@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { SimulatorForm } from './SimulatorForm';
-import { ResultsPanel } from './ResultsPanel';
+import { EnhancedResultsPanel } from './EnhancedResultsPanel';
 import { DetailDrawer } from './DetailDrawer';
 import { SimulatorData } from '@/types/simulator';
 
@@ -35,7 +35,7 @@ export const PatrimonialLeverage = () => {
 
       {/* Right Panel - Results */}
       <Card className="p-6">
-        <ResultsPanel 
+        <EnhancedResultsPanel 
           data={simulatorData}
           showResults={showResults}
         />
