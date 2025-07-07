@@ -9,7 +9,7 @@ import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { SimulatorData } from '@/types/simulator';
 import { ProposalGenerator } from './ProposalGenerator';
-import { Calculator, TrendingUp, Target, Clock, Info } from 'lucide-react';
+import { Calculator, TrendingUp, Target, Clock, Info, DollarSign } from 'lucide-react';
 
 interface SimulatorFormProps {
   data: SimulatorData;
@@ -97,66 +97,57 @@ export const SimulatorForm = ({ data, onChange, onCalculate, onOpenDetails }: Si
         </div>
       </div>
       
-      {/* Simulation Type Selection */}
+      {/* Simulation Type Selection - Corrigido conforme imagem */}
       <div className="space-y-4">
         <Label className="text-lg font-semibold text-gray-900">Tipo de Simulação</Label>
-        <div className="grid grid-cols-1 gap-4">
+        <div className="grid grid-cols-3 gap-3">
           <Button
             variant={data.simulationType === 'installment' ? 'default' : 'outline'}
             onClick={() => handleTypeChange('installment')}
-            className={`h-auto p-6 justify-start text-left transition-all duration-200 ${
+            className={`h-20 p-4 flex flex-col items-center justify-center gap-2 transition-all duration-200 ${
               data.simulationType === 'installment' 
                 ? 'bg-gradient-primary hover:opacity-90 shadow-lg border-0' 
                 : 'hover:bg-primary-50 hover:border-primary-200'
             }`}
           >
-            <div className="flex items-center space-x-4 w-full">
-              <TrendingUp className="h-6 w-6 shrink-0" />
-              <div className="flex-1">
-                <div className="flex items-center space-x-2">
-                  <span className="font-semibold">Simular por Parcela</span>
-                  <Badge variant="secondary" className="bg-warning/20 text-warning-foreground">
-                    Mais comum
-                  </Badge>
-                </div>
-                <p className="text-sm opacity-80 mt-1">Ideal para quem quer controlar o valor mensal</p>
-              </div>
+            <DollarSign className="h-6 w-6" />
+            <div className="text-center">
+              <div className="font-semibold text-xs">Por Parcela</div>
+              <Badge variant="secondary" className="bg-warning/20 text-warning-foreground text-xs mt-1">
+                Comum
+              </Badge>
             </div>
           </Button>
           
           <Button
             variant={data.simulationType === 'credit' ? 'default' : 'outline'}
             onClick={() => handleTypeChange('credit')}
-            className={`h-auto p-6 justify-start text-left transition-all duration-200 ${
+            className={`h-20 p-4 flex flex-col items-center justify-center gap-2 transition-all duration-200 ${
               data.simulationType === 'credit' 
                 ? 'bg-gradient-primary hover:opacity-90 shadow-lg border-0' 
                 : 'hover:bg-primary-50 hover:border-primary-200'
             }`}
           >
-            <div className="flex items-center space-x-4 w-full">
-              <Target className="h-6 w-6 shrink-0" />
-              <div className="flex-1">
-                <span className="font-semibold">Simular por Crédito</span>
-                <p className="text-sm opacity-80 mt-1">Para quem tem uma meta de crédito específica</p>
-              </div>
+            <Target className="h-6 w-6" />
+            <div className="text-center">
+              <div className="font-semibold text-xs">Por Crédito</div>
+              <div className="text-xs opacity-70 mt-1">Meta específica</div>
             </div>
           </Button>
           
           <Button
             variant={data.simulationType === 'income' ? 'default' : 'outline'}
             onClick={() => handleTypeChange('income')}
-            className={`h-auto p-6 justify-start text-left transition-all duration-200 ${
+            className={`h-20 p-4 flex flex-col items-center justify-center gap-2 transition-all duration-200 ${
               data.simulationType === 'income' 
                 ? 'bg-gradient-primary hover:opacity-90 shadow-lg border-0' 
                 : 'hover:bg-primary-50 hover:border-primary-200'
             }`}
           >
-            <div className="flex items-center space-x-4 w-full">
-              <Clock className="h-6 w-6 shrink-0" />
-              <div className="flex-1">
-                <span className="font-semibold">Simular por Renda Objetivo</span>
-                <p className="text-sm opacity-80 mt-1">Defina a renda passiva que deseja alcançar</p>
-              </div>
+            <TrendingUp className="h-6 w-6" />
+            <div className="text-center">
+              <div className="font-semibold text-xs">Por Renda</div>
+              <div className="text-xs opacity-70 mt-1">Renda passiva</div>
             </div>
           </Button>
         </div>

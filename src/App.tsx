@@ -20,7 +20,6 @@ function App() {
               <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/configuracoes" element={<Configuracoes />} />
-                <Route path="/administrators" element={<Configuracoes />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>

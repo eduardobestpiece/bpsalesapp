@@ -2,11 +2,33 @@
 import { useState, useCallback, useMemo } from 'react';
 import { SimulatorData } from '@/types/simulator';
 import { calculateConsortium, calculateAirbnb, calculateCommercialProperty, calculatePatrimonialEvolution } from '@/utils/calculations';
+import { calculateAdvancedConsortium, calculateHalfInstallment, AdvancedCalculationResult } from '@/utils/advancedCalculations';
 
 export const useCalculations = (data: SimulatorData) => {
   const [isCalculating, setIsCalculating] = useState(false);
   const [calculationError, setCalculationError] = useState<string | null>(null);
 
+  // Cálculos avançados com taxas
+  const advancedConsortiumData = useMemo((): AdvancedCalculationResult | null => {
+    try {
+      return calculateAdvancedConsortium(data);
+    } catch (error) {
+      console.error('Erro no cálculo avançado do consórcio:', error);
+      return null;
+    }
+  }, [data]);
+
+  const halfInstallmentData = useMemo((): AdvancedCalculationResult | null => {
+    if (!advancedConsortiumData) return null;
+    try {
+      return calculateHalfInstallment(advancedConsortiumData);
+    } catch (error) {
+      console.error('Erro no cálculo da meia parcela:', error);
+      return null;
+    }
+  }, [advancedConsortiumData]);
+
+  // Cálculos legados (mantidos para compatibilidade)
   const consortiumData = useMemo(() => {
     try {
       return calculateConsortium(data);
@@ -53,11 +75,13 @@ export const useCalculations = (data: SimulatorData) => {
       // Simular delay para UX
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      if (!consortiumData || !airbnbData) {
-        throw new Error('Erro nos cálculos base');
+      if (!advancedConsortiumData) {
+        throw new Error('Erro nos cálculos avançados');
       }
       
       return {
+        advanced: advancedConsortiumData,
+        halfInstallment: halfInstallmentData,
         consortium: consortiumData,
         airbnb: airbnbData,
         commercial: commercialData,
@@ -70,9 +94,11 @@ export const useCalculations = (data: SimulatorData) => {
     } finally {
       setIsCalculating(false);
     }
-  }, [consortiumData, airbnbData, commercialData, evolutionData]);
+  }, [advancedConsortiumData, halfInstallmentData, consortiumData, airbnbData, commercialData, evolutionData]);
 
   return {
+    advancedConsortiumData,
+    halfInstallmentData,
     consortiumData,
     airbnbData,
     commercialData,
