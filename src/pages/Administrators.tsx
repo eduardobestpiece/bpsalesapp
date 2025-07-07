@@ -1,11 +1,11 @@
 
 import React, { useState } from 'react';
+import { Header } from '@/components/Layout/Header';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Edit, Archive, Trash2 } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { AdministratorModal } from '@/components/Administrators/AdministratorModal';
 import { BidTypeModal } from '@/components/Administrators/BidTypeModal';
 import { ProductModal } from '@/components/Administrators/ProductModal';
@@ -78,113 +78,118 @@ export const Administrators = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Gerenciamento de Administradoras</h1>
-        <Button 
-          onClick={() => {
-            if (activeTab === 'administrators') handleOpenAdminModal();
-            else if (activeTab === 'bid-types') handleOpenBidTypeModal();
-            else if (activeTab === 'products') handleOpenProductModal();
-          }}
-          className="bg-amber-600 hover:bg-amber-700"
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Adicionar {activeTab === 'administrators' ? 'Administradora' : activeTab === 'bid-types' ? 'Tipo de Lance' : 'Produto'}
-        </Button>
-      </div>
-
-      {/* Tabs */}
-      <Card className="p-6">
-        <div className="flex space-x-1 mb-6">
-          {[
-            { key: 'administrators', label: 'Administradoras' },
-            { key: 'bid-types', label: 'Tipos de Lance' },
-            { key: 'products', label: 'Produtos' }
-          ].map((tab) => (
-            <Button
-              key={tab.key}
-              variant={activeTab === tab.key ? 'default' : 'ghost'}
-              onClick={() => setActiveTab(tab.key as any)}
-              className={activeTab === tab.key ? 'bg-amber-600 hover:bg-amber-700' : ''}
-            >
-              {tab.label}
-            </Button>
-          ))}
+    <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
+      <Header />
+      <div className="container mx-auto p-6 space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold text-secondary">Gerenciamento de Administradoras</h1>
+          <Button 
+            onClick={() => {
+              if (activeTab === 'administrators') handleOpenAdminModal();
+              else if (activeTab === 'bid-types') handleOpenBidTypeModal();
+              else if (activeTab === 'products') handleOpenProductModal();
+            }}
+            className="bg-gradient-primary hover:opacity-90 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Adicionar {activeTab === 'administrators' ? 'Administradora' : activeTab === 'bid-types' ? 'Tipo de Lance' : 'Produto'}
+          </Button>
         </div>
 
-        {/* Filters */}
-        <div className="flex flex-wrap gap-4 mb-6">
-          <div className="flex-1 min-w-64">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Pesquisar..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+        {/* Tabs */}
+        <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-100/50 p-1">
+          <Card className="bg-white rounded-[calc(1.5rem-4px)] p-6 shadow-sm">
+            <div className="flex space-x-1 mb-6">
+              {[
+                { key: 'administrators', label: 'Administradoras' },
+                { key: 'bid-types', label: 'Tipos de Lance' },
+                { key: 'products', label: 'Produtos' }
+              ].map((tab) => (
+                <Button
+                  key={tab.key}
+                  variant={activeTab === tab.key ? 'default' : 'ghost'}
+                  onClick={() => setActiveTab(tab.key as any)}
+                  className={activeTab === tab.key ? 'bg-gradient-primary hover:opacity-90 text-white' : 'hover:bg-primary-50 hover:border-primary-200'}
+                >
+                  {tab.label}
+                </Button>
+              ))}
             </div>
-          </div>
-          
-          <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
-            <SelectTrigger className="w-48">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="active">Ativos</SelectItem>
-              <SelectItem value="archived">Arquivados</SelectItem>
-            </SelectContent>
-          </Select>
 
-          {(activeTab === 'bid-types' || activeTab === 'products') && (
-            <Select value={selectedAdministrator} onValueChange={setSelectedAdministrator}>
-              <SelectTrigger className="w-48">
-                <SelectValue placeholder="Administradora" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas</SelectItem>
-                {/* TODO: Load administrators from database */}
-              </SelectContent>
-            </Select>
-          )}
+            {/* Filters */}
+            <div className="flex flex-wrap gap-4 mb-6">
+              <div className="flex-1 min-w-64">
+                <div className="relative">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Pesquisar..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 focus:border-primary-400 focus:ring-primary-100"
+                  />
+                </div>
+              </div>
+              
+              <Select value={statusFilter} onValueChange={(value: any) => setStatusFilter(value)}>
+                <SelectTrigger className="w-48 focus:border-primary-400 focus:ring-primary-100">
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="active">Ativos</SelectItem>
+                  <SelectItem value="archived">Arquivados</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {(activeTab === 'bid-types' || activeTab === 'products') && (
+                <Select value={selectedAdministrator} onValueChange={setSelectedAdministrator}>
+                  <SelectTrigger className="w-48 focus:border-primary-400 focus:ring-primary-100">
+                    <SelectValue placeholder="Administradora" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas</SelectItem>
+                    {/* TODO: Load administrators from database */}
+                  </SelectContent>
+                </Select>
+              )}
+            </div>
+
+            {/* Content */}
+            {renderTabContent()}
+          </Card>
         </div>
 
-        {/* Content */}
-        {renderTabContent()}
-      </Card>
+        {/* Modals */}
+        <AdministratorModal
+          open={adminModalOpen}
+          onOpenChange={setAdminModalOpen}
+          administrator={editingAdmin}
+          onSuccess={() => {
+            setAdminModalOpen(false);
+            setEditingAdmin(null);
+          }}
+        />
 
-      {/* Modals */}
-      <AdministratorModal
-        open={adminModalOpen}
-        onOpenChange={setAdminModalOpen}
-        administrator={editingAdmin}
-        onSuccess={() => {
-          setAdminModalOpen(false);
-          setEditingAdmin(null);
-        }}
-      />
+        <BidTypeModal
+          open={bidTypeModalOpen}
+          onOpenChange={setBidTypeModalOpen}
+          bidType={editingBidType}
+          onSuccess={() => {
+            setBidTypeModalOpen(false);
+            setBidTypeAdmin(null);
+          }}
+        />
 
-      <BidTypeModal
-        open={bidTypeModalOpen}
-        onOpenChange={setBidTypeModalOpen}
-        bidType={editingBidType}
-        onSuccess={() => {
-          setBidTypeModalOpen(false);
-          setBidTypeAdmin(null);
-        }}
-      />
-
-      <ProductModal
-        open={productModalOpen}
-        onOpenChange={setProductModalOpen}
-        product={editingProduct}
-        onSuccess={() => {
-          setProductModalOpen(false);
-          setEditingProduct(null);
-        }}
-      />
+        <ProductModal
+          open={productModalOpen}
+          onOpenChange={setProductModalOpen}
+          product={editingProduct}
+          onSuccess={() => {
+            setProductModalOpen(false);
+            setEditingProduct(null);
+          }}
+        />
+      </div>
     </div>
   );
 };
