@@ -1,5 +1,5 @@
 
-import { User, Settings, Building2, Package, Target, LogOut } from 'lucide-react';
+import { User, Settings, LogOut } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import {
   DropdownMenu,
@@ -46,26 +46,13 @@ export const UserMenu = () => {
         <DropdownMenuSeparator />
         <DropdownMenuItem className="p-3 cursor-pointer hover:bg-primary-50/70 rounded-lg">
           <User className="mr-3 h-5 w-5 text-primary-600" />
-          <span className="font-medium text-secondary">Meu Perfil</span>
+          <span className="font-medium text-secondary">Perfil</span>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="p-3 cursor-pointer hover:bg-primary-50/70 rounded-lg">
-          <Link to="/administrators">
-            <Building2 className="mr-3 h-5 w-5 text-primary-600" />
-            <span className="font-medium text-secondary">Administradoras</span>
+          <Link to="/configuracoes">
+            <Settings className="mr-3 h-5 w-5 text-primary-600" />
+            <span className="font-medium text-secondary">Configurações</span>
           </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem className="p-3 cursor-pointer hover:bg-primary-50/70 rounded-lg">
-          <Package className="mr-3 h-5 w-5 text-primary-600" />
-          <span className="font-medium text-secondary">Produtos</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem className="p-3 cursor-pointer hover:bg-primary-50/70 rounded-lg">
-          <Target className="mr-3 h-5 w-5 text-primary-600" />
-          <span className="font-medium text-secondary">Modalidades de Lances</span>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className="p-3 cursor-pointer hover:bg-primary-50/70 rounded-lg">
-          <Settings className="mr-3 h-5 w-5 text-primary-600" />
-          <span className="font-medium text-secondary">Configurações</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="p-3 cursor-pointer hover:bg-destructive-50 text-destructive rounded-lg">
