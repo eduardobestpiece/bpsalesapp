@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -402,37 +403,37 @@ export default function Configuracoes() {
           {/* Modals */}
           <AdministratorModal
             open={showAdministratorModal}
-            onClose={closeModals}
+            onOpenChange={setShowAdministratorModal}
             administrator={selectedAdministrator}
-            onSave={closeModals}
+            onSuccess={closeModals}
           />
 
           <ProductModal
             open={showProductModal}
-            onClose={closeModals}
+            onOpenChange={setShowProductModal}
             product={selectedProduct}
-            onSave={closeModals}
+            onSuccess={closeModals}
           />
 
           <InstallmentTypeModal
             open={showInstallmentTypeModal}
-            onClose={closeModals}
+            onOpenChange={setShowInstallmentTypeModal}
             installmentType={selectedInstallmentType}
-            onSave={closeModals}
+            onSuccess={closeModals}
           />
 
           <BidTypeModal
             open={showBidTypeModal}
-            onClose={closeModals}
+            onOpenChange={setShowBidTypeModal}
             bidType={selectedBidType}
-            onSave={closeModals}
+            onSuccess={closeModals}
           />
 
           <EntryTypeModal
             open={showEntryTypeModal}
-            onClose={closeModals}
+            onOpenChange={setShowEntryTypeModal}
             entryType={selectedEntryType}
-            onSave={closeModals}
+            onSuccess={closeModals}
           />
 
           <LeverageModal
