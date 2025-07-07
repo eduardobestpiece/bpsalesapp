@@ -112,6 +112,109 @@ export type Database = {
           },
         ]
       }
+      entry_types: {
+        Row: {
+          administrator_id: string | null
+          created_at: string
+          fixed_value: number | null
+          id: string
+          installment_months: number
+          is_archived: boolean | null
+          is_optional: boolean | null
+          name: string
+          percentage: number | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          administrator_id?: string | null
+          created_at?: string
+          fixed_value?: number | null
+          id?: string
+          installment_months?: number
+          is_archived?: boolean | null
+          is_optional?: boolean | null
+          name: string
+          percentage?: number | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          administrator_id?: string | null
+          created_at?: string
+          fixed_value?: number | null
+          id?: string
+          installment_months?: number
+          is_archived?: boolean | null
+          is_optional?: boolean | null
+          name?: string
+          percentage?: number | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entry_types_administrator_id_fkey"
+            columns: ["administrator_id"]
+            isOneToOne: false
+            referencedRelation: "administrators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      installment_types: {
+        Row: {
+          administrator_id: string | null
+          created_at: string
+          id: string
+          is_archived: boolean | null
+          name: string
+          reduces_admin_tax: boolean | null
+          reduces_credit: boolean | null
+          reduces_insurance: boolean | null
+          reduces_reserve_fund: boolean | null
+          reduction_percentage: number | null
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          administrator_id?: string | null
+          created_at?: string
+          id?: string
+          is_archived?: boolean | null
+          name: string
+          reduces_admin_tax?: boolean | null
+          reduces_credit?: boolean | null
+          reduces_insurance?: boolean | null
+          reduces_reserve_fund?: boolean | null
+          reduction_percentage?: number | null
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          administrator_id?: string | null
+          created_at?: string
+          id?: string
+          is_archived?: boolean | null
+          name?: string
+          reduces_admin_tax?: boolean | null
+          reduces_credit?: boolean | null
+          reduces_insurance?: boolean | null
+          reduces_reserve_fund?: boolean | null
+          reduction_percentage?: number | null
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "installment_types_administrator_id_fkey"
+            columns: ["administrator_id"]
+            isOneToOne: false
+            referencedRelation: "administrators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           administrator_id: string | null

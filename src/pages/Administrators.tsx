@@ -9,12 +9,16 @@ import { Plus, Search } from 'lucide-react';
 import { AdministratorModal } from '@/components/Administrators/AdministratorModal';
 import { BidTypeModal } from '@/components/Administrators/BidTypeModal';
 import { ProductModal } from '@/components/Administrators/ProductModal';
+import { InstallmentTypeModal } from '@/components/Administrators/InstallmentTypeModal';
+import { EntryTypeModal } from '@/components/Administrators/EntryTypeModal';
 import { AdministratorsList } from '@/components/Administrators/AdministratorsList';
 import { BidTypesList } from '@/components/Administrators/BidTypesList';
 import { ProductsList } from '@/components/Administrators/ProductsList';
+import { InstallmentTypesList } from '@/components/Administrators/InstallmentTypesList';
+import { EntryTypesList } from '@/components/Administrators/EntryTypesList';
 
 export const Administrators = () => {
-  const [activeTab, setActiveTab] = useState<'administrators' | 'bid-types' | 'products'>('administrators');
+  const [activeTab, setActiveTab] = useState<'administrators' | 'bid-types' | 'products' | 'installment-types' | 'entry-types'>('administrators');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
   const [selectedAdministrator, setSelectedAdministrator] = useState<string>('all');
@@ -23,11 +27,15 @@ export const Administrators = () => {
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [bidTypeModalOpen, setBidTypeModalOpen] = useState(false);
   const [productModalOpen, setProductModalOpen] = useState(false);
+  const [installmentTypeModalOpen, setInstallmentTypeModalOpen] = useState(false);
+  const [entryTypeModalOpen, setEntryTypeModalOpen] = useState(false);
   
   // Edit states
   const [editingAdmin, setEditingAdmin] = useState(null);
   const [editingBidType, setBidTypeAdmin] = useState(null);
   const [editingProduct, setEditingProduct] = useState(null);
+  const [editingInstallmentType, setEditingInstallmentType] = useState(null);
+  const [editingEntryType, setEditingEntryType] = useState(null);
 
   const handleOpenAdminModal = (admin = null) => {
     setEditingAdmin(admin);
@@ -42,6 +50,16 @@ export const Administrators = () => {
   const handleOpenProductModal = (product = null) => {
     setEditingProduct(product);
     setProductModalOpen(true);
+  };
+
+  const handleOpenInstallmentTypeModal = (installmentType = null) => {
+    setEditingInstallmentType(installmentType);
+    setInstallmentTypeModalOpen(true);
+  };
+
+  const handleOpenEntryTypeModal = (entryType = null) => {
+    setEditingEntryType(entryType);
+    setEntryTypeModalOpen(true);
   };
 
   const renderTabContent = () => {
@@ -72,8 +90,37 @@ export const Administrators = () => {
             onEdit={handleOpenProductModal}
           />
         );
+      case 'installment-types':
+        return (
+          <InstallmentTypesList
+            searchTerm={searchTerm}
+            statusFilter={statusFilter}
+            selectedAdministrator={selectedAdministrator}
+            onEdit={handleOpenInstallmentTypeModal}
+          />
+        );
+      case 'entry-types':
+        return (
+          <EntryTypesList
+            searchTerm={searchTerm}
+            statusFilter={statusFilter}
+            selectedAdministrator={selectedAdministrator}
+            onEdit={handleOpenEntryTypeModal}
+          />
+        );
       default:
         return null;
+    }
+  };
+
+  const getButtonText = () => {
+    switch (activeTab) {
+      case 'administrators': return 'Administradora';
+      case 'bid-types': return 'Tipo de Lance';
+      case 'products': return 'Produto';
+      case 'installment-types': return 'Tipo de Parcela';
+      case 'entry-types': return 'Tipo de Entrada';
+      default: return '';
     }
   };
 
@@ -88,22 +135,26 @@ export const Administrators = () => {
               if (activeTab === 'administrators') handleOpenAdminModal();
               else if (activeTab === 'bid-types') handleOpenBidTypeModal();
               else if (activeTab === 'products') handleOpenProductModal();
+              else if (activeTab === 'installment-types') handleOpenInstallmentTypeModal();
+              else if (activeTab === 'entry-types') handleOpenEntryTypeModal();
             }}
             className="bg-gradient-primary hover:opacity-90 text-white shadow-lg hover:shadow-xl transition-all duration-200"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Adicionar {activeTab === 'administrators' ? 'Administradora' : activeTab === 'bid-types' ? 'Tipo de Lance' : 'Produto'}
+            Adicionar {getButtonText()}
           </Button>
         </div>
 
         {/* Tabs */}
         <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-100/50 p-1">
           <Card className="bg-white rounded-[calc(1.5rem-4px)] p-6 shadow-sm">
-            <div className="flex space-x-1 mb-6">
+            <div className="flex space-x-1 mb-6 flex-wrap">
               {[
                 { key: 'administrators', label: 'Administradoras' },
                 { key: 'bid-types', label: 'Tipos de Lance' },
-                { key: 'products', label: 'Produtos' }
+                { key: 'products', label: 'Produtos' },
+                { key: 'installment-types', label: 'Parcelas' },
+                { key: 'entry-types', label: 'Entradas' }
               ].map((tab) => (
                 <Button
                   key={tab.key}
@@ -141,7 +192,7 @@ export const Administrators = () => {
                 </SelectContent>
               </Select>
 
-              {(activeTab === 'bid-types' || activeTab === 'products') && (
+              {(activeTab === 'bid-types' || activeTab === 'products' || activeTab === 'installment-types' || activeTab === 'entry-types') && (
                 <Select value={selectedAdministrator} onValueChange={setSelectedAdministrator}>
                   <SelectTrigger className="w-48 focus:border-primary-400 focus:ring-primary-100">
                     <SelectValue placeholder="Administradora" />
@@ -187,6 +238,26 @@ export const Administrators = () => {
           onSuccess={() => {
             setProductModalOpen(false);
             setEditingProduct(null);
+          }}
+        />
+
+        <InstallmentTypeModal
+          open={installmentTypeModalOpen}
+          onOpenChange={setInstallmentTypeModalOpen}
+          installmentType={editingInstallmentType}
+          onSuccess={() => {
+            setInstallmentTypeModalOpen(false);
+            setEditingInstallmentType(null);
+          }}
+        />
+
+        <EntryTypeModal
+          open={entryTypeModalOpen}
+          onOpenChange={setEntryTypeModalOpen}
+          entryType={editingEntryType}
+          onSuccess={() => {
+            setEntryTypeModalOpen(false);
+            setEditingEntryType(null);
           }}
         />
       </div>
