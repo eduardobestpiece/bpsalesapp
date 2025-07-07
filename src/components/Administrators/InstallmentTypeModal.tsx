@@ -85,11 +85,22 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
 
   const onSubmit = async (data: InstallmentTypeFormData) => {
     try {
+      const cleanData = {
+        name: data.name,
+        administrator_id: data.administrator_id,
+        type: data.type,
+        reduction_percentage: data.reduction_percentage,
+        reduces_credit: data.reduces_credit,
+        reduces_admin_tax: data.reduces_admin_tax,
+        reduces_insurance: data.reduces_insurance,
+        reduces_reserve_fund: data.reduces_reserve_fund,
+      };
+
       if (installmentType) {
         const { error } = await supabase
           .from('installment_types')
           .update({
-            ...data,
+            ...cleanData,
             updated_at: new Date().toISOString(),
           })
           .eq('id', installmentType.id);
@@ -99,7 +110,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
       } else {
         const { error } = await supabase
           .from('installment_types')
-          .insert([data]);
+          .insert(cleanData);
 
         if (error) throw error;
         toast({ title: 'Tipo de parcela criado com sucesso!' });

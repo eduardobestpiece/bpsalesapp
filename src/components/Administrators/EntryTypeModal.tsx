@@ -87,9 +87,13 @@ export const EntryTypeModal: React.FC<EntryTypeModalProps> = ({
     try {
       // Clear unnecessary fields based on type
       const cleanData = {
-        ...data,
+        name: data.name,
+        administrator_id: data.administrator_id,
+        type: data.type,
         percentage: data.type === 'PERCENTUAL' ? data.percentage : null,
         fixed_value: data.type === 'VALOR_FIXO' ? data.fixed_value : null,
+        installment_months: data.installment_months,
+        is_optional: data.is_optional,
       };
 
       if (entryType) {
@@ -106,7 +110,7 @@ export const EntryTypeModal: React.FC<EntryTypeModalProps> = ({
       } else {
         const { error } = await supabase
           .from('entry_types')
-          .insert([cleanData]);
+          .insert(cleanData);
 
         if (error) throw error;
         toast({ title: 'Tipo de entrada criado com sucesso!' });
