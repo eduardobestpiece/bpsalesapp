@@ -102,6 +102,10 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
     }
   };
 
+  const handleInsuranceChange = (checked: boolean | 'indeterminate') => {
+    setIncludeInsurance(checked === true);
+  };
+
   const availableTerms = products.length > 0 
     ? [...new Set(products.flatMap(p => p.term_options))].sort((a, b) => a - b)
     : [120, 150, 180, 200, 240];
@@ -233,7 +237,7 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
               <Checkbox 
                 id="include-insurance" 
                 checked={includeInsurance}
-                onCheckedChange={setIncludeInsurance}
+                onCheckedChange={handleInsuranceChange}
               />
               <Label htmlFor="include-insurance">Incluir seguro no cálculo</Label>
             </div>
@@ -327,7 +331,7 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
               <Checkbox 
                 id="include-insurance-credit" 
                 checked={includeInsurance}
-                onCheckedChange={setIncludeInsurance}
+                onCheckedChange={handleInsuranceChange}
               />
               <Label htmlFor="include-insurance-credit">Incluir seguro no cálculo</Label>
             </div>

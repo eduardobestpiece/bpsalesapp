@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -208,6 +207,7 @@ export default function Configuracoes() {
                       key={refreshKey}
                       searchTerm={productSearchTerm}
                       statusFilter={productStatusFilter}
+                      selectedAdministrator=""
                       onEdit={handleEditProduct}
                     />
                   </div>
@@ -253,6 +253,7 @@ export default function Configuracoes() {
                       key={refreshKey}
                       searchTerm={installmentSearchTerm}
                       statusFilter={installmentStatusFilter}
+                      selectedAdministrator=""
                       onEdit={handleEditInstallmentType}
                     />
                   </div>
@@ -298,6 +299,7 @@ export default function Configuracoes() {
                       key={refreshKey}
                       searchTerm={bidSearchTerm}
                       statusFilter={bidStatusFilter}
+                      selectedAdministrator=""
                       onEdit={handleEditBidType}
                     />
                   </div>
@@ -343,6 +345,7 @@ export default function Configuracoes() {
                       key={refreshKey}
                       searchTerm={entrySearchTerm}
                       statusFilter={entryStatusFilter}
+                      selectedAdministrator=""
                       onEdit={handleEditEntryType}
                     />
                   </div>
@@ -398,35 +401,35 @@ export default function Configuracoes() {
 
           {/* Modals */}
           <AdministratorModal
-            isOpen={showAdministratorModal}
+            open={showAdministratorModal}
             onClose={closeModals}
             administrator={selectedAdministrator}
             onSave={closeModals}
           />
 
           <ProductModal
-            isOpen={showProductModal}
+            open={showProductModal}
             onClose={closeModals}
             product={selectedProduct}
             onSave={closeModals}
           />
 
           <InstallmentTypeModal
-            isOpen={showInstallmentTypeModal}
+            open={showInstallmentTypeModal}
             onClose={closeModals}
             installmentType={selectedInstallmentType}
             onSave={closeModals}
           />
 
           <BidTypeModal
-            isOpen={showBidTypeModal}
+            open={showBidTypeModal}
             onClose={closeModals}
             bidType={selectedBidType}
             onSave={closeModals}
           />
 
           <EntryTypeModal
-            isOpen={showEntryTypeModal}
+            open={showEntryTypeModal}
             onClose={closeModals}
             entryType={selectedEntryType}
             onSave={closeModals}
