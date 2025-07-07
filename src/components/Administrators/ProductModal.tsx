@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 const formSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   type: z.enum(['property', 'car']),
-  administrator_id: z.string().min(1, 'Administradora é obrigatória'),
+  administrator_id: z.string().min(1, 'Administradora é obrigatória').nullable(),
   credit_value: z.number().min(1, 'Valor do crédito é obrigatório'),
   term_options: z.array(z.number()).min(1, 'Pelo menos uma opção de prazo é obrigatória'),
 });
@@ -45,7 +45,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     defaultValues: {
       name: product?.name || '',
       type: product?.type || 'property',
-      administrator_id: product?.administrator_id || '',
+      administrator_id: product?.administrator_id || null,
       credit_value: product?.credit_value || 0,
       term_options: product?.term_options || [],
     }
@@ -170,7 +170,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Administradora *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} defaultValue={field.value || ''}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione a administradora" />

@@ -14,11 +14,11 @@ import { toast } from 'sonner';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
-  administrator_id: z.string().min(1, 'Administradora é obrigatória'),
-  percentage: z.number().min(0).max(100).optional(),
+  administrator_id: z.string().min(1, 'Administradora é obrigatória').nullable(),
+  percentage: z.number().min(0).max(100).nullable(),
   allows_embedded: z.boolean().default(false),
   is_loyalty: z.boolean().default(false),
-  loyalty_months: z.number().min(0).optional(),
+  loyalty_months: z.number().min(0).nullable(),
   is_default: z.boolean().default(false),
 });
 
@@ -43,11 +43,11 @@ export const BidTypeModal: React.FC<BidTypeModalProps> = ({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: bidType?.name || '',
-      administrator_id: bidType?.administrator_id || '',
-      percentage: bidType?.percentage || undefined,
+      administrator_id: bidType?.administrator_id || null,
+      percentage: bidType?.percentage || null,
       allows_embedded: bidType?.allows_embedded || false,
       is_loyalty: bidType?.is_loyalty || false,
-      loyalty_months: bidType?.loyalty_months || undefined,
+      loyalty_months: bidType?.loyalty_months || null,
       is_default: bidType?.is_default || false,
     }
   });
@@ -130,7 +130,7 @@ export const BidTypeModal: React.FC<BidTypeModalProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Administradora *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value || ''}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione a administradora" />
@@ -163,7 +163,8 @@ export const BidTypeModal: React.FC<BidTypeModalProps> = ({
                       step="0.01"
                       placeholder="0.00"
                       {...field}
-                      onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                      onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
+                      value={field.value || ''}
                     />
                   </FormControl>
                   <FormMessage />
@@ -225,7 +226,8 @@ export const BidTypeModal: React.FC<BidTypeModalProps> = ({
                           min="0"
                           placeholder="Número de meses"
                           {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
+                          value={field.value || ''}
                         />
                       </FormControl>
                       <FormMessage />
