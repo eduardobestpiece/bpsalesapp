@@ -30,8 +30,8 @@ interface PropertyData {
 }
 
 interface PatrimonialLeverageNewProps {
-  administrator: Administrator;
-  product: Product;
+  administrator?: Administrator;
+  product?: Product;
   simulationData: {
     administrator: string;
     consortiumType: 'property' | 'vehicle';
@@ -71,7 +71,11 @@ const DEFAULT_PRODUCT: Product = {
   advanceInstallments: 0
 };
 
-export const PatrimonialLeverageNew = ({ simulationData }: PatrimonialLeverageNewProps) => {
+export const PatrimonialLeverageNew = ({ 
+  administrator = DEFAULT_ADMINISTRATOR, 
+  product = DEFAULT_PRODUCT, 
+  simulationData 
+}: PatrimonialLeverageNewProps) => {
   const [leverageType, setLeverageType] = useState<'single' | 'scaled'>('single');
   const [selectedLeverage, setSelectedLeverage] = useState<string>('');
   const [leverageData, setLeverageData] = useState<LeverageData | null>(null);
@@ -172,16 +176,16 @@ export const PatrimonialLeverageNew = ({ simulationData }: PatrimonialLeverageNe
       {leverageData ? (
         leverageType === 'single' ? (
           <SingleLeverage 
-            administrator={DEFAULT_ADMINISTRATOR}
-            product={DEFAULT_PRODUCT}
+            administrator={administrator}
+            product={product}
             propertyData={propertyData}
             installmentType={simulationData.installmentType as 'full' | 'half' | 'reduced'}
             simulationData={simulationData}
           />
         ) : (
           <ScaledLeverage 
-            administrator={DEFAULT_ADMINISTRATOR}
-            product={DEFAULT_PRODUCT}
+            administrator={administrator}
+            product={product}
             propertyData={propertyData}
             installmentType={simulationData.installmentType as 'full' | 'half' | 'reduced'}
             simulationData={simulationData}
