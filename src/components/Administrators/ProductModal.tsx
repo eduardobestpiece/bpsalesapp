@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,7 +15,7 @@ import { toast } from 'sonner';
 const formSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   type: z.enum(['property', 'car']),
-  administrator_id: z.string().min(1, 'Administradora é obrigatória').nullable(),
+  administrator_id: z.string().nullable(),
   credit_value: z.number().min(1, 'Valor do crédito é obrigatório'),
   term_options: z.array(z.number()).min(1, 'Pelo menos uma opção de prazo é obrigatória'),
 });
@@ -169,7 +168,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 name="administrator_id"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Administradora *</FormLabel>
+                    <FormLabel>Administradora</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value || ''}>
                       <FormControl>
                         <SelectTrigger>

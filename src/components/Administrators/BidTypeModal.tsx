@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -14,7 +13,7 @@ import { toast } from 'sonner';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
-  administrator_id: z.string().min(1, 'Administradora é obrigatória').nullable(),
+  administrator_id: z.string().nullable(),
   percentage: z.number().min(0).max(100).nullable(),
   allows_embedded: z.boolean().default(false),
   is_loyalty: z.boolean().default(false),
@@ -129,7 +128,7 @@ export const BidTypeModal: React.FC<BidTypeModalProps> = ({
               name="administrator_id"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Administradora *</FormLabel>
+                  <FormLabel>Administradora</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value || ''}>
                     <FormControl>
                       <SelectTrigger>
