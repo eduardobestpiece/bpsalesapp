@@ -15,7 +15,7 @@ export const UserMenu = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-12 w-12 rounded-full ring-2 ring-primary-100 hover:ring-primary-200 transition-all duration-200">
+        <Button variant="ghost" className="relative h-12 w-12 rounded-full ring-2 ring-primary-200 hover:ring-primary-300 transition-all duration-200">
           <Avatar className="h-10 w-10">
             <AvatarImage src="/placeholder-avatar.jpg" alt="User" />
             <AvatarFallback className="bg-gradient-primary text-white font-semibold">
@@ -34,8 +34,8 @@ export const UserMenu = () => {
                 </AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-base font-semibold leading-none">João Silva</p>
-                <p className="text-sm leading-none text-muted-foreground mt-1">
+                <p className="text-base font-semibold leading-none text-secondary">João Silva</p>
+                <p className="text-sm leading-none text-secondary/60 mt-1">
                   joao@exemplo.com
                 </p>
               </div>
@@ -43,26 +43,26 @@ export const UserMenu = () => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="p-3 cursor-pointer hover:bg-primary-50 rounded-lg">
+        <DropdownMenuItem className="p-3 cursor-pointer hover:bg-primary-50/70 rounded-lg">
           <User className="mr-3 h-5 w-5 text-primary-600" />
-          <span className="font-medium">Meu Perfil</span>
+          <span className="font-medium text-secondary">Meu Perfil</span>
         </DropdownMenuItem>
-        <DropdownMenuItem className="p-3 cursor-pointer hover:bg-primary-50 rounded-lg">
+        <DropdownMenuItem className="p-3 cursor-pointer hover:bg-primary-50/70 rounded-lg">
           <Building2 className="mr-3 h-5 w-5 text-primary-600" />
-          <span className="font-medium">Administradoras</span>
+          <span className="font-medium text-secondary">Administradoras</span>
         </DropdownMenuItem>
-        <DropdownMenuItem className="p-3 cursor-pointer hover:bg-primary-50 rounded-lg">
+        <DropdownMenuItem className="p-3 cursor-pointer hover:bg-primary-50/70 rounded-lg">
           <Package className="mr-3 h-5 w-5 text-primary-600" />
-          <span className="font-medium">Produtos</span>
+          <span className="font-medium text-secondary">Produtos</span>
         </DropdownMenuItem>
-        <DropdownMenuItem className="p-3 cursor-pointer hover:bg-primary-50 rounded-lg">
+        <DropdownMenuItem className="p-3 cursor-pointer hover:bg-primary-50/70 rounded-lg">
           <Target className="mr-3 h-5 w-5 text-primary-600" />
-          <span className="font-medium">Modalidades de Lances</span>
+          <span className="font-medium text-secondary">Modalidades de Lances</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="p-3 cursor-pointer hover:bg-primary-50 rounded-lg">
+        <DropdownMenuItem className="p-3 cursor-pointer hover:bg-primary-50/70 rounded-lg">
           <Settings className="mr-3 h-5 w-5 text-primary-600" />
-          <span className="font-medium">Configurações</span>
+          <span className="font-medium text-secondary">Configurações</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="p-3 cursor-pointer hover:bg-destructive-50 text-destructive rounded-lg">

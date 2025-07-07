@@ -53,7 +53,8 @@ export default {
 				},
 				destructive: {
 					DEFAULT: 'hsl(var(--destructive))',
-					foreground: 'hsl(var(--destructive-foreground))'
+					foreground: 'hsl(var(--destructive-foreground))',
+					50: 'hsl(var(--destructive-50))'
 				},
 				muted: {
 					DEFAULT: 'hsl(var(--muted))',
@@ -88,8 +89,8 @@ export default {
 				sm: 'calc(var(--radius) - 4px)'
 			},
 			fontFamily: {
-				sans: ['Inter', 'system-ui', 'sans-serif'],
-				heading: ['Inter', 'system-ui', 'sans-serif'],
+				sans: ['Effra', 'system-ui', 'sans-serif'],
+				heading: ['Effra', 'system-ui', 'sans-serif'],
 			},
 			fontSize: {
 				'2xs': ['0.625rem', { lineHeight: '0.75rem' }],
