@@ -49,6 +49,12 @@ export default function Configuracoes() {
   const [leverageSearchTerm, setLeverageSearchTerm] = useState('');
   const [leverageStatusFilter, setLeverageStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
 
+  // Administrator filter for related tables
+  const [productAdminFilter, setProductAdminFilter] = useState<string>('');
+  const [installmentAdminFilter, setInstallmentAdminFilter] = useState<string>('');
+  const [bidAdminFilter, setBidAdminFilter] = useState<string>('');
+  const [entryAdminFilter, setEntryAdminFilter] = useState<string>('');
+
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handleRefresh = () => {
@@ -210,7 +216,7 @@ export default function Configuracoes() {
                       key={refreshKey}
                       searchTerm={productSearchTerm}
                       statusFilter={productStatusFilter}
-                      selectedAdministrator={null}
+                      selectedAdministrator={productAdminFilter || null}
                       onEdit={handleEditProduct}
                     />
                   </div>
@@ -256,7 +262,7 @@ export default function Configuracoes() {
                       key={refreshKey}
                       searchTerm={installmentSearchTerm}
                       statusFilter={installmentStatusFilter}
-                      selectedAdministrator={null}
+                      selectedAdministrator={installmentAdminFilter || null}
                       onEdit={handleEditInstallmentType}
                     />
                   </div>
@@ -302,7 +308,7 @@ export default function Configuracoes() {
                       key={refreshKey}
                       searchTerm={bidSearchTerm}
                       statusFilter={bidStatusFilter}
-                      selectedAdministrator={null}
+                      selectedAdministrator={bidAdminFilter || null}
                       onEdit={handleEditBidType}
                     />
                   </div>
@@ -348,7 +354,7 @@ export default function Configuracoes() {
                       key={refreshKey}
                       searchTerm={entrySearchTerm}
                       statusFilter={entryStatusFilter}
-                      selectedAdministrator={null}
+                      selectedAdministrator={entryAdminFilter || null}
                       onEdit={handleEditEntryType}
                     />
                   </div>

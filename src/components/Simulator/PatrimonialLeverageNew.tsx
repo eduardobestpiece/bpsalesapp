@@ -1,13 +1,25 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
-import { PropertyCharacteristics } from './PropertyCharacteristics';
 import { LeverageTypes } from './LeverageTypes';
 import { SingleLeverage } from './SingleLeverage';
 import { ScaledLeverage } from './ScaledLeverage';
+import { LeverageSelector } from './LeverageSelector';
 import { Administrator, Product } from '@/types/entities';
+import { Label } from '@/components/ui/label';
 
-// Define the PropertyData interface locally to match PropertyCharacteristics
+interface LeverageData {
+  id: string;
+  name: string;
+  type: string;
+  subtype?: string;
+  daily_percentage?: number;
+  rental_percentage?: number;
+  occupancy_rate?: number;
+  total_expenses?: number;
+  fixed_property_value?: number;
+}
+
 interface PropertyData {
   type: 'short-stay' | 'commercial' | 'residential';
   dailyRate?: number;
@@ -15,6 +27,21 @@ interface PropertyData {
   occupancyRate?: number;
   fixedCosts: number;
   appreciationRate: number;
+}
+
+interface PatrimonialLeverageNewProps {
+  administrator: Administrator;
+  product: Product;
+  simulationData: {
+    administrator: string;
+    consortiumType: 'property' | 'vehicle';
+    installmentType: string;
+    value: number;
+    term: number;
+    updateRate: number;
+    searchType: 'contribution' | 'credit';
+    bidType?: string;
+  };
 }
 
 // Dados padrão baseados na documentação
@@ -44,16 +71,54 @@ const DEFAULT_PRODUCT: Product = {
   advanceInstallments: 0
 };
 
-export const PatrimonialLeverageNew = () => {
+export const PatrimonialLeverageNew = ({ simulationData }: PatrimonialLeverageNewProps) => {
   const [leverageType, setLeverageType] = useState<'single' | 'scaled'>('single');
-  const [installmentType, setInstallmentType] = useState<'full' | 'half' | 'reduced'>('full');
+  const [selectedLeverage, setSelectedLeverage] = useState<string>('');
+  const [leverageData, setLeverageData] = useState<LeverageData | null>(null);
   const [propertyData, setPropertyData] = useState<PropertyData>({
     type: 'short-stay' as const,
     dailyRate: 150,
     occupancyRate: 80,
     fixedCosts: 800,
-    appreciationRate: 8
+    appreciationRate: simulationData.updateRate || 8
   });
+
+  // Atualizar valorização anual automaticamente baseado na taxa de atualização
+  useEffect(() => {
+    setPropertyData(prev => ({
+      ...prev,
+      appreciationRate: simulationData.updateRate || 8
+    }));
+  }, [simulationData.updateRate]);
+
+  // Converter dados da alavanca para propertyData
+  useEffect(() => {
+    if (leverageData) {
+      const newPropertyData: PropertyData = {
+        type: leverageData.subtype === 'airbnb' ? 'short-stay' : 
+              leverageData.subtype === 'commercial' ? 'commercial' : 'residential',
+        appreciationRate: simulationData.updateRate || 8,
+        fixedCosts: leverageData.total_expenses || 800,
+      };
+
+      if (leverageData.subtype === 'airbnb') {
+        newPropertyData.dailyRate = leverageData.daily_percentage ? leverageData.daily_percentage * 10 : 150;
+        newPropertyData.occupancyRate = leverageData.occupancy_rate || 80;
+      } else {
+        newPropertyData.monthlyRent = leverageData.rental_percentage ? leverageData.rental_percentage * 100 : 2500;
+      }
+
+      setPropertyData(newPropertyData);
+    }
+  }, [leverageData, simulationData.updateRate]);
+
+  const handleLeverageChange = (leverageId: string) => {
+    setSelectedLeverage(leverageId);
+  };
+
+  const handleLeverageData = (leverage: LeverageData | null) => {
+    setLeverageData(leverage);
+  };
 
   return (
     <div className="space-y-6">
@@ -65,78 +130,69 @@ export const PatrimonialLeverageNew = () => {
         </p>
       </div>
 
-      {/* Características do Imóvel */}
-      <PropertyCharacteristics 
-        propertyData={propertyData}
-        onPropertyChange={setPropertyData}
-      />
+      {/* Características do Imóvel e Tipos de Alavanca na mesma linha */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Características do Imóvel */}
+        <Card className="p-4">
+          <div className="space-y-3">
+            <Label className="text-base font-semibold">Características do Imóvel</Label>
+            <LeverageSelector
+              selectedLeverage={selectedLeverage}
+              onLeverageChange={handleLeverageChange}
+              onLeverageData={handleLeverageData}
+            />
+            
+            {leverageData && (
+              <div className="mt-4 p-3 bg-muted rounded-lg">
+                <div className="text-sm font-medium mb-2">{leverageData.name}</div>
+                <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+                  <div>Tipo: {leverageData.type}</div>
+                  {leverageData.subtype && <div>Subtipo: {leverageData.subtype}</div>}
+                  {leverageData.occupancy_rate && <div>Taxa Ocupação: {leverageData.occupancy_rate}%</div>}
+                  {leverageData.total_expenses && <div>Custos: R$ {leverageData.total_expenses}</div>}
+                </div>
+              </div>
+            )}
+          </div>
+        </Card>
 
-      {/* Tipo de Alavancagem */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Tipo de Alavancagem</h3>
-        <LeverageTypes 
-          selectedType={leverageType}
-          onTypeChange={setLeverageType}
-        />
-      </Card>
-
-      {/* Configuração de Parcela */}
-      <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">Tipo de Parcela</h3>
-        <div className="grid grid-cols-3 gap-4">
-          <button
-            onClick={() => setInstallmentType('full')}
-            className={`p-4 rounded-lg border-2 transition-all ${
-              installmentType === 'full' 
-                ? 'border-primary bg-primary/5' 
-                : 'border-gray-200 hover:border-gray-300'
-            }`}
-          >
-            <div className="font-semibold">Parcela Cheia</div>
-            <div className="text-sm text-muted-foreground">100% do crédito</div>
-          </button>
-          
-          <button
-            onClick={() => setInstallmentType('half')}
-            className={`p-4 rounded-lg border-2 transition-all ${
-              installmentType === 'half' 
-                ? 'border-primary bg-primary/5' 
-                : 'border-gray-200 hover:border-gray-300'
-            }`}
-          >
-            <div className="font-semibold">Meia Parcela</div>
-            <div className="text-sm text-muted-foreground">50% do crédito</div>
-          </button>
-          
-          <button
-            onClick={() => setInstallmentType('reduced')}
-            className={`p-4 rounded-lg border-2 transition-all ${
-              installmentType === 'reduced' 
-                ? 'border-primary bg-primary/5' 
-                : 'border-gray-200 hover:border-gray-300'
-            }`}
-          >
-            <div className="font-semibold">Parcela Reduzida</div>
-            <div className="text-sm text-muted-foreground">75% do crédito</div>
-          </button>
-        </div>
-      </Card>
+        {/* Tipo de Alavanca */}
+        <Card className="p-4">
+          <div className="space-y-3">
+            <Label className="text-base font-semibold">Tipo de Alavancagem</Label>
+            <LeverageTypes 
+              selectedType={leverageType}
+              onTypeChange={setLeverageType}
+            />
+          </div>
+        </Card>
+      </div>
 
       {/* Conteúdo baseado no tipo de alavancagem */}
-      {leverageType === 'single' ? (
-        <SingleLeverage 
-          administrator={DEFAULT_ADMINISTRATOR}
-          product={DEFAULT_PRODUCT}
-          propertyData={propertyData}
-          installmentType={installmentType}
-        />
+      {leverageData ? (
+        leverageType === 'single' ? (
+          <SingleLeverage 
+            administrator={DEFAULT_ADMINISTRATOR}
+            product={DEFAULT_PRODUCT}
+            propertyData={propertyData}
+            installmentType={simulationData.installmentType as 'full' | 'half' | 'reduced'}
+            simulationData={simulationData}
+          />
+        ) : (
+          <ScaledLeverage 
+            administrator={DEFAULT_ADMINISTRATOR}
+            product={DEFAULT_PRODUCT}
+            propertyData={propertyData}
+            installmentType={simulationData.installmentType as 'full' | 'half' | 'reduced'}
+            simulationData={simulationData}
+          />
+        )
       ) : (
-        <ScaledLeverage 
-          administrator={DEFAULT_ADMINISTRATOR}
-          product={DEFAULT_PRODUCT}
-          propertyData={propertyData}
-          installmentType={installmentType}
-        />
+        <Card className="p-8">
+          <div className="text-center text-muted-foreground">
+            <p className="text-lg">Selecione uma alavanca para visualizar os cálculos</p>
+          </div>
+        </Card>
       )}
     </div>
   );

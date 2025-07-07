@@ -23,15 +23,42 @@ interface SingleLeverageProps {
   product: Product;
   propertyData: PropertyData;
   installmentType: 'full' | 'half' | 'reduced';
+  simulationData: {
+    administrator: string;
+    consortiumType: 'property' | 'vehicle';
+    installmentType: string;
+    value: number;
+    term: number;
+    updateRate: number;
+    searchType: 'contribution' | 'credit';
+    bidType?: string;
+  };
 }
 
-export const SingleLeverage = ({ administrator, product, propertyData, installmentType }: SingleLeverageProps) => {
+export const SingleLeverage = ({ administrator, product, propertyData, installmentType, simulationData }: SingleLeverageProps) => {
   const [contemplationMonth, setContemplationMonth] = useState(24);
+  
+  // Calcular crédito baseado no valor desejado e tipo de contemplação
+  const calculateCreditBasedOnDesiredValue = () => {
+    const desiredValue = simulationData.value;
+    
+    // Se busca por crédito, precisa encontrar um crédito maior que atenda o valor líquido desejado
+    if (simulationData.searchType === 'credit') {
+      // Considerando que o tipo de contemplação pode reduzir o valor líquido
+      // Por exemplo, se é lance livre com 20%, o valor líquido seria 80% do crédito total
+      const reductionFactor = 0.8; // Exemplo: 20% de redução por lance
+      return Math.ceil(desiredValue / reductionFactor);
+    }
+    
+    return desiredValue;
+  };
+  
+  const creditValue = calculateCreditBasedOnDesiredValue();
   
   const property = {
     id: 'single-property',
     type: propertyData.type,
-    initialValue: product.nominalCreditValue,
+    initialValue: creditValue,
     dailyRate: propertyData.dailyRate,
     monthlyRent: propertyData.monthlyRent,
     fixedMonthlyCosts: propertyData.fixedCosts,
@@ -42,7 +69,7 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
 
   const { summaryIndicators, leverageCalculations } = useAdvancedCalculations({
     administrator,
-    product,
+    product: { ...product, nominalCreditValue: creditValue },
     property,
     contemplationMonth,
     installmentType
@@ -58,7 +85,7 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
   };
 
   // Calcular valores específicos para alavancagem única
-  const propertyValueAtContemplation = product.nominalCreditValue;
+  const propertyValueAtContemplation = creditValue;
   const propertyValueAtEnd = propertyValueAtContemplation * Math.pow(1 + propertyData.appreciationRate / 100, product.termMonths / 12);
   const paidByOwner = summaryIndicators.totalPaidByConsortium;
   const paidByTenant = summaryIndicators.finalCreditValue - paidByOwner;
@@ -83,6 +110,28 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
 
   return (
     <div className="space-y-6">
+      {/* Informações do Crédito Calculado */}
+      {simulationData.searchType === 'credit' && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm font-medium text-blue-800">Crédito Recomendado</Label>
+                <div className="text-lg font-semibold text-blue-900">
+                  {formatCurrency(creditValue)}
+                </div>
+              </div>
+              <div className="text-right">
+                <Label className="text-sm text-blue-600">Valor Líquido Estimado</Label>
+                <div className="text-lg font-semibold text-blue-900">
+                  {formatCurrency(simulationData.value)}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Controle de Contemplação */}
       <Card>
         <CardHeader>

@@ -23,9 +23,19 @@ interface ScaledLeverageProps {
   product: Product;
   propertyData: PropertyData;
   installmentType: 'full' | 'half' | 'reduced';
+  simulationData: {
+    administrator: string;
+    consortiumType: 'property' | 'vehicle';
+    installmentType: string;
+    value: number;
+    term: number;
+    updateRate: number;
+    searchType: 'contribution' | 'credit';
+    bidType?: string;
+  };
 }
 
-export const ScaledLeverage = ({ administrator, product, propertyData, installmentType }: ScaledLeverageProps) => {
+export const ScaledLeverage = ({ administrator, product, propertyData, installmentType, simulationData }: ScaledLeverageProps) => {
   const [contemplationFrequency, setContemplationFrequency] = useState(60); // A cada 5 anos
   
   const formatCurrency = (value: number) => {
@@ -37,18 +47,35 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
     }).format(value);
   };
 
+  // Calcular crédito baseado no valor desejado
+  const calculateCreditBasedOnDesiredValue = () => {
+    const desiredValue = simulationData.value;
+    
+    if (simulationData.searchType === 'credit') {
+      const reductionFactor = 0.8; // Exemplo: 20% de redução por lance
+      return Math.ceil(desiredValue / reductionFactor);
+    }
+    
+    return desiredValue;
+  };
+
+  const baseCreditValue = calculateCreditBasedOnDesiredValue();
+
   // Calcular quantas contemplações ocorrerão
   const totalContemplations = Math.floor(product.termMonths / contemplationFrequency);
   const contemplationMonths = Array.from({ length: totalContemplations }, (_, i) => (i + 1) * contemplationFrequency);
 
-  // Calcular valores agregados para múltiplas propriedades
-  const propertyValueAtContemplation = product.nominalCreditValue * totalContemplations;
-  const propertyValueAtEnd = propertyValueAtContemplation * Math.pow(1 + propertyData.appreciationRate / 100, product.termMonths / 12);
+  // Calcular valores agregados para múltiplas propriedades baseado no valor de simulação
+  const totalCreditValue = baseCreditValue * totalContemplations;
+  const propertyValueAtEnd = totalCreditValue * Math.pow(1 + propertyData.appreciationRate / 100, product.termMonths / 12);
   
-  // Simulação simplificada para múltiplas propriedades
-  const totalPaidByOwner = (product.nominalCreditValue * 0.4) * totalContemplations; // Estimativa de 40% pago pelo proprietário
-  const totalPaidByTenant = propertyValueAtContemplation - totalPaidByOwner;
-  const savedCapital = propertyValueAtContemplation - totalPaidByOwner;
+  // Simulação baseada nos dados de simulação
+  const totalPaidByOwner = simulationData.searchType === 'contribution' 
+    ? simulationData.value * product.termMonths * totalContemplations // Para aporte
+    : baseCreditValue * 0.4 * totalContemplations; // Para crédito, estimativa de 40% pago pelo proprietário
+    
+  const totalPaidByTenant = totalCreditValue - totalPaidByOwner;
+  const savedCapital = totalCreditValue - totalPaidByOwner;
   
   // Fluxo de caixa estimado baseado no número de propriedades
   const monthlyIncomePerProperty = propertyData.type === 'short-stay' 
@@ -65,7 +92,7 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
     // Quantas propriedades já foram contempladas até este mês
     const contemplatedProperties = contemplationMonths.filter(cm => cm <= month).length;
     
-    const currentPatrimony = contemplatedProperties * product.nominalCreditValue * 
+    const currentPatrimony = contemplatedProperties * baseCreditValue * 
       Math.pow(1 + propertyData.appreciationRate / 100, month / 12);
     
     const currentIncome = contemplatedProperties * netIncomePerProperty;
@@ -82,6 +109,28 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
 
   return (
     <div className="space-y-6">
+      {/* Informações do Crédito Calculado */}
+      {simulationData.searchType === 'credit' && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label className="text-sm font-medium text-blue-800">Crédito por Contemplação</Label>
+                <div className="text-lg font-semibold text-blue-900">
+                  {formatCurrency(baseCreditValue)}
+                </div>
+              </div>
+              <div className="text-right">
+                <Label className="text-sm text-blue-600">Total de Créditos</Label>
+                <div className="text-lg font-semibold text-blue-900">
+                  {formatCurrency(totalCreditValue)}
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Controle de Frequência de Contemplação */}
       <Card>
         <CardHeader>
@@ -135,9 +184,9 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">Patrimônio na Contemplação</Label>
+              <Label className="text-sm text-muted-foreground">Patrimônio Total Contemplado</Label>
               <div className="text-xl font-semibold text-primary">
-                {formatCurrency(propertyValueAtContemplation)}
+                {formatCurrency(totalCreditValue)}
               </div>
               <Badge variant="outline" className="text-xs">
                 {totalContemplations} propriedades
@@ -150,7 +199,7 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
                 {formatCurrency(propertyValueAtEnd)}
               </div>
               <Badge variant="outline" className="text-xs">
-                +{((propertyValueAtEnd / propertyValueAtContemplation - 1) * 100).toFixed(1)}%
+                +{((propertyValueAtEnd / totalCreditValue - 1) * 100).toFixed(1)}%
               </Badge>
             </div>
             
@@ -174,7 +223,7 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
                 {formatCurrency(savedCapital)}
               </div>
               <Badge variant="outline" className="text-xs">
-                {((savedCapital / propertyValueAtContemplation) * 100).toFixed(1)}%
+                {((savedCapital / totalCreditValue) * 100).toFixed(1)}%
               </Badge>
             </div>
             

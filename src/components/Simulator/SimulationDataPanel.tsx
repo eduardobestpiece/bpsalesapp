@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { supabase } from '@/integrations/supabase/client';
+import { BidTypeSelector } from './BidTypeSelector';
 import { DollarSign, Target, TrendingUp, Settings } from 'lucide-react';
 
 interface SimulationData {
@@ -18,6 +19,7 @@ interface SimulationData {
   term: number;
   updateRate: number;
   searchType: 'contribution' | 'credit';
+  bidType?: string;
 }
 
 interface SimulationDataPanelProps {
@@ -167,6 +169,15 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
             </div>
 
             <div className="space-y-3">
+              <Label>Tipo de Contemplação *</Label>
+              <BidTypeSelector
+                administratorId={data.administrator}
+                value={data.bidType || ''}
+                onValueChange={(value) => handleChange('bidType', value)}
+              />
+            </div>
+
+            <div className="space-y-3">
               <Label>Tipo de consórcio *</Label>
               <Select value={data.consortiumType} onValueChange={(value: 'property' | 'vehicle') => handleChange('consortiumType', value)}>
                 <SelectTrigger>
@@ -258,6 +269,15 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-3">
+              <Label>Tipo de Contemplação *</Label>
+              <BidTypeSelector
+                administratorId={data.administrator}
+                value={data.bidType || ''}
+                onValueChange={(value) => handleChange('bidType', value)}
+              />
             </div>
 
             <div className="space-y-3">

@@ -15,6 +15,7 @@ interface SimulationData {
   term: number;
   updateRate: number;
   searchType: 'contribution' | 'credit';
+  bidType?: string;
 }
 
 interface SimulationResultsPanelProps {
@@ -36,7 +37,7 @@ export const SimulationResultsPanel = ({ data }: SimulationResultsPanelProps) =>
       </TabsContent>
       
       <TabsContent value="patrimonial" className="h-full">
-        <PatrimonialLeverageNew />
+        <PatrimonialLeverageNew simulationData={data} />
       </TabsContent>
       
       <TabsContent value="capital-gain" className="flex items-center justify-center h-32">
