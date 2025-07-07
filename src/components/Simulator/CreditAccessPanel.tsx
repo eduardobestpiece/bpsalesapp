@@ -5,8 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
-import { Trash2, RefreshCw } from 'lucide-react';
+import { Trash2, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface SimulationData {
   administrator: string;
@@ -26,6 +28,13 @@ interface Credit {
   selected: boolean;
 }
 
+interface MonthlyDetail {
+  month: number;
+  creditValue: number;
+  installmentValue: number;
+  debtBalance: number;
+}
+
 interface CreditAccessPanelProps {
   data: SimulationData;
 }
@@ -34,12 +43,28 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
   const [credits, setCredits] = useState<Credit[]>([]);
   const [availableProducts, setAvailableProducts] = useState<any[]>([]);
   const [selectedCreditForChange, setSelectedCreditForChange] = useState<string | null>(null);
+  const [showDetails, setShowDetails] = useState(false);
+  const [structureType, setStructureType] = useState<'normal' | 'administrator'>('normal');
+  const [viewableInstallments, setViewableInstallments] = useState(12);
+  const [monthlyDetails, setMonthlyDetails] = useState<MonthlyDetail[]>([]);
+  const [visibleColumns, setVisibleColumns] = useState({
+    month: true,
+    creditValue: true,
+    installmentValue: true,
+    debtBalance: true,
+  });
 
   useEffect(() => {
     if (data.administrator && data.value > 0) {
       calculateCredits();
     }
   }, [data]);
+
+  useEffect(() => {
+    if (showDetails && credits.length > 0) {
+      calculateMonthlyDetails();
+    }
+  }, [showDetails, credits, structureType, viewableInstallments]);
 
   const calculateCredits = async () => {
     try {
@@ -148,6 +173,48 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
         selected: true
       }
     ];
+  };
+
+  const calculateMonthlyDetails = () => {
+    const selectedCredits = credits.filter(c => c.selected);
+    if (selectedCredits.length === 0) return;
+
+    const totalCredit = selectedCredits.reduce((sum, c) => sum + c.creditValue, 0);
+    let currentCreditValue = totalCredit;
+    let currentInstallmentValue = totalCredit / data.term;
+    
+    const details: MonthlyDetail[] = [];
+    const currentMonth = new Date().getMonth() + 1; // Current month (1-12)
+    
+    for (let month = 1; month <= viewableInstallments; month++) {
+      // Apply adjustments based on structure type
+      if (structureType === 'administrator') {
+        // Mock administrator update logic - in real implementation, 
+        // this would use administrator's update_month and other settings
+        const isUpdateMonth = (currentMonth + month - 1) % 12 === 8; // August as example
+        if (isUpdateMonth) {
+          currentCreditValue *= (1 + data.updateRate / 100);
+          currentInstallmentValue = currentCreditValue / (data.term - month + 1);
+        }
+      } else {
+        // Normal structure - update every 12 months
+        if (month % 12 === 0 && month > 0) {
+          currentCreditValue *= (1 + data.updateRate / 100);
+          currentInstallmentValue = currentCreditValue / (data.term - month + 1);
+        }
+      }
+      
+      const debtBalance = currentCreditValue - (currentInstallmentValue * month);
+      
+      details.push({
+        month,
+        creditValue: currentCreditValue,
+        installmentValue: currentInstallmentValue,
+        debtBalance: Math.max(0, debtBalance),
+      });
+    }
+    
+    setMonthlyDetails(details);
   };
 
   const formatCurrency = (value: number) => {
@@ -288,6 +355,123 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      {/* Botão Detalhar */}
+      <div className="flex justify-center">
+        <Collapsible open={showDetails} onOpenChange={setShowDetails}>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" size="sm" className="text-muted-foreground">
+              {showDetails ? (
+                <>
+                  <ChevronUp className="h-4 w-4 mr-1" />
+                  Ocultar detalhes
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="h-4 w-4 mr-1" />
+                  Detalhar
+                </>
+              )}
+            </Button>
+          </CollapsibleTrigger>
+          
+          <CollapsibleContent className="space-y-4 mt-4">
+            {/* Controles do detalhamento */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
+              <div className="space-y-2">
+                <Label>Estrutura</Label>
+                <Select value={structureType} onValueChange={(value: 'normal' | 'administrator') => setStructureType(value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="normal">Normal</SelectItem>
+                    <SelectItem value="administrator">Administradora</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Parcelas para visualizar</Label>
+                <Select value={viewableInstallments.toString()} onValueChange={(value) => setViewableInstallments(parseInt(value))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.from({ length: Math.floor(data.term / 12) }, (_, i) => (i + 1) * 12).map(months => (
+                      <SelectItem key={months} value={months.toString()}>
+                        {months} meses
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label>Colunas visíveis</Label>
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="col-month" 
+                      checked={visibleColumns.month}
+                      onCheckedChange={(checked) => setVisibleColumns(prev => ({ ...prev, month: !!checked }))}
+                    />
+                    <Label htmlFor="col-month" className="text-sm">Número do mês</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="col-credit" 
+                      checked={visibleColumns.creditValue}
+                      onCheckedChange={(checked) => setVisibleColumns(prev => ({ ...prev, creditValue: !!checked }))}
+                    />
+                    <Label htmlFor="col-credit" className="text-sm">Valor do crédito</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="col-installment" 
+                      checked={visibleColumns.installmentValue}
+                      onCheckedChange={(checked) => setVisibleColumns(prev => ({ ...prev, installmentValue: !!checked }))}
+                    />
+                    <Label htmlFor="col-installment" className="text-sm">Valor da parcela</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id="col-debt" 
+                      checked={visibleColumns.debtBalance}
+                      onCheckedChange={(checked) => setVisibleColumns(prev => ({ ...prev, debtBalance: !!checked }))}
+                    />
+                    <Label htmlFor="col-debt" className="text-sm">Saldo devedor</Label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Tabela de detalhamento */}
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-200">
+                <thead>
+                  <tr className="bg-gray-50">
+                    {visibleColumns.month && <th className="border border-gray-200 p-3 text-left">Mês</th>}
+                    {visibleColumns.creditValue && <th className="border border-gray-200 p-3 text-left">Valor do Crédito</th>}
+                    {visibleColumns.installmentValue && <th className="border border-gray-200 p-3 text-left">Valor da Parcela</th>}
+                    {visibleColumns.debtBalance && <th className="border border-gray-200 p-3 text-left">Saldo Devedor</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {monthlyDetails.map((detail) => (
+                    <tr key={detail.month} className="hover:bg-gray-50">
+                      {visibleColumns.month && <td className="border border-gray-200 p-3">{detail.month}</td>}
+                      {visibleColumns.creditValue && <td className="border border-gray-200 p-3">{formatCurrency(detail.creditValue)}</td>}
+                      {visibleColumns.installmentValue && <td className="border border-gray-200 p-3">{formatCurrency(detail.installmentValue)}</td>}
+                      {visibleColumns.debtBalance && <td className="border border-gray-200 p-3">{formatCurrency(detail.debtBalance)}</td>}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
     </div>
   );
