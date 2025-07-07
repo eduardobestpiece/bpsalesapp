@@ -7,6 +7,16 @@ import { SingleLeverage } from './SingleLeverage';
 import { ScaledLeverage } from './ScaledLeverage';
 import { Administrator, Product } from '@/types/entities';
 
+// Define the PropertyData interface locally to match PropertyCharacteristics
+interface PropertyData {
+  type: 'short-stay' | 'commercial' | 'residential';
+  dailyRate?: number;
+  monthlyRent?: number;
+  occupancyRate?: number;
+  fixedCosts: number;
+  appreciationRate: number;
+}
+
 // Dados padrão baseados na documentação
 const DEFAULT_ADMINISTRATOR: Administrator = {
   id: 'default-admin',
@@ -37,7 +47,7 @@ const DEFAULT_PRODUCT: Product = {
 export const PatrimonialLeverageNew = () => {
   const [leverageType, setLeverageType] = useState<'single' | 'scaled'>('single');
   const [installmentType, setInstallmentType] = useState<'full' | 'half' | 'reduced'>('full');
-  const [propertyData, setPropertyData] = useState({
+  const [propertyData, setPropertyData] = useState<PropertyData>({
     type: 'short-stay' as const,
     dailyRate: 150,
     occupancyRate: 80,
