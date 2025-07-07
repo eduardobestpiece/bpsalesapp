@@ -14,13 +14,13 @@ import { toast } from 'sonner';
 const formSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   credit_update_type: z.enum(['monthly', 'annual']),
-  update_month: z.number().min(1).max(12).nullable(),
-  grace_period_days: z.number().min(0).nullable(),
-  max_embedded_percentage: z.number().min(0).max(100).nullable(),
-  special_entry_type: z.enum(['none', 'percentage', 'fixed_value']).nullable(),
-  special_entry_percentage: z.number().min(0).max(100).nullable(),
-  special_entry_fixed_value: z.number().min(0).nullable(),
-  special_entry_installments: z.number().min(0).nullable(),
+  update_month: z.number().min(1).max(12).optional(),
+  grace_period_days: z.number().min(0).optional(),
+  max_embedded_percentage: z.number().min(0).max(100).optional(),
+  special_entry_type: z.enum(['none', 'percentage', 'fixed_value']).optional(),
+  special_entry_percentage: z.number().min(0).max(100).optional(),
+  special_entry_fixed_value: z.number().min(0).optional(),
+  special_entry_installments: z.number().min(0).optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -43,13 +43,13 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
     defaultValues: {
       name: '',
       credit_update_type: 'monthly',
-      update_month: null,
-      grace_period_days: null,
-      max_embedded_percentage: null,
+      update_month: undefined,
+      grace_period_days: undefined,
+      max_embedded_percentage: undefined,
       special_entry_type: 'none',
-      special_entry_percentage: null,
-      special_entry_fixed_value: null,
-      special_entry_installments: null,
+      special_entry_percentage: undefined,
+      special_entry_fixed_value: undefined,
+      special_entry_installments: undefined,
     }
   });
 
@@ -59,36 +59,48 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
       form.reset({
         name: administrator.name || '',
         credit_update_type: administrator.credit_update_type || 'monthly',
-        update_month: administrator.update_month || null,
-        grace_period_days: administrator.grace_period_days || null,
-        max_embedded_percentage: administrator.max_embedded_percentage || null,
+        update_month: administrator.update_month || undefined,
+        grace_period_days: administrator.grace_period_days || undefined,
+        max_embedded_percentage: administrator.max_embedded_percentage || undefined,
         special_entry_type: administrator.special_entry_type || 'none',
-        special_entry_percentage: administrator.special_entry_percentage || null,
-        special_entry_fixed_value: administrator.special_entry_fixed_value || null,
-        special_entry_installments: administrator.special_entry_installments || null,
+        special_entry_percentage: administrator.special_entry_percentage || undefined,
+        special_entry_fixed_value: administrator.special_entry_fixed_value || undefined,
+        special_entry_installments: administrator.special_entry_installments || undefined,
       });
     } else if (!administrator && open) {
       form.reset({
         name: '',
         credit_update_type: 'monthly',
-        update_month: null,
-        grace_period_days: null,
-        max_embedded_percentage: null,
+        update_month: undefined,
+        grace_period_days: undefined,
+        max_embedded_percentage: undefined,
         special_entry_type: 'none',
-        special_entry_percentage: null,
-        special_entry_fixed_value: null,
-        special_entry_installments: null,
+        special_entry_percentage: undefined,
+        special_entry_fixed_value: undefined,
+        special_entry_installments: undefined,
       });
     }
   }, [administrator, open, form]);
 
   const onSubmit = async (data: FormData) => {
     try {
+      // Convert undefined values to null for Supabase
+      const cleanedData = {
+        ...data,
+        update_month: data.update_month ?? null,
+        grace_period_days: data.grace_period_days ?? null,
+        max_embedded_percentage: data.max_embedded_percentage ?? null,
+        special_entry_type: data.special_entry_type ?? null,
+        special_entry_percentage: data.special_entry_percentage ?? null,
+        special_entry_fixed_value: data.special_entry_fixed_value ?? null,
+        special_entry_installments: data.special_entry_installments ?? null,
+      };
+
       if (administrator?.id) {
         // Update
         const { error } = await supabase
           .from('administrators')
-          .update(data)
+          .update(cleanedData)
           .eq('id', administrator.id);
         if (error) throw error;
         toast.success('Administradora atualizada com sucesso!');
@@ -96,7 +108,7 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
         // Create
         const { error } = await supabase
           .from('administrators')
-          .insert(data);
+          .insert(cleanedData);
         if (error) throw error;
         toast.success('Administradora criada com sucesso!');
       }
@@ -170,7 +182,7 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
                         max="12" 
                         placeholder="1-12"
                         {...field}
-                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
+                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                         value={field.value || ''}
                       />
                     </FormControl>
@@ -193,7 +205,7 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
                         min="0" 
                         placeholder="Dias de carência"
                         {...field}
-                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
+                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                         value={field.value || ''}
                       />
                     </FormControl>
@@ -216,7 +228,7 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
                         step="0.01"
                         placeholder="0.00"
                         {...field}
-                        onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
+                        onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                         value={field.value || ''}
                       />
                     </FormControl>
@@ -265,7 +277,7 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
                           step="0.01"
                           placeholder="0.00"
                           {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
+                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                           value={field.value || ''}
                         />
                       </FormControl>
@@ -286,7 +298,7 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
                           min="0"
                           placeholder="Número de parcelas"
                           {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
+                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                           value={field.value || ''}
                         />
                       </FormControl>
@@ -312,7 +324,7 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
                           step="0.01"
                           placeholder="0.00"
                           {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
+                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                           value={field.value || ''}
                         />
                       </FormControl>
@@ -333,7 +345,7 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
                           min="0"
                           placeholder="Número de parcelas"
                           {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
+                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                           value={field.value || ''}
                         />
                       </FormControl>

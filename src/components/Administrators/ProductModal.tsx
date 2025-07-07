@@ -16,7 +16,7 @@ import { toast } from 'sonner';
 const formSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
   type: z.enum(['property', 'car']),
-  administrator_id: z.string().nullable(),
+  administrator_id: z.string().optional(),
   credit_value: z.number().min(1, 'Valor do crédito é obrigatório'),
   term_options: z.array(z.number()).min(1, 'Pelo menos uma opção de prazo é obrigatória'),
 });
@@ -45,7 +45,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     defaultValues: {
       name: product?.name || '',
       type: product?.type || 'property',
-      administrator_id: product?.administrator_id || null,
+      administrator_id: product?.administrator_id || undefined,
       credit_value: product?.credit_value || 0,
       term_options: product?.term_options || [],
     }
@@ -84,11 +84,17 @@ export const ProductModal: React.FC<ProductModalProps> = ({
 
   const onSubmit = async (data: FormData) => {
     try {
+      // Convert undefined values to null for Supabase
+      const cleanedData = {
+        ...data,
+        administrator_id: data.administrator_id || null,
+      };
+
       if (product?.id) {
         // Update
         const { error } = await supabase
           .from('products')
-          .update(data)
+          .update(cleanedData)
           .eq('id', product.id);
         if (error) throw error;
         toast.success('Produto atualizado com sucesso!');
@@ -96,7 +102,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         // Create
         const { error } = await supabase
           .from('products')
-          .insert(data);
+          .insert(cleanedData);
         if (error) throw error;
         toast.success('Produto criado com sucesso!');
       }

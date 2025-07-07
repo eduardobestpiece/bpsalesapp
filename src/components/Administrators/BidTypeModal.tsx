@@ -14,11 +14,11 @@ import { toast } from 'sonner';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
-  administrator_id: z.string().nullable(),
-  percentage: z.number().min(0).max(100).nullable(),
+  administrator_id: z.string().optional(),
+  percentage: z.number().min(0).max(100).optional(),
   allows_embedded: z.boolean().default(false),
   is_loyalty: z.boolean().default(false),
-  loyalty_months: z.number().min(0).nullable(),
+  loyalty_months: z.number().min(0).optional(),
   is_default: z.boolean().default(false),
 });
 
@@ -43,11 +43,11 @@ export const BidTypeModal: React.FC<BidTypeModalProps> = ({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: bidType?.name || '',
-      administrator_id: bidType?.administrator_id || null,
-      percentage: bidType?.percentage || null,
+      administrator_id: bidType?.administrator_id || undefined,
+      percentage: bidType?.percentage || undefined,
       allows_embedded: bidType?.allows_embedded || false,
       is_loyalty: bidType?.is_loyalty || false,
-      loyalty_months: bidType?.loyalty_months || null,
+      loyalty_months: bidType?.loyalty_months || undefined,
       is_default: bidType?.is_default || false,
     }
   });
@@ -69,11 +69,19 @@ export const BidTypeModal: React.FC<BidTypeModalProps> = ({
 
   const onSubmit = async (data: FormData) => {
     try {
+      // Convert undefined values to null for Supabase
+      const cleanedData = {
+        ...data,
+        administrator_id: data.administrator_id || null,
+        percentage: data.percentage ?? null,
+        loyalty_months: data.loyalty_months ?? null,
+      };
+
       if (bidType?.id) {
         // Update
         const { error } = await supabase
           .from('bid_types')
-          .update(data)
+          .update(cleanedData)
           .eq('id', bidType.id);
         if (error) throw error;
         toast.success('Tipo de lance atualizado com sucesso!');
@@ -81,7 +89,7 @@ export const BidTypeModal: React.FC<BidTypeModalProps> = ({
         // Create
         const { error } = await supabase
           .from('bid_types')
-          .insert(data);
+          .insert(cleanedData);
         if (error) throw error;
         toast.success('Tipo de lance criado com sucesso!');
       }
@@ -163,7 +171,7 @@ export const BidTypeModal: React.FC<BidTypeModalProps> = ({
                       step="0.01"
                       placeholder="0.00"
                       {...field}
-                      onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
+                      onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                       value={field.value || ''}
                     />
                   </FormControl>
@@ -241,7 +249,7 @@ export const BidTypeModal: React.FC<BidTypeModalProps> = ({
                         min="0"
                         placeholder="Número de meses"
                         {...field}
-                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
+                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                         value={field.value || ''}
                       />
                     </FormControl>
