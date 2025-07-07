@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CreditAccessPanel } from './CreditAccessPanel';
+import { PatrimonialLeverageNew } from './PatrimonialLeverageNew';
 
 interface SimulationData {
   administrator: string;
@@ -25,7 +26,7 @@ export const SimulationResultsPanel = ({ data }: SimulationResultsPanelProps) =>
     <Tabs defaultValue="credit-access" className="w-full h-full">
       <TabsList className="grid w-full grid-cols-4 mb-6">
         <TabsTrigger value="credit-access">Crédito acessado</TabsTrigger>
-        <TabsTrigger value="patrimonial" disabled>Alavancagem Patrimonial</TabsTrigger>
+        <TabsTrigger value="patrimonial">Alavancagem Patrimonial</TabsTrigger>
         <TabsTrigger value="capital-gain" disabled>Ganho de capital</TabsTrigger>
         <TabsTrigger value="redeemable" disabled>Capital resgatável</TabsTrigger>
       </TabsList>
@@ -34,10 +35,8 @@ export const SimulationResultsPanel = ({ data }: SimulationResultsPanelProps) =>
         <CreditAccessPanel data={data} />
       </TabsContent>
       
-      <TabsContent value="patrimonial" className="flex items-center justify-center h-32">
-        <div className="text-center text-muted-foreground">
-          <p className="text-lg">Em breve</p>
-        </div>
+      <TabsContent value="patrimonial" className="h-full">
+        <PatrimonialLeverageNew />
       </TabsContent>
       
       <TabsContent value="capital-gain" className="flex items-center justify-center h-32">
