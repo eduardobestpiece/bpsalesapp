@@ -1,6 +1,5 @@
 
-import { useState } from 'react';
-import { User, Settings, Building2, Package, Target } from 'lucide-react';
+import { User, Settings, Building2, Package, Target, LogOut } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,45 +15,59 @@ export const UserMenu = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+        <Button variant="ghost" className="relative h-12 w-12 rounded-full ring-2 ring-primary-100 hover:ring-primary-200 transition-all duration-200">
           <Avatar className="h-10 w-10">
             <AvatarImage src="/placeholder-avatar.jpg" alt="User" />
-            <AvatarFallback>
-              <User className="h-5 w-5" />
+            <AvatarFallback className="bg-gradient-primary text-white font-semibold">
+              JS
             </AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="w-56" align="end" forceMount>
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">João Silva</p>
-            <p className="text-xs leading-none text-muted-foreground">
-              joao@exemplo.com
-            </p>
+      <DropdownMenuContent className="w-64 p-2" align="end" forceMount>
+        <DropdownMenuLabel className="font-normal p-4">
+          <div className="flex flex-col space-y-2">
+            <div className="flex items-center space-x-3">
+              <Avatar className="h-10 w-10">
+                <AvatarFallback className="bg-gradient-primary text-white font-semibold">
+                  JS
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-base font-semibold leading-none">João Silva</p>
+                <p className="text-sm leading-none text-muted-foreground mt-1">
+                  joao@exemplo.com
+                </p>
+              </div>
+            </div>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <User className="mr-2 h-4 w-4" />
-          <span>Informações do Usuário</span>
+        <DropdownMenuItem className="p-3 cursor-pointer hover:bg-primary-50 rounded-lg">
+          <User className="mr-3 h-5 w-5 text-primary-600" />
+          <span className="font-medium">Meu Perfil</span>
         </DropdownMenuItem>
-        <DropdownMenuItem>
-          <Building2 className="mr-2 h-4 w-4" />
-          <span>Administradoras</span>
+        <DropdownMenuItem className="p-3 cursor-pointer hover:bg-primary-50 rounded-lg">
+          <Building2 className="mr-3 h-5 w-5 text-primary-600" />
+          <span className="font-medium">Administradoras</span>
         </DropdownMenuItem>
-        <DropdownMenuItem>
-          <Package className="mr-2 h-4 w-4" />
-          <span>Produtos</span>
+        <DropdownMenuItem className="p-3 cursor-pointer hover:bg-primary-50 rounded-lg">
+          <Package className="mr-3 h-5 w-5 text-primary-600" />
+          <span className="font-medium">Produtos</span>
         </DropdownMenuItem>
-        <DropdownMenuItem>
-          <Target className="mr-2 h-4 w-4" />
-          <span>Modalidades de Lances</span>
+        <DropdownMenuItem className="p-3 cursor-pointer hover:bg-primary-50 rounded-lg">
+          <Target className="mr-3 h-5 w-5 text-primary-600" />
+          <span className="font-medium">Modalidades de Lances</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <Settings className="mr-2 h-4 w-4" />
-          <span>Configurações</span>
+        <DropdownMenuItem className="p-3 cursor-pointer hover:bg-primary-50 rounded-lg">
+          <Settings className="mr-3 h-5 w-5 text-primary-600" />
+          <span className="font-medium">Configurações</span>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem className="p-3 cursor-pointer hover:bg-destructive-50 text-destructive rounded-lg">
+          <LogOut className="mr-3 h-5 w-5" />
+          <span className="font-medium">Sair</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

@@ -9,6 +9,7 @@ import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { SimulatorData } from '@/types/simulator';
 import { ProposalGenerator } from './ProposalGenerator';
+import { Calculator, TrendingUp, Target, Clock, Info } from 'lucide-react';
 
 interface SimulatorFormProps {
   data: SimulatorData;
@@ -84,83 +85,150 @@ export const SimulatorForm = ({ data, onChange, onCalculate, onOpenDetails }: Si
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold mb-4">Simulador de Alavancagem</h2>
-        
-        {/* Simulation Type Selection */}
-        <div className="grid grid-cols-1 gap-3 mb-6">
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="text-center space-y-4">
+        <div className="bg-gradient-primary p-3 rounded-2xl w-fit mx-auto">
+          <Calculator className="h-8 w-8 text-white" />
+        </div>
+        <div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">Configure Sua Simulação</h2>
+          <p className="text-gray-600">Escolha o tipo de simulação que melhor se adequa aos seus objetivos</p>
+        </div>
+      </div>
+      
+      {/* Simulation Type Selection */}
+      <div className="space-y-4">
+        <Label className="text-lg font-semibold text-gray-900">Tipo de Simulação</Label>
+        <div className="grid grid-cols-1 gap-4">
           <Button
             variant={data.simulationType === 'installment' ? 'default' : 'outline'}
             onClick={() => handleTypeChange('installment')}
-            className={data.simulationType === 'installment' ? 'bg-amber-600 hover:bg-amber-700' : ''}
+            className={`h-auto p-6 justify-start text-left transition-all duration-200 ${
+              data.simulationType === 'installment' 
+                ? 'bg-gradient-primary hover:opacity-90 shadow-lg border-0' 
+                : 'hover:bg-primary-50 hover:border-primary-200'
+            }`}
           >
-            Simular por Parcela
-            <Badge variant="secondary" className="ml-2">Mais comum</Badge>
+            <div className="flex items-center space-x-4 w-full">
+              <TrendingUp className="h-6 w-6 shrink-0" />
+              <div className="flex-1">
+                <div className="flex items-center space-x-2">
+                  <span className="font-semibold">Simular por Parcela</span>
+                  <Badge variant="secondary" className="bg-warning/20 text-warning-foreground">
+                    Mais comum
+                  </Badge>
+                </div>
+                <p className="text-sm opacity-80 mt-1">Ideal para quem quer controlar o valor mensal</p>
+              </div>
+            </div>
           </Button>
+          
           <Button
             variant={data.simulationType === 'credit' ? 'default' : 'outline'}
             onClick={() => handleTypeChange('credit')}
-            className={data.simulationType === 'credit' ? 'bg-amber-600 hover:bg-amber-700' : ''}
+            className={`h-auto p-6 justify-start text-left transition-all duration-200 ${
+              data.simulationType === 'credit' 
+                ? 'bg-gradient-primary hover:opacity-90 shadow-lg border-0' 
+                : 'hover:bg-primary-50 hover:border-primary-200'
+            }`}
           >
-            Simular por Crédito
+            <div className="flex items-center space-x-4 w-full">
+              <Target className="h-6 w-6 shrink-0" />
+              <div className="flex-1">
+                <span className="font-semibold">Simular por Crédito</span>
+                <p className="text-sm opacity-80 mt-1">Para quem tem uma meta de crédito específica</p>
+              </div>
+            </div>
           </Button>
+          
           <Button
             variant={data.simulationType === 'income' ? 'default' : 'outline'}
             onClick={() => handleTypeChange('income')}
-            className={data.simulationType === 'income' ? 'bg-amber-600 hover:bg-amber-700' : ''}
+            className={`h-auto p-6 justify-start text-left transition-all duration-200 ${
+              data.simulationType === 'income' 
+                ? 'bg-gradient-primary hover:opacity-90 shadow-lg border-0' 
+                : 'hover:bg-primary-50 hover:border-primary-200'
+            }`}
           >
-            Simular por Renda Objetivo
+            <div className="flex items-center space-x-4 w-full">
+              <Clock className="h-6 w-6 shrink-0" />
+              <div className="flex-1">
+                <span className="font-semibold">Simular por Renda Objetivo</span>
+                <p className="text-sm opacity-80 mt-1">Defina a renda passiva que deseja alcançar</p>
+              </div>
+            </div>
           </Button>
         </div>
+      </div>
 
-        {/* Value Input */}
-        <div className="space-y-2 mb-4">
-          <Label htmlFor="value">{getFieldLabel()}</Label>
+      {/* Value Input */}
+      <div className="space-y-3">
+        <Label htmlFor="value" className="text-lg font-semibold text-gray-900">
+          {getFieldLabel()}
+        </Label>
+        <div className="relative">
           <Input
             id="value"
             type="number"
             value={data.value || ''}
             onChange={(e) => onChange({ ...data, value: Number(e.target.value) })}
             placeholder={getFieldPlaceholder()}
-            className={`text-lg ${errors.value ? 'border-red-500' : ''}`}
+            className={`text-xl h-14 text-center font-semibold transition-all duration-200 ${
+              errors.value 
+                ? 'border-destructive focus:border-destructive' 
+                : 'focus:border-primary-400 focus:ring-primary-100'
+            }`}
           />
-          {errors.value && (
-            <p className="text-sm text-red-500">{errors.value}</p>
-          )}
-          {data.value > 0 && (
-            <p className="text-sm text-muted-foreground">
-              Valor formatado: {formatCurrency(data.value)}
+        </div>
+        {errors.value && (
+          <p className="text-sm text-destructive flex items-center space-x-1">
+            <Info className="h-4 w-4" />
+            <span>{errors.value}</span>
+          </p>
+        )}
+        {data.value > 0 && (
+          <div className="bg-primary-50 p-4 rounded-xl">
+            <p className="text-primary-700 font-medium text-center">
+              {formatCurrency(data.value)}
             </p>
-          )}
-        </div>
+          </div>
+        )}
+      </div>
 
-        {/* Installment Type */}
-        <div className="space-y-2 mb-4">
-          <Label>Tipo de Parcela</Label>
-          <Select 
-            value={data.installmentType} 
-            onValueChange={(value: 'reduced' | 'full') => onChange({ ...data, installmentType: value })}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="full">
-                Parcela Cheia
-                <span className="text-muted-foreground ml-2">(Contemplado)</span>
-              </SelectItem>
-              <SelectItem value="reduced">
-                Parcela Reduzida
-                <span className="text-muted-foreground ml-2">(Não contemplado)</span>
-              </SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      {/* Installment Type */}
+      <div className="space-y-3">
+        <Label className="text-lg font-semibold text-gray-900">Tipo de Parcela</Label>
+        <Select 
+          value={data.installmentType} 
+          onValueChange={(value: 'reduced' | 'full') => onChange({ ...data, installmentType: value })}
+        >
+          <SelectTrigger className="h-12 text-base">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="full" className="p-4">
+              <div className="flex flex-col">
+                <span className="font-medium">Parcela Cheia</span>
+                <span className="text-sm text-muted-foreground">Para quem já foi contemplado</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="reduced" className="p-4">
+              <div className="flex flex-col">
+                <span className="font-medium">Parcela Reduzida</span>
+                <span className="text-sm text-muted-foreground">Para quem ainda não foi contemplado</span>
+              </div>
+            </SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
 
-        {/* Simulation Time */}
-        <div className="space-y-4 mb-4">
-          <Label>Tempo de Simulação: {data.simulationTime} meses ({Math.round(data.simulationTime / 12)} anos)</Label>
+      {/* Simulation Time */}
+      <div className="space-y-4">
+        <Label className="text-lg font-semibold text-gray-900">
+          Tempo de Simulação: {data.simulationTime} meses ({Math.round(data.simulationTime / 12)} anos)
+        </Label>
+        <div className="bg-gray-50 p-6 rounded-xl space-y-4">
           <Slider
             value={[data.simulationTime]}
             onValueChange={(value) => onChange({ ...data, simulationTime: value[0] })}
@@ -171,68 +239,83 @@ export const SimulatorForm = ({ data, onChange, onCalculate, onOpenDetails }: Si
           />
           <div className="flex justify-between text-sm text-muted-foreground">
             <span>10 anos</span>
+            <span className="font-medium text-primary-600">{Math.round(data.simulationTime / 12)} anos</span>
             <span>40 anos</span>
           </div>
         </div>
+      </div>
 
-        {/* Contemplation Period */}
-        <div className="space-y-2 mb-6">
-          <Label htmlFor="contemplation">Período de Contemplação (meses)</Label>
-          <Input
-            id="contemplation"
-            type="number"
-            value={data.contemplationPeriod}
-            onChange={(e) => onChange({ ...data, contemplationPeriod: Number(e.target.value) })}
-            placeholder="Ex: 24"
-            className={errors.contemplation ? 'border-red-500' : ''}
-          />
-          {errors.contemplation && (
-            <p className="text-sm text-red-500">{errors.contemplation}</p>
-          )}
-          <p className="text-sm text-muted-foreground">
-            Frequência esperada de contemplação (6-60 meses)
+      {/* Contemplation Period */}
+      <div className="space-y-3">
+        <Label htmlFor="contemplation" className="text-lg font-semibold text-gray-900">
+          Período de Contemplação (meses)
+        </Label>
+        <Input
+          id="contemplation"
+          type="number"
+          value={data.contemplationPeriod}
+          onChange={(e) => onChange({ ...data, contemplationPeriod: Number(e.target.value) })}
+          placeholder="Ex: 24"
+          className={`h-12 text-base ${errors.contemplation ? 'border-destructive' : ''}`}
+        />
+        {errors.contemplation && (
+          <p className="text-sm text-destructive flex items-center space-x-1">
+            <Info className="h-4 w-4" />
+            <span>{errors.contemplation}</span>
           </p>
-        </div>
+        )}
+        <p className="text-sm text-muted-foreground">
+          Tempo esperado para contemplação (recomendado: 6-60 meses)
+        </p>
+      </div>
 
-        {/* Quick Calculation Preview */}
-        {data.value > 0 && (
-          <div className="p-4 bg-gray-50 rounded-lg mb-6">
-            <h4 className="font-medium mb-2">Prévia Rápida:</h4>
-            <div className="text-sm space-y-1">
-              <div className="flex justify-between">
-                <span>Imóveis em {data.simulationTime} meses:</span>
-                <span className="font-medium">{Math.floor(data.simulationTime / data.contemplationPeriod)}</span>
+      {/* Quick Preview */}
+      {data.value > 0 && (
+        <div className="bg-gradient-to-r from-success-50 to-primary-50 p-6 rounded-2xl border border-success-200/50">
+          <h4 className="font-semibold text-gray-900 mb-4 flex items-center space-x-2">
+            <TrendingUp className="h-5 w-5 text-success" />
+            <span>Prévia da Simulação</span>
+          </h4>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="text-center">
+              <div className="text-2xl font-bold text-success">
+                {Math.floor(data.simulationTime / data.contemplationPeriod)}
               </div>
-              <div className="flex justify-between">
-                <span>Patrimônio estimado:</span>
-                <span className="font-medium">R$ {(Math.floor(data.simulationTime / data.contemplationPeriod) * 50000).toLocaleString('pt-BR')}</span>
+              <div className="text-sm text-gray-600">Imóveis Estimados</div>
+            </div>
+            <div className="text-center">
+              <div className="text-2xl font-bold text-primary-600">
+                {formatCurrency(Math.floor(data.simulationTime / data.contemplationPeriod) * 200000)}
               </div>
+              <div className="text-sm text-gray-600">Patrimônio Estimado</div>
             </div>
           </div>
-        )}
-
-        {/* Action Buttons */}
-        <div className="space-y-3">
-          <Button 
-            onClick={handleCalculate}
-            className="w-full bg-amber-600 hover:bg-amber-700 text-white"
-            size="lg"
-            disabled={!data.value}
-          >
-            Calcular Simulação Completa
-          </Button>
-          
-          <ProposalGenerator data={data} />
         </div>
+      )}
 
-        {/* Details Link */}
-        <button
-          onClick={onOpenDetails}
-          className="text-sm text-muted-foreground hover:text-foreground underline mt-4 block w-full text-center"
+      {/* Action Buttons */}
+      <div className="space-y-4">
+        <Button 
+          onClick={handleCalculate}
+          className="w-full bg-gradient-primary hover:opacity-90 text-white h-14 text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
+          size="lg"
+          disabled={!data.value}
         >
-          Configurações Avançadas e Detalhes
-        </button>
+          <Calculator className="h-5 w-5 mr-2" />
+          Calcular Simulação Completa
+        </Button>
+        
+        <ProposalGenerator data={data} />
       </div>
+
+      {/* Details Link */}
+      <button
+        onClick={onOpenDetails}
+        className="w-full text-sm text-primary-600 hover:text-primary-700 underline underline-offset-4 hover:underline-offset-2 transition-all duration-200 py-2"
+      >
+        <Info className="h-4 w-4 inline mr-1" />
+        Configurações Avançadas e Detalhes
+      </button>
     </div>
   );
 };
