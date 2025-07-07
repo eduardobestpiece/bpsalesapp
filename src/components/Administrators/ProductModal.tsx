@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -95,7 +96,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         // Create
         const { error } = await supabase
           .from('products')
-          .insert([data]);
+          .insert(data);
         if (error) throw error;
         toast.success('Produto criado com sucesso!');
       }
@@ -147,7 +148,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Tipo *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o tipo" />
@@ -169,7 +170,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Administradora</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value || ''}>
+                    <Select onValueChange={field.onChange} value={field.value || ''}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione a administradora" />

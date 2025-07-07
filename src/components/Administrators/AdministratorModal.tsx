@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -40,17 +41,46 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: administrator?.name || '',
-      credit_update_type: administrator?.credit_update_type || 'monthly',
-      update_month: administrator?.update_month || null,
-      grace_period_days: administrator?.grace_period_days || null,
-      max_embedded_percentage: administrator?.max_embedded_percentage || null,
-      special_entry_type: administrator?.special_entry_type || 'none',
-      special_entry_percentage: administrator?.special_entry_percentage || null,
-      special_entry_fixed_value: administrator?.special_entry_fixed_value || null,
-      special_entry_installments: administrator?.special_entry_installments || null,
+      name: '',
+      credit_update_type: 'monthly',
+      update_month: null,
+      grace_period_days: null,
+      max_embedded_percentage: null,
+      special_entry_type: 'none',
+      special_entry_percentage: null,
+      special_entry_fixed_value: null,
+      special_entry_installments: null,
     }
   });
+
+  // Populate form when editing
+  useEffect(() => {
+    if (administrator && open) {
+      form.reset({
+        name: administrator.name || '',
+        credit_update_type: administrator.credit_update_type || 'monthly',
+        update_month: administrator.update_month || null,
+        grace_period_days: administrator.grace_period_days || null,
+        max_embedded_percentage: administrator.max_embedded_percentage || null,
+        special_entry_type: administrator.special_entry_type || 'none',
+        special_entry_percentage: administrator.special_entry_percentage || null,
+        special_entry_fixed_value: administrator.special_entry_fixed_value || null,
+        special_entry_installments: administrator.special_entry_installments || null,
+      });
+    } else if (!administrator && open) {
+      form.reset({
+        name: '',
+        credit_update_type: 'monthly',
+        update_month: null,
+        grace_period_days: null,
+        max_embedded_percentage: null,
+        special_entry_type: 'none',
+        special_entry_percentage: null,
+        special_entry_fixed_value: null,
+        special_entry_installments: null,
+      });
+    }
+  }, [administrator, open, form]);
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -66,7 +96,7 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
         // Create
         const { error } = await supabase
           .from('administrators')
-          .insert([data]);
+          .insert(data);
         if (error) throw error;
         toast.success('Administradora criada com sucesso!');
       }
@@ -111,7 +141,7 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Tipo de Atualização *</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o tipo" />
@@ -202,7 +232,7 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Tipo de Entrada Especial</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value || 'none'}>
+                  <Select onValueChange={field.onChange} value={field.value || 'none'}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione o tipo" />
@@ -220,28 +250,51 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
             />
 
             {form.watch('special_entry_type') === 'percentage' && (
-              <FormField
-                control={form.control}
-                name="special_entry_percentage"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Percentual da Entrada Especial</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        min="0" 
-                        max="100" 
-                        step="0.01"
-                        placeholder="0.00"
-                        {...field}
-                        onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
-                        value={field.value || ''}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="special_entry_percentage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Percentual da Entrada Especial</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="0" 
+                          max="100" 
+                          step="0.01"
+                          placeholder="0.00"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="special_entry_installments"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Parcelas da Entrada</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="0"
+                          placeholder="Número de parcelas"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             )}
 
             {form.watch('special_entry_type') === 'fixed_value' && (

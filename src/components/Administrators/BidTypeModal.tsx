@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -80,7 +81,7 @@ export const BidTypeModal: React.FC<BidTypeModalProps> = ({
         // Create
         const { error } = await supabase
           .from('bid_types')
-          .insert([data]);
+          .insert(data);
         if (error) throw error;
         toast.success('Tipo de lance criado com sucesso!');
       }
@@ -129,7 +130,7 @@ export const BidTypeModal: React.FC<BidTypeModalProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Administradora</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value || ''}>
+                  <Select onValueChange={field.onChange} value={field.value || ''}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecione a administradora" />
@@ -153,7 +154,7 @@ export const BidTypeModal: React.FC<BidTypeModalProps> = ({
               name="percentage"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Percentual</FormLabel>
+                  <FormLabel>Percentual (%)</FormLabel>
                   <FormControl>
                     <Input 
                       type="number" 
@@ -171,7 +172,7 @@ export const BidTypeModal: React.FC<BidTypeModalProps> = ({
               )}
             />
 
-            <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="allows_embedded"
@@ -184,56 +185,11 @@ export const BidTypeModal: React.FC<BidTypeModalProps> = ({
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel>
-                        Permite Lance Embutido
-                      </FormLabel>
+                      <FormLabel>Permite Lance Embutido</FormLabel>
                     </div>
                   </FormItem>
                 )}
               />
-
-              <FormField
-                control={form.control}
-                name="is_loyalty"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>
-                        Lance de Fidelidade
-                      </FormLabel>
-                    </div>
-                  </FormItem>
-                )}
-              />
-
-              {form.watch('is_loyalty') && (
-                <FormField
-                  control={form.control}
-                  name="loyalty_months"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Meses de Contribuição para Fidelidade</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          min="0"
-                          placeholder="Número de meses"
-                          {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
-                          value={field.value || ''}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              )}
 
               <FormField
                 control={form.control}
@@ -247,14 +203,53 @@ export const BidTypeModal: React.FC<BidTypeModalProps> = ({
                       />
                     </FormControl>
                     <div className="space-y-1 leading-none">
-                      <FormLabel>
-                        Lance Padrão
-                      </FormLabel>
+                      <FormLabel>Tipo Padrão</FormLabel>
                     </div>
                   </FormItem>
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="is_loyalty"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Lance de Fidelidade</FormLabel>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            {form.watch('is_loyalty') && (
+              <FormField
+                control={form.control}
+                name="loyalty_months"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Meses de Fidelidade</FormLabel>
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min="0"
+                        placeholder="Número de meses"
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
+                        value={field.value || ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div className="flex justify-end space-x-2 pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
