@@ -215,6 +215,60 @@ export type Database = {
           },
         ]
       }
+      leverages: {
+        Row: {
+          created_at: string | null
+          daily_percentage: number | null
+          fixed_property_value: number | null
+          has_fixed_property_value: boolean | null
+          id: string
+          is_archived: boolean | null
+          management_percentage: number | null
+          name: string
+          occupancy_rate: number | null
+          real_estate_percentage: number | null
+          rental_percentage: number | null
+          subtype: string | null
+          total_expenses: number | null
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          daily_percentage?: number | null
+          fixed_property_value?: number | null
+          has_fixed_property_value?: boolean | null
+          id?: string
+          is_archived?: boolean | null
+          management_percentage?: number | null
+          name: string
+          occupancy_rate?: number | null
+          real_estate_percentage?: number | null
+          rental_percentage?: number | null
+          subtype?: string | null
+          total_expenses?: number | null
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          daily_percentage?: number | null
+          fixed_property_value?: number | null
+          has_fixed_property_value?: boolean | null
+          id?: string
+          is_archived?: boolean | null
+          management_percentage?: number | null
+          name?: string
+          occupancy_rate?: number | null
+          real_estate_percentage?: number | null
+          rental_percentage?: number | null
+          subtype?: string | null
+          total_expenses?: number | null
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           administrator_id: string | null

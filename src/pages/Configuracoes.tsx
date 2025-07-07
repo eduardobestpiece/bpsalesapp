@@ -11,14 +11,16 @@ import { BidTypeModal } from '@/components/Administrators/BidTypeModal';
 import { ProductModal } from '@/components/Administrators/ProductModal';
 import { InstallmentTypeModal } from '@/components/Administrators/InstallmentTypeModal';
 import { EntryTypeModal } from '@/components/Administrators/EntryTypeModal';
+import { LeverageModal } from '@/components/Administrators/LeverageModal';
 import { AdministratorsList } from '@/components/Administrators/AdministratorsList';
 import { BidTypesList } from '@/components/Administrators/BidTypesList';
 import { ProductsList } from '@/components/Administrators/ProductsList';
 import { InstallmentTypesList } from '@/components/Administrators/InstallmentTypesList';
 import { EntryTypesList } from '@/components/Administrators/EntryTypesList';
+import { LeveragesList } from '@/components/Administrators/LeveragesList';
 
 export const Configuracoes = () => {
-  const [activeTab, setActiveTab] = useState<'administrators' | 'bid-types' | 'products' | 'installment-types' | 'entry-types'>('administrators');
+  const [activeTab, setActiveTab] = useState<'administrators' | 'bid-types' | 'products' | 'installment-types' | 'entry-types' | 'leverages'>('administrators');
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
   const [selectedAdministrator, setSelectedAdministrator] = useState<string>('all');
@@ -29,6 +31,7 @@ export const Configuracoes = () => {
   const [productModalOpen, setProductModalOpen] = useState(false);
   const [installmentTypeModalOpen, setInstallmentTypeModalOpen] = useState(false);
   const [entryTypeModalOpen, setEntryTypeModalOpen] = useState(false);
+  const [leverageModalOpen, setLeverageModalOpen] = useState(false);
   
   // Edit states
   const [editingAdmin, setEditingAdmin] = useState(null);
@@ -36,6 +39,7 @@ export const Configuracoes = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [editingInstallmentType, setEditingInstallmentType] = useState(null);
   const [editingEntryType, setEditingEntryType] = useState(null);
+  const [editingLeverage, setEditingLeverage] = useState(null);
 
   const handleOpenAdminModal = (admin = null) => {
     setEditingAdmin(admin);
@@ -60,6 +64,11 @@ export const Configuracoes = () => {
   const handleOpenEntryTypeModal = (entryType = null) => {
     setEditingEntryType(entryType);
     setEntryTypeModalOpen(true);
+  };
+
+  const handleOpenLeverageModal = (leverage = null) => {
+    setEditingLeverage(leverage);
+    setLeverageModalOpen(true);
   };
 
   const renderTabContent = () => {
@@ -108,6 +117,14 @@ export const Configuracoes = () => {
             onEdit={handleOpenEntryTypeModal}
           />
         );
+      case 'leverages':
+        return (
+          <LeveragesList
+            searchTerm={searchTerm}
+            statusFilter={statusFilter}
+            onEdit={handleOpenLeverageModal}
+          />
+        );
       default:
         return null;
     }
@@ -120,6 +137,7 @@ export const Configuracoes = () => {
       case 'products': return 'Produto';
       case 'installment-types': return 'Tipo de Parcela';
       case 'entry-types': return 'Tipo de Entrada';
+      case 'leverages': return 'Alavanca';
       default: return '';
     }
   };
@@ -137,6 +155,7 @@ export const Configuracoes = () => {
               else if (activeTab === 'products') handleOpenProductModal();
               else if (activeTab === 'installment-types') handleOpenInstallmentTypeModal();
               else if (activeTab === 'entry-types') handleOpenEntryTypeModal();
+              else if (activeTab === 'leverages') handleOpenLeverageModal();
             }}
             className="bg-gradient-primary hover:opacity-90 text-white shadow-lg hover:shadow-xl transition-all duration-200"
           >
@@ -154,7 +173,8 @@ export const Configuracoes = () => {
                 { key: 'bid-types', label: 'Tipos de Lance' },
                 { key: 'products', label: 'Produtos' },
                 { key: 'installment-types', label: 'Parcelas' },
-                { key: 'entry-types', label: 'Entradas' }
+                { key: 'entry-types', label: 'Entradas' },
+                { key: 'leverages', label: 'Alavancas' }
               ].map((tab) => (
                 <Button
                   key={tab.key}
@@ -258,6 +278,16 @@ export const Configuracoes = () => {
           onSuccess={() => {
             setEntryTypeModalOpen(false);
             setEditingEntryType(null);
+          }}
+        />
+
+        <LeverageModal
+          open={leverageModalOpen}
+          onOpenChange={setLeverageModalOpen}
+          leverage={editingLeverage}
+          onSuccess={() => {
+            setLeverageModalOpen(false);
+            setEditingLeverage(null);
           }}
         />
       </div>
