@@ -8,12 +8,12 @@ import { SimulationResultsPanel } from './SimulationResultsPanel';
 export const NewSimulatorLayout = () => {
   const [simulationData, setSimulationData] = useState({
     administrator: '',
-    consortiumType: 'property',
+    consortiumType: 'property' as 'property' | 'vehicle',
     installmentType: 'full',
     value: 0,
     term: 240,
     updateRate: 8,
-    searchType: 'contribution'
+    searchType: 'contribution' as 'contribution' | 'credit'
   });
 
   return (
