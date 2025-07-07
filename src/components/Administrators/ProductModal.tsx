@@ -84,10 +84,13 @@ export const ProductModal: React.FC<ProductModalProps> = ({
 
   const onSubmit = async (data: FormData) => {
     try {
-      // Convert undefined values to null for Supabase
+      // Ensure all required fields are present and properly typed
       const cleanedData = {
-        ...data,
+        name: data.name,
+        type: data.type,
         administrator_id: data.administrator_id || null,
+        credit_value: data.credit_value,
+        term_options: data.term_options,
       };
 
       if (product?.id) {

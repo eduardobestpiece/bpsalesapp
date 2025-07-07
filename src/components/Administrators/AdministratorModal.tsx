@@ -84,9 +84,10 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
 
   const onSubmit = async (data: FormData) => {
     try {
-      // Convert undefined values to null for Supabase
+      // Ensure all required fields are present and properly typed
       const cleanedData = {
-        ...data,
+        name: data.name,
+        credit_update_type: data.credit_update_type,
         update_month: data.update_month ?? null,
         grace_period_days: data.grace_period_days ?? null,
         max_embedded_percentage: data.max_embedded_percentage ?? null,

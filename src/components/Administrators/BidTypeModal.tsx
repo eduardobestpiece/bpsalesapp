@@ -69,12 +69,15 @@ export const BidTypeModal: React.FC<BidTypeModalProps> = ({
 
   const onSubmit = async (data: FormData) => {
     try {
-      // Convert undefined values to null for Supabase
+      // Ensure all required fields are present and properly typed
       const cleanedData = {
-        ...data,
+        name: data.name,
         administrator_id: data.administrator_id || null,
         percentage: data.percentage ?? null,
+        allows_embedded: data.allows_embedded,
+        is_loyalty: data.is_loyalty,
         loyalty_months: data.loyalty_months ?? null,
+        is_default: data.is_default,
       };
 
       if (bidType?.id) {
