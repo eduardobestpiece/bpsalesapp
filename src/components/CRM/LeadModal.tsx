@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -52,10 +51,15 @@ export const LeadModal = ({ isOpen, onClose, companyId }: LeadModalProps) => {
       }
 
       await createLead.mutateAsync({
-        ...formData,
-        company_id: companyId,
+        name: formData.name,
+        email: formData.email || undefined,
+        phone: formData.phone || undefined,
+        responsible_id: formData.responsible_id,
+        funnel_id: formData.funnel_id,
         current_stage_id: firstStage.id,
-        source_id: formData.source_id || null,
+        source_id: formData.source_id || undefined,
+        company_id: companyId,
+        status: 'active' as const,
       });
 
       toast.success('Lead criado com sucesso!');

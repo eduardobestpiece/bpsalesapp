@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -36,9 +35,12 @@ export const SaleModal = ({ isOpen, onClose, companyId }: SaleModalProps) => {
 
     try {
       await createSale.mutateAsync({
-        ...formData,
+        lead_id: formData.lead_id,
+        sale_date: formData.sale_date,
         sale_value: parseFloat(formData.sale_value),
+        responsible_id: formData.responsible_id,
         company_id: companyId,
+        status: 'active' as const,
       });
 
       toast.success('Venda registrada com sucesso!');

@@ -1,7 +1,16 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Lead, Sale, CrmUser, Funnel, Source, FunnelStage } from '@/types/crm';
+import { 
+  Lead, 
+  Sale, 
+  CrmUser, 
+  Funnel, 
+  Source, 
+  FunnelWithStages,
+  LeadWithRelations,
+  SaleWithRelations 
+} from '@/types/crm';
 
 // Hook para buscar leads
 export const useLeads = (companyId?: string) => {
@@ -25,7 +34,7 @@ export const useLeads = (companyId?: string) => {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as Lead[];
+      return data as LeadWithRelations[];
     },
     enabled: !!companyId,
   });
@@ -52,7 +61,7 @@ export const useSales = (companyId?: string) => {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as Sale[];
+      return data as SaleWithRelations[];
     },
     enabled: !!companyId,
   });
@@ -99,7 +108,7 @@ export const useFunnels = (companyId?: string) => {
 
       const { data, error } = await query;
       if (error) throw error;
-      return data as Funnel[];
+      return data as FunnelWithStages[];
     },
     enabled: !!companyId,
   });
@@ -132,10 +141,10 @@ export const useCreateLead = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (leadData: Partial<Lead>) => {
+    mutationFn: async (leadData: Omit<Lead, 'id' | 'created_at' | 'updated_at'>) => {
       const { data, error } = await supabase
         .from('leads')
-        .insert([leadData])
+        .insert(leadData)
         .select()
         .single();
 
@@ -153,10 +162,10 @@ export const useCreateSale = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (saleData: Partial<Sale>) => {
+    mutationFn: async (saleData: Omit<Sale, 'id' | 'created_at' | 'updated_at'>) => {
       const { data, error } = await supabase
         .from('sales')
-        .insert([saleData])
+        .insert(saleData)
         .select()
         .single();
 

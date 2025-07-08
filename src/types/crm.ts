@@ -119,3 +119,21 @@ export interface IndicatorValue {
   created_at: string;
   updated_at: string;
 }
+
+// Extended types for Supabase queries with joins
+export interface FunnelWithStages extends Funnel {
+  stages: FunnelStage[];
+}
+
+export interface LeadWithRelations extends Lead {
+  responsible: Pick<CrmUser, 'first_name' | 'last_name'>;
+  funnel: Pick<Funnel, 'name'>;
+  current_stage: Pick<FunnelStage, 'name'>;
+  source?: Pick<Source, 'name'>;
+}
+
+export interface SaleWithRelations extends Sale {
+  lead: Pick<Lead, 'name'>;
+  responsible: Pick<CrmUser, 'first_name' | 'last_name'>;
+  team?: Pick<Team, 'name'>;
+}
