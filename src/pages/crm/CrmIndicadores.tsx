@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Search, Edit, Archive } from 'lucide-react';
 import { IndicatorModal } from '@/components/CRM/IndicatorModal';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { useIndicators } from '@/hooks/useIndicators';
 
 const CrmIndicadores = () => {
   const [showModal, setShowModal] = useState(false);
@@ -15,30 +16,7 @@ const CrmIndicadores = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { crmUser } = useCrmAuth();
   const companyId = crmUser?.company_id || '';
-
-  // Mock data para demonstração
-  const indicators = [
-    {
-      id: '1',
-      period_date: '2024-01-15',
-      funnel_name: 'Vendas Online',
-      month_reference: 1,
-      year_reference: 2024,
-      total_leads: 150,
-      conversions: 12,
-      conversion_rate: '8%'
-    },
-    {
-      id: '2',
-      period_date: '2024-01-22',
-      funnel_name: 'Vendas Presencial',
-      month_reference: 1,
-      year_reference: 2024,
-      total_leads: 89,
-      conversions: 8,
-      conversion_rate: '9%'
-    }
-  ];
+  const { data: indicators, isLoading: isIndicatorsLoading } = useIndicators(companyId, crmUser?.id);
 
   const handleEdit = (indicator: any) => {
     setSelectedIndicator(indicator);
@@ -50,9 +28,9 @@ const CrmIndicadores = () => {
     setSelectedIndicator(null);
   };
 
-  const filteredIndicators = indicators.filter(indicator =>
+  const filteredIndicators = (indicators || []).filter(indicator =>
     indicator.period_date.includes(searchTerm) ||
-    indicator.funnel_name.toLowerCase().includes(searchTerm.toLowerCase())
+    (indicator.funnel_name || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -99,7 +77,11 @@ const CrmIndicadores = () => {
                   </div>
 
                   <div className="space-y-4">
-                    {filteredIndicators.length === 0 ? (
+                    {isIndicatorsLoading ? (
+                      <p className="text-muted-foreground text-center py-8">
+                        Carregando indicadores...
+                      </p>
+                    ) : filteredIndicators.length === 0 ? (
                       <p className="text-muted-foreground text-center py-8">
                         {searchTerm ? 'Nenhum indicador encontrado para a pesquisa.' : 'Nenhum indicador registrado. Registre o primeiro indicador para começar.'}
                       </p>
@@ -115,19 +97,19 @@ const CrmIndicadores = () => {
                               <p className="text-sm text-muted-foreground">Data do Período</p>
                             </div>
                             <div>
-                              <p className="text-sm">{indicator.funnel_name}</p>
+                              <p className="text-sm">{indicator.funnel_name || '-'}</p>
                               <p className="text-sm text-muted-foreground">Funil</p>
                             </div>
                             <div>
-                              <p className="text-sm">{indicator.total_leads}</p>
+                              <p className="text-sm">{indicator.total_leads || '-'}</p>
                               <p className="text-sm text-muted-foreground">Total de Leads</p>
                             </div>
                             <div>
-                              <p className="text-sm">{indicator.conversions}</p>
+                              <p className="text-sm">{indicator.conversions || '-'}</p>
                               <p className="text-sm text-muted-foreground">Conversões</p>
                             </div>
                             <div>
-                              <Badge variant="outline">{indicator.conversion_rate}</Badge>
+                              <Badge variant="outline">{indicator.conversion_rate || '-'}</Badge>
                               <p className="text-sm text-muted-foreground">Taxa de Conversão</p>
                             </div>
                           </div>
