@@ -9,6 +9,7 @@ import { Plus, Search, Edit, Archive } from 'lucide-react';
 import { IndicatorModal } from '@/components/CRM/IndicatorModal';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useIndicators } from '@/hooks/useIndicators';
+import { useFunnels } from '@/hooks/useFunnels';
 
 const CrmIndicadores = () => {
   const [showModal, setShowModal] = useState(false);
@@ -17,6 +18,7 @@ const CrmIndicadores = () => {
   const { crmUser } = useCrmAuth();
   const companyId = crmUser?.company_id || '';
   const { data: indicators, isLoading: isIndicatorsLoading } = useIndicators(companyId, crmUser?.id);
+  const { data: funnels, isLoading: isFunnelsLoading } = useFunnels(companyId, 'active');
 
   const handleEdit = (indicator: any) => {
     setSelectedIndicator(indicator);
@@ -32,6 +34,15 @@ const CrmIndicadores = () => {
     indicator.period_date.includes(searchTerm) ||
     (indicator.funnel_name || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Agrupar indicadores por funil
+  const indicatorsByFunnel: Record<string, any[]> = {};
+  (indicators || []).forEach((indicator) => {
+    if (!indicatorsByFunnel[indicator.funnel_id]) {
+      indicatorsByFunnel[indicator.funnel_id] = [];
+    }
+    indicatorsByFunnel[indicator.funnel_id].push(indicator);
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
@@ -76,72 +87,70 @@ const CrmIndicadores = () => {
                     </div>
                   </div>
 
-                  <div className="space-y-4">
-                    {isIndicatorsLoading ? (
+                  <div className="space-y-8">
+                    {isIndicatorsLoading || isFunnelsLoading ? (
                       <p className="text-muted-foreground text-center py-8">
                         Carregando indicadores...
                       </p>
-                    ) : filteredIndicators.length === 0 ? (
-                      <p className="text-muted-foreground text-center py-8">
-                        {searchTerm ? 'Nenhum indicador encontrado para a pesquisa.' : 'Nenhum indicador registrado. Registre o primeiro indicador para começar.'}
-                      </p>
-                    ) : (
-                      filteredIndicators.map((indicator) => (
-                        <div
-                          key={indicator.id}
-                          className="flex flex-col gap-2 p-4 border rounded-lg hover:shadow-md transition-shadow"
-                        >
-                          <div className="flex-1 grid grid-cols-1 md:grid-cols-5 gap-4">
-                            <div>
-                              <p className="font-medium">{new Date(indicator.period_date).toLocaleDateString('pt-BR')}</p>
-                              <p className="text-sm text-muted-foreground">Data do Período</p>
-                            </div>
-                            <div>
-                              <p className="text-sm">{indicator.funnel_name || '-'}</p>
-                              <p className="text-sm text-muted-foreground">Funil</p>
-                            </div>
-                            <div>
-                              <p className="text-sm">{indicator.total_leads || '-'}</p>
-                              <p className="text-sm text-muted-foreground">Total de Leads</p>
-                            </div>
-                            <div>
-                              <p className="text-sm">{indicator.conversions || '-'}</p>
-                              <p className="text-sm text-muted-foreground">Conversões</p>
-                            </div>
-                            <div>
-                              <Badge variant="outline">{indicator.conversion_rate || '-'}</Badge>
-                              <p className="text-sm text-muted-foreground">Taxa de Conversão</p>
-                            </div>
-                          </div>
-                          {/* Exibir valores das etapas */}
-                          {indicator.values && indicator.values.length > 0 && (
-                            <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2">
-                              {indicator.values.map((stageValue: any) => (
-                                <div key={stageValue.stage_id} className="text-xs bg-muted rounded px-2 py-1 flex items-center gap-2">
-                                  <span className="font-semibold">Etapa:</span> {stageValue.stage_id}
-                                  <span className="ml-2 font-semibold">Valor:</span> {stageValue.value}
-                                </div>
+                    ) : funnels && funnels.length > 0 ? (
+                      funnels.map((funnel) => {
+                        const funnelIndicators = indicatorsByFunnel[funnel.id] || [];
+                        // Ordenar etapas por stage_order
+                        const sortedStages = (funnel.stages || []).sort((a: any, b: any) => a.stage_order - b.stage_order);
+                        return (
+                          <div key={funnel.id} className="mb-8">
+                            <h3 className="font-bold text-lg mb-2">{funnel.name}</h3>
+                            {/* Cabeçalho dinâmico */}
+                            <div className="grid grid-cols-[120px_80px_80px_repeat(" + sortedStages.length + ",1fr)_100px] gap-2 font-semibold bg-muted rounded px-2 py-1 mb-2">
+                              <div>Período</div>
+                              <div>Mês</div>
+                              <div>Ano</div>
+                              {sortedStages.map((stage: any) => (
+                                <div key={stage.id}>{stage.name}</div>
                               ))}
+                              <div>Ações</div>
                             </div>
-                          )}
-                          <div className="flex gap-2 mt-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEdit(indicator)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {}}
-                            >
-                              <Archive className="w-4 h-4" />
-                            </Button>
+                            {/* Linhas dos indicadores */}
+                            {funnelIndicators.length === 0 ? (
+                              <div className="text-muted-foreground text-center py-4">Nenhum indicador registrado para este funil.</div>
+                            ) : (
+                              funnelIndicators.map((indicator) => (
+                                <div key={indicator.id} className="grid grid-cols-[120px_80px_80px_repeat(" + sortedStages.length + ",1fr)_100px] gap-2 items-center border-b last:border-b-0 py-2">
+                                  <div>{new Date(indicator.period_date).toLocaleDateString('pt-BR')}</div>
+                                  <div>{String(indicator.month_reference).padStart(2, '0')}</div>
+                                  <div>{indicator.year_reference}</div>
+                                  {sortedStages.map((stage: any) => {
+                                    const valueObj = (indicator.values || []).find((v: any) => v.stage_id === stage.id);
+                                    return (
+                                      <div key={stage.id} className="text-center">{valueObj ? valueObj.value : '-'}</div>
+                                    );
+                                  })}
+                                  <div className="flex gap-2 justify-center">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleEdit(indicator)}
+                                    >
+                                      <Edit className="w-4 h-4" />
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {}}
+                                    >
+                                      <Archive className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              ))
+                            )}
                           </div>
-                        </div>
-                      ))
+                        );
+                      })
+                    ) : (
+                      <p className="text-muted-foreground text-center py-8">
+                        Nenhum funil encontrado.
+                      </p>
                     )}
                   </div>
                 </CardContent>
