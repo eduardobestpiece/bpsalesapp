@@ -2,11 +2,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { CrmUser } from '@/types/crm';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
 
-export const useCrmUsers = (companyId: string) => {
+export const useCrmUsers = () => {
+  const { companyId, user } = useCrmAuth();
+  
   return useQuery({
     queryKey: ['crm-users', companyId],
     queryFn: async () => {
+      if (!companyId || !user) {
+        throw new Error('Company ID or user not available');
+      }
+
       console.log('Fetching CRM users for company:', companyId);
       
       const { data, error } = await supabase
@@ -24,5 +31,6 @@ export const useCrmUsers = (companyId: string) => {
       console.log('CRM users fetched:', data);
       return data as CrmUser[];
     },
+    enabled: !!companyId && !!user,
   });
 };

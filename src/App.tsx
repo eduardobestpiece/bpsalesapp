@@ -4,8 +4,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ModuleProvider } from "@/contexts/ModuleContext";
+import { CrmAuthProvider } from "@/contexts/CrmAuthContext";
+import { ProtectedRoute } from "@/components/CRM/ProtectedRoute";
 import Index from "./pages/Index";
 import Configuracoes from "./pages/Configuracoes";
+import CrmLogin from "./pages/crm/CrmLogin";
 import CrmDashboard from "./pages/crm/CrmDashboard";
 import CrmConfiguracoes from "./pages/crm/CrmConfiguracoes";
 import CrmIndicadores from "./pages/crm/CrmIndicadores";
@@ -20,23 +23,67 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <ModuleProvider>
-          <Toaster />
-          <BrowserRouter>
-            <div className="min-h-screen bg-gray-50">
-              <main>
-                <Routes>
-                  <Route path="/" element={<Index />} />
-                  <Route path="/configuracoes" element={<Configuracoes />} />
-                  <Route path="/crm" element={<CrmDashboard />} />
-                  <Route path="/crm/configuracoes" element={<CrmConfiguracoes />} />
-                  <Route path="/crm/indicadores" element={<CrmIndicadores />} />
-                  <Route path="/crm/performance" element={<CrmPerformance />} />
-                  <Route path="/crm/perfil" element={<CrmPerfil />} />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </main>
-            </div>
-          </BrowserRouter>
+          <CrmAuthProvider>
+            <Toaster />
+            <BrowserRouter>
+              <div className="min-h-screen bg-gray-50">
+                <main>
+                  <Routes>
+                    {/* Rotas principais */}
+                    <Route path="/" element={<Index />} />
+                    <Route path="/configuracoes" element={<Configuracoes />} />
+                    
+                    {/* Rota de login do CRM */}
+                    <Route path="/crm/login" element={<CrmLogin />} />
+                    
+                    {/* Rotas protegidas do CRM */}
+                    <Route 
+                      path="/crm" 
+                      element={
+                        <ProtectedRoute>
+                          <CrmDashboard />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/crm/configuracoes" 
+                      element={
+                        <ProtectedRoute requiredRole="admin">
+                          <CrmConfiguracoes />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/crm/indicadores" 
+                      element={
+                        <ProtectedRoute>
+                          <CrmIndicadores />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/crm/performance" 
+                      element={
+                        <ProtectedRoute requiredRole="leader">
+                          <CrmPerformance />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/crm/perfil" 
+                      element={
+                        <ProtectedRoute>
+                          <CrmPerfil />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </main>
+              </div>
+            </BrowserRouter>
+          </CrmAuthProvider>
         </ModuleProvider>
       </TooltipProvider>
     </QueryClientProvider>

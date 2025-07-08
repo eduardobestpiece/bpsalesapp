@@ -2,12 +2,19 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { LeadWithRelations } from '@/types/crm';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
 
-export const useLeads = (companyId: string) => {
+export const useLeads = () => {
+  const { companyId, user } = useCrmAuth();
+  
   return useQuery({
     queryKey: ['leads', companyId],
     queryFn: async () => {
+      if (!companyId || !user) {
+        throw new Error('Company ID or user not available');
+      }
+
       console.log('Fetching leads for company:', companyId);
       
       const { data, error } = await supabase
@@ -31,6 +38,7 @@ export const useLeads = (companyId: string) => {
       console.log('Leads fetched:', data);
       return data as LeadWithRelations[];
     },
+    enabled: !!companyId && !!user,
   });
 };
 

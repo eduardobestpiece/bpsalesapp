@@ -2,11 +2,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { FunnelWithStages } from '@/types/crm';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
 
-export const useFunnels = (companyId: string) => {
+export const useFunnels = () => {
+  const { companyId, user } = useCrmAuth();
+  
   return useQuery({
     queryKey: ['funnels', companyId],
     queryFn: async () => {
+      if (!companyId || !user) {
+        throw new Error('Company ID or user not available');
+      }
+
       console.log('Fetching funnels for company:', companyId);
       
       const { data, error } = await supabase
@@ -27,5 +34,6 @@ export const useFunnels = (companyId: string) => {
       console.log('Funnels fetched:', data);
       return data as FunnelWithStages[];
     },
+    enabled: !!companyId && !!user,
   });
 };
