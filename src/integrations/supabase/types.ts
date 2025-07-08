@@ -112,6 +112,109 @@ export type Database = {
           },
         ]
       }
+      companies: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          status: Database["public"]["Enums"]["entity_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          status?: Database["public"]["Enums"]["entity_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          status?: Database["public"]["Enums"]["entity_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      crm_users: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          birth_date: string | null
+          company_id: string
+          created_at: string | null
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          leader_id: string | null
+          password_hash: string
+          phone: string | null
+          role: Database["public"]["Enums"]["user_role"]
+          status: Database["public"]["Enums"]["entity_status"] | null
+          team_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          birth_date?: string | null
+          company_id: string
+          created_at?: string | null
+          email: string
+          first_name: string
+          id?: string
+          last_name: string
+          leader_id?: string | null
+          password_hash: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          status?: Database["public"]["Enums"]["entity_status"] | null
+          team_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          birth_date?: string | null
+          company_id?: string
+          created_at?: string | null
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          leader_id?: string | null
+          password_hash?: string
+          phone?: string | null
+          role?: Database["public"]["Enums"]["user_role"]
+          status?: Database["public"]["Enums"]["entity_status"] | null
+          team_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crm_users_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_crm_users_leader"
+            columns: ["leader_id"]
+            isOneToOne: false
+            referencedRelation: "crm_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_crm_users_team"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       entry_types: {
         Row: {
           administrator_id: string | null
@@ -158,6 +261,188 @@ export type Database = {
             columns: ["administrator_id"]
             isOneToOne: false
             referencedRelation: "administrators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funnel_stages: {
+        Row: {
+          created_at: string | null
+          funnel_id: string
+          id: string
+          name: string
+          stage_order: number
+          target_percentage: number | null
+          target_value: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          funnel_id: string
+          id?: string
+          name: string
+          stage_order: number
+          target_percentage?: number | null
+          target_value?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          funnel_id?: string
+          id?: string
+          name?: string
+          stage_order?: number
+          target_percentage?: number | null
+          target_value?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funnel_stages_funnel_id_fkey"
+            columns: ["funnel_id"]
+            isOneToOne: false
+            referencedRelation: "funnels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funnels: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          id: string
+          name: string
+          status: Database["public"]["Enums"]["entity_status"] | null
+          updated_at: string | null
+          verification_day: number | null
+          verification_type: Database["public"]["Enums"]["funnel_verification"]
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          id?: string
+          name: string
+          status?: Database["public"]["Enums"]["entity_status"] | null
+          updated_at?: string | null
+          verification_day?: number | null
+          verification_type: Database["public"]["Enums"]["funnel_verification"]
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+          status?: Database["public"]["Enums"]["entity_status"] | null
+          updated_at?: string | null
+          verification_day?: number | null
+          verification_type?: Database["public"]["Enums"]["funnel_verification"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funnels_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      indicator_values: {
+        Row: {
+          created_at: string | null
+          id: string
+          indicator_id: string
+          stage_id: string
+          updated_at: string | null
+          value: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          indicator_id: string
+          stage_id: string
+          updated_at?: string | null
+          value?: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          indicator_id?: string
+          stage_id?: string
+          updated_at?: string | null
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "indicator_values_indicator_id_fkey"
+            columns: ["indicator_id"]
+            isOneToOne: false
+            referencedRelation: "indicators"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "indicator_values_stage_id_fkey"
+            columns: ["stage_id"]
+            isOneToOne: false
+            referencedRelation: "funnel_stages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      indicators: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          funnel_id: string
+          id: string
+          month_reference: number
+          period_date: string
+          updated_at: string | null
+          user_id: string
+          year_reference: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          funnel_id: string
+          id?: string
+          month_reference: number
+          period_date: string
+          updated_at?: string | null
+          user_id: string
+          year_reference: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          funnel_id?: string
+          id?: string
+          month_reference?: number
+          period_date?: string
+          updated_at?: string | null
+          user_id?: string
+          year_reference?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "indicators_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "indicators_funnel_id_fkey"
+            columns: ["funnel_id"]
+            isOneToOne: false
+            referencedRelation: "funnels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "indicators_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "crm_users"
             referencedColumns: ["id"]
           },
         ]
@@ -211,6 +496,87 @@ export type Database = {
             columns: ["administrator_id"]
             isOneToOne: false
             referencedRelation: "administrators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      leads: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          current_stage_id: string
+          email: string | null
+          funnel_id: string
+          id: string
+          name: string
+          phone: string | null
+          responsible_id: string
+          source_id: string | null
+          status: Database["public"]["Enums"]["entity_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          current_stage_id: string
+          email?: string | null
+          funnel_id: string
+          id?: string
+          name: string
+          phone?: string | null
+          responsible_id: string
+          source_id?: string | null
+          status?: Database["public"]["Enums"]["entity_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          current_stage_id?: string
+          email?: string | null
+          funnel_id?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          responsible_id?: string
+          source_id?: string | null
+          status?: Database["public"]["Enums"]["entity_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_current_stage_id_fkey"
+            columns: ["current_stage_id"]
+            isOneToOne: false
+            referencedRelation: "funnel_stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_funnel_id_fkey"
+            columns: ["funnel_id"]
+            isOneToOne: false
+            referencedRelation: "funnels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_responsible_id_fkey"
+            columns: ["responsible_id"]
+            isOneToOne: false
+            referencedRelation: "crm_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "sources"
             referencedColumns: ["id"]
           },
         ]
@@ -313,15 +679,172 @@ export type Database = {
           },
         ]
       }
+      sales: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          id: string
+          lead_id: string
+          responsible_id: string
+          sale_date: string
+          sale_value: number
+          status: Database["public"]["Enums"]["entity_status"] | null
+          team_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          id?: string
+          lead_id: string
+          responsible_id: string
+          sale_date: string
+          sale_value: number
+          status?: Database["public"]["Enums"]["entity_status"] | null
+          team_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          id?: string
+          lead_id?: string
+          responsible_id?: string
+          sale_date?: string
+          sale_value?: number
+          status?: Database["public"]["Enums"]["entity_status"] | null
+          team_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sales_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_responsible_id_fkey"
+            columns: ["responsible_id"]
+            isOneToOne: false
+            referencedRelation: "crm_users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sources: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          id: string
+          name: string
+          status: Database["public"]["Enums"]["entity_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          id?: string
+          name: string
+          status?: Database["public"]["Enums"]["entity_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          id?: string
+          name?: string
+          status?: Database["public"]["Enums"]["entity_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sources_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
+        Row: {
+          company_id: string
+          created_at: string | null
+          id: string
+          leader_id: string
+          name: string
+          status: Database["public"]["Enums"]["entity_status"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string | null
+          id?: string
+          leader_id: string
+          name: string
+          status?: Database["public"]["Enums"]["entity_status"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string | null
+          id?: string
+          leader_id?: string
+          name?: string
+          status?: Database["public"]["Enums"]["entity_status"] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teams_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teams_leader_id_fkey"
+            columns: ["leader_id"]
+            isOneToOne: false
+            referencedRelation: "crm_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_role: {
+        Args: { user_email: string }
+        Returns: Database["public"]["Enums"]["user_role"]
+      }
+      user_belongs_to_company: {
+        Args: { user_email: string; comp_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      entity_status: "active" | "archived"
+      funnel_verification: "daily" | "weekly" | "monthly"
+      user_role: "master" | "admin" | "leader" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -448,6 +971,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      entity_status: ["active", "archived"],
+      funnel_verification: ["daily", "weekly", "monthly"],
+      user_role: ["master", "admin", "leader", "user"],
+    },
   },
 } as const
