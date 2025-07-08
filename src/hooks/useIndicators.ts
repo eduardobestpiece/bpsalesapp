@@ -65,12 +65,16 @@ export const useCreateIndicator = () => {
         ...value,
         indicator_id: indicator.id
       }));
+      console.log('Salvando indicator_values:', valuesToInsert);
 
       const { error: valuesError } = await supabase
         .from('indicator_values')
         .insert(valuesToInsert);
 
-      if (valuesError) throw valuesError;
+      if (valuesError) {
+        console.error('Erro ao salvar indicator_values:', valuesError);
+        throw valuesError;
+      }
 
       return indicator;
     },
