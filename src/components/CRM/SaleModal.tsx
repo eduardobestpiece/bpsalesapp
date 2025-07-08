@@ -22,8 +22,8 @@ export const SaleModal = ({ isOpen, onClose, companyId }: SaleModalProps) => {
   });
 
   const createSale = useCreateSale();
-  const { data: leads = [] } = useLeads(companyId);
-  const { data: users = [] } = useCrmUsers(companyId);
+  const { data: leads = [] } = useLeads();
+  const { data: users = [] } = useCrmUsers();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

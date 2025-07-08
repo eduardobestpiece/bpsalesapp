@@ -24,9 +24,9 @@ export const LeadModal = ({ isOpen, onClose, companyId }: LeadModalProps) => {
   });
 
   const createLead = useCreateLead();
-  const { data: users = [] } = useCrmUsers(companyId);
-  const { data: funnels = [] } = useFunnels(companyId);
-  const { data: sources = [] } = useSources(companyId);
+  const { data: users = [] } = useCrmUsers();
+  const { data: funnels = [] } = useFunnels();
+  const { data: sources = [] } = useSources();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

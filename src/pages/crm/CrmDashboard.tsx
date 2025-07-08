@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { CrmHeader } from '@/components/Layout/CrmHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -21,8 +20,8 @@ const CrmDashboard = () => {
   const [saleModalOpen, setSaleModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const { data: leads = [], isLoading: leadsLoading } = useLeads(MOCK_COMPANY_ID);
-  const { data: sales = [], isLoading: salesLoading } = useSales(MOCK_COMPANY_ID);
+  const { data: leads = [], isLoading: leadsLoading } = useLeads();
+  const { data: sales = [], isLoading: salesLoading } = useSales();
 
   const filteredLeads = leads.filter(lead => 
     lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||

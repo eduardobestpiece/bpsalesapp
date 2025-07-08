@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,7 @@ interface FunnelsListProps {
 export const FunnelsList = ({ companyId }: FunnelsListProps) => {
   const [showModal, setShowModal] = useState(false);
   const [selectedFunnel, setSelectedFunnel] = useState<any>(null);
-  const { data: funnels = [], isLoading } = useFunnels(companyId);
+  const { data: funnels = [], isLoading } = useFunnels();
 
   const handleEdit = (funnel: any) => {
     setSelectedFunnel(funnel);

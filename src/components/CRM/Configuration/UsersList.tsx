@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,7 @@ interface UsersListProps {
 export const UsersList = ({ companyId }: UsersListProps) => {
   const [showModal, setShowModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
-  const { data: users = [], isLoading } = useCrmUsers(companyId);
+  const { data: users = [], isLoading } = useCrmUsers();
 
   const handleEdit = (user: any) => {
     setSelectedUser(user);

@@ -21,7 +21,7 @@ export const TeamModal = ({ isOpen, onClose, companyId, team }: TeamModalProps) 
     leader_id: '',
   });
 
-  const { data: users = [] } = useCrmUsers(companyId);
+  const { data: users = [] } = useCrmUsers();
   const leaders = users.filter(user => user.role === 'leader' || user.role === 'admin' || user.role === 'master');
 
   useEffect(() => {

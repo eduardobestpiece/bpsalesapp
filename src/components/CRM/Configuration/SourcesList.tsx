@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,7 @@ interface SourcesListProps {
 export const SourcesList = ({ companyId }: SourcesListProps) => {
   const [showModal, setShowModal] = useState(false);
   const [selectedSource, setSelectedSource] = useState<any>(null);
-  const { data: sources = [], isLoading } = useSources(companyId);
+  const { data: sources = [], isLoading } = useSources();
 
   const handleEdit = (source: any) => {
     setSelectedSource(source);

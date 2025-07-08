@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -14,7 +13,7 @@ interface TeamsListProps {
 export const TeamsList = ({ companyId }: TeamsListProps) => {
   const [showModal, setShowModal] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<any>(null);
-  const { data: users = [], isLoading } = useCrmUsers(companyId);
+  const { data: users = [], isLoading } = useCrmUsers();
 
   // Simular dados de times (já que não temos hook para times ainda)
   const teams = [
