@@ -142,12 +142,9 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         });
       } else {
         // Para semanal/mensal: comparar period_date salvo (data final) com o último dia do período
-        // periodosUsuario: lista de datas finais já registradas
-        // ultimoPeriodoUsuario: última data final registrada
         const hoje = new Date();
         const dataLimite = new Date(hoje);
         dataLimite.setDate(dataLimite.getDate() - 89);
-        // Gerar todos os períodos possíveis dos últimos 90 dias
         if (selectedFunnel.verification_type === 'weekly') {
           todosPeriodos = gerarPeriodosSemanaisUltimos90Dias(selectedFunnel.verification_day ?? 1);
         } else if (selectedFunnel.verification_type === 'monthly') {
@@ -164,20 +161,19 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
             }
           }
         }
-        // Encontrar o índice do último período registrado pelo usuário
-        const idxUltimo = todosPeriodos.findIndex(opt => getUltimoDiaPeriodo(opt.value) === ultimoPeriodoUsuario);
-        // Só mostrar períodos entre o último registrado (exclusivo) e o período vigente (último dia <= hoje)
+        // Só mostrar períodos cujo último dia seja maior que o último registrado e menor que hoje
         periodOptions = todosPeriodos
-          .filter((opt, idx) => {
+          .filter(opt => {
             const ultimoDia = new Date(getUltimoDiaPeriodo(opt.value));
-            return idx > idxUltimo && ultimoDia < hoje;
+            const ultimoRegistrado = new Date(ultimoPeriodoUsuario!);
+            return ultimoDia > ultimoRegistrado && ultimoDia < hoje;
           })
           .map(opt => {
             const isMissing = !periodosUsuario.includes(getUltimoDiaPeriodo(opt.value));
             return {
               ...opt,
               isMissing,
-              isAllowed: true // sempre permitido se está na lista
+              isAllowed: true
             };
           });
       }
