@@ -1,0 +1,94 @@
+
+import { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Plus, Edit, Archive } from 'lucide-react';
+import { useSources } from '@/hooks/useCrmData';
+import { SourceModal } from './SourceModal';
+
+interface SourcesListProps {
+  companyId: string;
+}
+
+export const SourcesList = ({ companyId }: SourcesListProps) => {
+  const [showModal, setShowModal] = useState(false);
+  const [selectedSource, setSelectedSource] = useState<any>(null);
+  const { data: sources = [], isLoading } = useSources(companyId);
+
+  const handleEdit = (source: any) => {
+    setSelectedSource(source);
+    setShowModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setSelectedSource(null);
+  };
+
+  if (isLoading) {
+    return <div className="text-center py-4">Carregando origens...</div>;
+  }
+
+  return (
+    <>
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Origens de Leads</CardTitle>
+              <CardDescription>
+                Gerencie as origens de onde vêm os leads
+              </CardDescription>
+            </div>
+            <Button onClick={() => setShowModal(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Nova Origem
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {sources.length === 0 ? (
+              <div className="col-span-full text-center py-8">
+                <p className="text-muted-foreground">
+                  Nenhuma origem encontrada. Crie a primeira origem para começar.
+                </p>
+              </div>
+            ) : (
+              sources.map((source) => (
+                <div
+                  key={source.id}
+                  className="p-4 border rounded-lg hover:shadow-md transition-shadow"
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="font-medium">{source.name}</h3>
+                    <Badge variant={source.status === 'active' ? 'default' : 'secondary'}>
+                      {source.status === 'active' ? 'Ativo' : 'Arquivado'}
+                    </Badge>
+                  </div>
+                  <div className="flex gap-2 mt-3">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleEdit(source)}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <SourceModal
+        isOpen={showModal}
+        onClose={handleCloseModal}
+        companyId={companyId}
+        source={selectedSource}
+      />
+    </>
+  );
+};

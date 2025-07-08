@@ -1,8 +1,16 @@
 
+import { useState } from 'react';
 import { CrmHeader } from '@/components/Layout/CrmHeader';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { FunnelsList } from '@/components/CRM/Configuration/FunnelsList';
+import { SourcesList } from '@/components/CRM/Configuration/SourcesList';
+import { TeamsList } from '@/components/CRM/Configuration/TeamsList';
+import { UsersList } from '@/components/CRM/Configuration/UsersList';
 
 const CrmConfiguracoes = () => {
+  // Em um cenário real, isso viria do contexto de autenticação
+  const companyId = '550e8400-e29b-41d4-a716-446655440000';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
       <CrmHeader />
@@ -18,16 +26,30 @@ const CrmConfiguracoes = () => {
                 </p>
               </div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Em Desenvolvimento</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">
-                    Esta página será implementada na próxima fase do desenvolvimento.
-                  </p>
-                </CardContent>
-              </Card>
+              <Tabs defaultValue="funnels" className="w-full">
+                <TabsList className="grid w-full grid-cols-4">
+                  <TabsTrigger value="funnels">Funis</TabsTrigger>
+                  <TabsTrigger value="sources">Origens</TabsTrigger>
+                  <TabsTrigger value="teams">Times</TabsTrigger>
+                  <TabsTrigger value="users">Usuários</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="funnels" className="mt-6">
+                  <FunnelsList companyId={companyId} />
+                </TabsContent>
+                
+                <TabsContent value="sources" className="mt-6">
+                  <SourcesList companyId={companyId} />
+                </TabsContent>
+                
+                <TabsContent value="teams" className="mt-6">
+                  <TeamsList companyId={companyId} />
+                </TabsContent>
+                
+                <TabsContent value="users" className="mt-6">
+                  <UsersList companyId={companyId} />
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
         </div>
