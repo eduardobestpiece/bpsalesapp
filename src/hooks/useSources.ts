@@ -1,41 +1,65 @@
 
-import { useQuery } from '@tanstack/react-query';
-
-// Mock data for sources
-const mockSources = [
-  {
-    id: '550e8400-e29b-41d4-a716-446655440020',
-    name: 'Site Institucional',
-    company_id: '550e8400-e29b-41d4-a716-446655440000',
-    status: 'active',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440021',
-    name: 'Redes Sociais',
-    company_id: '550e8400-e29b-41d4-a716-446655440000',
-    status: 'active',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z'
-  },
-  {
-    id: '550e8400-e29b-41d4-a716-446655440022',
-    name: 'Indicação',
-    company_id: '550e8400-e29b-41d4-a716-446655440000',
-    status: 'active',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z'
-  }
-];
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Source } from '@/types/crm';
 
 export const useSources = () => {
   return useQuery({
     queryKey: ['sources'],
     queryFn: async () => {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return mockSources;
+      const { data, error } = await supabase
+        .from('sources')
+        .select('*')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching sources:', error);
+        throw error;
+      }
+
+      return data as Source[];
+    },
+  });
+};
+
+export const useCreateSource = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (sourceData: any) => {
+      const { data, error } = await supabase
+        .from('sources')
+        .insert(sourceData)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sources'] });
+    },
+  });
+};
+
+export const useUpdateSource = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...sourceData }: any) => {
+      const { data, error } = await supabase
+        .from('sources')
+        .update(sourceData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sources'] });
     },
   });
 };

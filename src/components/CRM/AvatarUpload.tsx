@@ -1,8 +1,9 @@
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Upload, Crop } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Camera, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AvatarUploadProps {
@@ -11,113 +12,127 @@ interface AvatarUploadProps {
 }
 
 export const AvatarUpload = ({ currentAvatar, onAvatarChange }: AvatarUploadProps) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        toast.error('Arquivo muito grande. Máximo 5MB.');
-        return;
-      }
+    if (!file) return;
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setSelectedImage(e.target?.result as string);
-        setIsModalOpen(true);
-      };
-      reader.readAsDataURL(file);
+    // Validar tipo de arquivo
+    if (!file.type.startsWith('image/')) {
+      toast.error('Por favor, selecione uma imagem válida');
+      return;
+    }
+
+    // Validar tamanho (máximo 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('A imagem deve ter no máximo 5MB');
+      return;
+    }
+
+    // Criar preview da imagem
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        setSelectedImage(e.target.result as string);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleUpload = async () => {
+    if (!selectedImage) return;
+
+    setIsUploading(true);
+    try {
+      // Simular upload - em um cenário real, seria feito upload para Supabase Storage
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Por enquanto, usar a preview como URL do avatar
+      onAvatarChange(selectedImage);
+      toast.success('Avatar atualizado com sucesso!');
+      setSelectedImage(null);
+    } catch (error) {
+      console.error('Erro ao fazer upload:', error);
+      toast.error('Erro ao atualizar avatar');
+    } finally {
+      setIsUploading(false);
     }
   };
 
-  const handleCropAndSave = () => {
-    if (selectedImage) {
-      // Aqui seria implementada a lógica de crop real
-      // Por agora, vamos simular o salvamento
-      onAvatarChange(selectedImage);
-      setIsModalOpen(false);
-      setSelectedImage(null);
-      toast.success('Avatar atualizado com sucesso!');
-    }
+  const handleRemove = () => {
+    setSelectedImage(null);
+    onAvatarChange('');
+    toast.success('Avatar removido com sucesso!');
   };
 
   return (
-    <>
-      <div className="flex flex-col items-center space-y-4">
-        <div className="relative">
-          <div className="w-32 h-32 rounded-full border-4 border-gray-200 overflow-hidden bg-gray-100 flex items-center justify-center">
-            {currentAvatar ? (
-              <img 
-                src={currentAvatar} 
-                alt="Avatar" 
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="text-4xl text-gray-400">👤</div>
-            )}
-          </div>
-          <Button
-            size="sm"
-            className="absolute bottom-0 right-0 rounded-full p-2"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Upload className="w-4 h-4" />
-          </Button>
-        </div>
+    <div className="flex flex-col items-center space-y-4">
+      <div className="relative">
+        <Avatar className="w-32 h-32 border-4 border-gray-200">
+          <AvatarImage 
+            src={selectedImage || currentAvatar} 
+            alt="Avatar" 
+            className="object-cover"
+          />
+          <AvatarFallback className="bg-gradient-primary text-white text-2xl font-semibold">
+            <Camera className="w-12 h-12" />
+          </AvatarFallback>
+        </Avatar>
         
-        <Button
-          variant="outline"
-          onClick={() => fileInputRef.current?.click()}
-        >
-          <Upload className="w-4 h-4 mr-2" />
-          Alterar Avatar
-        </Button>
+        {selectedImage && (
+          <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
+            <p className="text-white text-xs">Preview</p>
+          </div>
+        )}
       </div>
 
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleFileSelect}
-        className="hidden"
-      />
+      <div className="flex flex-col items-center space-y-2">
+        <div className="flex gap-2">
+          <Input
+            type="file"
+            accept="image/*"
+            onChange={handleFileSelect}
+            className="hidden"
+            id="avatar-upload"
+          />
+          <label htmlFor="avatar-upload">
+            <Button variant="outline" size="sm" className="cursor-pointer" asChild>
+              <span>
+                <Upload className="w-4 h-4 mr-2" />
+                Selecionar Foto
+              </span>
+            </Button>
+          </label>
 
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>Cortar Imagem</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            {selectedImage && (
-              <div className="flex justify-center">
-                <div className="relative">
-                  <img 
-                    src={selectedImage} 
-                    alt="Preview" 
-                    className="max-w-full max-h-64 object-contain border rounded"
-                  />
-                  {/* Aqui seria o componente de crop real */}
-                  <div className="absolute inset-0 border-2 border-dashed border-blue-500 rounded-full opacity-50 pointer-events-none"></div>
-                </div>
-              </div>
-            )}
-            <p className="text-sm text-muted-foreground text-center">
-              Ajuste a imagem dentro da área circular e clique em salvar.
-            </p>
-            <div className="flex justify-end space-x-2">
-              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-                Cancelar
-              </Button>
-              <Button onClick={handleCropAndSave}>
-                <Crop className="w-4 h-4 mr-2" />
-                Salvar
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </>
+          {selectedImage && (
+            <Button 
+              onClick={handleUpload} 
+              size="sm"
+              disabled={isUploading}
+            >
+              {isUploading ? 'Salvando...' : 'Salvar'}
+            </Button>
+          )}
+        </div>
+
+        {(selectedImage || currentAvatar) && (
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRemove}
+            className="text-destructive hover:text-destructive"
+          >
+            Remover Foto
+          </Button>
+        )}
+
+        <p className="text-xs text-muted-foreground text-center">
+          Formatos aceitos: JPG, PNG, GIF<br />
+          Tamanho máximo: 5MB
+        </p>
+      </div>
+    </div>
   );
 };

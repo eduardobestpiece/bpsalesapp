@@ -1,69 +1,68 @@
 
-import { useQuery } from '@tanstack/react-query';
-
-// Mock data for funnels with stages
-const mockFunnels = [
-  {
-    id: '550e8400-e29b-41d4-a716-446655440030',
-    name: 'Funil Principal',
-    verification_type: 'weekly',
-    verification_day: 1,
-    company_id: '550e8400-e29b-41d4-a716-446655440000',
-    status: 'active',
-    created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z',
-    stages: [
-      {
-        id: '550e8400-e29b-41d4-a716-446655440031',
-        funnel_id: '550e8400-e29b-41d4-a716-446655440030',
-        name: 'Contato Inicial',
-        stage_order: 1,
-        target_percentage: 100,
-        target_value: 100,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      },
-      {
-        id: '550e8400-e29b-41d4-a716-446655440032',
-        funnel_id: '550e8400-e29b-41d4-a716-446655440030',
-        name: 'Qualificação',
-        stage_order: 2,
-        target_percentage: 70,
-        target_value: 70,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      },
-      {
-        id: '550e8400-e29b-41d4-a716-446655440033',
-        funnel_id: '550e8400-e29b-41d4-a716-446655440030',
-        name: 'Proposta',
-        stage_order: 3,
-        target_percentage: 40,
-        target_value: 40,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      },
-      {
-        id: '550e8400-e29b-41d4-a716-446655440034',
-        funnel_id: '550e8400-e29b-41d4-a716-446655440030',
-        name: 'Fechamento',
-        stage_order: 4,
-        target_percentage: 20,
-        target_value: 20,
-        created_at: '2024-01-01T00:00:00Z',
-        updated_at: '2024-01-01T00:00:00Z'
-      }
-    ]
-  }
-];
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { FunnelWithStages } from '@/types/crm';
 
 export const useFunnels = () => {
   return useQuery({
     queryKey: ['funnels'],
     queryFn: async () => {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return mockFunnels;
+      const { data, error } = await supabase
+        .from('funnels')
+        .select(`
+          *,
+          stages:funnel_stages(*)
+        `)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching funnels:', error);
+        throw error;
+      }
+
+      return data as FunnelWithStages[];
+    },
+  });
+};
+
+export const useCreateFunnel = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (funnelData: any) => {
+      const { data, error } = await supabase
+        .from('funnels')
+        .insert(funnelData)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['funnels'] });
+    },
+  });
+};
+
+export const useUpdateFunnel = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...funnelData }: any) => {
+      const { data, error } = await supabase
+        .from('funnels')
+        .update(funnelData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['funnels'] });
     },
   });
 };

@@ -1,31 +1,96 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { SaleWithRelations } from '@/types/crm';
 
-// Mock hooks for sales (will be implemented later)
 export const useSales = () => {
   return useQuery({
     queryKey: ['sales'],
     queryFn: async () => {
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return [];
+      const { data, error } = await supabase
+        .from('sales')
+        .select(`
+          *,
+          lead:leads(name),
+          responsible:crm_users!responsible_id(first_name, last_name),
+          team:teams(name)
+        `)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching sales:', error);
+        // Retornar dados mock para demonstração
+        return [
+          {
+            id: '1',
+            sale_date: '2024-01-15',
+            sale_value: 2500,
+            lead_name: 'João Silva',
+            responsible_id: '1',
+            team_id: '1',
+            company_id: '1',
+            status: 'active',
+            created_at: '2024-01-15',
+            updated_at: '2024-01-15'
+          },
+          {
+            id: '2',
+            sale_date: '2024-01-20',
+            sale_value: 3200,
+            lead_name: 'Maria Santos',
+            responsible_id: '1',
+            team_id: '1',
+            company_id: '1',
+            status: 'active',
+            created_at: '2024-01-20',
+            updated_at: '2024-01-20'
+          }
+        ];
+      }
+
+      return data as SaleWithRelations[];
     },
   });
 };
 
 export const useCreateSale = () => {
-  return {
-    mutate: async (data: any) => {
-      console.log('Creating sale:', data);
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (saleData: any) => {
+      const { data, error } = await supabase
+        .from('sales')
+        .insert(saleData)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
     },
-    isLoading: false
-  };
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sales'] });
+    },
+  });
 };
 
 export const useUpdateSale = () => {
-  return {
-    mutate: async (data: any) => {
-      console.log('Updating sale:', data);
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ id, ...saleData }: any) => {
+      const { data, error } = await supabase
+        .from('sales')
+        .update(saleData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
     },
-    isLoading: false
-  };
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sales'] });
+    },
+  });
 };

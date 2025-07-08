@@ -6,8 +6,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
+
+interface FunnelStage {
+  id?: string;
+  name: string;
+  stage_order: number;
+  target_percentage: number;
+  target_value: number;
+}
 
 interface FunnelModalProps {
   isOpen: boolean;
@@ -23,11 +31,11 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
     verification_day: 1,
   });
 
-  const [stages, setStages] = useState([
-    { name: 'Contato Inicial', stage_order: 1, target_percentage: 100, target_value: 1000 }
+  const [stages, setStages] = useState<FunnelStage[]>([
+    { name: '', stage_order: 1, target_percentage: 0, target_value: 0 }
   ]);
 
-  const [baseValue, setBaseValue] = useState(1000);
+  const [baseValue, setBaseValue] = useState(100);
 
   useEffect(() => {
     if (funnel) {
@@ -36,13 +44,9 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
         verification_type: funnel.verification_type,
         verification_day: funnel.verification_day || 1,
       });
-      if (funnel.stages && funnel.stages.length > 0) {
-        const sortedStages = funnel.stages.sort((a: any, b: any) => a.stage_order - b.stage_order);
-        setStages(sortedStages);
-        // Pegar o valor base da primeira etapa
-        if (sortedStages[0]?.target_value) {
-          setBaseValue(sortedStages[0].target_value);
-        }
+      
+      if (funnel.stages) {
+        setStages(funnel.stages.sort((a: any, b: any) => a.stage_order - b.stage_order));
       }
     } else {
       setFormData({
@@ -51,44 +55,79 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
         verification_day: 1,
       });
       setStages([
-        { name: 'Contato Inicial', stage_order: 1, target_percentage: 100, target_value: 1000 }
+        { name: '', stage_order: 1, target_percentage: 0, target_value: 0 }
       ]);
-      setBaseValue(1000);
     }
   }, [funnel]);
 
   const addStage = () => {
-    const newOrder = Math.max(...stages.map(s => s.stage_order)) + 1;
-    setStages([...stages, {
+    const newStage: FunnelStage = {
       name: '',
-      stage_order: newOrder,
-      target_percentage: 50,
-      target_value: Math.round(baseValue * 0.5)
-    }]);
+      stage_order: stages.length + 1,
+      target_percentage: 0,
+      target_value: 0
+    };
+    setStages([...stages, newStage]);
   };
 
   const removeStage = (index: number) => {
     if (stages.length > 1) {
-      setStages(stages.filter((_, i) => i !== index));
+      const newStages = stages.filter((_, i) => i !== index);
+      // Reordenar as etapas
+      const reorderedStages = newStages.map((stage, i) => ({
+        ...stage,
+        stage_order: i + 1
+      }));
+      setStages(reorderedStages);
     }
   };
 
-  const updateStage = (index: number, field: string, value: any) => {
-    const updatedStages = [...stages];
-    updatedStages[index] = { ...updatedStages[index], [field]: value };
-
-    // Calcular automaticamente o valor ou percentual
+  const updateStage = (index: number, field: keyof FunnelStage, value: string | number) => {
+    const newStages = [...stages];
+    newStages[index] = { ...newStages[index], [field]: value };
+    
+    // Se foi alterado o percentual, calcular o valor
     if (field === 'target_percentage') {
-      const percentage = parseFloat(value) || 0;
+      const percentage = Number(value);
       const calculatedValue = Math.round((baseValue * percentage) / 100);
-      updatedStages[index].target_value = calculatedValue;
-    } else if (field === 'target_value') {
-      const targetValue = parseFloat(value) || 0;
-      const calculatedPercentage = baseValue > 0 ? Math.round((targetValue / baseValue) * 100) : 0;
-      updatedStages[index].target_percentage = calculatedPercentage;
+      newStages[index].target_value = calculatedValue;
     }
+    
+    // Se foi alterado o valor, calcular o percentual
+    if (field === 'target_value') {
+      const targetValue = Number(value);
+      const calculatedPercentage = baseValue > 0 ? (targetValue / baseValue) * 100 : 0;
+      newStages[index].target_percentage = Math.round(calculatedPercentage * 100) / 100;
+    }
+    
+    setStages(newStages);
+  };
 
-    setStages(updatedStages);
+  const getVerificationDayLabel = () => {
+    if (formData.verification_type === 'weekly') {
+      const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+      return days[formData.verification_day] || 'Segunda';
+    }
+    return `Dia ${formData.verification_day}`;
+  };
+
+  const getVerificationDayOptions = () => {
+    if (formData.verification_type === 'weekly') {
+      return [
+        { value: 1, label: 'Segunda-feira' },
+        { value: 2, label: 'Terça-feira' },
+        { value: 3, label: 'Quarta-feira' },
+        { value: 4, label: 'Quinta-feira' },
+        { value: 5, label: 'Sexta-feira' },
+        { value: 6, label: 'Sábado' },
+        { value: 0, label: 'Domingo' },
+      ];
+    } else {
+      return Array.from({ length: 31 }, (_, i) => ({
+        value: i + 1,
+        label: `Dia ${i + 1}`
+      }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -99,26 +138,35 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
       return;
     }
 
-    if (stages.some(stage => !stage.name.trim())) {
+    if (stages.length === 0) {
+      toast.error('Pelo menos uma etapa é obrigatória');
+      return;
+    }
+
+    const hasEmptyStages = stages.some(stage => !stage.name.trim());
+    if (hasEmptyStages) {
       toast.error('Todas as etapas devem ter um nome');
       return;
     }
 
-    console.log('Dados do funil:', { formData, stages, baseValue });
+    console.log('Dados do funil:', {
+      ...formData,
+      stages,
+      companyId
+    });
+
     toast.success(funnel ? 'Funil atualizado com sucesso!' : 'Funil criado com sucesso!');
     onClose();
-  };
-
-  const handleBaseValueChange = (value: string) => {
-    const newBaseValue = parseFloat(value) || 0;
-    setBaseValue(newBaseValue);
     
-    // Recalcular todos os valores baseados no novo valor base
-    const updatedStages = stages.map(stage => ({
-      ...stage,
-      target_value: Math.round((newBaseValue * stage.target_percentage) / 100)
-    }));
-    setStages(updatedStages);
+    // Reset form
+    setFormData({
+      name: '',
+      verification_type: 'weekly',
+      verification_day: 1,
+    });
+    setStages([
+      { name: '', stage_order: 1, target_percentage: 0, target_value: 0 }
+    ]);
   };
 
   return (
@@ -138,7 +186,7 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Ex: Funil Principal"
+                placeholder="Ex: Funil de Vendas Online"
                 required
               />
             </div>
@@ -148,7 +196,11 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
               <Select
                 value={formData.verification_type}
                 onValueChange={(value: 'daily' | 'weekly' | 'monthly') => 
-                  setFormData(prev => ({ ...prev, verification_type: value }))
+                  setFormData(prev => ({ 
+                    ...prev, 
+                    verification_type: value,
+                    verification_day: value === 'weekly' ? 1 : 1
+                  }))
                 }
               >
                 <SelectTrigger>
@@ -162,36 +214,44 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
               </Select>
             </div>
 
-            {(formData.verification_type === 'weekly' || formData.verification_type === 'monthly') && (
+            {formData.verification_type !== 'daily' && (
               <div>
                 <Label htmlFor="verification_day">
                   {formData.verification_type === 'weekly' ? 'Dia da Semana' : 'Dia do Mês'}
                 </Label>
-                <Input
-                  id="verification_day"
-                  type="number"
-                  min={1}
-                  max={formData.verification_type === 'weekly' ? 7 : 31}
-                  value={formData.verification_day}
-                  onChange={(e) => setFormData(prev => ({ 
+                <Select
+                  value={formData.verification_day.toString()}
+                  onValueChange={(value) => setFormData(prev => ({ 
                     ...prev, 
-                    verification_day: parseInt(e.target.value) 
+                    verification_day: parseInt(value) 
                   }))}
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {getVerificationDayOptions().map(option => (
+                      <SelectItem key={option.value} value={option.value.toString()}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
 
             <div>
-              <Label htmlFor="base_value">Valor Base (primeira etapa)</Label>
+              <Label htmlFor="base_value">Valor Base para Cálculos</Label>
               <Input
                 id="base_value"
                 type="number"
-                min="1"
-                step="1"
                 value={baseValue}
-                onChange={(e) => handleBaseValueChange(e.target.value)}
-                placeholder="1000"
+                onChange={(e) => setBaseValue(parseInt(e.target.value) || 100)}
+                placeholder="100"
               />
+              <p className="text-xs text-muted-foreground mt-1">
+                Usado para calcular valores baseados em percentuais
+              </p>
             </div>
           </div>
 
@@ -199,7 +259,7 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle>Etapas do Funil</CardTitle>
-                <Button type="button" variant="outline" onClick={addStage}>
+                <Button type="button" onClick={addStage} size="sm">
                   <Plus className="w-4 h-4 mr-2" />
                   Adicionar Etapa
                 </Button>
@@ -209,51 +269,52 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
               <div className="space-y-4">
                 {stages.map((stage, index) => (
                   <div key={index} className="p-4 border rounded-lg">
-                    <div className="flex justify-between items-start mb-3">
+                    <div className="flex justify-between items-center mb-3">
                       <h4 className="font-medium">Etapa {stage.stage_order}</h4>
                       {stages.length > 1 && (
                         <Button
                           type="button"
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => removeStage(index)}
                         >
-                          <Trash2 className="w-4 h-4 text-red-500" />
+                          <X className="w-4 h-4" />
                         </Button>
                       )}
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div>
                         <Label>Nome da Etapa *</Label>
                         <Input
                           value={stage.name}
                           onChange={(e) => updateStage(index, 'name', e.target.value)}
-                          placeholder="Ex: Qualificação"
+                          placeholder="Ex: Prospecção"
                           required
                         />
                       </div>
                       
                       <div>
-                        <Label>Meta (%)</Label>
+                        <Label>Percentual (%)</Label>
                         <Input
                           type="number"
+                          step="0.01"
                           min="0"
                           max="100"
-                          step="0.1"
                           value={stage.target_percentage}
-                          onChange={(e) => updateStage(index, 'target_percentage', e.target.value)}
+                          onChange={(e) => updateStage(index, 'target_percentage', parseFloat(e.target.value) || 0)}
+                          placeholder="0"
                         />
                       </div>
                       
                       <div>
-                        <Label>Meta (Valor)</Label>
+                        <Label>Valor (quantidade)</Label>
                         <Input
                           type="number"
                           min="0"
-                          step="1"
                           value={stage.target_value}
-                          onChange={(e) => updateStage(index, 'target_value', e.target.value)}
+                          onChange={(e) => updateStage(index, 'target_value', parseInt(e.target.value) || 0)}
+                          placeholder="0"
                         />
                       </div>
                     </div>
