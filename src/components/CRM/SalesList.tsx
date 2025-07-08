@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, Edit, Archive } from 'lucide-react';
-import { useSales } from '@/hooks/useSales';
 import { SaleModal } from './SaleModal';
 
 interface SalesListProps {
@@ -16,7 +15,28 @@ export const SalesList = ({ companyId }: SalesListProps) => {
   const [showModal, setShowModal] = useState(false);
   const [selectedSale, setSelectedSale] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const { data: sales = [], isLoading } = useSales();
+
+  // Mock data para demonstração
+  const sales = [
+    {
+      id: '1',
+      saleDate: '2024-01-15',
+      leadName: 'João Silva',
+      saleValue: 15000,
+      responsible: 'Maria Santos',
+      team: 'Equipe Vendas',
+      status: 'active'
+    },
+    {
+      id: '2',
+      saleDate: '2024-01-20',
+      leadName: 'Ana Costa',
+      saleValue: 25000,
+      responsible: 'Pedro Oliveira',
+      team: 'Equipe Digital',
+      status: 'active'
+    }
+  ];
 
   const handleEdit = (sale: any) => {
     setSelectedSale(sale);
@@ -29,8 +49,10 @@ export const SalesList = ({ companyId }: SalesListProps) => {
   };
 
   const filteredSales = sales.filter(sale =>
-    sale.sale_date.includes(searchTerm) ||
-    sale.sale_value.toString().includes(searchTerm)
+    sale.saleDate.includes(searchTerm) ||
+    sale.leadName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    sale.responsible.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    sale.saleValue.toString().includes(searchTerm)
   );
 
   const formatCurrency = (value: number) => {
@@ -40,13 +62,9 @@ export const SalesList = ({ companyId }: SalesListProps) => {
     }).format(value);
   };
 
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('pt-BR');
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('pt-BR');
   };
-
-  if (isLoading) {
-    return <div className="text-center py-4">Carregando vendas...</div>;
-  }
 
   return (
     <>
@@ -56,7 +74,7 @@ export const SalesList = ({ companyId }: SalesListProps) => {
             <div>
               <CardTitle>Vendas</CardTitle>
               <CardDescription>
-                Gerencie todas as vendas da empresa
+                Gerencie as vendas realizadas
               </CardDescription>
             </div>
             <Button onClick={() => setShowModal(true)}>
@@ -70,7 +88,7 @@ export const SalesList = ({ companyId }: SalesListProps) => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
-                placeholder="Pesquisar por data, nome do lead, responsável ou valor..."
+                placeholder="Pesquisar por data, lead, responsável ou valor..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -81,7 +99,7 @@ export const SalesList = ({ companyId }: SalesListProps) => {
           <div className="space-y-4">
             {filteredSales.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">
-                {searchTerm ? 'Nenhuma venda encontrada para a pesquisa.' : 'Nenhuma venda encontrada. Registre a primeira venda para começar.'}
+                {searchTerm ? 'Nenhuma venda encontrada para a pesquisa.' : 'Nenhuma venda registrada. Registre a primeira venda para começar.'}
               </p>
             ) : (
               filteredSales.map((sale) => (
@@ -91,24 +109,24 @@ export const SalesList = ({ companyId }: SalesListProps) => {
                 >
                   <div className="flex-1 grid grid-cols-1 md:grid-cols-5 gap-4">
                     <div>
-                      <p className="font-medium">{formatDate(sale.sale_date)}</p>
+                      <p className="font-medium">{formatDate(sale.saleDate)}</p>
                       <p className="text-sm text-muted-foreground">Data da Venda</p>
                     </div>
                     <div>
-                      <p className="text-sm">Nome do Lead</p>
-                      <p className="text-sm text-muted-foreground">A definir</p>
+                      <p className="text-sm">{sale.leadName}</p>
+                      <p className="text-sm text-muted-foreground">Lead</p>
                     </div>
                     <div>
-                      <p className="font-medium text-green-600">{formatCurrency(sale.sale_value)}</p>
-                      <p className="text-sm text-muted-foreground">Valor da Venda</p>
+                      <p className="text-sm font-semibold text-green-600">{formatCurrency(sale.saleValue)}</p>
+                      <p className="text-sm text-muted-foreground">Valor</p>
                     </div>
                     <div>
-                      <p className="text-sm">Responsável</p>
-                      <p className="text-sm text-muted-foreground">A definir</p>
+                      <p className="text-sm">{sale.responsible}</p>
+                      <p className="text-sm text-muted-foreground">Responsável</p>
                     </div>
                     <div>
-                      <Badge variant="outline">Equipe</Badge>
-                      <p className="text-sm text-muted-foreground">A definir</p>
+                      <Badge variant="outline">{sale.team}</Badge>
+                      <p className="text-sm text-muted-foreground">Equipe</p>
                     </div>
                   </div>
                   <div className="flex gap-2">

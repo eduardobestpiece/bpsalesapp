@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, Edit, Archive } from 'lucide-react';
-import { useLeads } from '@/hooks/useLeads';
 import { LeadModal } from './LeadModal';
 
 interface LeadsListProps {
@@ -16,7 +15,30 @@ export const LeadsList = ({ companyId }: LeadsListProps) => {
   const [showModal, setShowModal] = useState(false);
   const [selectedLead, setSelectedLead] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const { data: leads = [], isLoading } = useLeads();
+
+  // Mock data para demonstração
+  const leads = [
+    {
+      id: '1',
+      name: 'João Silva',
+      email: 'joao@email.com',
+      phone: '(11) 99999-9999',
+      responsible: 'Maria Santos',
+      stage: 'Qualificação',
+      source: 'Site',
+      status: 'active'
+    },
+    {
+      id: '2',
+      name: 'Ana Costa',
+      email: 'ana@email.com',
+      phone: '(11) 88888-8888',
+      responsible: 'Pedro Oliveira',
+      stage: 'Proposta',
+      source: 'Indicação',
+      status: 'active'
+    }
+  ];
 
   const handleEdit = (lead: any) => {
     setSelectedLead(lead);
@@ -30,13 +52,11 @@ export const LeadsList = ({ companyId }: LeadsListProps) => {
 
   const filteredLeads = leads.filter(lead =>
     lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.phone?.includes(searchTerm)
+    lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    lead.phone.includes(searchTerm) ||
+    lead.responsible.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    lead.stage.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  if (isLoading) {
-    return <div className="text-center py-4">Carregando leads...</div>;
-  }
 
   return (
     <>
@@ -46,7 +66,7 @@ export const LeadsList = ({ companyId }: LeadsListProps) => {
             <div>
               <CardTitle>Leads</CardTitle>
               <CardDescription>
-                Gerencie todos os leads da empresa
+                Gerencie seus leads e prospects
               </CardDescription>
             </div>
             <Button onClick={() => setShowModal(true)}>
@@ -71,7 +91,7 @@ export const LeadsList = ({ companyId }: LeadsListProps) => {
           <div className="space-y-4">
             {filteredLeads.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">
-                {searchTerm ? 'Nenhum lead encontrado para a pesquisa.' : 'Nenhum lead encontrado. Crie o primeiro lead para começar.'}
+                {searchTerm ? 'Nenhum lead encontrado para a pesquisa.' : 'Nenhum lead cadastrado. Adicione o primeiro lead para começar.'}
               </p>
             ) : (
               filteredLeads.map((lead) => (
@@ -79,26 +99,30 @@ export const LeadsList = ({ companyId }: LeadsListProps) => {
                   key={lead.id}
                   className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow"
                 >
-                  <div className="flex-1 grid grid-cols-1 md:grid-cols-5 gap-4">
+                  <div className="flex-1 grid grid-cols-1 md:grid-cols-6 gap-4">
                     <div>
                       <p className="font-medium">{lead.name}</p>
-                      <p className="text-sm text-muted-foreground">Nome do Lead</p>
+                      <p className="text-sm text-muted-foreground">Nome</p>
                     </div>
                     <div>
-                      <p className="text-sm">{lead.email || 'N/A'}</p>
+                      <p className="text-sm">{lead.email}</p>
                       <p className="text-sm text-muted-foreground">Email</p>
                     </div>
                     <div>
-                      <p className="text-sm">{lead.phone || 'N/A'}</p>
+                      <p className="text-sm">{lead.phone}</p>
                       <p className="text-sm text-muted-foreground">Telefone</p>
                     </div>
                     <div>
-                      <p className="text-sm">Responsável</p>
-                      <p className="text-sm text-muted-foreground">A definir</p>
+                      <p className="text-sm">{lead.responsible}</p>
+                      <p className="text-sm text-muted-foreground">Responsável</p>
                     </div>
                     <div>
-                      <Badge variant="outline">Fase</Badge>
-                      <p className="text-sm text-muted-foreground">A definir</p>
+                      <Badge variant="outline">{lead.stage}</Badge>
+                      <p className="text-sm text-muted-foreground">Fase</p>
+                    </div>
+                    <div>
+                      <p className="text-sm">{lead.source}</p>
+                      <p className="text-sm text-muted-foreground">Origem</p>
                     </div>
                   </div>
                   <div className="flex gap-2">

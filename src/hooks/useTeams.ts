@@ -1,36 +1,26 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { Team } from '@/types/crm';
-import { useCrmAuth } from '@/contexts/CrmAuthContext';
+
+// Mock data for teams
+const mockTeams = [
+  {
+    id: '550e8400-e29b-41d4-a716-446655440010',
+    name: 'Equipe Vendas',
+    leader_id: '550e8400-e29b-41d4-a716-446655440003',
+    company_id: '550e8400-e29b-41d4-a716-446655440000',
+    status: 'active',
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z'
+  }
+];
 
 export const useTeams = () => {
-  const { companyId, user } = useCrmAuth();
-  
   return useQuery({
-    queryKey: ['teams', companyId],
+    queryKey: ['teams'],
     queryFn: async () => {
-      if (!companyId || !user) {
-        throw new Error('Company ID or user not available');
-      }
-
-      console.log('Fetching teams for company:', companyId);
-      
-      const { data, error } = await supabase
-        .from('teams')
-        .select('*')
-        .eq('company_id', companyId)
-        .eq('status', 'active')
-        .order('name');
-
-      if (error) {
-        console.error('Error fetching teams:', error);
-        throw error;
-      }
-
-      console.log('Teams fetched:', data);
-      return data as Team[];
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return mockTeams;
     },
-    enabled: !!companyId && !!user,
   });
 };

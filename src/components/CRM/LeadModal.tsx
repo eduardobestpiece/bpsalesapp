@@ -1,12 +1,6 @@
 
-import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useCreateLead, useUpdateLead, useCrmUsers, useFunnels, useSources } from '@/hooks/useCrmData';
-import { toast } from 'sonner';
 
 interface LeadModalProps {
   isOpen: boolean;
@@ -16,204 +10,32 @@ interface LeadModalProps {
 }
 
 export const LeadModal = ({ isOpen, onClose, companyId, lead }: LeadModalProps) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    responsible_id: '',
-    funnel_id: '',
-    source_id: '',
-  });
-
-  const createLead = useCreateLead();
-  const updateLead = useUpdateLead();
-  const { data: users = [] } = useCrmUsers();
-  const { data: funnels = [] } = useFunnels();
-  const { data: sources = [] } = useSources();
-
-  const isEditMode = !!lead;
-
-  useEffect(() => {
-    if (lead) {
-      setFormData({
-        name: lead.name || '',
-        email: lead.email || '',
-        phone: lead.phone || '',
-        responsible_id: lead.responsible_id || '',
-        funnel_id: lead.funnel_id || '',
-        source_id: lead.source_id || '',
-      });
-    } else {
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        responsible_id: '',
-        funnel_id: '',
-        source_id: '',
-      });
-    }
-  }, [lead]);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.name || !formData.responsible_id || !formData.funnel_id) {
-      toast.error('Preencha os campos obrigatórios');
-      return;
-    }
-
-    try {
-      if (isEditMode) {
-        await updateLead.mutateAsync({
-          id: lead.id,
-          name: formData.name,
-          email: formData.email || undefined,
-          phone: formData.phone || undefined,
-          responsible_id: formData.responsible_id,
-          funnel_id: formData.funnel_id,
-          source_id: formData.source_id || undefined,
-        });
-        toast.success('Lead atualizado com sucesso!');
-      } else {
-        // Get the first stage of the selected funnel
-        const selectedFunnel = funnels.find(f => f.id === formData.funnel_id);
-        if (!selectedFunnel || !selectedFunnel.stages || selectedFunnel.stages.length === 0) {
-          toast.error('Funil selecionado não possui etapas configuradas');
-          return;
-        }
-
-        const firstStage = selectedFunnel.stages.find(s => s.stage_order === 1);
-        if (!firstStage) {
-          toast.error('Funil selecionado não possui primeira etapa');
-          return;
-        }
-
-        await createLead.mutateAsync({
-          name: formData.name,
-          email: formData.email || undefined,
-          phone: formData.phone || undefined,
-          responsible_id: formData.responsible_id,
-          funnel_id: formData.funnel_id,
-          current_stage_id: firstStage.id,
-          source_id: formData.source_id || undefined,
-          company_id: companyId,
-          status: 'active' as const,
-        });
-        toast.success('Lead criado com sucesso!');
-      }
-
-      onClose();
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        responsible_id: '',
-        funnel_id: '',
-        source_id: '',
-      });
-    } catch (error) {
-      console.error('Erro ao salvar lead:', error);
-      toast.error(isEditMode ? 'Erro ao atualizar lead' : 'Erro ao criar lead');
-    }
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>{isEditMode ? 'Editar Lead' : 'Adicionar Novo Lead'}</DialogTitle>
+          <DialogTitle>
+            {lead ? 'Editar Lead' : 'Novo Lead'}
+          </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="name">Nome *</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-              placeholder="Nome do lead"
-              required
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
-              placeholder="email@exemplo.com"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="phone">Telefone</Label>
-            <Input
-              id="phone"
-              value={formData.phone}
-              onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-              placeholder="(11) 99999-9999"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="responsible">Responsável *</Label>
-            <Select value={formData.responsible_id} onValueChange={(value) => setFormData(prev => ({ ...prev, responsible_id: value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o responsável" />
-              </SelectTrigger>
-              <SelectContent>
-                {users.map(user => (
-                  <SelectItem key={user.id} value={user.id}>
-                    {user.first_name} {user.last_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="funnel">Funil *</Label>
-            <Select value={formData.funnel_id} onValueChange={(value) => setFormData(prev => ({ ...prev, funnel_id: value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o funil" />
-              </SelectTrigger>
-              <SelectContent>
-                {funnels.map(funnel => (
-                  <SelectItem key={funnel.id} value={funnel.id}>
-                    {funnel.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="source">Origem</Label>
-            <Select value={formData.source_id} onValueChange={(value) => setFormData(prev => ({ ...prev, source_id: value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione a origem" />
-              </SelectTrigger>
-              <SelectContent>
-                {sources.map(source => (
-                  <SelectItem key={source.id} value={source.id}>
-                    {source.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+        
+        <div className="space-y-6">
+          <div className="text-center py-8">
+            <div className="w-24 h-24 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-3xl">🚧</span>
+            </div>
+            <h3 className="text-lg font-semibold mb-2">Em breve</h3>
+            <p className="text-muted-foreground">
+              Esta funcionalidade estará disponível em breve. Estamos trabalhando para trazer a melhor experiência de gestão de leads.
+            </p>
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={createLead.isPending || updateLead.isPending}>
-              {(createLead.isPending || updateLead.isPending) ? 'Salvando...' : (isEditMode ? 'Atualizar Lead' : 'Criar Lead')}
+            <Button variant="outline" onClick={onClose}>
+              Fechar
             </Button>
           </div>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   );

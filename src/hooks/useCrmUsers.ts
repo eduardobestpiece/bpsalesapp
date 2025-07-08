@@ -1,36 +1,57 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import { CrmUser } from '@/types/crm';
-import { useCrmAuth } from '@/contexts/CrmAuthContext';
+
+// Mock data for CRM users
+const mockUsers = [
+  {
+    id: '550e8400-e29b-41d4-a716-446655440003',
+    email: 'eduardocosta@bestpiece.com.br',
+    first_name: 'Eduardo',
+    last_name: 'Costa',
+    phone: '(11) 99999-9999',
+    role: 'master',
+    company_id: '550e8400-e29b-41d4-a716-446655440000',
+    team_id: '550e8400-e29b-41d4-a716-446655440010',
+    status: 'active',
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '550e8400-e29b-41d4-a716-446655440004',
+    email: 'maria@empresa.com',
+    first_name: 'Maria',
+    last_name: 'Santos',
+    phone: '(11) 88888-8888',
+    role: 'admin',
+    company_id: '550e8400-e29b-41d4-a716-446655440000',
+    team_id: '550e8400-e29b-41d4-a716-446655440010',
+    status: 'active',
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z'
+  },
+  {
+    id: '550e8400-e29b-41d4-a716-446655440005',
+    email: 'pedro@empresa.com',
+    first_name: 'Pedro',
+    last_name: 'Oliveira',
+    phone: '(11) 77777-7777',
+    role: 'leader',
+    company_id: '550e8400-e29b-41d4-a716-446655440000',
+    team_id: '550e8400-e29b-41d4-a716-446655440010',
+    leader_id: '550e8400-e29b-41d4-a716-446655440003',
+    status: 'active',
+    created_at: '2024-01-01T00:00:00Z',
+    updated_at: '2024-01-01T00:00:00Z'
+  }
+];
 
 export const useCrmUsers = () => {
-  const { companyId, user } = useCrmAuth();
-  
   return useQuery({
-    queryKey: ['crm-users', companyId],
+    queryKey: ['crm-users'],
     queryFn: async () => {
-      if (!companyId || !user) {
-        throw new Error('Company ID or user not available');
-      }
-
-      console.log('Fetching CRM users for company:', companyId);
-      
-      const { data, error } = await supabase
-        .from('crm_users')
-        .select('*')
-        .eq('company_id', companyId)
-        .eq('status', 'active')
-        .order('first_name');
-
-      if (error) {
-        console.error('Error fetching CRM users:', error);
-        throw error;
-      }
-
-      console.log('CRM users fetched:', data);
-      return data as CrmUser[];
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      return mockUsers;
     },
-    enabled: !!companyId && !!user,
   });
 };
