@@ -89,7 +89,7 @@ const CrmIndicadores = () => {
                       filteredIndicators.map((indicator) => (
                         <div
                           key={indicator.id}
-                          className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow"
+                          className="flex flex-col gap-2 p-4 border rounded-lg hover:shadow-md transition-shadow"
                         >
                           <div className="flex-1 grid grid-cols-1 md:grid-cols-5 gap-4">
                             <div>
@@ -113,7 +113,18 @@ const CrmIndicadores = () => {
                               <p className="text-sm text-muted-foreground">Taxa de Conversão</p>
                             </div>
                           </div>
-                          <div className="flex gap-2">
+                          {/* Exibir valores das etapas */}
+                          {indicator.values && indicator.values.length > 0 && (
+                            <div className="mt-2 grid grid-cols-1 md:grid-cols-3 gap-2">
+                              {indicator.values.map((stageValue: any) => (
+                                <div key={stageValue.stage_id} className="text-xs bg-muted rounded px-2 py-1 flex items-center gap-2">
+                                  <span className="font-semibold">Etapa:</span> {stageValue.stage_id}
+                                  <span className="ml-2 font-semibold">Valor:</span> {stageValue.value}
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          <div className="flex gap-2 mt-2">
                             <Button
                               variant="outline"
                               size="sm"
