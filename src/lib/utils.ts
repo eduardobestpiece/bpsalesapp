@@ -93,3 +93,43 @@ export function gerarPeriodosSemanaisUltimos90Dias(diaInicioSemana: number = 1) 
   }
   return periodos;
 }
+
+// Função para gerar períodos mensais com dia customizável (ex: do dia 2 ao dia 1 do mês seguinte)
+export function gerarPeriodosMensaisCustom(mes: number, ano: number, diaInicio: number = 1, quantidade: number = 3) {
+  const periodos: { label: string; value: string }[] = [];
+  let dataInicio = new Date(ano, mes - 1, diaInicio);
+  for (let i = 0; i < quantidade; i++) {
+    const dataFim = new Date(dataInicio);
+    dataFim.setMonth(dataFim.getMonth() + 1);
+    dataFim.setDate(diaInicio - 1 === 0 ? new Date(dataFim.getFullYear(), dataFim.getMonth(), 0).getDate() : diaInicio - 1);
+    // Corrigir se passou do mês
+    if (dataFim < dataInicio) {
+      dataFim.setMonth(dataFim.getMonth() + 1);
+    }
+    const value = `${dataInicio.toISOString().split('T')[0]}_${dataFim.toISOString().split('T')[0]}`;
+    const label = `De ${dataInicio.toLocaleDateString('pt-BR')} até ${dataFim.toLocaleDateString('pt-BR')}`;
+    periodos.push({ label, value });
+    // Próximo período
+    dataInicio = new Date(dataFim);
+    dataInicio.setDate(dataInicio.getDate() + 1);
+  }
+  return periodos;
+}
+
+// Função para gerar dias dos últimos 90 dias até ontem (para funis diários)
+export function gerarDiasUltimos90AteOntem() {
+  const periodos: { label: string; value: string }[] = [];
+  const hoje = new Date();
+  const ontem = new Date(hoje);
+  ontem.setDate(hoje.getDate() - 1);
+  for (let i = 0; i < 90; i++) {
+    const data = new Date(ontem);
+    data.setDate(ontem.getDate() - i);
+    const value = data.toISOString().split('T')[0];
+    periodos.push({
+      label: data.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+      value
+    });
+  }
+  return periodos;
+}

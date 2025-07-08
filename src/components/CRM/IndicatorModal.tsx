@@ -9,7 +9,7 @@ import { useFunnels } from '@/hooks/useFunnels';
 import { useCreateIndicator, useUpdateIndicator } from '@/hooks/useIndicators';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
-import { gerarPeriodosDiarios, gerarPeriodosSemanais, gerarPeriodoMensal, getUltimoDiaPeriodo, gerarPeriodosSemanaisUltimos90Dias } from '@/lib/utils';
+import { gerarPeriodosDiarios, gerarPeriodosSemanais, gerarPeriodoMensal, getUltimoDiaPeriodo, gerarPeriodosSemanaisUltimos90Dias, gerarPeriodosMensaisCustom, gerarDiasUltimos90AteOntem } from '@/lib/utils';
 import { useIndicators } from '@/hooks/useIndicators';
 
 interface IndicatorModalProps {
@@ -68,7 +68,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     // Gerar todos os períodos possíveis para o mês/ano/funil
     let todosPeriodos: { label: string; value: string }[] = [];
     if (selectedFunnel.verification_type === 'daily') {
-      todosPeriodos = gerarPeriodosDiarios(formData.month_reference, formData.year_reference);
+      todosPeriodos = gerarDiasUltimos90AteOntem();
     } else if (selectedFunnel.verification_type === 'weekly') {
       todosPeriodos = gerarPeriodosSemanais(
         formData.month_reference,
@@ -76,7 +76,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         selectedFunnel.verification_day ?? 1
       );
     } else if (selectedFunnel.verification_type === 'monthly') {
-      todosPeriodos = gerarPeriodoMensal(formData.month_reference, formData.year_reference);
+      todosPeriodos = gerarPeriodosMensaisCustom(formData.month_reference, formData.year_reference, selectedFunnel.verification_day ?? 1, 1);
     }
 
     // 1. PRIMEIRO REGISTRO DO USUÁRIO PARA O FUNIL
@@ -85,24 +85,21 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         // Gerar períodos semanais dos últimos 90 dias, respeitando o dia de início do funil
         todosPeriodos = gerarPeriodosSemanaisUltimos90Dias(selectedFunnel.verification_day ?? 1);
       } else if (selectedFunnel.verification_type === 'daily') {
-        // Diários: últimos 90 dias
-        const hoje = new Date();
-        const dataLimite = new Date(hoje);
-        dataLimite.setDate(dataLimite.getDate() - 89);
-        todosPeriodos = gerarPeriodosDiarios(hoje.getMonth() + 1, hoje.getFullYear())
-          .filter(opt => {
-            const data = new Date(opt.value);
-            return data >= dataLimite && data <= hoje;
-          });
+        // Diários: últimos 90 dias até ontem
+        todosPeriodos = gerarDiasUltimos90AteOntem();
       } else if (selectedFunnel.verification_type === 'monthly') {
-        // Mensal: últimos 3 meses
+        // Mensal: últimos 3 períodos, respeitando o dia de início do funil
         const hoje = new Date();
         todosPeriodos = [];
+        let mes = hoje.getMonth() + 1;
+        let ano = hoje.getFullYear();
         for (let i = 0; i < 3; i++) {
-          const mes = hoje.getMonth() + 1 - i;
-          const ano = hoje.getFullYear() - (mes <= 0 ? 1 : 0);
-          const mesCorrigido = ((mes - 1 + 12) % 12) + 1;
-          todosPeriodos.push(...gerarPeriodoMensal(mesCorrigido, ano));
+          todosPeriodos.push(...gerarPeriodosMensaisCustom(mes, ano, selectedFunnel.verification_day ?? 1, 1));
+          mes--;
+          if (mes === 0) {
+            mes = 12;
+            ano--;
+          }
         }
       }
       // Buscar períodos dos últimos 90 dias (de hoje para trás)
@@ -111,15 +108,15 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
       dataLimite.setDate(dataLimite.getDate() - 89); // 90 dias incluindo hoje
       periodOptions = todosPeriodos
         .filter(opt => {
-          // O último dia do período deve estar entre dataLimite e hoje
-          const ultimoDia = new Date(getUltimoDiaPeriodo(opt.value));
-          return ultimoDia >= dataLimite && ultimoDia <= hoje;
+          // O último dia do período deve estar entre dataLimite e ontem
+          const data = new Date(opt.value);
+          return data >= dataLimite && data < hoje;
         })
-        .sort((a, b) => new Date(getUltimoDiaPeriodo(b.value)).getTime() - new Date(getUltimoDiaPeriodo(a.value)).getTime())
+        .sort((a, b) => new Date(b.value).getTime() - new Date(a.value).getTime())
         .map(opt => {
-          // Só pode registrar se hoje >= último dia do período
-          const ultimoDia = new Date(getUltimoDiaPeriodo(opt.value));
-          const isAllowed = hoje >= ultimoDia;
+          // Só pode registrar se o dia < hoje
+          const data = new Date(opt.value);
+          const isAllowed = data < hoje;
           return {
             ...opt,
             isAllowed,
@@ -129,22 +126,40 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     }
     // 2. SEGUNDO REGISTRO OU MAIS
     else {
-      // Encontrar o índice do último período registrado pelo usuário
-      const idxUltimo = todosPeriodos.findIndex(opt => opt.value === ultimoPeriodoUsuario);
-      // Só mostrar períodos entre o último registrado (exclusivo) e o período vigente (último dia <= hoje)
-      periodOptions = todosPeriodos
-        .filter((opt, idx) => {
-          const ultimoDia = new Date(getUltimoDiaPeriodo(opt.value));
-          return idx > idxUltimo && ultimoDia <= hoje;
-        })
-        .map(opt => {
+      if (selectedFunnel.verification_type === 'daily') {
+        // Só pode registrar entre o primeiro registro e ontem
+        const primeiroDia = new Date(ultimoPeriodoUsuario!);
+        const hoje = new Date();
+        todosPeriodos = gerarDiasUltimos90AteOntem().filter(opt => {
+          const data = new Date(opt.value);
+          return data >= primeiroDia && data < hoje;
+        });
+        periodOptions = todosPeriodos.map(opt => {
           const isMissing = !periodosUsuario.includes(opt.value);
           return {
             ...opt,
             isMissing,
-            isAllowed: true // sempre permitido se está na lista
+            isAllowed: true
           };
         });
+      } else {
+        // Encontrar o índice do último período registrado pelo usuário
+        const idxUltimo = todosPeriodos.findIndex(opt => opt.value === ultimoPeriodoUsuario);
+        // Só mostrar períodos entre o último registrado (exclusivo) e o período vigente (último dia <= hoje)
+        periodOptions = todosPeriodos
+          .filter((opt, idx) => {
+            const ultimoDia = new Date(getUltimoDiaPeriodo(opt.value));
+            return idx > idxUltimo && ultimoDia <= hoje;
+          })
+          .map(opt => {
+            const isMissing = !periodosUsuario.includes(opt.value);
+            return {
+              ...opt,
+              isMissing,
+              isAllowed: true // sempre permitido se está na lista
+            };
+          });
+      }
     }
   }
 
