@@ -32,7 +32,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   const { crmUser } = useCrmAuth();
   // Garantir que o companyId nunca é undefined
   const effectiveCompanyId = companyId || crmUser?.company_id || '';
-  const { data: funnels, isLoading: isFunnelsLoading } = useFunnels(effectiveCompanyId, 'active');
+  const { data: funnels, isLoading: isFunnelsLoading, error: funnelsError } = useFunnels(effectiveCompanyId, 'active');
   const { mutate: createIndicator } = useCreateIndicator();
   const { mutate: updateIndicator } = useUpdateIndicator();
 
@@ -188,7 +188,11 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                   <SelectValue placeholder="Selecione um funil" />
                 </SelectTrigger>
                 <SelectContent>
-                  {isFunnelsLoading ? (
+                  {funnelsError ? (
+                    <div className="px-4 py-2 text-red-500 text-sm">
+                      Erro ao carregar funis: {funnelsError.message || 'Erro desconhecido'}
+                    </div>
+                  ) : isFunnelsLoading ? (
                     <div className="px-4 py-2 text-muted-foreground text-sm">
                       Carregando funis...
                     </div>
