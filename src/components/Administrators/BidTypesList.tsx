@@ -54,7 +54,7 @@ export const BidTypesList: React.FC<BidTypesListProps> = ({
         query = query.eq('is_archived', statusFilter === 'archived');
       }
 
-      if (selectedAdministrator !== 'all') {
+      if (selectedAdministrator && selectedAdministrator !== 'all') {
         query = query.eq('administrator_id', selectedAdministrator);
       }
 

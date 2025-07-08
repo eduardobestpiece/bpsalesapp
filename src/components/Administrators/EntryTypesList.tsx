@@ -64,7 +64,7 @@ export const EntryTypesList: React.FC<EntryTypesListProps> = ({
         query = query.eq('is_archived', true);
       }
 
-      if (selectedAdministrator !== 'all') {
+      if (selectedAdministrator && selectedAdministrator !== 'all') {
         query = query.eq('administrator_id', selectedAdministrator);
       }
 
