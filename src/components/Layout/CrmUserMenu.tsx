@@ -1,5 +1,5 @@
 
-import { User, Settings, LogOut, Users } from 'lucide-react';
+import { User, Settings, LogOut, Calculator } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useModule } from '@/contexts/ModuleContext';
 import {
@@ -13,11 +13,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-export const UserMenu = () => {
+export const CrmUserMenu = () => {
   const { setModule } = useModule();
 
-  const handleGoToCrm = () => {
-    setModule('crm');
+  const handleGoToSimulator = () => {
+    setModule('simulator');
   };
 
   return (
@@ -51,20 +51,22 @@ export const UserMenu = () => {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="p-3 cursor-pointer hover:bg-primary-50/70 rounded-lg">
-          <User className="mr-3 h-5 w-5 text-primary-600" />
-          <span className="font-medium text-secondary">Perfil</span>
+        <DropdownMenuItem asChild className="p-3 cursor-pointer hover:bg-primary-50/70 rounded-lg">
+          <Link to="/crm/perfil">
+            <User className="mr-3 h-5 w-5 text-primary-600" />
+            <span className="font-medium text-secondary">Perfil</span>
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild className="p-3 cursor-pointer hover:bg-primary-50/70 rounded-lg">
-          <Link to="/configuracoes">
+          <Link to="/crm/configuracoes">
             <Settings className="mr-3 h-5 w-5 text-primary-600" />
             <span className="font-medium text-secondary">Configurações</span>
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem className="p-3 cursor-pointer hover:bg-blue-50/70 rounded-lg" onClick={handleGoToCrm}>
-          <Link to="/crm" className="flex items-center w-full">
-            <Users className="mr-3 h-5 w-5 text-blue-600" />
-            <span className="font-medium text-secondary">CRM</span>
+        <DropdownMenuItem className="p-3 cursor-pointer hover:bg-blue-50/70 rounded-lg" onClick={handleGoToSimulator}>
+          <Link to="/" className="flex items-center w-full">
+            <Calculator className="mr-3 h-5 w-5 text-blue-600" />
+            <span className="font-medium text-secondary">Simulador</span>
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
