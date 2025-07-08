@@ -101,52 +101,60 @@ const CrmIndicadores = () => {
                         return (
                           <div key={funnel.id} className="mb-8">
                             <h3 className="font-bold text-lg mb-2">{funnel.name}</h3>
-                            {/* Cabeçalho dinâmico */}
-                            <div
-                              className={`grid grid-cols-${colCount} gap-2 font-semibold bg-muted rounded px-2 py-1 mb-2`}
-                            >
-                              <div>Período</div>
-                              <div>Mês</div>
-                              <div>Ano</div>
-                              {sortedStages.map((stage: any) => (
-                                <div key={stage.id}>{stage.name}</div>
-                              ))}
-                              <div>Ações</div>
+                            <div className="overflow-x-auto">
+                              <table className="min-w-full border-separate border-spacing-y-1">
+                                <thead>
+                                  <tr className="bg-muted">
+                                    <th className="px-2 py-1 text-left font-semibold">Período</th>
+                                    <th className="px-2 py-1 text-left font-semibold">Mês</th>
+                                    <th className="px-2 py-1 text-left font-semibold">Ano</th>
+                                    {sortedStages.map((stage: any) => (
+                                      <th key={stage.id} className="px-2 py-1 text-left font-semibold">{stage.name}</th>
+                                    ))}
+                                    <th className="px-2 py-1 text-center font-semibold">Ações</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {funnelIndicators.length === 0 ? (
+                                    <tr>
+                                      <td colSpan={3 + sortedStages.length + 1} className="text-muted-foreground text-center py-4">Nenhum indicador registrado para este funil.</td>
+                                    </tr>
+                                  ) : (
+                                    funnelIndicators.map((indicator) => (
+                                      <tr key={indicator.id} className="bg-white border-b last:border-b-0">
+                                        <td className="px-2 py-1">{new Date(indicator.period_date).toLocaleDateString('pt-BR')}</td>
+                                        <td className="px-2 py-1">{String(indicator.month_reference).padStart(2, '0')}</td>
+                                        <td className="px-2 py-1">{indicator.year_reference}</td>
+                                        {sortedStages.map((stage: any) => {
+                                          const valueObj = (indicator.values || []).find((v: any) => v.stage_id === stage.id);
+                                          return (
+                                            <td key={stage.id} className="px-2 py-1 text-center">{valueObj ? valueObj.value : '-'}</td>
+                                          );
+                                        })}
+                                        <td className="px-2 py-1 text-center">
+                                          <div className="flex gap-2 justify-center">
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={() => handleEdit(indicator)}
+                                            >
+                                              <Edit className="w-4 h-4" />
+                                            </Button>
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={() => {}}
+                                            >
+                                              <Archive className="w-4 h-4" />
+                                            </Button>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    ))
+                                  )}
+                                </tbody>
+                              </table>
                             </div>
-                            {/* Linhas dos indicadores */}
-                            {funnelIndicators.length === 0 ? (
-                              <div className="text-muted-foreground text-center py-4">Nenhum indicador registrado para este funil.</div>
-                            ) : (
-                              funnelIndicators.map((indicator) => (
-                                <div key={indicator.id} className={`grid grid-cols-${colCount} gap-2 items-center border-b last:border-b-0 py-2`}>
-                                  <div>{new Date(indicator.period_date).toLocaleDateString('pt-BR')}</div>
-                                  <div>{String(indicator.month_reference).padStart(2, '0')}</div>
-                                  <div>{indicator.year_reference}</div>
-                                  {sortedStages.map((stage: any) => {
-                                    const valueObj = (indicator.values || []).find((v: any) => v.stage_id === stage.id);
-                                    return (
-                                      <div key={stage.id} className="text-center">{valueObj ? valueObj.value : '-'}</div>
-                                    );
-                                  })}
-                                  <div className="flex gap-2 justify-center">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => handleEdit(indicator)}
-                                    >
-                                      <Edit className="w-4 h-4" />
-                                    </Button>
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => {}}
-                                    >
-                                      <Archive className="w-4 h-4" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              ))
-                            )}
                           </div>
                         );
                       })
