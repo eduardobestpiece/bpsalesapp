@@ -10,6 +10,8 @@ import { IndicatorModal } from '@/components/CRM/IndicatorModal';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useIndicators } from '@/hooks/useIndicators';
 import { useFunnels } from '@/hooks/useFunnels';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import CrmPerformance from './CrmPerformance';
 
 const CrmIndicadores = () => {
   const [showModal, setShowModal] = useState(false);
@@ -55,128 +57,136 @@ const CrmIndicadores = () => {
               <div className="text-center space-y-2 mb-8">
                 <h2 className="text-2xl font-bold">Indicadores</h2>
                 <p className="text-muted-foreground">
-                  Registre e acompanhe seus números e resultados
+                  Acompanhe e registre seus indicadores e resultados
                 </p>
               </div>
-
-              <Card>
-                <CardHeader>
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <CardTitle>Meus Indicadores</CardTitle>
-                      <CardDescription>
-                        Registre seus números por período e funil
-                      </CardDescription>
-                    </div>
-                    <Button onClick={() => setShowModal(true)}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Registrar Indicador
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="mb-4">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                      <Input
-                        placeholder="Pesquisar por data ou funil..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-8">
-                    {isIndicatorsLoading || isFunnelsLoading ? (
-                      <p className="text-muted-foreground text-center py-8">
-                        Carregando indicadores...
-                      </p>
-                    ) : funnels && funnels.length > 0 ? (
-                      funnels.map((funnel) => {
-                        const funnelIndicators = indicatorsByFunnel[funnel.id] || [];
-                        // Ordenar etapas por stage_order
-                        const sortedStages = (funnel.stages || []).sort((a: any, b: any) => a.stage_order - b.stage_order);
-                        const colCount = 3 + sortedStages.length + 1;
-                        return (
-                          <div key={funnel.id} className="mb-8">
-                            <h3 className="font-bold text-lg mb-2">{funnel.name}</h3>
-                            <div className="overflow-x-auto">
-                              <table className="min-w-full border-separate border-spacing-y-1">
-                                <thead>
-                                  <tr className="bg-muted">
-                                    <th className="px-2 py-1 text-left font-semibold">Período</th>
-                                    <th className="px-2 py-1 text-left font-semibold">Mês</th>
-                                    <th className="px-2 py-1 text-left font-semibold">Ano</th>
-                                    {sortedStages.map((stage: any) => (
-                                      <th key={stage.id} className="px-2 py-1 text-left font-semibold">{stage.name}</th>
-                                    ))}
-                                    <th className="px-2 py-1 text-center font-semibold">Ações</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {funnelIndicators.length === 0 ? (
-                                    <tr>
-                                      <td colSpan={3 + sortedStages.length + 1} className="text-muted-foreground text-center py-4">Nenhum indicador registrado para este funil.</td>
-                                    </tr>
-                                  ) : (
-                                    funnelIndicators.map((indicator) => (
-                                      <tr key={indicator.id} className="bg-white border-b last:border-b-0">
-                                        <td className="px-2 py-1">{new Date(indicator.period_date).toLocaleDateString('pt-BR')}</td>
-                                        <td className="px-2 py-1">{String(indicator.month_reference).padStart(2, '0')}</td>
-                                        <td className="px-2 py-1">{indicator.year_reference}</td>
-                                        {sortedStages.map((stage: any) => {
-                                          const valueObj = (indicator.values || []).find((v: any) => v.stage_id === stage.id);
-                                          return (
-                                            <td key={stage.id} className="px-2 py-1 text-center">{valueObj ? valueObj.value : '-'}</td>
-                                          );
-                                        })}
-                                        <td className="px-2 py-1 text-center">
-                                          <div className="flex gap-2 justify-center">
-                                            <Button
-                                              variant="outline"
-                                              size="sm"
-                                              onClick={() => handleEdit(indicator)}
-                                            >
-                                              <Edit className="w-4 h-4" />
-                                            </Button>
-                                            <Button
-                                              variant="outline"
-                                              size="sm"
-                                              onClick={() => {}}
-                                            >
-                                              <Archive className="w-4 h-4" />
-                                            </Button>
-                                          </div>
-                                        </td>
+              <Tabs defaultValue="performance">
+                <TabsList className="mb-6">
+                  <TabsTrigger value="performance">Performance</TabsTrigger>
+                  <TabsTrigger value="registro">Registro de Indicadores</TabsTrigger>
+                </TabsList>
+                <TabsContent value="performance">
+                  <CrmPerformance embedded />
+                </TabsContent>
+                <TabsContent value="registro">
+                  {/* Conteúdo original da página de Indicadores */}
+                  <Card>
+                    <CardHeader>
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <CardTitle>Meus Indicadores</CardTitle>
+                          <CardDescription>
+                            Registre seus números por período e funil
+                          </CardDescription>
+                        </div>
+                        <Button onClick={() => setShowModal(true)}>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Registrar Indicador
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="mb-4">
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                          <Input
+                            placeholder="Pesquisar por data ou funil..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="pl-10"
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-8">
+                        {isIndicatorsLoading || isFunnelsLoading ? (
+                          <p className="text-muted-foreground text-center py-8">
+                            Carregando indicadores...
+                          </p>
+                        ) : funnels && funnels.length > 0 ? (
+                          funnels.map((funnel) => {
+                            const funnelIndicators = indicatorsByFunnel[funnel.id] || [];
+                            const sortedStages = (funnel.stages || []).sort((a: any, b: any) => a.stage_order - b.stage_order);
+                            const colCount = 3 + sortedStages.length + 1;
+                            return (
+                              <div key={funnel.id} className="mb-8">
+                                <h3 className="font-bold text-lg mb-2">{funnel.name}</h3>
+                                <div className="overflow-x-auto">
+                                  <table className="min-w-full border-separate border-spacing-y-1">
+                                    <thead>
+                                      <tr className="bg-muted">
+                                        <th className="px-2 py-1 text-left font-semibold">Período</th>
+                                        <th className="px-2 py-1 text-left font-semibold">Mês</th>
+                                        <th className="px-2 py-1 text-left font-semibold">Ano</th>
+                                        {sortedStages.map((stage: any) => (
+                                          <th key={stage.id} className="px-2 py-1 text-left font-semibold">{stage.name}</th>
+                                        ))}
+                                        <th className="px-2 py-1 text-center font-semibold">Ações</th>
                                       </tr>
-                                    ))
-                                  )}
-                                </tbody>
-                              </table>
-                            </div>
-                          </div>
-                        );
-                      })
-                    ) : (
-                      <p className="text-muted-foreground text-center py-8">
-                        Nenhum funil encontrado.
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                                    </thead>
+                                    <tbody>
+                                      {funnelIndicators.length === 0 ? (
+                                        <tr>
+                                          <td colSpan={3 + sortedStages.length + 1} className="text-muted-foreground text-center py-4">Nenhum indicador registrado para este funil.</td>
+                                        </tr>
+                                      ) : (
+                                        funnelIndicators.map((indicator) => (
+                                          <tr key={indicator.id} className="bg-white border-b last:border-b-0">
+                                            <td className="px-2 py-1">{new Date(indicator.period_date).toLocaleDateString('pt-BR')}</td>
+                                            <td className="px-2 py-1">{String(indicator.month_reference).padStart(2, '0')}</td>
+                                            <td className="px-2 py-1">{indicator.year_reference}</td>
+                                            {sortedStages.map((stage: any) => {
+                                              const valueObj = (indicator.values || []).find((v: any) => v.stage_id === stage.id);
+                                              return (
+                                                <td key={stage.id} className="px-2 py-1 text-center">{valueObj ? valueObj.value : '-'}</td>
+                                              );
+                                            })}
+                                            <td className="px-2 py-1 text-center">
+                                              <div className="flex gap-2 justify-center">
+                                                <Button
+                                                  variant="outline"
+                                                  size="sm"
+                                                  onClick={() => handleEdit(indicator)}
+                                                >
+                                                  <Edit className="w-4 h-4" />
+                                                </Button>
+                                                <Button
+                                                  variant="outline"
+                                                  size="sm"
+                                                  onClick={() => {}}
+                                                >
+                                                  <Archive className="w-4 h-4" />
+                                                </Button>
+                                              </div>
+                                            </td>
+                                          </tr>
+                                        ))
+                                      )}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </div>
+                            );
+                          })
+                        ) : (
+                          <p className="text-muted-foreground text-center py-8">
+                            Nenhum funil encontrado.
+                          </p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <IndicatorModal
+                    isOpen={showModal}
+                    onClose={handleCloseModal}
+                    companyId={companyId}
+                    indicator={selectedIndicator}
+                  />
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
         </div>
       </main>
-
-      <IndicatorModal
-        isOpen={showModal}
-        onClose={handleCloseModal}
-        companyId={companyId}
-        indicator={selectedIndicator}
-      />
     </div>
   );
 };
