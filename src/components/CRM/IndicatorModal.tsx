@@ -141,16 +141,39 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
           };
         });
       } else {
+        // Para semanal/mensal: comparar period_date salvo (data final) com o último dia do período
+        // periodosUsuario: lista de datas finais já registradas
+        // ultimoPeriodoUsuario: última data final registrada
+        const hoje = new Date();
+        const dataLimite = new Date(hoje);
+        dataLimite.setDate(dataLimite.getDate() - 89);
+        // Gerar todos os períodos possíveis dos últimos 90 dias
+        if (selectedFunnel.verification_type === 'weekly') {
+          todosPeriodos = gerarPeriodosSemanaisUltimos90Dias(selectedFunnel.verification_day ?? 1);
+        } else if (selectedFunnel.verification_type === 'monthly') {
+          const hoje = new Date();
+          todosPeriodos = [];
+          let mes = hoje.getMonth() + 1;
+          let ano = hoje.getFullYear();
+          for (let i = 0; i < 3; i++) {
+            todosPeriodos.push(...gerarPeriodosMensaisCustom(mes, ano, selectedFunnel.verification_day ?? 1, 1));
+            mes--;
+            if (mes === 0) {
+              mes = 12;
+              ano--;
+            }
+          }
+        }
         // Encontrar o índice do último período registrado pelo usuário
-        const idxUltimo = todosPeriodos.findIndex(opt => opt.value === ultimoPeriodoUsuario);
+        const idxUltimo = todosPeriodos.findIndex(opt => getUltimoDiaPeriodo(opt.value) === ultimoPeriodoUsuario);
         // Só mostrar períodos entre o último registrado (exclusivo) e o período vigente (último dia <= hoje)
         periodOptions = todosPeriodos
           .filter((opt, idx) => {
             const ultimoDia = new Date(getUltimoDiaPeriodo(opt.value));
-            return idx > idxUltimo && ultimoDia <= hoje;
+            return idx > idxUltimo && ultimoDia < hoje;
           })
           .map(opt => {
-            const isMissing = !periodosUsuario.includes(opt.value);
+            const isMissing = !periodosUsuario.includes(getUltimoDiaPeriodo(opt.value));
             return {
               ...opt,
               isMissing,
