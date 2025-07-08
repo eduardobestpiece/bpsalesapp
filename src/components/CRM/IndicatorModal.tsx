@@ -185,12 +185,19 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
 
   useEffect(() => {
     if (indicator) {
+      // Preencher stages a partir de indicator.values
+      const stagesValues: Record<string, number> = {};
+      if (indicator.values && Array.isArray(indicator.values)) {
+        indicator.values.forEach((v: any) => {
+          stagesValues[v.stage_id] = v.value;
+        });
+      }
       setFormData({
         period_date: indicator.period_date,
         funnel_id: indicator.funnel_id,
         month_reference: indicator.month_reference,
         year_reference: indicator.year_reference,
-        stages: indicator.stages || {}
+        stages: stagesValues
       });
     } else {
       const today = new Date().toISOString().split('T')[0];
