@@ -1,19 +1,21 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useCreateLead, useCrmUsers, useFunnels, useSources } from '@/hooks/useCrmData';
+import { useCreateLead, useUpdateLead, useCrmUsers, useFunnels, useSources } from '@/hooks/useCrmData';
 import { toast } from 'sonner';
 
 interface LeadModalProps {
   isOpen: boolean;
   onClose: () => void;
   companyId: string;
+  lead?: any;
 }
 
-export const LeadModal = ({ isOpen, onClose, companyId }: LeadModalProps) => {
+export const LeadModal = ({ isOpen, onClose, companyId, lead }: LeadModalProps) => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -24,9 +26,34 @@ export const LeadModal = ({ isOpen, onClose, companyId }: LeadModalProps) => {
   });
 
   const createLead = useCreateLead();
+  const updateLead = useUpdateLead();
   const { data: users = [] } = useCrmUsers();
   const { data: funnels = [] } = useFunnels();
   const { data: sources = [] } = useSources();
+
+  const isEditMode = !!lead;
+
+  useEffect(() => {
+    if (lead) {
+      setFormData({
+        name: lead.name || '',
+        email: lead.email || '',
+        phone: lead.phone || '',
+        responsible_id: lead.responsible_id || '',
+        funnel_id: lead.funnel_id || '',
+        source_id: lead.source_id || '',
+      });
+    } else {
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        responsible_id: '',
+        funnel_id: '',
+        source_id: '',
+      });
+    }
+  }, [lead]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,32 +64,45 @@ export const LeadModal = ({ isOpen, onClose, companyId }: LeadModalProps) => {
     }
 
     try {
-      // Get the first stage of the selected funnel
-      const selectedFunnel = funnels.find(f => f.id === formData.funnel_id);
-      if (!selectedFunnel || !selectedFunnel.stages || selectedFunnel.stages.length === 0) {
-        toast.error('Funil selecionado não possui etapas configuradas');
-        return;
+      if (isEditMode) {
+        await updateLead.mutateAsync({
+          id: lead.id,
+          name: formData.name,
+          email: formData.email || undefined,
+          phone: formData.phone || undefined,
+          responsible_id: formData.responsible_id,
+          funnel_id: formData.funnel_id,
+          source_id: formData.source_id || undefined,
+        });
+        toast.success('Lead atualizado com sucesso!');
+      } else {
+        // Get the first stage of the selected funnel
+        const selectedFunnel = funnels.find(f => f.id === formData.funnel_id);
+        if (!selectedFunnel || !selectedFunnel.stages || selectedFunnel.stages.length === 0) {
+          toast.error('Funil selecionado não possui etapas configuradas');
+          return;
+        }
+
+        const firstStage = selectedFunnel.stages.find(s => s.stage_order === 1);
+        if (!firstStage) {
+          toast.error('Funil selecionado não possui primeira etapa');
+          return;
+        }
+
+        await createLead.mutateAsync({
+          name: formData.name,
+          email: formData.email || undefined,
+          phone: formData.phone || undefined,
+          responsible_id: formData.responsible_id,
+          funnel_id: formData.funnel_id,
+          current_stage_id: firstStage.id,
+          source_id: formData.source_id || undefined,
+          company_id: companyId,
+          status: 'active' as const,
+        });
+        toast.success('Lead criado com sucesso!');
       }
 
-      const firstStage = selectedFunnel.stages.find(s => s.stage_order === 1);
-      if (!firstStage) {
-        toast.error('Funil selecionado não possui primeira etapa');
-        return;
-      }
-
-      await createLead.mutateAsync({
-        name: formData.name,
-        email: formData.email || undefined,
-        phone: formData.phone || undefined,
-        responsible_id: formData.responsible_id,
-        funnel_id: formData.funnel_id,
-        current_stage_id: firstStage.id,
-        source_id: formData.source_id || undefined,
-        company_id: companyId,
-        status: 'active' as const,
-      });
-
-      toast.success('Lead criado com sucesso!');
       onClose();
       setFormData({
         name: '',
@@ -73,8 +113,8 @@ export const LeadModal = ({ isOpen, onClose, companyId }: LeadModalProps) => {
         source_id: '',
       });
     } catch (error) {
-      console.error('Erro ao criar lead:', error);
-      toast.error('Erro ao criar lead');
+      console.error('Erro ao salvar lead:', error);
+      toast.error(isEditMode ? 'Erro ao atualizar lead' : 'Erro ao criar lead');
     }
   };
 
@@ -82,7 +122,7 @@ export const LeadModal = ({ isOpen, onClose, companyId }: LeadModalProps) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Adicionar Novo Lead</DialogTitle>
+          <DialogTitle>{isEditMode ? 'Editar Lead' : 'Adicionar Novo Lead'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -169,8 +209,8 @@ export const LeadModal = ({ isOpen, onClose, companyId }: LeadModalProps) => {
             <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={createLead.isPending}>
-              {createLead.isPending ? 'Criando...' : 'Criar Lead'}
+            <Button type="submit" disabled={createLead.isPending || updateLead.isPending}>
+              {(createLead.isPending || updateLead.isPending) ? 'Salvando...' : (isEditMode ? 'Atualizar Lead' : 'Criar Lead')}
             </Button>
           </div>
         </form>

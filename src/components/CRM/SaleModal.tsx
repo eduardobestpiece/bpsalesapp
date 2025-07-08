@@ -1,19 +1,21 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useCreateSale, useLeads, useCrmUsers } from '@/hooks/useCrmData';
+import { useCreateSale, useUpdateSale, useLeads, useCrmUsers } from '@/hooks/useCrmData';
 import { toast } from 'sonner';
 
 interface SaleModalProps {
   isOpen: boolean;
   onClose: () => void;
   companyId: string;
+  sale?: any;
 }
 
-export const SaleModal = ({ isOpen, onClose, companyId }: SaleModalProps) => {
+export const SaleModal = ({ isOpen, onClose, companyId, sale }: SaleModalProps) => {
   const [formData, setFormData] = useState({
     lead_id: '',
     sale_date: new Date().toISOString().split('T')[0],
@@ -22,8 +24,29 @@ export const SaleModal = ({ isOpen, onClose, companyId }: SaleModalProps) => {
   });
 
   const createSale = useCreateSale();
+  const updateSale = useUpdateSale();
   const { data: leads = [] } = useLeads();
   const { data: users = [] } = useCrmUsers();
+
+  const isEditMode = !!sale;
+
+  useEffect(() => {
+    if (sale) {
+      setFormData({
+        lead_id: sale.lead_id || '',
+        sale_date: sale.sale_date || new Date().toISOString().split('T')[0],
+        sale_value: sale.sale_value?.toString() || '',
+        responsible_id: sale.responsible_id || '',
+      });
+    } else {
+      setFormData({
+        lead_id: '',
+        sale_date: new Date().toISOString().split('T')[0],
+        sale_value: '',
+        responsible_id: '',
+      });
+    }
+  }, [sale]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,16 +57,27 @@ export const SaleModal = ({ isOpen, onClose, companyId }: SaleModalProps) => {
     }
 
     try {
-      await createSale.mutateAsync({
-        lead_id: formData.lead_id,
-        sale_date: formData.sale_date,
-        sale_value: parseFloat(formData.sale_value),
-        responsible_id: formData.responsible_id,
-        company_id: companyId,
-        status: 'active' as const,
-      });
+      if (isEditMode) {
+        await updateSale.mutateAsync({
+          id: sale.id,
+          lead_id: formData.lead_id,
+          sale_date: formData.sale_date,
+          sale_value: parseFloat(formData.sale_value),
+          responsible_id: formData.responsible_id,
+        });
+        toast.success('Venda atualizada com sucesso!');
+      } else {
+        await createSale.mutateAsync({
+          lead_id: formData.lead_id,
+          sale_date: formData.sale_date,
+          sale_value: parseFloat(formData.sale_value),
+          responsible_id: formData.responsible_id,
+          company_id: companyId,
+          status: 'active' as const,
+        });
+        toast.success('Venda registrada com sucesso!');
+      }
 
-      toast.success('Venda registrada com sucesso!');
       onClose();
       setFormData({
         lead_id: '',
@@ -52,8 +86,8 @@ export const SaleModal = ({ isOpen, onClose, companyId }: SaleModalProps) => {
         responsible_id: '',
       });
     } catch (error) {
-      console.error('Erro ao registrar venda:', error);
-      toast.error('Erro ao registrar venda');
+      console.error('Erro ao salvar venda:', error);
+      toast.error(isEditMode ? 'Erro ao atualizar venda' : 'Erro ao registrar venda');
     }
   };
 
@@ -61,7 +95,7 @@ export const SaleModal = ({ isOpen, onClose, companyId }: SaleModalProps) => {
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Registrar Nova Venda</DialogTitle>
+          <DialogTitle>{isEditMode ? 'Editar Venda' : 'Registrar Nova Venda'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -125,8 +159,8 @@ export const SaleModal = ({ isOpen, onClose, companyId }: SaleModalProps) => {
             <Button type="button" variant="outline" onClick={onClose}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={createSale.isPending}>
-              {createSale.isPending ? 'Registrando...' : 'Registrar Venda'}
+            <Button type="submit" disabled={createSale.isPending || updateSale.isPending}>
+              {(createSale.isPending || updateSale.isPending) ? 'Salvando...' : (isEditMode ? 'Atualizar Venda' : 'Registrar Venda')}
             </Button>
           </div>
         </form>
