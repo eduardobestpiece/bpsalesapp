@@ -102,21 +102,19 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
           }
         }
       }
-      // Buscar períodos dos últimos 90 dias (de hoje para trás)
+      // Filtrar períodos cujo último dia já passou e está dentro dos últimos 90 dias
       const hoje = new Date();
       const dataLimite = new Date(hoje);
       dataLimite.setDate(dataLimite.getDate() - 89); // 90 dias incluindo hoje
       periodOptions = todosPeriodos
         .filter(opt => {
-          // O último dia do período deve estar entre dataLimite e ontem
-          const data = new Date(opt.value);
-          return data >= dataLimite && data < hoje;
+          const ultimoDia = new Date(getUltimoDiaPeriodo(opt.value));
+          return ultimoDia >= dataLimite && ultimoDia < hoje;
         })
-        .sort((a, b) => new Date(b.value).getTime() - new Date(a.value).getTime())
+        .sort((a, b) => new Date(getUltimoDiaPeriodo(b.value)).getTime() - new Date(getUltimoDiaPeriodo(a.value)).getTime())
         .map(opt => {
-          // Só pode registrar se o dia < hoje
-          const data = new Date(opt.value);
-          const isAllowed = data < hoje;
+          const ultimoDia = new Date(getUltimoDiaPeriodo(opt.value));
+          const isAllowed = hoje > ultimoDia;
           return {
             ...opt,
             isAllowed,
