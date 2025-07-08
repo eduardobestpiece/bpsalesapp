@@ -222,7 +222,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
             </div>
 
             <div>
-              <Label htmlFor="verification_type">Tipo de Verificação *</Label>
+              <Label htmlFor="verification_type">Periodicidade *</Label>
               <Select
                 value={formData.verification_type}
                 onValueChange={(value: 'daily' | 'weekly' | 'monthly') => 
