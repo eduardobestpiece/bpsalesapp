@@ -29,7 +29,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   const [selectedFunnel, setSelectedFunnel] = useState<any>(null);
 
   const { crmUser } = useCrmAuth();
-  const { data: funnels } = useFunnels(companyId);
+  const { data: funnels } = useFunnels(companyId, 'all');
   const { mutate: createIndicator } = useCreateIndicator();
   const { mutate: updateIndicator } = useUpdateIndicator();
 

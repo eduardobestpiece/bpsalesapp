@@ -8,35 +8,35 @@ type Funnel = Tables<'funnels'>;
 type FunnelInsert = TablesInsert<'funnels'>;
 type FunnelUpdate = TablesUpdate<'funnels'>;
 
-export const useFunnels = (companyId?: string | null) => {
+export const useFunnels = (companyId?: string | null, status: 'active' | 'archived' | 'all' = 'active') => {
   const { companyId: authCompanyId } = useCrmAuth();
   const effectiveCompanyId = companyId || authCompanyId;
 
   return useQuery({
-    queryKey: ['funnels', effectiveCompanyId],
+    queryKey: ['funnels', effectiveCompanyId, status],
     queryFn: async () => {
       if (!effectiveCompanyId) {
         console.log('No company ID available for funnels query');
         return [];
       }
 
-      console.log('Fetching funnels for company:', effectiveCompanyId);
-      const { data, error } = await supabase
+      let query = supabase
         .from('funnels')
-        .select(`
-          *,
-          stages:funnel_stages(*)
-        `)
+        .select(`*, stages:funnel_stages(*)`)
         .eq('company_id', effectiveCompanyId)
-        .eq('status', 'active')
         .order('name');
+
+      if (status !== 'all') {
+        query = query.eq('status', status);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('Error fetching funnels:', error);
         throw error;
       }
 
-      console.log('Funnels fetched:', data);
       return data;
     },
     enabled: !!effectiveCompanyId

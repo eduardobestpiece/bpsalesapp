@@ -12,4 +12,10 @@
     - EntryTypesList.tsx
   - Status: ✅ Concluído
 
+- **Ajuste no modal Registrar Indicador para exibir todos os funis**
+  - Alterado o hook useFunnels para aceitar parâmetro de status ('active', 'archived', 'all').
+  - No modal Registrar Indicador, agora são exibidos todos os funis cadastrados (ativos e arquivados).
+  - Objetivo: permitir selecionar qualquer funil ao registrar um novo indicador.
+  - Status: ✅ Concluído
+
 --- 
