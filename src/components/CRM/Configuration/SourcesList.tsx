@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Edit, Archive } from 'lucide-react';
-import { useSources } from '@/hooks/useCrmData';
+import { useSources } from '@/hooks/useSources';
 import { SourceModal } from './SourceModal';
 
 interface SourcesListProps {
