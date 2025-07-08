@@ -1,7 +1,6 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Construction } from 'lucide-react';
 
 interface LeadModalProps {
   isOpen: boolean;
@@ -20,18 +19,14 @@ export const LeadModal = ({ isOpen, onClose, companyId, lead }: LeadModalProps) 
           </DialogTitle>
         </DialogHeader>
         
-        <div className="flex flex-col items-center justify-center py-8 space-y-4">
-          <Construction className="w-16 h-16 text-muted-foreground" />
-          <div className="text-center space-y-2">
-            <h3 className="text-lg font-semibold">Em Breve</h3>
-            <p className="text-muted-foreground">
-              Esta funcionalidade estará disponível em breve.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex justify-end">
-          <Button onClick={onClose}>
+        <div className="flex flex-col items-center justify-center py-12 space-y-4">
+          <div className="text-6xl">🚧</div>
+          <h3 className="text-xl font-semibold">Em breve</h3>
+          <p className="text-muted-foreground text-center">
+            Esta funcionalidade estará disponível em breve.
+          </p>
+          
+          <Button onClick={onClose} className="mt-6">
             Fechar
           </Button>
         </div>

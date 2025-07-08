@@ -1,12 +1,25 @@
 
-import { useState } from 'react';
 import { CrmHeader } from '@/components/Layout/CrmHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LeadsList } from '@/components/CRM/LeadsList';
 import { SalesList } from '@/components/CRM/SalesList';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
 
 const CrmDashboard = () => {
-  const companyId = '550e8400-e29b-41d4-a716-446655440000';
+  const { companyId } = useCrmAuth();
+
+  if (!companyId) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
+        <CrmHeader />
+        <main className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <p className="text-muted-foreground">Carregando informações da empresa...</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
@@ -17,9 +30,9 @@ const CrmDashboard = () => {
             <div className="bg-white rounded-[calc(1.5rem-4px)] p-8 shadow-sm min-h-[600px]">
               
               <div className="text-center space-y-2 mb-8">
-                <h2 className="text-2xl font-bold">CRM - Gestão de Leads e Vendas</h2>
+                <h2 className="text-2xl font-bold">Dashboard CRM</h2>
                 <p className="text-muted-foreground">
-                  Gerencie seus leads e vendas de forma eficiente
+                  Gerencie seus leads e vendas
                 </p>
               </div>
 
