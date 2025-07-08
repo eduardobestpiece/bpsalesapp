@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useFunnels } from '@/hooks/useFunnels';
+import { useCreateIndicator, useUpdateIndicator } from '@/hooks/useIndicators';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
 
@@ -30,6 +30,8 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
 
   const { crmUser } = useCrmAuth();
   const { data: funnels } = useFunnels(companyId);
+  const { mutate: createIndicator } = useCreateIndicator();
+  const { mutate: updateIndicator } = useUpdateIndicator();
 
   useEffect(() => {
     if (indicator) {
@@ -94,22 +96,52 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     setIsLoading(true);
 
     try {
-      // Simular salvamento - em um cenário real, seria feito via API
       const indicatorData = {
-        ...formData,
         user_id: crmUser.id,
         company_id: companyId,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        funnel_id: formData.funnel_id,
+        period_date: formData.period_date,
+        month_reference: formData.month_reference,
+        year_reference: formData.year_reference
       };
 
-      console.log('Saving indicator:', indicatorData);
-      
-      // Simular delay de API
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      toast.success(indicator ? 'Indicador atualizado com sucesso!' : 'Indicador registrado com sucesso!');
-      onClose();
+      const stageValues = Object.entries(formData.stages).map(([stageId, value]) => ({
+        stage_id: stageId,
+        value: value
+      }));
+
+      if (indicator) {
+        // Update existing indicator
+        updateIndicator({
+          id: indicator.id,
+          indicator: indicatorData,
+          values: stageValues
+        }, {
+          onSuccess: () => {
+            toast.success('Indicador atualizado com sucesso!');
+            onClose();
+          },
+          onError: (error: any) => {
+            console.error('Erro ao atualizar indicador:', error);
+            toast.error(error.message || 'Erro ao atualizar indicador');
+          }
+        });
+      } else {
+        // Create new indicator
+        createIndicator({
+          indicator: indicatorData,
+          values: stageValues
+        }, {
+          onSuccess: () => {
+            toast.success('Indicador registrado com sucesso!');
+            onClose();
+          },
+          onError: (error: any) => {
+            console.error('Erro ao salvar indicador:', error);
+            toast.error(error.message || 'Erro ao salvar indicador');
+          }
+        });
+      }
     } catch (error: any) {
       console.error('Erro ao salvar indicador:', error);
       toast.error(error.message || 'Erro ao salvar indicador');
