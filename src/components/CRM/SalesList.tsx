@@ -30,8 +30,10 @@ export const SalesList = ({ companyId }: SalesListProps) => {
 
   const filteredSales = sales.filter(sale =>
     sale.sale_date?.includes(searchTerm) ||
-    sale.lead_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    sale.sale_value?.toString().includes(searchTerm)
+    sale.lead?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    sale.sale_value?.toString().includes(searchTerm) ||
+    `${sale.responsible?.first_name} ${sale.responsible?.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    sale.team?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (isLoading) {
@@ -85,7 +87,7 @@ export const SalesList = ({ companyId }: SalesListProps) => {
                       <p className="text-sm text-muted-foreground">Data da Venda</p>
                     </div>
                     <div>
-                      <p className="text-sm">{sale.lead_name || 'Lead não informado'}</p>
+                      <p className="text-sm">{sale.lead?.name || 'Lead não informado'}</p>
                       <p className="text-sm text-muted-foreground">Nome do Lead</p>
                     </div>
                     <div>
@@ -101,12 +103,19 @@ export const SalesList = ({ companyId }: SalesListProps) => {
                       <p className="text-sm text-muted-foreground">Valor da Venda</p>
                     </div>
                     <div>
-                      <p className="text-sm">Responsável</p>
-                      <p className="text-sm text-muted-foreground">Usuário</p>
+                      <p className="text-sm">
+                        {sale.responsible ? 
+                          `${sale.responsible.first_name} ${sale.responsible.last_name}` : 
+                          'Responsável não informado'
+                        }
+                      </p>
+                      <p className="text-sm text-muted-foreground">Responsável</p>
                     </div>
                     <div>
-                      <Badge variant="outline">Equipe</Badge>
-                      <p className="text-sm text-muted-foreground">Time</p>
+                      <Badge variant="outline">
+                        {sale.team?.name || 'Equipe não informada'}
+                      </Badge>
+                      <p className="text-sm text-muted-foreground">Equipe</p>
                     </div>
                   </div>
                   <div className="flex gap-2">
