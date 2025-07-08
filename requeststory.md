@@ -1,24 +1,29 @@
-# Requisição: Reestruturação da listagem e modal de indicadores
+# Requisição em andamento
+
+## Objetivo
+Implementar a lógica para gerar as opções de período no modal de indicador, conforme a configuração do funil selecionado (semanal, diário ou mensal), destacando períodos faltantes em vermelho (a partir do segundo registro).
 
 ## Contexto
-O usuário solicitou melhorias na tela de indicadores e no modal de registro, para melhor usabilidade e controle dos períodos e etapas.
-
-## Itens solicitados
-- Agrupar indicadores por funil na listagem.
-- Cabeçalho dinâmico: "Período", "Mês", "Ano" e nome de cada etapa do funil.
-- Cada linha: valores alinhados ao cabeçalho, botão de editar e arquivar.
-- No modal, trocar "Data do Período" para "Período".
-- Períodos baseados na configuração do funil (ex: semanal, iniciando na sexta), exibindo opções como "Do dia 04/07/2025 ao dia 10/07/2025".
-- Períodos faltantes (sem registro) aparecem em vermelho, mas só do segundo registro em diante.
-- O cálculo dos períodos começa a partir do primeiro registro daquele funil.
-- Ordem dos campos no modal: "Mês", "Ano", "Funil", "Período", "Resultados por Etapa".
-- "Mês" e "Ano" sugerem o mês/ano atual, com meses exibidos com a primeira letra maiúscula.
+- O campo "Período" do modal deve exibir opções dinâmicas baseadas em:
+  - verification_type ("daily", "weekly", "monthly")
+  - verification_day (ex: dia da semana de início)
+  - mês e ano selecionados
+- Períodos já registrados devem ser destacados (ou bloqueados) para evitar duplicidade.
+- Períodos faltantes devem ser destacados em vermelho, mas só do segundo registro em diante.
+- Ordem dos campos já está correta no modal.
 
 ## Checklist
-- [ ] Refatorar listagem de indicadores para agrupar por funil e exibir cabeçalho dinâmico.
-- [ ] Refatorar linhas para alinhar valores conforme cabeçalho, com botões de editar/arquivar.
-- [ ] Refatorar modal: trocar campo para "Período" e gerar opções dinâmicas conforme funil.
-- [ ] Implementar lógica de períodos faltantes (vermelho) a partir do segundo registro.
-- [ ] Ajustar ordem dos campos no modal.
-- [ ] Garantir mês/ano atual como padrão, com meses formatados corretamente.
-- [ ] Testar e validar. 
+- [x] Analisar estrutura de dados do funil e indicadores
+- [x] Verificar como buscar indicadores já registrados
+- [x] Planejar funções utilitárias para gerar períodos dinâmicos
+- [ ] Implementar geração dinâmica de períodos no modal
+- [ ] Destacar períodos faltantes conforme regra
+- [ ] Testar e ajustar interface
+- [ ] Realizar deploy
+
+**Ponto de partida:**
+- O modal já exibe os campos corretamente, mas as opções de período ainda são estáticas.
+- Estrutura de dados e hooks já analisados.
+
+**Próximo passo:**
+Implementar a função utilitária para gerar períodos dinâmicos (diário, semanal, mensal) e integrar ao modal. 

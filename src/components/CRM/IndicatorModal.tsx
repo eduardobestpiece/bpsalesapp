@@ -9,6 +9,8 @@ import { useFunnels } from '@/hooks/useFunnels';
 import { useCreateIndicator, useUpdateIndicator } from '@/hooks/useIndicators';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
+import { gerarPeriodosDiarios, gerarPeriodosSemanais, gerarPeriodoMensal } from '@/lib/utils';
+import { useIndicators } from '@/hooks/useIndicators';
 
 interface IndicatorModalProps {
   isOpen: boolean;
@@ -35,6 +37,44 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   const { data: funnels, isLoading: isFunnelsLoading, error: funnelsError } = useFunnels(effectiveCompanyId, 'active');
   const { mutate: createIndicator } = useCreateIndicator();
   const { mutate: updateIndicator } = useUpdateIndicator();
+  const { data: indicators } = useIndicators(effectiveCompanyId);
+
+  // Geração dinâmica dos períodos
+  let periodOptions: { label: string; value: string; isMissing?: boolean }[] = [];
+  let periodosRegistrados: string[] = [];
+  if (selectedFunnel && formData.month_reference && formData.year_reference) {
+    // Buscar períodos já registrados para o funil, mês e ano
+    periodosRegistrados = (indicators || [])
+      .filter((ind) =>
+        ind.funnel_id === selectedFunnel.id &&
+        ind.month_reference === formData.month_reference &&
+        ind.year_reference === formData.year_reference
+      )
+      .map((ind) => ind.period_date);
+    if (selectedFunnel.verification_type === 'daily') {
+      periodOptions = gerarPeriodosDiarios(formData.month_reference, formData.year_reference).map(opt => ({
+        ...opt,
+        isMissing: !periodosRegistrados.includes(opt.value)
+      }));
+    } else if (selectedFunnel.verification_type === 'weekly') {
+      periodOptions = gerarPeriodosSemanais(
+        formData.month_reference,
+        formData.year_reference,
+        selectedFunnel.verification_day ?? 1
+      ).map(opt => ({
+        ...opt,
+        isMissing: !periodosRegistrados.includes(opt.value)
+      }));
+    } else if (selectedFunnel.verification_type === 'monthly') {
+      periodOptions = gerarPeriodoMensal(formData.month_reference, formData.year_reference).map(opt => ({
+        ...opt,
+        isMissing: !periodosRegistrados.includes(opt.value)
+      }));
+    }
+  }
+
+  // Regra: só destacar faltantes em vermelho a partir do segundo registro
+  const destacarFaltantes = periodosRegistrados.length > 0;
 
   useEffect(() => {
     if (indicator) {
@@ -164,18 +204,46 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Mês */}
             <div>
-              <Label htmlFor="period_date">Data do Período *</Label>
+              <Label htmlFor="month_reference">Mês *</Label>
+              <Select
+                value={String(formData.month_reference)}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, month_reference: Number(value) }))}
+                disabled={isLoading}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o mês" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[...Array(12)].map((_, i) => {
+                    const date = new Date(2000, i, 1);
+                    const monthName = date.toLocaleString('pt-BR', { month: 'long' });
+                    return (
+                      <SelectItem key={i+1} value={String(i+1)}>
+                        {monthName.charAt(0).toUpperCase() + monthName.slice(1)}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+            {/* Ano */}
+            <div>
+              <Label htmlFor="year_reference">Ano *</Label>
               <Input
-                id="period_date"
-                type="date"
-                value={formData.period_date}
-                onChange={(e) => setFormData(prev => ({ ...prev, period_date: e.target.value }))}
+                id="year_reference"
+                type="number"
+                value={formData.year_reference}
+                onChange={(e) => setFormData(prev => ({ ...prev, year_reference: Number(e.target.value) }))}
                 required
                 disabled={isLoading}
+                min={2000}
+                max={2100}
               />
             </div>
-
+            {/* Funil */}
             <div>
               <Label htmlFor="funnel_id">Funil *</Label>
               <Select 
@@ -210,40 +278,38 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Período */}
             <div>
-              <Label htmlFor="month_reference">Mês de Referência</Label>
-              <Select 
-                value={formData.month_reference.toString()} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, month_reference: parseInt(value) }))}
-                disabled={isLoading}
+              <Label htmlFor="period_date">Período *</Label>
+              <Select
+                value={formData.period_date}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, period_date: value }))}
+                disabled={isLoading || !formData.funnel_id}
+                required
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Selecione o período" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.from({ length: 12 }, (_, i) => (
-                    <SelectItem key={i + 1} value={(i + 1).toString()}>
-                      {new Date(2024, i).toLocaleString('pt-BR', { month: 'long' })}
+                  {periodOptions.length === 0 && (
+                    <div className="px-4 py-2 text-muted-foreground text-sm">
+                      Selecione um funil, mês e ano
+                    </div>
+                  )}
+                  {periodOptions.map(opt => (
+                    <SelectItem
+                      key={opt.value}
+                      value={opt.value}
+                      disabled={periodosRegistrados.includes(opt.value) && (!indicator || indicator.period_date !== opt.value)}
+                    >
+                      <span className={opt.isMissing && destacarFaltantes ? 'text-red-500' : ''}>{opt.label}</span>
+                      {periodosRegistrados.includes(opt.value) && (!indicator || indicator.period_date !== opt.value) && (
+                        <span className="ml-2 text-xs text-muted-foreground">(já registrado)</span>
+                      )}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="year_reference">Ano de Referência</Label>
-              <Input
-                id="year_reference"
-                type="number"
-                value={formData.year_reference}
-                onChange={(e) => setFormData(prev => ({ ...prev, year_reference: parseInt(e.target.value) }))}
-                min="2020"
-                max="2030"
-                disabled={isLoading}
-              />
             </div>
           </div>
 
