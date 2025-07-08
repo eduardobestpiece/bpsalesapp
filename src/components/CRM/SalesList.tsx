@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, Edit, Archive } from 'lucide-react';
+import { useSales } from '@/hooks/useSales';
 import { SaleModal } from './SaleModal';
 
 interface SalesListProps {
@@ -15,28 +16,7 @@ export const SalesList = ({ companyId }: SalesListProps) => {
   const [showModal, setShowModal] = useState(false);
   const [selectedSale, setSelectedSale] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
-
-  // Mock data para demonstração
-  const sales = [
-    {
-      id: '1',
-      saleDate: '2024-01-15',
-      leadName: 'João Silva',
-      saleValue: 15000,
-      responsible: 'Maria Santos',
-      team: 'Equipe Vendas',
-      status: 'active'
-    },
-    {
-      id: '2',
-      saleDate: '2024-01-20',
-      leadName: 'Ana Costa',
-      saleValue: 25000,
-      responsible: 'Pedro Oliveira',
-      team: 'Equipe Digital',
-      status: 'active'
-    }
-  ];
+  const { data: sales = [], isLoading } = useSales();
 
   const handleEdit = (sale: any) => {
     setSelectedSale(sale);
@@ -49,22 +29,14 @@ export const SalesList = ({ companyId }: SalesListProps) => {
   };
 
   const filteredSales = sales.filter(sale =>
-    sale.saleDate.includes(searchTerm) ||
-    sale.leadName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    sale.responsible.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    sale.saleValue.toString().includes(searchTerm)
+    sale.sale_date?.includes(searchTerm) ||
+    sale.lead_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    sale.sale_value?.toString().includes(searchTerm)
   );
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('pt-BR', {
-      style: 'currency',
-      currency: 'BRL'
-    }).format(value);
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
-  };
+  if (isLoading) {
+    return <div className="text-center py-4">Carregando vendas...</div>;
+  }
 
   return (
     <>
@@ -74,7 +46,7 @@ export const SalesList = ({ companyId }: SalesListProps) => {
             <div>
               <CardTitle>Vendas</CardTitle>
               <CardDescription>
-                Gerencie as vendas realizadas
+                Gerencie suas vendas e resultados
               </CardDescription>
             </div>
             <Button onClick={() => setShowModal(true)}>
@@ -99,7 +71,7 @@ export const SalesList = ({ companyId }: SalesListProps) => {
           <div className="space-y-4">
             {filteredSales.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">
-                {searchTerm ? 'Nenhuma venda encontrada para a pesquisa.' : 'Nenhuma venda registrada. Registre a primeira venda para começar.'}
+                {searchTerm ? 'Nenhuma venda encontrada para a pesquisa.' : 'Nenhuma venda cadastrada. Adicione a primeira venda para começar.'}
               </p>
             ) : (
               filteredSales.map((sale) => (
@@ -109,24 +81,32 @@ export const SalesList = ({ companyId }: SalesListProps) => {
                 >
                   <div className="flex-1 grid grid-cols-1 md:grid-cols-5 gap-4">
                     <div>
-                      <p className="font-medium">{formatDate(sale.saleDate)}</p>
+                      <p className="font-medium">{sale.sale_date ? new Date(sale.sale_date).toLocaleDateString('pt-BR') : 'Data não informada'}</p>
                       <p className="text-sm text-muted-foreground">Data da Venda</p>
                     </div>
                     <div>
-                      <p className="text-sm">{sale.leadName}</p>
-                      <p className="text-sm text-muted-foreground">Lead</p>
+                      <p className="text-sm">{sale.lead_name || 'Lead não informado'}</p>
+                      <p className="text-sm text-muted-foreground">Nome do Lead</p>
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-green-600">{formatCurrency(sale.saleValue)}</p>
-                      <p className="text-sm text-muted-foreground">Valor</p>
+                      <p className="text-sm font-medium">
+                        {sale.sale_value ? 
+                          new Intl.NumberFormat('pt-BR', { 
+                            style: 'currency', 
+                            currency: 'BRL' 
+                          }).format(sale.sale_value) : 
+                          'Valor não informado'
+                        }
+                      </p>
+                      <p className="text-sm text-muted-foreground">Valor da Venda</p>
                     </div>
                     <div>
-                      <p className="text-sm">{sale.responsible}</p>
-                      <p className="text-sm text-muted-foreground">Responsável</p>
+                      <p className="text-sm">Responsável</p>
+                      <p className="text-sm text-muted-foreground">Usuário</p>
                     </div>
                     <div>
-                      <Badge variant="outline">{sale.team}</Badge>
-                      <p className="text-sm text-muted-foreground">Equipe</p>
+                      <Badge variant="outline">Equipe</Badge>
+                      <p className="text-sm text-muted-foreground">Time</p>
                     </div>
                   </div>
                   <div className="flex gap-2">

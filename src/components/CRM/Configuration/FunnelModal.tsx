@@ -27,6 +27,8 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
     { name: 'Contato Inicial', stage_order: 1, target_percentage: 100, target_value: 1000 }
   ]);
 
+  const [baseValue, setBaseValue] = useState(1000);
+
   useEffect(() => {
     if (funnel) {
       setFormData({
@@ -35,7 +37,12 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
         verification_day: funnel.verification_day || 1,
       });
       if (funnel.stages && funnel.stages.length > 0) {
-        setStages(funnel.stages.sort((a: any, b: any) => a.stage_order - b.stage_order));
+        const sortedStages = funnel.stages.sort((a: any, b: any) => a.stage_order - b.stage_order);
+        setStages(sortedStages);
+        // Pegar o valor base da primeira etapa
+        if (sortedStages[0]?.target_value) {
+          setBaseValue(sortedStages[0].target_value);
+        }
       }
     } else {
       setFormData({
@@ -46,6 +53,7 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
       setStages([
         { name: 'Contato Inicial', stage_order: 1, target_percentage: 100, target_value: 1000 }
       ]);
+      setBaseValue(1000);
     }
   }, [funnel]);
 
@@ -55,7 +63,7 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
       name: '',
       stage_order: newOrder,
       target_percentage: 50,
-      target_value: 500
+      target_value: Math.round(baseValue * 0.5)
     }]);
   };
 
@@ -68,6 +76,18 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
   const updateStage = (index: number, field: string, value: any) => {
     const updatedStages = [...stages];
     updatedStages[index] = { ...updatedStages[index], [field]: value };
+
+    // Calcular automaticamente o valor ou percentual
+    if (field === 'target_percentage') {
+      const percentage = parseFloat(value) || 0;
+      const calculatedValue = Math.round((baseValue * percentage) / 100);
+      updatedStages[index].target_value = calculatedValue;
+    } else if (field === 'target_value') {
+      const targetValue = parseFloat(value) || 0;
+      const calculatedPercentage = baseValue > 0 ? Math.round((targetValue / baseValue) * 100) : 0;
+      updatedStages[index].target_percentage = calculatedPercentage;
+    }
+
     setStages(updatedStages);
   };
 
@@ -84,9 +104,21 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
       return;
     }
 
-    console.log('Dados do funil:', { formData, stages });
+    console.log('Dados do funil:', { formData, stages, baseValue });
     toast.success(funnel ? 'Funil atualizado com sucesso!' : 'Funil criado com sucesso!');
     onClose();
+  };
+
+  const handleBaseValueChange = (value: string) => {
+    const newBaseValue = parseFloat(value) || 0;
+    setBaseValue(newBaseValue);
+    
+    // Recalcular todos os valores baseados no novo valor base
+    const updatedStages = stages.map(stage => ({
+      ...stage,
+      target_value: Math.round((newBaseValue * stage.target_percentage) / 100)
+    }));
+    setStages(updatedStages);
   };
 
   return (
@@ -148,6 +180,19 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
                 />
               </div>
             )}
+
+            <div>
+              <Label htmlFor="base_value">Valor Base (primeira etapa)</Label>
+              <Input
+                id="base_value"
+                type="number"
+                min="1"
+                step="1"
+                value={baseValue}
+                onChange={(e) => handleBaseValueChange(e.target.value)}
+                placeholder="1000"
+              />
+            </div>
           </div>
 
           <Card>
@@ -197,17 +242,18 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
                           max="100"
                           step="0.1"
                           value={stage.target_percentage}
-                          onChange={(e) => updateStage(index, 'target_percentage', parseFloat(e.target.value))}
+                          onChange={(e) => updateStage(index, 'target_percentage', e.target.value)}
                         />
                       </div>
                       
                       <div>
-                        <Label>Meta (Quantidade)</Label>
+                        <Label>Meta (Valor)</Label>
                         <Input
                           type="number"
                           min="0"
+                          step="1"
                           value={stage.target_value}
-                          onChange={(e) => updateStage(index, 'target_value', parseInt(e.target.value))}
+                          onChange={(e) => updateStage(index, 'target_value', e.target.value)}
                         />
                       </div>
                     </div>
@@ -222,7 +268,7 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
               Cancelar
             </Button>
             <Button type="submit">
-              {funnel ? 'Atualizar Funil' : 'Criar Funil'}
+              {funnel ? 'Atualizar' : 'Criar'} Funil
             </Button>
           </div>
         </form>

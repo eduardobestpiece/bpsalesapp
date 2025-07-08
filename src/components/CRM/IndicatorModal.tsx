@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useFunnels } from '@/hooks/useCrmData';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useFunnels } from '@/hooks/useFunnels';
 import { toast } from 'sonner';
 
 interface IndicatorModalProps {
@@ -17,146 +18,214 @@ interface IndicatorModalProps {
 
 export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: IndicatorModalProps) => {
   const [formData, setFormData] = useState({
+    period_date: '',
     funnel_id: '',
-    period_date: new Date().toISOString().split('T')[0],
     month_reference: new Date().getMonth() + 1,
     year_reference: new Date().getFullYear(),
-    stages: {} as Record<string, number>,
   });
 
+  const [stageValues, setStageValues] = useState<Record<string, number>>({});
   const { data: funnels = [] } = useFunnels();
-  const isEditMode = !!indicator;
 
   const selectedFunnel = funnels.find(f => f.id === formData.funnel_id);
 
   useEffect(() => {
     if (indicator) {
       setFormData({
-        funnel_id: indicator.funnel_id || '',
-        period_date: indicator.period_date || new Date().toISOString().split('T')[0],
-        month_reference: indicator.month_reference || new Date().getMonth() + 1,
-        year_reference: indicator.year_reference || new Date().getFullYear(),
-        stages: indicator.stages || {},
+        period_date: indicator.period_date,
+        funnel_id: indicator.funnel_id,
+        month_reference: indicator.month_reference,
+        year_reference: indicator.year_reference,
       });
+      // Aqui você carregaria os valores das etapas do indicador
     } else {
-      const now = new Date();
+      const today = new Date();
       setFormData({
+        period_date: today.toISOString().split('T')[0],
         funnel_id: '',
-        period_date: now.toISOString().split('T')[0],
-        month_reference: now.getMonth() + 1,
-        year_reference: now.getFullYear(),
-        stages: {},
+        month_reference: today.getMonth() + 1,
+        year_reference: today.getFullYear(),
       });
+      setStageValues({});
     }
   }, [indicator]);
 
-  const handleStageValueChange = (stageId: string, value: string) => {
-    setFormData(prev => ({
-      ...prev,
-      stages: {
-        ...prev.stages,
-        [stageId]: parseInt(value) || 0
-      }
-    }));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!formData.funnel_id || !formData.period_date) {
-      toast.error('Preencha os campos obrigatórios');
+    
+    if (!formData.period_date) {
+      toast.error('Data do período é obrigatória');
       return;
     }
 
-    try {
-      // Simulação da criação/edição de indicador
-      toast.success(isEditMode ? 'Indicador atualizado com sucesso!' : 'Indicador registrado com sucesso!');
-      onClose();
-    } catch (error) {
-      console.error('Erro ao salvar indicador:', error);
-      toast.error(isEditMode ? 'Erro ao atualizar indicador' : 'Erro ao registrar indicador');
+    if (!formData.funnel_id) {
+      toast.error('Funil é obrigatório');
+      return;
     }
+
+    // Verificar se todas as etapas têm valores
+    const hasEmptyStages = selectedFunnel?.stages?.some(stage => 
+      !stageValues[stage.id] || stageValues[stage.id] === 0
+    );
+
+    if (hasEmptyStages) {
+      toast.error('Todas as etapas devem ter valores');
+      return;
+    }
+
+    console.log('Dados do indicador:', {
+      ...formData,
+      stageValues,
+      companyId
+    });
+
+    toast.success(indicator ? 'Indicador atualizado com sucesso!' : 'Indicador registrado com sucesso!');
+    onClose();
+    
+    // Reset form
+    setFormData({
+      period_date: new Date().toISOString().split('T')[0],
+      funnel_id: '',
+      month_reference: new Date().getMonth() + 1,
+      year_reference: new Date().getFullYear(),
+    });
+    setStageValues({});
+  };
+
+  const handleStageValueChange = (stageId: string, value: string) => {
+    const numValue = parseInt(value) || 0;
+    setStageValues(prev => ({
+      ...prev,
+      [stageId]: numValue
+    }));
+  };
+
+  const getMonthName = (month: number) => {
+    const months = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+    return months[month - 1];
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{isEditMode ? 'Editar Indicador' : 'Registrar Indicador'}</DialogTitle>
+          <DialogTitle>
+            {indicator ? 'Editar Indicador' : 'Registrar Indicador'}
+          </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="period_date">Período *</Label>
-            <Input
-              id="period_date"
-              type="date"
-              value={formData.period_date}
-              onChange={(e) => setFormData(prev => ({ ...prev, period_date: e.target.value }))}
-              required
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="funnel">Funil *</Label>
-            <Select value={formData.funnel_id} onValueChange={(value) => setFormData(prev => ({ ...prev, funnel_id: value }))}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione o funil" />
-              </SelectTrigger>
-              <SelectContent>
-                {funnels.map(funnel => (
-                  <SelectItem key={funnel.id} value={funnel.id}>
-                    {funnel.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {isEditMode && (
+        
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="month_reference">Mês de Referência</Label>
-              <Select 
-                value={formData.month_reference.toString()} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, month_reference: parseInt(value) }))}
+              <Label htmlFor="period_date">Data do Período *</Label>
+              <Input
+                id="period_date"
+                type="date"
+                value={formData.period_date}
+                onChange={(e) => setFormData(prev => ({ ...prev, period_date: e.target.value }))}
+                required
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="funnel">Funil *</Label>
+              <Select
+                value={formData.funnel_id}
+                onValueChange={(value) => {
+                  setFormData(prev => ({ ...prev, funnel_id: value }));
+                  setStageValues({});
+                }}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Selecione o funil" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Array.from({ length: 12 }, (_, i) => (
-                    <SelectItem key={i + 1} value={(i + 1).toString()}>
-                      {new Date(2024, i, 1).toLocaleDateString('pt-BR', { month: 'long' })}
+                  {funnels.map(funnel => (
+                    <SelectItem key={funnel.id} value={funnel.id}>
+                      {funnel.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-          )}
 
-          {selectedFunnel?.stages && selectedFunnel.stages.length > 0 && (
-            <div className="space-y-4">
-              <Label>Números por Etapa</Label>
-              <div className="grid gap-4">
-                {selectedFunnel.stages
-                  .sort((a, b) => a.stage_order - b.stage_order)
-                  .map(stage => (
-                    <div key={stage.id} className="flex items-center gap-4">
+            <div>
+              <Label htmlFor="month_reference">Mês de Referência</Label>
+              <Select
+                value={formData.month_reference.toString()}
+                onValueChange={(value) => setFormData(prev => ({ 
+                  ...prev, 
+                  month_reference: parseInt(value) 
+                }))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map(month => (
+                    <SelectItem key={month} value={month.toString()}>
+                      {getMonthName(month)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="year_reference">Ano de Referência</Label>
+              <Input
+                id="year_reference"
+                type="number"
+                min={2020}
+                max={2030}
+                value={formData.year_reference}
+                onChange={(e) => setFormData(prev => ({ 
+                  ...prev, 
+                  year_reference: parseInt(e.target.value) 
+                }))}
+              />
+            </div>
+          </div>
+
+          {selectedFunnel && selectedFunnel.stages && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Etapas do Funil - {selectedFunnel.name}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {selectedFunnel.stages
+                    .sort((a, b) => a.stage_order - b.stage_order)
+                    .map((stage, index) => (
+                    <div key={stage.id} className="flex items-center justify-between p-3 border rounded-lg">
                       <div className="flex-1">
-                        <Label className="text-sm">{stage.name}</Label>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-muted-foreground">
+                            Etapa {stage.stage_order}
+                          </span>
+                          <h4 className="font-medium">{stage.name}</h4>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          Meta: {stage.target_percentage}% ({stage.target_value} leads)
+                        </p>
                       </div>
                       <div className="w-32">
                         <Input
                           type="number"
                           min="0"
-                          value={formData.stages[stage.id] || ''}
+                          placeholder="Quantidade"
+                          value={stageValues[stage.id] || ''}
                           onChange={(e) => handleStageValueChange(stage.id, e.target.value)}
-                          placeholder="0"
                         />
                       </div>
                     </div>
                   ))}
-              </div>
-            </div>
+                </div>
+              </CardContent>
+            </Card>
           )}
 
           <div className="flex justify-end space-x-2 pt-4">
@@ -164,7 +233,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
               Cancelar
             </Button>
             <Button type="submit">
-              {isEditMode ? 'Atualizar Indicador' : 'Registrar Indicador'}
+              {indicator ? 'Atualizar' : 'Registrar'} Indicador
             </Button>
           </div>
         </form>

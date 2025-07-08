@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, Edit, Archive } from 'lucide-react';
+import { useLeads } from '@/hooks/useLeads';
 import { LeadModal } from './LeadModal';
 
 interface LeadsListProps {
@@ -15,30 +16,7 @@ export const LeadsList = ({ companyId }: LeadsListProps) => {
   const [showModal, setShowModal] = useState(false);
   const [selectedLead, setSelectedLead] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
-
-  // Mock data para demonstração
-  const leads = [
-    {
-      id: '1',
-      name: 'João Silva',
-      email: 'joao@email.com',
-      phone: '(11) 99999-9999',
-      responsible: 'Maria Santos',
-      stage: 'Qualificação',
-      source: 'Site',
-      status: 'active'
-    },
-    {
-      id: '2',
-      name: 'Ana Costa',
-      email: 'ana@email.com',
-      phone: '(11) 88888-8888',
-      responsible: 'Pedro Oliveira',
-      stage: 'Proposta',
-      source: 'Indicação',
-      status: 'active'
-    }
-  ];
+  const { data: leads = [], isLoading } = useLeads();
 
   const handleEdit = (lead: any) => {
     setSelectedLead(lead);
@@ -51,12 +29,14 @@ export const LeadsList = ({ companyId }: LeadsListProps) => {
   };
 
   const filteredLeads = leads.filter(lead =>
-    lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.phone.includes(searchTerm) ||
-    lead.responsible.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    lead.stage.toLowerCase().includes(searchTerm.toLowerCase())
+    lead.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    lead.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    lead.phone?.includes(searchTerm)
   );
+
+  if (isLoading) {
+    return <div className="text-center py-4">Carregando leads...</div>;
+  }
 
   return (
     <>
@@ -80,7 +60,7 @@ export const LeadsList = ({ companyId }: LeadsListProps) => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
               <Input
-                placeholder="Pesquisar por nome, email, telefone, responsável ou fase..."
+                placeholder="Pesquisar por nome, email ou telefone..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -99,30 +79,26 @@ export const LeadsList = ({ companyId }: LeadsListProps) => {
                   key={lead.id}
                   className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow"
                 >
-                  <div className="flex-1 grid grid-cols-1 md:grid-cols-6 gap-4">
+                  <div className="flex-1 grid grid-cols-1 md:grid-cols-5 gap-4">
                     <div>
                       <p className="font-medium">{lead.name}</p>
-                      <p className="text-sm text-muted-foreground">Nome</p>
+                      <p className="text-sm text-muted-foreground">Nome do Lead</p>
                     </div>
                     <div>
-                      <p className="text-sm">{lead.email}</p>
+                      <p className="text-sm">{lead.email || 'Não informado'}</p>
                       <p className="text-sm text-muted-foreground">Email</p>
                     </div>
                     <div>
-                      <p className="text-sm">{lead.phone}</p>
+                      <p className="text-sm">{lead.phone || 'Não informado'}</p>
                       <p className="text-sm text-muted-foreground">Telefone</p>
                     </div>
                     <div>
-                      <p className="text-sm">{lead.responsible}</p>
-                      <p className="text-sm text-muted-foreground">Responsável</p>
+                      <p className="text-sm">Responsável</p>
+                      <p className="text-sm text-muted-foreground">Usuário</p>
                     </div>
                     <div>
-                      <Badge variant="outline">{lead.stage}</Badge>
-                      <p className="text-sm text-muted-foreground">Fase</p>
-                    </div>
-                    <div>
-                      <p className="text-sm">{lead.source}</p>
-                      <p className="text-sm text-muted-foreground">Origem</p>
+                      <Badge variant="outline">Fase</Badge>
+                      <p className="text-sm text-muted-foreground">Etapa do Funil</p>
                     </div>
                   </div>
                   <div className="flex gap-2">
