@@ -15,7 +15,7 @@ interface PerformanceFilters {
   period: 'day' | 'week' | 'month';
 }
 
-const CrmPerformance = () => {
+const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
   const { companyId, crmUser } = useCrmAuth();
   const [filters, setFilters] = useState<PerformanceFilters | null>(null);
   
@@ -78,6 +78,57 @@ const CrmPerformance = () => {
   const funnelData = getFunnelChartData();
   const statsData = getPerformanceStats();
 
+  const content = (
+    <div className="space-y-6">
+      {/* Filters */}
+      <PerformanceFilters onFiltersChange={setFilters} />
+      {filters && (
+        <>
+          {/* Statistics */}
+          <PerformanceStats {...statsData} />
+          {/* Funnel Chart */}
+          {funnelData.length > 0 ? (
+            <FunnelChart 
+              stages={funnelData}
+              title={`Funil: ${selectedFunnel?.name} - ${filters.period === 'day' ? 'Diário' : filters.period === 'week' ? 'Semanal' : 'Mensal'}`}
+            />
+          ) : (
+            <div className="text-center py-12">
+              <div className="text-6xl mb-4">📊</div>
+              <h3 className="text-xl font-semibold mb-2">Sem dados de performance</h3>
+              <p className="text-muted-foreground">
+                Não há indicadores registrados para este funil no período selecionado.
+              </p>
+            </div>
+          )}
+        </>
+      )}
+      {!filters && (
+        <div className="text-center py-12">
+          <div className="text-6xl mb-4">🎯</div>
+          <h3 className="text-xl font-semibold mb-2">Selecione os filtros</h3>
+          <p className="text-muted-foreground">
+            Configure os filtros acima para visualizar a performance do funil.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+
+  if (embedded) {
+    return (
+      <>
+        <div className="text-center space-y-2 mb-8">
+          <h2 className="text-2xl font-bold">Performance</h2>
+          <p className="text-muted-foreground">
+            Acompanhe o desempenho dos funis e resultados
+          </p>
+        </div>
+        {content}
+      </>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
       <CrmHeader />
@@ -85,51 +136,13 @@ const CrmPerformance = () => {
         <div className="max-w-7xl mx-auto">
           <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-100/50 p-1">
             <div className="bg-white rounded-[calc(1.5rem-4px)] p-8 shadow-sm min-h-[600px]">
-              
               <div className="text-center space-y-2 mb-8">
                 <h2 className="text-2xl font-bold">Performance</h2>
                 <p className="text-muted-foreground">
                   Acompanhe o desempenho dos funis e resultados
                 </p>
               </div>
-
-              <div className="space-y-6">
-                {/* Filters */}
-                <PerformanceFilters onFiltersChange={setFilters} />
-
-                {filters && (
-                  <>
-                    {/* Statistics */}
-                    <PerformanceStats {...statsData} />
-
-                    {/* Funnel Chart */}
-                    {funnelData.length > 0 ? (
-                      <FunnelChart 
-                        stages={funnelData}
-                        title={`Funil: ${selectedFunnel?.name} - ${filters.period === 'day' ? 'Diário' : filters.period === 'week' ? 'Semanal' : 'Mensal'}`}
-                      />
-                    ) : (
-                      <div className="text-center py-12">
-                        <div className="text-6xl mb-4">📊</div>
-                        <h3 className="text-xl font-semibold mb-2">Sem dados de performance</h3>
-                        <p className="text-muted-foreground">
-                          Não há indicadores registrados para este funil no período selecionado.
-                        </p>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {!filters && (
-                  <div className="text-center py-12">
-                    <div className="text-6xl mb-4">🎯</div>
-                    <h3 className="text-xl font-semibold mb-2">Selecione os filtros</h3>
-                    <p className="text-muted-foreground">
-                      Configure os filtros acima para visualizar a performance do funil.
-                    </p>
-                  </div>
-                )}
-              </div>
+              {content}
             </div>
           </div>
         </div>
