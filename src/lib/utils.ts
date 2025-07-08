@@ -67,3 +67,29 @@ export function getUltimoDiaPeriodo(value: string): string {
   // Período diário
   return value;
 }
+
+// Função para gerar períodos semanais dos últimos 90 dias a partir de hoje
+export function gerarPeriodosSemanaisUltimos90Dias(diaInicioSemana: number = 1) {
+  const periodos: { label: string; value: string }[] = [];
+  const hoje = new Date();
+  const dataLimite = new Date(hoje);
+  dataLimite.setDate(dataLimite.getDate() - 89); // 90 dias incluindo hoje
+
+  // Encontrar a última data de término de semana <= hoje
+  let dataFim = new Date(hoje);
+  while (dataFim.getDay() !== ((diaInicioSemana + 6) % 7)) {
+    dataFim.setDate(dataFim.getDate() - 1);
+  }
+
+  // Gerar períodos semanais retroativamente
+  while (dataFim >= dataLimite) {
+    const dataInicio = new Date(dataFim);
+    dataInicio.setDate(dataFim.getDate() - 6);
+    if (dataInicio < dataLimite) break;
+    const value = `${dataInicio.toISOString().split('T')[0]}_${dataFim.toISOString().split('T')[0]}`;
+    const label = `De ${dataInicio.toLocaleDateString('pt-BR')} até ${dataFim.toLocaleDateString('pt-BR')}`;
+    periodos.push({ label, value });
+    dataFim.setDate(dataFim.getDate() - 7);
+  }
+  return periodos;
+}

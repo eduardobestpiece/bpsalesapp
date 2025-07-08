@@ -9,7 +9,7 @@ import { useFunnels } from '@/hooks/useFunnels';
 import { useCreateIndicator, useUpdateIndicator } from '@/hooks/useIndicators';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
-import { gerarPeriodosDiarios, gerarPeriodosSemanais, gerarPeriodoMensal, getUltimoDiaPeriodo } from '@/lib/utils';
+import { gerarPeriodosDiarios, gerarPeriodosSemanais, gerarPeriodoMensal, getUltimoDiaPeriodo, gerarPeriodosSemanaisUltimos90Dias } from '@/lib/utils';
 import { useIndicators } from '@/hooks/useIndicators';
 
 interface IndicatorModalProps {
@@ -81,7 +81,32 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
 
     // 1. PRIMEIRO REGISTRO DO USUÁRIO PARA O FUNIL
     if (periodosUsuario.length === 0) {
+      if (selectedFunnel.verification_type === 'weekly') {
+        // Gerar períodos semanais dos últimos 90 dias, respeitando o dia de início do funil
+        todosPeriodos = gerarPeriodosSemanaisUltimos90Dias(selectedFunnel.verification_day ?? 1);
+      } else if (selectedFunnel.verification_type === 'daily') {
+        // Diários: últimos 90 dias
+        const hoje = new Date();
+        const dataLimite = new Date(hoje);
+        dataLimite.setDate(dataLimite.getDate() - 89);
+        todosPeriodos = gerarPeriodosDiarios(hoje.getMonth() + 1, hoje.getFullYear())
+          .filter(opt => {
+            const data = new Date(opt.value);
+            return data >= dataLimite && data <= hoje;
+          });
+      } else if (selectedFunnel.verification_type === 'monthly') {
+        // Mensal: últimos 3 meses
+        const hoje = new Date();
+        todosPeriodos = [];
+        for (let i = 0; i < 3; i++) {
+          const mes = hoje.getMonth() + 1 - i;
+          const ano = hoje.getFullYear() - (mes <= 0 ? 1 : 0);
+          const mesCorrigido = ((mes - 1 + 12) % 12) + 1;
+          todosPeriodos.push(...gerarPeriodoMensal(mesCorrigido, ano));
+        }
+      }
       // Buscar períodos dos últimos 90 dias (de hoje para trás)
+      const hoje = new Date();
       const dataLimite = new Date(hoje);
       dataLimite.setDate(dataLimite.getDate() - 89); // 90 dias incluindo hoje
       periodOptions = todosPeriodos
