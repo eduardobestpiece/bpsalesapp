@@ -343,7 +343,9 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                 <SelectContent>
                   {periodOptions.length === 0 && (
                     <div className="px-4 py-2 text-muted-foreground text-sm">
-                      Selecione um funil, mês e ano
+                      {periodosUsuario.length === 0
+                        ? 'Nenhum período disponível para registro neste mês/ano. Só é possível registrar períodos cujo último dia já passou e estejam dentro dos últimos 90 dias.'
+                        : 'Nenhum período disponível entre o último registrado e o período atual. Não há períodos pendentes para registro neste mês/ano.'}
                     </div>
                   )}
                   {periodOptions.map(opt => (
