@@ -54,12 +54,6 @@ const CrmIndicadores = () => {
           <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-100/50 p-1">
             <div className="bg-white rounded-[calc(1.5rem-4px)] p-8 shadow-sm min-h-[600px]">
               
-              <div className="text-center space-y-2 mb-8">
-                <h2 className="text-2xl font-bold">Indicadores</h2>
-                <p className="text-muted-foreground">
-                  Acompanhe e registre seus indicadores e resultados
-                </p>
-              </div>
               <Tabs defaultValue="performance">
                 <TabsList className="mb-6">
                   <TabsTrigger value="performance">Performance</TabsTrigger>
