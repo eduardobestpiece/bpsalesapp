@@ -16,4 +16,10 @@
 - [x] Commit e deploy automático realizados.
 - [ ] Aguardando validação do usuário sobre o funcionamento da nova lógica de períodos no modal.
 
+- [x] Implementação das regras avançadas para sugestão e restrição de períodos no campo "Período" do modal de indicador:
+  - Primeiro registro: períodos dos últimos 90 dias, só pode registrar no último dia do período.
+  - Segundo registro em diante: só períodos entre o último registrado e o atual, sem futuros, destacando faltantes em vermelho.
+- [x] Commit e deploy automático realizados.
+- [ ] Aguardando validação do usuário sobre o novo comportamento do campo "Período".
+
 --- 
