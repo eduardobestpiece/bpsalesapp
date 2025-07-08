@@ -8,9 +8,6 @@ import { TeamsList } from '@/components/CRM/Configuration/TeamsList';
 import { UsersList } from '@/components/CRM/Configuration/UsersList';
 
 const CrmConfiguracoes = () => {
-  // Em um cenário real, isso viria do contexto de autenticação
-  const companyId = '550e8400-e29b-41d4-a716-446655440000';
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
       <CrmHeader />
@@ -35,19 +32,19 @@ const CrmConfiguracoes = () => {
                 </TabsList>
                 
                 <TabsContent value="funnels" className="mt-6">
-                  <FunnelsList companyId={companyId} />
+                  <FunnelsList />
                 </TabsContent>
                 
                 <TabsContent value="sources" className="mt-6">
-                  <SourcesList companyId={companyId} />
+                  <SourcesList />
                 </TabsContent>
                 
                 <TabsContent value="teams" className="mt-6">
-                  <TeamsList companyId={companyId} />
+                  <TeamsList />
                 </TabsContent>
                 
                 <TabsContent value="users" className="mt-6">
-                  <UsersList companyId={companyId} />
+                  <UsersList />
                 </TabsContent>
               </Tabs>
             </div>
