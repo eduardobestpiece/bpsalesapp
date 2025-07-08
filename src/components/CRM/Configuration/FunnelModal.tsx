@@ -36,7 +36,6 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
     { name: '', stage_order: 1, target_percentage: 0, target_value: 0 }
   ]);
   
-  const [baseValue, setBaseValue] = useState(100);
   const [isLoading, setIsLoading] = useState(false);
 
   const { companyId } = useCrmAuth();
@@ -91,21 +90,23 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
   const updateStage = (index: number, field: keyof FunnelStage, value: string | number) => {
     const newStages = [...stages];
     newStages[index] = { ...newStages[index], [field]: value };
-    
-    // Se foi alterado o percentual, calcular o valor
-    if (field === 'target_percentage') {
-      const percentage = Number(value);
-      const calculatedValue = Math.round((baseValue * percentage) / 100);
-      newStages[index].target_value = calculatedValue;
+
+    // Definir base de cálculo
+    const base = index === 0 ? 0 : newStages[index - 1].target_value;
+
+    // Para etapas 2+, calcular valor/percentual com base na etapa anterior
+    if (index > 0) {
+      if (field === 'target_percentage') {
+        const percentage = Number(value);
+        const calculatedValue = Math.round((base * percentage) / 100);
+        newStages[index].target_value = calculatedValue;
+      }
+      if (field === 'target_value') {
+        const targetValue = Number(value);
+        const calculatedPercentage = base > 0 ? (targetValue / base) * 100 : 0;
+        newStages[index].target_percentage = Math.round(calculatedPercentage * 100) / 100;
+      }
     }
-    
-    // Se foi alterado o valor, calcular o percentual
-    if (field === 'target_value') {
-      const targetValue = Number(value);
-      const calculatedPercentage = baseValue > 0 ? (targetValue / baseValue) * 100 : 0;
-      newStages[index].target_percentage = Math.round(calculatedPercentage * 100) / 100;
-    }
-    
     setStages(newStages);
   };
 
@@ -271,21 +272,6 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                 </Select>
               </div>
             )}
-
-            <div>
-              <Label htmlFor="base_value">Valor Base para Cálculos</Label>
-              <Input
-                id="base_value"
-                type="number"
-                value={baseValue}
-                onChange={(e) => setBaseValue(parseInt(e.target.value) || 100)}
-                placeholder="100"
-                disabled={isLoading}
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Usado para calcular valores baseados em percentuais
-              </p>
-            </div>
           </div>
 
           <Card>
@@ -328,21 +314,21 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                           disabled={isLoading}
                         />
                       </div>
-                      
-                      <div>
-                        <Label>Percentual (%)</Label>
-                        <Input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          max="100"
-                          value={stage.target_percentage}
-                          onChange={(e) => updateStage(index, 'target_percentage', parseFloat(e.target.value) || 0)}
-                          placeholder="0"
-                          disabled={isLoading}
-                        />
-                      </div>
-                      
+                      {index > 0 && (
+                        <div>
+                          <Label>Percentual (%)</Label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            max="100"
+                            value={stage.target_percentage}
+                            onChange={(e) => updateStage(index, 'target_percentage', parseFloat(e.target.value) || 0)}
+                            placeholder="0"
+                            disabled={isLoading}
+                          />
+                        </div>
+                      )}
                       <div>
                         <Label>Valor (quantidade)</Label>
                         <Input

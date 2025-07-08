@@ -18,4 +18,11 @@
   - Objetivo: permitir selecionar qualquer funil ao registrar um novo indicador.
   - Status: ✅ Concluído
 
+- **Ajuste no modal de criação/edição de funil**
+  - Removido o campo "Valor Base para Cálculos".
+  - Primeira etapa do funil agora aceita apenas valor (quantidade), sem campo de percentual.
+  - Da segunda etapa em diante, mantido percentual e valor, mas o cálculo de base usa o valor da etapa anterior.
+  - Objetivo: tornar o fluxo de criação/edição de funil mais intuitivo e alinhado ao processo de negócio.
+  - Status: ✅ Concluído
+
 --- 
