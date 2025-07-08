@@ -15,7 +15,7 @@ interface PerformanceFiltersProps {
     teamId?: string;
     userId?: string;
     period: 'day' | 'week' | 'month';
-  }) => void;
+  } | null) => void;
 }
 
 export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps) => {
@@ -57,7 +57,10 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
   };
 
   const handleApplyFilters = () => {
-    if (!selectedFunnel) return;
+    if (!selectedFunnel) {
+      onFiltersChange(null);
+      return;
+    }
 
     onFiltersChange({
       funnelId: selectedFunnel,
@@ -98,7 +101,7 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
                   <SelectValue placeholder="Todas as equipes" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Todas as equipes</SelectItem>
+                  <SelectItem value="all">Todas as equipes</SelectItem>
                   {availableTeams.map(team => (
                     <SelectItem key={team.id} value={team.id}>
                       {team.name}
@@ -117,7 +120,7 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
               </SelectTrigger>
               <SelectContent>
                 {!isRegularUser && (
-                  <SelectItem value="">Todos os usuários</SelectItem>
+                  <SelectItem value="all">Todos os usuários</SelectItem>
                 )}
                 {availableUsers().map(user => (
                   <SelectItem key={user.id} value={user.id}>

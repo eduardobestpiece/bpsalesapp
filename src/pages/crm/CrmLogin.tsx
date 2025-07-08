@@ -22,7 +22,8 @@ const CrmLogin = () => {
 
   useEffect(() => {
     if (user && !authLoading) {
-      navigate('/crm');
+      console.log('User authenticated, redirecting to simulator');
+      navigate('/', { replace: true });
     }
   }, [user, authLoading, navigate]);
 
@@ -31,22 +32,28 @@ const CrmLogin = () => {
     setIsLoading(true);
     setError('');
 
-    const { error } = await signIn(email, password);
+    try {
+      const { error } = await signIn(email, password);
 
-    if (error) {
-      if (error.message.includes('Invalid login credentials')) {
-        setError('Credenciais inválidas. Verifique seu email e senha.');
-      } else if (error.message.includes('Email not confirmed')) {
-        setError('Email não confirmado. Verifique sua caixa de entrada.');
+      if (error) {
+        if (error.message.includes('Invalid login credentials')) {
+          setError('Credenciais inválidas. Verifique seu email e senha.');
+        } else if (error.message.includes('Email not confirmed')) {
+          setError('Email não confirmado. Verifique sua caixa de entrada.');
+        } else {
+          setError('Erro ao fazer login. Tente novamente.');
+        }
+        console.error('Login error:', error);
       } else {
-        setError('Erro ao fazer login. Tente novamente.');
+        toast.success('Login realizado com sucesso!');
+        // Redirect will be handled by useEffect
       }
-      console.error('Login error:', error);
-    } else {
-      toast.success('Login realizado com sucesso!');
+    } catch (err) {
+      console.error('Unexpected login error:', err);
+      setError('Erro inesperado ao fazer login. Tente novamente.');
+    } finally {
+      setIsLoading(false);
     }
-
-    setIsLoading(false);
   };
 
   if (authLoading) {

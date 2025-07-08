@@ -1,10 +1,14 @@
 
 import { Button } from '@/components/ui/button';
 import { CrmUserMenu } from './CrmUserMenu';
-import { Calculator, Users } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Calculator, Users, BarChart3, TrendingUp } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
 
 export const CrmHeader = () => {
+  const location = useLocation();
+
+  const isActivePath = (path: string) => location.pathname === path;
+
   return (
     <header className="border-b bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50">
       <div className="container mx-auto px-4 py-4 flex items-center justify-between">
@@ -18,6 +22,42 @@ export const CrmHeader = () => {
               <span className="text-sm text-secondary/60 font-medium">Sistema de Gestão</span>
             </div>
           </Link>
+          
+          {/* Navigation Links */}
+          <nav className="hidden md:flex items-center space-x-1">
+            <Link to="/crm">
+              <Button 
+                variant={isActivePath('/crm') ? 'default' : 'ghost'} 
+                size="sm"
+                className="flex items-center space-x-2"
+              >
+                <Users className="h-4 w-4" />
+                <span>Dashboard</span>
+              </Button>
+            </Link>
+            
+            <Link to="/crm/indicadores">
+              <Button 
+                variant={isActivePath('/crm/indicadores') ? 'default' : 'ghost'} 
+                size="sm"
+                className="flex items-center space-x-2"
+              >
+                <BarChart3 className="h-4 w-4" />
+                <span>Indicadores</span>
+              </Button>
+            </Link>
+            
+            <Link to="/crm/performance">
+              <Button 
+                variant={isActivePath('/crm/performance') ? 'default' : 'ghost'} 
+                size="sm"
+                className="flex items-center space-x-2"
+              >
+                <TrendingUp className="h-4 w-4" />
+                <span>Performance</span>
+              </Button>
+            </Link>
+          </nav>
         </div>
         
         <div className="flex items-center space-x-4">

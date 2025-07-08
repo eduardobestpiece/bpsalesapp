@@ -1,78 +1,124 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { FunnelWithStages } from '@/types/crm';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
-export const useFunnels = (companyId?: string) => {
+type Funnel = Tables<'funnels'>;
+type FunnelInsert = TablesInsert<'funnels'>;
+type FunnelUpdate = TablesUpdate<'funnels'>;
+
+export const useFunnels = (companyId?: string | null) => {
+  const { companyId: authCompanyId } = useCrmAuth();
+  const effectiveCompanyId = companyId || authCompanyId;
+
   return useQuery({
-    queryKey: ['funnels', companyId],
+    queryKey: ['funnels', effectiveCompanyId],
     queryFn: async () => {
-      let query = supabase
+      if (!effectiveCompanyId) {
+        console.log('No company ID available for funnels query');
+        return [];
+      }
+
+      console.log('Fetching funnels for company:', effectiveCompanyId);
+      const { data, error } = await supabase
         .from('funnels')
         .select(`
           *,
           stages:funnel_stages(*)
         `)
+        .eq('company_id', effectiveCompanyId)
         .eq('status', 'active')
-        .order('created_at', { ascending: false });
-
-      if (companyId) {
-        query = query.eq('company_id', companyId);
-      }
-
-      const { data, error } = await query;
+        .order('name');
 
       if (error) {
         console.error('Error fetching funnels:', error);
-        // Se o erro for de RLS (usuário não autenticado), retornar array vazio
-        if (error.code === 'PGRST301' || error.message.includes('RLS')) {
-          return [] as FunnelWithStages[];
-        }
         throw error;
       }
 
-      return data as FunnelWithStages[];
+      console.log('Funnels fetched:', data);
+      return data;
     },
-    enabled: !!companyId, // Only run query if companyId is provided
+    enabled: !!effectiveCompanyId
   });
 };
 
 export const useCreateFunnel = () => {
   const queryClient = useQueryClient();
+  const { companyId } = useCrmAuth();
 
   return useMutation({
-    mutationFn: async (funnelData: any) => {
+    mutationFn: async (funnel: FunnelInsert) => {
+      console.log('Creating funnel:', funnel);
       const { data, error } = await supabase
         .from('funnels')
-        .insert(funnelData)
+        .insert([funnel])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating funnel:', error);
+        throw error;
+      }
+
+      console.log('Funnel created:', data);
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['funnels'] });
-    },
+      queryClient.invalidateQueries({ queryKey: ['funnels', companyId] });
+    }
   });
 };
 
 export const useUpdateFunnel = () => {
   const queryClient = useQueryClient();
+  const { companyId } = useCrmAuth();
 
   return useMutation({
-    mutationFn: async ({ id, ...funnelData }: any) => {
+    mutationFn: async ({ id, ...funnel }: FunnelUpdate & { id: string }) => {
+      console.log('Updating funnel:', id, funnel);
       const { data, error } = await supabase
         .from('funnels')
-        .update(funnelData)
+        .update(funnel)
         .eq('id', id)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating funnel:', error);
+        throw error;
+      }
+
+      console.log('Funnel updated:', data);
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['funnels'] });
+      queryClient.invalidateQueries({ queryKey: ['funnels', companyId] });
+    }
+  });
+};
+
+export const useDeleteFunnel = () => {
+  const queryClient = useQueryClient();
+  const { companyId } = useCrmAuth();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      console.log('Deleting funnel:', id);
+      const { error } = await supabase
+        .from('funnels')
+        .update({ status: 'archived' })
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting funnel:', error);
+        throw error;
+      }
+
+      console.log('Funnel deleted:', id);
     },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['funnels', companyId] });
+    }
   });
 };
