@@ -126,13 +126,13 @@ export const useDeleteFunnel = () => {
 // Funções utilitárias para manipular etapas do funil
 export const insertFunnelStages = async (funnelId: string, stages: any[]) => {
   if (!stages.length) return;
-  const stagesToInsert = stages.map(stage => ({
-    ...stage,
-    funnel_id: funnelId,
-    created_at: undefined,
-    updated_at: undefined,
-    id: undefined,
-  }));
+  const stagesToInsert = stages.map(stage => {
+    const { id, created_at, updated_at, ...rest } = stage;
+    return {
+      ...rest,
+      funnel_id: funnelId,
+    };
+  });
   const { error } = await supabase.from('funnel_stages').insert(stagesToInsert);
   if (error) throw error;
 };
