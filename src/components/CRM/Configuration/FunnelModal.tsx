@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, X } from 'lucide-react';
+import { useCreateFunnel, useUpdateFunnel } from '@/hooks/useFunnels';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
 
 interface FunnelStage {
@@ -20,22 +22,26 @@ interface FunnelStage {
 interface FunnelModalProps {
   isOpen: boolean;
   onClose: () => void;
-  companyId: string;
   funnel?: any;
 }
 
-export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalProps) => {
+export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
   const [formData, setFormData] = useState({
     name: '',
     verification_type: 'weekly' as 'daily' | 'weekly' | 'monthly',
     verification_day: 1,
   });
-
+  
   const [stages, setStages] = useState<FunnelStage[]>([
     { name: '', stage_order: 1, target_percentage: 0, target_value: 0 }
   ]);
-
+  
   const [baseValue, setBaseValue] = useState(100);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { companyId } = useCrmAuth();
+  const createFunnelMutation = useCreateFunnel();
+  const updateFunnelMutation = useUpdateFunnel();
 
   useEffect(() => {
     if (funnel) {
@@ -45,7 +51,7 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
         verification_day: funnel.verification_day || 1,
       });
       
-      if (funnel.stages) {
+      if (funnel.stages && funnel.stages.length > 0) {
         setStages(funnel.stages.sort((a: any, b: any) => a.stage_order - b.stage_order));
       }
     } else {
@@ -103,14 +109,6 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
     setStages(newStages);
   };
 
-  const getVerificationDayLabel = () => {
-    if (formData.verification_type === 'weekly') {
-      const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-      return days[formData.verification_day] || 'Segunda';
-    }
-    return `Dia ${formData.verification_day}`;
-  };
-
   const getVerificationDayOptions = () => {
     if (formData.verification_type === 'weekly') {
       return [
@@ -149,24 +147,55 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
       return;
     }
 
-    console.log('Dados do funil:', {
-      ...formData,
-      stages,
-      companyId
-    });
+    if (!companyId) {
+      toast.error('Erro: Empresa não identificada');
+      return;
+    }
 
-    toast.success(funnel ? 'Funil atualizado com sucesso!' : 'Funil criado com sucesso!');
-    onClose();
-    
-    // Reset form
-    setFormData({
-      name: '',
-      verification_type: 'weekly',
-      verification_day: 1,
-    });
-    setStages([
-      { name: '', stage_order: 1, target_percentage: 0, target_value: 0 }
-    ]);
+    setIsLoading(true);
+
+    try {
+      const funnelData = {
+        name: formData.name.trim(),
+        verification_type: formData.verification_type,
+        verification_day: formData.verification_type === 'daily' ? null : formData.verification_day,
+        company_id: companyId,
+        status: 'active' as const
+      };
+
+      if (funnel) {
+        // Editar funil existente
+        await updateFunnelMutation.mutateAsync({
+          id: funnel.id,
+          ...funnelData
+        });
+        toast.success('Funil atualizado com sucesso!');
+      } else {
+        // Criar novo funil
+        await createFunnelMutation.mutateAsync(funnelData);
+        toast.success('Funil criado com sucesso!');
+      }
+
+      // TODO: Implementar criação/atualização das stages do funil
+      // Isso será implementado quando criarmos os hooks específicos para funnel_stages
+
+      onClose();
+      
+      // Reset form
+      setFormData({
+        name: '',
+        verification_type: 'weekly',
+        verification_day: 1,
+      });
+      setStages([
+        { name: '', stage_order: 1, target_percentage: 0, target_value: 0 }
+      ]);
+    } catch (error: any) {
+      console.error('Erro ao salvar funil:', error);
+      toast.error(error.message || 'Erro ao salvar funil');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -188,6 +217,7 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
                 onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                 placeholder="Ex: Funil de Vendas Online"
                 required
+                disabled={isLoading}
               />
             </div>
 
@@ -202,6 +232,7 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
                     verification_day: value === 'weekly' ? 1 : 1
                   }))
                 }
+                disabled={isLoading}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -225,6 +256,7 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
                     ...prev, 
                     verification_day: parseInt(value) 
                   }))}
+                  disabled={isLoading}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -248,6 +280,7 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
                 value={baseValue}
                 onChange={(e) => setBaseValue(parseInt(e.target.value) || 100)}
                 placeholder="100"
+                disabled={isLoading}
               />
               <p className="text-xs text-muted-foreground mt-1">
                 Usado para calcular valores baseados em percentuais
@@ -259,7 +292,7 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle>Etapas do Funil</CardTitle>
-                <Button type="button" onClick={addStage} size="sm">
+                <Button type="button" onClick={addStage} size="sm" disabled={isLoading}>
                   <Plus className="w-4 h-4 mr-2" />
                   Adicionar Etapa
                 </Button>
@@ -277,6 +310,7 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
                           variant="outline"
                           size="sm"
                           onClick={() => removeStage(index)}
+                          disabled={isLoading}
                         >
                           <X className="w-4 h-4" />
                         </Button>
@@ -291,6 +325,7 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
                           onChange={(e) => updateStage(index, 'name', e.target.value)}
                           placeholder="Ex: Prospecção"
                           required
+                          disabled={isLoading}
                         />
                       </div>
                       
@@ -304,6 +339,7 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
                           value={stage.target_percentage}
                           onChange={(e) => updateStage(index, 'target_percentage', parseFloat(e.target.value) || 0)}
                           placeholder="0"
+                          disabled={isLoading}
                         />
                       </div>
                       
@@ -315,6 +351,7 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
                           value={stage.target_value}
                           onChange={(e) => updateStage(index, 'target_value', parseInt(e.target.value) || 0)}
                           placeholder="0"
+                          disabled={isLoading}
                         />
                       </div>
                     </div>
@@ -325,11 +362,11 @@ export const FunnelModal = ({ isOpen, onClose, companyId, funnel }: FunnelModalP
           </Card>
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
               Cancelar
             </Button>
-            <Button type="submit">
-              {funnel ? 'Atualizar' : 'Criar'} Funil
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Salvando...' : (funnel ? 'Atualizar' : 'Criar')} Funil
             </Button>
           </div>
         </form>

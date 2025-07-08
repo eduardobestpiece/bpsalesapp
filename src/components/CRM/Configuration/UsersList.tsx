@@ -1,18 +1,17 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, User } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Plus, Edit, User, Search } from 'lucide-react';
 import { useCrmUsers } from '@/hooks/useCrmData';
 import { UserModal } from './UserModal';
 
-interface UsersListProps {
-  companyId: string;
-}
-
-export const UsersList = ({ companyId }: UsersListProps) => {
+export const UsersList = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const { data: users = [], isLoading } = useCrmUsers();
 
   const handleEdit = (user: any) => {
@@ -48,6 +47,15 @@ export const UsersList = ({ companyId }: UsersListProps) => {
     }
   };
 
+  const filteredUsers = users.filter(user => {
+    const fullName = `${user.first_name} ${user.last_name}`.toLowerCase();
+    const searchLower = searchTerm.toLowerCase();
+    
+    return fullName.includes(searchLower) ||
+           user.email?.toLowerCase().includes(searchLower) ||
+           user.phone?.toLowerCase().includes(searchLower);
+  });
+
   if (isLoading) {
     return <div className="text-center py-4">Carregando usuários...</div>;
   }
@@ -68,15 +76,24 @@ export const UsersList = ({ companyId }: UsersListProps) => {
               Novo Usuário
             </Button>
           </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
+              placeholder="Pesquisar por nome, email ou telefone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {users.length === 0 ? (
+            {filteredUsers.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">
-                Nenhum usuário encontrado.
+                {searchTerm ? 'Nenhum usuário encontrado com este termo.' : 'Nenhum usuário encontrado.'}
               </p>
             ) : (
-              users.map((user) => (
+              filteredUsers.map((user) => (
                 <div
                   key={user.id}
                   className="flex items-center justify-between p-4 border rounded-lg"
@@ -122,7 +139,6 @@ export const UsersList = ({ companyId }: UsersListProps) => {
       <UserModal
         isOpen={showModal}
         onClose={handleCloseModal}
-        companyId={companyId}
         user={selectedUser}
       />
     </>

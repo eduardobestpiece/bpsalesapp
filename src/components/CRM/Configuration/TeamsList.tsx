@@ -1,29 +1,20 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Users } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Plus, Edit, Users, Search } from 'lucide-react';
 import { useCrmUsers } from '@/hooks/useCrmData';
+import { useTeams } from '@/hooks/useTeams';
 import { TeamModal } from './TeamModal';
 
-interface TeamsListProps {
-  companyId: string;
-}
-
-export const TeamsList = ({ companyId }: TeamsListProps) => {
+export const TeamsList = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<any>(null);
-  const { data: users = [], isLoading } = useCrmUsers();
-
-  // Simular dados de times (já que não temos hook para times ainda)
-  const teams = [
-    {
-      id: '550e8400-e29b-41d4-a716-446655440010',
-      name: 'Equipe Vendas',
-      leader_id: '550e8400-e29b-41d4-a716-446655440003',
-      status: 'active'
-    }
-  ];
+  const [searchTerm, setSearchTerm] = useState('');
+  const { data: users = [], isLoading: usersLoading } = useCrmUsers();
+  const { data: teams = [], isLoading: teamsLoading } = useTeams();
 
   const handleEdit = (team: any) => {
     setSelectedTeam(team);
@@ -44,7 +35,13 @@ export const TeamsList = ({ companyId }: TeamsListProps) => {
     return users.filter(user => user.team_id === teamId).length;
   };
 
-  if (isLoading) {
+  const filteredTeams = teams.filter(team => {
+    const leaderName = getLeaderName(team.leader_id).toLowerCase();
+    return team.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+           leaderName.includes(searchTerm.toLowerCase());
+  });
+
+  if (teamsLoading || usersLoading) {
     return <div className="text-center py-4">Carregando times...</div>;
   }
 
@@ -64,17 +61,26 @@ export const TeamsList = ({ companyId }: TeamsListProps) => {
               Novo Time
             </Button>
           </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
+              placeholder="Pesquisar por nome ou líder..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {teams.length === 0 ? (
+            {filteredTeams.length === 0 ? (
               <div className="col-span-full text-center py-8">
                 <p className="text-muted-foreground">
-                  Nenhum time encontrado. Crie o primeiro time para começar.
+                  {searchTerm ? 'Nenhum time encontrado com este termo.' : 'Nenhum time encontrado. Crie o primeiro time para começar.'}
                 </p>
               </div>
             ) : (
-              teams.map((team) => (
+              filteredTeams.map((team) => (
                 <div
                   key={team.id}
                   className="p-4 border rounded-lg hover:shadow-md transition-shadow"
@@ -117,7 +123,6 @@ export const TeamsList = ({ companyId }: TeamsListProps) => {
       <TeamModal
         isOpen={showModal}
         onClose={handleCloseModal}
-        companyId={companyId}
         team={selectedTeam}
       />
     </>

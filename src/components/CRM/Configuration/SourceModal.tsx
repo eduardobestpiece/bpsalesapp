@@ -4,19 +4,25 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useCreateSource, useUpdateSource } from '@/hooks/useSources';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
 
 interface SourceModalProps {
   isOpen: boolean;
   onClose: () => void;
-  companyId: string;
   source?: any;
 }
 
-export const SourceModal = ({ isOpen, onClose, companyId, source }: SourceModalProps) => {
+export const SourceModal = ({ isOpen, onClose, source }: SourceModalProps) => {
   const [formData, setFormData] = useState({
     name: '',
   });
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { companyId } = useCrmAuth();
+  const createSourceMutation = useCreateSource();
+  const updateSourceMutation = useUpdateSource();
 
   useEffect(() => {
     if (source) {
@@ -38,10 +44,41 @@ export const SourceModal = ({ isOpen, onClose, companyId, source }: SourceModalP
       return;
     }
 
-    console.log('Dados da origem:', formData);
-    toast.success(source ? 'Origem atualizada com sucesso!' : 'Origem criada com sucesso!');
-    onClose();
-    setFormData({ name: '' });
+    if (!companyId) {
+      toast.error('Erro: Empresa não identificada');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      if (source) {
+        // Editar origem existente
+        await updateSourceMutation.mutateAsync({
+          id: source.id,
+          name: formData.name.trim(),
+          company_id: companyId,
+          status: 'active'
+        });
+        toast.success('Origem atualizada com sucesso!');
+      } else {
+        // Criar nova origem
+        await createSourceMutation.mutateAsync({
+          name: formData.name.trim(),
+          company_id: companyId,
+          status: 'active'
+        });
+        toast.success('Origem criada com sucesso!');
+      }
+
+      onClose();
+      setFormData({ name: '' });
+    } catch (error: any) {
+      console.error('Erro ao salvar origem:', error);
+      toast.error(error.message || 'Erro ao salvar origem');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -62,15 +99,16 @@ export const SourceModal = ({ isOpen, onClose, companyId, source }: SourceModalP
               onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
               placeholder="Ex: Site, Indicação, Redes Sociais"
               required
+              disabled={isLoading}
             />
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
               Cancelar
             </Button>
-            <Button type="submit">
-              {source ? 'Atualizar' : 'Criar Origem'}
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Salvando...' : (source ? 'Atualizar' : 'Criar Origem')}
             </Button>
           </div>
         </form>

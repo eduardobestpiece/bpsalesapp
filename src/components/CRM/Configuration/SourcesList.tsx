@@ -1,18 +1,17 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Archive } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Plus, Edit, Search } from 'lucide-react';
 import { useSources } from '@/hooks/useSources';
 import { SourceModal } from './SourceModal';
 
-interface SourcesListProps {
-  companyId: string;
-}
-
-export const SourcesList = ({ companyId }: SourcesListProps) => {
+export const SourcesList = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedSource, setSelectedSource] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const { data: sources = [], isLoading } = useSources();
 
   const handleEdit = (source: any) => {
@@ -24,6 +23,10 @@ export const SourcesList = ({ companyId }: SourcesListProps) => {
     setShowModal(false);
     setSelectedSource(null);
   };
+
+  const filteredSources = sources.filter(source => 
+    source.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (isLoading) {
     return <div className="text-center py-4">Carregando origens...</div>;
@@ -45,17 +48,26 @@ export const SourcesList = ({ companyId }: SourcesListProps) => {
               Nova Origem
             </Button>
           </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
+              placeholder="Pesquisar por nome..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {sources.length === 0 ? (
+            {filteredSources.length === 0 ? (
               <div className="col-span-full text-center py-8">
                 <p className="text-muted-foreground">
-                  Nenhuma origem encontrada. Crie a primeira origem para começar.
+                  {searchTerm ? 'Nenhuma origem encontrada com este termo.' : 'Nenhuma origem encontrada. Crie a primeira origem para começar.'}
                 </p>
               </div>
             ) : (
-              sources.map((source) => (
+              filteredSources.map((source) => (
                 <div
                   key={source.id}
                   className="p-4 border rounded-lg hover:shadow-md transition-shadow"
@@ -85,7 +97,6 @@ export const SourcesList = ({ companyId }: SourcesListProps) => {
       <SourceModal
         isOpen={showModal}
         onClose={handleCloseModal}
-        companyId={companyId}
         source={selectedSource}
       />
     </>

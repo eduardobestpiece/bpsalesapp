@@ -5,16 +5,17 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useCreateCrmUser, useUpdateCrmUser } from '@/hooks/useCrmUsers';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
 
 interface UserModalProps {
   isOpen: boolean;
   onClose: () => void;
-  companyId: string;
   user?: any;
 }
 
-export const UserModal = ({ isOpen, onClose, companyId, user }: UserModalProps) => {
+export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -22,6 +23,14 @@ export const UserModal = ({ isOpen, onClose, companyId, user }: UserModalProps) 
     phone: '',
     role: 'user' as 'master' | 'admin' | 'leader' | 'user',
   });
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { companyId, crmUser } = useCrmAuth();
+  const createUserMutation = useCreateCrmUser();
+  const updateUserMutation = useUpdateCrmUser();
+
+  // Verificar se o usuário atual pode criar administradores
+  const canCreateAdmin = crmUser?.role === 'master' || crmUser?.role === 'admin';
 
   useEffect(() => {
     if (user) {
@@ -56,16 +65,62 @@ export const UserModal = ({ isOpen, onClose, companyId, user }: UserModalProps) 
       return;
     }
 
-    console.log('Dados do usuário:', formData);
-    toast.success(user ? 'Usuário atualizado com sucesso!' : 'Usuário criado com sucesso!');
-    onClose();
-    setFormData({
-      first_name: '',
-      last_name: '',
-      email: '',
-      phone: '',
-      role: 'user',
-    });
+    if (!companyId) {
+      toast.error('Erro: Empresa não identificada');
+      return;
+    }
+
+    // Verificar permissão para criar admin
+    if (formData.role === 'admin' && !canCreateAdmin) {
+      toast.error('Você não tem permissão para criar administradores');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      if (user) {
+        // Editar usuário existente
+        await updateUserMutation.mutateAsync({
+          id: user.id,
+          first_name: formData.first_name.trim(),
+          last_name: formData.last_name.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim() || null,
+          role: formData.role,
+          company_id: companyId,
+          status: 'active'
+        });
+        toast.success('Usuário atualizado com sucesso!');
+      } else {
+        // Criar novo usuário
+        await createUserMutation.mutateAsync({
+          first_name: formData.first_name.trim(),
+          last_name: formData.last_name.trim(),
+          email: formData.email.trim(),
+          phone: formData.phone.trim() || null,
+          role: formData.role,
+          company_id: companyId,
+          password_hash: 'temp_hash', // Será substituído por sistema real de senha
+          status: 'active'
+        });
+        toast.success('Usuário criado com sucesso!');
+      }
+
+      onClose();
+      setFormData({
+        first_name: '',
+        last_name: '',
+        email: '',
+        phone: '',
+        role: 'user',
+      });
+    } catch (error: any) {
+      console.error('Erro ao salvar usuário:', error);
+      toast.error(error.message || 'Erro ao salvar usuário');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -86,6 +141,7 @@ export const UserModal = ({ isOpen, onClose, companyId, user }: UserModalProps) 
                 value={formData.first_name}
                 onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
                 required
+                disabled={isLoading}
               />
             </div>
             
@@ -96,6 +152,7 @@ export const UserModal = ({ isOpen, onClose, companyId, user }: UserModalProps) 
                 value={formData.last_name}
                 onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
                 required
+                disabled={isLoading}
               />
             </div>
           </div>
@@ -108,8 +165,13 @@ export const UserModal = ({ isOpen, onClose, companyId, user }: UserModalProps) 
               value={formData.email}
               onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
               required
-              disabled={!!user} // Não permite editar email de usuário existente
+              disabled={isLoading || !!user} // Não permite editar email de usuário existente
             />
+            {user && (
+              <p className="text-xs text-muted-foreground mt-1">
+                O email não pode ser alterado após a criação
+              </p>
+            )}
           </div>
 
           <div>
@@ -119,6 +181,7 @@ export const UserModal = ({ isOpen, onClose, companyId, user }: UserModalProps) 
               value={formData.phone}
               onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
               placeholder="(11) 99999-9999"
+              disabled={isLoading}
             />
           </div>
 
@@ -129,6 +192,7 @@ export const UserModal = ({ isOpen, onClose, companyId, user }: UserModalProps) 
               onValueChange={(value: 'master' | 'admin' | 'leader' | 'user') => 
                 setFormData(prev => ({ ...prev, role: value }))
               }
+              disabled={isLoading}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -136,18 +200,22 @@ export const UserModal = ({ isOpen, onClose, companyId, user }: UserModalProps) 
               <SelectContent>
                 <SelectItem value="user">Usuário</SelectItem>
                 <SelectItem value="leader">Líder</SelectItem>
-                <SelectItem value="admin">Administrador</SelectItem>
-                <SelectItem value="master">Master</SelectItem>
+                {canCreateAdmin && (
+                  <SelectItem value="admin">Administrador</SelectItem>
+                )}
+                {crmUser?.role === 'master' && (
+                  <SelectItem value="master">Master</SelectItem>
+                )}
               </SelectContent>
             </Select>
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
               Cancelar
             </Button>
-            <Button type="submit">
-              {user ? 'Atualizar' : 'Criar Usuário'}
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? 'Salvando...' : (user ? 'Atualizar' : 'Criar Usuário')}
             </Button>
           </div>
         </form>

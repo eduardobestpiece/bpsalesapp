@@ -1,18 +1,17 @@
+
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Edit, Archive, Eye } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Plus, Edit, Archive, Eye, Search } from 'lucide-react';
 import { useFunnels } from '@/hooks/useCrmData';
 import { FunnelModal } from './FunnelModal';
 
-interface FunnelsListProps {
-  companyId: string;
-}
-
-export const FunnelsList = ({ companyId }: FunnelsListProps) => {
+export const FunnelsList = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedFunnel, setSelectedFunnel] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   const { data: funnels = [], isLoading } = useFunnels();
 
   const handleEdit = (funnel: any) => {
@@ -34,6 +33,10 @@ export const FunnelsList = ({ companyId }: FunnelsListProps) => {
     return labels[type as keyof typeof labels] || type;
   };
 
+  const filteredFunnels = funnels.filter(funnel =>
+    funnel.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   if (isLoading) {
     return <div className="text-center py-4">Carregando funis...</div>;
   }
@@ -54,15 +57,24 @@ export const FunnelsList = ({ companyId }: FunnelsListProps) => {
               Novo Funil
             </Button>
           </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+            <Input
+              placeholder="Pesquisar por nome..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {funnels.length === 0 ? (
+            {filteredFunnels.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">
-                Nenhum funil encontrado. Crie o primeiro funil para começar.
+                {searchTerm ? 'Nenhum funil encontrado com este termo.' : 'Nenhum funil encontrado. Crie o primeiro funil para começar.'}
               </p>
             ) : (
-              funnels.map((funnel) => (
+              filteredFunnels.map((funnel) => (
                 <div
                   key={funnel.id}
                   className="flex items-center justify-between p-4 border rounded-lg"
@@ -108,7 +120,6 @@ export const FunnelsList = ({ companyId }: FunnelsListProps) => {
       <FunnelModal
         isOpen={showModal}
         onClose={handleCloseModal}
-        companyId={companyId}
         funnel={selectedFunnel}
       />
     </>
