@@ -7,12 +7,14 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, Edit, Archive } from 'lucide-react';
 import { IndicatorModal } from '@/components/CRM/IndicatorModal';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
 
 const CrmIndicadores = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedIndicator, setSelectedIndicator] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const companyId = '550e8400-e29b-41d4-a716-446655440000';
+  const { crmUser } = useCrmAuth();
+  const companyId = crmUser?.company_id || '';
 
   // Mock data para demonstração
   const indicators = [
