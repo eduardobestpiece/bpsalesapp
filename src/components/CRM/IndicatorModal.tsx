@@ -227,11 +227,16 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     setIsLoading(true);
 
     try {
+      // Corrigir period_date: se for intervalo, pega só o último dia
+      const periodDateValue = formData.period_date.includes('_')
+        ? formData.period_date.split('_')[1]
+        : formData.period_date;
+
       const indicatorData = {
         user_id: crmUser.id,
         company_id: companyId,
         funnel_id: formData.funnel_id,
-        period_date: formData.period_date,
+        period_date: periodDateValue,
         month_reference: formData.month_reference,
         year_reference: formData.year_reference
       };
