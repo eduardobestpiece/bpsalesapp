@@ -30,8 +30,9 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
 
   // Garantir que o companyId está correto (fallback para o do usuário logado)
   const { crmUser } = useCrmAuth();
-  const effectiveCompanyId = companyId || crmUser?.company_id;
-  const { data: funnels } = useFunnels(effectiveCompanyId, 'active');
+  // Garantir que o companyId nunca é undefined
+  const effectiveCompanyId = companyId || crmUser?.company_id || '';
+  const { data: funnels, isLoading: isFunnelsLoading } = useFunnels(effectiveCompanyId, 'active');
   const { mutate: createIndicator } = useCreateIndicator();
   const { mutate: updateIndicator } = useUpdateIndicator();
 
@@ -187,7 +188,11 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                   <SelectValue placeholder="Selecione um funil" />
                 </SelectTrigger>
                 <SelectContent>
-                  {funnels && funnels.length > 0 ? (
+                  {isFunnelsLoading ? (
+                    <div className="px-4 py-2 text-muted-foreground text-sm">
+                      Carregando funis...
+                    </div>
+                  ) : funnels && funnels.length > 0 ? (
                     funnels.map((funnel) => (
                       <SelectItem key={funnel.id} value={funnel.id}>
                         {funnel.name}
