@@ -122,3 +122,42 @@ export const useDeleteFunnel = () => {
     }
   });
 };
+
+// Funções utilitárias para manipular etapas do funil
+export const insertFunnelStages = async (funnelId: string, stages: any[]) => {
+  if (!stages.length) return;
+  const stagesToInsert = stages.map(stage => ({
+    ...stage,
+    funnel_id: funnelId,
+    created_at: undefined,
+    updated_at: undefined,
+    id: undefined,
+  }));
+  const { error } = await supabase.from('funnel_stages').insert(stagesToInsert);
+  if (error) throw error;
+};
+
+export const updateFunnelStages = async (funnelId: string, stages: any[]) => {
+  for (const stage of stages) {
+    if (stage.id) {
+      // Atualizar etapa existente
+      const { error } = await supabase.from('funnel_stages').update({
+        name: stage.name,
+        stage_order: stage.stage_order,
+        target_percentage: stage.target_percentage,
+        target_value: stage.target_value,
+        updated_at: new Date().toISOString(),
+      }).eq('id', stage.id);
+      if (error) throw error;
+    } else {
+      // Inserir nova etapa
+      await insertFunnelStages(funnelId, [stage]);
+    }
+  }
+};
+
+export const deleteFunnelStages = async (stageIds: string[]) => {
+  if (!stageIds.length) return;
+  const { error } = await supabase.from('funnel_stages').delete().in('id', stageIds);
+  if (error) throw error;
+};

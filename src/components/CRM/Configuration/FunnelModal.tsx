@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, X } from 'lucide-react';
-import { useCreateFunnel, useUpdateFunnel } from '@/hooks/useFunnels';
+import { useCreateFunnel, useUpdateFunnel, insertFunnelStages, updateFunnelStages, deleteFunnelStages } from '@/hooks/useFunnels';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
 
@@ -165,31 +165,26 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
 
       if (funnel) {
         // Editar funil existente
-        await updateFunnelMutation.mutateAsync({
-          id: funnel.id,
-          ...funnelData
-        });
+        await updateFunnelMutation.mutateAsync({ id: funnel.id, ...funnelData });
+        // Atualizar etapas existentes e inserir novas
+        await updateFunnelStages(funnel.id, stages);
+        // Remover etapas excluídas
+        const oldStageIds = (funnel.stages || []).map((s: any) => s.id);
+        const currentStageIds = stages.filter(s => s.id).map(s => s.id);
+        const toDelete = oldStageIds.filter((id: string) => !currentStageIds.includes(id));
+        if (toDelete.length) await deleteFunnelStages(toDelete);
         toast.success('Funil atualizado com sucesso!');
       } else {
         // Criar novo funil
-        await createFunnelMutation.mutateAsync(funnelData);
+        const created = await createFunnelMutation.mutateAsync(funnelData);
+        await insertFunnelStages(created.id, stages);
         toast.success('Funil criado com sucesso!');
       }
-
-      // TODO: Implementar criação/atualização das stages do funil
-      // Isso será implementado quando criarmos os hooks específicos para funnel_stages
-
       onClose();
       
       // Reset form
-      setFormData({
-        name: '',
-        verification_type: 'weekly',
-        verification_day: 1,
-      });
-      setStages([
-        { name: '', stage_order: 1, target_percentage: 0, target_value: 0 }
-      ]);
+      setFormData({ name: '', verification_type: 'weekly', verification_day: 1 });
+      setStages([{ name: '', stage_order: 1, target_percentage: 0, target_value: 0 }]);
     } catch (error: any) {
       console.error('Erro ao salvar funil:', error);
       toast.error(error.message || 'Erro ao salvar funil');
