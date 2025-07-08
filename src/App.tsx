@@ -14,6 +14,7 @@ import CrmConfiguracoes from "./pages/crm/CrmConfiguracoes";
 import CrmIndicadores from "./pages/crm/CrmIndicadores";
 import CrmPerformance from "./pages/crm/CrmPerformance";
 import CrmPerfil from "./pages/crm/CrmPerfil";
+import CrmMasterConfig from "./pages/crm/CrmMasterConfig";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -74,6 +75,14 @@ function App() {
                       element={
                         <ProtectedRoute>
                           <CrmPerfil />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/crm/master" 
+                      element={
+                        <ProtectedRoute requiredRole="master">
+                          <CrmMasterConfig />
                         </ProtectedRoute>
                       } 
                     />

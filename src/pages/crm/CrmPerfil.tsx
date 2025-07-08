@@ -8,11 +8,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { AvatarUpload } from '@/components/CRM/AvatarUpload';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const CrmPerfil = () => {
   const { crmUser } = useCrmAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     first_name: crmUser?.first_name || '',
     last_name: crmUser?.last_name || '',
@@ -29,24 +31,70 @@ const CrmPerfil = () => {
 
   const handleAvatarChange = (avatarUrl: string) => {
     setFormData(prev => ({ ...prev, avatar_url: avatarUrl }));
+    // Auto-save avatar changes
+    handleSave(true);
   };
 
-  const handleSave = async () => {
+  const handleSave = async (avatarOnly = false) => {
+    if (!crmUser) return;
+    
+    setIsSaving(true);
     try {
-      // Aqui seria a chamada para a API para salvar os dados
-      console.log('Salvando dados do perfil:', formData);
-      toast.success('Perfil atualizado com sucesso!');
-      setIsEditing(false);
+      const { error } = await supabase
+        .from('crm_users')
+        .update({
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          phone: formData.phone,
+          birth_date: formData.birth_date || null,
+          bio: formData.bio,
+          avatar_url: formData.avatar_url || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', crmUser.id);
+
+      if (error) {
+        console.error('Error updating profile:', error);
+        toast.error('Erro ao atualizar perfil');
+        return;
+      }
+
+      if (!avatarOnly) {
+        toast.success('Perfil atualizado com sucesso!');
+        setIsEditing(false);
+      }
     } catch (error) {
-      console.error('Erro ao salvar perfil:', error);
+      console.error('Error updating profile:', error);
       toast.error('Erro ao atualizar perfil');
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const handleResetPassword = () => {
-    // Aqui seria implementada a lógica de redefinição de senha
-    toast.success('Email de redefinição de senha enviado!');
+  const handleResetPassword = async () => {
+    if (!crmUser?.email) return;
+    
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(crmUser.email, {
+        redirectTo: `${window.location.origin}/crm/perfil`,
+      });
+
+      if (error) {
+        console.error('Error sending reset email:', error);
+        toast.error('Erro ao enviar email de redefinição');
+        return;
+      }
+
+      toast.success('Email de redefinição de senha enviado com sucesso!');
+    } catch (error) {
+      console.error('Error sending reset email:', error);
+      toast.error('Erro ao enviar email de redefinição');
+    }
   };
+
+  const userInitials = crmUser 
+    ? `${crmUser.first_name.charAt(0)}${crmUser.last_name.charAt(0)}`
+    : 'U';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
@@ -73,6 +121,8 @@ const CrmPerfil = () => {
                     <AvatarUpload
                       currentAvatar={formData.avatar_url}
                       onAvatarChange={handleAvatarChange}
+                      userId={crmUser?.id || ''}
+                      userInitials={userInitials}
                     />
                   </CardContent>
                 </Card>
@@ -86,8 +136,9 @@ const CrmPerfil = () => {
                         <Button
                           variant={isEditing ? "default" : "outline"}
                           onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+                          disabled={isSaving}
                         >
-                          {isEditing ? 'Salvar' : 'Editar'}
+                          {isSaving ? 'Salvando...' : isEditing ? 'Salvar' : 'Editar'}
                         </Button>
                       </div>
                     </CardHeader>
@@ -99,7 +150,7 @@ const CrmPerfil = () => {
                             id="first_name"
                             value={formData.first_name}
                             onChange={(e) => handleInputChange('first_name', e.target.value)}
-                            disabled={!isEditing}
+                            disabled={!isEditing || isSaving}
                           />
                         </div>
                         <div>
@@ -108,7 +159,7 @@ const CrmPerfil = () => {
                             id="last_name"
                             value={formData.last_name}
                             onChange={(e) => handleInputChange('last_name', e.target.value)}
-                            disabled={!isEditing}
+                            disabled={!isEditing || isSaving}
                           />
                         </div>
                       </div>
@@ -119,9 +170,12 @@ const CrmPerfil = () => {
                           id="email"
                           type="email"
                           value={formData.email}
-                          onChange={(e) => handleInputChange('email', e.target.value)}
-                          disabled={!isEditing}
+                          disabled={true}
+                          className="bg-gray-50"
                         />
+                        <p className="text-xs text-muted-foreground mt-1">
+                          O email não pode ser alterado
+                        </p>
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -131,7 +185,7 @@ const CrmPerfil = () => {
                             id="phone"
                             value={formData.phone}
                             onChange={(e) => handleInputChange('phone', e.target.value)}
-                            disabled={!isEditing}
+                            disabled={!isEditing || isSaving}
                             placeholder="(11) 99999-9999"
                           />
                         </div>
@@ -142,7 +196,7 @@ const CrmPerfil = () => {
                             type="date"
                             value={formData.birth_date}
                             onChange={(e) => handleInputChange('birth_date', e.target.value)}
-                            disabled={!isEditing}
+                            disabled={!isEditing || isSaving}
                           />
                         </div>
                       </div>
@@ -153,7 +207,7 @@ const CrmPerfil = () => {
                           id="bio"
                           value={formData.bio}
                           onChange={(e) => handleInputChange('bio', e.target.value)}
-                          disabled={!isEditing}
+                          disabled={!isEditing || isSaving}
                           placeholder="Conte um pouco sobre você..."
                           rows={4}
                         />
@@ -164,11 +218,15 @@ const CrmPerfil = () => {
                           <Button
                             variant="outline"
                             onClick={() => setIsEditing(false)}
+                            disabled={isSaving}
                           >
                             Cancelar
                           </Button>
-                          <Button onClick={handleSave}>
-                            Salvar Alterações
+                          <Button 
+                            onClick={() => handleSave()}
+                            disabled={isSaving}
+                          >
+                            {isSaving ? 'Salvando...' : 'Salvar Alterações'}
                           </Button>
                         </div>
                       )}
