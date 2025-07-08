@@ -7,4 +7,9 @@
   - O modal de edição exibe as etapas cadastradas.
   - Status: ✅ Concluído
 
+- **Ajuste no modal de Registrar Indicador**
+  - Garantido que o seletor de funil exibe corretamente todos os funis disponíveis da empresa.
+  - Adicionada mensagem de vazio caso não haja funis cadastrados.
+  - Status: ✅ Concluído
+
 --- 
