@@ -43,17 +43,16 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
   const updateFunnelMutation = useUpdateFunnel();
 
   useEffect(() => {
-    if (funnel) {
+    if (funnel && isOpen) {
       setFormData({
         name: funnel.name,
         verification_type: funnel.verification_type,
         verification_day: funnel.verification_day || 1,
       });
-      
       if (funnel.stages && funnel.stages.length > 0) {
         setStages(funnel.stages.sort((a: any, b: any) => a.stage_order - b.stage_order));
       }
-    } else {
+    } else if (isOpen) {
       setFormData({
         name: '',
         verification_type: 'weekly',
@@ -63,7 +62,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
         { name: '', stage_order: 1, target_percentage: 0, target_value: 0 }
       ]);
     }
-  }, [funnel]);
+  }, [funnel, isOpen]);
 
   const addStage = () => {
     const newStage: FunnelStage = {

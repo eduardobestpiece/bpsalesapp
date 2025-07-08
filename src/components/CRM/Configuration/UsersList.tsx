@@ -7,12 +7,17 @@ import { Input } from '@/components/ui/input';
 import { Plus, Edit, User, Search } from 'lucide-react';
 import { useCrmUsers } from '@/hooks/useCrmData';
 import { UserModal } from './UserModal';
+import { useUpdateCrmUser } from '@/hooks/useCrmUsers';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { toast } from 'sonner';
 
 export const UsersList = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { data: users = [], isLoading } = useCrmUsers();
+  const updateUserMutation = useUpdateCrmUser();
+  const { userRole } = useCrmAuth();
 
   const handleEdit = (user: any) => {
     setSelectedUser(user);
@@ -22,6 +27,15 @@ export const UsersList = () => {
   const handleCloseModal = () => {
     setShowModal(false);
     setSelectedUser(null);
+  };
+
+  const handleDeactivate = async (userId: string) => {
+    try {
+      await updateUserMutation.mutateAsync({ id: userId, status: 'archived' });
+      toast.success('Usuário desativado com sucesso!');
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao desativar usuário');
+    }
   };
 
   const getRoleLabel = (role: string) => {
@@ -128,6 +142,15 @@ export const UsersList = () => {
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
+                    {(userRole === 'admin' || userRole === 'master') && user.status === 'active' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeactivate(user.id)}
+                      >
+                        Desativar
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))

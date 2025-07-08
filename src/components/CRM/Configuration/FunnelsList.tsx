@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Plus, Edit, Archive, Eye, Search } from 'lucide-react';
 import { useFunnels } from '@/hooks/useCrmData';
+import { useDeleteFunnel } from '@/hooks/useFunnels';
+import { toast } from 'sonner';
 import { FunnelModal } from './FunnelModal';
 
 export const FunnelsList = () => {
@@ -13,6 +15,7 @@ export const FunnelsList = () => {
   const [selectedFunnel, setSelectedFunnel] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { data: funnels = [], isLoading } = useFunnels();
+  const deleteFunnelMutation = useDeleteFunnel();
 
   const handleEdit = (funnel: any) => {
     setSelectedFunnel(funnel);
@@ -22,6 +25,15 @@ export const FunnelsList = () => {
   const handleCloseModal = () => {
     setShowModal(false);
     setSelectedFunnel(null);
+  };
+
+  const handleArchive = async (funnelId: string) => {
+    try {
+      await deleteFunnelMutation.mutateAsync(funnelId);
+      toast.success('Funil arquivado com sucesso!');
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao arquivar funil');
+    }
   };
 
   const getVerificationTypeLabel = (type: string) => {
@@ -100,15 +112,17 @@ export const FunnelsList = () => {
                       size="sm"
                       onClick={() => handleEdit(funnel)}
                     >
-                      <Eye className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(funnel)}
-                    >
                       <Edit className="w-4 h-4" />
                     </Button>
+                    {funnel.status === 'active' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleArchive(funnel.id)}
+                      >
+                        <Archive className="w-4 h-4" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))

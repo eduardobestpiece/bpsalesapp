@@ -5,14 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Plus, Edit, Search } from 'lucide-react';
-import { useSources } from '@/hooks/useSources';
+import { useSources, useDeleteSource } from '@/hooks/useSources';
 import { SourceModal } from './SourceModal';
+import { toast } from 'sonner';
 
 export const SourcesList = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedSource, setSelectedSource] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { data: sources = [], isLoading } = useSources();
+  const deleteSourceMutation = useDeleteSource();
 
   const handleEdit = (source: any) => {
     setSelectedSource(source);
@@ -22,6 +24,15 @@ export const SourcesList = () => {
   const handleCloseModal = () => {
     setShowModal(false);
     setSelectedSource(null);
+  };
+
+  const handleArchive = async (sourceId: string) => {
+    try {
+      await deleteSourceMutation.mutateAsync(sourceId);
+      toast.success('Origem arquivada com sucesso!');
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao arquivar origem');
+    }
   };
 
   const filteredSources = sources.filter(source => 
@@ -86,6 +97,15 @@ export const SourcesList = () => {
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
+                    {source.status === 'active' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleArchive(source.id)}
+                      >
+                        Arquivar
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))

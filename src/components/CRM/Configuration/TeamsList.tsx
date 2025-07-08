@@ -6,8 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Plus, Edit, Users, Search } from 'lucide-react';
 import { useCrmUsers } from '@/hooks/useCrmData';
-import { useTeams } from '@/hooks/useTeams';
+import { useTeams, useDeleteTeam } from '@/hooks/useTeams';
 import { TeamModal } from './TeamModal';
+import { toast } from 'sonner';
 
 export const TeamsList = () => {
   const [showModal, setShowModal] = useState(false);
@@ -15,6 +16,7 @@ export const TeamsList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { data: users = [], isLoading: usersLoading } = useCrmUsers();
   const { data: teams = [], isLoading: teamsLoading } = useTeams();
+  const deleteTeamMutation = useDeleteTeam();
 
   const handleEdit = (team: any) => {
     setSelectedTeam(team);
@@ -24,6 +26,15 @@ export const TeamsList = () => {
   const handleCloseModal = () => {
     setShowModal(false);
     setSelectedTeam(null);
+  };
+
+  const handleArchive = async (teamId: string) => {
+    try {
+      await deleteTeamMutation.mutateAsync(teamId);
+      toast.success('Time arquivado com sucesso!');
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao arquivar time');
+    }
   };
 
   const getLeaderName = (leaderId: string) => {
@@ -112,6 +123,15 @@ export const TeamsList = () => {
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
+                    {team.status === 'active' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleArchive(team.id)}
+                      >
+                        Arquivar
+                      </Button>
+                    )}
                   </div>
                 </div>
               ))
