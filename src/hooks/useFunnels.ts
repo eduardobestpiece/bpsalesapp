@@ -1,13 +1,12 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { FunnelWithStages } from '@/types/crm';
 
-export const useFunnels = () => {
+export const useFunnels = (companyId?: string) => {
   return useQuery({
-    queryKey: ['funnels'],
+    queryKey: ['funnels', companyId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('funnels')
         .select(`
           *,
@@ -15,6 +14,12 @@ export const useFunnels = () => {
         `)
         .eq('status', 'active')
         .order('created_at', { ascending: false });
+
+      if (companyId) {
+        query = query.eq('company_id', companyId);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('Error fetching funnels:', error);
@@ -27,6 +32,7 @@ export const useFunnels = () => {
 
       return data as FunnelWithStages[];
     },
+    enabled: !!companyId, // Only run query if companyId is provided
   });
 };
 
