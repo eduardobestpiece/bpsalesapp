@@ -97,12 +97,13 @@ const CrmIndicadores = () => {
                         const funnelIndicators = indicatorsByFunnel[funnel.id] || [];
                         // Ordenar etapas por stage_order
                         const sortedStages = (funnel.stages || []).sort((a: any, b: any) => a.stage_order - b.stage_order);
+                        const colCount = 3 + sortedStages.length + 1;
                         return (
                           <div key={funnel.id} className="mb-8">
                             <h3 className="font-bold text-lg mb-2">{funnel.name}</h3>
                             {/* Cabeçalho dinâmico */}
                             <div
-                              className={`grid grid-cols-[120px_80px_80px${sortedStages.length > 0 ? `_repeat(${sortedStages.length},1fr)` : ''}_100px] gap-2 font-semibold bg-muted rounded px-2 py-1 mb-2`}
+                              className={`grid grid-cols-${colCount} gap-2 font-semibold bg-muted rounded px-2 py-1 mb-2`}
                             >
                               <div>Período</div>
                               <div>Mês</div>
@@ -117,7 +118,7 @@ const CrmIndicadores = () => {
                               <div className="text-muted-foreground text-center py-4">Nenhum indicador registrado para este funil.</div>
                             ) : (
                               funnelIndicators.map((indicator) => (
-                                <div key={indicator.id} className={`grid grid-cols-[120px_80px_80px${sortedStages.length > 0 ? `_repeat(${sortedStages.length},1fr)` : ''}_100px] gap-2 items-center border-b last:border-b-0 py-2`}>
+                                <div key={indicator.id} className={`grid grid-cols-${colCount} gap-2 items-center border-b last:border-b-0 py-2`}>
                                   <div>{new Date(indicator.period_date).toLocaleDateString('pt-BR')}</div>
                                   <div>{String(indicator.month_reference).padStart(2, '0')}</div>
                                   <div>{indicator.year_reference}</div>
