@@ -99,12 +99,18 @@ export function gerarPeriodosMensaisCustom(mes: number, ano: number, diaInicio: 
   const periodos: { label: string; value: string }[] = [];
   let dataInicio = new Date(ano, mes - 1, diaInicio);
   for (let i = 0; i < quantidade; i++) {
-    const dataFim = new Date(dataInicio);
-    dataFim.setMonth(dataFim.getMonth() + 1);
-    dataFim.setDate(diaInicio - 1 === 0 ? new Date(dataFim.getFullYear(), dataFim.getMonth(), 0).getDate() : diaInicio - 1);
-    // Corrigir se passou do mês
-    if (dataFim < dataInicio) {
+    let dataFim: Date;
+    if (diaInicio === 1) {
+      // Fim: último dia do mesmo mês
+      dataFim = new Date(dataInicio.getFullYear(), dataInicio.getMonth() + 1, 0);
+    } else {
+      // Fim: dia (X-1) do mês seguinte
+      dataFim = new Date(dataInicio);
       dataFim.setMonth(dataFim.getMonth() + 1);
+      dataFim.setDate(diaInicio - 1 === 0 ? new Date(dataFim.getFullYear(), dataFim.getMonth(), 0).getDate() : diaInicio - 1);
+      if (dataFim < dataInicio) {
+        dataFim.setMonth(dataFim.getMonth() + 1);
+      }
     }
     const value = `${dataInicio.toISOString().split('T')[0]}_${dataFim.toISOString().split('T')[0]}`;
     const label = `De ${dataInicio.toLocaleDateString('pt-BR')} até ${dataFim.toLocaleDateString('pt-BR')}`;
