@@ -20,7 +20,11 @@ export const useSales = () => {
 
       if (error) {
         console.error('Error fetching sales:', error);
-        // Retornar dados mock para demonstração com estrutura correta
+        // Se o erro for de RLS (usuário não autenticado), retornar array vazio
+        if (error.code === 'PGRST301' || error.message.includes('RLS')) {
+          return [] as SaleWithRelations[];
+        }
+        // Para outros erros, retornar dados mock para demonstração
         return [
           {
             id: '1',

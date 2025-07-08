@@ -15,6 +15,10 @@ export const useTeams = () => {
 
       if (error) {
         console.error('Error fetching teams:', error);
+        // Se o erro for de RLS (usuário não autenticado), retornar array vazio
+        if (error.code === 'PGRST301' || error.message.includes('RLS')) {
+          return [] as Team[];
+        }
         throw error;
       }
 

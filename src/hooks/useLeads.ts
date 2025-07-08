@@ -21,6 +21,10 @@ export const useLeads = () => {
 
       if (error) {
         console.error('Error fetching leads:', error);
+        // Se o erro for de RLS (usuário não autenticado), retornar array vazio
+        if (error.code === 'PGRST301' || error.message.includes('RLS')) {
+          return [] as LeadWithRelations[];
+        }
         throw error;
       }
 
