@@ -57,3 +57,13 @@ export function gerarPeriodoMensal(mes: number, ano: number) {
     value: `${dataInicio.toISOString().split('T')[0]}_${dataFim.toISOString().split('T')[0]}`
   }];
 }
+
+// Função para extrair o último dia de um período (value pode ser 'YYYY-MM-DD' ou 'YYYY-MM-DD_YYYY-MM-DD')
+export function getUltimoDiaPeriodo(value: string): string {
+  if (value.includes('_')) {
+    // Período semanal ou mensal
+    return value.split('_')[1];
+  }
+  // Período diário
+  return value;
+}

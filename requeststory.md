@@ -1,29 +1,27 @@
 # Requisição em andamento
 
 ## Objetivo
-Implementar a lógica para gerar as opções de período no modal de indicador, conforme a configuração do funil selecionado (semanal, diário ou mensal), destacando períodos faltantes em vermelho (a partir do segundo registro).
+Ajustar a lógica do campo "Período" no modal de indicador conforme regras detalhadas para o primeiro e segundo registro do usuário para cada funil.
 
-## Contexto
-- O campo "Período" do modal deve exibir opções dinâmicas baseadas em:
-  - verification_type ("daily", "weekly", "monthly")
-  - verification_day (ex: dia da semana de início)
-  - mês e ano selecionados
-- Períodos já registrados devem ser destacados (ou bloqueados) para evitar duplicidade.
-- Períodos faltantes devem ser destacados em vermelho, mas só do segundo registro em diante.
-- Ordem dos campos já está correta no modal.
+## Novos Ajustes Solicitados
+- Se for o **primeiro registro** do usuário para aquele funil:
+  - Sugerir períodos dentro do espaço de 90 dias antes de hoje, do mais recente para o mais antigo.
+  - O usuário só poderá adicionar registros para aquele período no último dia do período (ex: se o período termina numa quinta, só pode registrar a partir da quinta).
+- Se for o **segundo registro** (ou mais) do usuário para aquele funil:
+  - Só aparecerão nas opções de período a partir do último registrado até o período do dia vigente.
+  - Mostrar em vermelho se está faltando algum (como já está).
+  - NÃO apresentar períodos futuros.
 
 ## Checklist
-- [x] Analisar estrutura de dados do funil e indicadores
-- [x] Verificar como buscar indicadores já registrados
-- [x] Planejar funções utilitárias para gerar períodos dinâmicos
-- [ ] Implementar geração dinâmica de períodos no modal
-- [ ] Destacar períodos faltantes conforme regra
+- [x] Analisar regras e impacto na lógica atual
+- [ ] Implementar sugestão de períodos para o primeiro registro (90 dias antes de hoje, ordem decrescente)
+- [ ] Restringir seleção para o último dia do período
+- [ ] Ajustar lógica para segundo registro: só períodos entre o último registrado e o atual, sem futuros
 - [ ] Testar e ajustar interface
 - [ ] Realizar deploy
 
 **Ponto de partida:**
-- O modal já exibe os campos corretamente, mas as opções de período ainda são estáticas.
-- Estrutura de dados e hooks já analisados.
+- Lógica de períodos dinâmicos já implementada, mas sem diferenciação entre primeiro e segundo registro do usuário para o funil.
 
 **Próximo passo:**
-Implementar a função utilitária para gerar períodos dinâmicos (diário, semanal, mensal) e integrar ao modal. 
+Atualizar a lógica do campo "Período" no modal conforme as novas regras acima. 

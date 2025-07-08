@@ -9,7 +9,7 @@ import { useFunnels } from '@/hooks/useFunnels';
 import { useCreateIndicator, useUpdateIndicator } from '@/hooks/useIndicators';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
-import { gerarPeriodosDiarios, gerarPeriodosSemanais, gerarPeriodoMensal } from '@/lib/utils';
+import { gerarPeriodosDiarios, gerarPeriodosSemanais, gerarPeriodoMensal, getUltimoDiaPeriodo } from '@/lib/utils';
 import { useIndicators } from '@/hooks/useIndicators';
 
 interface IndicatorModalProps {
@@ -39,11 +39,24 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   const { mutate: updateIndicator } = useUpdateIndicator();
   const { data: indicators } = useIndicators(effectiveCompanyId);
 
-  // Geração dinâmica dos períodos
-  let periodOptions: { label: string; value: string; isMissing?: boolean }[] = [];
+  // NOVA LÓGICA DE PERÍODOS
+  let periodOptions: { label: string; value: string; isMissing?: boolean; isAllowed?: boolean }[] = [];
   let periodosRegistrados: string[] = [];
-  if (selectedFunnel && formData.month_reference && formData.year_reference) {
-    // Buscar períodos já registrados para o funil, mês e ano
+  let periodosUsuario: string[] = [];
+  let ultimoPeriodoUsuario: string | null = null;
+  const hoje = new Date();
+
+  if (selectedFunnel && formData.month_reference && formData.year_reference && crmUser) {
+    // Filtrar indicadores do usuário para o funil selecionado
+    const indicadoresUsuario = (indicators || []).filter(
+      (ind) => ind.funnel_id === selectedFunnel.id && ind.user_id === crmUser.id
+    );
+    periodosUsuario = indicadoresUsuario.map((ind) => ind.period_date);
+    ultimoPeriodoUsuario = indicadoresUsuario.length > 0
+      ? indicadoresUsuario.sort((a, b) => b.period_date.localeCompare(a.period_date))[0].period_date
+      : null;
+
+    // Períodos já registrados por todos usuários (para bloqueio visual)
     periodosRegistrados = (indicators || [])
       .filter((ind) =>
         ind.funnel_id === selectedFunnel.id &&
@@ -51,30 +64,67 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         ind.year_reference === formData.year_reference
       )
       .map((ind) => ind.period_date);
+
+    // Gerar todos os períodos possíveis para o mês/ano/funil
+    let todosPeriodos: { label: string; value: string }[] = [];
     if (selectedFunnel.verification_type === 'daily') {
-      periodOptions = gerarPeriodosDiarios(formData.month_reference, formData.year_reference).map(opt => ({
-        ...opt,
-        isMissing: !periodosRegistrados.includes(opt.value)
-      }));
+      todosPeriodos = gerarPeriodosDiarios(formData.month_reference, formData.year_reference);
     } else if (selectedFunnel.verification_type === 'weekly') {
-      periodOptions = gerarPeriodosSemanais(
+      todosPeriodos = gerarPeriodosSemanais(
         formData.month_reference,
         formData.year_reference,
         selectedFunnel.verification_day ?? 1
-      ).map(opt => ({
-        ...opt,
-        isMissing: !periodosRegistrados.includes(opt.value)
-      }));
+      );
     } else if (selectedFunnel.verification_type === 'monthly') {
-      periodOptions = gerarPeriodoMensal(formData.month_reference, formData.year_reference).map(opt => ({
-        ...opt,
-        isMissing: !periodosRegistrados.includes(opt.value)
-      }));
+      todosPeriodos = gerarPeriodoMensal(formData.month_reference, formData.year_reference);
+    }
+
+    // 1. PRIMEIRO REGISTRO DO USUÁRIO PARA O FUNIL
+    if (periodosUsuario.length === 0) {
+      // Buscar períodos dos últimos 90 dias (de hoje para trás)
+      const dataLimite = new Date(hoje);
+      dataLimite.setDate(dataLimite.getDate() - 89); // 90 dias incluindo hoje
+      periodOptions = todosPeriodos
+        .filter(opt => {
+          // O último dia do período deve estar entre dataLimite e hoje
+          const ultimoDia = new Date(getUltimoDiaPeriodo(opt.value));
+          return ultimoDia >= dataLimite && ultimoDia <= hoje;
+        })
+        .sort((a, b) => new Date(getUltimoDiaPeriodo(b.value)).getTime() - new Date(getUltimoDiaPeriodo(a.value)).getTime())
+        .map(opt => {
+          // Só pode registrar se hoje >= último dia do período
+          const ultimoDia = new Date(getUltimoDiaPeriodo(opt.value));
+          const isAllowed = hoje >= ultimoDia;
+          return {
+            ...opt,
+            isAllowed,
+            isMissing: true // sempre vermelho pois é o primeiro
+          };
+        });
+    }
+    // 2. SEGUNDO REGISTRO OU MAIS
+    else {
+      // Encontrar o índice do último período registrado pelo usuário
+      const idxUltimo = todosPeriodos.findIndex(opt => opt.value === ultimoPeriodoUsuario);
+      // Só mostrar períodos entre o último registrado (exclusivo) e o período vigente (último dia <= hoje)
+      periodOptions = todosPeriodos
+        .filter((opt, idx) => {
+          const ultimoDia = new Date(getUltimoDiaPeriodo(opt.value));
+          return idx > idxUltimo && ultimoDia <= hoje;
+        })
+        .map(opt => {
+          const isMissing = !periodosUsuario.includes(opt.value);
+          return {
+            ...opt,
+            isMissing,
+            isAllowed: true // sempre permitido se está na lista
+          };
+        });
     }
   }
 
   // Regra: só destacar faltantes em vermelho a partir do segundo registro
-  const destacarFaltantes = periodosRegistrados.length > 0;
+  const destacarFaltantes = periodosUsuario.length > 0;
 
   useEffect(() => {
     if (indicator) {
@@ -300,7 +350,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                     <SelectItem
                       key={opt.value}
                       value={opt.value}
-                      disabled={periodosRegistrados.includes(opt.value) && (!indicator || indicator.period_date !== opt.value)}
+                      disabled={(!opt.isAllowed) || (periodosRegistrados.includes(opt.value) && (!indicator || indicator.period_date !== opt.value))}
                     >
                       <span className={opt.isMissing && destacarFaltantes ? 'text-red-500' : ''}>{opt.label}</span>
                       {periodosRegistrados.includes(opt.value) && (!indicator || indicator.period_date !== opt.value) && (
