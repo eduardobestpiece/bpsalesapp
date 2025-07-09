@@ -90,7 +90,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
         toast.success('Usuário atualizado com sucesso!');
       } else {
         // Chamar Edge Function invite-user
-        const res = await fetch('/functions/v1/invite-user', {
+        const res = await fetch('https://jbhocghbieqxjwsdstgm.supabase.co/functions/v1/invite-user', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
