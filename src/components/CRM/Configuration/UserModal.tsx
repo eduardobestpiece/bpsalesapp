@@ -19,7 +19,10 @@ interface UserModalProps {
 
 export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
   const [formData, setFormData] = useState({
+    first_name: '',
+    last_name: '',
     email: '',
+    phone: '',
     role: 'user' as 'master' | 'admin' | 'leader' | 'user',
     funnels: [] as string[],
   });
@@ -36,13 +39,19 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
   useEffect(() => {
     if (user) {
       setFormData({
+        first_name: user.first_name || '',
+        last_name: user.last_name || '',
         email: user.email,
+        phone: user.phone || '',
         role: user.role,
         funnels: user.funnels || [],
       });
     } else {
       setFormData({
+        first_name: '',
+        last_name: '',
         email: '',
+        phone: '',
         role: 'user',
         funnels: [],
       });
@@ -69,6 +78,9 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
         // Editar usuário existente
         await updateUserMutation.mutateAsync({
           id: user.id,
+          first_name: formData.first_name.trim(),
+          last_name: formData.last_name.trim(),
+          phone: formData.phone.trim() || null,
           email: formData.email.trim(),
           role: formData.role,
           funnels: formData.funnels,
@@ -98,7 +110,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
       }
 
       onClose();
-      setFormData({ email: '', role: 'user', funnels: [] });
+      setFormData({ first_name: '', last_name: '', email: '', phone: '', role: 'user', funnels: [] });
     } catch (error: any) {
       console.error('Erro ao salvar usuário:', error);
       toast.error(error.message || 'Erro ao salvar usuário');
@@ -117,6 +129,30 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
+          {user && (
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="first_name">Nome *</Label>
+                <Input
+                  id="first_name"
+                  value={formData.first_name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+              <div>
+                <Label htmlFor="last_name">Sobrenome *</Label>
+                <Input
+                  id="last_name"
+                  value={formData.last_name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
+                  required
+                  disabled={isLoading}
+                />
+              </div>
+            </div>
+          )}
           <div>
             <Label htmlFor="email">Email *</Label>
             <Input
@@ -133,6 +169,18 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
               </p>
             )}
           </div>
+          {user && (
+            <div>
+              <Label htmlFor="phone">Telefone</Label>
+              <Input
+                id="phone"
+                value={formData.phone}
+                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                placeholder="(11) 99999-9999"
+                disabled={isLoading}
+              />
+            </div>
+          )}
           <div>
             <Label htmlFor="role">Função *</Label>
             <Select
