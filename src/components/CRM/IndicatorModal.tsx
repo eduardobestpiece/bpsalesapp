@@ -144,7 +144,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
           return data >= primeiroDia && data < hoje;
         });
         periodOptions = todosPeriodos.map(opt => {
-          const isMissing = !periodosUsuario.includes(opt.value);
+          const isMissing = !(Array.isArray(periodosUsuario) ? periodosUsuario : []).includes(opt.value);
           return {
             ...opt,
             isMissing,
@@ -180,7 +180,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
             return ultimoDia > ultimoRegistrado && ultimoDia < hoje;
           })
           .map(opt => {
-            const isMissing = !periodosUsuario.includes(getUltimoDiaPeriodo(opt.value));
+            const isMissing = !(Array.isArray(periodosUsuario) ? periodosUsuario : []).includes(getUltimoDiaPeriodo(opt.value));
             return {
               ...opt,
               isMissing,
@@ -319,7 +319,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
       }
       setIsAutoLoading(false);
     }
-    if (selectedFunnel && ['master', 'admin'].includes(crmUser?.role)) {
+    if (selectedFunnel && ['master', 'admin'].includes(crmUser?.role || '')) {
       fetchAutoValues();
     }
   }, [selectedFunnel, crmUser, formData.funnel_id, formData.period_date, companyId]);
@@ -628,10 +628,10 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                       <SelectItem
                         key={opt.value}
                         value={opt.value}
-                        disabled={(!opt.isAllowed) || (periodosRegistrados.includes(opt.value) && (!indicator || indicator.period_date !== opt.value))}
+                        disabled={(!opt.isAllowed) || ((Array.isArray(periodosRegistrados) ? periodosRegistrados : []).includes(opt.value) && (!indicator || indicator.period_date !== opt.value))}
                       >
                         <span className={opt.isMissing && destacarFaltantes ? 'text-red-500' : ''}>{opt.label}</span>
-                        {periodosRegistrados.includes(opt.value) && (!indicator || indicator.period_date !== opt.value) && (
+                        {(Array.isArray(periodosRegistrados) ? periodosRegistrados : []).includes(opt.value) && (!indicator || indicator.period_date !== opt.value) && (
                           <span className="ml-2 text-xs text-muted-foreground">(já registrado)</span>
                         )}
                       </SelectItem>
@@ -647,7 +647,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
               </div>
             )}
             {/* CAMPOS RESTRITOS MASTER/ADMIN */}
-            {selectedFunnel && ['master', 'admin'].includes(crmUser?.role) && (
+            {selectedFunnel && ['master', 'admin'].includes(crmUser?.role || '') && (
               <>
                 {/* Campo Valor das Vendas */}
                 <div>
@@ -655,8 +655,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                   {selectedFunnel.sales_value_mode === 'manual' ? (
                     <Input
                       id="sales_value"
-                      type="number"
-                      step="0.01"
+                      type="text"
                       value={isAutoLoading ? '...' : salesValue}
                       onChange={e => setSalesValue(e.target.value)}
                       placeholder="0,00"
