@@ -204,6 +204,9 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         const ultimoRegistroUsuario = indicadoresUsuario && indicadoresUsuario.length > 0
           ? indicadoresUsuario.sort((a, b) => new Date(b.period_end).getTime() - new Date(a.period_end).getTime())[0]
           : null;
+        console.log('[DEBUG] Todos os períodos possíveis:', todosPeriodos.map(p => p.value));
+        console.log('[DEBUG] Último registro do usuário:', ultimoRegistroUsuario);
+        console.log('[DEBUG] period_end do último registro:', ultimoRegistroUsuario ? ultimoRegistroUsuario.period_end : null);
         // Na filtragem dos períodos disponíveis (para semanal/mensal):
         periodOptions = todosPeriodos
           .filter(opt => {
@@ -215,9 +218,13 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
               primeiroDiaPeriodo = new Date(opt.value);
             }
             // Só mostrar períodos cujo início seja estritamente maior que o period_end do último registro
-            return (!ultimoRegistroUsuario || primeiroDiaPeriodo > ultimoRegistroUsuario.period_end)
+            const isValid = (!ultimoRegistroUsuario || primeiroDiaPeriodo > new Date(ultimoRegistroUsuario.period_end))
               && primeiroDiaPeriodo < hoje
               && !periodosRegistradosUsuario.includes(identificadorPeriodo);
+            if (!isValid) {
+              console.log('[DEBUG] Período filtrado:', identificadorPeriodo, 'primeiroDiaPeriodo:', primeiroDiaPeriodo, 'ultimoRegistroUsuario.period_end:', ultimoRegistroUsuario ? ultimoRegistroUsuario.period_end : null);
+            }
+            return isValid;
           })
           .map(opt => ({
             ...opt,
