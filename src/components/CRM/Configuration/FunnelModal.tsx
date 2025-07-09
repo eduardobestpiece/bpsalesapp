@@ -54,7 +54,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
         verification_day: funnel.verification_day || 1,
         sales_value_mode: funnel.sales_value_mode || 'manual',
         recommendations_mode: funnel.recommendations_mode || 'manual',
-        recommendation_stage_id: funnel.recommendation_stage_id || ''
+        recommendation_stage_id: funnel.recommendation_stage_id ? String(funnel.recommendation_stage_id) : ''
       });
       if (funnel.stages && funnel.stages.length > 0) {
         setStages(funnel.stages.sort((a: any, b: any) => a.stage_order - b.stage_order));
@@ -207,7 +207,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
         status: 'active' as const,
         sales_value_mode: formData.sales_value_mode,
         recommendations_mode: formData.recommendations_mode,
-        recommendation_stage_id: formData.recommendation_stage_id || null
+        recommendation_stage_id: formData.recommendation_stage_id ? String(formData.recommendation_stage_id) : null
       };
 
       if (funnel) {
@@ -325,8 +325,8 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                 <div>
                   <Label htmlFor="recommendation_stage_id">Etapa ligada às Recomendações</Label>
                   <Select
-                    value={formData.recommendation_stage_id}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, recommendation_stage_id: value }))}
+                    value={formData.recommendation_stage_id ? String(formData.recommendation_stage_id) : ''}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, recommendation_stage_id: String(value) }))}
                     disabled={isLoading || stages.length === 0 || stages.length === 1}
                   >
                     <SelectTrigger>
@@ -334,7 +334,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                     </SelectTrigger>
                     <SelectContent>
                       {stages.filter(stage => !!stage.name && !!stage.id).map((stage) => (
-                        <SelectItem key={stage.id} value={stage.id}>
+                        <SelectItem key={String(stage.id)} value={String(stage.id)}>
                           {stage.name || `Etapa ${stage.stage_order}`}
                         </SelectItem>
                       ))}
