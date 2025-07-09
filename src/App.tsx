@@ -16,6 +16,7 @@ import CrmPerformance from "./pages/crm/CrmPerformance";
 import CrmPerfil from "./pages/crm/CrmPerfil";
 import CrmMasterConfig from "./pages/crm/CrmMasterConfig";
 import NotFound from "./pages/NotFound";
+import CrmResetPasswordInvite from "./pages/crm/CrmResetPasswordInvite";
 
 const queryClient = new QueryClient();
 
@@ -36,6 +37,7 @@ function App() {
                     
                     {/* Rota de login do CRM */}
                     <Route path="/crm/login" element={<CrmLogin />} />
+                    <Route path="/crm/redefinir-senha-convite" element={<CrmResetPasswordInvite />} />
                     
                     {/* Rotas protegidas do CRM */}
                     <Route 

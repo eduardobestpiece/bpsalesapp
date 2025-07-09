@@ -1,18 +1,23 @@
 # Solicitação em Andamento
 
-## Remover página Performance do cabeçalho e iniciar etapa de usuários
+## Etapa de Usuários - Planejamento e Checklist
 
-**Ponto de partida:**
-- Usuário confirmou conclusão da aba de Registro de Indicadores e Funis.
-- Nova demanda: remover página Performance do cabeçalho (pois virou aba dos indicadores) e iniciar a etapa de usuários.
+**Objetivo:**
+Implementar o fluxo completo de gestão de usuários no CRM, incluindo convite, cadastro simplificado, seleção de funis, redefinição de senha pós-convite e recuperação de senha.
 
-**Etapas da nova solicitação:**
-- Remover página Performance do cabeçalho.
-- Criar página de redefinição de senha pós convite (Nome, Sobrenome, E-mail, Telefone, Data de nascimento, nova senha e repetir senha).
-- Criar página de redefinição de senha comum (E-mail, nova senha e repetir senha).
-- Ajustar fluxo de convite: ao adicionar usuário, criar no Supabase com senha "Admin" e auto-confirmar, enviando e-mail para redefinir senha e completar cadastro.
-- Modal de cadastro de usuários: apenas Email, Função e seleção de Funis.
-- Modal de edição de usuários: manter campos atuais + seleção de Funis.
+### Checklist Geral
+- [x] Remover página Performance do cabeçalho e rota
+- [ ] Criar página de redefinição de senha pós convite (Nome, Sobrenome, E-mail, Telefone, Data de nascimento, nova senha e repetir senha)
+- [ ] Criar página de redefinição de senha comum (E-mail, nova senha e repetir senha)
+- [ ] Ajustar fluxo de convite: criar usuário no Supabase com senha "Admin", auto-confirmar e enviar e-mail para redefinir senha/completar cadastro
+- [ ] Modal de cadastro de usuários: apenas Email, Função e seleção de Funis
+- [ ] Modal de edição de usuários: manter campos atuais + seleção de Funis
+
+### Primeira Etapa: Página de redefinição de senha pós convite
+- [ ] Criar rota e componente para página de redefinição de senha pós convite
+- [ ] Formulário com campos: Nome, Sobrenome, E-mail, Telefone, Data de nascimento, Nova senha, Repetir senha
+- [ ] Integração com Supabase para atualizar dados do usuário e senha
+- [ ] Mensagem de sucesso e redirecionamento para login
 
 **Status atual:**
-- Iniciando planejamento e execução da primeira etapa: remoção da página Performance do cabeçalho. 
+- Iniciando implementação da página de redefinição de senha pós convite. 

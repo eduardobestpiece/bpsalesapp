@@ -122,6 +122,8 @@
 
 **Status:** Correção aplicada e aguardando validação do usuário.
 
+- [x] **08/07/2024** - Removida a página Performance do cabeçalho e da rota do CRM, conforme solicitado. Deploy automático acionado. Próxima etapa: funcionalidades de usuários (convite, redefinição de senha, cadastro/edição simplificados).
+
 - [ ] **07/07/2024** - Correção da estrutura do JSX na tela de indicadores do CRM:
     - CardHeader agora contém apenas cabeçalho, filtros e botões.
     - CardContent contém apenas a tabela/listagem.
