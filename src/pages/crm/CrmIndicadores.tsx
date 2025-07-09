@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Edit, Archive, Trash2, Filter } from 'lucide-react';
+import { Plus, Search, Edit, Archive, Trash2, Filter, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
 import { IndicatorModal } from '@/components/CRM/IndicatorModal';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useIndicators } from '@/hooks/useIndicators';
@@ -19,6 +19,23 @@ import { useEffect } from 'react';
 import { DatePicker } from '@/components/ui/datepicker'; // Supondo que existe um componente de datepicker
 import { useTeams } from '@/hooks/useTeams';
 import { useCrmUsers } from '@/hooks/useCrmUsers';
+
+// Função utilitária para status visual do prazo
+function getPrazoStatus(indicator, funnel) {
+  if (!indicator || !funnel || !indicator.created_at || !indicator.period_end) return null;
+  const deadlineHours = funnel.indicator_deadline_hours ?? 0;
+  const periodEnd = new Date(indicator.period_end);
+  const prazo = new Date(periodEnd.getTime() + deadlineHours * 60 * 60 * 1000);
+  const createdAt = new Date(indicator.created_at);
+  const diffMs = createdAt.getTime() - prazo.getTime();
+  if (createdAt <= prazo) {
+    return { color: 'green', icon: <CheckCircle className="w-4 h-4 text-green-500" />, msg: 'Preenchido dentro do prazo' };
+  } else if (diffMs <= 24 * 60 * 60 * 1000) {
+    return { color: 'yellow', icon: <AlertCircle className="w-4 h-4 text-yellow-500" />, msg: 'Preenchido 24 horas após prazo' };
+  } else {
+    return { color: 'red', icon: <XCircle className="w-4 h-4 text-red-500" />, msg: 'Preenchido fora do prazo' };
+  }
+}
 
 const CrmIndicadores = () => {
   const [showModal, setShowModal] = useState(false);
@@ -146,6 +163,9 @@ const CrmIndicadores = () => {
     filteredIndicatorsByFunnel[indicator.funnel_id].push(indicator);
   });
 
+  // Adicionar estado para seleção em massa
+  const [selectedIndicators, setSelectedIndicators] = useState<string[]>([]);
+
   // Função para arquivar indicador
   const handleArchive = async (indicator: any) => {
     if (!indicator) return;
@@ -264,6 +284,8 @@ const CrmIndicadores = () => {
                                   <table className="min-w-full border-separate border-spacing-y-1">
                                     <thead>
                                       <tr className="bg-muted">
+                                        {(crmUser?.role === 'admin' || crmUser?.role === 'master') && <th className="px-2 py-1 text-left font-semibold">Selecionar</th>}
+                                        <th className="px-2 py-1 text-left font-semibold">Status</th>
                                         {columnsConfig[funnel.id]?.includes('period') && <th className="px-2 py-1 text-left font-semibold">Período</th>}
                                         {columnsConfig[funnel.id]?.includes('month') && <th className="px-2 py-1 text-left font-semibold">Mês</th>}
                                         {columnsConfig[funnel.id]?.includes('year') && <th className="px-2 py-1 text-left font-semibold">Ano</th>}
@@ -302,10 +324,33 @@ const CrmIndicadores = () => {
                                           const taxaConversao = penultimateValue > 0 ? (lastValue / penultimateValue) * 100 : 0;
                                           // Conversão do funil
                                           const conversaoFunil = firstValue > 0 ? (lastValue / firstValue) * 100 : 0;
-                                          // Média de Recomendações (associada à última etapa)
-                                          const mediaRecomendacoes = lastValue > 0 ? recommendationsCount / lastValue : 0;
+                                          // Média de Recomendações (associada à etapa correta)
+                                          const recommendationStage = sortedStages.find((s: any) => s.name.toLowerCase().includes('recomend')) || lastStage;
+                                          const recommendationStageValue = (indicator.values || []).find((v: any) => v.stage_id === recommendationStage?.id)?.value || 0;
+                                          const mediaRecomendacoes = recommendationStageValue > 0 ? recommendationsCount / recommendationStageValue : 0;
+                                          // Status visual do prazo
+                                          const prazoStatus = getPrazoStatus(indicator, funnel);
                                           return (
                                             <tr key={indicator.id} className="bg-white border-b last:border-b-0">
+                                              {/* Checkbox para admin/master */}
+                                              {(crmUser?.role === 'admin' || crmUser?.role === 'master') && (
+                                                <td className="px-2 py-1">
+                                                  <input type="checkbox" checked={selectedIndicators.includes(indicator.id)} onChange={e => {
+                                                    setSelectedIndicators(prev => e.target.checked ? [...prev, indicator.id] : prev.filter(id => id !== indicator.id));
+                                                  }} />
+                                                </td>
+                                              )}
+                                              {/* Status visual do prazo */}
+                                              <td className="px-2 py-1">
+                                                {prazoStatus && (
+                                                  <span className="flex items-center gap-1">
+                                                    {prazoStatus.icon}
+                                                    <span className={`text-xs ${
+                                                      prazoStatus.color === 'green' ? 'text-green-600' : prazoStatus.color === 'yellow' ? 'text-yellow-600' : 'text-red-600'
+                                                    }`}>{prazoStatus.msg}</span>
+                                                  </span>
+                                                )}
+                                              </td>
                                               {columnsConfig[funnel.id]?.includes('period') && (
                                                 <td className="px-2 py-1">{
                                                   indicator.period_start && indicator.period_end
@@ -320,7 +365,12 @@ const CrmIndicadores = () => {
                                                 <td className="px-2 py-1">{indicator.year_reference}</td>
                                               )}
                                               {columnsConfig[funnel.id]?.includes('last_stage') && (
-                                                <td className="px-2 py-1">{lastStage?.name || '-'}</td>
+                                                <td className="px-2 py-1">
+                                                  <div className="flex flex-col">
+                                                    <span>{lastStage?.name || '-'}</span>
+                                                    <span className="font-bold text-base">{lastValue}</span>
+                                                  </div>
+                                                </td>
                                               )}
                                               {columnsConfig[funnel.id]?.includes('sales_value') && (
                                                 <td className="px-2 py-1">{salesValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
@@ -335,11 +385,11 @@ const CrmIndicadores = () => {
                                                 <td className="px-2 py-1">{firstValue > 0 ? conversaoFunil.toFixed(1) + '%' : '-'}</td>
                                               )}
                                               {columnsConfig[funnel.id]?.includes('media_recomendacoes') && (
-                                                <td className="px-2 py-1">{lastValue > 0 ? mediaRecomendacoes.toFixed(2) : '-'}</td>
+                                                <td className="px-2 py-1">{recommendationStageValue > 0 ? mediaRecomendacoes.toFixed(2) : '-'}</td>
                                               )}
                                               {/* Ações */}
                                               <td className="px-2 py-1 text-center">
-                                              <div className="flex gap-2 justify-center">
+                                                <div className="flex gap-2 justify-center">
                             <Button
                               variant="outline"
                               size="sm"
