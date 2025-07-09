@@ -52,3 +52,11 @@ Reformulação do filtro de indicadores (CRM):
 - Corrigir cálculo da coluna "Média de Recomendações" para dividir pelo valor da etapa correta.
 - Adicionar seletor para ações em massa (visível apenas para admin/master).
 - Próximos passos: analisar código, dependências e banco para planejar as alterações. 
+
+## 2024-07-08 - Nova solicitação: ações em massa na lista de indicadores
+
+- Ações em massa devem ser aplicadas por funil (não pode selecionar indicadores de funis diferentes).
+- Opções de ação em massa: Arquivar ou Alterar Período.
+- Alteração de período só pode ocorrer se todos os selecionados tiverem períodos iguais.
+- Ao clicar em Alterar Período, abrir o modal de Alterar Período.
+- Próximos passos: planejar e implementar as ações em massa conforme regras acima. 

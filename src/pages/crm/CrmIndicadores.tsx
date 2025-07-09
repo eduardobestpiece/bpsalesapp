@@ -165,6 +165,39 @@ const CrmIndicadores = () => {
 
   // Adicionar estado para seleção em massa
   const [selectedIndicators, setSelectedIndicators] = useState<string[]>([]);
+  const [selectedFunilId, setSelectedFunilId] = useState<string | null>(null);
+  const [showBulkPeriodModal, setShowBulkPeriodModal] = useState(false);
+
+  // Função para lidar com seleção em massa
+  const handleSelectIndicator = (indicatorId: string, funilId: string) => {
+    if (selectedIndicators.length === 0) {
+      setSelectedIndicators([indicatorId]);
+      setSelectedFunilId(funilId);
+    } else if (selectedFunilId === funilId) {
+      setSelectedIndicators(prev => prev.includes(indicatorId) ? prev.filter(id => id !== indicatorId) : [...prev, indicatorId]);
+    } else {
+      alert('Só é possível selecionar indicadores do mesmo funil para ações em massa.');
+    }
+  };
+  // Função para limpar seleção
+  const clearBulkSelection = () => {
+    setSelectedIndicators([]);
+    setSelectedFunilId(null);
+  };
+  // Função para arquivar em massa
+  const handleBulkArchive = async () => {
+    if (selectedIndicators.length === 0) return;
+    if (!window.confirm('Tem certeza que deseja arquivar os indicadores selecionados?')) return;
+    await Promise.all(selectedIndicators.map(id =>
+      supabase.from('indicators').update({ archived_at: new Date().toISOString() }).eq('id', id)
+    ));
+    clearBulkSelection();
+    window.location.reload();
+  };
+  // Função para abrir modal de período em massa
+  const handleBulkPeriod = () => {
+    setShowBulkPeriodModal(true);
+  };
 
   // Função para arquivar indicador
   const handleArchive = async (indicator: any) => {
@@ -280,6 +313,21 @@ const CrmIndicadores = () => {
                                     </DialogContent>
                                   </Dialog>
                                 )}
+                                {/* Menu de ações em massa (acima da tabela, se houver seleção) */}
+                                {selectedIndicators.length > 0 && (
+                                  <div className="flex gap-2 mb-2">
+                                    <Button variant="destructive" onClick={handleBulkArchive}>Arquivar Selecionados</Button>
+                                    <Button variant="outline" onClick={handleBulkPeriod} disabled={(() => {
+                                      // Só habilita se todos os períodos forem iguais
+                                      if (selectedIndicators.length === 0) return true;
+                                      const selectedObjs = funnelIndicators.filter(i => selectedIndicators.includes(i.id));
+                                      if (selectedObjs.length === 0) return true;
+                                      const firstPeriod = selectedObjs[0]?.period_start + '_' + selectedObjs[0]?.period_end;
+                                      return !selectedObjs.every(i => (i.period_start + '_' + i.period_end) === firstPeriod);
+                                    })()}>Alterar Período</Button>
+                                    <Button variant="ghost" onClick={clearBulkSelection}>Cancelar Seleção</Button>
+                                  </div>
+                                )}
                                 <div className="overflow-x-auto">
                                   <table className="min-w-full border-separate border-spacing-y-1">
                                     <thead>
@@ -335,9 +383,7 @@ const CrmIndicadores = () => {
                                               {/* Checkbox para admin/master */}
                                               {(crmUser?.role === 'admin' || crmUser?.role === 'master') && (
                                                 <td className="px-2 py-1">
-                                                  <input type="checkbox" checked={selectedIndicators.includes(indicator.id)} onChange={e => {
-                                                    setSelectedIndicators(prev => e.target.checked ? [...prev, indicator.id] : prev.filter(id => id !== indicator.id));
-                                                  }} />
+                                                  <input type="checkbox" checked={selectedIndicators.includes(indicator.id)} onChange={e => handleSelectIndicator(indicator.id, funnel.id)} />
                                                 </td>
                                               )}
                                               {/* Status visual do prazo */}
@@ -526,6 +572,23 @@ const CrmIndicadores = () => {
                 <Button type="button" variant="outline" onClick={() => setFilters({ periodStart: '', periodEnd: '', month: '', year: '', funnelId: '', teamId: '', userId: '' })}>Limpar filtros</Button>
                 <Button type="button" onClick={() => setShowFiltersModal(false)}>Aplicar</Button>
               </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
+      {/* Modal de Alterar Período em massa */}
+      {showBulkPeriodModal && (
+        <Dialog open={showBulkPeriodModal} onOpenChange={setShowBulkPeriodModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Alterar Período (Ação em Massa)</DialogTitle>
+            </DialogHeader>
+            <div className="mb-4">Você está alterando o período de {selectedIndicators.length} indicadores.</div>
+            {/* Aqui pode ser usado o mesmo conteúdo do modal de período já existente, adaptando para múltiplos IDs */}
+            {/* ... */}
+            <div className="flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => setShowBulkPeriodModal(false)}>Cancelar</Button>
+              {/* Botão de salvar alteração em massa (implementar lógica conforme modal individual) */}
             </div>
           </DialogContent>
         </Dialog>

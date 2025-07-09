@@ -101,4 +101,17 @@
 
 **Status:** Concluído e aguardando validação do usuário.
 
+## 2024-07-08 - Concluído
+
+- Melhorias na lista de indicadores (CRM):
+  - Filtragem por perfil: admin/master veem todos, líder vê equipe, usuário vê apenas os próprios.
+  - Status visual (bolinha colorida e mensagem) indicando prazo de preenchimento.
+  - Exibição do valor da última etapa logo abaixo do nome.
+  - Cálculo correto da média de recomendações (dividindo pela etapa correta).
+  - Checkbox para seleção em massa (apenas admin/master).
+- Testes realizados e checklist atualizado.
+- Deploy automático realizado.
+
+**Status:** Concluído e aguardando validação do usuário.
+
 --- 
