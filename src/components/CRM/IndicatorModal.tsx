@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { gerarPeriodosDiarios, gerarPeriodosSemanais, gerarPeriodoMensal, getUltimoDiaPeriodo, gerarPeriodosSemanaisUltimos90Dias, gerarPeriodosMensaisCustom, gerarDiasUltimos90AteOntem } from '@/lib/utils';
 import { useIndicators } from '@/hooks/useIndicators';
 import { supabase } from '@/integrations/supabase/client';
+import ReactInputMask from 'react-input-mask';
 
 interface IndicatorModalProps {
   isOpen: boolean;
@@ -30,7 +31,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   });
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFunnel, setSelectedFunnel] = useState<any>(null);
-  const [salesValue, setSalesValue] = useState(0);
+  const [salesValue, setSalesValue] = useState('0,00');
   const [recommendationsCount, setRecommendationsCount] = useState(0);
   const [isAutoLoading, setIsAutoLoading] = useState(false);
 
@@ -203,6 +204,8 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         year_reference: indicator.year_reference,
         stages: stagesValues
       });
+      setSalesValue(indicator.sales_value || '0,00');
+      setRecommendationsCount(indicator.recommendations_count || 0);
     } else {
       const today = new Date().toISOString().split('T')[0];
       setFormData({
@@ -212,6 +215,8 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         year_reference: new Date().getFullYear(),
         stages: {}
       });
+      setSalesValue('0,00');
+      setRecommendationsCount(0);
     }
   }, [indicator]);
 
@@ -231,10 +236,10 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
       // Inicializar campos de vendas/recomendações
       if (funnel) {
         if (funnel.sales_value_mode === 'manual') {
-          setSalesValue(indicator?.sales_value || 0);
+          setSalesValue(indicator?.sales_value || '0,00');
         } else {
           // Aqui você pode buscar/calcular o valor das vendas do sistema
-          setSalesValue(0); // Substitua por lógica real
+          setSalesValue('0,00'); // Substitua por lógica real
         }
         if (funnel.recommendations_mode === 'manual') {
           setRecommendationsCount(indicator?.recommendations_count || 0);
@@ -270,9 +275,9 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
           .eq('status', 'active');
         if (!error && data) {
           const total = data.reduce((sum, s) => sum + (s.sale_value || 0), 0);
-          setSalesValue(total);
+          setSalesValue(total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace('.', ','));
         } else {
-          setSalesValue(0);
+          setSalesValue('0,00');
         }
       }
       // Buscar número de recomendações
@@ -313,6 +318,11 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     }
   }, [selectedFunnel, crmUser, formData.funnel_id, formData.period_date, companyId]);
 
+  // Máscara monetária: converte string com vírgula para número
+  function parseMonetaryValue(value: string) {
+    return Number(value.replace(/\./g, '').replace(',', '.')) || 0;
+  }
+
   const handleStageValueChange = (stageId: string, value: number) => {
     setFormData(prev => ({
       ...prev,
@@ -351,7 +361,9 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         funnel_id: formData.funnel_id,
         period_date: periodDateValue,
         month_reference: formData.month_reference,
-        year_reference: formData.year_reference
+        year_reference: formData.year_reference,
+        sales_value: parseMonetaryValue(salesValue),
+        recommendations_count: recommendationsCount
       };
 
       const stageValues = Object.entries(formData.stages).map(([stageId, value]) => ({
@@ -394,6 +406,27 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     } catch (error: any) {
       console.error('Erro ao salvar indicador:', error);
       toast.error(error.message || 'Erro ao salvar indicador');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      const indicatorData = {
+        sales_value: parseMonetaryValue(salesValue),
+        recommendations_count: recommendationsCount
+      };
+      const { error } = await supabase
+        .from('indicators')
+        .update(indicatorData)
+        .eq('id', indicator.id);
+      if (error) throw error;
+      onClose();
+    } catch (err) {
+      // tratamento de erro
     } finally {
       setIsLoading(false);
     }
@@ -485,60 +518,61 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
               </Select>
             </div>
             {/* Período */}
-            <div>
-              <Label htmlFor="period_date">Período *</Label>
-              <Select
-                value={formData.period_date}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, period_date: value }))}
-                disabled={isLoading || !formData.funnel_id || !!indicator}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o período" />
-                </SelectTrigger>
-                <SelectContent>
-                  {periodOptions.length === 0 && (
-                    <div className="px-4 py-2 text-muted-foreground text-sm">
-                      {periodosUsuario.length === 0
-                        ? 'Nenhum período disponível para registro neste mês/ano. Só é possível registrar períodos cujo último dia já passou e estejam dentro dos últimos 90 dias.'
-                        : 'Nenhum período disponível entre o último registrado e o período atual. Não há períodos pendentes para registro neste mês/ano.'}
-                    </div>
-                  )}
-                  {periodOptions.map(opt => (
-                    <SelectItem
-                      key={opt.value}
-                      value={opt.value}
-                      disabled={(!opt.isAllowed) || (periodosRegistrados.includes(opt.value) && (!indicator || indicator.period_date !== opt.value))}
-                    >
-                      <span className={opt.isMissing && destacarFaltantes ? 'text-red-500' : ''}>{opt.label}</span>
-                      {periodosRegistrados.includes(opt.value) && (!indicator || indicator.period_date !== opt.value) && (
-                        <span className="ml-2 text-xs text-muted-foreground">(já registrado)</span>
-                      )}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {/* Exibir data/hora de criação no modo edição */}
-              {indicator && indicator.created_at && (
-                <div className="text-xs text-muted-foreground mt-1">
-                  Preenchido em: {new Date(indicator.created_at).toLocaleString('pt-BR')}
-                </div>
-              )}
-            </div>
+            {isOpen && !indicator && (
+              <div>
+                <Label htmlFor="period_date">Período *</Label>
+                <Select
+                  value={formData.period_date}
+                  onValueChange={(value) => setFormData(prev => ({ ...prev, period_date: value }))}
+                  disabled={isLoading || !formData.funnel_id}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o período" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {periodOptions.length === 0 && (
+                      <div className="px-4 py-2 text-muted-foreground text-sm">
+                        {periodosUsuario.length === 0
+                          ? 'Nenhum período disponível para registro neste mês/ano. Só é possível registrar períodos cujo último dia já passou e estejam dentro dos últimos 90 dias.'
+                          : 'Nenhum período disponível entre o último registrado e o período atual. Não há períodos pendentes para registro neste mês/ano.'}
+                      </div>
+                    )}
+                    {periodOptions.map(opt => (
+                      <SelectItem
+                        key={opt.value}
+                        value={opt.value}
+                        disabled={(!opt.isAllowed) || (periodosRegistrados.includes(opt.value) && (!indicator || indicator.period_date !== opt.value))}
+                      >
+                        <span className={opt.isMissing && destacarFaltantes ? 'text-red-500' : ''}>{opt.label}</span>
+                        {periodosRegistrados.includes(opt.value) && (!indicator || indicator.period_date !== opt.value) && (
+                          <span className="ml-2 text-xs text-muted-foreground">(já registrado)</span>
+                        )}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {/* Exibir data/hora de criação no modo edição */}
+                {indicator && indicator.created_at && (
+                  <div className="text-xs text-muted-foreground mt-1">
+                    Preenchido em: {new Date(indicator.created_at).toLocaleString('pt-BR')}
+                  </div>
+                )}
+              </div>
+            )}
             {/* CAMPOS RESTRITOS MASTER/ADMIN */}
             {selectedFunnel && ['master', 'admin'].includes(crmUser?.role) && (
               <>
                 <div>
                   <Label htmlFor="sales_value">Valor das Vendas</Label>
                   {selectedFunnel.sales_value_mode === 'manual' ? (
-                    <Input
-                      id="sales_value"
-                      type="number"
-                      min="0"
+                    <ReactInputMask
+                      mask="999.999.999,99"
+                      maskChar={null}
                       value={salesValue}
-                      onChange={e => setSalesValue(Number(e.target.value) || 0)}
-                      placeholder="Digite o valor das vendas"
-                      disabled={isLoading}
+                      onChange={e => setSalesValue(e.target.value)}
+                      placeholder="0,00"
+                      inputMode="decimal"
                     />
                   ) : (
                     <Input

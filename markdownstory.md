@@ -25,5 +25,6 @@
 - [2024-07-08] Adicionados campos de configuração de Valor das Vendas (Manual/Sistema), Recomendações (Manual/Sistema) e seleção de etapa de recomendações ao modal de criação/edição de Funil (visíveis apenas para Master/Admin). Modal de Indicador atualizado para exibir campos de Valor das Vendas e Número de Recomendações conforme configuração do funil (editável se manual, calculado se sistema). Commit e deploy realizados.
 - [2024-07-08] Correção: relacionamento duplicado entre funis e etapas (Supabase) ajustado na query do frontend; crash do Select de etapa de recomendação no modal de Funil corrigido. Commit e deploy realizados.
 - [2024-07-08] Implantada lógica automática para valor das vendas e recomendações no registro/edição de indicador (modo sistema): busca e soma vendas do usuário no funil/período, e conta leads de recomendação. Commit e deploy realizados.
+- [2024-07-08] Correção: não enviar sales_value e recommendations_count para o Supabase ao criar/editar indicador (campos só para exibição). Commit e deploy realizados.
 
 --- 

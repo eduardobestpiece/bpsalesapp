@@ -1,18 +1,14 @@
 # Requisição em Andamento
 
-## Registro e Edição de Indicadores (Lógica Automática)
-- Valor das vendas: se "Manual", campo editável; se "Sistema", valor calculado automaticamente com base nas vendas do usuário naquele funil e período.
-- Número de recomendações: se "Manual", campo editável; se "Sistema", valor calculado automaticamente com base nos leads do usuário naquele funil e período, cuja origem seja "Recomendação".
+## Ajuste nos Registros e Edições de Indicadores
+- Campo "Valor das Vendas" deve ser monetário, aceitando vírgula para centavos.
+- Ao registrar, os campos "Valor de Vendas" e "Recomendações" devem ser salvos corretamente.
+- Na edição, campo "Valor das Vendas" também deve ser monetário.
+- Campo "Período" deve ser oculto no modal de edição (não editável, não obrigatório).
 
 ## Checklist
-- [x] Campos e permissões já implementados nos modais
-- [ ] Buscar vendas do usuário para o funil e período selecionados (modo "Sistema")
-- [ ] Buscar leads de recomendação do usuário para o funil e período selecionados (modo "Sistema")
-- [ ] Atualizar modal de indicador para exibir valores automáticos e bloquear edição
-- [ ] Testar e validar
-- [ ] Commitar e fazer deploy
-- [ ] Solicitar validação do usuário
-
----
-
-**Status:** Iniciando implementação da lógica automática no modal de indicador. 
+- [x] Migration SQL aplicada com sucesso
+- [ ] Máscara monetária no campo de valor das vendas (registro e edição)
+- [ ] Persistir corretamente os campos sales_value e recommendations_count ao criar indicador
+- [ ] Persistir corretamente os campos sales_value e recommendations_count ao editar indicador
+- [ ] Ocultar campo "Período" no modal de edição de indicador 
