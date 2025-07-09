@@ -9,7 +9,7 @@ import { useFunnels } from '@/hooks/useFunnels';
 import { useCreateIndicator, useUpdateIndicator } from '@/hooks/useIndicators';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
-import { gerarPeriodosDiarios, gerarPeriodosSemanais, gerarPeriodoMensal, getUltimoDiaPeriodo, gerarPeriodosSemanaisUltimos90Dias, gerarPeriodosMensaisCustom, gerarDiasUltimos90AteOntem } from '@/lib/utils';
+import { gerarPeriodosDiarios, gerarPeriodosSemanais, gerarPeriodoMensal, getUltimoDiaPeriodo, gerarPeriodosSemanaisUltimos90Dias, gerarPeriodosMensaisCustom, gerarDiasUltimos90AteHoje } from '@/lib/utils';
 import { useIndicators } from '@/hooks/useIndicators';
 import { supabase } from '@/integrations/supabase/client';
 import ReactInputMask from 'react-input-mask';
@@ -104,7 +104,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     // Gerar todos os períodos possíveis para o funil, sem limitar por formData.month_reference/year_reference
     let todosPeriodos: { label: string; value: string }[] = [];
     if (selectedFunnel.verification_type === 'daily') {
-      todosPeriodos = gerarDiasUltimos90AteOntem();
+      todosPeriodos = gerarDiasUltimos90AteHoje();
     } else if (selectedFunnel.verification_type === 'weekly') {
       todosPeriodos = gerarPeriodosSemanaisUltimos90Dias(selectedFunnel.verification_day ?? 1);
     } else if (selectedFunnel.verification_type === 'monthly') {
@@ -130,7 +130,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         todosPeriodos = gerarPeriodosSemanaisUltimos90Dias(selectedFunnel.verification_day ?? 1);
       } else if (selectedFunnel.verification_type === 'daily') {
         // Diários: últimos 90 dias até ontem
-        todosPeriodos = gerarDiasUltimos90AteOntem();
+        todosPeriodos = gerarDiasUltimos90AteHoje();
       } else if (selectedFunnel.verification_type === 'monthly') {
         // Mensal: últimos 3 períodos, respeitando o dia de início do funil
         const hoje = new Date();
@@ -172,7 +172,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         // Só pode registrar entre o primeiro registro e ontem
         const primeiroDia = new Date(ultimoRegistroUsuario?.period_end || ultimoPeriodoUsuario!);
         const hoje = new Date();
-        todosPeriodos = gerarDiasUltimos90AteOntem().filter(opt => {
+        todosPeriodos = gerarDiasUltimos90AteHoje().filter(opt => {
           const data = new Date(opt.value);
           return data >= primeiroDia && data < hoje;
         });
