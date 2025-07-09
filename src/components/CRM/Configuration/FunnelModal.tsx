@@ -10,6 +10,7 @@ import { Plus, X } from 'lucide-react';
 import { useCreateFunnel, useUpdateFunnel, insertFunnelStages, updateFunnelStages, deleteFunnelStages } from '@/hooks/useFunnels';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabaseClient';
 
 interface FunnelStage {
   id?: string;
@@ -215,12 +216,13 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
         status: 'active' as const,
         sales_value_mode: formData.sales_value_mode,
         recommendations_mode: formData.recommendations_mode,
-        recommendation_stage_id: formData.recommendation_stage_id ? String(formData.recommendation_stage_id) : null
+        // Não enviar recommendation_stage_id na criação, só na edição
+        // recommendation_stage_id: formData.recommendation_stage_id ? String(formData.recommendation_stage_id).trim() : null
       };
 
       if (funnel) {
         // Editar funil existente
-        await updateFunnelMutation.mutateAsync({ id: funnel.id, ...funnelData });
+        await updateFunnelMutation.mutateAsync({ id: funnel.id, ...funnelData, recommendation_stage_id: formData.recommendation_stage_id ? String(formData.recommendation_stage_id).trim() : null });
         // Atualizar etapas existentes e inserir novas
         await updateFunnelStages(funnel.id, stages);
         // Remover etapas excluídas
@@ -230,9 +232,20 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
         if (toDelete.length) await deleteFunnelStages(toDelete);
         toast.success('Funil atualizado com sucesso!');
       } else {
-        // Criar novo funil
+        // Criar novo funil SEM recommendation_stage_id
         const created = await createFunnelMutation.mutateAsync(funnelData);
         await insertFunnelStages(created.id, stages);
+        // Buscar novamente as etapas para pegar os IDs gerados
+        const { data: etapasCriadas, error: errorEtapas } = await supabase
+          .from('funnel_stages')
+          .select('id, name')
+          .eq('funnel_id', created.id);
+        if (errorEtapas) throw errorEtapas;
+        // Encontrar o id da etapa selecionada pelo nome
+        const etapaSelecionada = etapasCriadas.find((etapa: any) => String(etapa.id) === String(formData.recommendation_stage_id) || etapa.name === stages.find(s => String(s.id) === String(formData.recommendation_stage_id))?.name);
+        if (etapaSelecionada) {
+          await updateFunnelMutation.mutateAsync({ id: created.id, recommendation_stage_id: etapaSelecionada.id });
+        }
         toast.success('Funil criado com sucesso!');
       }
       onClose();
