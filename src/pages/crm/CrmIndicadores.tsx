@@ -51,7 +51,7 @@ const CrmIndicadores = () => {
   // Configuração de colunas por funil
   const [showColumnsModal, setShowColumnsModal] = useState(false);
   const [columnsConfig, setColumnsConfig] = useState<Record<string, string[]>>({}); // funnel_id -> colunas
-  const [selectedFunnelId, setSelectedFunnelId] = useState<string | null>(null);
+  const [selectedFunnelId, setSelectedFunnelId] = useState<string>('');
   const allColumns = [
     { key: 'period', label: 'Período' },
     { key: 'month', label: 'Mês' },
@@ -115,7 +115,6 @@ const CrmIndicadores = () => {
 
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   // Estado para seleção de funil fixa
-  const [selectedFunnelId, setSelectedFunnelId] = useState<string>('');
   const [filters, setFilters] = useState({
     periodStart: '',
     periodEnd: '',
@@ -258,7 +257,7 @@ const CrmIndicadores = () => {
                           </p>
                         ) : funnels && funnels.length > 0 ? (
                           funnels.map((funnel) => {
-                            const funnelIndicators = filteredIndicatorsByFunnel[funnel.id] || [];
+                            const funnelIndicators = filteredIndicators.filter(indicator => indicator.funnel_id === funnel.id);
                             const sortedStages = (funnel.stages || []).sort((a: any, b: any) => a.stage_order - b.stage_order);
                             const colCount = 3 + sortedStages.length + 1;
                             return (
