@@ -242,241 +242,26 @@ const CrmIndicadores = () => {
                       </CardDescription>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" onClick={() => setShowFiltersModal(true)}>
-                        <Filter className="w-4 h-4 mr-2" />
-                        Filtros
-                      </Button>
-                      <Button onClick={() => setShowModal(true)}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Registrar Indicador
-                      </Button>
+                      {/* Layout dos filtros e seletor de funil (apenas Funil ao lado do botão Filtros) */}
+                      <div className="flex items-center gap-4 mb-4">
+                        <div>
+                          <select value={selectedFunnelId} onChange={e => setSelectedFunnelId(e.target.value)} className="border rounded-lg px-3 py-2 text-base">
+                            <option value="">Todos os funis</option>
+                            {funnels?.map(f => (
+                              <option key={f.id} value={f.id}>{f.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                        <Button variant="outline" onClick={() => setShowFiltersModal(true)}>
+                          <Filter className="w-4 h-4 mr-2" />
+                          Filtros
+                        </Button>
+                        <Button onClick={() => setShowModal(true)}>
+                          <Plus className="w-4 h-4 mr-2" />
+                          Registrar Indicador
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {/* Remover campo de filtro de texto */}
-                      <div className="space-y-8">
-                        {isIndicatorsLoading || isFunnelsLoading ? (
-                      <p className="text-muted-foreground text-center py-8">
-                            Carregando indicadores...
-                          </p>
-                        ) : funnels && funnels.length > 0 ? (
-                          <>
-                            {/* Layout dos filtros e seletor de funil */}
-                            <div className="flex items-center gap-4 mb-4">
-                              <div>
-                                <select value={selectedFunnelId} onChange={e => setSelectedFunnelId(e.target.value)} className="border rounded px-2 py-1">
-                                  <option value="">Todos os funis</option>
-                                  {funnels?.map(f => (
-                                    <option key={f.id} value={f.id}>{f.name}</option>
-                                  ))}
-                                </select>
-                              </div>
-                              {/* Filtro por período */}
-                              <div className="flex gap-2 items-end">
-                                <div>
-                                  <label>Data início</label>
-                                  <input type="date" value={filters.periodStart} onChange={e => setFilters(f => ({ ...f, periodStart: e.target.value }))} className="block border rounded px-2 py-1" />
-                                </div>
-                                <div>
-                                  <label>Data fim</label>
-                                  <input type="date" value={filters.periodEnd} onChange={e => setFilters(f => ({ ...f, periodEnd: e.target.value }))} className="block border rounded px-2 py-1" />
-                                </div>
-                              </div>
-                              {/* Filtro por mês */}
-                              <div>
-                                <label>Mês</label>
-                                <select value={filters.month} onChange={e => setFilters(f => ({ ...f, month: e.target.value }))} className="block border rounded px-2 py-1">
-                                  <option value="">Todos</option>
-                                  {[...Array(12)].map((_, i) => (
-                                    <option key={i+1} value={i+1}>{new Date(2000, i, 1).toLocaleString('pt-BR', { month: 'long' })}</option>
-                                  ))}
-                                </select>
-                              </div>
-                              {/* Filtro por ano */}
-                              <div>
-                                <label>Ano</label>
-                                <select value={filters.year} onChange={e => setFilters(f => ({ ...f, year: e.target.value }))} className="block border rounded px-2 py-1">
-                                  <option value="">Todos</option>
-                                  {Array.from({length: 5}, (_, i) => new Date().getFullYear() - i).map(y => (
-                                    <option key={y} value={y}>{y}</option>
-                                  ))}
-                                </select>
-                              </div>
-                              {/* Filtro por funil (se houver 2+) */}
-                              {funnels && funnels.length > 1 && (
-                                <div>
-                                  <label>Funil</label>
-                                  <select value={selectedFunnelId} onChange={e => setSelectedFunnelId(e.target.value)} className="block border rounded px-2 py-1">
-                                    <option value="">Todos</option>
-                                    {funnels.map(f => (
-                                      <option key={f.id} value={f.id}>{f.name}</option>
-                                    ))}
-                                  </select>
-                                </div>
-                              )}
-                              {/* Filtro por equipe (apenas admin/master) */}
-                              {(crmUser?.role === 'admin' || crmUser?.role === 'master') && (
-                                <div>
-                                  <label>Equipe</label>
-                                  <select value={filters.teamId} onChange={e => setFilters(f => ({ ...f, teamId: e.target.value }))} className="block border rounded px-2 py-1">
-                                    <option value="">Todas</option>
-                                    {teams.map(team => (
-                                      <option key={team.id} value={team.id}>{team.name}</option>
-                                    ))}
-                                  </select>
-                                </div>
-                              )}
-                              {/* Filtro por usuário (apenas admin/master) */}
-                              {(crmUser?.role === 'admin' || crmUser?.role === 'master') && (
-                                <div>
-                                  <label>Usuário</label>
-                                  <select value={filters.userId} onChange={e => setFilters(f => ({ ...f, userId: e.target.value }))} className="block border rounded px-2 py-1">
-                                    <option value="">Todos</option>
-                                    {crmUsers.map(user => (
-                                      <option key={user.id} value={user.id}>{user.first_name} {user.last_name}</option>
-                                    ))}
-                                  </select>
-                                </div>
-                              )}
-                              <div className="flex gap-2 justify-end pt-2">
-                                <Button type="button" variant="outline" onClick={() => setFilters({ periodStart: '', periodEnd: '', month: '', year: '', funnelId: '', teamId: '', userId: '' })}>Limpar filtros</Button>
-                                <Button type="button" onClick={() => setShowFiltersModal(false)}>Aplicar</Button>
-                              </div>
-                            </div>
-                            {/* Menu de ações em massa acima da tabela */}
-                            {selectedIndicators.length > 0 && (
-                              <div className="flex gap-2 mb-2">
-                                <Button variant="destructive" onClick={handleBulkArchive}>Arquivar Selecionados</Button>
-                                <Button variant="outline" onClick={handleBulkPeriod} disabled={(() => {
-                                  if (selectedIndicators.length === 0) return true;
-                                  const selectedObjs = filteredIndicators.filter(i => selectedIndicators.includes(i.id));
-                                  if (selectedObjs.length === 0) return true;
-                                  const firstPeriod = selectedObjs[0]?.period_start + '_' + selectedObjs[0]?.period_end;
-                                  return !selectedObjs.every(i => (i.period_start + '_' + i.period_end) === firstPeriod);
-                                })()}>Alterar Período</Button>
-                                <Button variant="ghost" onClick={clearBulkSelection}>Cancelar Seleção</Button>
-                              </div>
-                            )}
-                            {/* Tabela única com colunas ajustadas */}
-                            <div className="overflow-x-auto rounded-2xl shadow border bg-white">
-                              <table className="min-w-full border-separate border-spacing-y-1">
-                                <thead className="sticky top-0 z-10 bg-muted">
-                                  <tr>
-                                    <th className="px-2 py-2 text-center font-semibold rounded-tl-2xl"></th> {/* Bolinha */}
-                                    {(crmUser?.role === 'admin' || crmUser?.role === 'master') && <th className="px-2 py-2 text-center font-semibold"></th>} {/* Checkbox */}
-                                    <th className="px-2 py-2 text-left font-semibold">Período</th>
-                                    {selectedFunnel && lastStage && <th className="px-2 py-2 text-left font-semibold">{lastStage.name}</th>}
-                                    <th className="px-2 py-2 text-left font-semibold">Valor das Vendas</th>
-                                    <th className="px-2 py-2 text-left font-semibold">Ticket Médio</th>
-                                    <th className="px-2 py-2 text-left font-semibold">Taxa de Conversão</th>
-                                    <th className="px-2 py-2 text-left font-semibold">Conversão do Funil</th>
-                                    {selectedFunnel && recommendationStage && <th className="px-2 py-2 text-left font-semibold">Média de Recomendações</th>}
-                                    <th className="px-2 py-2 text-center font-semibold rounded-tr-2xl">Ações</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {filteredIndicators.length === 0 ? (
-                                    <tr><td colSpan={10} className="text-center text-muted-foreground py-8">Nenhum indicador encontrado.</td></tr>
-                                  ) : (
-                                    filteredIndicators.map((indicator, idx) => {
-                                      // Buscar funil e etapas
-                                      const funnel = funnels?.find(f => f.id === indicator.funnel_id);
-                                      const stages = (funnel?.stages || []).sort((a: any, b: any) => a.stage_order - b.stage_order);
-                                      const lastStage = stages[stages.length - 1];
-                                      const penultimateStage = stages[stages.length - 2];
-                                      const firstStage = stages[0];
-                                      const lastValue = (indicator.values || []).find((v: any) => v.stage_id === lastStage?.id)?.value || 0;
-                                      const penultimateValue = (indicator.values || []).find((v: any) => v.stage_id === penultimateStage?.id)?.value || 0;
-                                      const firstValue = (indicator.values || []).find((v: any) => v.stage_id === firstStage?.id)?.value || 0;
-                                      const salesValue = indicator.sales_value || 0;
-                                      const ticketMedio = lastValue > 0 ? salesValue / lastValue : 0;
-                                      const taxaConversao = penultimateValue > 0 ? (lastValue / penultimateValue) * 100 : 0;
-                                      const conversaoFunil = firstValue > 0 ? (lastValue / firstValue) * 100 : 0;
-                                      // Etapa de recomendação
-                                      const recommendationStage = stages.find((s: any) => s.name.toLowerCase().includes('reuni') || s.name.toLowerCase().includes('recomend'));
-                                      const recommendationStageValue = (indicator.values || []).find((v: any) => v.stage_id === recommendationStage?.id)?.value || 0;
-                                      const recommendationsCount = indicator.recommendations_count || 0;
-                                      const mediaRecomendacoes = recommendationStageValue > 0 ? recommendationsCount / recommendationStageValue : 0;
-                                      const prazoStatus = getPrazoStatus(indicator, funnel);
-                                      return (
-                                        <tr key={indicator.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-muted/40'}>
-                                          {/* Bolinha colorida */}
-                                          <td className="px-2 py-2 text-center">
-                                            {prazoStatus && (
-                                              <span className={`inline-block w-3 h-3 rounded-full ${
-                                                prazoStatus.color === 'green' ? 'bg-green-500' : prazoStatus.color === 'yellow' ? 'bg-yellow-400' : 'bg-red-500'
-                                              }`}></span>
-                                            )}
-                                          </td>
-                                          {/* Checkbox */}
-                                          {(crmUser?.role === 'admin' || crmUser?.role === 'master') && (
-                                            <td className="px-2 py-2 text-center">
-                                              <input type="checkbox" checked={selectedIndicators.includes(indicator.id)} onChange={e => handleSelectIndicator(indicator.id, indicator.funnel_id)} />
-                                            </td>
-                                          )}
-                                          {/* Período */}
-                                          <td className="px-2 py-2">{
-                                            indicator.period_start && indicator.period_end
-                                              ? `De ${new Date(indicator.period_start).toLocaleDateString('pt-BR')} até ${new Date(indicator.period_end).toLocaleDateString('pt-BR')}`
-                                              : '-'
-                                          }</td>
-                                          {/* Última etapa (apenas valor) */}
-                                          {lastStage && <td className="px-2 py-2 text-center font-bold text-base">{lastValue}</td>}
-                                          {/* Valor das Vendas */}
-                                          <td className="px-2 py-2 text-center">{salesValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                                          {/* Ticket Médio */}
-                                          <td className="px-2 py-2 text-center">{ticketMedio > 0 ? ticketMedio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</td>
-                                          {/* Taxa de Conversão */}
-                                          <td className="px-2 py-2 text-center">{penultimateValue > 0 ? taxaConversao.toFixed(1) + '%' : '-'}</td>
-                                          {/* Conversão do Funil */}
-                                          <td className="px-2 py-2 text-center">{firstValue > 0 ? conversaoFunil.toFixed(1) + '%' : '-'}</td>
-                                          {/* Média de Recomendações */}
-                                          {recommendationStage && <td className="px-2 py-2 text-center">{recommendationStageValue > 0 ? mediaRecomendacoes.toFixed(2) : '-'}</td>}
-                                          {/* Ações */}
-                                          <td className="px-2 py-2 text-center">
-                                            <div className="flex gap-2 justify-center">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleEdit(indicator)}
-                              >
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                              {crmUser?.role === 'master' && (
-                                <>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleArchive(indicator)}
-                                  >
-                                    <Archive className="w-4 h-4" />
-                                  </Button>
-                                  <Button
-                                    variant="destructive"
-                                    size="sm"
-                                    onClick={() => handleDelete(indicator)}
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                </>
-                              )}
-                            </div>
-                                          </td>
-                                        </tr>
-                                      );
-                                    })
-                                  )}
-                                </tbody>
-                              </table>
-                            </div>
-                          </>
-                        ) : (
-                          <p className="text-muted-foreground text-center py-8">
-                            Nenhum funil encontrado.
-                          </p>
-                    )}
-                  </div>
                 </CardContent>
               </Card>
                   <IndicatorModal
@@ -498,79 +283,62 @@ const CrmIndicadores = () => {
             <DialogHeader>
               <DialogTitle>Filtros de indicadores</DialogTitle>
             </DialogHeader>
-            <div className="space-y-4">
-              {/* Filtro por período */}
-              <div className="flex gap-2 items-end">
+            <form className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label>Data início</label>
-                  <input type="date" value={filters.periodStart} onChange={e => setFilters(f => ({ ...f, periodStart: e.target.value }))} className="block border rounded px-2 py-1" />
+                  <label className="block text-sm font-medium mb-1">Data início</label>
+                  <input type="date" value={filters.periodStart} onChange={e => setFilters(f => ({ ...f, periodStart: e.target.value }))} className="w-full border rounded-lg px-3 py-2" />
                 </div>
                 <div>
-                  <label>Data fim</label>
-                  <input type="date" value={filters.periodEnd} onChange={e => setFilters(f => ({ ...f, periodEnd: e.target.value }))} className="block border rounded px-2 py-1" />
+                  <label className="block text-sm font-medium mb-1">Data fim</label>
+                  <input type="date" value={filters.periodEnd} onChange={e => setFilters(f => ({ ...f, periodEnd: e.target.value }))} className="w-full border rounded-lg px-3 py-2" />
                 </div>
-              </div>
-              {/* Filtro por mês */}
-              <div>
-                <label>Mês</label>
-                <select value={filters.month} onChange={e => setFilters(f => ({ ...f, month: e.target.value }))} className="block border rounded px-2 py-1">
-                  <option value="">Todos</option>
-                  {[...Array(12)].map((_, i) => (
-                    <option key={i+1} value={i+1}>{new Date(2000, i, 1).toLocaleString('pt-BR', { month: 'long' })}</option>
-                  ))}
-                </select>
-              </div>
-              {/* Filtro por ano */}
-              <div>
-                <label>Ano</label>
-                <select value={filters.year} onChange={e => setFilters(f => ({ ...f, year: e.target.value }))} className="block border rounded px-2 py-1">
-                  <option value="">Todos</option>
-                  {Array.from({length: 5}, (_, i) => new Date().getFullYear() - i).map(y => (
-                    <option key={y} value={y}>{y}</option>
-                  ))}
-                </select>
-              </div>
-              {/* Filtro por funil (se houver 2+) */}
-              {funnels && funnels.length > 1 && (
                 <div>
-                  <label>Funil</label>
-                  <select value={selectedFunnelId} onChange={e => setSelectedFunnelId(e.target.value)} className="block border rounded px-2 py-1">
+                  <label className="block text-sm font-medium mb-1">Mês</label>
+                  <select value={filters.month} onChange={e => setFilters(f => ({ ...f, month: e.target.value }))} className="w-full border rounded-lg px-3 py-2">
                     <option value="">Todos</option>
-                    {funnels.map(f => (
-                      <option key={f.id} value={f.id}>{f.name}</option>
+                    {[...Array(12)].map((_, i) => (
+                      <option key={i+1} value={i+1}>{new Date(2000, i, 1).toLocaleString('pt-BR', { month: 'long' })}</option>
                     ))}
                   </select>
                 </div>
-              )}
-              {/* Filtro por equipe (apenas admin/master) */}
-              {(crmUser?.role === 'admin' || crmUser?.role === 'master') && (
                 <div>
-                  <label>Equipe</label>
-                  <select value={filters.teamId} onChange={e => setFilters(f => ({ ...f, teamId: e.target.value }))} className="block border rounded px-2 py-1">
-                    <option value="">Todas</option>
-                    {teams.map(team => (
-                      <option key={team.id} value={team.id}>{team.name}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-              {/* Filtro por usuário (apenas admin/master) */}
-              {(crmUser?.role === 'admin' || crmUser?.role === 'master') && (
-                <div>
-                  <label>Usuário</label>
-                  <select value={filters.userId} onChange={e => setFilters(f => ({ ...f, userId: e.target.value }))} className="block border rounded px-2 py-1">
+                  <label className="block text-sm font-medium mb-1">Ano</label>
+                  <select value={filters.year} onChange={e => setFilters(f => ({ ...f, year: e.target.value }))} className="w-full border rounded-lg px-3 py-2">
                     <option value="">Todos</option>
-                    {crmUsers.map(user => (
-                      <option key={user.id} value={user.id}>{user.first_name} {user.last_name}</option>
+                    {Array.from({length: 5}, (_, i) => new Date().getFullYear() - i).map(y => (
+                      <option key={y} value={y}>{y}</option>
                     ))}
                   </select>
                 </div>
-              )}
+                {(crmUser?.role === 'admin' || crmUser?.role === 'master') && (
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Equipe</label>
+                    <select value={filters.teamId} onChange={e => setFilters(f => ({ ...f, teamId: e.target.value }))} className="w-full border rounded-lg px-3 py-2">
+                      <option value="">Todas</option>
+                      {teams.map(team => (
+                        <option key={team.id} value={team.id}>{team.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {(crmUser?.role === 'admin' || crmUser?.role === 'master') && (
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Usuário</label>
+                    <select value={filters.userId} onChange={e => setFilters(f => ({ ...f, userId: e.target.value }))} className="w-full border rounded-lg px-3 py-2">
+                      <option value="">Todos</option>
+                      {crmUsers.map(user => (
+                        <option key={user.id} value={user.id}>{user.first_name} {user.last_name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
               <div className="flex gap-2 justify-end pt-2">
-                <Button type="button" variant="outline" onClick={() => setFilters({ periodStart: '', periodEnd: '', month: '', year: '', funnelId: '', teamId: '', userId: '' })}>Limpar filtros</Button>
+                <Button type="button" variant="outline" onClick={() => setFilters({ periodStart: '', periodEnd: '', month: '', year: '', teamId: '', userId: '' })}>Limpar filtros</Button>
                 <Button type="button" onClick={() => setShowFiltersModal(false)}>Aplicar</Button>
               </div>
-            </div>
+            </form>
           </DialogContent>
         </Dialog>
       )}
