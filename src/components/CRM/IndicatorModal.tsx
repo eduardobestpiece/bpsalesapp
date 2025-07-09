@@ -403,7 +403,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
               <Select
                 value={formData.period_date}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, period_date: value }))}
-                disabled={isLoading || !formData.funnel_id}
+                disabled={isLoading || !formData.funnel_id || !!indicator}
                 required
               >
                 <SelectTrigger>
@@ -431,6 +431,12 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                   ))}
                 </SelectContent>
               </Select>
+              {/* Exibir data/hora de criação no modo edição */}
+              {indicator && indicator.created_at && (
+                <div className="text-xs text-muted-foreground mt-1">
+                  Preenchido em: {new Date(indicator.created_at).toLocaleString('pt-BR')}
+                </div>
+              )}
             </div>
           </div>
 
