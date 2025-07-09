@@ -63,8 +63,10 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     (ind) => ind.funnel_id === selectedFunnel.id && ind.user_id === crmUser.id
   ) : [];
   const periodosUsuario: string[] = indicadoresUsuario ? indicadoresUsuario.map((ind) => ind.period_date) : [];
-  const ultimoPeriodoUsuario: string | null = indicadoresUsuario && indicadoresUsuario.length > 0
-    ? indicadoresUsuario.sort((a, b) => b.period_date.localeCompare(a.period_date))[0].period_date
+  // Filtrar apenas registros com period_end válido
+  const indicadoresUsuarioValidos = indicadoresUsuario.filter(ind => !!ind.period_end);
+  const ultimoRegistroUsuario = indicadoresUsuarioValidos.length > 0
+    ? indicadoresUsuarioValidos.sort((a, b) => new Date(b.period_end).getTime() - new Date(a.period_end).getTime())[0]
     : null;
 
   const hoje = new Date();
@@ -158,7 +160,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     else {
       if (selectedFunnel.verification_type === 'daily') {
         // Só pode registrar entre o primeiro registro e ontem
-        const primeiroDia = new Date(ultimoPeriodoUsuario!);
+        const primeiroDia = new Date(ultimoRegistroUsuario?.period_end || ultimoPeriodoUsuario!);
         const hoje = new Date();
         todosPeriodos = gerarDiasUltimos90AteOntem().filter(opt => {
           const data = new Date(opt.value);
