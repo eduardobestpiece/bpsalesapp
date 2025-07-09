@@ -43,3 +43,12 @@ Reformulação do filtro de indicadores (CRM):
 - Ponto de partida: código do filtro já está no repositório e disponível na interface.
 - O que foi tentado: usuário testou o filtro, mas não houve efeito na listagem de indicadores.
 - Próximos passos: analisar o código, dependências e integração com a listagem para identificar e corrigir o problema. 
+
+## 2024-07-08 - Nova solicitação: melhorias na lista de indicadores
+
+- Regras de visualização por perfil (admin/master vê todos, líder vê equipe, usuário vê apenas os próprios).
+- Status visual (bolinha colorida) e mensagem conforme prazo de preenchimento do indicador (verde, amarelo, vermelho).
+- Exibir valor da última etapa na coluna correspondente.
+- Corrigir cálculo da coluna "Média de Recomendações" para dividir pelo valor da etapa correta.
+- Adicionar seletor para ações em massa (visível apenas para admin/master).
+- Próximos passos: analisar código, dependências e banco para planejar as alterações. 

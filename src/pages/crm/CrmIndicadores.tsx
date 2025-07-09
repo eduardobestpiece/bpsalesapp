@@ -107,7 +107,18 @@ const CrmIndicadores = () => {
     userId: ''
   });
 
-  const filteredIndicators = (indicators || []).filter(indicator => {
+  // Filtragem de indicadores por perfil
+  let accessibleIndicators = indicators || [];
+  if (crmUser?.role === 'leader') {
+    // Líder vê os próprios e da equipe
+    const teamMembers = crmUsers.filter(u => u.team_id === crmUser.team_id).map(u => u.id);
+    accessibleIndicators = accessibleIndicators.filter(ind => teamMembers.includes(ind.user_id) || ind.user_id === crmUser.id);
+  } else if (crmUser?.role === 'user') {
+    // Usuário comum vê apenas os próprios
+    accessibleIndicators = accessibleIndicators.filter(ind => ind.user_id === crmUser.id);
+  }
+  // Filtros adicionais (modal)
+  const filteredIndicators = (accessibleIndicators || []).filter(indicator => {
     // Filtro por período
     if (filters.periodStart && filters.periodEnd) {
       if (!indicator.period_start || !indicator.period_end) return false;
