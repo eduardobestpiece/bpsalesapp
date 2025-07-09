@@ -1,23 +1,28 @@
 ## Requisição em andamento - 08/07/2024
 
 ### Problema
-No modal "Editar Funil" e "Novo Funil" (aba Funis), ao selecionar uma fase no campo "Etapa ligada às Recomendações", a informação não está sendo salva corretamente. Mesmo após salvar, ao editar novamente, o campo volta para "Selecione a etapa". Logs mostram que o valor é enviado e recebido corretamente do Supabase.
+O campo “Etapa ligada às Recomendações” no modal de Funil não funciona bem na criação, pois as etapas ainda não têm id até serem salvas no banco. O fluxo atual é confuso e pouco intuitivo.
 
-### Análise Inicial
-- O valor `recommendation_stage_id` está sendo salvo e retornado do Supabase.
-- O problema parece estar na exibição do valor salvo no campo do formulário ao reabrir o modal.
+### Solução aprovada pelo usuário
+- Adicionar um campo de seleção (radio button) diretamente em cada etapa na lista de “Etapas do Funil”.
+- O usuário marca qual etapa será usada para recomendação (apenas uma por funil).
+- O campo `recommendation_stage_id` do funil será preenchido automaticamente com o id da etapa marcada.
+- O Select separado será removido do modal.
+- O fluxo de criação e edição ficará igual, sem necessidade de salvar duas vezes.
 
 ### Plano de Ação
-1. Confirmar onde o valor de `recommendation_stage_id` é lido e setado no formulário do modal.
-2. Verificar se o valor está sendo corretamente passado para o componente de seleção ao abrir o modal.
-3. Corrigir o carregamento inicial do valor selecionado.
-4. Testar a criação e edição de funis para garantir que o valor é salvo e exibido corretamente.
-5. Executar o deploy.
-6. Solicitar validação do usuário.
+1. Adicionar um campo de seleção (radio) em cada etapa na lista de etapas do funil.
+2. Permitir selecionar apenas uma etapa por funil.
+3. Ao salvar, o campo `recommendation_stage_id` do funil recebe o id da etapa marcada.
+4. Na edição, o radio já vem marcado conforme o valor salvo.
+5. Remover o Select separado do modal.
+6. Testar criação e edição.
+7. Atualizar histórico e encerrar.
 
 ### Checklist
-- [x] Registrar requisição em `requeststory.md`
-- [ ] Analisar e corrigir o carregamento do valor no modal
-- [ ] Testar criação e edição de funis
-- [ ] Executar deploy
-- [ ] Solicitar validação do usuário 
+- [x] Registrar a nova requisição e plano em `requeststory.md`
+- [x] Planejar a alteração no componente de etapas do funil
+- [ ] Implementar o campo de seleção em cada etapa
+- [ ] Garantir que o valor é salvo corretamente no banco
+- [ ] Testar criação e edição
+- [ ] Atualizar histórico e encerrar 

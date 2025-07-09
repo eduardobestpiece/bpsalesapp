@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plus, X } from 'lucide-react';
 import { useCreateFunnel, useUpdateFunnel, insertFunnelStages, updateFunnelStages, deleteFunnelStages } from '@/hooks/useFunnels';
@@ -348,34 +349,6 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label htmlFor="recommendation_stage_id">Etapa ligada às Recomendações</Label>
-                  {/* Alerta visual se não houver etapas válidas */}
-                  {stages.filter(stage => !!stage.name).length === 0 && (
-                    <div style={{ color: 'red', fontSize: 12, marginBottom: 4 }}>
-                      Nenhuma etapa válida encontrada para seleção.
-                    </div>
-                  )}
-                  {/* Só renderiza o Select quando as etapas e o valor estão prontos */}
-                  {(stages.length > 0 && typeof formData.recommendation_stage_id !== 'undefined') && (
-                  <Select
-                    value={formData.recommendation_stage_id ? String(formData.recommendation_stage_id).trim() : ''}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, recommendation_stage_id: String(value).trim() }))}
-                    disabled={isLoading || stages.length === 0 || stages.length === 1 || !canSelectRecommendationStage}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a etapa" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {stages.filter(stage => !!stage.name).map((stage, idx) => (
-                        <SelectItem key={String(stage.id).trim() || idx} value={String(stage.id).trim() || ''}>
-                          {stage.name || `Etapa ${stage.stage_order}`} {stage.id ? '' : '(sem id)'}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  )}
-                </div>
               </>
             )}
 
@@ -418,65 +391,77 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <RadioGroup
+                value={formData.recommendation_stage_id || ''}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, recommendation_stage_id: value }))}
+                className="space-y-4"
+              >
                 {stages.map((stage, index) => (
-                  <div key={index} className="p-4 border rounded-lg">
-                    <div className="flex justify-between items-center mb-3">
-                      <h4 className="font-medium">Etapa {stage.stage_order}</h4>
-                      {stages.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeStage(index)}
-                          disabled={isLoading}
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                      )}
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <Label>Nome da Etapa *</Label>
-                        <Input
-                          value={stage.name}
-                          onChange={(e) => updateStage(index, 'name', e.target.value)}
-                          placeholder="Ex: Prospecção"
-                          required
-                          disabled={isLoading}
-                        />
+                  <div key={index} className="p-4 border rounded-lg flex items-start gap-4">
+                    <RadioGroupItem
+                      value={stage.id || ''}
+                      id={`recommendation-radio-${index}`}
+                      className="mt-2"
+                      disabled={isLoading || !stage.id}
+                      aria-label={`Selecionar etapa ${stage.name}`}
+                    />
+                    <div className="flex-1">
+                      <div className="flex justify-between items-center mb-3">
+                        <h4 className="font-medium">Etapa {stage.stage_order}</h4>
+                        {stages.length > 1 && (
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeStage(index)}
+                            disabled={isLoading}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
-                      {index > 0 && (
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         <div>
-                          <Label>Percentual (%)</Label>
+                          <Label>Nome da Etapa *</Label>
+                          <Input
+                            value={stage.name}
+                            onChange={(e) => updateStage(index, 'name', e.target.value)}
+                            placeholder="Ex: Prospecção"
+                            required
+                            disabled={isLoading}
+                          />
+                        </div>
+                        {index > 0 && (
+                          <div>
+                            <Label>Percentual (%)</Label>
+                            <Input
+                              type="number"
+                              step="0.01"
+                              min="0"
+                              max="100"
+                              value={stage.target_percentage}
+                              onChange={(e) => updateStage(index, 'target_percentage', parseFloat(e.target.value) || 0)}
+                              placeholder="0"
+                              disabled={isLoading}
+                            />
+                          </div>
+                        )}
+                        <div>
+                          <Label>Valor (quantidade)</Label>
                           <Input
                             type="number"
-                            step="0.01"
                             min="0"
-                            max="100"
-                            value={stage.target_percentage}
-                            onChange={(e) => updateStage(index, 'target_percentage', parseFloat(e.target.value) || 0)}
+                            value={stage.target_value}
+                            onChange={(e) => updateStage(index, 'target_value', parseInt(e.target.value) || 0)}
                             placeholder="0"
                             disabled={isLoading}
                           />
                         </div>
-                      )}
-                      <div>
-                        <Label>Valor (quantidade)</Label>
-                        <Input
-                          type="number"
-                          min="0"
-                          value={stage.target_value}
-                          onChange={(e) => updateStage(index, 'target_value', parseInt(e.target.value) || 0)}
-                          placeholder="0"
-                          disabled={isLoading}
-                        />
                       </div>
                     </div>
                   </div>
                 ))}
-              </div>
+              </RadioGroup>
             </CardContent>
           </Card>
 
