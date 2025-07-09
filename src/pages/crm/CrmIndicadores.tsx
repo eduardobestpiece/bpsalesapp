@@ -125,7 +125,11 @@ const CrmIndicadores = () => {
                                       ) : (
                                         funnelIndicators.map((indicator) => (
                                           <tr key={indicator.id} className="bg-white border-b last:border-b-0">
-                                            <td className="px-2 py-1">{new Date(indicator.period_date).toLocaleDateString('pt-BR')}</td>
+                                            <td className="px-2 py-1">{
+                                              indicator.period_start && indicator.period_end
+                                                ? `De ${new Date(indicator.period_start).toLocaleDateString('pt-BR')} até ${new Date(indicator.period_end).toLocaleDateString('pt-BR')}`
+                                                : '-'
+                                            }</td>
                                             <td className="px-2 py-1">{String(indicator.month_reference).padStart(2, '0')}</td>
                                             <td className="px-2 py-1">{indicator.year_reference}</td>
                                             {sortedStages.map((stage: any) => {
