@@ -192,9 +192,12 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
           return '';
         }) : [];
         // Na filtragem dos períodos disponíveis (para semanal/mensal):
+        const ultimoRegistroUsuario = indicadoresUsuario && indicadoresUsuario.length > 0
+          ? indicadoresUsuario.sort((a, b) => b.period_date.localeCompare(a.period_date))[0]
+          : null;
+        const ultimoRegistrado = ultimoRegistroUsuario ? new Date(ultimoRegistroUsuario.period_end) : null;
         periodOptions = todosPeriodos
           .filter(opt => {
-            // Para cada período, extrair a data inicial e o identificador
             let primeiroDiaPeriodo = null;
             let identificadorPeriodo = opt.value;
             if (opt.value.includes('_')) {
@@ -202,19 +205,16 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
             } else {
               primeiroDiaPeriodo = new Date(opt.value);
             }
-            const ultimoRegistrado = ultimoPeriodoUsuario ? new Date(ultimoPeriodoUsuario) : null;
-            // Só mostrar períodos cujo início seja após o último registrado E que ainda não tenham sido registrados pelo usuário
+            // Só mostrar períodos cujo início seja estritamente maior que o period_end do último registro
             return (!ultimoRegistrado || primeiroDiaPeriodo > ultimoRegistrado)
               && primeiroDiaPeriodo < hoje
               && !periodosRegistradosUsuario.includes(identificadorPeriodo);
           })
-          .map(opt => {
-            return {
-              ...opt,
-              isMissing: false,
-              isAllowed: true
-            };
-          });
+          .map(opt => ({
+            ...opt,
+            isMissing: false,
+            isAllowed: true
+          }));
       }
     }
   }
