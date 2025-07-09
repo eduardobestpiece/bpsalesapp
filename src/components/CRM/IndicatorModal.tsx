@@ -603,10 +603,11 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                 <div>
                   <Label htmlFor="sales_value">Valor das Vendas</Label>
                   {selectedFunnel.sales_value_mode === 'manual' ? (
-                    <ReactInputMask
-                      mask="999.999.999,99"
-                      maskChar={null}
-                      value={salesValue}
+                    <Input
+                      id="sales_value"
+                      type="number"
+                      step="0.01"
+                      value={isAutoLoading ? '...' : salesValue}
                       onChange={e => setSalesValue(e.target.value)}
                       placeholder="0,00"
                       inputMode="decimal"
