@@ -298,8 +298,8 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                       <SelectValue placeholder="Selecione a etapa" />
                     </SelectTrigger>
                     <SelectContent>
-                      {stages.map((stage, idx) => (
-                        <SelectItem key={stage.id || idx} value={stage.id || ''}>
+                      {stages.filter(stage => !!stage.id).map((stage) => (
+                        <SelectItem key={stage.id} value={stage.id}>
                           {stage.name || `Etapa ${stage.stage_order}`}
                         </SelectItem>
                       ))}

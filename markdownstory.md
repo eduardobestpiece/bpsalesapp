@@ -22,4 +22,6 @@
 - [x] Commit e deploy automático realizados.
 - [ ] Aguardando validação do usuário sobre o novo comportamento do campo "Período".
 
+- [2024-07-08] Adicionados campos de configuração de Valor das Vendas (Manual/Sistema), Recomendações (Manual/Sistema) e seleção de etapa de recomendações ao modal de criação/edição de Funil (visíveis apenas para Master/Admin). Modal de Indicador atualizado para exibir campos de Valor das Vendas e Número de Recomendações conforme configuração do funil (editável se manual, calculado se sistema). Commit e deploy realizados.
+
 --- 

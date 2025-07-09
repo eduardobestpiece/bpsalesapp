@@ -22,7 +22,7 @@ export const useFunnels = (companyId?: string | null, status: 'active' | 'archiv
 
       let query = supabase
         .from('funnels')
-        .select(`*, stages:funnel_stages(*)`)
+        .select(`*, stages:funnel_stages!funnel_id(*)`)
         .eq('company_id', effectiveCompanyId)
         .order('name');
 
