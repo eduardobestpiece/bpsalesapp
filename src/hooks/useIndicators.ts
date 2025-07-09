@@ -19,6 +19,9 @@ export const useIndicators = (companyId?: string, userId?: string) => {
         `)
         .order('period_date', { ascending: false });
 
+      // Filtro para não trazer arquivados
+      query = query.is('archived_at', null);
+
       if (companyId) {
         query = query.eq('company_id', companyId);
       }
