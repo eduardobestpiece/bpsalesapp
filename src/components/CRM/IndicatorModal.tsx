@@ -187,9 +187,17 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         // Só mostrar períodos cujo último dia seja maior que o último registrado e menor que hoje
         periodOptions = todosPeriodos
           .filter(opt => {
-            const ultimoDia = new Date(getUltimoDiaPeriodo(opt.value));
-            const ultimoRegistrado = new Date(ultimoPeriodoUsuario!);
-            return ultimoDia > ultimoRegistrado && ultimoDia < hoje;
+            // Para cada período, extrair a data inicial
+            let primeiroDiaPeriodo = null;
+            if (opt.value.includes('_')) {
+              // formato 'YYYY-MM-DD_YYYY-MM-DD'
+              primeiroDiaPeriodo = new Date(opt.value.split('_')[0]);
+            } else {
+              // formato único
+              primeiroDiaPeriodo = new Date(opt.value);
+            }
+            const ultimoRegistrado = ultimoRegistroUsuario ? new Date(ultimoRegistroUsuario.period_end) : null;
+            return (!ultimoRegistrado || primeiroDiaPeriodo > ultimoRegistrado) && primeiroDiaPeriodo < hoje;
           })
           .map(opt => {
             const isMissing = !(Array.isArray(periodosUsuario) ? periodosUsuario : []).includes(getUltimoDiaPeriodo(opt.value));
