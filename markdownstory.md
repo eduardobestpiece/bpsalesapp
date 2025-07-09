@@ -30,5 +30,6 @@
 - [2024-07-08] Correção: adicionada dependência react-input-mask ao projeto para corrigir erro de build na Vercel. Commit e deploy realizados.
 - [2024-07-08] Implantação: indicadores agora usam período de data início/fim (period_start/period_end), preenchimento automático de mês/ano conforme regras do período, e valor de vendas numérico (aceita vírgula). Commit e deploy realizados.
 - [2024-07-08] Correção: validação obrigatória para mês/ano do período e nunca enviar string vazia para campos inteiros ao registrar indicador. Commit e deploy realizados.
+- [2024-07-08] Correção: indicador agora usa campos de data início/fim, mês/ano dinâmicos e valor de vendas numérico com vírgula, com validação reforçada. Commit e deploy realizados.
 
 --- 

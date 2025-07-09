@@ -384,11 +384,11 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
       toast.error('Selecione o período (data início e fim).');
       return;
     }
-    if (!monthReference) {
+    if (monthReference === null) {
       toast.error('Selecione o mês do período.');
       return;
     }
-    if (!yearReference) {
+    if (yearReference === null) {
       toast.error('Selecione o ano do período.');
       return;
     }
@@ -403,7 +403,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         period_end: periodEnd,
         month_reference: monthReference,
         year_reference: yearReference,
-        sales_value: parseMonetaryValue(salesValue),
+        sales_value: parseFloat(salesValue.replace(',', '.')),
         recommendations_count: recommendationsCount
       };
 
@@ -488,46 +488,37 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Mês */}
+            {/* Campo Mês */}
             <div>
-              <Label htmlFor="month_reference">Mês *</Label>
-              <Select
-                value={String(formData.month_reference)}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, month_reference: Number(value) }))}
-                disabled={isLoading}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione o mês" />
-                </SelectTrigger>
-                <SelectContent>
-                  {[...Array(12)].map((_, i) => {
-                    const date = new Date(2000, i, 1);
-                    const monthName = date.toLocaleString('pt-BR', { month: 'long' });
-                    return (
-                      <SelectItem key={i+1} value={String(i+1)}>
-                        {monthName.charAt(0).toUpperCase() + monthName.slice(1)}
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
+              <label>Mês *</label>
+              {monthOptions.length === 1 ? (
+                <div>{new Date(2000, monthReference - 1, 1).toLocaleString('pt-BR', { month: 'long' })}</div>
+              ) : (
+                <select value={monthReference ?? ''} onChange={e => setMonthReference(Number(e.target.value))} required>
+                  <option value="">Selecione</option>
+                  {monthOptions.map(m => (
+                    <option key={m} value={m}>{new Date(2000, m - 1, 1).toLocaleString('pt-BR', { month: 'long' })}</option>
+                  ))}
+                </select>
+              )}
             </div>
-            {/* Ano */}
+
+            {/* Campo Ano */}
             <div>
-              <Label htmlFor="year_reference">Ano *</Label>
-              <Input
-                id="year_reference"
-                type="number"
-                value={formData.year_reference}
-                onChange={(e) => setFormData(prev => ({ ...prev, year_reference: Number(e.target.value) }))}
-                required
-                disabled={isLoading}
-                min={2000}
-                max={2100}
-              />
+              <label>Ano *</label>
+              {yearOptions.length === 1 ? (
+                <div>{yearReference}</div>
+              ) : (
+                <select value={yearReference ?? ''} onChange={e => setYearReference(Number(e.target.value))} required>
+                  <option value="">Selecione</option>
+                  {yearOptions.map(y => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              )}
             </div>
-            {/* Funil */}
+
+            {/* Campo Funil */}
             <div>
               <Label htmlFor="funnel_id">Funil *</Label>
               <Select 
@@ -608,6 +599,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
             {/* CAMPOS RESTRITOS MASTER/ADMIN */}
             {selectedFunnel && ['master', 'admin'].includes(crmUser?.role) && (
               <>
+                {/* Campo Valor das Vendas */}
                 <div>
                   <Label htmlFor="sales_value">Valor das Vendas</Label>
                   {selectedFunnel.sales_value_mode === 'manual' ? (
@@ -629,6 +621,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                     />
                   )}
                 </div>
+                {/* Campo Número de Recomendações */}
                 <div>
                   <Label htmlFor="recommendations_count">Número de Recomendações</Label>
                   {selectedFunnel.recommendations_mode === 'manual' ? (
