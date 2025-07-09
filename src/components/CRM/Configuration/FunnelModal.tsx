@@ -51,14 +51,18 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
       console.log('Etapas recebidas do Supabase:', funnel.stages);
       if (funnel.stages) {
         console.log('IDs das etapas recebidas:', funnel.stages.map((s: any) => s.id));
+        funnel.stages.forEach((s: any, idx: number) => {
+          console.log(`Tipo do stage[${idx}].id:`, typeof s.id, '| Valor:', s.id);
+        });
       }
+      console.log('Tipo de recommendation_stage_id:', typeof funnel.recommendation_stage_id, '| Valor:', funnel.recommendation_stage_id);
       setFormData({
         name: funnel.name,
         verification_type: funnel.verification_type,
         verification_day: funnel.verification_day || 1,
         sales_value_mode: funnel.sales_value_mode || 'manual',
         recommendations_mode: funnel.recommendations_mode || 'manual',
-        recommendation_stage_id: funnel.recommendation_stage_id ? String(funnel.recommendation_stage_id) : ''
+        recommendation_stage_id: funnel.recommendation_stage_id ? String(funnel.recommendation_stage_id).trim() : ''
       });
       if (funnel.stages && funnel.stages.length > 0) {
         setStages(funnel.stages.sort((a: any, b: any) => a.stage_order - b.stage_order));
@@ -335,8 +339,8 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                     </div>
                   )}
                   <Select
-                    value={formData.recommendation_stage_id ? String(formData.recommendation_stage_id) : ''}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, recommendation_stage_id: String(value) }))}
+                    value={formData.recommendation_stage_id ? String(formData.recommendation_stage_id).trim() : ''}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, recommendation_stage_id: String(value).trim() }))}
                     disabled={isLoading || stages.length === 0 || stages.length === 1}
                   >
                     <SelectTrigger>
@@ -345,7 +349,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                     <SelectContent>
                       {/* Mostrar todas as etapas com nome, mesmo sem id, para debug */}
                       {stages.filter(stage => !!stage.name).map((stage, idx) => (
-                        <SelectItem key={String(stage.id) || idx} value={String(stage.id) || ''}>
+                        <SelectItem key={String(stage.id).trim() || idx} value={String(stage.id).trim() || ''}>
                           {stage.name || `Etapa ${stage.stage_order}`} {stage.id ? '' : '(sem id)'}
                         </SelectItem>
                       ))}
