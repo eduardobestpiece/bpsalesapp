@@ -24,3 +24,12 @@
 **Próximos passos:**
 - Exibir aba "Itens arquivados" para Master.
 - Implementar página de arquivados com filtro, lista, excluir e recuperar. 
+
+## 2024-07-08 - Aba 'Itens arquivados' em Configurações do Master
+
+**Implementação:**
+- Adicionada a aba "Itens arquivados" nas Configurações do Master.
+- Esqueleto da página criado: filtro por Tipo e Data, tabela para exibir itens arquivados (Indicador, Lead, Venda), botões de Excluir e Recuperar (ainda sem lógica).
+
+**Próxima etapa:**
+- Implementar a lógica de busca dos itens arquivados, exclusão definitiva e recuperação. 

@@ -152,8 +152,9 @@ const CrmMasterConfig = () => {
               </div>
 
               <Tabs defaultValue="companies" className="w-full">
-                <TabsList className="grid w-full grid-cols-1">
+                <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="companies">Empresas</TabsTrigger>
+                  <TabsTrigger value="archived">Itens arquivados</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="companies" className="mt-6">
@@ -247,6 +248,59 @@ const CrmMasterConfig = () => {
                             </div>
                           ))
                         )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                <TabsContent value="archived" className="mt-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Itens arquivados</CardTitle>
+                      <CardDescription>Consulte e gerencie todos os itens arquivados do sistema</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {/* Filtros */}
+                      <div className="flex gap-4 mb-4">
+                        <div>
+                          <Label htmlFor="filter-type">Tipo</Label>
+                          <select id="filter-type" className="block w-full border rounded px-2 py-1">
+                            <option value="">Todos</option>
+                            <option value="indicator">Indicador</option>
+                            <option value="lead">Lead</option>
+                            <option value="sale">Venda</option>
+                          </select>
+                        </div>
+                        <div>
+                          <Label htmlFor="filter-date">Data</Label>
+                          <Input id="filter-date" type="date" className="block w-full" />
+                        </div>
+                      </div>
+                      {/* Lista de itens arquivados */}
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full border-separate border-spacing-y-1">
+                          <thead>
+                            <tr className="bg-muted">
+                              <th className="px-2 py-1 text-left font-semibold">Data arquivamento</th>
+                              <th className="px-2 py-1 text-left font-semibold">Tipo</th>
+                              <th className="px-2 py-1 text-left font-semibold">Descrição</th>
+                              <th className="px-2 py-1 text-center font-semibold">Ações</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {/* Aqui virá a lista dinâmica */}
+                            <tr>
+                              <td className="px-2 py-1">-</td>
+                              <td className="px-2 py-1">-</td>
+                              <td className="px-2 py-1">-</td>
+                              <td className="px-2 py-1 text-center">
+                                <div className="flex gap-2 justify-center">
+                                  <Button variant="outline" size="sm">Recuperar</Button>
+                                  <Button variant="destructive" size="sm">Excluir</Button>
+                                </div>
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
                       </div>
                     </CardContent>
                   </Card>
