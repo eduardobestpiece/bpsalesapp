@@ -46,17 +46,7 @@ export const CrmHeader = () => {
                 <span>Indicadores</span>
               </Button>
             </Link>
-            
-            <Link to="/crm/performance">
-              <Button 
-                variant={isActivePath('/crm/performance') ? 'default' : 'ghost'} 
-                size="sm"
-                className="flex items-center space-x-2"
-              >
-                <TrendingUp className="h-4 w-4" />
-                <span>Performance</span>
-              </Button>
-            </Link>
+            {/* Removido o botão Performance */}
           </nav>
         </div>
         

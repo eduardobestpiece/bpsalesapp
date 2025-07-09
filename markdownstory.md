@@ -122,4 +122,11 @@
 
 **Status:** Correção aplicada e aguardando validação do usuário.
 
+- [ ] **07/07/2024** - Correção da estrutura do JSX na tela de indicadores do CRM:
+    - CardHeader agora contém apenas cabeçalho, filtros e botões.
+    - CardContent contém apenas a tabela/listagem.
+    - Fechamento correto das tags e remoção de divs desnecessárias.
+    - Commit e push realizados para deploy automático.
+    - Aguardando validação do usuário para confirmar funcionamento e ausência de erros de build/renderização.
+
 --- 

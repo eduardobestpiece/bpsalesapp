@@ -62,14 +62,7 @@ function App() {
                         </ProtectedRoute>
                       } 
                     />
-                    <Route 
-                      path="/crm/performance" 
-                      element={
-                        <ProtectedRoute requiredRole="leader">
-                          <CrmPerformance />
-                        </ProtectedRoute>
-                      } 
-                    />
+                    {/* Rota Performance removida */}
                     <Route 
                       path="/crm/perfil" 
                       element={
