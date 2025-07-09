@@ -338,6 +338,8 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                       Nenhuma etapa válida encontrada para seleção.
                     </div>
                   )}
+                  {/* Só renderiza o Select quando as etapas e o valor estão prontos */}
+                  {(stages.length > 0 && typeof formData.recommendation_stage_id !== 'undefined') && (
                   <Select
                     value={formData.recommendation_stage_id ? String(formData.recommendation_stage_id).trim() : ''}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, recommendation_stage_id: String(value).trim() }))}
@@ -347,7 +349,6 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                       <SelectValue placeholder="Selecione a etapa" />
                     </SelectTrigger>
                     <SelectContent>
-                      {/* Mostrar todas as etapas com nome, mesmo sem id, para debug */}
                       {stages.filter(stage => !!stage.name).map((stage, idx) => (
                         <SelectItem key={String(stage.id).trim() || idx} value={String(stage.id).trim() || ''}>
                           {stage.name || `Etapa ${stage.stage_order}`} {stage.id ? '' : '(sem id)'}
@@ -355,6 +356,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                       ))}
                     </SelectContent>
                   </Select>
+                  )}
                 </div>
               </>
             )}
