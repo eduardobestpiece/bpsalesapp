@@ -348,25 +348,34 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   // Atualiza opções de mês/ano ao mudar datas
   useEffect(() => {
     if (periodStart && periodEnd) {
-      const { months, years } = getAllMonthsAndYears(periodStart, periodEnd);
+      const startDate = new Date(periodStart);
+      const endDate = new Date(periodEnd);
+      const startMonth = startDate.getMonth() + 1;
+      const endMonth = endDate.getMonth() + 1;
+      const startYear = startDate.getFullYear();
+      const endYear = endDate.getFullYear();
+      let months = [];
+      let years = [];
+      if (startMonth === endMonth) {
+        months = [startMonth];
+        setMonthReference(startMonth);
+        console.log('[Indicador] Mês único:', startMonth);
+      } else {
+        months = [startMonth, endMonth];
+        setMonthReference(null);
+        console.log('[Indicador] Meses múltiplos:', months);
+      }
+      if (startYear === endYear) {
+        years = [startYear];
+        setYearReference(startYear);
+        console.log('[Indicador] Ano único:', startYear);
+      } else {
+        years = [startYear, endYear];
+        setYearReference(null);
+        console.log('[Indicador] Anos múltiplos:', years);
+      }
       setMonthOptions(months);
       setYearOptions(years);
-      console.log('[Indicador] Meses encontrados no período:', months);
-      console.log('[Indicador] Anos encontrados no período:', years);
-      if (months.length === 1) {
-        setMonthReference(months[0]);
-        console.log('[Indicador] Mês setado automaticamente:', months[0]);
-      } else {
-        setMonthReference(null);
-        console.warn('[Indicador] Mais de um mês encontrado, selecione manualmente.');
-      }
-      if (years.length === 1) {
-        setYearReference(years[0]);
-        console.log('[Indicador] Ano setado automaticamente:', years[0]);
-      } else {
-        setYearReference(null);
-        console.warn('[Indicador] Mais de um ano encontrado, selecione manualmente.');
-      }
     } else {
       setMonthOptions([]);
       setYearOptions([]);

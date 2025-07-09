@@ -34,5 +34,6 @@
 - [2024-07-08] Correção: modal de indicador agora preenche mês/ano automaticamente, só mostra select se necessário, campos alinhados, valor de vendas decimal sem máscara. Commit e deploy realizados.
 - [2024-07-08] Correção final: preenchimento automático de mês/ano conforme regras e visual do campo valor das vendas igual ao de recomendações. Commit e deploy realizados.
 - [2024-07-08] Correção: preenchimento automático inteligente de mês/ano no modal de indicador, baseado em todos os dias do período. Commit e deploy realizados.
+- [2024-07-08] Correção: logs detalhados e preenchimento automático robusto de mês/ano no modal de indicador. Commit e deploy realizados.
 
 --- 
