@@ -48,6 +48,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
   useEffect(() => {
     if (funnel && isOpen) {
       console.log('Valor recebido do Supabase (funnel.recommendation_stage_id):', funnel.recommendation_stage_id);
+      console.log('Etapas recebidas do Supabase:', funnel.stages);
       setFormData({
         name: funnel.name,
         verification_type: funnel.verification_type,
@@ -324,6 +325,12 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                 </div>
                 <div>
                   <Label htmlFor="recommendation_stage_id">Etapa ligada às Recomendações</Label>
+                  {/* Alerta visual se não houver etapas válidas */}
+                  {stages.filter(stage => !!stage.name).length === 0 && (
+                    <div style={{ color: 'red', fontSize: 12, marginBottom: 4 }}>
+                      Nenhuma etapa válida encontrada para seleção.
+                    </div>
+                  )}
                   <Select
                     value={formData.recommendation_stage_id ? String(formData.recommendation_stage_id) : ''}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, recommendation_stage_id: String(value) }))}
@@ -333,9 +340,10 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                       <SelectValue placeholder="Selecione a etapa" />
                     </SelectTrigger>
                     <SelectContent>
-                      {stages.filter(stage => !!stage.name && !!stage.id).map((stage) => (
-                        <SelectItem key={String(stage.id)} value={String(stage.id)}>
-                          {stage.name || `Etapa ${stage.stage_order}`}
+                      {/* Mostrar todas as etapas com nome, mesmo sem id, para debug */}
+                      {stages.filter(stage => !!stage.name).map((stage, idx) => (
+                        <SelectItem key={String(stage.id) || idx} value={String(stage.id) || ''}>
+                          {stage.name || `Etapa ${stage.stage_order}`} {stage.id ? '' : '(sem id)'}
                         </SelectItem>
                       ))}
                     </SelectContent>
