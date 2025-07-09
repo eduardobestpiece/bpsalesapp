@@ -13,6 +13,9 @@ import { useFunnels } from '@/hooks/useFunnels';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import CrmPerformance from './CrmPerformance';
 import { supabase } from '@/integrations/supabase/client';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useEffect } from 'react';
 
 const CrmIndicadores = () => {
   const [showModal, setShowModal] = useState(false);
@@ -22,6 +25,61 @@ const CrmIndicadores = () => {
   const companyId = crmUser?.company_id || '';
   const { data: indicators, isLoading: isIndicatorsLoading } = useIndicators(companyId, crmUser?.id);
   const { data: funnels, isLoading: isFunnelsLoading } = useFunnels(companyId, 'active');
+
+  // Configuração de colunas por funil
+  const [showColumnsModal, setShowColumnsModal] = useState(false);
+  const [columnsConfig, setColumnsConfig] = useState<Record<string, string[]>>({}); // funnel_id -> colunas
+  const [selectedFunnelId, setSelectedFunnelId] = useState<string | null>(null);
+  const allColumns = [
+    { key: 'period', label: 'Período' },
+    { key: 'month', label: 'Mês' },
+    { key: 'year', label: 'Ano' },
+    { key: 'last_stage', label: 'Última etapa' },
+    { key: 'sales_value', label: 'Valor das Vendas' },
+    { key: 'ticket_medio', label: 'Ticket Médio' },
+    { key: 'taxa_conversao', label: 'Taxa de conversão' },
+    { key: 'conversao_funil', label: 'Conversão do funil' },
+    { key: 'media_recomendacoes', label: 'Média de Recomendações' },
+  ];
+
+  // Buscar configuração de colunas ao carregar
+  useEffect(() => {
+    const fetchConfigs = async () => {
+      if (!funnels) return;
+      const configs: Record<string, string[]> = {};
+      for (const funnel of funnels) {
+        const { data } = await supabase
+          .from('funnel_column_settings')
+          .select('columns')
+          .eq('funnel_id', funnel.id)
+          .single();
+        configs[funnel.id] = data?.columns || allColumns.map(c => c.key);
+      }
+      setColumnsConfig(configs);
+    };
+    fetchConfigs();
+  }, [funnels]);
+
+  // Salvar configuração
+  const saveColumnsConfig = async (funnelId: string, columns: string[]) => {
+    const { data: existing } = await supabase
+      .from('funnel_column_settings')
+      .select('id')
+      .eq('funnel_id', funnelId)
+      .single();
+    if (existing) {
+      await supabase
+        .from('funnel_column_settings')
+        .update({ columns })
+        .eq('funnel_id', funnelId);
+    } else {
+      await supabase
+        .from('funnel_column_settings')
+        .insert({ funnel_id: funnelId, columns });
+    }
+    setColumnsConfig(prev => ({ ...prev, [funnelId]: columns }));
+    setShowColumnsModal(false);
+  };
 
   const handleEdit = (indicator: any) => {
     setSelectedIndicator(indicator);
@@ -124,27 +182,67 @@ const CrmIndicadores = () => {
                             const colCount = 3 + sortedStages.length + 1;
                             return (
                               <div key={funnel.id} className="mb-8">
-                                <h3 className="font-bold text-lg mb-2">{funnel.name}</h3>
+                                <h3 className="font-bold text-lg mb-2 flex items-center gap-2">{funnel.name}
+                                  {(crmUser?.role === 'master' || crmUser?.role === 'admin') && (
+                                    <Button size="sm" variant="outline" onClick={() => { setSelectedFunnelId(funnel.id); setShowColumnsModal(true); }}>
+                                      Colunas
+                                    </Button>
+                                  )}
+                                </h3>
+                                {/* Modal de configuração de colunas */}
+                                {showColumnsModal && selectedFunnelId === funnel.id && (
+                                  <Dialog open={showColumnsModal} onOpenChange={setShowColumnsModal}>
+                                    <DialogContent>
+                                      <DialogHeader>
+                                        <DialogTitle>Configurar colunas do funil</DialogTitle>
+                                      </DialogHeader>
+                                      <form onSubmit={e => { e.preventDefault(); saveColumnsConfig(funnel.id, columnsConfig[funnel.id]); }}>
+                                        <div className="space-y-2 mb-4">
+                                          {allColumns.map(col => (
+                                            <div key={col.key} className="flex items-center gap-2">
+                                              <Checkbox
+                                                checked={columnsConfig[funnel.id]?.includes(col.key)}
+                                                onCheckedChange={checked => {
+                                                  setColumnsConfig(prev => ({
+                                                    ...prev,
+                                                    [funnel.id]: checked
+                                                      ? [...(prev[funnel.id] || []), col.key]
+                                                      : (prev[funnel.id] || []).filter(k => k !== col.key)
+                                                  }));
+                                                }}
+                                              />
+                                              <span>{col.label}</span>
+                                            </div>
+                                          ))}
+                                        </div>
+                                        <div className="flex gap-2 justify-end">
+                                          <Button type="button" variant="outline" onClick={() => setShowColumnsModal(false)}>Cancelar</Button>
+                                          <Button type="submit">Salvar</Button>
+                                        </div>
+                                      </form>
+                                    </DialogContent>
+                                  </Dialog>
+                                )}
                                 <div className="overflow-x-auto">
                                   <table className="min-w-full border-separate border-spacing-y-1">
                                     <thead>
                                       <tr className="bg-muted">
-                                        <th className="px-2 py-1 text-left font-semibold">Período</th>
-                                        <th className="px-2 py-1 text-left font-semibold">Mês</th>
-                                        <th className="px-2 py-1 text-left font-semibold">Ano</th>
-                                        <th className="px-2 py-1 text-left font-semibold">Última etapa</th>
-                                        <th className="px-2 py-1 text-left font-semibold">Valor das Vendas</th>
-                                        <th className="px-2 py-1 text-left font-semibold">Ticket Médio</th>
-                                        <th className="px-2 py-1 text-left font-semibold">Taxa de conversão</th>
-                                        <th className="px-2 py-1 text-left font-semibold">Conversão do funil</th>
-                                        <th className="px-2 py-1 text-left font-semibold">Média de Recomendações</th>
+                                        {columnsConfig[funnel.id]?.includes('period') && <th className="px-2 py-1 text-left font-semibold">Período</th>}
+                                        {columnsConfig[funnel.id]?.includes('month') && <th className="px-2 py-1 text-left font-semibold">Mês</th>}
+                                        {columnsConfig[funnel.id]?.includes('year') && <th className="px-2 py-1 text-left font-semibold">Ano</th>}
+                                        {columnsConfig[funnel.id]?.includes('last_stage') && <th className="px-2 py-1 text-left font-semibold">Última etapa</th>}
+                                        {columnsConfig[funnel.id]?.includes('sales_value') && <th className="px-2 py-1 text-left font-semibold">Valor das Vendas</th>}
+                                        {columnsConfig[funnel.id]?.includes('ticket_medio') && <th className="px-2 py-1 text-left font-semibold">Ticket Médio</th>}
+                                        {columnsConfig[funnel.id]?.includes('taxa_conversao') && <th className="px-2 py-1 text-left font-semibold">Taxa de conversão</th>}
+                                        {columnsConfig[funnel.id]?.includes('conversao_funil') && <th className="px-2 py-1 text-left font-semibold">Conversão do funil</th>}
+                                        {columnsConfig[funnel.id]?.includes('media_recomendacoes') && <th className="px-2 py-1 text-left font-semibold">Média de Recomendações</th>}
                                         <th className="px-2 py-1 text-center font-semibold">Ações</th>
                                       </tr>
                                     </thead>
                                     <tbody>
                                       {funnelIndicators.length === 0 ? (
                                         <tr>
-                                          <td colSpan={3 + sortedStages.length + 1} className="text-muted-foreground text-center py-4">Nenhum indicador registrado para este funil.</td>
+                                          <td colSpan={10} className="text-muted-foreground text-center py-4">Nenhum indicador registrado para este funil.</td>
                                         </tr>
                                       ) : (
                                         funnelIndicators.map((indicator) => {
@@ -167,26 +265,37 @@ const CrmIndicadores = () => {
                                           const mediaRecomendacoes = lastValue > 0 ? recommendationsCount / lastValue : 0;
                                           return (
                                             <tr key={indicator.id} className="bg-white border-b last:border-b-0">
-                                              {/* Período, Mês, Ano já existentes */}
-                                              <td className="px-2 py-1">{
-                                                indicator.period_start && indicator.period_end
-                                                  ? `De ${new Date(indicator.period_start).toLocaleDateString('pt-BR')} até ${new Date(indicator.period_end).toLocaleDateString('pt-BR')}`
-                                                  : '-'
-                                              }</td>
-                                              <td className="px-2 py-1">{String(indicator.month_reference).padStart(2, '0')}</td>
-                                              <td className="px-2 py-1">{indicator.year_reference}</td>
-                                              {/* Última etapa */}
-                                              <td className="px-2 py-1">{lastStage?.name || '-'}</td>
-                                              {/* Valor das vendas */}
-                                              <td className="px-2 py-1">{salesValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                                              {/* Ticket Médio */}
-                                              <td className="px-2 py-1">{ticketMedio > 0 ? ticketMedio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</td>
-                                              {/* Taxa de conversão */}
-                                              <td className="px-2 py-1">{penultimateValue > 0 ? taxaConversao.toFixed(1) + '%' : '-'}</td>
-                                              {/* Conversão do funil */}
-                                              <td className="px-2 py-1">{firstValue > 0 ? conversaoFunil.toFixed(1) + '%' : '-'}</td>
-                                              {/* Média de Recomendações */}
-                                              <td className="px-2 py-1">{lastValue > 0 ? mediaRecomendacoes.toFixed(2) : '-'}</td>
+                                              {columnsConfig[funnel.id]?.includes('period') && (
+                                                <td className="px-2 py-1">{
+                                                  indicator.period_start && indicator.period_end
+                                                    ? `De ${new Date(indicator.period_start).toLocaleDateString('pt-BR')} até ${new Date(indicator.period_end).toLocaleDateString('pt-BR')}`
+                                                    : '-'
+                                                }</td>
+                                              )}
+                                              {columnsConfig[funnel.id]?.includes('month') && (
+                                                <td className="px-2 py-1">{String(indicator.month_reference).padStart(2, '0')}</td>
+                                              )}
+                                              {columnsConfig[funnel.id]?.includes('year') && (
+                                                <td className="px-2 py-1">{indicator.year_reference}</td>
+                                              )}
+                                              {columnsConfig[funnel.id]?.includes('last_stage') && (
+                                                <td className="px-2 py-1">{lastStage?.name || '-'}</td>
+                                              )}
+                                              {columnsConfig[funnel.id]?.includes('sales_value') && (
+                                                <td className="px-2 py-1">{salesValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                              )}
+                                              {columnsConfig[funnel.id]?.includes('ticket_medio') && (
+                                                <td className="px-2 py-1">{ticketMedio > 0 ? ticketMedio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</td>
+                                              )}
+                                              {columnsConfig[funnel.id]?.includes('taxa_conversao') && (
+                                                <td className="px-2 py-1">{penultimateValue > 0 ? taxaConversao.toFixed(1) + '%' : '-'}</td>
+                                              )}
+                                              {columnsConfig[funnel.id]?.includes('conversao_funil') && (
+                                                <td className="px-2 py-1">{firstValue > 0 ? conversaoFunil.toFixed(1) + '%' : '-'}</td>
+                                              )}
+                                              {columnsConfig[funnel.id]?.includes('media_recomendacoes') && (
+                                                <td className="px-2 py-1">{lastValue > 0 ? mediaRecomendacoes.toFixed(2) : '-'}</td>
+                                              )}
                                               {/* Ações */}
                                               <td className="px-2 py-1 text-center">
                                               <div className="flex gap-2 justify-center">
