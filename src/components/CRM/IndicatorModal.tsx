@@ -409,7 +409,13 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
       console.log('[Indicador] Extraído (ISO):', start, end);
       return { start, end };
     }
-    // Formato 2: 'De dd/mm/yyyy até dd/mm/yyyy'
+    // Formato 2: 'YYYY-MM-DD' (diário)
+    if (/^\d{4}-\d{2}-\d{2}$/.test(periodString)) {
+      // Período diário: início e fim são iguais
+      console.log('[Indicador] Extraído (diário):', periodString);
+      return { start: periodString, end: periodString };
+    }
+    // Formato 3: 'De dd/mm/yyyy até dd/mm/yyyy'
     const match = periodString.match(/(\d{2}\/\d{2}\/\d{4}).*?(\d{2}\/\d{2}\/\d{4})/);
     if (match) {
       const [_, start, end] = match;
