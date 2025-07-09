@@ -290,19 +290,19 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                 <div>
                   <Label htmlFor="recommendation_stage_id">Etapa ligada às Recomendações</Label>
                   <Select
-                    value={formData.recommendation_stage_id}
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, recommendation_stage_id: value }))}
-                    disabled={isLoading || stages.length === 0}
+                    value={stages.length > 0 && stages[stages.length - 1].id ? stages[stages.length - 1].id : ''}
+                    onValueChange={() => {}}
+                    disabled
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione a etapa" />
                     </SelectTrigger>
                     <SelectContent>
-                      {stages.filter(stage => !!stage.id).map((stage) => (
-                        <SelectItem key={stage.id} value={stage.id}>
-                          {stage.name || `Etapa ${stage.stage_order}`}
+                      {stages.length > 0 && stages[stages.length - 1].id && (
+                        <SelectItem key={stages[stages.length - 1].id} value={stages[stages.length - 1].id}>
+                          {stages[stages.length - 1].name || `Etapa ${stages[stages.length - 1].stage_order}`}
                         </SelectItem>
-                      ))}
+                      )}
                     </SelectContent>
                   </Select>
                 </div>

@@ -230,7 +230,11 @@ const CrmIndicadores = () => {
                                         {columnsConfig[funnel.id]?.includes('period') && <th className="px-2 py-1 text-left font-semibold">Período</th>}
                                         {columnsConfig[funnel.id]?.includes('month') && <th className="px-2 py-1 text-left font-semibold">Mês</th>}
                                         {columnsConfig[funnel.id]?.includes('year') && <th className="px-2 py-1 text-left font-semibold">Ano</th>}
-                                        {columnsConfig[funnel.id]?.includes('last_stage') && <th className="px-2 py-1 text-left font-semibold">Última etapa</th>}
+                                        {columnsConfig[funnel.id]?.includes('last_stage') && (
+                                          <th className="px-2 py-1 text-left font-semibold">
+                                            {sortedStages.length > 0 ? sortedStages[sortedStages.length - 1].name : 'Última etapa'}
+                                          </th>
+                                        )}
                                         {columnsConfig[funnel.id]?.includes('sales_value') && <th className="px-2 py-1 text-left font-semibold">Valor das Vendas</th>}
                                         {columnsConfig[funnel.id]?.includes('ticket_medio') && <th className="px-2 py-1 text-left font-semibold">Ticket Médio</th>}
                                         {columnsConfig[funnel.id]?.includes('taxa_conversao') && <th className="px-2 py-1 text-left font-semibold">Taxa de conversão</th>}

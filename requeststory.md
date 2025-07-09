@@ -1,12 +1,17 @@
-# Histórico de Requisições
+# Requisição Atual
 
-## 2024-07-08 - Lógica completa da aba Itens arquivados
+**Data:** [Preencher com data/hora atual]
+**Solicitante:** Usuário
 
-**Implementação:**
-- Agora a aba "Itens arquivados" busca e exibe todos os indicadores, leads e vendas arquivados (campo archived_at preenchido).
-- Filtro por Tipo (Indicador, Lead, Venda) e Data de arquivamento.
-- Botão "Recuperar": remove o arquivamento (zera o campo archived_at).
-- Botão "Excluir": remove o item do banco de dados.
+## Descrição
+Corrigir o campo "Etapa ligada às Recomendações" no modal de edição de funil (`FunnelModal`) para que sempre mostre a última etapa cadastrada, mesmo que o usuário ainda não tenha salvo o funil. Atualmente, o campo permite selecionar qualquer etapa, mas a regra de negócio é que recomendações estejam sempre ligadas à última etapa do funil.
 
-**Próximos passos:**
-- Validar o funcionamento com o usuário. 
+## Checklist
+- [ ] Analisar o componente FunnelModal e a lógica de etapas
+- [ ] Ajustar o campo para exibir apenas a última etapa cadastrada
+- [ ] Garantir que o valor seja atualizado ao adicionar/remover etapas
+- [ ] Testar o comportamento no frontend
+- [ ] Realizar deploy
+
+## Status
+Em andamento 

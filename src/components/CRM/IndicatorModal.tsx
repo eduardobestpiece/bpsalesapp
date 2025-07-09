@@ -40,6 +40,11 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   const [yearOptions, setYearOptions] = useState<number[]>([]);
   const [monthReference, setMonthReference] = useState<number | null>(null);
   const [yearReference, setYearReference] = useState<number | null>(null);
+  // Estado para modal de alteração de período
+  const [showPeriodModal, setShowPeriodModal] = useState(false);
+  const [tempPeriod, setTempPeriod] = useState(formData.period_date);
+  const [tempMonth, setTempMonth] = useState(monthReference);
+  const [tempYear, setTempYear] = useState(yearReference);
 
   // Garantir que o companyId está correto (fallback para o do usuário logado)
   const { crmUser } = useCrmAuth();
@@ -595,34 +600,51 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Campo Mês */}
-            <div>
-              <label>Mês *</label>
-              {monthOptions.length === 1 && monthReference ? (
-                <div>{new Date(2000, monthReference - 1, 1).toLocaleString('pt-BR', { month: 'long' })}</div>
-              ) : (
-                <select value={monthReference ?? ''} onChange={e => setMonthReference(Number(e.target.value))} required>
-                  <option value="">Selecione</option>
-                  {monthOptions.map(m => (
-                    <option key={m} value={m}>{new Date(2000, m - 1, 1).toLocaleString('pt-BR', { month: 'long' })}</option>
-                  ))}
-                </select>
-              )}
-            </div>
-
+            {!indicator && (
+              <div>
+                <label>Mês *</label>
+                {monthOptions.length === 1 && monthReference ? (
+                  <div>{new Date(2000, monthReference - 1, 1).toLocaleString('pt-BR', { month: 'long' })}</div>
+                ) : (
+                  <select value={monthReference ?? ''} onChange={e => setMonthReference(Number(e.target.value))} required>
+                    <option value="">Selecione</option>
+                    {monthOptions.map(m => (
+                      <option key={m} value={m}>{new Date(2000, m - 1, 1).toLocaleString('pt-BR', { month: 'long' })}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            )}
             {/* Campo Ano */}
-            <div>
-              <label>Ano *</label>
-              {yearOptions.length === 1 && yearReference ? (
-                <div>{yearReference}</div>
-              ) : (
-                <select value={yearReference ?? ''} onChange={e => setYearReference(Number(e.target.value))} required>
-                  <option value="">Selecione</option>
-                  {yearOptions.map(y => (
-                    <option key={y} value={y}>{y}</option>
-                  ))}
-                </select>
-              )}
-            </div>
+            {!indicator && (
+              <div>
+                <label>Ano *</label>
+                {yearOptions.length === 1 && yearReference ? (
+                  <div>{yearReference}</div>
+                ) : (
+                  <select value={yearReference ?? ''} onChange={e => setYearReference(Number(e.target.value))} required>
+                    <option value="">Selecione</option>
+                    {yearOptions.map(y => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
+                  </select>
+                )}
+              </div>
+            )}
+            {/* Botão Alterar Período no modo edição */}
+            {indicator && (
+              <div className="col-span-2 flex items-center gap-2">
+                <Button type="button" variant="outline" onClick={() => {
+                  setTempPeriod(formData.period_date);
+                  setTempMonth(monthReference);
+                  setTempYear(yearReference);
+                  setShowPeriodModal(true);
+                }}>
+                  Alterar Período
+                </Button>
+                <span className="text-xs text-muted-foreground">Período atual: {periodStart && periodEnd ? `De ${new Date(periodStart).toLocaleDateString('pt-BR')} até ${new Date(periodEnd).toLocaleDateString('pt-BR')}` : '-'}</span>
+              </div>
+            )}
 
             {/* Campo Funil */}
             <div>
@@ -805,6 +827,70 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
           </div>
         </form>
       </DialogContent>
+      {/* Modal secundário para alterar período */}
+      {showPeriodModal && (
+        <Dialog open={showPeriodModal} onOpenChange={setShowPeriodModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Alterar Período</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <Label htmlFor="period_date_modal">Período *</Label>
+                <Select
+                  value={tempPeriod}
+                  onValueChange={(value) => {
+                    setTempPeriod(value);
+                    const { start, end } = extractPeriodDates(value);
+                    setPeriodStart(start);
+                    setPeriodEnd(end);
+                  }}
+                  required
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione o período" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {periodOptions.map(opt => (
+                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label>Mês *</label>
+                <select value={tempMonth ?? ''} onChange={e => setTempMonth(Number(e.target.value))} required>
+                  <option value="">Selecione</option>
+                  {monthOptions.map(m => (
+                    <option key={m} value={m}>{new Date(2000, m - 1, 1).toLocaleString('pt-BR', { month: 'long' })}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label>Ano *</label>
+                <select value={tempYear ?? ''} onChange={e => setTempYear(Number(e.target.value))} required>
+                  <option value="">Selecione</option>
+                  {yearOptions.map(y => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="flex gap-2 justify-end">
+                <Button type="button" variant="outline" onClick={() => setShowPeriodModal(false)}>Cancelar</Button>
+                <Button type="button" onClick={() => {
+                  setFormData(prev => ({ ...prev, period_date: tempPeriod }));
+                  setMonthReference(tempMonth);
+                  setYearReference(tempYear);
+                  const { start, end } = extractPeriodDates(tempPeriod);
+                  setPeriodStart(start);
+                  setPeriodEnd(end);
+                  setShowPeriodModal(false);
+                }}>Salvar</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </Dialog>
   );
 };
