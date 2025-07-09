@@ -344,15 +344,14 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         ? formData.period_date.split('_')[1]
         : formData.period_date;
 
+      // Remover sales_value e recommendations_count do objeto enviado
       const indicatorData = {
         user_id: crmUser.id,
         company_id: companyId,
         funnel_id: formData.funnel_id,
         period_date: periodDateValue,
         month_reference: formData.month_reference,
-        year_reference: formData.year_reference,
-        sales_value: salesValue,
-        recommendations_count: recommendationsCount
+        year_reference: formData.year_reference
       };
 
       const stageValues = Object.entries(formData.stages).map(([stageId, value]) => ({
