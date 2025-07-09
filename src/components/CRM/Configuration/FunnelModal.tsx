@@ -41,6 +41,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
   ]);
   
   const [isLoading, setIsLoading] = useState(false);
+  const [canSelectRecommendationStage, setCanSelectRecommendationStage] = useState(false);
 
   const { companyId, crmUser } = useCrmAuth();
   const createFunnelMutation = useCreateFunnel();
@@ -68,6 +69,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
       if (funnel.stages && funnel.stages.length > 0) {
         setStages(funnel.stages.sort((a: any, b: any) => a.stage_order - b.stage_order));
       }
+      setCanSelectRecommendationStage(true);
     } else if (isOpen) {
       setFormData({
         name: '',
@@ -80,6 +82,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
       setStages([
         { name: '', stage_order: 1, target_percentage: 0, target_value: 0 }
       ]);
+      setCanSelectRecommendationStage(false);
     }
   }, [funnel, isOpen]);
 
@@ -241,12 +244,14 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
           .select('id, name')
           .eq('funnel_id', created.id);
         if (errorEtapas) throw errorEtapas;
-        // Encontrar o id da etapa selecionada pelo nome
-        const etapaSelecionada = etapasCriadas.find((etapa: any) => String(etapa.id) === String(formData.recommendation_stage_id) || etapa.name === stages.find(s => String(s.id) === String(formData.recommendation_stage_id))?.name);
-        if (etapaSelecionada) {
-          await updateFunnelMutation.mutateAsync({ id: created.id, recommendation_stage_id: etapaSelecionada.id });
-        }
-        toast.success('Funil criado com sucesso!');
+        // Atualizar o estado para permitir seleção do campo recommendation_stage_id
+        setStages(etapasCriadas);
+        setCanSelectRecommendationStage(true);
+        toast.success('Funil criado! Agora selecione a etapa ligada às recomendações e salve novamente.');
+        // Não fecha o modal, aguarda o usuário selecionar e salvar o campo recommendation_stage_id
+        setFormData(prev => ({ ...prev, recommendation_stage_id: '' }));
+        setIsLoading(false);
+        return;
       }
       onClose();
       
@@ -356,7 +361,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                   <Select
                     value={formData.recommendation_stage_id ? String(formData.recommendation_stage_id).trim() : ''}
                     onValueChange={(value) => setFormData(prev => ({ ...prev, recommendation_stage_id: String(value).trim() }))}
-                    disabled={isLoading || stages.length === 0 || stages.length === 1}
+                    disabled={isLoading || stages.length === 0 || stages.length === 1 || !canSelectRecommendationStage}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione a etapa" />
