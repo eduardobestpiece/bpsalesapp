@@ -329,27 +329,26 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     if (!value) return 0;
     return Number(value.replace(/\./g, '').replace(',', '.'));
   }
-  // Função para extrair meses e anos do período
-  function getMonthYearOptions(start: string, end: string) {
+  // Função para extrair todos os meses e anos presentes em cada dia do período
+  function getAllMonthsAndYears(start: string, end: string) {
     if (!start || !end) return { months: [], years: [] };
     const startDate = new Date(start);
     const endDate = new Date(end);
-    let months = [];
-    let years = [];
+    let monthsSet = new Set();
+    let yearsSet = new Set();
     let d = new Date(startDate);
     while (d <= endDate) {
-      const m = d.getMonth() + 1;
-      const y = d.getFullYear();
-      if (!months.includes(m)) months.push(m);
-      if (!years.includes(y)) years.push(y);
+      monthsSet.add(d.getMonth() + 1);
+      yearsSet.add(d.getFullYear());
       d.setDate(d.getDate() + 1);
     }
-    return { months, years };
+    return { months: Array.from(monthsSet), years: Array.from(yearsSet) };
   }
+
   // Atualiza opções de mês/ano ao mudar datas
   useEffect(() => {
     if (periodStart && periodEnd) {
-      const { months, years } = getMonthYearOptions(periodStart, periodEnd);
+      const { months, years } = getAllMonthsAndYears(periodStart, periodEnd);
       setMonthOptions(months);
       setYearOptions(years);
       if (months.length === 1) setMonthReference(months[0]);
