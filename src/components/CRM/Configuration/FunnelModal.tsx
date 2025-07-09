@@ -90,6 +90,23 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
     }
   }, [stages, formData.recommendation_stage_id, funnel]);
 
+  // Garantir que recommendation_stage_id corresponde a uma etapa válida ao abrir o modal
+  useEffect(() => {
+    if (
+      funnel &&
+      isOpen &&
+      stages.length > 0 &&
+      formData.recommendation_stage_id &&
+      !stages.some(stage => stage.id === formData.recommendation_stage_id)
+    ) {
+      // Se o valor salvo não existe mais, seta para a primeira etapa válida
+      const firstValid = stages.find(stage => !!stage.id && !!stage.name);
+      if (firstValid) {
+        setFormData(prev => ({ ...prev, recommendation_stage_id: firstValid.id }));
+      }
+    }
+  }, [funnel, isOpen, stages, formData.recommendation_stage_id]);
+
   const addStage = () => {
     const newStage: FunnelStage = {
       name: '',
