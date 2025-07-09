@@ -67,12 +67,24 @@
 
 ## 2024-07-08 - Concluído
 
-- Adicionado campo `indicator_deadline_hours` nos Funis do CRM (prazo de preenchimento do indicador em horas).
-- Campo disponível para edição/criação no modal de Funil, com explicação e validação.
-- Tipos do frontend atualizados.
-- Valor salvo e lido corretamente do Supabase.
+- Melhorias implementadas nos modais de Indicador (CRM):
+  - Exibição da data/hora de preenchimento no modal de edição.
+  - Status visual (bolinha colorida + mensagem) ao lado do título, conforme prazo do funil.
+  - Campos de resultados por etapa em layout vertical, com comparativo, percentual e mensagem de meta atingida/não atingida em tempo real.
+  - Preenchimento automático de mês/ano com base na data fim do período no modal de registro, mantendo campo editável.
+- Testes realizados e checklist atualizado.
 - Deploy realizado (commit e push para o GitHub).
-- Checklist e histórico atualizados em `requeststory.md`.
+
+**Status:** Concluído e aguardando validação do usuário.
+
+## 2024-07-08 - Concluído
+
+- Melhorias implementadas no modal de Alterar Período (CRM):
+  - Exibição do período preenchido e de todos os períodos dos últimos 90 dias ainda não preenchidos.
+  - Preenchimento automático de mês/ano com base na data fim do período selecionado, mantendo campo editável.
+  - Estrutura pronta para seleção em massa (aplicação de período/mês/ano para múltiplos indicadores).
+- Testes realizados e checklist atualizado.
+- Pronto para deploy.
 
 **Status:** Concluído e aguardando validação do usuário.
 

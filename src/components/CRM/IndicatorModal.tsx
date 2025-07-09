@@ -46,6 +46,8 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   const [tempPeriod, setTempPeriod] = useState(formData.period_date);
   const [tempMonth, setTempMonth] = useState(monthReference);
   const [tempYear, setTempYear] = useState(yearReference);
+  // Estado para seleção em massa (preparação)
+  const [tempSelectedIndicators, setTempSelectedIndicators] = useState<string[]>([]); // IDs dos indicadores selecionados
 
   // Garantir que o companyId está correto (fallback para o do usuário logado)
   const { crmUser } = useCrmAuth();
@@ -878,6 +880,13 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
               <DialogTitle>Alterar Período</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
+              {/* (Futuro) Campo de seleção múltipla de indicadores */}
+              {/* <div>
+                <Label>Indicadores selecionados</Label>
+                <Select multiple value={tempSelectedIndicators} onValueChange={setTempSelectedIndicators}>
+                  ... opções ...
+                </Select>
+              </div> */}
               <div>
                 <Label htmlFor="period_date_modal">Período *</Label>
                 <Select
@@ -887,6 +896,10 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                     const { start, end } = extractPeriodDates(value);
                     setPeriodStart(start);
                     setPeriodEnd(end);
+                    // Preencher mês/ano automaticamente com base na data fim
+                    const endDate = new Date(end);
+                    setTempMonth(endDate.getMonth() + 1);
+                    setTempYear(endDate.getFullYear());
                   }}
                   required
                 >
@@ -894,7 +907,10 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                     <SelectValue placeholder="Selecione o período" />
                   </SelectTrigger>
                   <SelectContent>
-                    {periodOptions.map(opt => (
+                    <SelectItem key={formData.period_date} value={formData.period_date}>
+                      (Atual) {formData.period_date}
+                    </SelectItem>
+                    {periodOptions.filter(opt => opt.value !== formData.period_date).map(opt => (
                       <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                     ))}
                   </SelectContent>
@@ -921,12 +937,19 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
               <div className="flex gap-2 justify-end">
                 <Button type="button" variant="outline" onClick={() => setShowPeriodModal(false)}>Cancelar</Button>
                 <Button type="button" onClick={() => {
-                  setFormData(prev => ({ ...prev, period_date: tempPeriod }));
-                  setMonthReference(tempMonth);
-                  setYearReference(tempYear);
-                  const { start, end } = extractPeriodDates(tempPeriod);
-                  setPeriodStart(start);
-                  setPeriodEnd(end);
+                  if (tempSelectedIndicators.length > 1) {
+                    // Seleção em massa: aplicar para todos
+                    console.log('Aplicar para múltiplos:', tempSelectedIndicators, tempPeriod, tempMonth, tempYear);
+                    // Aqui entraria a lógica de atualização em massa (futura)
+                  } else {
+                    // Seleção única
+                    setFormData(prev => ({ ...prev, period_date: tempPeriod }));
+                    setMonthReference(tempMonth);
+                    setYearReference(tempYear);
+                    const { start, end } = extractPeriodDates(tempPeriod);
+                    setPeriodStart(start);
+                    setPeriodEnd(end);
+                  }
                   setShowPeriodModal(false);
                 }}>Salvar</Button>
               </div>
