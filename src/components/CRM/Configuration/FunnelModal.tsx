@@ -73,6 +73,21 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
     }
   }, [funnel, isOpen]);
 
+  // Ajuste: garantir que recommendation_stage_id sempre seja o id da etapa
+  useEffect(() => {
+    // Se não houver valor selecionado e houver etapas, selecionar a primeira etapa válida
+    if (
+      stages.length > 0 &&
+      stages.filter(stage => !!stage.name).length > 0 &&
+      !formData.recommendation_stage_id
+    ) {
+      const firstStageWithId = stages.find(stage => !!stage.id && !!stage.name);
+      if (firstStageWithId) {
+        setFormData(prev => ({ ...prev, recommendation_stage_id: firstStageWithId.id }));
+      }
+    }
+  }, [stages, formData.recommendation_stage_id]);
+
   const addStage = () => {
     const newStage: FunnelStage = {
       name: '',
@@ -298,8 +313,8 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                       <SelectValue placeholder="Selecione a etapa" />
                     </SelectTrigger>
                     <SelectContent>
-                      {stages.filter(stage => !!stage.name).map((stage, idx) => (
-                        <SelectItem key={stage.id || idx} value={stage.id || idx.toString()}>
+                      {stages.filter(stage => !!stage.name && !!stage.id).map((stage) => (
+                        <SelectItem key={stage.id} value={stage.id}>
                           {stage.name || `Etapa ${stage.stage_order}`}
                         </SelectItem>
                       ))}

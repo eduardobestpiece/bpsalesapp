@@ -7,6 +7,13 @@
 - Campo ficou desabilitado para edição manual, garantindo integridade.
 - Commit realizado e deploy automático efetuado.
 
+## [Preencher com data/hora atual] - Atualização do campo "Etapa ligada às Recomendações" no FunnelModal
+
+- No modal de Novo Funil, o campo permite selecionar qualquer etapa criada pelo usuário, atualizado dinamicamente conforme as etapas são adicionadas.
+- No modal de Editar Funil, o campo permite selecionar qualquer etapa já registrada no funil.
+- O campo só fica travado se houver apenas uma etapa.
+- Commit realizado e deploy automático efetuado.
+
 ## 2024-07-08
 
 - **Implementação da persistência das etapas do funil (funnel_stages)**
