@@ -1,27 +1,32 @@
-# Requisição em andamento
+# Requisição em Andamento
 
-## Objetivo
-Ajustar a lógica do campo "Período" no modal de indicador conforme regras detalhadas para o primeiro e segundo registro do usuário para cada funil.
+## Criação e Edição de Funis (Configurações CRM)
+- Adicionar campos toggle (ligar/desligar):
+  - Valor das Vendas: Manual/Sistema
+  - Recomendações: Manual/Sistema
+- Seleção da etapa do funil atrelada às recomendações
+- Visibilidade restrita a Master/Admin
 
-## Novos Ajustes Solicitados
-- Se for o **primeiro registro** do usuário para aquele funil:
-  - Sugerir períodos dentro do espaço de 90 dias antes de hoje, do mais recente para o mais antigo.
-  - O usuário só poderá adicionar registros para aquele período no último dia do período (ex: se o período termina numa quinta, só pode registrar a partir da quinta).
-- Se for o **segundo registro** (ou mais) do usuário para aquele funil:
-  - Só aparecerão nas opções de período a partir do último registrado até o período do dia vigente.
-  - Mostrar em vermelho se está faltando algum (como já está).
-  - NÃO apresentar períodos futuros.
+## Registro e Edição de Indicadores
+- Valor das vendas: editável se "Manual", calculado se "Sistema"
+- Número de recomendações: editável se "Manual", calculado se "Sistema" (leads de origem recomendação)
+
+## Banco de Dados
+- Adicionar na tabela `funnels`:
+  - `sales_value_mode` (enum/manual/sistema)
+  - `recommendations_mode` (enum/manual/sistema)
+  - `recommendation_stage_id` (uuid, FK para `funnel_stages`)
 
 ## Checklist
-- [x] Analisar regras e impacto na lógica atual
-- [ ] Implementar sugestão de períodos para o primeiro registro (90 dias antes de hoje, ordem decrescente)
-- [ ] Restringir seleção para o último dia do período
-- [ ] Ajustar lógica para segundo registro: só períodos entre o último registrado e o atual, sem futuros
-- [ ] Testar e ajustar interface
-- [ ] Realizar deploy
+- [ ] Migration SQL criada e aplicada
+- [ ] Tipos TypeScript atualizados
+- [ ] Modal de Funil atualizado (campos + permissão)
+- [ ] Modal de Indicador atualizado (campos + lógica)
+- [ ] Lógica de cálculo automático implementada
+- [ ] Testes manuais realizados
+- [ ] Deploy realizado
+- [ ] Usuário validou funcionamento
 
-**Ponto de partida:**
-- Lógica de períodos dinâmicos já implementada, mas sem diferenciação entre primeiro e segundo registro do usuário para o funil.
+---
 
-**Próximo passo:**
-Atualizar a lógica do campo "Período" no modal conforme as novas regras acima. 
+**Status:** Iniciando etapa de migration no banco de dados. 

@@ -224,6 +224,21 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         });
         setFormData(prev => ({ ...prev, stages: newStages }));
       }
+      // Inicializar campos de vendas/recomendações
+      if (funnel) {
+        if (funnel.sales_value_mode === 'manual') {
+          setSalesValue(indicator?.sales_value || 0);
+        } else {
+          // Aqui você pode buscar/calcular o valor das vendas do sistema
+          setSalesValue(0); // Substitua por lógica real
+        }
+        if (funnel.recommendations_mode === 'manual') {
+          setRecommendationsCount(indicator?.recommendations_count || 0);
+        } else {
+          // Aqui você pode buscar/calcular o número de recomendações do sistema
+          setRecommendationsCount(0); // Substitua por lógica real
+        }
+      }
     }
   }, [formData.funnel_id, funnels, indicator]);
 
@@ -264,7 +279,9 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         funnel_id: formData.funnel_id,
         period_date: periodDateValue,
         month_reference: formData.month_reference,
-        year_reference: formData.year_reference
+        year_reference: formData.year_reference,
+        sales_value: salesValue,
+        recommendations_count: recommendationsCount
       };
 
       const stageValues = Object.entries(formData.stages).map(([stageId, value]) => ({
@@ -438,6 +455,55 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                 </div>
               )}
             </div>
+            {/* CAMPOS RESTRITOS MASTER/ADMIN */}
+            {selectedFunnel && ['master', 'admin'].includes(crmUser?.role) && (
+              <>
+                <div>
+                  <Label htmlFor="sales_value">Valor das Vendas</Label>
+                  {selectedFunnel.sales_value_mode === 'manual' ? (
+                    <Input
+                      id="sales_value"
+                      type="number"
+                      min="0"
+                      value={salesValue}
+                      onChange={e => setSalesValue(Number(e.target.value) || 0)}
+                      placeholder="Digite o valor das vendas"
+                      disabled={isLoading}
+                    />
+                  ) : (
+                    <Input
+                      id="sales_value"
+                      type="number"
+                      value={salesValue}
+                      disabled
+                      placeholder="Calculado automaticamente"
+                    />
+                  )}
+                </div>
+                <div>
+                  <Label htmlFor="recommendations_count">Número de Recomendações</Label>
+                  {selectedFunnel.recommendations_mode === 'manual' ? (
+                    <Input
+                      id="recommendations_count"
+                      type="number"
+                      min="0"
+                      value={recommendationsCount}
+                      onChange={e => setRecommendationsCount(Number(e.target.value) || 0)}
+                      placeholder="Digite o número de recomendações"
+                      disabled={isLoading}
+                    />
+                  ) : (
+                    <Input
+                      id="recommendations_count"
+                      type="number"
+                      value={recommendationsCount}
+                      disabled
+                      placeholder="Calculado automaticamente"
+                    />
+                  )}
+                </div>
+              </>
+            )}
           </div>
 
           {selectedFunnel?.stages && (

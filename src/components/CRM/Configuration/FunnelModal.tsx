@@ -30,6 +30,9 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
     name: '',
     verification_type: 'weekly' as 'daily' | 'weekly' | 'monthly',
     verification_day: 1,
+    sales_value_mode: 'manual' as 'manual' | 'sistema',
+    recommendations_mode: 'manual' as 'manual' | 'sistema',
+    recommendation_stage_id: ''
   });
   
   const [stages, setStages] = useState<FunnelStage[]>([
@@ -38,7 +41,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
   
   const [isLoading, setIsLoading] = useState(false);
 
-  const { companyId } = useCrmAuth();
+  const { companyId, crmUser } = useCrmAuth();
   const createFunnelMutation = useCreateFunnel();
   const updateFunnelMutation = useUpdateFunnel();
 
@@ -48,6 +51,9 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
         name: funnel.name,
         verification_type: funnel.verification_type,
         verification_day: funnel.verification_day || 1,
+        sales_value_mode: funnel.sales_value_mode || 'manual',
+        recommendations_mode: funnel.recommendations_mode || 'manual',
+        recommendation_stage_id: funnel.recommendation_stage_id || ''
       });
       if (funnel.stages && funnel.stages.length > 0) {
         setStages(funnel.stages.sort((a: any, b: any) => a.stage_order - b.stage_order));
@@ -57,6 +63,9 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
         name: '',
         verification_type: 'weekly',
         verification_day: 1,
+        sales_value_mode: 'manual',
+        recommendations_mode: 'manual',
+        recommendation_stage_id: ''
       });
       setStages([
         { name: '', stage_order: 1, target_percentage: 0, target_value: 0 }
@@ -160,7 +169,10 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
         verification_type: formData.verification_type,
         verification_day: formData.verification_type === 'daily' ? null : formData.verification_day,
         company_id: companyId,
-        status: 'active' as const
+        status: 'active' as const,
+        sales_value_mode: formData.sales_value_mode,
+        recommendations_mode: formData.recommendations_mode,
+        recommendation_stage_id: formData.recommendation_stage_id || null
       };
 
       if (funnel) {
@@ -183,7 +195,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
       onClose();
       
       // Reset form
-      setFormData({ name: '', verification_type: 'weekly', verification_day: 1 });
+      setFormData({ name: '', verification_type: 'weekly', verification_day: 1, sales_value_mode: 'manual', recommendations_mode: 'manual', recommendation_stage_id: '' });
       setStages([{ name: '', stage_order: 1, target_percentage: 0, target_value: 0 }]);
     } catch (error: any) {
       console.error('Erro ao salvar funil:', error);
@@ -239,6 +251,63 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                 </SelectContent>
               </Select>
             </div>
+
+            {/* CAMPOS RESTRITOS MASTER/ADMIN */}
+            {['master', 'admin'].includes(crmUser?.role) && (
+              <>
+                <div>
+                  <Label htmlFor="sales_value_mode">Valor das Vendas</Label>
+                  <Select
+                    value={formData.sales_value_mode}
+                    onValueChange={(value: 'manual' | 'sistema') => setFormData(prev => ({ ...prev, sales_value_mode: value }))}
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="manual">Manual</SelectItem>
+                      <SelectItem value="sistema">Sistema</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="recommendations_mode">Recomendações</Label>
+                  <Select
+                    value={formData.recommendations_mode}
+                    onValueChange={(value: 'manual' | 'sistema') => setFormData(prev => ({ ...prev, recommendations_mode: value }))}
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="manual">Manual</SelectItem>
+                      <SelectItem value="sistema">Sistema</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="recommendation_stage_id">Etapa ligada às Recomendações</Label>
+                  <Select
+                    value={formData.recommendation_stage_id}
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, recommendation_stage_id: value }))}
+                    disabled={isLoading || stages.length === 0}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione a etapa" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {stages.map((stage, idx) => (
+                        <SelectItem key={stage.id || idx} value={stage.id || ''}>
+                          {stage.name || `Etapa ${stage.stage_order}`}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </>
+            )}
 
             {formData.verification_type !== 'daily' && (
               <div>
