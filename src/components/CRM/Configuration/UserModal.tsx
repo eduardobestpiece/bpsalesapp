@@ -89,23 +89,19 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
         });
         toast.success('Usuário atualizado com sucesso!');
       } else {
-        // 1. Criar usuário no Supabase Auth
-        const { data, error } = await supabase.auth.admin.createUser({
-          email: formData.email.trim(),
-          password: 'Admin',
-          email_confirm: true,
+        // Chamar Edge Function invite-user
+        const res = await fetch('/functions/v1/invite-user', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: formData.email.trim(),
+            role: formData.role,
+            funnels: formData.funnels,
+            company_id: companyId
+          })
         });
-        if (error) throw error;
-        // 2. Inserir usuário na tabela crm_users
-        await createUserMutation.mutateAsync({
-          email: formData.email.trim(),
-          role: formData.role,
-          funnels: formData.funnels,
-          company_id: companyId,
-          status: 'active',
-          auth_id: data.user?.id
-        });
-        // 3. Enviar e-mail para redefinir senha (Supabase já envia por padrão, mas pode customizar aqui se necessário)
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.error || data);
         toast.success('Usuário convidado com sucesso! O usuário receberá um e-mail para redefinir a senha.');
       }
 
@@ -185,7 +181,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
             <Label htmlFor="role">Função *</Label>
             <Select
               value={formData.role}
-              onValueChange={(value: 'master' | 'admin' | 'leader' | 'user') => setFormData(prev => ({ ...prev, role: value }))}
+              onValueChange={(value: 'admin' | 'user') => setFormData(prev => ({ ...prev, role: value }))}
               disabled={isLoading}
             >
               <SelectTrigger>
@@ -193,9 +189,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="user">Usuário</SelectItem>
-                <SelectItem value="leader">Líder</SelectItem>
                 <SelectItem value="admin">Administrador</SelectItem>
-                <SelectItem value="master">Master</SelectItem>
               </SelectContent>
             </Select>
           </div>

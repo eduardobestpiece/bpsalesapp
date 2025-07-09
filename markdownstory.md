@@ -133,5 +133,6 @@
 
 - [ ] **08/07/2024** - Criada página de redefinição de senha comum e rota /crm/redefinir-senha. Deploy automático acionado. Aguardando validação do usuário.
 - [ ] **08/07/2024** - Ajustado fluxo de convite: criação automática no Supabase Auth (senha Admin, auto-confirmação), seleção de funis e modal de cadastro simplificado. Deploy automático acionado. Aguardando validação do usuário.
+- [ ] **08/07/2024** - Modal de edição de usuários ajustado: permite editar nome, sobrenome, telefone, função e funis. Deploy automático acionado. Aguardando validação do usuário.
 
 --- 
