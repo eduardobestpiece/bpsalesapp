@@ -378,17 +378,23 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.period_date || !formData.funnel_id) {
-      toast.error('Por favor, preencha todos os campos obrigatórios');
+    // Validação obrigatória
+    if (!formData.funnel_id) {
+      toast.error('Selecione um funil.');
       return;
     }
-
-    if (!crmUser) {
-      toast.error('Usuário não autenticado');
+    if (!periodStart || !periodEnd) {
+      toast.error('Selecione o período (data início e fim).');
       return;
     }
-
+    if (!monthReference) {
+      toast.error('Selecione o mês do período.');
+      return;
+    }
+    if (!yearReference) {
+      toast.error('Selecione o ano do período.');
+      return;
+    }
     setIsLoading(true);
 
     try {
@@ -404,8 +410,8 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         funnel_id: formData.funnel_id,
         period_start: periodStart,
         period_end: periodEnd,
-        month_reference: monthReference,
-        year_reference: yearReference,
+        month_reference: monthReference ? monthReference : null,
+        year_reference: yearReference ? yearReference : null,
         sales_value: parseMonetaryValue(salesValue),
         recommendations_count: recommendationsCount
       };
