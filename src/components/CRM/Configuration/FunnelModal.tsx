@@ -180,6 +180,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
     setIsLoading(true);
 
     try {
+      console.log('Valor enviado para recommendation_stage_id:', formData.recommendation_stage_id);
       const funnelData = {
         name: formData.name.trim(),
         verification_type: formData.verification_type,

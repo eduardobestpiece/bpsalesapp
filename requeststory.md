@@ -4,17 +4,15 @@
 **Solicitante:** Usuário
 
 ## Descrição
-Ajustar o campo "Etapa ligada às Recomendações" no modal de funil (`FunnelModal`):
-- No modal de **Novo Funil**, o campo deve ser dinâmico, permitindo selecionar entre as etapas criadas pelo usuário (nomes das fases adicionadas nas "Etapas do Funil").
-- No modal de **Editar Funil**, o campo deve ser editável, permitindo selecionar qualquer uma das fases já registradas.
-- O campo não deve ficar travado na última etapa, exceto se for a única.
-- Lembrar: nos indicadores, o cálculo da média de recomendações será o número de recomendações dividido pelo valor associado a esse campo.
+Debug do campo "Etapa ligada às Recomendações" no funil:
+- Confirmado que a coluna recommendation_stage_id já existe na tabela funnels do Supabase.
+- Próximo passo: debugar o frontend para garantir que o valor está sendo enviado corretamente ao Supabase e não está sendo sobrescrito antes do envio.
 
 ## Checklist
-- [ ] Ajustar lógica do campo no modal de Novo Funil
-- [ ] Ajustar lógica do campo no modal de Editar Funil
-- [ ] Garantir atualização dinâmica conforme etapas
-- [ ] Testar comportamento no frontend
+- [x] Verificar estrutura do banco e existência da coluna
+- [ ] Analisar montagem do objeto funnelData no frontend
+- [ ] Garantir que o valor correto está sendo enviado no update/insert
+- [ ] Testar fluxo completo de criação e edição
 - [ ] Realizar deploy
 
 ## Status
