@@ -184,18 +184,18 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
             }
           }
         }
-        // Obter todos os períodos já registrados pelo usuário (como string 'YYYY-MM-DD_YYYY-MM-DD')
+        // Sempre derive os períodos já registrados e o último registro APENAS de indicadoresUsuario (filtrados por funil e usuário)
+        // Isso garante que cada funil/usuário tem sua própria linha do tempo de registros
         const periodosRegistradosUsuario = indicadoresUsuario ? indicadoresUsuario.map(ind => {
           if (ind.period_start && ind.period_end) {
             return `${ind.period_start}_${ind.period_end}`;
           }
           return '';
         }) : [];
-        // Na filtragem dos períodos disponíveis (para semanal/mensal):
         const ultimoRegistroUsuario = indicadoresUsuario && indicadoresUsuario.length > 0
-          ? indicadoresUsuario.sort((a, b) => b.period_date.localeCompare(a.period_date))[0]
+          ? indicadoresUsuario.sort((a, b) => new Date(b.period_end).getTime() - new Date(a.period_end).getTime())[0]
           : null;
-        const ultimoRegistrado = ultimoRegistroUsuario ? new Date(ultimoRegistroUsuario.period_end) : null;
+        // Na filtragem dos períodos disponíveis (para semanal/mensal):
         periodOptions = todosPeriodos
           .filter(opt => {
             let primeiroDiaPeriodo = null;
@@ -206,7 +206,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
               primeiroDiaPeriodo = new Date(opt.value);
             }
             // Só mostrar períodos cujo início seja estritamente maior que o period_end do último registro
-            return (!ultimoRegistrado || primeiroDiaPeriodo > ultimoRegistrado)
+            return (!ultimoRegistroUsuario || primeiroDiaPeriodo > ultimoRegistroUsuario.period_end)
               && primeiroDiaPeriodo < hoje
               && !periodosRegistradosUsuario.includes(identificadorPeriodo);
           })
