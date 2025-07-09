@@ -88,4 +88,17 @@
 
 **Status:** Concluído e aguardando validação do usuário.
 
+## 2024-07-08 - Concluído
+
+- Reformulação completa do filtro de indicadores (CRM):
+  - Remoção do campo de filtro de texto.
+  - Botão de filtro (ícone) ao lado do botão "Registrar Indicador".
+  - Modal "Filtros de indicadores" com opções: período, mês, ano, funil, equipe e usuário (dinâmicos).
+  - Filtros aplicados à listagem de indicadores em tempo real.
+  - Botão "Limpar filtros" para remover todos os filtros.
+- Testes realizados e checklist atualizado.
+- Pronto para deploy.
+
+**Status:** Concluído e aguardando validação do usuário.
+
 --- 

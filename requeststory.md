@@ -5,18 +5,30 @@
 **Solicitante:** Usuário
 
 **Descrição:**
-Melhorias no Modal de Alterar Período (CRM):
+Reformulação do filtro de indicadores (CRM):
 
-- Exibir o período preenchido e todos os períodos dos últimos 90 dias que ainda não foram preenchidos no campo "Período".
-- Para o campo mês e ano, preencher automaticamente com base na data fim do período selecionado. Se o período ocupar dois meses ou dois anos, selecionar automaticamente o mês/ano da data fim, mas manter o campo editável.
-- Se o usuário fizer seleção em massa, ao salvar, o mês/ano escolhido será aplicado para todos os itens selecionados. Se selecionar apenas um, o valor será salvo apenas para aquele indicador.
+- Remover o campo de filtro de texto atual.
+- Adicionar botão de filtro (ícone) ao lado esquerdo do botão "Registrar Indicador".
+- Ao clicar, abrir modal "Filtros de indicadores".
+- Permitir ao usuário retirar todos os filtros (botão "Limpar filtros").
+- Opções de filtro:
+  - Filtrar por período (campo de data início e data fim)
+  - Filtrar por mês
+  - Filtrar por ano
+  - Filtrar por funil (apenas se o usuário tiver acesso a 2 funis ou mais)
+  - Filtrar por equipe (apenas para administradores e master)
+  - Filtrar por usuário (apenas para administradores e master)
+- Aplicar filtros à listagem de indicadores.
+- Garantir que o usuário pode remover filtros facilmente.
 
 **Checklist:**
 - [ ] Atualizar requeststory.md com a nova requisição.
-- [ ] Exibir o período preenchido e todos os períodos dos últimos 90 dias ainda não preenchidos.
-- [ ] Garantir preenchimento automático de mês/ano com base na data fim do período selecionado, mantendo campo editável.
-- [ ] Seleção em massa: aplicar mês/ano para todos os itens selecionados ao salvar.
-- [ ] Testar todos os fluxos (seleção única e múltipla).
+- [ ] Remover campo de filtro de texto atual.
+- [ ] Adicionar botão de filtro (ícone) ao lado esquerdo do botão "Registrar Indicador".
+- [ ] Criar modal "Filtros de indicadores" com todas as opções.
+- [ ] Permitir limpar todos os filtros.
+- [ ] Aplicar filtros à listagem de indicadores.
+- [ ] Testar todos os fluxos.
 - [ ] Atualizar histórico e checklist.
 - [ ] Executar deploy.
 - [ ] Solicitar validação do usuário.

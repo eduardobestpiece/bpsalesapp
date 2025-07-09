@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Edit, Archive, Trash2 } from 'lucide-react';
+import { Plus, Search, Edit, Archive, Trash2, Filter } from 'lucide-react';
 import { IndicatorModal } from '@/components/CRM/IndicatorModal';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useIndicators } from '@/hooks/useIndicators';
@@ -16,6 +16,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useEffect } from 'react';
+import { DatePicker } from '@/components/ui/datepicker'; // Supondo que existe um componente de datepicker
+import { useTeams } from '@/hooks/useTeams';
+import { useCrmUsers } from '@/hooks/useCrmUsers';
 
 const CrmIndicadores = () => {
   const [showModal, setShowModal] = useState(false);
@@ -25,6 +28,8 @@ const CrmIndicadores = () => {
   const companyId = crmUser?.company_id || '';
   const { data: indicators, isLoading: isIndicatorsLoading } = useIndicators(companyId, crmUser?.id);
   const { data: funnels, isLoading: isFunnelsLoading } = useFunnels(companyId, 'active');
+  const { data: teams = [] } = useTeams();
+  const { data: crmUsers = [] } = useCrmUsers();
 
   // Configuração de colunas por funil
   const [showColumnsModal, setShowColumnsModal] = useState(false);
@@ -91,10 +96,35 @@ const CrmIndicadores = () => {
     setSelectedIndicator(null);
   };
 
-  const filteredIndicators = (indicators || []).filter(indicator =>
-    (indicator.period_date || '').includes(searchTerm) ||
-    (indicator.funnel_name || '').toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const [showFiltersModal, setShowFiltersModal] = useState(false);
+  const [filters, setFilters] = useState({
+    periodStart: '',
+    periodEnd: '',
+    month: '',
+    year: '',
+    funnelId: '',
+    teamId: '',
+    userId: ''
+  });
+
+  const filteredIndicators = (indicators || []).filter(indicator => {
+    // Filtro por período
+    if (filters.periodStart && filters.periodEnd) {
+      if (!indicator.period_start || !indicator.period_end) return false;
+      if (indicator.period_start < filters.periodStart || indicator.period_end > filters.periodEnd) return false;
+    }
+    // Filtro por mês
+    if (filters.month && String(indicator.month_reference) !== String(filters.month)) return false;
+    // Filtro por ano
+    if (filters.year && String(indicator.year_reference) !== String(filters.year)) return false;
+    // Filtro por funil
+    if (filters.funnelId && indicator.funnel_id !== filters.funnelId) return false;
+    // Filtro por equipe (apenas admin/master)
+    if (filters.teamId && indicator.team_id !== filters.teamId) return false;
+    // Filtro por usuário (apenas admin/master)
+    if (filters.userId && indicator.user_id !== filters.userId) return false;
+    return true;
+  });
 
   // Agrupar indicadores por funil
   const indicatorsByFunnel: Record<string, any[]> = {};
@@ -152,24 +182,20 @@ const CrmIndicadores = () => {
                         Registre seus números por período e funil
                       </CardDescription>
                     </div>
-                    <Button onClick={() => setShowModal(true)}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Registrar Indicador
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="outline" onClick={() => setShowFiltersModal(true)}>
+                        <Filter className="w-4 h-4 mr-2" />
+                        Filtros
+                      </Button>
+                      <Button onClick={() => setShowModal(true)}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Registrar Indicador
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="mb-4">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                      <Input
-                        placeholder="Pesquisar por data ou funil..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
+                  {/* Remover campo de filtro de texto */}
                       <div className="space-y-8">
                         {isIndicatorsLoading || isFunnelsLoading ? (
                       <p className="text-muted-foreground text-center py-8">
@@ -360,6 +386,89 @@ const CrmIndicadores = () => {
           </div>
         </div>
       </main>
+      {/* Modal de Filtros de Indicadores */}
+      {showFiltersModal && (
+        <Dialog open={showFiltersModal} onOpenChange={setShowFiltersModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Filtros de indicadores</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              {/* Filtro por período */}
+              <div className="flex gap-2 items-end">
+                <div>
+                  <label>Data início</label>
+                  <input type="date" value={filters.periodStart} onChange={e => setFilters(f => ({ ...f, periodStart: e.target.value }))} className="block border rounded px-2 py-1" />
+                </div>
+                <div>
+                  <label>Data fim</label>
+                  <input type="date" value={filters.periodEnd} onChange={e => setFilters(f => ({ ...f, periodEnd: e.target.value }))} className="block border rounded px-2 py-1" />
+                </div>
+              </div>
+              {/* Filtro por mês */}
+              <div>
+                <label>Mês</label>
+                <select value={filters.month} onChange={e => setFilters(f => ({ ...f, month: e.target.value }))} className="block border rounded px-2 py-1">
+                  <option value="">Todos</option>
+                  {[...Array(12)].map((_, i) => (
+                    <option key={i+1} value={i+1}>{new Date(2000, i, 1).toLocaleString('pt-BR', { month: 'long' })}</option>
+                  ))}
+                </select>
+              </div>
+              {/* Filtro por ano */}
+              <div>
+                <label>Ano</label>
+                <select value={filters.year} onChange={e => setFilters(f => ({ ...f, year: e.target.value }))} className="block border rounded px-2 py-1">
+                  <option value="">Todos</option>
+                  {Array.from({length: 5}, (_, i) => new Date().getFullYear() - i).map(y => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </div>
+              {/* Filtro por funil (se houver 2+) */}
+              {funnels && funnels.length > 1 && (
+                <div>
+                  <label>Funil</label>
+                  <select value={filters.funnelId} onChange={e => setFilters(f => ({ ...f, funnelId: e.target.value }))} className="block border rounded px-2 py-1">
+                    <option value="">Todos</option>
+                    {funnels.map(f => (
+                      <option key={f.id} value={f.id}>{f.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              {/* Filtro por equipe (apenas admin/master) */}
+              {(crmUser?.role === 'admin' || crmUser?.role === 'master') && (
+                <div>
+                  <label>Equipe</label>
+                  <select value={filters.teamId} onChange={e => setFilters(f => ({ ...f, teamId: e.target.value }))} className="block border rounded px-2 py-1">
+                    <option value="">Todas</option>
+                    {teams.map(team => (
+                      <option key={team.id} value={team.id}>{team.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              {/* Filtro por usuário (apenas admin/master) */}
+              {(crmUser?.role === 'admin' || crmUser?.role === 'master') && (
+                <div>
+                  <label>Usuário</label>
+                  <select value={filters.userId} onChange={e => setFilters(f => ({ ...f, userId: e.target.value }))} className="block border rounded px-2 py-1">
+                    <option value="">Todos</option>
+                    {crmUsers.map(user => (
+                      <option key={user.id} value={user.id}>{user.first_name} {user.last_name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              <div className="flex gap-2 justify-end pt-2">
+                <Button type="button" variant="outline" onClick={() => setFilters({ periodStart: '', periodEnd: '', month: '', year: '', funnelId: '', teamId: '', userId: '' })}>Limpar filtros</Button>
+                <Button type="button" onClick={() => setShowFiltersModal(false)}>Aplicar</Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };
