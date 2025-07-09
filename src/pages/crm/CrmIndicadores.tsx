@@ -132,9 +132,12 @@ const CrmIndicadores = () => {
                                         <th className="px-2 py-1 text-left font-semibold">Período</th>
                                         <th className="px-2 py-1 text-left font-semibold">Mês</th>
                                         <th className="px-2 py-1 text-left font-semibold">Ano</th>
-                                        {sortedStages.map((stage: any) => (
-                                          <th key={stage.id} className="px-2 py-1 text-left font-semibold">{stage.name}</th>
-                                        ))}
+                                        <th className="px-2 py-1 text-left font-semibold">Última etapa</th>
+                                        <th className="px-2 py-1 text-left font-semibold">Valor das Vendas</th>
+                                        <th className="px-2 py-1 text-left font-semibold">Ticket Médio</th>
+                                        <th className="px-2 py-1 text-left font-semibold">Taxa de conversão</th>
+                                        <th className="px-2 py-1 text-left font-semibold">Conversão do funil</th>
+                                        <th className="px-2 py-1 text-left font-semibold">Média de Recomendações</th>
                                         <th className="px-2 py-1 text-center font-semibold">Ações</th>
                                       </tr>
                                     </thead>
@@ -144,22 +147,48 @@ const CrmIndicadores = () => {
                                           <td colSpan={3 + sortedStages.length + 1} className="text-muted-foreground text-center py-4">Nenhum indicador registrado para este funil.</td>
                                         </tr>
                                       ) : (
-                                        funnelIndicators.map((indicator) => (
-                                          <tr key={indicator.id} className="bg-white border-b last:border-b-0">
-                                            <td className="px-2 py-1">{
-                                              indicator.period_start && indicator.period_end
-                                                ? `De ${new Date(indicator.period_start).toLocaleDateString('pt-BR')} até ${new Date(indicator.period_end).toLocaleDateString('pt-BR')}`
-                                                : '-'
-                                            }</td>
-                                            <td className="px-2 py-1">{String(indicator.month_reference).padStart(2, '0')}</td>
-                                            <td className="px-2 py-1">{indicator.year_reference}</td>
-                                            {sortedStages.map((stage: any) => {
-                                              const valueObj = (indicator.values || []).find((v: any) => v.stage_id === stage.id);
-                                              return (
-                                                <td key={stage.id} className="px-2 py-1 text-center">{valueObj ? valueObj.value : '-'}</td>
-                                              );
-                                            })}
-                                            <td className="px-2 py-1 text-center">
+                                        funnelIndicators.map((indicator) => {
+                                          // Cálculos auxiliares
+                                          const lastStage = sortedStages[sortedStages.length - 1];
+                                          const penultimateStage = sortedStages[sortedStages.length - 2];
+                                          const firstStage = sortedStages[0];
+                                          const lastValue = (indicator.values || []).find((v: any) => v.stage_id === lastStage?.id)?.value || 0;
+                                          const penultimateValue = (indicator.values || []).find((v: any) => v.stage_id === penultimateStage?.id)?.value || 0;
+                                          const firstValue = (indicator.values || []).find((v: any) => v.stage_id === firstStage?.id)?.value || 0;
+                                          const salesValue = indicator.sales_value || 0;
+                                          const recommendationsCount = indicator.recommendations_count || 0;
+                                          // Ticket Médio
+                                          const ticketMedio = lastValue > 0 ? salesValue / lastValue : 0;
+                                          // Taxa de conversão
+                                          const taxaConversao = penultimateValue > 0 ? (lastValue / penultimateValue) * 100 : 0;
+                                          // Conversão do funil
+                                          const conversaoFunil = firstValue > 0 ? (lastValue / firstValue) * 100 : 0;
+                                          // Média de Recomendações (associada à última etapa)
+                                          const mediaRecomendacoes = lastValue > 0 ? recommendationsCount / lastValue : 0;
+                                          return (
+                                            <tr key={indicator.id} className="bg-white border-b last:border-b-0">
+                                              {/* Período, Mês, Ano já existentes */}
+                                              <td className="px-2 py-1">{
+                                                indicator.period_start && indicator.period_end
+                                                  ? `De ${new Date(indicator.period_start).toLocaleDateString('pt-BR')} até ${new Date(indicator.period_end).toLocaleDateString('pt-BR')}`
+                                                  : '-'
+                                              }</td>
+                                              <td className="px-2 py-1">{String(indicator.month_reference).padStart(2, '0')}</td>
+                                              <td className="px-2 py-1">{indicator.year_reference}</td>
+                                              {/* Última etapa */}
+                                              <td className="px-2 py-1">{lastStage?.name || '-'}</td>
+                                              {/* Valor das vendas */}
+                                              <td className="px-2 py-1">{salesValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
+                                              {/* Ticket Médio */}
+                                              <td className="px-2 py-1">{ticketMedio > 0 ? ticketMedio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</td>
+                                              {/* Taxa de conversão */}
+                                              <td className="px-2 py-1">{penultimateValue > 0 ? taxaConversao.toFixed(1) + '%' : '-'}</td>
+                                              {/* Conversão do funil */}
+                                              <td className="px-2 py-1">{firstValue > 0 ? conversaoFunil.toFixed(1) + '%' : '-'}</td>
+                                              {/* Média de Recomendações */}
+                                              <td className="px-2 py-1">{lastValue > 0 ? mediaRecomendacoes.toFixed(2) : '-'}</td>
+                                              {/* Ações */}
+                                              <td className="px-2 py-1 text-center">
                                               <div className="flex gap-2 justify-center">
                             <Button
                               variant="outline"
