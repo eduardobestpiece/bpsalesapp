@@ -60,3 +60,15 @@ Reformulação do filtro de indicadores (CRM):
 - Alteração de período só pode ocorrer se todos os selecionados tiverem períodos iguais.
 - Ao clicar em Alterar Período, abrir o modal de Alterar Período.
 - Próximos passos: planejar e implementar as ações em massa conforme regras acima. 
+
+## 2024-07-08 - Solicitação de redesign da página de indicadores
+
+- Exibir todos os indicadores em uma única tabela (sem separação por funil).
+- Campo de seleção de funil fixo ao lado esquerdo dos filtros (sempre visível).
+- Remover seleção de funil do modal de filtros.
+- Primeira coluna: bolinha colorida (verde, amarela ou vermelha) indicando status do prazo.
+- Segunda coluna: checkbox para seleção múltipla.
+- Colunas principais: Período, Última Etapa (com valor), Média de Recomendações, Ações, etc.
+- Menu de ações por linha e menu de ações em massa acima da tabela.
+- Visual mais limpo: linhas alternadas, cabeçalho fixo, bordas arredondadas, espaçamento confortável, mantendo as cores da plataforma.
+- Próximos passos: refatorar layout, ajustar filtros e colunas, aplicar novo visual e testar. 

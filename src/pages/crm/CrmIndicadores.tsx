@@ -114,12 +114,13 @@ const CrmIndicadores = () => {
   };
 
   const [showFiltersModal, setShowFiltersModal] = useState(false);
+  // Estado para seleção de funil fixa
+  const [selectedFunnelId, setSelectedFunnelId] = useState<string>('');
   const [filters, setFilters] = useState({
     periodStart: '',
     periodEnd: '',
     month: '',
     year: '',
-    funnelId: '',
     teamId: '',
     userId: ''
   });
@@ -134,8 +135,9 @@ const CrmIndicadores = () => {
     // Usuário comum vê apenas os próprios
     accessibleIndicators = accessibleIndicators.filter(ind => ind.user_id === crmUser.id);
   }
-  // Filtros adicionais (modal)
+  // Filtrar indicadores pelo funil selecionado
   const filteredIndicators = (accessibleIndicators || []).filter(indicator => {
+    if (selectedFunnelId && indicator.funnel_id !== selectedFunnelId) return false;
     // Filtro por período
     if (filters.periodStart && filters.periodEnd) {
       if (!indicator.period_start || !indicator.period_end) return false;
@@ -145,22 +147,11 @@ const CrmIndicadores = () => {
     if (filters.month && String(indicator.month_reference) !== String(filters.month)) return false;
     // Filtro por ano
     if (filters.year && String(indicator.year_reference) !== String(filters.year)) return false;
-    // Filtro por funil
-    if (filters.funnelId && indicator.funnel_id !== filters.funnelId) return false;
     // Filtro por equipe (apenas admin/master)
     if (filters.teamId && indicator.team_id !== filters.teamId) return false;
     // Filtro por usuário (apenas admin/master)
     if (filters.userId && indicator.user_id !== filters.userId) return false;
     return true;
-  });
-
-  // Agrupar indicadores por funil (usando os filtrados)
-  const filteredIndicatorsByFunnel: Record<string, any[]> = {};
-  (filteredIndicators || []).forEach((indicator) => {
-    if (!filteredIndicatorsByFunnel[indicator.funnel_id]) {
-      filteredIndicatorsByFunnel[indicator.funnel_id] = [];
-    }
-    filteredIndicatorsByFunnel[indicator.funnel_id].push(indicator);
   });
 
   // Adicionar estado para seleção em massa
@@ -536,7 +527,7 @@ const CrmIndicadores = () => {
               {funnels && funnels.length > 1 && (
                 <div>
                   <label>Funil</label>
-                  <select value={filters.funnelId} onChange={e => setFilters(f => ({ ...f, funnelId: e.target.value }))} className="block border rounded px-2 py-1">
+                  <select value={selectedFunnelId} onChange={e => setSelectedFunnelId(e.target.value)} className="block border rounded px-2 py-1">
                     <option value="">Todos</option>
                     {funnels.map(f => (
                       <option key={f.id} value={f.id}>{f.name}</option>
