@@ -351,15 +351,28 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
       const { months, years } = getAllMonthsAndYears(periodStart, periodEnd);
       setMonthOptions(months);
       setYearOptions(years);
-      if (months.length === 1) setMonthReference(months[0]);
-      else setMonthReference(null);
-      if (years.length === 1) setYearReference(years[0]);
-      else setYearReference(null);
+      console.log('[Indicador] Meses encontrados no período:', months);
+      console.log('[Indicador] Anos encontrados no período:', years);
+      if (months.length === 1) {
+        setMonthReference(months[0]);
+        console.log('[Indicador] Mês setado automaticamente:', months[0]);
+      } else {
+        setMonthReference(null);
+        console.warn('[Indicador] Mais de um mês encontrado, selecione manualmente.');
+      }
+      if (years.length === 1) {
+        setYearReference(years[0]);
+        console.log('[Indicador] Ano setado automaticamente:', years[0]);
+      } else {
+        setYearReference(null);
+        console.warn('[Indicador] Mais de um ano encontrado, selecione manualmente.');
+      }
     } else {
       setMonthOptions([]);
       setYearOptions([]);
       setMonthReference(null);
       setYearReference(null);
+      console.warn('[Indicador] Período não selecionado.');
     }
   }, [periodStart, periodEnd]);
 
@@ -490,7 +503,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
             {/* Campo Mês */}
             <div>
               <label>Mês *</label>
-              {monthOptions.length === 1 ? (
+              {monthOptions.length === 1 && monthReference ? (
                 <div>{new Date(2000, monthReference - 1, 1).toLocaleString('pt-BR', { month: 'long' })}</div>
               ) : (
                 <select value={monthReference ?? ''} onChange={e => setMonthReference(Number(e.target.value))} required>
@@ -505,7 +518,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
             {/* Campo Ano */}
             <div>
               <label>Ano *</label>
-              {yearOptions.length === 1 ? (
+              {yearOptions.length === 1 && yearReference ? (
                 <div>{yearReference}</div>
               ) : (
                 <select value={yearReference ?? ''} onChange={e => setYearReference(Number(e.target.value))} required>
