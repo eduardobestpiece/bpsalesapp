@@ -66,7 +66,12 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   // Filtrar apenas registros com period_end válido
   const indicadoresUsuarioValidos = indicadoresUsuario.filter(ind => !!ind.period_end);
   const ultimoRegistroUsuario = indicadoresUsuarioValidos.length > 0
-    ? indicadoresUsuarioValidos.sort((a, b) => new Date(b.period_end).getTime() - new Date(a.period_end).getTime())[0]
+    ? indicadoresUsuarioValidos.sort((a, b) => {
+        // Proteger contra period_end nulo
+        const aDate = a.period_end ? new Date(a.period_end).getTime() : 0;
+        const bDate = b.period_end ? new Date(b.period_end).getTime() : 0;
+        return bDate - aDate;
+      })[0]
     : null;
 
   const hoje = new Date();
@@ -204,7 +209,12 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
           return '';
         }) : [];
         const ultimoRegistroUsuario = indicadoresUsuario && indicadoresUsuario.length > 0
-          ? indicadoresUsuario.sort((a, b) => new Date(b.period_end).getTime() - new Date(a.period_end).getTime())[0]
+          ? indicadoresUsuario.sort((a, b) => {
+              // Proteger contra period_end nulo
+              const aDate = a.period_end ? new Date(a.period_end).getTime() : 0;
+              const bDate = b.period_end ? new Date(b.period_end).getTime() : 0;
+              return bDate - aDate;
+            })[0]
           : null;
         console.log('[DEBUG] Todos os períodos possíveis:', todosPeriodos.map(p => p.value));
         console.log('[DEBUG] Último registro do usuário:', ultimoRegistroUsuario);
