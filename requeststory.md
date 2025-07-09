@@ -5,6 +5,7 @@
 ## Descrição
 Correção de crash ao registrar indicador:
 - Proteção contra null/undefined em todos os usos de `.includes` em arrays (ex: periodosUsuario, periodosRegistrados, roles).
+- Garantido que periodosUsuario e periodosRegistrados nunca sejam null/undefined, sempre arrays.
 - Ajuste do input de valor de vendas para aceitar formato brasileiro (type="text"), convertendo apenas ao salvar.
 - Deploy automático realizado.
 

@@ -33,7 +33,7 @@ const CrmIndicadores = () => {
   };
 
   const filteredIndicators = (indicators || []).filter(indicator =>
-    indicator.period_date.includes(searchTerm) ||
+    (indicator.period_date || '').includes(searchTerm) ||
     (indicator.funnel_name || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
