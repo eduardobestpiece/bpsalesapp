@@ -52,29 +52,41 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
 
   // NOVA LÓGICA DE PERÍODOS
   let periodOptions: { label: string; value: string; isMissing?: boolean; isAllowed?: boolean }[] = [];
-  let periodosRegistrados: string[] = [];
-  let periodosUsuario: string[] = [];
-  let ultimoPeriodoUsuario: string | null = null;
+  const periodosRegistrados: string[] = Array.isArray(indicators) ? (indicators.filter(
+    (ind) =>
+      selectedFunnel &&
+      ind.funnel_id === selectedFunnel.id &&
+      ind.month_reference === formData.month_reference &&
+      ind.year_reference === formData.year_reference
+  ).map((ind) => ind.period_date)) : [];
+  const indicadoresUsuario = Array.isArray(indicators) && selectedFunnel && crmUser ? indicators.filter(
+    (ind) => ind.funnel_id === selectedFunnel.id && ind.user_id === crmUser.id
+  ) : [];
+  const periodosUsuario: string[] = indicadoresUsuario ? indicadoresUsuario.map((ind) => ind.period_date) : [];
+  const ultimoPeriodoUsuario: string | null = indicadoresUsuario && indicadoresUsuario.length > 0
+    ? indicadoresUsuario.sort((a, b) => b.period_date.localeCompare(a.period_date))[0].period_date
+    : null;
+
   const hoje = new Date();
 
   if (selectedFunnel && formData.month_reference && formData.year_reference && crmUser) {
     // Filtrar indicadores do usuário para o funil selecionado
-    const indicadoresUsuario = (indicators || []).filter(
-      (ind) => ind.funnel_id === selectedFunnel.id && ind.user_id === crmUser.id
-    );
-    periodosUsuario = indicadoresUsuario.map((ind) => ind.period_date);
-    ultimoPeriodoUsuario = indicadoresUsuario.length > 0
-      ? indicadoresUsuario.sort((a, b) => b.period_date.localeCompare(a.period_date))[0].period_date
-      : null;
+    // const indicadoresUsuario = (indicators || []).filter(
+    //   (ind) => ind.funnel_id === selectedFunnel.id && ind.user_id === crmUser.id
+    // );
+    // periodosUsuario = indicadoresUsuario.map((ind) => ind.period_date);
+    // ultimoPeriodoUsuario = indicadoresUsuario.length > 0
+    //   ? indicadoresUsuario.sort((a, b) => b.period_date.localeCompare(a.period_date))[0].period_date
+    //   : null;
 
     // Períodos já registrados por todos usuários (para bloqueio visual)
-    periodosRegistrados = (indicators || [])
-      .filter((ind) =>
-        ind.funnel_id === selectedFunnel.id &&
-        ind.month_reference === formData.month_reference &&
-        ind.year_reference === formData.year_reference
-      )
-      .map((ind) => ind.period_date);
+    // periodosRegistrados = (indicators || [])
+    //   .filter((ind) =>
+    //     ind.funnel_id === selectedFunnel.id &&
+    //     ind.month_reference === formData.month_reference &&
+    //     ind.year_reference === formData.year_reference
+    //   )
+    //   .map((ind) => ind.period_date);
 
     // Gerar todos os períodos possíveis para o mês/ano/funil
     let todosPeriodos: { label: string; value: string }[] = [];
