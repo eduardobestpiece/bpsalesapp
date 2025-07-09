@@ -14,6 +14,12 @@
 - O campo só fica travado se houver apenas uma etapa.
 - Commit realizado e deploy automático efetuado.
 
+## [Preencher com data/hora atual] - Correção da persistência do campo "Etapa ligada às Recomendações"
+
+- O campo agora sempre salva e recupera o id da etapa (UUID), nunca o índice.
+- O valor selecionado permanece corretamente ao reabrir o modal de edição ou após criar um novo funil.
+- Commit realizado e deploy automático efetuado.
+
 ## 2024-07-08
 
 - **Implementação da persistência das etapas do funil (funnel_stages)**

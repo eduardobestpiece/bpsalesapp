@@ -75,8 +75,9 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
 
   // Ajuste: garantir que recommendation_stage_id sempre seja o id da etapa
   useEffect(() => {
-    // Se não houver valor selecionado e houver etapas, selecionar a primeira etapa válida
+    // Só preenche automaticamente se NÃO estiver editando (ou seja, criando novo funil)
     if (
+      !funnel &&
       stages.length > 0 &&
       stages.filter(stage => !!stage.name).length > 0 &&
       !formData.recommendation_stage_id
@@ -86,7 +87,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
         setFormData(prev => ({ ...prev, recommendation_stage_id: firstStageWithId.id }));
       }
     }
-  }, [stages, formData.recommendation_stage_id]);
+  }, [stages, formData.recommendation_stage_id, funnel]);
 
   const addStage = () => {
     const newStage: FunnelStage = {
