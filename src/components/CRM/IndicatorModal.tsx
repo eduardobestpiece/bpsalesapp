@@ -347,18 +347,24 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
 
   // Função para extrair datas do valor do select de período
   function extractPeriodDates(periodString: string) {
-    // Exemplo: 'De 20/06/2025 até 26/06/2025'
+    // Formato 1: 'YYYY-MM-DD_YYYY-MM-DD'
+    if (periodString.includes('_')) {
+      const [start, end] = periodString.split('_');
+      console.log('[Indicador] Extraído (ISO):', start, end);
+      return { start, end };
+    }
+    // Formato 2: 'De dd/mm/yyyy até dd/mm/yyyy'
     const match = periodString.match(/(\d{2}\/\d{2}\/\d{4}).*?(\d{2}\/\d{2}\/\d{4})/);
     if (match) {
       const [_, start, end] = match;
-      // Converter para formato YYYY-MM-DD
       const [d1, m1, y1] = start.split('/');
       const [d2, m2, y2] = end.split('/');
-      return {
-        start: `${y1}-${m1}-${d1}`,
-        end: `${y2}-${m2}-${d2}`
-      };
+      const s = `${y1}-${m1}-${d1}`;
+      const e = `${y2}-${m2}-${d2}`;
+      console.log('[Indicador] Extraído (extenso):', s, e);
+      return { start: s, end: e };
     }
+    console.warn('[Indicador] Não foi possível extrair datas do período:', periodString);
     return { start: '', end: '' };
   }
 
