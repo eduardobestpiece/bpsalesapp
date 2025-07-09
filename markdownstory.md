@@ -1,5 +1,12 @@
 # Histórico de Atividades
 
+## [Preencher com data/hora atual] - Correção do campo "Etapa ligada às Recomendações" no FunnelModal
+
+- O campo agora sempre exibe apenas a última etapa cadastrada no funil, conforme a regra de negócio.
+- O valor é atualizado automaticamente ao adicionar ou remover etapas.
+- Campo ficou desabilitado para edição manual, garantindo integridade.
+- Commit realizado e deploy automático efetuado.
+
 ## 2024-07-08
 
 - **Implementação da persistência das etapas do funil (funnel_stages)**

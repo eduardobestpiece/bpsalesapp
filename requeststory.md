@@ -4,13 +4,17 @@
 **Solicitante:** Usuário
 
 ## Descrição
-Corrigir o campo "Etapa ligada às Recomendações" no modal de edição de funil (`FunnelModal`) para que sempre mostre a última etapa cadastrada, mesmo que o usuário ainda não tenha salvo o funil. Atualmente, o campo permite selecionar qualquer etapa, mas a regra de negócio é que recomendações estejam sempre ligadas à última etapa do funil.
+Ajustar o campo "Etapa ligada às Recomendações" no modal de funil (`FunnelModal`):
+- No modal de **Novo Funil**, o campo deve ser dinâmico, permitindo selecionar entre as etapas criadas pelo usuário (nomes das fases adicionadas nas "Etapas do Funil").
+- No modal de **Editar Funil**, o campo deve ser editável, permitindo selecionar qualquer uma das fases já registradas.
+- O campo não deve ficar travado na última etapa, exceto se for a única.
+- Lembrar: nos indicadores, o cálculo da média de recomendações será o número de recomendações dividido pelo valor associado a esse campo.
 
 ## Checklist
-- [ ] Analisar o componente FunnelModal e a lógica de etapas
-- [ ] Ajustar o campo para exibir apenas a última etapa cadastrada
-- [ ] Garantir que o valor seja atualizado ao adicionar/remover etapas
-- [ ] Testar o comportamento no frontend
+- [ ] Ajustar lógica do campo no modal de Novo Funil
+- [ ] Ajustar lógica do campo no modal de Editar Funil
+- [ ] Garantir atualização dinâmica conforme etapas
+- [ ] Testar comportamento no frontend
 - [ ] Realizar deploy
 
 ## Status
