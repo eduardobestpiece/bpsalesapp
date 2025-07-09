@@ -31,15 +31,15 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   });
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFunnel, setSelectedFunnel] = useState<any>(null);
-  const [salesValue, setSalesValue] = useState('0,00');
+  const [salesValue, setSalesValue] = useState('');
   const [recommendationsCount, setRecommendationsCount] = useState(0);
   const [isAutoLoading, setIsAutoLoading] = useState(false);
   const [periodStart, setPeriodStart] = useState('');
   const [periodEnd, setPeriodEnd] = useState('');
-  const [monthOptions, setMonthOptions] = useState<string[]>([]);
+  const [monthOptions, setMonthOptions] = useState<number[]>([]);
   const [yearOptions, setYearOptions] = useState<number[]>([]);
-  const [monthReference, setMonthReference] = useState('');
-  const [yearReference, setYearReference] = useState('');
+  const [monthReference, setMonthReference] = useState<number | null>(null);
+  const [yearReference, setYearReference] = useState<number | null>(null);
 
   // Garantir que o companyId está correto (fallback para o do usuário logado)
   const { crmUser } = useCrmAuth();
@@ -324,47 +324,45 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     }
   }, [selectedFunnel, crmUser, formData.funnel_id, formData.period_date, companyId]);
 
-  // Função para extrair meses/anos do período
-  function getMonthsAndYears(start: string, end: string) {
+  // Função para converter string monetária para número
+  function parseMonetaryValue(value: string) {
+    if (!value) return 0;
+    return Number(value.replace(/\./g, '').replace(',', '.'));
+  }
+  // Função para extrair meses e anos do período
+  function getMonthYearOptions(start: string, end: string) {
     if (!start || !end) return { months: [], years: [] };
     const startDate = new Date(start);
     const endDate = new Date(end);
-    let months: string[] = [];
-    let years: number[] = [];
+    let months = [];
+    let years = [];
     let d = new Date(startDate);
     while (d <= endDate) {
-      const m = d.toLocaleString('pt-BR', { month: 'long' });
+      const m = d.getMonth() + 1;
       const y = d.getFullYear();
       if (!months.includes(m)) months.push(m);
       if (!years.includes(y)) years.push(y);
-      d.setMonth(d.getMonth() + 1);
-      d.setDate(1);
+      d.setDate(d.getDate() + 1);
     }
     return { months, years };
   }
-  // Atualizar opções de mês/ano ao mudar datas
+  // Atualiza opções de mês/ano ao mudar datas
   useEffect(() => {
     if (periodStart && periodEnd) {
-      const { months, years } = getMonthsAndYears(periodStart, periodEnd);
+      const { months, years } = getMonthYearOptions(periodStart, periodEnd);
       setMonthOptions(months);
       setYearOptions(years);
-      // Preenchimento automático se só um mês/ano
       if (months.length === 1) setMonthReference(months[0]);
-      else setMonthReference('');
-      if (years.length === 1) setYearReference(years[0].toString());
-      else setYearReference('');
+      else setMonthReference(null);
+      if (years.length === 1) setYearReference(years[0]);
+      else setYearReference(null);
     } else {
       setMonthOptions([]);
       setYearOptions([]);
-      setMonthReference('');
-      setYearReference('');
+      setMonthReference(null);
+      setYearReference(null);
     }
   }, [periodStart, periodEnd]);
-
-  // Função para converter valor monetário string para número
-  function parseMonetaryValue(value: string) {
-    return Number(value.replace(/\./g, '').replace(',', '.')) || 0;
-  }
 
   const handleStageValueChange = (stageId: string, value: number) => {
     setFormData(prev => ({
@@ -378,7 +376,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Validação obrigatória
     if (!formData.funnel_id) {
       toast.error('Selecione um funil.');
       return;
@@ -398,20 +395,14 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     setIsLoading(true);
 
     try {
-      // Corrigir period_date: se for intervalo, pega só o último dia
-      const periodDateValue = formData.period_date.includes('_')
-        ? formData.period_date.split('_')[1]
-        : formData.period_date;
-
-      // Remover sales_value e recommendations_count do objeto enviado
       const indicatorData = {
         user_id: crmUser.id,
         company_id: companyId,
         funnel_id: formData.funnel_id,
         period_start: periodStart,
         period_end: periodEnd,
-        month_reference: monthReference ? monthReference : null,
-        year_reference: yearReference ? yearReference : null,
+        month_reference: monthReference,
+        year_reference: yearReference,
         sales_value: parseMonetaryValue(salesValue),
         recommendations_count: recommendationsCount
       };

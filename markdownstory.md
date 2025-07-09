@@ -29,5 +29,6 @@
 - [2024-07-08] Ajustes concluídos: máscara monetária no campo de valor das vendas (aceita vírgula), persistência correta de sales_value e recommendations_count no registro e edição de indicador, e campo período oculto na edição. Commit e deploy realizados.
 - [2024-07-08] Correção: adicionada dependência react-input-mask ao projeto para corrigir erro de build na Vercel. Commit e deploy realizados.
 - [2024-07-08] Implantação: indicadores agora usam período de data início/fim (period_start/period_end), preenchimento automático de mês/ano conforme regras do período, e valor de vendas numérico (aceita vírgula). Commit e deploy realizados.
+- [2024-07-08] Correção: validação obrigatória para mês/ano do período e nunca enviar string vazia para campos inteiros ao registrar indicador. Commit e deploy realizados.
 
 --- 
