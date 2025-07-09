@@ -345,6 +345,23 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     return { months: Array.from(monthsSet), years: Array.from(yearsSet) };
   }
 
+  // Função para extrair datas do valor do select de período
+  function extractPeriodDates(periodString: string) {
+    // Exemplo: 'De 20/06/2025 até 26/06/2025'
+    const match = periodString.match(/(\d{2}\/\d{2}\/\d{4}).*?(\d{2}\/\d{2}\/\d{4})/);
+    if (match) {
+      const [_, start, end] = match;
+      // Converter para formato YYYY-MM-DD
+      const [d1, m1, y1] = start.split('/');
+      const [d2, m2, y2] = end.split('/');
+      return {
+        start: `${y1}-${m1}-${d1}`,
+        end: `${y2}-${m2}-${d2}`
+      };
+    }
+    return { start: '', end: '' };
+  }
+
   // Atualiza opções de mês/ano ao mudar datas
   useEffect(() => {
     if (periodStart && periodEnd) {
@@ -580,7 +597,13 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                 <Label htmlFor="period_date">Período *</Label>
                 <Select
                   value={formData.period_date}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, period_date: value }))}
+                  onValueChange={(value) => {
+                    setFormData({ ...formData, period_date: value });
+                    const { start, end } = extractPeriodDates(value);
+                    setPeriodStart(start);
+                    setPeriodEnd(end);
+                    console.log('[Indicador] Período selecionado:', value, '| Início:', start, '| Fim:', end);
+                  }}
                   disabled={isLoading || !formData.funnel_id}
                   required
                 >

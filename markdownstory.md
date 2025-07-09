@@ -35,5 +35,6 @@
 - [2024-07-08] Correção final: preenchimento automático de mês/ano conforme regras e visual do campo valor das vendas igual ao de recomendações. Commit e deploy realizados.
 - [2024-07-08] Correção: preenchimento automático inteligente de mês/ano no modal de indicador, baseado em todos os dias do período. Commit e deploy realizados.
 - [2024-07-08] Correção: logs detalhados e preenchimento automático robusto de mês/ano no modal de indicador. Commit e deploy realizados.
+- [2024-07-08] Correção: lógica de mês/ano baseada apenas em data início/fim do período (regra simples e direta). Commit e deploy realizados.
 
 --- 
