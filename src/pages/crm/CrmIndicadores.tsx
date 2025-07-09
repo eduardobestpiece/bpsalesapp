@@ -209,6 +209,11 @@ const CrmIndicadores = () => {
     window.location.reload();
   };
 
+  const selectedFunnel = funnels?.find(f => f.id === selectedFunnelId);
+  const sortedStages = (selectedFunnel?.stages || []).sort((a: any, b: any) => a.stage_order - b.stage_order);
+  const lastStage = sortedStages.length > 0 ? sortedStages[sortedStages.length - 1] : null;
+  const recommendationStage = sortedStages.find((s: any) => s.name.toLowerCase().includes('reuni') || s.name.toLowerCase().includes('recomend'));
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
       <CrmHeader />
@@ -361,12 +366,12 @@ const CrmIndicadores = () => {
                                     <th className="px-2 py-2 text-center font-semibold rounded-tl-2xl"></th> {/* Bolinha */}
                                     {(crmUser?.role === 'admin' || crmUser?.role === 'master') && <th className="px-2 py-2 text-center font-semibold"></th>} {/* Checkbox */}
                                     <th className="px-2 py-2 text-left font-semibold">Período</th>
-                                    {lastStage && <th className="px-2 py-2 text-left font-semibold">{lastStage.name}</th>}
+                                    {selectedFunnel && lastStage && <th className="px-2 py-2 text-left font-semibold">{lastStage.name}</th>}
                                     <th className="px-2 py-2 text-left font-semibold">Valor das Vendas</th>
                                     <th className="px-2 py-2 text-left font-semibold">Ticket Médio</th>
                                     <th className="px-2 py-2 text-left font-semibold">Taxa de Conversão</th>
                                     <th className="px-2 py-2 text-left font-semibold">Conversão do Funil</th>
-                                    {recommendationStage && <th className="px-2 py-2 text-left font-semibold">Média de Recomendações</th>}
+                                    {selectedFunnel && recommendationStage && <th className="px-2 py-2 text-left font-semibold">Média de Recomendações</th>}
                                     <th className="px-2 py-2 text-center font-semibold rounded-tr-2xl">Ações</th>
                                   </tr>
                                 </thead>
