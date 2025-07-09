@@ -114,4 +114,12 @@
 
 **Status:** Concluído e aguardando validação do usuário.
 
+## 2024-07-08 - Correção de erro de build
+
+- Corrigido erro de build na Vercel causado por duplicidade de declaração da variável `selectedFunnelId` em `CrmIndicadores.tsx`.
+- Agora só existe uma declaração, eliminando o conflito e permitindo o deploy.
+- Deploy automático realizado.
+
+**Status:** Correção aplicada e aguardando validação do usuário.
+
 --- 
