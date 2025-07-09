@@ -10,7 +10,7 @@ import { Plus, X } from 'lucide-react';
 import { useCreateFunnel, useUpdateFunnel, insertFunnelStages, updateFunnelStages, deleteFunnelStages } from '@/hooks/useFunnels';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FunnelStage {
   id?: string;
