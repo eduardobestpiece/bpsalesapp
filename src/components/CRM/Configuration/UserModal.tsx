@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useCreateCrmUser, useUpdateCrmUser } from '@/hooks/useCrmUsers';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useFunnels } from '@/hooks/useFunnels';
 
 interface UserModalProps {
   isOpen: boolean;
@@ -17,17 +19,16 @@ interface UserModalProps {
 
 export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
   const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
     email: '',
-    phone: '',
     role: 'user' as 'master' | 'admin' | 'leader' | 'user',
+    funnels: [] as string[],
   });
   const [isLoading, setIsLoading] = useState(false);
 
   const { companyId, crmUser } = useCrmAuth();
   const createUserMutation = useCreateCrmUser();
   const updateUserMutation = useUpdateCrmUser();
+  const { data: funnels = [] } = useFunnels(companyId);
 
   // Verificar se o usuário atual pode criar administradores
   const canCreateAdmin = crmUser?.role === 'master' || crmUser?.role === 'admin';
@@ -35,19 +36,15 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
   useEffect(() => {
     if (user) {
       setFormData({
-        first_name: user.first_name,
-        last_name: user.last_name,
         email: user.email,
-        phone: user.phone || '',
         role: user.role,
+        funnels: user.funnels || [],
       });
     } else {
       setFormData({
-        first_name: '',
-        last_name: '',
         email: '',
-        phone: '',
         role: 'user',
+        funnels: [],
       });
     }
   }, [user]);
@@ -55,11 +52,6 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.first_name.trim() || !formData.last_name.trim()) {
-      toast.error('Nome e sobrenome são obrigatórios');
-      return;
-    }
-
     if (!formData.email.trim()) {
       toast.error('Email é obrigatório');
       return;
@@ -70,12 +62,6 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
       return;
     }
 
-    // Verificar permissão para criar admin
-    if (formData.role === 'admin' && !canCreateAdmin) {
-      toast.error('Você não tem permissão para criar administradores');
-      return;
-    }
-
     setIsLoading(true);
 
     try {
@@ -83,38 +69,36 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
         // Editar usuário existente
         await updateUserMutation.mutateAsync({
           id: user.id,
-          first_name: formData.first_name.trim(),
-          last_name: formData.last_name.trim(),
           email: formData.email.trim(),
-          phone: formData.phone.trim() || null,
           role: formData.role,
+          funnels: formData.funnels,
           company_id: companyId,
           status: 'active'
         });
         toast.success('Usuário atualizado com sucesso!');
       } else {
-        // Criar novo usuário
-        await createUserMutation.mutateAsync({
-          first_name: formData.first_name.trim(),
-          last_name: formData.last_name.trim(),
+        // 1. Criar usuário no Supabase Auth
+        const { data, error } = await supabase.auth.admin.createUser({
           email: formData.email.trim(),
-          phone: formData.phone.trim() || null,
-          role: formData.role,
-          company_id: companyId,
-          password_hash: 'temp_hash', // Será substituído por sistema real de senha
-          status: 'active'
+          password: 'Admin',
+          email_confirm: true,
         });
-        toast.success('Usuário criado com sucesso!');
+        if (error) throw error;
+        // 2. Inserir usuário na tabela crm_users
+        await createUserMutation.mutateAsync({
+          email: formData.email.trim(),
+          role: formData.role,
+          funnels: formData.funnels,
+          company_id: companyId,
+          status: 'active',
+          auth_id: data.user?.id
+        });
+        // 3. Enviar e-mail para redefinir senha (Supabase já envia por padrão, mas pode customizar aqui se necessário)
+        toast.success('Usuário convidado com sucesso! O usuário receberá um e-mail para redefinir a senha.');
       }
 
       onClose();
-      setFormData({
-        first_name: '',
-        last_name: '',
-        email: '',
-        phone: '',
-        role: 'user',
-      });
+      setFormData({ email: '', role: 'user', funnels: [] });
     } catch (error: any) {
       console.error('Erro ao salvar usuário:', error);
       toast.error(error.message || 'Erro ao salvar usuário');
@@ -133,30 +117,6 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="first_name">Nome *</Label>
-              <Input
-                id="first_name"
-                value={formData.first_name}
-                onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
-                required
-                disabled={isLoading}
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="last_name">Sobrenome *</Label>
-              <Input
-                id="last_name"
-                value={formData.last_name}
-                onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
-                required
-                disabled={isLoading}
-              />
-            </div>
-          </div>
-
           <div>
             <Label htmlFor="email">Email *</Label>
             <Input
@@ -165,7 +125,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
               value={formData.email}
               onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
               required
-              disabled={isLoading || !!user} // Não permite editar email de usuário existente
+              disabled={isLoading || !!user}
             />
             {user && (
               <p className="text-xs text-muted-foreground mt-1">
@@ -173,25 +133,11 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
               </p>
             )}
           </div>
-
-          <div>
-            <Label htmlFor="phone">Telefone</Label>
-            <Input
-              id="phone"
-              value={formData.phone}
-              onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-              placeholder="(11) 99999-9999"
-              disabled={isLoading}
-            />
-          </div>
-
           <div>
             <Label htmlFor="role">Função *</Label>
             <Select
               value={formData.role}
-              onValueChange={(value: 'master' | 'admin' | 'leader' | 'user') => 
-                setFormData(prev => ({ ...prev, role: value }))
-              }
+              onValueChange={(value: 'master' | 'admin' | 'leader' | 'user') => setFormData(prev => ({ ...prev, role: value }))}
               disabled={isLoading}
             >
               <SelectTrigger>
@@ -200,22 +146,40 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
               <SelectContent>
                 <SelectItem value="user">Usuário</SelectItem>
                 <SelectItem value="leader">Líder</SelectItem>
-                {canCreateAdmin && (
-                  <SelectItem value="admin">Administrador</SelectItem>
-                )}
-                {crmUser?.role === 'master' && (
-                  <SelectItem value="master">Master</SelectItem>
-                )}
+                <SelectItem value="admin">Administrador</SelectItem>
+                <SelectItem value="master">Master</SelectItem>
               </SelectContent>
             </Select>
           </div>
-
+          <div>
+            <Label>Funis permitidos</Label>
+            <div className="flex flex-wrap gap-2">
+              {funnels.map((f: any) => (
+                <label key={f.id} className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={formData.funnels.includes(f.id)}
+                    onChange={e => {
+                      setFormData(prev => ({
+                        ...prev,
+                        funnels: e.target.checked
+                          ? [...prev.funnels, f.id]
+                          : prev.funnels.filter((id) => id !== f.id)
+                      }));
+                    }}
+                    disabled={isLoading}
+                  />
+                  <span>{f.name}</span>
+                </label>
+              ))}
+            </div>
+          </div>
           <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
               Cancelar
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Salvando...' : (user ? 'Atualizar' : 'Criar Usuário')}
+              {isLoading ? 'Salvando...' : (user ? 'Atualizar' : 'Convidar Usuário')}
             </Button>
           </div>
         </form>
