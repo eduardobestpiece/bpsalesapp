@@ -34,6 +34,12 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   const [salesValue, setSalesValue] = useState('0,00');
   const [recommendationsCount, setRecommendationsCount] = useState(0);
   const [isAutoLoading, setIsAutoLoading] = useState(false);
+  const [periodStart, setPeriodStart] = useState('');
+  const [periodEnd, setPeriodEnd] = useState('');
+  const [monthOptions, setMonthOptions] = useState<string[]>([]);
+  const [yearOptions, setYearOptions] = useState<number[]>([]);
+  const [monthReference, setMonthReference] = useState('');
+  const [yearReference, setYearReference] = useState('');
 
   // Garantir que o companyId está correto (fallback para o do usuário logado)
   const { crmUser } = useCrmAuth();
@@ -318,7 +324,44 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     }
   }, [selectedFunnel, crmUser, formData.funnel_id, formData.period_date, companyId]);
 
-  // Máscara monetária: converte string com vírgula para número
+  // Função para extrair meses/anos do período
+  function getMonthsAndYears(start: string, end: string) {
+    if (!start || !end) return { months: [], years: [] };
+    const startDate = new Date(start);
+    const endDate = new Date(end);
+    let months: string[] = [];
+    let years: number[] = [];
+    let d = new Date(startDate);
+    while (d <= endDate) {
+      const m = d.toLocaleString('pt-BR', { month: 'long' });
+      const y = d.getFullYear();
+      if (!months.includes(m)) months.push(m);
+      if (!years.includes(y)) years.push(y);
+      d.setMonth(d.getMonth() + 1);
+      d.setDate(1);
+    }
+    return { months, years };
+  }
+  // Atualizar opções de mês/ano ao mudar datas
+  useEffect(() => {
+    if (periodStart && periodEnd) {
+      const { months, years } = getMonthsAndYears(periodStart, periodEnd);
+      setMonthOptions(months);
+      setYearOptions(years);
+      // Preenchimento automático se só um mês/ano
+      if (months.length === 1) setMonthReference(months[0]);
+      else setMonthReference('');
+      if (years.length === 1) setYearReference(years[0].toString());
+      else setYearReference('');
+    } else {
+      setMonthOptions([]);
+      setYearOptions([]);
+      setMonthReference('');
+      setYearReference('');
+    }
+  }, [periodStart, periodEnd]);
+
+  // Função para converter valor monetário string para número
   function parseMonetaryValue(value: string) {
     return Number(value.replace(/\./g, '').replace(',', '.')) || 0;
   }
@@ -359,9 +402,10 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         user_id: crmUser.id,
         company_id: companyId,
         funnel_id: formData.funnel_id,
-        period_date: periodDateValue,
-        month_reference: formData.month_reference,
-        year_reference: formData.year_reference,
+        period_start: periodStart,
+        period_end: periodEnd,
+        month_reference: monthReference,
+        year_reference: yearReference,
         sales_value: parseMonetaryValue(salesValue),
         recommendations_count: recommendationsCount
       };
@@ -416,6 +460,10 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     setIsLoading(true);
     try {
       const indicatorData = {
+        period_start: periodStart,
+        period_end: periodEnd,
+        month_reference: monthReference,
+        year_reference: yearReference,
         sales_value: parseMonetaryValue(salesValue),
         recommendations_count: recommendationsCount
       };

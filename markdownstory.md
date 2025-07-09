@@ -26,5 +26,7 @@
 - [2024-07-08] Correção: relacionamento duplicado entre funis e etapas (Supabase) ajustado na query do frontend; crash do Select de etapa de recomendação no modal de Funil corrigido. Commit e deploy realizados.
 - [2024-07-08] Implantada lógica automática para valor das vendas e recomendações no registro/edição de indicador (modo sistema): busca e soma vendas do usuário no funil/período, e conta leads de recomendação. Commit e deploy realizados.
 - [2024-07-08] Correção: não enviar sales_value e recommendations_count para o Supabase ao criar/editar indicador (campos só para exibição). Commit e deploy realizados.
+- [2024-07-08] Ajustes concluídos: máscara monetária no campo de valor das vendas (aceita vírgula), persistência correta de sales_value e recommendations_count no registro e edição de indicador, e campo período oculto na edição. Commit e deploy realizados.
+- [2024-07-08] Correção: adicionada dependência react-input-mask ao projeto para corrigir erro de build na Vercel. Commit e deploy realizados.
 
 --- 

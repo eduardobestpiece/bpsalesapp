@@ -1,14 +1,16 @@
 # Requisição em Andamento
 
-## Ajuste nos Registros e Edições de Indicadores
-- Campo "Valor das Vendas" deve ser monetário, aceitando vírgula para centavos.
-- Ao registrar, os campos "Valor de Vendas" e "Recomendações" devem ser salvos corretamente.
-- Na edição, campo "Valor das Vendas" também deve ser monetário.
-- Campo "Período" deve ser oculto no modal de edição (não editável, não obrigatório).
+## Indicadores: Período com Data Início e Fim + Preenchimento Automático de Mês/Ano
+- Ao registrar indicador, o campo "Período" será dividido em "Data Início" (period_start) e "Data Fim" (period_end).
+- O campo mês será preenchido automaticamente se todo o período estiver em um mês; caso contrário, mostrará opções dos meses envolvidos.
+- O campo ano será preenchido automaticamente se todo o período estiver em um ano; caso contrário, mostrará opções dos anos envolvidos.
+- O campo valor de vendas volta a ser numérico (aceita vírgula).
 
 ## Checklist
-- [x] Migration SQL aplicada com sucesso
-- [ ] Máscara monetária no campo de valor das vendas (registro e edição)
-- [ ] Persistir corretamente os campos sales_value e recommendations_count ao criar indicador
-- [ ] Persistir corretamente os campos sales_value e recommendations_count ao editar indicador
-- [ ] Ocultar campo "Período" no modal de edição de indicador 
+- [x] Migration SQL aplicada: adicionados period_start e period_end
+- [ ] Atualizar modal de indicador para usar period_start/period_end
+- [ ] Lógica automática de mês/ano conforme regras
+- [ ] Campo valor de vendas numérico (aceita vírgula)
+- [ ] Testar registro e edição
+- [ ] Commitar e fazer deploy
+- [ ] Solicitar validação do usuário 
