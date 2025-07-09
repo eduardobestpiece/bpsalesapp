@@ -5,13 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Edit, Archive } from 'lucide-react';
+import { Plus, Search, Edit, Archive, Trash2 } from 'lucide-react';
 import { IndicatorModal } from '@/components/CRM/IndicatorModal';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useIndicators } from '@/hooks/useIndicators';
 import { useFunnels } from '@/hooks/useFunnels';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import CrmPerformance from './CrmPerformance';
+import { supabase } from '@/integrations/supabase/client';
 
 const CrmIndicadores = () => {
   const [showModal, setShowModal] = useState(false);
@@ -45,6 +46,26 @@ const CrmIndicadores = () => {
     }
     indicatorsByFunnel[indicator.funnel_id].push(indicator);
   });
+
+  // Função para arquivar indicador
+  const handleArchive = async (indicator: any) => {
+    if (!indicator) return;
+    await supabase
+      .from('indicators')
+      .update({ archived_at: new Date().toISOString() })
+      .eq('id', indicator.id);
+    window.location.reload(); // Atualiza a lista
+  };
+  // Função para excluir indicador
+  const handleDelete = async (indicator: any) => {
+    if (!indicator) return;
+    if (!window.confirm('Tem certeza que deseja excluir este indicador? Essa ação não pode ser desfeita.')) return;
+    await supabase
+      .from('indicators')
+      .delete()
+      .eq('id', indicator.id);
+    window.location.reload();
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
@@ -147,13 +168,24 @@ const CrmIndicadores = () => {
                             >
                               <Edit className="w-4 h-4" />
                             </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {}}
-                            >
-                              <Archive className="w-4 h-4" />
-                            </Button>
+                            {crmUser?.role === 'master' && (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleArchive(indicator)}
+                                >
+                                  <Archive className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => handleDelete(indicator)}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </>
+                            )}
                           </div>
                                             </td>
                                           </tr>
