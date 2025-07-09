@@ -81,7 +81,7 @@ export const useUpdateFunnel = () => {
         .from('funnels')
         .update(funnel)
         .eq('id', id)
-        .select()
+        .select('*')
         .single();
 
       if (error) {
