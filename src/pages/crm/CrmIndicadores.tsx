@@ -64,36 +64,36 @@ const CrmIndicadores = () => {
                 </TabsContent>
                 <TabsContent value="registro">
                   {/* Conteúdo original da página de Indicadores */}
-                  <Card>
-                    <CardHeader>
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <CardTitle>Meus Indicadores</CardTitle>
-                          <CardDescription>
-                            Registre seus números por período e funil
-                          </CardDescription>
-                        </div>
-                        <Button onClick={() => setShowModal(true)}>
-                          <Plus className="w-4 h-4 mr-2" />
-                          Registrar Indicador
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="mb-4">
-                        <div className="relative">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                          <Input
-                            placeholder="Pesquisar por data ou funil..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10"
-                          />
-                        </div>
-                      </div>
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>Meus Indicadores</CardTitle>
+                      <CardDescription>
+                        Registre seus números por período e funil
+                      </CardDescription>
+                    </div>
+                    <Button onClick={() => setShowModal(true)}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Registrar Indicador
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="mb-4">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                      <Input
+                        placeholder="Pesquisar por data ou funil..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                  </div>
                       <div className="space-y-8">
                         {isIndicatorsLoading || isFunnelsLoading ? (
-                          <p className="text-muted-foreground text-center py-8">
+                      <p className="text-muted-foreground text-center py-8">
                             Carregando indicadores...
                           </p>
                         ) : funnels && funnels.length > 0 ? (
@@ -140,21 +140,21 @@ const CrmIndicadores = () => {
                                             })}
                                             <td className="px-2 py-1 text-center">
                                               <div className="flex gap-2 justify-center">
-                                                <Button
-                                                  variant="outline"
-                                                  size="sm"
-                                                  onClick={() => handleEdit(indicator)}
-                                                >
-                                                  <Edit className="w-4 h-4" />
-                                                </Button>
-                                                <Button
-                                                  variant="outline"
-                                                  size="sm"
-                                                  onClick={() => {}}
-                                                >
-                                                  <Archive className="w-4 h-4" />
-                                                </Button>
-                                              </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleEdit(indicator)}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {}}
+                            >
+                              <Archive className="w-4 h-4" />
+                            </Button>
+                          </div>
                                             </td>
                                           </tr>
                                         ))
@@ -162,17 +162,17 @@ const CrmIndicadores = () => {
                                     </tbody>
                                   </table>
                                 </div>
-                              </div>
+                        </div>
                             );
                           })
                         ) : (
                           <p className="text-muted-foreground text-center py-8">
                             Nenhum funil encontrado.
                           </p>
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
                   <IndicatorModal
                     isOpen={showModal}
                     onClose={handleCloseModal}

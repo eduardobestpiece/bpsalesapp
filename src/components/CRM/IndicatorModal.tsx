@@ -88,18 +88,27 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     //   )
     //   .map((ind) => ind.period_date);
 
-    // Gerar todos os períodos possíveis para o mês/ano/funil
+    // Remover filtro por mês/ano do formulário na busca dos períodos disponíveis
+    // Gerar todos os períodos possíveis para o funil, sem limitar por formData.month_reference/year_reference
     let todosPeriodos: { label: string; value: string }[] = [];
     if (selectedFunnel.verification_type === 'daily') {
       todosPeriodos = gerarDiasUltimos90AteOntem();
     } else if (selectedFunnel.verification_type === 'weekly') {
-      todosPeriodos = gerarPeriodosSemanais(
-        formData.month_reference,
-        formData.year_reference,
-        selectedFunnel.verification_day ?? 1
-      );
+      todosPeriodos = gerarPeriodosSemanaisUltimos90Dias(selectedFunnel.verification_day ?? 1);
     } else if (selectedFunnel.verification_type === 'monthly') {
-      todosPeriodos = gerarPeriodosMensaisCustom(formData.month_reference, formData.year_reference, selectedFunnel.verification_day ?? 1, 1);
+      // Mensal: últimos 3 períodos, respeitando o dia de início do funil
+      const hoje = new Date();
+      todosPeriodos = [];
+      let mes = hoje.getMonth() + 1;
+      let ano = hoje.getFullYear();
+      for (let i = 0; i < 3; i++) {
+        todosPeriodos.push(...gerarPeriodosMensaisCustom(mes, ano, selectedFunnel.verification_day ?? 1, 1));
+        mes--;
+        if (mes === 0) {
+          mes = 12;
+          ano--;
+        }
+      }
     }
 
     // 1. PRIMEIRO REGISTRO DO USUÁRIO PARA O FUNIL
