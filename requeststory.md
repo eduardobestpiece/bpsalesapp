@@ -36,3 +36,10 @@ Reformulação do filtro de indicadores (CRM):
 **Status:** Em andamento
 
 --- 
+
+## 2024-07-08 - Problema no filtro de indicadores
+
+- O filtro de indicadores foi implementado conforme solicitado (modal, filtros dinâmicos, integração com listagem), porém o usuário relatou que não está funcionando corretamente.
+- Ponto de partida: código do filtro já está no repositório e disponível na interface.
+- O que foi tentado: usuário testou o filtro, mas não houve efeito na listagem de indicadores.
+- Próximos passos: analisar o código, dependências e integração com a listagem para identificar e corrigir o problema. 

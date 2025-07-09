@@ -126,13 +126,13 @@ const CrmIndicadores = () => {
     return true;
   });
 
-  // Agrupar indicadores por funil
-  const indicatorsByFunnel: Record<string, any[]> = {};
-  (indicators || []).forEach((indicator) => {
-    if (!indicatorsByFunnel[indicator.funnel_id]) {
-      indicatorsByFunnel[indicator.funnel_id] = [];
+  // Agrupar indicadores por funil (usando os filtrados)
+  const filteredIndicatorsByFunnel: Record<string, any[]> = {};
+  (filteredIndicators || []).forEach((indicator) => {
+    if (!filteredIndicatorsByFunnel[indicator.funnel_id]) {
+      filteredIndicatorsByFunnel[indicator.funnel_id] = [];
     }
-    indicatorsByFunnel[indicator.funnel_id].push(indicator);
+    filteredIndicatorsByFunnel[indicator.funnel_id].push(indicator);
   });
 
   // Função para arquivar indicador
@@ -203,7 +203,7 @@ const CrmIndicadores = () => {
                           </p>
                         ) : funnels && funnels.length > 0 ? (
                           funnels.map((funnel) => {
-                            const funnelIndicators = indicatorsByFunnel[funnel.id] || [];
+                            const funnelIndicators = filteredIndicatorsByFunnel[funnel.id] || [];
                             const sortedStages = (funnel.stages || []).sort((a: any, b: any) => a.stage_order - b.stage_order);
                             const colCount = 3 + sortedStages.length + 1;
                             return (
