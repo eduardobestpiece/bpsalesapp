@@ -11,6 +11,7 @@ import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
 import { gerarPeriodosDiarios, gerarPeriodosSemanais, gerarPeriodoMensal, getUltimoDiaPeriodo, gerarPeriodosSemanaisUltimos90Dias, gerarPeriodosMensaisCustom, gerarDiasUltimos90AteOntem } from '@/lib/utils';
 import { useIndicators } from '@/hooks/useIndicators';
+import { supabase } from '@/integrations/supabase/client';
 
 interface IndicatorModalProps {
   isOpen: boolean;
@@ -29,6 +30,9 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   });
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFunnel, setSelectedFunnel] = useState<any>(null);
+  const [salesValue, setSalesValue] = useState(0);
+  const [recommendationsCount, setRecommendationsCount] = useState(0);
+  const [isAutoLoading, setIsAutoLoading] = useState(false);
 
   // Garantir que o companyId está correto (fallback para o do usuário logado)
   const { crmUser } = useCrmAuth();
@@ -241,6 +245,73 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
       }
     }
   }, [formData.funnel_id, funnels, indicator]);
+
+  useEffect(() => {
+    async function fetchAutoValues() {
+      if (!selectedFunnel || !crmUser || !formData.funnel_id || !formData.period_date) return;
+      setIsAutoLoading(true);
+      // Determinar período (data inicial e final)
+      let periodStart = formData.period_date;
+      let periodEnd = formData.period_date;
+      if (formData.period_date.includes('_')) {
+        const [start, end] = formData.period_date.split('_');
+        periodStart = start;
+        periodEnd = end;
+      }
+      // Buscar valor das vendas
+      if (selectedFunnel.sales_value_mode === 'sistema') {
+        const { data, error } = await supabase
+          .from('sales')
+          .select('sale_value')
+          .eq('responsible_id', crmUser.id)
+          .eq('funnel_id', formData.funnel_id)
+          .gte('sale_date', periodStart)
+          .lte('sale_date', periodEnd)
+          .eq('status', 'active');
+        if (!error && data) {
+          const total = data.reduce((sum, s) => sum + (s.sale_value || 0), 0);
+          setSalesValue(total);
+        } else {
+          setSalesValue(0);
+        }
+      }
+      // Buscar número de recomendações
+      if (selectedFunnel.recommendations_mode === 'sistema') {
+        // Buscar id da source "Recomendação"
+        const { data: sources } = await supabase
+          .from('sources')
+          .select('id')
+          .eq('company_id', companyId)
+          .eq('name', 'Recomendação')
+          .eq('status', 'active')
+          .limit(1)
+          .single();
+        const recommendationSourceId = sources?.id;
+        if (recommendationSourceId) {
+          const { data, error } = await supabase
+            .from('leads')
+            .select('id')
+            .eq('responsible_id', crmUser.id)
+            .eq('funnel_id', formData.funnel_id)
+            .eq('source_id', recommendationSourceId)
+            .gte('created_at', periodStart)
+            .lte('created_at', periodEnd)
+            .eq('status', 'active');
+          if (!error && data) {
+            setRecommendationsCount(data.length);
+          } else {
+            setRecommendationsCount(0);
+          }
+        } else {
+          setRecommendationsCount(0);
+        }
+      }
+      setIsAutoLoading(false);
+    }
+    if (selectedFunnel && ['master', 'admin'].includes(crmUser?.role)) {
+      fetchAutoValues();
+    }
+  }, [selectedFunnel, crmUser, formData.funnel_id, formData.period_date, companyId]);
 
   const handleStageValueChange = (stageId: string, value: number) => {
     setFormData(prev => ({
@@ -474,7 +545,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                     <Input
                       id="sales_value"
                       type="number"
-                      value={salesValue}
+                      value={isAutoLoading ? '...' : salesValue}
                       disabled
                       placeholder="Calculado automaticamente"
                     />
@@ -496,7 +567,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                     <Input
                       id="recommendations_count"
                       type="number"
-                      value={recommendationsCount}
+                      value={isAutoLoading ? '...' : recommendationsCount}
                       disabled
                       placeholder="Calculado automaticamente"
                     />
