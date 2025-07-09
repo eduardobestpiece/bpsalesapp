@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CrmHeader } from '@/components/Layout/CrmHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -121,6 +121,75 @@ const CrmMasterConfig = () => {
     if (confirm('Tem certeza que deseja arquivar esta empresa?')) {
       archiveCompanyMutation.mutate(id);
     }
+  };
+
+  // --- ITENS ARQUIVADOS ---
+  const [archivedType, setArchivedType] = useState('');
+  const [archivedDate, setArchivedDate] = useState('');
+  const [archivedItems, setArchivedItems] = useState<any[]>([]);
+  const [isLoadingArchived, setIsLoadingArchived] = useState(false);
+
+  useEffect(() => {
+    const fetchArchived = async () => {
+      setIsLoadingArchived(true);
+      // Buscar todos os itens arquivados
+      const [indicators, leads, sales] = await Promise.all([
+        supabase.from('indicators').select('*').not('archived_at', 'is', null),
+        supabase.from('leads').select('*').not('archived_at', 'is', null),
+        supabase.from('sales').select('*').not('archived_at', 'is', null),
+      ]);
+      let items: any[] = [];
+      if (indicators.data) items = items.concat(indicators.data.map((i: any) => ({
+        id: i.id,
+        type: 'indicator',
+        archived_at: i.archived_at,
+        description: `Indicador: ${i.period_start ? `De ${new Date(i.period_start).toLocaleDateString('pt-BR')}` : ''}${i.period_end ? ` até ${new Date(i.period_end).toLocaleDateString('pt-BR')}` : ''}`
+      })));
+      if (leads.data) items = items.concat(leads.data.map((l: any) => ({
+        id: l.id,
+        type: 'lead',
+        archived_at: l.archived_at,
+        description: `Lead: ${l.name || l.id}`
+      })));
+      if (sales.data) items = items.concat(sales.data.map((s: any) => ({
+        id: s.id,
+        type: 'sale',
+        archived_at: s.archived_at,
+        description: `Venda: ${s.sale_date ? new Date(s.sale_date).toLocaleDateString('pt-BR') : s.id}`
+      })));
+      setArchivedItems(items);
+      setIsLoadingArchived(false);
+    };
+    fetchArchived();
+  }, []);
+
+  // Filtro
+  const filteredArchived = archivedItems.filter(item => {
+    if (archivedType && item.type !== archivedType) return false;
+    if (archivedDate && item.archived_at) {
+      const itemDate = new Date(item.archived_at).toISOString().slice(0, 10);
+      if (itemDate !== archivedDate) return false;
+    }
+    return true;
+  });
+
+  // Ações
+  const handleRecover = async (item: any) => {
+    let table = '';
+    if (item.type === 'indicator') table = 'indicators';
+    if (item.type === 'lead') table = 'leads';
+    if (item.type === 'sale') table = 'sales';
+    await supabase.from(table).update({ archived_at: null }).eq('id', item.id);
+    setArchivedItems(prev => prev.filter(i => i.id !== item.id || i.type !== item.type));
+  };
+  const handleDelete = async (item: any) => {
+    if (!window.confirm('Tem certeza que deseja excluir este item? Essa ação não pode ser desfeita.')) return;
+    let table = '';
+    if (item.type === 'indicator') table = 'indicators';
+    if (item.type === 'lead') table = 'leads';
+    if (item.type === 'sale') table = 'sales';
+    await supabase.from(table).delete().eq('id', item.id);
+    setArchivedItems(prev => prev.filter(i => i.id !== item.id || i.type !== item.type));
   };
 
   if (userRole !== 'master') {
@@ -263,7 +332,7 @@ const CrmMasterConfig = () => {
                       <div className="flex gap-4 mb-4">
                         <div>
                           <Label htmlFor="filter-type">Tipo</Label>
-                          <select id="filter-type" className="block w-full border rounded px-2 py-1">
+                          <select id="filter-type" className="block w-full border rounded px-2 py-1" value={archivedType} onChange={e => setArchivedType(e.target.value)}>
                             <option value="">Todos</option>
                             <option value="indicator">Indicador</option>
                             <option value="lead">Lead</option>
@@ -272,7 +341,7 @@ const CrmMasterConfig = () => {
                         </div>
                         <div>
                           <Label htmlFor="filter-date">Data</Label>
-                          <Input id="filter-date" type="date" className="block w-full" />
+                          <Input id="filter-date" type="date" className="block w-full" value={archivedDate} onChange={e => setArchivedDate(e.target.value)} />
                         </div>
                       </div>
                       {/* Lista de itens arquivados */}
@@ -287,18 +356,23 @@ const CrmMasterConfig = () => {
                             </tr>
                           </thead>
                           <tbody>
-                            {/* Aqui virá a lista dinâmica */}
-                            <tr>
-                              <td className="px-2 py-1">-</td>
-                              <td className="px-2 py-1">-</td>
-                              <td className="px-2 py-1">-</td>
-                              <td className="px-2 py-1 text-center">
-                                <div className="flex gap-2 justify-center">
-                                  <Button variant="outline" size="sm">Recuperar</Button>
-                                  <Button variant="destructive" size="sm">Excluir</Button>
-                                </div>
-                              </td>
-                            </tr>
+                            {isLoadingArchived ? (
+                              <tr><td colSpan={4} className="text-center py-4">Carregando...</td></tr>
+                            ) : filteredArchived.length === 0 ? (
+                              <tr><td colSpan={4} className="text-center py-4">Nenhum item arquivado encontrado.</td></tr>
+                            ) : filteredArchived.map(item => (
+                              <tr key={item.type + '-' + item.id}>
+                                <td className="px-2 py-1">{item.archived_at ? new Date(item.archived_at).toLocaleDateString('pt-BR') : '-'}</td>
+                                <td className="px-2 py-1">{item.type === 'indicator' ? 'Indicador' : item.type === 'lead' ? 'Lead' : 'Venda'}</td>
+                                <td className="px-2 py-1">{item.description}</td>
+                                <td className="px-2 py-1 text-center">
+                                  <div className="flex gap-2 justify-center">
+                                    <Button variant="outline" size="sm" onClick={() => handleRecover(item)}>Recuperar</Button>
+                                    <Button variant="destructive" size="sm" onClick={() => handleDelete(item)}>Excluir</Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))}
                           </tbody>
                         </table>
                       </div>

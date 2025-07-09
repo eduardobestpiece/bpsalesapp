@@ -1,35 +1,12 @@
 # Histórico de Requisições
 
-## 2024-07-08 - Ajuste para periodicidade diária no registro de indicadores
-
-**Problema:**
-- Para funis com periodicidade diária, o campo Período é uma data única, não um intervalo.
-- O sistema estava tentando extrair início e fim de um valor único, podendo gerar campos vazios ou errados.
-
-**Solução aplicada:**
-- Ajustada a função extractPeriodDates para, ao detectar um valor no formato 'YYYY-MM-DD' (diário), definir period_start e period_end como a mesma data.
-- Todas as regras de mês/ano continuam automáticas, baseando-se nessa data única.
-
-**Próximos passos:**
-- Testar o registro de indicadores diários.
-- Validar se o fluxo está correto para todos os tipos de periodicidade. 
-
-## 2024-07-08 - Ações de arquivar e excluir para Master na lista de indicadores
+## 2024-07-08 - Lógica completa da aba Itens arquivados
 
 **Implementação:**
-- Agora, na lista "Meus Indicadores", o usuário Master vê os botões de Arquivar e Excluir na coluna Ações.
-- Arquivar: atualiza o campo archived_at do indicador com a data/hora atual (item some da lista principal e vai para os arquivados).
-- Excluir: remove o indicador do banco de dados (ação irreversível).
+- Agora a aba "Itens arquivados" busca e exibe todos os indicadores, leads e vendas arquivados (campo archived_at preenchido).
+- Filtro por Tipo (Indicador, Lead, Venda) e Data de arquivamento.
+- Botão "Recuperar": remove o arquivamento (zera o campo archived_at).
+- Botão "Excluir": remove o item do banco de dados.
 
 **Próximos passos:**
-- Exibir aba "Itens arquivados" para Master.
-- Implementar página de arquivados com filtro, lista, excluir e recuperar. 
-
-## 2024-07-08 - Aba 'Itens arquivados' em Configurações do Master
-
-**Implementação:**
-- Adicionada a aba "Itens arquivados" nas Configurações do Master.
-- Esqueleto da página criado: filtro por Tipo e Data, tabela para exibir itens arquivados (Indicador, Lead, Venda), botões de Excluir e Recuperar (ainda sem lógica).
-
-**Próxima etapa:**
-- Implementar a lógica de busca dos itens arquivados, exclusão definitiva e recuperação. 
+- Validar o funcionamento com o usuário. 
