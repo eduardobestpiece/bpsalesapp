@@ -13,6 +13,7 @@ import { gerarPeriodosDiarios, gerarPeriodosSemanais, gerarPeriodoMensal, getUlt
 import { useIndicators } from '@/hooks/useIndicators';
 import { supabase } from '@/integrations/supabase/client';
 import ReactInputMask from 'react-input-mask';
+import { CheckCircle, AlertCircle, XCircle } from 'lucide-react';
 
 interface IndicatorModalProps {
   isOpen: boolean;
@@ -449,20 +450,16 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
       if (startMonth === endMonth) {
         months = [startMonth];
         setMonthReference(startMonth);
-        console.log('[Indicador] Mês único:', startMonth);
       } else {
         months = [startMonth, endMonth];
-        setMonthReference(null);
-        console.log('[Indicador] Meses múltiplos:', months);
+        setMonthReference(endMonth); // Seleciona mês da data fim
       }
       if (startYear === endYear) {
         years = [startYear];
         setYearReference(startYear);
-        console.log('[Indicador] Ano único:', startYear);
       } else {
         years = [startYear, endYear];
-        setYearReference(null);
-        console.log('[Indicador] Anos múltiplos:', years);
+        setYearReference(endYear); // Seleciona ano da data fim
       }
       setMonthOptions(months);
       setYearOptions(years);
@@ -471,7 +468,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
       setYearOptions([]);
       setMonthReference(null);
       setYearReference(null);
-      console.warn('[Indicador] Período não selecionado.');
     }
   }, [periodStart, periodEnd]);
 
@@ -588,13 +584,41 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     }
   };
 
+  // Função utilitária para calcular status do prazo
+  function getPrazoStatus() {
+    if (!indicator || !selectedFunnel || !indicator.created_at || !indicator.period_end) return null;
+    const deadlineHours = selectedFunnel.indicator_deadline_hours ?? 0;
+    const periodEnd = new Date(indicator.period_end);
+    const prazo = new Date(periodEnd.getTime() + deadlineHours * 60 * 60 * 1000);
+    const createdAt = new Date(indicator.created_at);
+    const diffMs = createdAt.getTime() - prazo.getTime();
+    if (createdAt <= prazo) {
+      return { color: 'green', icon: <CheckCircle className="w-4 h-4 text-green-500" />, msg: 'Preenchido dentro do prazo' };
+    } else if (diffMs <= 24 * 60 * 60 * 1000) {
+      return { color: 'yellow', icon: <AlertCircle className="w-4 h-4 text-yellow-500" />, msg: 'Preenchido 24 horas após prazo' };
+    } else {
+      return { color: 'red', icon: <XCircle className="w-4 h-4 text-red-500" />, msg: 'Preenchido fora do prazo' };
+    }
+  }
+  const prazoStatus = getPrazoStatus();
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>
-            {indicator ? 'Editar Indicador' : 'Registrar Indicador'}
-          </DialogTitle>
+          <div className="flex items-center justify-between">
+            <DialogTitle>
+              {indicator ? 'Editar Indicador' : 'Registrar Indicador'}
+            </DialogTitle>
+            {indicator && prazoStatus && (
+              <div className="flex items-center gap-2">
+                {prazoStatus.icon}
+                <span className={`text-xs ${
+                  prazoStatus.color === 'green' ? 'text-green-600' : prazoStatus.color === 'yellow' ? 'text-yellow-600' : 'text-red-600'
+                }`}>{prazoStatus.msg}</span>
+              </div>
+            )}
+          </div>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -730,6 +754,12 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                 )}
               </div>
             )}
+            {/* Exibir data/hora de criação no modo edição acima do botão de alterar período */}
+            {indicator && indicator.created_at && (
+              <div className="text-xs text-muted-foreground mb-2">
+                Preenchido em: {new Date(indicator.created_at).toLocaleString('pt-BR')}
+              </div>
+            )}
             {/* CAMPOS RESTRITOS MASTER/ADMIN */}
             {selectedFunnel && ['master', 'admin'].includes(crmUser?.role || '') && (
               <>
@@ -788,30 +818,43 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                 <CardTitle className="text-lg">Resultados por Etapa</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-4">
                   {selectedFunnel.stages
                     .sort((a: any, b: any) => a.stage_order - b.stage_order)
-                    .map((stage: any) => (
-                      <div key={stage.id}>
-                        <Label htmlFor={`stage_${stage.id}`}>
-                          {stage.name}
-                          {stage.target_value && (
-                            <span className="text-sm text-muted-foreground ml-2">
-                              (Meta: {stage.target_value})
-                            </span>
-                          )}
-                        </Label>
-                        <Input
-                          id={`stage_${stage.id}`}
-                          type="number"
-                          min="0"
-                          value={formData.stages[stage.id] || 0}
-                          onChange={(e) => handleStageValueChange(stage.id, parseInt(e.target.value) || 0)}
-                          placeholder="Digite o resultado"
-                          disabled={isLoading}
-                        />
-                      </div>
-                    ))}
+                    .map((stage: any) => {
+                      const valor = formData.stages[stage.id] || 0;
+                      const meta = stage.target_value || 0;
+                      const percentual = meta > 0 ? Math.round((valor / meta) * 100) : 0;
+                      const atingiu = valor >= meta && meta > 0;
+                      return (
+                        <div key={stage.id} className="flex flex-col md:flex-row md:items-center gap-2 p-2 border rounded-lg">
+                          <div className="flex-1">
+                            <Label htmlFor={`stage_${stage.id}`}>{stage.name}
+                              {stage.target_value && (
+                                <span className="text-sm text-muted-foreground ml-2">(Meta: {stage.target_value})</span>
+                              )}
+                            </Label>
+                            <Input
+                              id={`stage_${stage.id}`}
+                              type="number"
+                              min="0"
+                              value={valor}
+                              onChange={(e) => handleStageValueChange(stage.id, parseInt(e.target.value) || 0)}
+                              placeholder="Digite o resultado"
+                              disabled={isLoading}
+                            />
+                          </div>
+                          <div className="flex flex-col items-start md:items-end min-w-[180px]">
+                            <span className="text-xs">{percentual}% da meta</span>
+                            {atingiu ? (
+                              <span className="text-green-600 text-xs font-semibold">Meta atingida. Parabéns!</span>
+                            ) : (
+                              <span className="text-red-600 text-xs font-semibold">Meta não atingida, consulte seu líder</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
                 </div>
               </CardContent>
             </Card>

@@ -65,4 +65,15 @@
 - [2024-07-08] Correção: atualização correta de periodStart/periodEnd ao selecionar período, com logs para depuração. Commit e deploy realizados.
 - [2024-07-08] Correção: extração de datas do período agora aceita formato ISO e extenso, com logs detalhados. Commit e deploy realizados.
 
+## 2024-07-08 - Concluído
+
+- Adicionado campo `indicator_deadline_hours` nos Funis do CRM (prazo de preenchimento do indicador em horas).
+- Campo disponível para edição/criação no modal de Funil, com explicação e validação.
+- Tipos do frontend atualizados.
+- Valor salvo e lido corretamente do Supabase.
+- Deploy realizado (commit e push para o GitHub).
+- Checklist e histórico atualizados em `requeststory.md`.
+
+**Status:** Concluído e aguardando validação do usuário.
+
 --- 

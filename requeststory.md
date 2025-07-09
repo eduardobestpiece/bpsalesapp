@@ -5,15 +5,35 @@
 **Solicitante:** Usuário
 
 **Descrição:**
-Adicionar o campo `indicator_deadline_hours` nos Funis do CRM para definir o prazo de preenchimento do indicador (em horas). O campo já foi criado manualmente no Supabase. Agora, o sistema deve permitir editar/visualizar esse campo no modal de Funil, garantir que seja salvo/lido corretamente e atualizar os tipos do frontend.
+Melhorias nos modais de Indicador (CRM):
+
+## Modal de “Editar Indicador”
+- Exibir a data e hora em que o usuário preencheu o indicador, acima do botão de alterar período.
+- Ao lado do título “Editar Indicador”, mostrar um status visual (bolinha colorida + mensagem) conforme o prazo definido no Funil:
+  - Verde: “Preenchido dentro do prazo”
+  - Amarelo: “Preenchido 24 horas após prazo”
+  - Vermelho: “Preenchido fora do prazo”
+  - Regras: Prazo = data fim do período + indicator_deadline_hours (em horas). Se preenchido até o prazo: verde. Até 24h após: amarelo. Acima de 24h após: vermelho.
+- Nos campos de “Resultados por Etapa”, exibir um abaixo do outro, mostrando ao lado:
+  - Comparativo com a meta
+  - Percentual atingido
+  - Mensagem: Verde “Meta atingida. Parabéns!” ou Vermelha “Meta não atingida, consulte seu líder”.
+
+## Modal de “Registrar Indicador”
+- Para mês e ano, preencher automaticamente com base na data fim do período. Se o período ocupar dois meses/anos, selecionar automaticamente o da data fim, mas manter o campo editável.
+- Nos campos de “Resultados por Etapa”, exibir um abaixo do outro, mostrando ao lado:
+  - Comparativo com a meta
+  - Percentual atingido
+  - Mensagem: Verde “Meta atingida. Parabéns!” ou Vermelha “Meta não atingida, consulte seu líder”.
 
 **Checklist:**
-- [x] Adicionar o campo `indicator_deadline_hours` nos tipos do frontend (`crm.ts` e `supabase/types.ts`).
-- [x] Adicionar o campo no estado e formulário do modal de Funil (`FunnelModal.tsx`), com explicação e validação.
-- [ ] Garantir que o campo seja enviado/salvo ao criar/editar funis.
-- [ ] Atualizar a leitura do funil para trazer o campo.
-- [ ] Testar o fluxo de criação/edição.
-- [ ] Atualizar `requeststory.md` com a requisição.
+- [ ] Atualizar requeststory.md com a nova requisição.
+- [ ] Implementar exibição da data/hora de preenchimento no modal de edição.
+- [ ] Implementar status visual do prazo ao lado do título.
+- [ ] Ajustar layout dos campos de resultados por etapa (um abaixo do outro) e exibir comparativo/meta/mensagem.
+- [ ] Ajustar lógica de mês/ano no modal de registro para preencher automaticamente com base na data fim.
+- [ ] Testar todos os fluxos.
+- [ ] Atualizar histórico e checklist.
 - [ ] Executar deploy.
 - [ ] Solicitar validação do usuário.
 
