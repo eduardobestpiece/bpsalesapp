@@ -49,6 +49,9 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
     if (funnel && isOpen) {
       console.log('Valor recebido do Supabase (funnel.recommendation_stage_id):', funnel.recommendation_stage_id);
       console.log('Etapas recebidas do Supabase:', funnel.stages);
+      if (funnel.stages) {
+        console.log('IDs das etapas recebidas:', funnel.stages.map((s: any) => s.id));
+      }
       setFormData({
         name: funnel.name,
         verification_type: funnel.verification_type,
