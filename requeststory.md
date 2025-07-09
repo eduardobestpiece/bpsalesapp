@@ -1,20 +1,22 @@
-## Requisição em andamento - 08/07/2024
+# Requisição em andamento
 
-### Problema
-No campo "Período" dos modais "Registrar Indicado", "Editar Indicador" e "Alterar Período", atualmente o último dia considerado é ontem. O usuário deseja que o período inclua o dia de hoje também.
+**Data:** 2024-07-08
 
-### Plano de Ação
-1. Localizar todos os componentes/modais que usam o campo "Período".
-2. Identificar a lógica que define o último dia do período.
-3. Alterar para considerar o dia de hoje como último dia.
-4. Testar todos os modais citados.
-5. Executar o deploy.
-6. Solicitar validação do usuário.
+**Solicitante:** Usuário
 
-### Checklist
-- [x] Registrar requisição em `requeststory.md`
-- [ ] Localizar todos os usos do campo "Período"
-- [ ] Alterar lógica para incluir o dia de hoje
-- [ ] Testar nos três modais
-- [ ] Executar deploy
-- [ ] Solicitar validação 
+**Descrição:**
+Adicionar o campo `indicator_deadline_hours` nos Funis do CRM para definir o prazo de preenchimento do indicador (em horas). O campo já foi criado manualmente no Supabase. Agora, o sistema deve permitir editar/visualizar esse campo no modal de Funil, garantir que seja salvo/lido corretamente e atualizar os tipos do frontend.
+
+**Checklist:**
+- [x] Adicionar o campo `indicator_deadline_hours` nos tipos do frontend (`crm.ts` e `supabase/types.ts`).
+- [x] Adicionar o campo no estado e formulário do modal de Funil (`FunnelModal.tsx`), com explicação e validação.
+- [ ] Garantir que o campo seja enviado/salvo ao criar/editar funis.
+- [ ] Atualizar a leitura do funil para trazer o campo.
+- [ ] Testar o fluxo de criação/edição.
+- [ ] Atualizar `requeststory.md` com a requisição.
+- [ ] Executar deploy.
+- [ ] Solicitar validação do usuário.
+
+**Status:** Em andamento
+
+--- 

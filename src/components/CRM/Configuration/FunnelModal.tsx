@@ -34,7 +34,8 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
     verification_day: 1,
     sales_value_mode: 'manual' as 'manual' | 'sistema',
     recommendations_mode: 'manual' as 'manual' | 'sistema',
-    recommendation_stage_id: ''
+    recommendation_stage_id: '',
+    indicator_deadline_hours: 0 // Novo campo: padrão 0
   });
   
   const [stages, setStages] = useState<FunnelStage[]>([
@@ -65,7 +66,8 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
         verification_day: funnel.verification_day || 1,
         sales_value_mode: funnel.sales_value_mode || 'manual',
         recommendations_mode: funnel.recommendations_mode || 'manual',
-        recommendation_stage_id: funnel.recommendation_stage_id ? String(funnel.recommendation_stage_id).trim() : ''
+        recommendation_stage_id: funnel.recommendation_stage_id ? String(funnel.recommendation_stage_id).trim() : '',
+        indicator_deadline_hours: funnel.indicator_deadline_hours ?? 0
       });
       if (funnel.stages && funnel.stages.length > 0) {
         setStages(funnel.stages.sort((a: any, b: any) => a.stage_order - b.stage_order));
@@ -78,7 +80,8 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
         verification_day: 1,
         sales_value_mode: 'manual',
         recommendations_mode: 'manual',
-        recommendation_stage_id: ''
+        recommendation_stage_id: '',
+        indicator_deadline_hours: 0
       });
       setStages([
         { name: '', stage_order: 1, target_percentage: 0, target_value: 0 }
@@ -208,6 +211,11 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
       return;
     }
 
+    if (formData.indicator_deadline_hours < 0 || !Number.isInteger(formData.indicator_deadline_hours)) {
+      toast.error('O prazo do indicador deve ser um número inteiro maior ou igual a 0.');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
@@ -220,6 +228,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
         status: 'active' as const,
         sales_value_mode: formData.sales_value_mode,
         recommendations_mode: formData.recommendations_mode,
+        indicator_deadline_hours: formData.indicator_deadline_hours,
         // Não enviar recommendation_stage_id na criação, só na edição
         // recommendation_stage_id: formData.recommendation_stage_id ? String(formData.recommendation_stage_id).trim() : null
       };
@@ -257,7 +266,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
       onClose();
       
       // Reset form
-      setFormData({ name: '', verification_type: 'weekly', verification_day: 1, sales_value_mode: 'manual', recommendations_mode: 'manual', recommendation_stage_id: '' });
+      setFormData({ name: '', verification_type: 'weekly', verification_day: 1, sales_value_mode: 'manual', recommendations_mode: 'manual', recommendation_stage_id: '', indicator_deadline_hours: 0 });
       setStages([{ name: '', stage_order: 1, target_percentage: 0, target_value: 0 }]);
     } catch (error: any) {
       console.error('Erro ao salvar funil:', error);
@@ -378,6 +387,22 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                 </Select>
               </div>
             )}
+            <div>
+              <Label htmlFor="indicator_deadline_hours">Prazo do Indicador (horas)</Label>
+              <Input
+                id="indicator_deadline_hours"
+                type="number"
+                min={0}
+                step={1}
+                value={formData.indicator_deadline_hours}
+                onChange={e => setFormData(prev => ({ ...prev, indicator_deadline_hours: Math.max(0, Math.floor(Number(e.target.value) || 0)) }))}
+                disabled={isLoading}
+                required
+              />
+              <div className="text-xs text-muted-foreground mt-1">
+                0 = até a data fim do período, 24 = 1 dia após, 48 = 2 dias após, etc.
+              </div>
+            </div>
           </div>
 
           <Card>

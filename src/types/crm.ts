@@ -49,6 +49,7 @@ export interface Funnel {
   status: EntityStatus;
   created_at: string;
   updated_at: string;
+  indicator_deadline_hours?: number; // Prazo de preenchimento do indicador em horas (0 = até o fim do período, 24 = 1 dia após, etc)
 }
 
 export interface FunnelStage {

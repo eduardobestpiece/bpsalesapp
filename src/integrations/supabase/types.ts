@@ -316,6 +316,7 @@ export type Database = {
           updated_at: string | null
           verification_day: number | null
           verification_type: Database["public"]["Enums"]["funnel_verification"]
+          indicator_deadline_hours: number | null // Prazo de preenchimento do indicador em horas
         }
         Insert: {
           company_id: string
@@ -326,6 +327,7 @@ export type Database = {
           updated_at?: string | null
           verification_day?: number | null
           verification_type: Database["public"]["Enums"]["funnel_verification"]
+          indicator_deadline_hours?: number | null
         }
         Update: {
           company_id?: string
@@ -336,6 +338,7 @@ export type Database = {
           updated_at?: string | null
           verification_day?: number | null
           verification_type?: Database["public"]["Enums"]["funnel_verification"]
+          indicator_deadline_hours?: number | null
         }
         Relationships: [
           {
