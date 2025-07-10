@@ -248,7 +248,6 @@ const CrmIndicadores = () => {
         <div className="max-w-full mx-auto">
           <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-100/50 p-1">
             <div className="bg-white rounded-[calc(1.5rem-4px)] p-8 shadow-sm min-h-[600px]">
-              
               {allowedTabs.length > 0 && (
                 <Tabs defaultValue={defaultTab}>
                   <TabsList className="mb-6">
@@ -266,56 +265,55 @@ const CrmIndicadores = () => {
                   )}
                   {allowedTabs.includes('registro') && (
                     <TabsContent value="registro">
-              <Card>
-                <CardHeader>
-                  <div className="flex justify-between items-center">
-                    <div>
-                      <CardTitle>Meus Indicadores</CardTitle>
-                      <CardDescription>
-                        Registre seus números por período e funil
-                      </CardDescription>
-                    </div>
-                        <div className="flex gap-2">
-                          {/* Layout dos filtros e seletor de funil (apenas Funil ao lado do botão Filtros) */}
-                          <div className="flex items-center gap-4">
+                      <Card>
+                        <CardHeader>
+                          <div className="flex justify-between items-center">
                             <div>
-                              <select value={selectedFunnelId} onChange={e => setSelectedFunnelId(e.target.value)} className="border rounded-lg px-3 py-2 text-base">
-                                <option value="">Todos os funis</option>
-                                {allowedFunnels.map(f => (
-                                  <option key={f.id} value={f.id}>{f.name}</option>
-                                ))}
-                              </select>
+                              <CardTitle>Meus Indicadores</CardTitle>
+                              <CardDescription>
+                                Registre seus números por período e funil
+                              </CardDescription>
                             </div>
-                            <Button variant="outline" onClick={() => setShowFiltersModal(true)}>
-                              <Filter className="w-4 h-4 mr-2" />
-                              Filtros
-                            </Button>
-                    <Button onClick={() => setShowModal(true)}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Registrar Indicador
-                    </Button>
+                            <div className="flex gap-2">
+                              <div className="flex items-center gap-4">
+                                <div>
+                                  <select value={selectedFunnelId} onChange={e => setSelectedFunnelId(e.target.value)} className="border rounded-lg px-3 py-2 text-base">
+                                    <option value="">Todos os funis</option>
+                                    {allowedFunnels.map(f => (
+                                      <option key={f.id} value={f.id}>{f.name}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                                <Button variant="outline" onClick={() => setShowFiltersModal(true)}>
+                                  <Filter className="w-4 h-4 mr-2" />
+                                  Filtros
+                                </Button>
+                                <Button onClick={() => setShowModal(true)}>
+                                  <Plus className="w-4 h-4 mr-2" />
+                                  Registrar Indicador
+                                </Button>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                      {/* Menu de ações em massa acima da tabela */}
-                      {selectedIndicators.length > 0 && (
-                        <div className="flex gap-2 mb-2">
-                          <Button variant="destructive" onClick={handleBulkArchive}>Arquivar Selecionados</Button>
-                          <Button variant="outline" onClick={handleBulkPeriod} disabled={(() => {
-                            if (selectedIndicators.length === 0) return true;
-                            const selectedObjs = filteredIndicators.filter(i => selectedIndicators.includes(i.id));
-                            if (selectedObjs.length === 0) return true;
-                            const firstPeriod = selectedObjs[0]?.period_start + '_' + selectedObjs[0]?.period_end;
-                            return !selectedObjs.every(i => (i.period_start + '_' + i.period_end) === firstPeriod);
-                          })()}>Alterar Período</Button>
-                          <Button variant="ghost" onClick={clearBulkSelection}>Cancelar Seleção</Button>
-                  </div>
-                      )}
-                      {/* Tabela única com colunas ajustadas */}
-                      <div className="overflow-x-auto rounded-2xl shadow border bg-white">
-                                  <table className="min-w-full border-separate border-spacing-y-1">
+                        </CardHeader>
+                        <CardContent>
+                          {/* Menu de ações em massa acima da tabela */}
+                          {selectedIndicators.length > 0 && (
+                            <div className="flex gap-2 mb-2">
+                              <Button variant="destructive" onClick={handleBulkArchive}>Arquivar Selecionados</Button>
+                              <Button variant="outline" onClick={handleBulkPeriod} disabled={(() => {
+                                if (selectedIndicators.length === 0) return true;
+                                const selectedObjs = filteredIndicators.filter(i => selectedIndicators.includes(i.id));
+                                if (selectedObjs.length === 0) return true;
+                                const firstPeriod = selectedObjs[0]?.period_start + '_' + selectedObjs[0]?.period_end;
+                                return !selectedObjs.every(i => (i.period_start + '_' + i.period_end) === firstPeriod);
+                              })()}>Alterar Período</Button>
+                              <Button variant="ghost" onClick={clearBulkSelection}>Cancelar Seleção</Button>
+                          </div>
+                          )}
+                          {/* Tabela única com colunas ajustadas */}
+                          <div className="overflow-x-auto rounded-2xl shadow border bg-white">
+                                      <table className="min-w-full border-separate border-spacing-y-1">
                           <thead className="sticky top-0 z-10 bg-muted">
                             <tr>
                               <th className="px-2 py-2 text-center font-semibold rounded-tl-2xl"></th> {/* Bolinha */}
@@ -426,17 +424,17 @@ const CrmIndicadores = () => {
                                   </table>
                   </div>
                 </CardContent>
-                  <IndicatorModal
-                    isOpen={showModal}
-                    onClose={handleCloseModal}
-                    companyId={companyId}
-                    indicator={selectedIndicator}
-                  />
-                  </Card>
-                </TabsContent>
-              </Tabs>
-              )}
-              {/* Fechamento correto do Tabs */}
+                <IndicatorModal
+                  isOpen={showModal}
+                  onClose={handleCloseModal}
+                  companyId={companyId}
+                  indicator={selectedIndicator}
+                />
+              </Card>
+            </TabsContent>
+          )}
+        </Tabs>
+      )}
             </div>
           </div>
         </div>
