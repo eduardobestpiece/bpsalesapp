@@ -89,10 +89,15 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
         });
         toast.success('Usuário atualizado com sucesso!');
       } else {
-        // Chamar Edge Function invite-user
+        // Chamar Edge Function invite-user com autenticação
+        const session = await supabase.auth.getSession();
+        const accessToken = session.data.session?.access_token;
         const res = await fetch('https://jbhocghbieqxjwsdstgm.supabase.co/functions/v1/invite-user', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'Content-Type': 'application/json',
+            ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {})
+          },
           body: JSON.stringify({
             email: formData.email.trim(),
             role: formData.role,
