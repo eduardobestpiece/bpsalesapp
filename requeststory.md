@@ -1,34 +1,23 @@
-# Requisição Atual
+# Solicitação em andamento
 
-**Data:** 2024-07-10
+**Data:** <!-- Preencher com a data/hora atual -->
+
 **Solicitante:** Usuário
 
-## Descrição
-1. Revisar e ajustar globalmente o dark mode, contraste e acessibilidade em todos os componentes, páginas e layouts do sistema Monteo (Simulador e CRM).
-2. [NOVO] Adicionar uma nova aba "Acessos" em Configurações Master, permitindo definir quais páginas/rotas cada função (Administrador, Líder, Usuário) pode acessar/visualizar. Se desmarcar, o usuário não vê nem o botão, nem a página/rota.
+**Descrição:**
+Criar uma nova aba chamada "Acessos" dentro da página de configurações do Master (CrmMasterConfig). Nessa aba, o usuário Master poderá definir, para cada função (Administrador, Líder e Usuário), quais páginas estarão visíveis/permitidas. Se uma página for desmarcada para uma função, ela não aparecerá nem no menu, nem nos botões de navegação, nem será acessível diretamente pela URL.
 
-## Ponto de Partida
-- O projeto já possui variáveis CSS para temas e um ThemeSwitch funcional.
-- Diversos componentes e páginas já utilizam classes utilitárias do Tailwind, mas há trechos com cores fixas e gradientes que precisam de revisão.
-- Estrutura de Tabs já implementada em CrmMasterConfig.
+**Contexto:**
+- O sistema já possui controle de funções (master, admin, leader, user) e permissões básicas por função.
+- Não existe ainda uma tabela de permissões de páginas por função no banco.
+- O objetivo é permitir que o Master personalize o acesso às páginas principais (ex: Simulador, CRM, Indicadores, etc) para cada função.
 
-## O que foi alterado
-- Mapeamento completo de todos os diretórios e arquivos de UI (Simulador, CRM, Administradores, Layout, UI compartilhada, páginas).
-- Planejamento para revisão e ajuste de todos os pontos críticos de contraste e tema.
-- Planejamento para implementação do controle de acessos por função.
+**Checklist inicial:**
+- [ ] Analisar estrutura de abas em CrmMasterConfig
+- [ ] Planejar tabela de permissões no Supabase
+- [ ] Implementar interface de configuração na nova aba
+- [ ] Adaptar menus e botões para respeitar as permissões
+- [ ] Garantir que rotas protegidas respeitem as permissões
+- [ ] Testar e validar com diferentes funções
 
-## Próximos passos do checklist
-- [x] Mapear todos os arquivos e pontos de UI para revisão
-- [ ] Revisar e ajustar todos os componentes de UI compartilhados (src/components/ui)
-- [ ] Revisar e ajustar todos os layouts (src/components/Layout)
-- [ ] Revisar e ajustar todos os componentes do Simulador
-- [ ] Revisar e ajustar todos os componentes do CRM (incluindo Performance, Configuração, etc)
-- [ ] Revisar e ajustar todos os componentes de Administradores
-- [ ] Revisar e ajustar todas as páginas (src/pages)
-- [ ] Testar o dark mode e contraste em todos os fluxos
-- [ ] Adicionar aba "Acessos" em Configurações Master
-- [ ] Criar UI de permissões por função/página
-- [ ] Definir e criar estrutura no banco para salvar permissões
-- [ ] Implementar lógica para esconder botões/menus/páginas conforme permissões
-- [ ] Testar com cada função
-- [ ] Atualizar documentação e histórico 
+**Status:** Em análise e planejamento 

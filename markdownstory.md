@@ -20,3 +20,11 @@
 ---
 
 *Itens anteriores marcados como concluídos. Caso precise de novos ajustes, abrir nova solicitação ou detalhar os pontos pendentes.* 
+
+## [2024-07-10] Nova solicitação: Aba "Acessos" em Configurações Master
+
+- Usuário solicitou a criação de uma nova aba chamada "Acessos" na página de configurações Master.
+- Objetivo: permitir ao Master definir, para cada função (Administrador, Líder, Usuário), quais páginas estarão visíveis/permitidas.
+- Se uma página for desmarcada para uma função, ela não aparecerá nem no menu, nem nos botões de navegação, nem será acessível diretamente pela URL.
+- Não existe ainda uma tabela de permissões de páginas por função no banco.
+- Status: Início do planejamento e análise. 

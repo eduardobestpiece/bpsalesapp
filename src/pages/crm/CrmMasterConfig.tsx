@@ -221,9 +221,10 @@ const CrmMasterConfig = () => {
               </div>
 
               <Tabs defaultValue="companies" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="companies">Empresas</TabsTrigger>
                   <TabsTrigger value="archived">Itens arquivados</TabsTrigger>
+                  <TabsTrigger value="accesses">Acessos</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="companies" className="mt-6">
@@ -375,6 +376,55 @@ const CrmMasterConfig = () => {
                             ))}
                           </tbody>
                         </table>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                <TabsContent value="accesses" className="mt-6">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Permissões de Acesso</CardTitle>
+                      <CardDescription>
+                        Defina quais páginas cada função pode acessar. Desmarque para ocultar do menu, botões e impedir acesso direto.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="overflow-x-auto">
+                        <table className="min-w-full border-separate border-spacing-y-1">
+                          <thead>
+                            <tr className="bg-muted">
+                              <th className="px-2 py-1 text-left font-semibold">Página</th>
+                              <th className="px-2 py-1 text-center font-semibold">Administrador</th>
+                              <th className="px-2 py-1 text-center font-semibold">Líder</th>
+                              <th className="px-2 py-1 text-center font-semibold">Usuário</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {/* Estrutura estática inicial, depois será dinâmica */}
+                            {[
+                              { key: 'simulator', label: 'Simulador' },
+                              { key: 'crm', label: 'CRM' },
+                              { key: 'indicadores', label: 'Indicadores' },
+                              { key: 'configuracoes', label: 'Configurações' },
+                            ].map((page) => (
+                              <tr key={page.key}>
+                                <td className="px-2 py-1 font-medium">{page.label}</td>
+                                <td className="px-2 py-1 text-center">
+                                  <input type="checkbox" checked readOnly />
+                                </td>
+                                <td className="px-2 py-1 text-center">
+                                  <input type="checkbox" checked readOnly />
+                                </td>
+                                <td className="px-2 py-1 text-center">
+                                  <input type="checkbox" checked readOnly />
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        <div className="text-xs text-muted-foreground mt-4">
+                          * Apenas usuários Master podem editar essas permissões.
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
