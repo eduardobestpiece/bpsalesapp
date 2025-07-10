@@ -51,7 +51,7 @@ serve(async (req) => {
   })
   const inviteData = await inviteRes.json()
   if (!inviteRes.ok) {
-    return new Response(JSON.stringify({ error: inviteData, debugHeaders, bodyJson }), {
+    return new Response(JSON.stringify({ error: inviteData, debugHeaders, bodyJson, serviceKey, supabaseUrl }), {
       status: 400,
       headers: corsHeaders
     });
