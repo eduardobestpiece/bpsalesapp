@@ -26,7 +26,7 @@ const queryClient = new QueryClient();
 function CrmLoginRedirect() {
   const { user, loading } = useCrmAuth();
   if (loading) return null;
-  if (user) return <Navigate to="/home" replace />;
+  if (user) return <Navigate to="/crm" replace />;
   return <CrmLogin />;
 }
 

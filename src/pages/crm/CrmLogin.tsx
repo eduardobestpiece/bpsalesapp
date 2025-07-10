@@ -22,8 +22,8 @@ const CrmLogin = () => {
 
   useEffect(() => {
     if (user && !authLoading) {
-      console.log('User authenticated, redirecting to simulator');
-      navigate('/', { replace: true });
+      console.log('User authenticated, redirecting to Comercial');
+      navigate('/crm', { replace: true });
     }
   }, [user, authLoading, navigate]);
 
@@ -47,7 +47,7 @@ const CrmLogin = () => {
       } else {
         toast.success('Login realizado com sucesso!');
         // Redirect will be handled by useEffect
-        navigate('/home');
+        // Removido navigate('/home')
       }
     } catch (err) {
       console.error('Unexpected login error:', err);

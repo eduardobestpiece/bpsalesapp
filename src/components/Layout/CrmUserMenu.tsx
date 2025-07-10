@@ -21,6 +21,7 @@ export const CrmUserMenu = () => {
 
   const handleGoToSimulator = () => {
     setModule('simulator');
+    navigate('/');
   };
 
   const handleSignOut = async () => {
@@ -102,10 +103,10 @@ export const CrmUserMenu = () => {
         )}
 
         <DropdownMenuItem className="p-3 cursor-pointer hover:bg-blue-50/70 rounded-lg" onClick={handleGoToSimulator}>
-          <Link to="/" className="flex items-center w-full">
+          <span className="flex items-center w-full">
             <Calculator className="mr-3 h-5 w-5 text-blue-600" />
             <span className="font-medium text-secondary">Simulador</span>
-          </Link>
+          </span>
         </DropdownMenuItem>
         
         <DropdownMenuSeparator />
