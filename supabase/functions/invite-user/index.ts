@@ -25,27 +25,25 @@ serve(async (req) => {
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
   const supabaseUrl = Deno.env.get('SUPABASE_URL')
 
-  // 1. Criar usuário no Auth
-  const authRes = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
+  // 1. Convidar usuário no Auth (envia e-mail automático)
+  const inviteRes = await fetch(`${supabaseUrl}/auth/v1/invite`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${serviceKey}`
     },
     body: JSON.stringify({
-      email,
-      password: 'Admin',
-      email_confirm: true
+      email
     })
   })
-  const authData = await authRes.json()
-  if (!authRes.ok) {
-    return new Response(JSON.stringify({ error: authData }), {
+  const inviteData = await inviteRes.json()
+  if (!inviteRes.ok) {
+    return new Response(JSON.stringify({ error: inviteData }), {
       status: 400,
       headers: corsHeaders
     });
   }
-  const auth_id = authData.user?.id
+  const auth_id = inviteData.user?.id
 
   // 2. Inserir usuário na tabela crm_users
   const dbRes = await fetch(`${supabaseUrl}/rest/v1/crm_users`, {

@@ -1,36 +1,20 @@
-# Solicitação em Andamento
+# Requisição Atual
 
-## Deploy para GitHub e Vercel
+**Data:** 2024-07-09
+**Solicitante:** Usuário
 
-**Objetivo:**
-Realizar deploy das alterações atuais do projeto para atualizar o repositório no GitHub e o ambiente de produção no Vercel.
+## Descrição
+Ajustar o fluxo de convite de usuário para que, ao adicionar um novo usuário pela plataforma, o Supabase envie automaticamente um e-mail de convite para o usuário acessar a plataforma.
 
-### Checklist Geral
-- [x] Analisar arquivos modificados
-- [x] Verificar pendências de banco de dados
-- [ ] Commitar alterações
-- [ ] Push para GitHub
-- [ ] Verificar início do deploy no Vercel
-- [ ] Solicitar conferência ao usuário
+## Ponto de Partida
+- O frontend já possui formulário e chamada para função Edge `invite-user`.
+- A função Edge criava o usuário no Auth, mas não disparava o e-mail de convite (usava endpoint de admin com senha e email_confirm).
 
-**Status:**
-- Iniciado em: <!-- Data/hora será preenchida pelo usuário ou posteriormente -->
-- Aguardando commit e push.
+## O que foi alterado
+- A função Edge foi ajustada para usar o endpoint `/auth/v1/invite` do Supabase, garantindo o envio automático do e-mail de convite.
 
----
-
-## Etapa de Usuários - Planejamento e Checklist
-
-**Objetivo:**
-Implementar o fluxo completo de gestão de usuários no CRM, incluindo convite, cadastro simplificado, seleção de funis, redefinição de senha pós-convite e recuperação de senha.
-
-### Checklist Geral
-- [x] Remover página Performance do cabeçalho e rota
-- [x] Criar página de redefinição de senha pós convite (Nome, Sobrenome, E-mail, Telefone, Data de nascimento, nova senha e repetir senha)
-- [x] Criar página de redefinição de senha comum (E-mail, nova senha e repetir senha)
-- [x] Ajustar fluxo de convite: criar usuário no Supabase com senha "Admin", auto-confirmar e enviar e-mail para redefinir senha/completar cadastro
-- [x] Modal de cadastro de usuários: apenas Email, Função e seleção de Funis
-- [x] Modal de edição de usuários: manter campos atuais + seleção de Funis
-
-**Status:**
-- Todas as etapas do fluxo de usuários concluídas. Pronto para validação final do usuário. 
+## Próximos passos do checklist
+- [x] Ajustar função Edge para disparar convite
+- [ ] Garantir que o template de convite está ativo no Supabase
+- [ ] Testar o fluxo completo
+- [ ] Atualizar documentação e histórico 
