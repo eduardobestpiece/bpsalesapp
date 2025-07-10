@@ -33,9 +33,9 @@ serve(async (req) => {
     return new Response(JSON.stringify({ error: 'Dados obrigatórios ausentes', debugHeaders, bodyJson }), { status: 400, headers: corsHeaders });
   }
 
-  // Usar variáveis customizadas (sem prefixo SUPABASE_)
-  const serviceKey = Deno.env.get('SERVICE_ROLE_KEY');
-  const supabaseUrl = Deno.env.get('PROJECT_URL');
+  // Definir manualmente as chaves para debug
+  const serviceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpiaG9jZ2hiaWVxeGp3c2RzdGdtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTg1NDExNywiZXhwIjoyMDY3NDMwMTE3fQ.THDbqsymTMNTaEyr3FxKp6maGlct6kr5jH8fIvDRTyE';
+  const supabaseUrl = 'https://jbhocghbieqxjwsdstgm.supabase.co';
 
   // 1. Convidar usuário no Auth (envia e-mail automático)
   const inviteRes = await fetch(`${supabaseUrl}/auth/v1/invite`, {
