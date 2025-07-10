@@ -10,6 +10,9 @@ import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useFunnels } from '@/hooks/useFunnels';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Checkbox } from '@/components/ui/checkbox';
+import { ChevronDown } from 'lucide-react';
 
 interface UserModalProps {
   isOpen: boolean;
@@ -228,26 +231,42 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
           </div>
           <div>
             <Label>Funis permitidos</Label>
-            <div className="flex flex-wrap gap-2">
-              {funnels.map((f: any) => (
-                <label key={f.id} className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={formData.funnels.includes(f.id)}
-                    onChange={e => {
-                      setFormData(prev => ({
-                        ...prev,
-                        funnels: e.target.checked
-                          ? [...prev.funnels, f.id]
-                          : prev.funnels.filter((id) => id !== f.id)
-                      }));
-                    }}
-                    disabled={isLoading}
-                  />
-                  <span>{f.name}</span>
-                </label>
-              ))}
-            </div>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full flex justify-between items-center"
+                  disabled={isLoading}
+                >
+                  {formData.funnels.length > 0
+                    ? funnels.filter(f => formData.funnels.includes(f.id)).map(f => f.name).join(', ')
+                    : 'Selecione os funis'}
+                  <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-72 p-2">
+                <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
+                  {funnels.map((f: any) => (
+                    <label key={f.id} className="flex items-center gap-2 cursor-pointer">
+                      <Checkbox
+                        checked={formData.funnels.includes(f.id)}
+                        onCheckedChange={checked => {
+                          setFormData(prev => ({
+                            ...prev,
+                            funnels: checked
+                              ? [...prev.funnels, f.id]
+                              : prev.funnels.filter((id) => id !== f.id)
+                          }));
+                        }}
+                        disabled={isLoading}
+                      />
+                      <span>{f.name}</span>
+                    </label>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
           <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
