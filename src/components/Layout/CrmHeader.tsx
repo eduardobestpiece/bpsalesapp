@@ -4,9 +4,30 @@ import { CrmUserMenu } from './CrmUserMenu';
 import { Calculator, Users, BarChart3, TrendingUp } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
 
 export const CrmHeader = () => {
   const location = useLocation();
+  const { userRole, companyId } = useCrmAuth();
+  const [pagePermissions, setPagePermissions] = useState<any>({});
+
+  useEffect(() => {
+    if (!companyId) return;
+    supabase
+      .from('role_page_permissions')
+      .select('*')
+      .eq('company_id', companyId)
+      .eq('role', userRole)
+      .then(({ data }) => {
+        const perms: any = {};
+        data?.forEach((row: any) => {
+          perms[row.page] = row.allowed;
+        });
+        setPagePermissions(perms);
+      });
+  }, [companyId, userRole]);
 
   const isActivePath = (path: string) => location.pathname === path;
 
@@ -23,41 +44,42 @@ export const CrmHeader = () => {
               <span className="text-sm text-secondary/60 font-medium">Sistema de Gestão</span>
             </div>
           </Link>
-          
           {/* Navigation Links */}
           <nav className="hidden md:flex items-center space-x-1">
-            <Link to="/crm">
-              <Button 
-                variant={isActivePath('/crm') ? 'default' : 'ghost'} 
-                size="sm"
-                className="flex items-center space-x-2"
-              >
-                <Users className="h-4 w-4" />
-                <span>Dashboard</span>
-              </Button>
-            </Link>
-            
-            <Link to="/crm/indicadores">
-              <Button 
-                variant={isActivePath('/crm/indicadores') ? 'default' : 'ghost'} 
-                size="sm"
-                className="flex items-center space-x-2"
-              >
-                <BarChart3 className="h-4 w-4" />
-                <span>Indicadores</span>
-              </Button>
-            </Link>
-            {/* Removido o botão Performance */}
+            {pagePermissions['comercial'] !== false && (
+              <Link to="/crm">
+                <Button 
+                  variant={isActivePath('/crm') ? 'default' : 'ghost'} 
+                  size="sm"
+                  className="flex items-center space-x-2"
+                >
+                  <Users className="h-4 w-4" />
+                  <span>Comercial</span>
+                </Button>
+              </Link>
+            )}
+            {pagePermissions['indicadores'] !== false && (
+              <Link to="/crm/indicadores">
+                <Button 
+                  variant={isActivePath('/crm/indicadores') ? 'default' : 'ghost'} 
+                  size="sm"
+                  className="flex items-center space-x-2"
+                >
+                  <BarChart3 className="h-4 w-4" />
+                  <span>Indicadores</span>
+                </Button>
+              </Link>
+            )}
+            {/* Adicione outros botões conforme granularidade desejada */}
           </nav>
         </div>
-        
         <div className="flex items-center space-x-4">
           <ThemeSwitch />
           <div className="hidden md:flex items-center space-x-2 text-sm text-secondary/70 bg-blue-50/70 px-3 py-1.5 rounded-full">
             <Users className="h-4 w-4 text-blue-600" />
             <span className="font-medium">Gerencie seus leads</span>
           </div>
-          <CrmUserMenu />
+          <CrmUserMenu pagePermissions={pagePermissions} />
         </div>
       </div>
     </header>

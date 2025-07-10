@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
-export const CrmUserMenu = () => {
+export const CrmUserMenu = ({ pagePermissions = {} }: { pagePermissions?: any }) => {
   const { setModule } = useModule();
   const { crmUser, signOut, userRole } = useCrmAuth();
   const navigate = useNavigate();
@@ -102,12 +102,14 @@ export const CrmUserMenu = () => {
           </DropdownMenuItem>
         )}
 
-        <DropdownMenuItem className="p-3 cursor-pointer hover:bg-blue-50/70 rounded-lg" onClick={handleGoToSimulator}>
-          <span className="flex items-center w-full">
-            <Calculator className="mr-3 h-5 w-5 text-blue-600" />
-            <span className="font-medium text-secondary">Simulador</span>
-          </span>
-        </DropdownMenuItem>
+        {pagePermissions['simulator'] !== false && (
+          <DropdownMenuItem className="p-3 cursor-pointer hover:bg-blue-50/70 rounded-lg" onClick={handleGoToSimulator}>
+            <span className="flex items-center w-full">
+              <Calculator className="mr-3 h-5 w-5 text-blue-600" />
+              <span className="font-medium text-secondary">Simulador</span>
+            </span>
+          </DropdownMenuItem>
+        )}
         
         <DropdownMenuSeparator />
         <DropdownMenuItem 

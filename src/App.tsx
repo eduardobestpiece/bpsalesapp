@@ -20,6 +20,8 @@ import CrmResetPasswordInvite from "./pages/crm/CrmResetPasswordInvite";
 import CrmResetPassword from "./pages/crm/CrmResetPassword";
 import Home from "./pages/Home";
 import { useCrmAuth } from "@/contexts/CrmAuthContext";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +30,28 @@ function CrmLoginRedirect() {
   if (loading) return null;
   if (user) return <Navigate to="/crm" replace />;
   return <CrmLogin />;
+}
+
+function ProtectedPage({ pageKey, children }: { pageKey: string, children: React.ReactNode }) {
+  const { userRole, companyId, loading } = useCrmAuth();
+  const [allowed, setAllowed] = useState<boolean>(true);
+  useEffect(() => {
+    if (!companyId || !userRole) return;
+    supabase
+      .from('role_page_permissions')
+      .select('allowed')
+      .eq('company_id', companyId)
+      .eq('role', userRole)
+      .eq('page', pageKey)
+      .single()
+      .then(({ data }) => {
+        if (data && data.allowed === false) setAllowed(false);
+        else setAllowed(true);
+      });
+  }, [companyId, userRole, pageKey]);
+  if (loading) return null;
+  if (!allowed) return <Navigate to="/" replace />;
+  return <>{children}</>;
 }
 
 function App() {
@@ -56,7 +80,9 @@ function App() {
                       path="/crm" 
                       element={
                         <ProtectedRoute>
-                          <CrmDashboard />
+                          <ProtectedPage pageKey="comercial">
+                            <CrmDashboard />
+                          </ProtectedPage>
                         </ProtectedRoute>
                       } 
                     />
@@ -72,7 +98,9 @@ function App() {
                       path="/crm/indicadores" 
                       element={
                         <ProtectedRoute>
-                          <CrmIndicadores />
+                          <ProtectedPage pageKey="indicadores">
+                            <CrmIndicadores />
+                          </ProtectedPage>
                         </ProtectedRoute>
                       } 
                     />

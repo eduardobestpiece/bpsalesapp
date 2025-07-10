@@ -389,52 +389,7 @@ const CrmMasterConfig = () => {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full border-separate border-spacing-y-1">
-                          <thead>
-                            <tr className="bg-muted">
-                              <th className="px-2 py-1 text-left font-semibold">Página / Aba</th>
-                              <th className="px-2 py-1 text-center font-semibold">Administrador</th>
-                              <th className="px-2 py-1 text-center font-semibold">Líder</th>
-                              <th className="px-2 py-1 text-center font-semibold">Usuário</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {/* Estrutura detalhada, checkboxes editáveis (apenas visual, sem salvar ainda) */}
-                            {[
-                              { key: 'simulator', label: 'Simulador' },
-                              { key: 'simulator_config', label: 'Configurações do Simulador', indent: true },
-                              { key: 'comercial', label: 'Comercial' },
-                              { key: 'comercial_leads', label: 'Leads', indent: true },
-                              { key: 'comercial_sales', label: 'Vendas', indent: true },
-                              { key: 'indicadores', label: 'Indicadores' },
-                              { key: 'indicadores_performance', label: 'Performance', indent: true },
-                              { key: 'indicadores_registro', label: 'Registro de Indicadores', indent: true },
-                              { key: 'crm_config', label: 'Configurações CRM' },
-                              { key: 'crm_config_funnels', label: 'Funis', indent: true },
-                              { key: 'crm_config_sources', label: 'Origens', indent: true },
-                              { key: 'crm_config_teams', label: 'Times', indent: true },
-                              { key: 'crm_config_users', label: 'Usuários', indent: true },
-                            ].map((item) => (
-                              <tr key={item.key}>
-                                <td className={`px-2 py-1 font-medium${item.indent ? ' pl-8' : ''}`}>{item.label}</td>
-                                <td className="px-2 py-1 text-center">
-                                  <input type="checkbox" defaultChecked />
-                                </td>
-                                <td className="px-2 py-1 text-center">
-                                  <input type="checkbox" defaultChecked />
-                                </td>
-                                <td className="px-2 py-1 text-center">
-                                  <input type="checkbox" defaultChecked />
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                        <div className="text-xs text-muted-foreground mt-4">
-                          * Apenas usuários Master podem editar essas permissões. (Funcionalidade visual, salvar no banco em breve)
-                        </div>
-                      </div>
+                      <AccessPermissionsTable />
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -448,3 +403,147 @@ const CrmMasterConfig = () => {
 };
 
 export default CrmMasterConfig;
+
+function AccessPermissionsTable() {
+  const { companyId } = useCrmAuth();
+  const [permissions, setPermissions] = useState<any>({});
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const pages = [
+    { key: 'simulator', label: 'Simulador' },
+    { key: 'simulator_config', label: 'Configurações do Simulador', indent: true },
+    { key: 'comercial', label: 'Comercial' },
+    { key: 'comercial_leads', label: 'Leads', indent: true },
+    { key: 'comercial_sales', label: 'Vendas', indent: true },
+    { key: 'indicadores', label: 'Indicadores' },
+    { key: 'indicadores_performance', label: 'Performance', indent: true },
+    { key: 'indicadores_registro', label: 'Registro de Indicadores', indent: true },
+    { key: 'crm_config', label: 'Configurações CRM' },
+    { key: 'crm_config_funnels', label: 'Funis', indent: true },
+    { key: 'crm_config_sources', label: 'Origens', indent: true },
+    { key: 'crm_config_teams', label: 'Times', indent: true },
+    { key: 'crm_config_users', label: 'Usuários', indent: true },
+  ];
+  const roles = [
+    { key: 'admin', label: 'Administrador' },
+    { key: 'leader', label: 'Líder' },
+    { key: 'user', label: 'Usuário' },
+  ];
+
+  useEffect(() => {
+    if (!companyId) return;
+    setLoading(true);
+    supabase
+      .from('role_page_permissions')
+      .select('*')
+      .eq('company_id', companyId)
+      .then(({ data, error }) => {
+        if (error) {
+          toast.error('Erro ao carregar permissões: ' + error.message);
+          setLoading(false);
+          return;
+        }
+        // Montar objeto: permissions[role][page] = allowed
+        const perms: any = {};
+        roles.forEach(r => { perms[r.key] = {}; });
+        data?.forEach((row: any) => {
+          if (!perms[row.role]) perms[row.role] = {};
+          perms[row.role][row.page] = row.allowed;
+        });
+        setPermissions(perms);
+        setLoading(false);
+      });
+  }, [companyId]);
+
+  const handleChange = (role: string, page: string, value: boolean) => {
+    setPermissions((prev: any) => ({
+      ...prev,
+      [role]: { ...prev[role], [page]: value }
+    }));
+  };
+
+  const handleSave = async () => {
+    if (!companyId) return;
+    setSaving(true);
+    // Montar lista de permissões para salvar
+    const rows = [];
+    for (const role of roles) {
+      for (const page of pages) {
+        rows.push({
+          role: role.key,
+          page: page.key,
+          allowed: permissions?.[role.key]?.[page.key] ?? true,
+          company_id: companyId,
+        });
+      }
+    }
+    // Deletar todas as permissões da empresa e inserir as novas (simples)
+    const { error: delError } = await supabase
+      .from('role_page_permissions')
+      .delete()
+      .eq('company_id', companyId);
+    if (delError) {
+      toast.error('Erro ao salvar permissões: ' + delError.message);
+      setSaving(false);
+      return;
+    }
+    const { error: insError } = await supabase
+      .from('role_page_permissions')
+      .insert(rows);
+    if (insError) {
+      toast.error('Erro ao salvar permissões: ' + insError.message);
+      setSaving(false);
+      return;
+    }
+    toast.success('Permissões salvas com sucesso!');
+    setSaving(false);
+  };
+
+  if (loading) {
+    return <div className="text-center py-8 text-muted-foreground">Carregando permissões...</div>;
+  }
+
+  return (
+    <div>
+      <table className="min-w-full border-separate border-spacing-y-1">
+        <thead>
+          <tr className="bg-muted">
+            <th className="px-2 py-1 text-left font-semibold">Página / Aba</th>
+            {roles.map(role => (
+              <th key={role.key} className="px-2 py-1 text-center font-semibold">{role.label}</th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {pages.map(item => (
+            <tr key={item.key}>
+              <td className={`px-2 py-1 font-medium${item.indent ? ' pl-8' : ''}`}>{item.label}</td>
+              {roles.map(role => (
+                <td key={role.key} className="px-2 py-1 text-center">
+                  <input
+                    type="checkbox"
+                    checked={permissions?.[role.key]?.[item.key] ?? true}
+                    onChange={e => handleChange(role.key, item.key, e.target.checked)}
+                  />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div className="flex justify-end mt-4">
+        <button
+          className="bg-primary text-white px-6 py-2 rounded-lg shadow hover:bg-primary-700 disabled:opacity-60"
+          onClick={handleSave}
+          disabled={saving}
+        >
+          {saving ? 'Salvando...' : 'Salvar Permissões'}
+        </button>
+      </div>
+      <div className="text-xs text-muted-foreground mt-4">
+        * Apenas usuários Master podem editar essas permissões.
+      </div>
+    </div>
+  );
+}
