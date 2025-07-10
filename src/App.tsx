@@ -2,7 +2,7 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ModuleProvider } from "@/contexts/ModuleContext";
 import { CrmAuthProvider } from "@/contexts/CrmAuthContext";
 import { ProtectedRoute } from "@/components/CRM/ProtectedRoute";
@@ -32,8 +32,8 @@ function App() {
               <div className="min-h-screen bg-gray-50">
                 <main>
                   <Routes>
-                    {/* Rotas principais */}
-                    <Route path="/" element={<Index />} />
+                    {/* Redirecionar home para login */}
+                    <Route path="/" element={<Navigate to="/crm/login" replace />} />
                     <Route path="/configuracoes" element={<Configuracoes />} />
                     
                     {/* Rota de login do CRM */}
