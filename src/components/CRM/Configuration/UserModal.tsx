@@ -106,7 +106,18 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
           })
         });
         const data = await res.json();
-        if (!res.ok) throw new Error(data?.error || data);
+        if (!res.ok) {
+          // Se o erro for um objeto, mostrar a mensagem interna
+          let errorMsg = '';
+          if (typeof data?.error === 'string') {
+            errorMsg = data.error;
+          } else if (typeof data?.error === 'object' && data?.error?.message) {
+            errorMsg = data.error.message;
+          } else {
+            errorMsg = JSON.stringify(data?.error || data);
+          }
+          throw new Error(errorMsg);
+        }
         toast.success('Usuário convidado com sucesso! O usuário receberá um e-mail para redefinir a senha.');
       }
 
