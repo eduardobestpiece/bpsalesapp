@@ -58,6 +58,9 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   const { mutate: updateIndicator } = useUpdateIndicator();
   const { data: indicators } = useIndicators(effectiveCompanyId);
 
+  const isUser = crmUser?.role === 'user';
+  const allowedFunnels = isUser ? (funnels || []).filter(f => crmUser.funnels?.includes(f.id)) : (funnels || []);
+
   // NOVA LÓGICA DE PERÍODOS
   let periodOptions: { label: string; value: string; isMissing?: boolean; isAllowed?: boolean }[] = [];
   const periodosRegistrados: string[] = Array.isArray(indicators) ? (indicators.filter(
@@ -693,8 +696,8 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                     <div className="px-4 py-2 text-muted-foreground text-sm">
                       Carregando funis...
                     </div>
-                  ) : funnels && funnels.length > 0 ? (
-                    funnels.map((funnel) => (
+                  ) : allowedFunnels.length > 0 ? (
+                    allowedFunnels.map((funnel) => (
                       <SelectItem key={funnel.id} value={funnel.id}>
                         {funnel.name}
                       </SelectItem>
