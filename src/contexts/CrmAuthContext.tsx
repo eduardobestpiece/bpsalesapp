@@ -35,44 +35,57 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [loading, setLoading] = useState(true);
 
   const fetchCrmUser = async (email: string) => {
-    console.log('Fetching CRM user for email:', email);
-    
-    const { data, error } = await supabase
-      .from('crm_users')
-      .select('*')
-      .eq('email', email)
-      .eq('status', 'active')
-      .single();
-
-    if (error) {
-      console.error('Error fetching CRM user:', error);
+    console.log('[CrmAuth] Buscando CRM user para:', email);
+    let timeoutId: NodeJS.Timeout | null = null;
+    try {
+      const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('Timeout ao buscar CRM user')), 8000);
+      });
+      const { data, error } = await Promise.race([
+        supabase
+          .from('crm_users')
+          .select('*')
+          .eq('email', email)
+          .eq('status', 'active')
+          .single(),
+        timeoutPromise
+      ]);
+      if (timeoutId) clearTimeout(timeoutId);
+      if (error) {
+        console.error('[CrmAuth] Erro ao buscar CRM user:', error);
+        return null;
+      }
+      console.log('[CrmAuth] CRM user encontrado:', data);
+      return data as CrmUser;
+    } catch (err) {
+      if (timeoutId) clearTimeout(timeoutId);
+      console.error('[CrmAuth] Erro inesperado ao buscar CRM user:', err);
       return null;
     }
-
-    console.log('CRM user found:', data);
-    return data as CrmUser;
   };
 
   useEffect(() => {
     // Setup auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
+        console.log('[CrmAuth] Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
-
-        if (session?.user?.email) {
-          setLoading(true); // <- Garante loading durante busca
-          // Fetch CRM user data when logged in
-          const crmUserData = await fetchCrmUser(session.user.email!);
-          setCrmUser(crmUserData);
-          setUserRole(crmUserData?.role ?? null);
-          setCompanyId(crmUserData?.company_id ?? null);
-          setLoading(false);
-        } else {
-          setCrmUser(null);
-          setUserRole(null);
-          setCompanyId(null);
+        setLoading(true);
+        try {
+          if (session?.user?.email) {
+            const crmUserData = await fetchCrmUser(session.user.email!);
+            setCrmUser(crmUserData);
+            setUserRole(crmUserData?.role ?? null);
+            setCompanyId(crmUserData?.company_id ?? null);
+          } else {
+            setCrmUser(null);
+            setUserRole(null);
+            setCompanyId(null);
+          }
+        } catch (err) {
+          console.error('[CrmAuth] Erro inesperado no listener:', err);
+        } finally {
           setLoading(false);
         }
       }
@@ -80,18 +93,24 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     // Check for existing session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log('Initial session check:', session?.user?.email);
+      console.log('[CrmAuth] Initial session check:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
-
-      if (session?.user?.email) {
-        setLoading(true); // <- Garante loading durante busca
-        const crmUserData = await fetchCrmUser(session.user.email);
-        setCrmUser(crmUserData);
-        setUserRole(crmUserData?.role ?? null);
-        setCompanyId(crmUserData?.company_id ?? null);
-        setLoading(false);
-      } else {
+      setLoading(true);
+      try {
+        if (session?.user?.email) {
+          const crmUserData = await fetchCrmUser(session.user.email);
+          setCrmUser(crmUserData);
+          setUserRole(crmUserData?.role ?? null);
+          setCompanyId(crmUserData?.company_id ?? null);
+        } else {
+          setCrmUser(null);
+          setUserRole(null);
+          setCompanyId(null);
+        }
+      } catch (err) {
+        console.error('[CrmAuth] Erro inesperado no check inicial:', err);
+      } finally {
         setLoading(false);
       }
     });
