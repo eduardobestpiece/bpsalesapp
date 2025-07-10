@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Search, Edit, Archive, Trash2, Filter, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
 import { IndicatorModal } from '@/components/CRM/IndicatorModal';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
-import { useIndicators } from '@/hooks/useIndicators';
+import { useIndicators, IndicatorWithValues } from '@/hooks/useIndicators';
 import { useFunnels } from '@/hooks/useFunnels';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import CrmPerformance from './CrmPerformance';
@@ -16,12 +16,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useEffect } from 'react';
-import { DatePicker } from '@/components/ui/datepicker'; // Supondo que existe um componente de datepicker
+import { DatePicker } from '@/components/ui/datepicker';
 import { useTeams } from '@/hooks/useTeams';
 import { useCrmUsers } from '@/hooks/useCrmUsers';
 
 // Função utilitária para status visual do prazo
-function getPrazoStatus(indicator, funnel) {
+function getPrazoStatus(indicator: IndicatorWithValues, funnel: any) {
   if (!indicator || !funnel || !indicator.created_at || !indicator.period_end) return null;
   const deadlineHours = funnel.indicator_deadline_hours ?? 0;
   const periodEnd = new Date(indicator.period_end);
@@ -39,7 +39,7 @@ function getPrazoStatus(indicator, funnel) {
 
 const CrmIndicadores = () => {
   const [showModal, setShowModal] = useState(false);
-  const [selectedIndicator, setSelectedIndicator] = useState<any>(null);
+  const [selectedIndicator, setSelectedIndicator] = useState<IndicatorWithValues | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { crmUser } = useCrmAuth();
   const companyId = crmUser?.company_id || '';
@@ -75,7 +75,13 @@ const CrmIndicadores = () => {
           .select('columns')
           .eq('funnel_id', funnel.id)
           .single();
-        configs[funnel.id] = data?.columns || allColumns.map(c => c.key);
+        // Ensure columns is properly typed as string array
+        const columns = data?.columns;
+        if (Array.isArray(columns)) {
+          configs[funnel.id] = columns as string[];
+        } else {
+          configs[funnel.id] = allColumns.map(c => c.key);
+        }
       }
       setColumnsConfig(configs);
     };
@@ -103,7 +109,7 @@ const CrmIndicadores = () => {
     setShowColumnsModal(false);
   };
 
-  const handleEdit = (indicator: any) => {
+  const handleEdit = (indicator: IndicatorWithValues) => {
     setSelectedIndicator(indicator);
     setShowModal(true);
   };
@@ -125,7 +131,7 @@ const CrmIndicadores = () => {
   });
 
   // Filtragem de indicadores por perfil
-  let accessibleIndicators = indicators || [];
+  let accessibleIndicators: IndicatorWithValues[] = indicators || [];
   if (crmUser?.role === 'leader') {
     // Líder vê os próprios e da equipe
     const teamMembers = crmUsers.filter(u => u.team_id === crmUser.team_id).map(u => u.id);
@@ -190,7 +196,7 @@ const CrmIndicadores = () => {
   };
 
   // Função para arquivar indicador
-  const handleArchive = async (indicator: any) => {
+  const handleArchive = async (indicator: IndicatorWithValues) => {
     if (!indicator) return;
     await supabase
       .from('indicators')
@@ -199,7 +205,7 @@ const CrmIndicadores = () => {
     window.location.reload(); // Atualiza a lista
   };
   // Função para excluir indicador
-  const handleDelete = async (indicator: any) => {
+  const handleDelete = async (indicator: IndicatorWithValues) => {
     if (!indicator) return;
     if (!window.confirm('Tem certeza que deseja excluir este indicador? Essa ação não pode ser desfeita.')) return;
     await supabase
@@ -272,8 +278,8 @@ const CrmIndicadores = () => {
                             if (selectedIndicators.length === 0) return true;
                             const selectedObjs = filteredIndicators.filter(i => selectedIndicators.includes(i.id));
                             if (selectedObjs.length === 0) return true;
-                            const firstPeriod = selectedObjs[0]?.period_start + '_' + selectedObjs[0]?.period_end;
-                            return !selectedObjs.every(i => (i.period_start + '_' + i.period_end) === firstPeriod);
+                            const firstPeriod = (selectedObjs[0]?.period_start || '') + '_' + (selectedObjs[0]?.period_end || '');
+                            return !selectedObjs.every(i => ((i.period_start || '') + '_' + (i.period_end || '')) === firstPeriod);
                           })()}>Alterar Período</Button>
                           <Button variant="ghost" onClick={clearBulkSelection}>Cancelar Seleção</Button>
                   </div>

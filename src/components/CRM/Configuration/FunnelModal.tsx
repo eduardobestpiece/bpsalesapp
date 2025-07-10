@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -251,11 +250,25 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
         // Buscar novamente as etapas para pegar os IDs gerados
         const { data: etapasCriadas, error: errorEtapas } = await supabase
           .from('funnel_stages')
-          .select('id, name')
-          .eq('funnel_id', created.id);
+          .select('*')
+          .eq('funnel_id', created.id)
+          .order('stage_order');
         if (errorEtapas) throw errorEtapas;
+        
+        // Convert the fetched stages to the correct format
+        const stagesWithAllProperties: FunnelStage[] = etapasCriadas.map(stage => ({
+          id: stage.id,
+          funnel_id: stage.funnel_id,
+          name: stage.name,
+          stage_order: stage.stage_order,
+          target_percentage: stage.target_percentage || 0,
+          target_value: stage.target_value || 0,
+          created_at: stage.created_at,
+          updated_at: stage.updated_at
+        }));
+        
         // Atualizar o estado para permitir seleção do campo recommendation_stage_id
-        setStages(etapasCriadas);
+        setStages(stagesWithAllProperties);
         setCanSelectRecommendationStage(true);
         toast.success('Funil criado! Agora selecione a etapa ligada às recomendações e salve novamente.');
         // Não fecha o modal, aguarda o usuário selecionar e salvar o campo recommendation_stage_id

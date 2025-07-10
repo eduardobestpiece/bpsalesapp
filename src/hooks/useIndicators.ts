@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Indicator, IndicatorValue } from '@/types/crm';
 
-interface IndicatorWithValues extends Indicator {
+export interface IndicatorWithValues extends Indicator {
   values: IndicatorValue[];
 }
 
