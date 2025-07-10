@@ -1,3 +1,4 @@
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Indicator, IndicatorValue } from '@/types/crm';
@@ -53,13 +54,13 @@ export const useIndicators = (companyId?: string, userId?: string) => {
         return data as IndicatorWithValues[];
       } catch (err) {
         console.error('[useIndicators] Erro inesperado:', err);
-        throw err;
+        return [] as IndicatorWithValues[];
       }
     },
     enabled: !!companyId,
     staleTime: 30000, // 30 segundos
     gcTime: 300000, // 5 minutos
-    retry: 2,
+    retry: 1,
     retryDelay: 1000,
   });
 };

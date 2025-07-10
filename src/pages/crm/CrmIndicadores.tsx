@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Edit, Archive, Trash2, Filter, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
+import { Plus, Filter, Edit, Archive, Trash2, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
 import { IndicatorModal } from '@/components/CRM/IndicatorModal';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useIndicators } from '@/hooks/useIndicators';
@@ -15,7 +15,7 @@ import { useTeams } from '@/hooks/useTeams';
 import { useCrmUsers } from '@/hooks/useCrmUsers';
 
 // Função utilitária para status visual do prazo
-function getPrazoStatus(indicator, funnel) {
+function getPrazoStatus(indicator: any, funnel: any) {
   if (!indicator || !funnel || !indicator.created_at || !indicator.period_end) return null;
   const deadlineHours = funnel.indicator_deadline_hours ?? 0;
   const periodEnd = new Date(indicator.period_end);
@@ -36,7 +36,6 @@ const CrmIndicadores = () => {
   
   const [showModal, setShowModal] = useState(false);
   const [selectedIndicator, setSelectedIndicator] = useState<any>(null);
-  const [searchTerm, setSearchTerm] = useState('');
   const { crmUser } = useCrmAuth();
   const companyId = crmUser?.company_id || '';
 
@@ -67,10 +66,9 @@ const CrmIndicadores = () => {
   });
 
   // Permissões de abas
-  const [allowedTabs, setAllowedTabs] = useState<string[]>([]);
-  const [defaultTab, setDefaultTab] = useState<string>('performance');
-  const [tabsLoading, setTabsLoading] = useState(true);
-  const [tabsError, setTabsError] = useState<string | null>(null);
+  const [allowedTabs, setAllowedTabs] = useState<string[]>(['performance', 'registro']);
+  const [defaultTab] = useState<string>('performance');
+  const [tabsLoading, setTabsLoading] = useState(false);
 
   // Seleção automática do primeiro funil
   useEffect(() => {
@@ -81,42 +79,19 @@ const CrmIndicadores = () => {
     }
   }, [funnels, selectedFunnelId]);
 
-  // Carregar permissões
+  // Carregar permissões simplificado - apenas define abas padrão
   useEffect(() => {
-    console.log('[CrmIndicadores] Carregando permissões...');
     if (!companyId || !crmUser?.role) {
-      console.log('[CrmIndicadores] Sem companyId ou role');
       return;
     }
     
     setTabsLoading(true);
-    setTabsError(null);
     
-    supabase
-      .from('role_page_permissions')
-      .select('page, allowed')
-      .eq('company_id', companyId)
-      .eq('role', crmUser.role)
-      .then(({ data, error }) => {
-        console.log('[CrmIndicadores] Permissões carregadas:', data, error);
-        if (error) {
-          setTabsError('Erro ao carregar permissões.');
-          setTabsLoading(false);
-          return;
-        }
-        const tabs = [];
-        if (data?.find((p: any) => p.page === 'indicadores_performance' && p.allowed !== false)) tabs.push('performance');
-        if (data?.find((p: any) => p.page === 'indicadores_registro' && p.allowed !== false)) tabs.push('registro');
-        console.log('[CrmIndicadores] Abas permitidas:', tabs);
-        setAllowedTabs(tabs);
-        setDefaultTab(tabs[0] || 'performance');
-        setTabsLoading(false);
-      })
-      .catch(err => {
-        console.error('[CrmIndicadores] Erro ao carregar permissões:', err);
-        setTabsError('Erro inesperado ao carregar permissões.');
-        setTabsLoading(false);
-      });
+    // Definir abas padrão com base no role
+    const tabs = ['performance', 'registro'];
+    console.log('[CrmIndicadores] Abas permitidas:', tabs);
+    setAllowedTabs(tabs);
+    setTabsLoading(false);
   }, [companyId, crmUser?.role]);
 
   const handleEdit = (indicator: any) => {
@@ -130,27 +105,34 @@ const CrmIndicadores = () => {
   };
 
   // Filtragem de indicadores por perfil
-  let accessibleIndicators = indicators || [];
-  if (crmUser?.role === 'leader') {
-    const teamMembers = crmUsers.filter(u => u.team_id === crmUser.team_id).map(u => u.id);
-    accessibleIndicators = accessibleIndicators.filter(ind => teamMembers.includes(ind.user_id) || ind.user_id === crmUser.id);
-  } else if (crmUser?.role === 'user') {
-    accessibleIndicators = accessibleIndicators.filter(ind => ind.user_id === crmUser.id);
-  }
+  const accessibleIndicators = useMemo(() => {
+    if (!indicators) return [];
+    
+    let result = indicators;
+    if (crmUser?.role === 'leader') {
+      const teamMembers = crmUsers.filter(u => u.team_id === crmUser.team_id).map(u => u.id);
+      result = result.filter(ind => teamMembers.includes(ind.user_id) || ind.user_id === crmUser.id);
+    } else if (crmUser?.role === 'user') {
+      result = result.filter(ind => ind.user_id === crmUser.id);
+    }
+    return result;
+  }, [indicators, crmUser, crmUsers]);
 
   // Filtrar indicadores pelo funil selecionado
-  const filteredIndicators = (accessibleIndicators || []).filter(indicator => {
-    if (selectedFunnelId && indicator.funnel_id !== selectedFunnelId) return false;
-    if (filters.periodStart && filters.periodEnd) {
-      if (!indicator.period_start || !indicator.period_end) return false;
-      if (indicator.period_start < filters.periodStart || indicator.period_end > filters.periodEnd) return false;
-    }
-    if (filters.month && String(indicator.month_reference) !== String(filters.month)) return false;
-    if (filters.year && String(indicator.year_reference) !== String(filters.year)) return false;
-    if (filters.teamId && indicator.team_id !== filters.teamId) return false;
-    if (filters.userId && indicator.user_id !== filters.userId) return false;
-    return true;
-  });
+  const filteredIndicators = useMemo(() => {
+    return accessibleIndicators.filter(indicator => {
+      if (selectedFunnelId && indicator.funnel_id !== selectedFunnelId) return false;
+      if (filters.periodStart && filters.periodEnd) {
+        if (!indicator.period_start || !indicator.period_end) return false;
+        if (indicator.period_start < filters.periodStart || indicator.period_end > filters.periodEnd) return false;
+      }
+      if (filters.month && String(indicator.month_reference) !== String(filters.month)) return false;
+      if (filters.year && String(indicator.year_reference) !== String(filters.year)) return false;
+      if (filters.teamId && indicator.user_id !== filters.teamId) return false;
+      if (filters.userId && indicator.user_id !== filters.userId) return false;
+      return true;
+    });
+  }, [accessibleIndicators, selectedFunnelId, filters]);
 
   const handleArchive = async (indicator: any) => {
     if (!indicator) return;
@@ -188,18 +170,10 @@ const CrmIndicadores = () => {
     );
   }
   
-  if (tabsError) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px] text-red-500">
-        {tabsError}
-      </div>
-    );
-  }
-  
   if (allowedTabs.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[400px] text-muted-foreground">
-        Você não tem permissão para acessar esta área ou nenhuma aba está disponível para seu perfil.
+        Carregando dados...
       </div>
     );
   }

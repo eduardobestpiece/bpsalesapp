@@ -41,15 +41,15 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const timeoutPromise = new Promise((_, reject) => {
         timeoutId = setTimeout(() => reject(new Error('Timeout ao buscar CRM user')), 8000);
       });
-      const { data, error } = await Promise.race([
-        supabase
-          .from('crm_users')
-          .select('*')
-          .eq('email', email)
-          .eq('status', 'active')
-          .single(),
-        timeoutPromise
-      ]);
+      const queryPromise = supabase
+        .from('crm_users')
+        .select('*')
+        .eq('email', email)
+        .eq('status', 'active')
+        .single();
+      
+      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
+      
       if (timeoutId) clearTimeout(timeoutId);
       if (error) {
         console.error('[CrmAuth] Erro ao buscar CRM user:', error);
@@ -67,27 +67,31 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
   useEffect(() => {
     // Setup auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('[CrmAuth] Auth state changed:', event, session?.user?.email);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(true);
-        try {
-          if (session?.user?.email) {
-            const crmUserData = await fetchCrmUser(session.user.email!);
-            setCrmUser(crmUserData);
-            setUserRole(crmUserData?.role ?? null);
-            setCompanyId(crmUserData?.company_id ?? null);
-          } else {
-            setCrmUser(null);
-            setUserRole(null);
-            setCompanyId(null);
+        
+        // Use setTimeout to prevent blocking the auth callback
+        setTimeout(async () => {
+          try {
+            if (session?.user?.email) {
+              const crmUserData = await fetchCrmUser(session.user.email!);
+              setCrmUser(crmUserData);
+              setUserRole(crmUserData?.role ?? null);
+              setCompanyId(crmUserData?.company_id ?? null);
+            } else {
+              setCrmUser(null);
+              setUserRole(null);
+              setCompanyId(null);
+            }
+          } catch (err) {
+            console.error('[CrmAuth] Erro inesperado no listener:', err);
+          } finally {
+            setLoading(false);
           }
-        } catch (err) {
-          console.error('[CrmAuth] Erro inesperado no listener:', err);
-        } finally {
-          setLoading(false);
-        }
+        }, 0);
       }
     );
 
