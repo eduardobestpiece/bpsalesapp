@@ -62,14 +62,13 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setUser(session?.user ?? null);
 
         if (session?.user?.email) {
+          setLoading(true); // <- Garante loading durante busca
           // Fetch CRM user data when logged in
-          setTimeout(async () => {
-            const crmUserData = await fetchCrmUser(session.user.email!);
-            setCrmUser(crmUserData);
-            setUserRole(crmUserData?.role ?? null);
-            setCompanyId(crmUserData?.company_id ?? null);
-            setLoading(false);
-          }, 0);
+          const crmUserData = await fetchCrmUser(session.user.email!);
+          setCrmUser(crmUserData);
+          setUserRole(crmUserData?.role ?? null);
+          setCompanyId(crmUserData?.company_id ?? null);
+          setLoading(false);
         } else {
           setCrmUser(null);
           setUserRole(null);
@@ -80,18 +79,18 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       console.log('Initial session check:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
 
       if (session?.user?.email) {
-        fetchCrmUser(session.user.email).then((crmUserData) => {
-          setCrmUser(crmUserData);
-          setUserRole(crmUserData?.role ?? null);
-          setCompanyId(crmUserData?.company_id ?? null);
-          setLoading(false);
-        });
+        setLoading(true); // <- Garante loading durante busca
+        const crmUserData = await fetchCrmUser(session.user.email);
+        setCrmUser(crmUserData);
+        setUserRole(crmUserData?.role ?? null);
+        setCompanyId(crmUserData?.company_id ?? null);
+        setLoading(false);
       } else {
         setLoading(false);
       }
