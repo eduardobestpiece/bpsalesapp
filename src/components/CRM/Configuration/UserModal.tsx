@@ -98,7 +98,6 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'apikey': SUPABASE_PUBLISHABLE_KEY,
             ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {})
           },
           body: JSON.stringify({
