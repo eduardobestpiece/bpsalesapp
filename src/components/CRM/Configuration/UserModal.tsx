@@ -97,9 +97,9 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
         const res = await fetch('https://jbhocghbieqxjwsdstgm.supabase.co/functions/v1/invite-user', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
+            'content-type': 'application/json',
             'apikey': SUPABASE_PUBLISHABLE_KEY,
-            ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {})
+            ...(accessToken ? { 'authorization': `Bearer ${accessToken}` } : {})
           },
           body: JSON.stringify({
             email: formData.email.trim(),
