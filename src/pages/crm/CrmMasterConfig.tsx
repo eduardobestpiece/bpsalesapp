@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -25,35 +25,29 @@ const CrmMasterConfig = () => {
   const [newCompanyName, setNewCompanyName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
-  // Permissões de abas
-  const [allowedTabs, setAllowedTabs] = useState<string[]>([]);
-  const [defaultTab, setDefaultTab] = useState<string>('companies');
-  const [tabsLoading, setTabsLoading] = useState(true);
+  // Permissões de abas - usando useMemo para evitar re-renders
+  const allowedTabs = useMemo(() => {
+    // Sempre retornar um array válido para master
+    if (userRole === 'master') {
+      return ['companies', 'archived', 'accesses'];
+    }
+    return [];
+  }, [userRole]);
+
+  const defaultTab = useMemo(() => {
+    return allowedTabs[0] || 'companies';
+  }, [allowedTabs]);
+
+  const [tabsLoading, setTabsLoading] = useState(false);
   const [tabsError, setTabsError] = useState<string | null>(null);
+
+  // Remover o useEffect que causava infinite loop - usar useMemo acima
   useEffect(() => {
-    if (!companyId || !userRole) return;
-    setTabsLoading(true);
-    setTabsError(null);
-    supabase
-      .from('role_page_permissions')
-      .select('page, allowed')
-      .eq('company_id', companyId)
-      .eq('role', userRole)
-      .then(({ data, error }) => {
-        if (error) {
-          setTabsError('Erro ao carregar permissões.');
-          setTabsLoading(false);
-          return;
-        }
-        const tabs = [];
-        if (data?.find((p: any) => p.page === 'crm_master_companies' && p.allowed !== false)) tabs.push('companies');
-        if (data?.find((p: any) => p.page === 'crm_master_archived' && p.allowed !== false)) tabs.push('archived');
-        if (data?.find((p: any) => p.page === 'crm_master_accesses' && p.allowed !== false)) tabs.push('accesses');
-        setAllowedTabs(tabs);
-        setDefaultTab(tabs[0] || 'companies');
-        setTabsLoading(false);
-      });
-  }, [companyId, userRole]);
+    if (userRole === 'master') {
+      setTabsLoading(false);
+      setTabsError(null);
+    }
+  }, [userRole]);
 
   // Fallback visual para loading, erro ou ausência de abas
   if (tabsLoading) {
@@ -169,15 +163,17 @@ const CrmMasterConfig = () => {
   const [archivedItems, setArchivedItems] = useState<any[]>([]);
   const [isLoadingArchived, setIsLoadingArchived] = useState(false);
 
-  useEffect(() => {
-    const fetchArchived = async () => {
-      setIsLoadingArchived(true);
+  // Usar useCallback para estabilizar a função
+  const fetchArchived = useCallback(async () => {
+    setIsLoadingArchived(true);
+    try {
       // Buscar todos os itens arquivados
       const [indicators, leads, sales] = await Promise.all([
         supabase.from('indicators').select('*').not('archived_at', 'is', null),
         supabase.from('leads').select('*').not('archived_at', 'is', null),
         supabase.from('sales').select('*').not('archived_at', 'is', null),
       ]);
+      
       let items: any[] = [];
       if (indicators.data) items = items.concat(indicators.data.map((i: any) => ({
         id: i.id,
@@ -198,20 +194,30 @@ const CrmMasterConfig = () => {
         description: `Venda: ${s.sale_date ? new Date(s.sale_date).toLocaleDateString('pt-BR') : s.id}`
       })));
       setArchivedItems(items);
+    } catch (error) {
+      console.error('Error fetching archived items:', error);
+    } finally {
       setIsLoadingArchived(false);
-    };
-    fetchArchived();
+    }
   }, []);
 
-  // Filtro
-  const filteredArchived = archivedItems.filter(item => {
-    if (archivedType && item.type !== archivedType) return false;
-    if (archivedDate && item.archived_at) {
-      const itemDate = new Date(item.archived_at).toISOString().slice(0, 10);
-      if (itemDate !== archivedDate) return false;
+  useEffect(() => {
+    if (userRole === 'master') {
+      fetchArchived();
     }
-    return true;
-  });
+  }, [userRole, fetchArchived]);
+
+  // Filtro usando useMemo para evitar re-renders
+  const filteredArchived = useMemo(() => {
+    return archivedItems.filter(item => {
+      if (archivedType && item.type !== archivedType) return false;
+      if (archivedDate && item.archived_at) {
+        const itemDate = new Date(item.archived_at).toISOString().slice(0, 10);
+        if (itemDate !== archivedDate) return false;
+      }
+      return true;
+    });
+  }, [archivedItems, archivedType, archivedDate]);
 
   // Ações
   const handleRecover = async (item: any) => {
@@ -222,6 +228,7 @@ const CrmMasterConfig = () => {
     await supabase.from(table).update({ archived_at: null }).eq('id', item.id);
     setArchivedItems(prev => prev.filter(i => i.id !== item.id || i.type !== item.type));
   };
+  
   const handleDelete = async (item: any) => {
     if (!window.confirm('Tem certeza que deseja excluir este item? Essa ação não pode ser desfeita.')) return;
     let table = '';
