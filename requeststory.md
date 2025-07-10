@@ -1,5 +1,24 @@
 # Solicitação em Andamento
 
+## Deploy para GitHub e Vercel
+
+**Objetivo:**
+Realizar deploy das alterações atuais do projeto para atualizar o repositório no GitHub e o ambiente de produção no Vercel.
+
+### Checklist Geral
+- [x] Analisar arquivos modificados
+- [x] Verificar pendências de banco de dados
+- [ ] Commitar alterações
+- [ ] Push para GitHub
+- [ ] Verificar início do deploy no Vercel
+- [ ] Solicitar conferência ao usuário
+
+**Status:**
+- Iniciado em: <!-- Data/hora será preenchida pelo usuário ou posteriormente -->
+- Aguardando commit e push.
+
+---
+
 ## Etapa de Usuários - Planejamento e Checklist
 
 **Objetivo:**
