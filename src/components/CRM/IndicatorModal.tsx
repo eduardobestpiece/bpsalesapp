@@ -22,6 +22,13 @@ interface IndicatorModalProps {
   indicator?: any;
 }
 
+interface PeriodOption {
+  label: string;
+  value: string;
+  isMissing?: boolean;
+  isAllowed?: boolean;
+}
+
 export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: IndicatorModalProps) => {
   const [formData, setFormData] = useState({
     period_date: '',
@@ -58,7 +65,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   const { data: indicators } = useIndicators(effectiveCompanyId);
 
   // NOVA LÓGICA DE PERÍODOS
-  let periodOptions: { label: string; value: string; isMissing?: boolean; isAllowed?: boolean }[] = [];
+  let periodOptions: PeriodOption[] = [];
   const periodosRegistrados: string[] = Array.isArray(indicators) ? (indicators.filter(
     (ind) =>
       selectedFunnel &&
@@ -309,68 +316,69 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     }
   }, [formData.funnel_id, funnels, indicator]);
 
-  useEffect(() => {
-    async function fetchAutoValues() {
-      if (!selectedFunnel || !crmUser || !formData.funnel_id || !formData.period_date) return;
-      setIsAutoLoading(true);
-      // Determinar período (data inicial e final)
-      let periodStart = formData.period_date;
-      let periodEnd = formData.period_date;
-      if (formData.period_date.includes('_')) {
-        const [start, end] = formData.period_date.split('_');
-        periodStart = start;
-        periodEnd = end;
+  async function fetchAutoValues() {
+    if (!selectedFunnel || !crmUser || !formData.funnel_id || !formData.period_date) return;
+    setIsAutoLoading(true);
+    // Determinar período (data inicial e final)
+    let periodStart = formData.period_date;
+    let periodEnd = formData.period_date;
+    if (formData.period_date.includes('_')) {
+      const [start, end] = formData.period_date.split('_');
+      periodStart = start;
+      periodEnd = end;
+    }
+    // Buscar valor das vendas
+    if (selectedFunnel.sales_value_mode === 'sistema') {
+      const { data, error } = await supabase
+        .from('sales')
+        .select('sale_value')
+        .eq('responsible_id', crmUser.id)
+        .eq('funnel_id', formData.funnel_id)
+        .gte('sale_date', periodStart)
+        .lte('sale_date', periodEnd)
+        .eq('status', 'active');
+      if (!error && data) {
+        const total = data.reduce((sum, s) => sum + (s.sale_value || 0), 0);
+        setSalesValue(total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace('.', ','));
+      } else {
+        setSalesValue('0,00');
       }
-      // Buscar valor das vendas
-      if (selectedFunnel.sales_value_mode === 'sistema') {
+    }
+    // Buscar número de recomendações
+    if (selectedFunnel.recommendations_mode === 'sistema') {
+      // Buscar id da source "Recomendação"
+      const { data: sources } = await supabase
+        .from('sources')
+        .select('id')
+        .eq('company_id', companyId)
+        .eq('name', 'Recomendação')
+        .eq('status', 'active')
+        .limit(1)
+        .single();
+      const recommendationSourceId = sources?.id;
+      if (recommendationSourceId) {
         const { data, error } = await supabase
-          .from('sales')
-          .select('sale_value')
+          .from('leads')
+          .select('id')
           .eq('responsible_id', crmUser.id)
           .eq('funnel_id', formData.funnel_id)
-          .gte('sale_date', periodStart)
-          .lte('sale_date', periodEnd)
+          .eq('source_id', recommendationSourceId)
+          .gte('created_at', periodStart)
+          .lte('created_at', periodEnd)
           .eq('status', 'active');
         if (!error && data) {
-          const total = data.reduce((sum, s) => sum + (s.sale_value || 0), 0);
-          setSalesValue(total.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace('.', ','));
-        } else {
-          setSalesValue('0,00');
-        }
-      }
-      // Buscar número de recomendações
-      if (selectedFunnel.recommendations_mode === 'sistema') {
-        // Buscar id da source "Recomendação"
-        const { data: sources } = await supabase
-          .from('sources')
-          .select('id')
-          .eq('company_id', companyId)
-          .eq('name', 'Recomendação')
-          .eq('status', 'active')
-          .limit(1)
-          .single();
-        const recommendationSourceId = sources?.id;
-        if (recommendationSourceId) {
-          const { data, error } = await supabase
-            .from('leads')
-            .select('id')
-            .eq('responsible_id', crmUser.id)
-            .eq('funnel_id', formData.funnel_id)
-            .eq('source_id', recommendationSourceId)
-            .gte('created_at', periodStart)
-            .lte('created_at', periodEnd)
-            .eq('status', 'active');
-          if (!error && data) {
-            setRecommendationsCount(data.length);
-          } else {
-            setRecommendationsCount(0);
-          }
+          setRecommendationsCount(data.length);
         } else {
           setRecommendationsCount(0);
         }
+      } else {
+        setRecommendationsCount(0);
       }
-      setIsAutoLoading(false);
     }
+    setIsAutoLoading(false);
+  }
+
+  useEffect(() => {
     if (selectedFunnel && ['master', 'admin'].includes(crmUser?.role || '')) {
       fetchAutoValues();
     }
@@ -478,7 +486,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
 
     try {
       const indicatorData = {
-        user_id: crmUser.id,
+        user_id: crmUser!.id,
         company_id: companyId,
         funnel_id: formData.funnel_id,
         period_date: formData.period_date,
@@ -535,109 +543,23 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     }
   };
 
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    try {
-      const indicatorData = {
-        period_start: periodStart,
-        period_end: periodEnd,
-        month_reference: monthReference,
-        year_reference: yearReference,
-        sales_value: parseMonetaryValue(salesValue),
-        recommendations_count: recommendationsCount
-      };
-      const { error } = await supabase
-        .from('indicators')
-        .update(indicatorData)
-        .eq('id', indicator.id);
-      if (error) throw error;
-      onClose();
-    } catch (err) {
-      // tratamento de erro
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Função utilitária para calcular status do prazo
-  function getPrazoStatus() {
-    if (!indicator || !selectedFunnel || !indicator.created_at || !indicator.period_end) return null;
-    const deadlineHours = selectedFunnel.indicator_deadline_hours ?? 0;
-    const periodEnd = new Date(indicator.period_end);
-    const prazo = new Date(periodEnd.getTime() + deadlineHours * 60 * 60 * 1000);
-    const createdAt = new Date(indicator.created_at);
-    const diffMs = createdAt.getTime() - prazo.getTime();
-    if (createdAt <= prazo) {
-      return { color: 'green', icon: <CheckCircle className="w-4 h-4 text-green-500" />, msg: 'Preenchido dentro do prazo' };
-    } else if (diffMs <= 24 * 60 * 60 * 1000) {
-      return { color: 'yellow', icon: <AlertCircle className="w-4 h-4 text-yellow-500" />, msg: 'Preenchido 24 horas após prazo' };
-    } else {
-      return { color: 'red', icon: <XCircle className="w-4 h-4 text-red-500" />, msg: 'Preenchido fora do prazo' };
-    }
-  }
-  const prazoStatus = getPrazoStatus();
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle>
-              {indicator ? 'Editar Indicador' : 'Registrar Indicador'}
-            </DialogTitle>
-            {indicator && prazoStatus && (
-              <div className="flex items-center gap-2">
-                {prazoStatus.icon}
-                <span className={`text-xs ${
-                  prazoStatus.color === 'green' ? 'text-green-600' : prazoStatus.color === 'yellow' ? 'text-yellow-600' : 'text-red-600'
-                }`}>{prazoStatus.msg}</span>
-              </div>
-            )}
-          </div>
+          <DialogTitle>
+            {indicator ? 'Editar Indicador' : 'Registrar Indicador'}
+          </DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Campo Mês */}
-            {!indicator && (
-              <div>
-                <label>Mês *</label>
-                {monthOptions.length === 1 && monthReference ? (
-                  <div>{new Date(2000, monthReference - 1, 1).toLocaleString('pt-BR', { month: 'long' })}</div>
-                ) : (
-                  <select value={monthReference ?? ''} onChange={e => setMonthReference(Number(e.target.value))} required>
-                    <option value="">Selecione</option>
-                    {monthOptions.map(m => (
-                      <option key={m} value={m}>{new Date(2000, m - 1, 1).toLocaleString('pt-BR', { month: 'long' })}</option>
-                    ))}
-                  </select>
-                )}
-              </div>
-            )}
-            {/* Campo Ano */}
-            {!indicator && (
-              <div>
-                <label>Ano *</label>
-                {yearOptions.length === 1 && yearReference ? (
-                  <div>{yearReference}</div>
-                ) : (
-                  <select value={yearReference ?? ''} onChange={e => setYearReference(Number(e.target.value))} required>
-                    <option value="">Selecione</option>
-                    {yearOptions.map(y => (
-                      <option key={y} value={y}>{y}</option>
-                    ))}
-                  </select>
-                )}
-              </div>
-            )}
-
             {/* Campo Funil */}
             <div>
               <Label htmlFor="funnel_id">Funil *</Label>
               <Select 
                 value={formData.funnel_id} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, funnel_id: value }))}
+                onValueChange={(value: string) => setFormData(prev => ({ ...prev, funnel_id: value }))}
                 disabled={isLoading}
                 required
               >
@@ -667,99 +589,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                 </SelectContent>
               </Select>
             </div>
-            
-            {/* Período */}
-            {isOpen && !indicator && (
-              <div>
-                <Label htmlFor="period_date">Período *</Label>
-                <Select
-                  value={formData.period_date}
-                  onValueChange={(value) => {
-                    setFormData({ ...formData, period_date: value });
-                    const { start, end } = extractPeriodDates(value);
-                    setPeriodStart(start);
-                    setPeriodEnd(end);
-                    console.log('[Indicador] Período selecionado:', value, '| Início:', start, '| Fim:', end);
-                  }}
-                  disabled={isLoading || !formData.funnel_id}
-                  required
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o período" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {periodOptions.length === 0 && (
-                      <div className="px-4 py-2 text-muted-foreground text-sm">
-                        {periodosUsuario.length === 0
-                          ? 'Nenhum período disponível para registro neste mês/ano. Só é possível registrar períodos cujo último dia já passou e estejam dentro dos últimos 90 dias.'
-                          : 'Nenhum período disponível entre o último registrado e o período atual. Não há períodos pendentes para registro neste mês/ano.'}
-                      </div>
-                    )}
-                    {periodOptions.map(opt => (
-                      <SelectItem
-                        key={opt.value}
-                        value={opt.value}
-                        disabled={(!opt.isAllowed) || ((Array.isArray(periodosRegistrados) ? periodosRegistrados : []).includes(opt.value) && (!indicator || indicator.period_date !== opt.value))}
-                      >
-                        <span className={opt.isMissing && destacarFaltantes ? 'text-red-500' : ''}>{opt.label}</span>
-                        {(Array.isArray(periodosRegistrados) ? periodosRegistrados : []).includes(opt.value) && (!indicator || indicator.period_date !== opt.value) && (
-                          <span className="ml-2 text-xs text-muted-foreground">(já registrado)</span>
-                        )}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
           </div>
-
-          {selectedFunnel?.stages && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Resultados por Etapa</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col gap-4">
-                  {selectedFunnel.stages
-                    .sort((a: any, b: any) => a.stage_order - b.stage_order)
-                    .map((stage: any) => {
-                      const valor = formData.stages[stage.id] || 0;
-                      const meta = stage.target_value || 0;
-                      const percentual = meta > 0 ? Math.round((valor / meta) * 100) : 0;
-                      const atingiu = valor >= meta && meta > 0;
-                      return (
-                        <div key={stage.id} className="flex flex-col md:flex-row md:items-center gap-2 p-2 border rounded-lg">
-                          <div className="flex-1">
-                            <Label htmlFor={`stage_${stage.id}`}>{stage.name}
-                              {stage.target_value && (
-                                <span className="text-sm text-muted-foreground ml-2">(Meta: {stage.target_value})</span>
-                              )}
-                            </Label>
-                            <Input
-                              id={`stage_${stage.id}`}
-                              type="number"
-                              min="0"
-                              value={valor}
-                              onChange={(e) => handleStageValueChange(stage.id, parseInt(e.target.value) || 0)}
-                              placeholder="Digite o resultado"
-                              disabled={isLoading}
-                            />
-                          </div>
-                          <div className="flex flex-col items-start md:items-end min-w-[180px]">
-                            <span className="text-xs">{percentual}% da meta</span>
-                            {atingiu ? (
-                              <span className="text-green-600 text-xs font-semibold">Meta atingida. Parabéns!</span>
-                            ) : (
-                              <span className="text-red-600 text-xs font-semibold">Meta não atingida, consulte seu líder</span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                </div>
-              </CardContent>
-            </Card>
-          )}
 
           <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>

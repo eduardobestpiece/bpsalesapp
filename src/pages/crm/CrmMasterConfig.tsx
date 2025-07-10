@@ -20,6 +20,13 @@ interface Company {
   created_at: string;
 }
 
+interface ArchivedItem {
+  id: string;
+  type: 'indicator' | 'lead' | 'sale';
+  archived_at: string;
+  description: string;
+}
+
 const CrmMasterConfig = () => {
   const { userRole } = useCrmAuth();
   const queryClient = useQueryClient();
@@ -126,7 +133,7 @@ const CrmMasterConfig = () => {
   // --- ITENS ARQUIVADOS ---
   const [archivedType, setArchivedType] = useState('');
   const [archivedDate, setArchivedDate] = useState('');
-  const [archivedItems, setArchivedItems] = useState<any[]>([]);
+  const [archivedItems, setArchivedItems] = useState<ArchivedItem[]>([]);
   const [isLoadingArchived, setIsLoadingArchived] = useState(false);
 
   useEffect(() => {
@@ -138,22 +145,22 @@ const CrmMasterConfig = () => {
         supabase.from('leads').select('*').not('archived_at', 'is', null),
         supabase.from('sales').select('*').not('archived_at', 'is', null),
       ]);
-      let items: any[] = [];
+      let items: ArchivedItem[] = [];
       if (indicators.data) items = items.concat(indicators.data.map((i: any) => ({
         id: i.id,
-        type: 'indicator',
+        type: 'indicator' as const,
         archived_at: i.archived_at,
         description: `Indicador: ${i.period_start ? `De ${new Date(i.period_start).toLocaleDateString('pt-BR')}` : ''}${i.period_end ? ` até ${new Date(i.period_end).toLocaleDateString('pt-BR')}` : ''}`
       })));
       if (leads.data) items = items.concat(leads.data.map((l: any) => ({
         id: l.id,
-        type: 'lead',
+        type: 'lead' as const,
         archived_at: l.archived_at,
         description: `Lead: ${l.name || l.id}`
       })));
       if (sales.data) items = items.concat(sales.data.map((s: any) => ({
         id: s.id,
-        type: 'sale',
+        type: 'sale' as const,
         archived_at: s.archived_at,
         description: `Venda: ${s.sale_date ? new Date(s.sale_date).toLocaleDateString('pt-BR') : s.id}`
       })));
@@ -174,22 +181,40 @@ const CrmMasterConfig = () => {
   });
 
   // Ações
-  const handleRecover = async (item: any) => {
-    let table = '';
-    if (item.type === 'indicator') table = 'indicators';
-    if (item.type === 'lead') table = 'leads';
-    if (item.type === 'sale') table = 'sales';
-    await supabase.from(table).update({ archived_at: null }).eq('id', item.id);
-    setArchivedItems(prev => prev.filter(i => i.id !== item.id || i.type !== item.type));
+  const handleRecover = async (item: ArchivedItem) => {
+    try {
+      if (item.type === 'indicator') {
+        await supabase.from('indicators').update({ archived_at: null }).eq('id', item.id);
+      } else if (item.type === 'lead') {
+        await supabase.from('leads').update({ archived_at: null }).eq('id', item.id);
+      } else if (item.type === 'sale') {
+        await supabase.from('sales').update({ archived_at: null }).eq('id', item.id);
+      }
+      setArchivedItems(prev => prev.filter(i => !(i.id === item.id && i.type === item.type)));
+      toast.success('Item recuperado com sucesso!');
+    } catch (error) {
+      console.error('Error recovering item:', error);
+      toast.error('Erro ao recuperar item');
+    }
   };
-  const handleDelete = async (item: any) => {
+
+  const handleDelete = async (item: ArchivedItem) => {
     if (!window.confirm('Tem certeza que deseja excluir este item? Essa ação não pode ser desfeita.')) return;
-    let table = '';
-    if (item.type === 'indicator') table = 'indicators';
-    if (item.type === 'lead') table = 'leads';
-    if (item.type === 'sale') table = 'sales';
-    await supabase.from(table).delete().eq('id', item.id);
-    setArchivedItems(prev => prev.filter(i => i.id !== item.id || i.type !== item.type));
+    
+    try {
+      if (item.type === 'indicator') {
+        await supabase.from('indicators').delete().eq('id', item.id);
+      } else if (item.type === 'lead') {
+        await supabase.from('leads').delete().eq('id', item.id);
+      } else if (item.type === 'sale') {
+        await supabase.from('sales').delete().eq('id', item.id);
+      }
+      setArchivedItems(prev => prev.filter(i => !(i.id === item.id && i.type === item.type)));
+      toast.success('Item excluído com sucesso!');
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      toast.error('Erro ao excluir item');
+    }
   };
 
   if (userRole !== 'master') {
