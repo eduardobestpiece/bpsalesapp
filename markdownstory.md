@@ -11,6 +11,12 @@
 - Checklist criado e registrado em `requeststory.md`
 - Próximos passos: revisão e ajuste de todos os componentes de UI compartilhados
 
+### [NOVO] Controle de acessos por função
+- Solicitado pelo usuário: criar uma nova aba "Acessos" em Configurações Master
+- Permitir definir, para cada função (Administrador, Líder, Usuário), quais páginas/rotas podem ser acessadas/visualizadas
+- Se desmarcar, o usuário não vê nem o botão, nem a página/rota
+- Checklist atualizado em `requeststory.md`
+
 ---
 
 *Itens anteriores marcados como concluídos. Caso precise de novos ajustes, abrir nova solicitação ou detalhar os pontos pendentes.* 
