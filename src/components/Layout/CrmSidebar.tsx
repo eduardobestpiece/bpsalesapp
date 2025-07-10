@@ -19,7 +19,7 @@ import {
 import { CrmUserMenu } from './CrmUserMenu';
 import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
 import { useModule } from '@/contexts/ModuleContext';
-import { Avatar } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { LogOut } from 'lucide-react';
 
 export const CrmSidebar = () => {
@@ -129,8 +129,8 @@ export const CrmSidebar = () => {
         <div className="flex items-center gap-3">
           <div className="cursor-pointer" onClick={handleAvatarClick}>
             <Avatar>
-              <Avatar.Image src={crmUser?.avatar_url || undefined} alt={crmUser?.first_name || 'Usuário'} />
-              <Avatar.Fallback>{(crmUser?.first_name?.[0] || 'U')}{(crmUser?.last_name?.[0] || '')}</Avatar.Fallback>
+              <AvatarImage src={crmUser?.avatar_url || undefined} alt={crmUser?.first_name || 'Usuário'} />
+              <AvatarFallback>{(crmUser?.first_name?.[0] || 'U')}{(crmUser?.last_name?.[0] || '')}</AvatarFallback>
             </Avatar>
           </div>
           <div className="flex flex-col flex-1 min-w-0">
