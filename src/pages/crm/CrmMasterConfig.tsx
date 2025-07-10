@@ -254,6 +254,52 @@ const CrmMasterConfig = () => {
   // Antes de usar archivedItems, garantir que é array
   const safeArchivedItems = Array.isArray(archivedItems) ? archivedItems : [];
 
+  // LOG extra para debug
+  console.log('[MasterConfig] allowedTabs:', allowedTabs, 'safeAllowedTabs:', safeAllowedTabs);
+  console.log('[MasterConfig] companies:', companies, 'safeCompanies:', safeCompanies);
+  console.log('[MasterConfig] archivedItems:', archivedItems, 'safeArchivedItems:', safeArchivedItems);
+
+  // Garantir que defaultTab é string válida
+  const safeDefaultTab = typeof defaultTab === 'string' && defaultTab ? defaultTab : (safeAllowedTabs[0] || 'companies');
+
+  // LOG para tabs
+  console.log('[MasterConfig] defaultTab:', safeDefaultTab);
+
+  // Renderização defensiva de companies
+  let renderedCompanies = null;
+  try {
+    renderedCompanies = safeCompanies.map((company) => (
+      <div key={company.id} className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow">
+        <div className="flex-1">
+          <div className="flex items-center gap-3 mb-2">
+            <h3 className="font-medium">{company.name}</h3>
+            <Badge variant={company.status === 'active' ? 'default' : 'secondary'}>
+              {company.status === 'active' ? 'Ativa' : 'Arquivada'}
+            </Badge>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Criada em: {new Date(company.created_at).toLocaleDateString('pt-BR')}
+          </p>
+        </div>
+        {company.status === 'active' && (
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => handleArchiveCompany(company.id)}
+              disabled={archiveCompanyMutation.isPending}
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+    ));
+  } catch (e) {
+    console.error('[MasterConfig] Erro ao renderizar companies:', e, safeCompanies);
+    renderedCompanies = <p className="text-center py-8 text-red-500">Erro ao renderizar empresas.</p>;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
       <main className="container mx-auto px-4 py-8">
@@ -269,7 +315,7 @@ const CrmMasterConfig = () => {
               </div>
 
               {safeAllowedTabs.length > 0 && (
-                <Tabs defaultValue={defaultTab} className="w-full">
+                <Tabs defaultValue={safeDefaultTab} className="w-full">
                   <TabsList className={`grid w-full grid-cols-${safeAllowedTabs.length}`}>
                     {safeAllowedTabs.includes('companies') && (
                       <TabsTrigger value="companies">Empresas</TabsTrigger>
@@ -342,36 +388,7 @@ const CrmMasterConfig = () => {
                                 Nenhuma empresa encontrada. Crie a primeira empresa para começar.
                               </p>
                             ) : (
-                              safeCompanies.map((company) => (
-                                <div
-                                  key={company.id}
-                                  className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow"
-                                >
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-3 mb-2">
-                                      <h3 className="font-medium">{company.name}</h3>
-                                      <Badge variant={company.status === 'active' ? 'default' : 'secondary'}>
-                                        {company.status === 'active' ? 'Ativa' : 'Arquivada'}
-                                      </Badge>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground">
-                                      Criada em: {new Date(company.created_at).toLocaleDateString('pt-BR')}
-                                    </p>
-                                  </div>
-                                  {company.status === 'active' && (
-                                    <div className="flex gap-2">
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => handleArchiveCompany(company.id)}
-                                        disabled={archiveCompanyMutation.isPending}
-                                      >
-                                        <Trash2 className="w-4 h-4" />
-                                      </Button>
-                                    </div>
-                                  )}
-                                </div>
-                              ))
+                              renderedCompanies
                             )}
                           </div>
                         </CardContent>
