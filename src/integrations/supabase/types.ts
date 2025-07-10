@@ -145,6 +145,7 @@ export type Database = {
           created_at: string | null
           email: string
           first_name: string
+          funnels: string[] | null
           id: string
           last_name: string
           leader_id: string | null
@@ -163,6 +164,7 @@ export type Database = {
           created_at?: string | null
           email: string
           first_name: string
+          funnels?: string[] | null
           id?: string
           last_name: string
           leader_id?: string | null
@@ -181,6 +183,7 @@ export type Database = {
           created_at?: string | null
           email?: string
           first_name?: string
+          funnels?: string[] | null
           id?: string
           last_name?: string
           leader_id?: string | null
@@ -741,6 +744,44 @@ export type Database = {
             columns: ["administrator_id"]
             isOneToOne: false
             referencedRelation: "administrators"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      role_page_permissions: {
+        Row: {
+          allowed: boolean
+          company_id: string | null
+          created_at: string | null
+          id: string
+          page: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string | null
+        }
+        Insert: {
+          allowed?: boolean
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          page: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
+        }
+        Update: {
+          allowed?: boolean
+          company_id?: string | null
+          created_at?: string | null
+          id?: string
+          page?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_page_permissions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]

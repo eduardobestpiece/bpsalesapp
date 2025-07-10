@@ -1,6 +1,6 @@
 
 import { User, Settings, LogOut, Users } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useModule } from '@/contexts/ModuleContext';
 import {
   DropdownMenu,
@@ -15,9 +15,11 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export const UserMenu = () => {
   const { setModule } = useModule();
+  const navigate = useNavigate();
 
   const handleGoToCrm = () => {
     setModule('crm');
+    navigate('/crm/indicadores');
   };
 
   return (
@@ -62,10 +64,8 @@ export const UserMenu = () => {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem className="p-3 cursor-pointer hover:bg-blue-50/70 rounded-lg" onClick={handleGoToCrm}>
-          <Link to="/crm" className="flex items-center w-full">
-            <Users className="mr-3 h-5 w-5 text-blue-600" />
-            <span className="font-medium text-secondary">CRM</span>
-          </Link>
+          <Users className="mr-3 h-5 w-5 text-blue-600" />
+          <span className="font-medium text-secondary">CRM</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem className="p-3 cursor-pointer hover:bg-destructive-50 text-destructive rounded-lg">

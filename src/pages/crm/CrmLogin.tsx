@@ -9,6 +9,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Users, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
+import ForgotPasswordModal from '@/components/Auth/ForgotPasswordModal';
 
 const CrmLogin = () => {
   const [email, setEmail] = useState('');
@@ -16,14 +17,15 @@ const CrmLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showForgotModal, setShowForgotModal] = useState(false);
   
   const { signIn, user, loading: authLoading } = useCrmAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (user && !authLoading) {
-      console.log('User authenticated, redirecting to Comercial');
-      navigate('/crm', { replace: true });
+      console.log('User authenticated, redirecting to Home');
+      navigate('/home', { replace: true });
     }
   }, [user, authLoading, navigate]);
 
@@ -47,7 +49,6 @@ const CrmLogin = () => {
       } else {
         toast.success('Login realizado com sucesso!');
         // Redirect will be handled by useEffect
-        // Removido navigate('/home')
       }
     } catch (err) {
       console.error('Unexpected login error:', err);
@@ -151,7 +152,15 @@ const CrmLogin = () => {
                 )}
               </Button>
 
-              <div className="text-center text-sm text-secondary/60">
+              <div className="flex flex-col items-center space-y-2 text-sm text-secondary/60">
+                <button
+                  type="button"
+                  onClick={() => setShowForgotModal(true)}
+                  className="text-primary hover:underline"
+                  disabled={isLoading}
+                >
+                  Esqueci a senha
+                </button>
                 <Link 
                   to="/" 
                   className="text-primary hover:underline"
@@ -163,7 +172,10 @@ const CrmLogin = () => {
           </form>
         </Card>
 
-        {/* Bloco de dados de teste removido */}
+        <ForgotPasswordModal 
+          open={showForgotModal} 
+          onOpenChange={setShowForgotModal} 
+        />
       </div>
     </div>
   );
