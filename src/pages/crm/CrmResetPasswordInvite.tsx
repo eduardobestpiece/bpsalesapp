@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,7 +22,37 @@ const CrmResetPasswordInvite = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Verificar se há parâmetros de convite na URL
+    const token = searchParams.get('token');
+    const type = searchParams.get('type');
+    
+    console.log('URL params:', { token, type });
+    
+    if (token && type === 'invite') {
+      // Verificar o token de convite
+      supabase.auth.verifyOtp({
+        token_hash: token,
+        type: 'invite'
+      }).then(({ data, error }) => {
+        if (error) {
+          console.error('Error verifying invite token:', error);
+          setError('Link de convite inválido ou expirado. Entre em contato com o administrador.');
+        } else {
+          console.log('Invite token verified:', data);
+          if (data.user?.email) {
+            setForm(prev => ({ ...prev, email: data.user.email || '' }));
+          }
+        }
+      });
+    } else {
+      // Se não há token de convite, mostrar erro
+      setError('Link de convite inválido. Entre em contato com o administrador.');
+    }
+  }, [searchParams]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -38,10 +69,15 @@ const CrmResetPasswordInvite = () => {
       return;
     }
 
+    if (form.password.length < 6) {
+      setError('A senha deve ter pelo menos 6 caracteres.');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      // Atualizar senha e dados do usuário no Supabase
+      // Atualizar a senha e dados do usuário
       const { error: updateError } = await supabase.auth.updateUser({
-        email: form.email,
         password: form.password,
         data: {
           first_name: form.first_name,
@@ -50,16 +86,52 @@ const CrmResetPasswordInvite = () => {
           birthdate: form.birthdate
         }
       });
+
       if (updateError) {
-        setError(updateError.message);
+        console.error('Error updating user:', updateError);
+        setError('Erro ao completar cadastro: ' + updateError.message);
         setIsLoading(false);
         return;
       }
+
+      // Buscar e atualizar o usuário CRM
+      const { data: crmUser, error: crmUserError } = await supabase
+        .from('crm_users')
+        .select('*')
+        .eq('email', form.email)
+        .single();
+
+      if (crmUserError) {
+        console.error('Error fetching CRM user:', crmUserError);
+        setError('Erro ao buscar dados do usuário.');
+        setIsLoading(false);
+        return;
+      }
+
+      // Atualizar dados do usuário CRM
+      const { error: updateCrmError } = await supabase
+        .from('crm_users')
+        .update({
+          first_name: form.first_name,
+          last_name: form.last_name,
+          phone: form.phone,
+          birth_date: form.birthdate
+        })
+        .eq('id', crmUser.id);
+
+      if (updateCrmError) {
+        console.error('Error updating CRM user:', updateCrmError);
+        setError('Erro ao atualizar dados do usuário.');
+        setIsLoading(false);
+        return;
+      }
+
       setSuccess(true);
-      toast.success('Cadastro atualizado com sucesso! Faça login para acessar a plataforma.');
+      toast.success('Cadastro completado com sucesso! Redirecionando para o login...');
       setTimeout(() => navigate('/crm/login'), 2000);
     } catch (err: any) {
-      setError('Erro ao atualizar cadastro. Tente novamente.');
+      console.error('Unexpected error:', err);
+      setError('Erro inesperado ao completar cadastro. Tente novamente.');
     } finally {
       setIsLoading(false);
     }
@@ -72,7 +144,7 @@ const CrmResetPasswordInvite = () => {
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">Complete seu cadastro</CardTitle>
             <CardDescription>
-              Preencha seus dados e defina uma nova senha para acessar a plataforma.
+              Preencha seus dados e defina uma senha para acessar a plataforma.
             </CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
@@ -83,42 +155,103 @@ const CrmResetPasswordInvite = () => {
                 </Alert>
               )}
               {success && (
-                <Alert variant="success">
-                  <AlertDescription>Cadastro atualizado com sucesso!</AlertDescription>
+                <Alert>
+                  <AlertDescription>Cadastro completado com sucesso!</AlertDescription>
                 </Alert>
               )}
               <div className="space-y-2">
                 <Label htmlFor="first_name">Nome</Label>
-                <Input id="first_name" name="first_name" value={form.first_name} onChange={handleChange} required disabled={isLoading} />
+                <Input 
+                  id="first_name" 
+                  name="first_name" 
+                  value={form.first_name} 
+                  onChange={handleChange} 
+                  required 
+                  disabled={isLoading}
+                  placeholder="Seu nome" 
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="last_name">Sobrenome</Label>
-                <Input id="last_name" name="last_name" value={form.last_name} onChange={handleChange} required disabled={isLoading} />
+                <Input 
+                  id="last_name" 
+                  name="last_name" 
+                  value={form.last_name} 
+                  onChange={handleChange} 
+                  required 
+                  disabled={isLoading}
+                  placeholder="Seu sobrenome" 
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">E-mail</Label>
-                <Input id="email" name="email" type="email" value={form.email} onChange={handleChange} required disabled={isLoading} />
+                <Input 
+                  id="email" 
+                  name="email" 
+                  type="email" 
+                  value={form.email} 
+                  onChange={handleChange} 
+                  required 
+                  disabled={true}
+                  placeholder="Seu e-mail" 
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">Telefone</Label>
-                <Input id="phone" name="phone" value={form.phone} onChange={handleChange} required disabled={isLoading} />
+                <Input 
+                  id="phone" 
+                  name="phone" 
+                  value={form.phone} 
+                  onChange={handleChange} 
+                  disabled={isLoading}
+                  placeholder="(11) 99999-9999" 
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="birthdate">Data de nascimento</Label>
-                <Input id="birthdate" name="birthdate" type="date" value={form.birthdate} onChange={handleChange} required disabled={isLoading} />
+                <Input 
+                  id="birthdate" 
+                  name="birthdate" 
+                  type="date" 
+                  value={form.birthdate} 
+                  onChange={handleChange} 
+                  disabled={isLoading} 
+                />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Nova senha</Label>
-                <Input id="password" name="password" type="password" value={form.password} onChange={handleChange} required disabled={isLoading} />
+                <Label htmlFor="password">Senha</Label>
+                <Input 
+                  id="password" 
+                  name="password" 
+                  type="password" 
+                  value={form.password} 
+                  onChange={handleChange} 
+                  required 
+                  disabled={isLoading}
+                  placeholder="Mínimo 6 caracteres" 
+                />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Repita a senha</Label>
-                <Input id="confirmPassword" name="confirmPassword" type="password" value={form.confirmPassword} onChange={handleChange} required disabled={isLoading} />
+                <Label htmlFor="confirmPassword">Confirmar senha</Label>
+                <Input 
+                  id="confirmPassword" 
+                  name="confirmPassword" 
+                  type="password" 
+                  value={form.confirmPassword} 
+                  onChange={handleChange} 
+                  required 
+                  disabled={isLoading}
+                  placeholder="Repita a senha" 
+                />
               </div>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
-              <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90" disabled={isLoading}>
-                {isLoading ? 'Salvando...' : 'Salvar e acessar'}
+              <Button 
+                type="submit" 
+                className="w-full bg-gradient-primary hover:opacity-90" 
+                disabled={isLoading || !form.email}
+              >
+                {isLoading ? 'Salvando...' : 'Completar cadastro'}
               </Button>
             </CardFooter>
           </form>
@@ -128,4 +261,4 @@ const CrmResetPasswordInvite = () => {
   );
 };
 
-export default CrmResetPasswordInvite; 
+export default CrmResetPasswordInvite;

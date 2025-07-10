@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -9,44 +10,32 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
 const CrmResetPassword = () => {
-  const [form, setForm] = useState({
-    email: '',
-    password: '',
-    confirmPassword: ''
-  });
+  const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const navigate = useNavigate();
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setIsLoading(true);
 
-    if (form.password !== form.confirmPassword) {
-      setError('As senhas não coincidem.');
-      setIsLoading(false);
-      return;
-    }
-
     try {
       // Enviar e-mail de redefinição de senha
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(form.email, {
-        redirectTo: window.location.origin + '/crm/redefinir-senha',
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/crm/redefinir-senha-convite',
       });
+      
       if (resetError) {
         setError(resetError.message);
         setIsLoading(false);
         return;
       }
+      
       setSuccess(true);
       toast.success('Se o e-mail estiver correto, você receberá instruções para redefinir sua senha.');
-      setTimeout(() => navigate('/crm/login'), 2000);
+      setTimeout(() => navigate('/crm/login'), 3000);
     } catch (err: any) {
       setError('Erro ao solicitar redefinição. Tente novamente.');
     } finally {
@@ -61,7 +50,7 @@ const CrmResetPassword = () => {
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">Redefinir Senha</CardTitle>
             <CardDescription>
-              Informe seu e-mail e defina uma nova senha para acessar a plataforma.
+              Informe seu e-mail para receber instruções de redefinição de senha.
             </CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
@@ -72,26 +61,40 @@ const CrmResetPassword = () => {
                 </Alert>
               )}
               {success && (
-                <Alert variant="success">
+                <Alert>
                   <AlertDescription>Solicitação enviada! Verifique seu e-mail.</AlertDescription>
                 </Alert>
               )}
               <div className="space-y-2">
                 <Label htmlFor="email">E-mail</Label>
-                <Input id="email" name="email" type="email" value={form.email} onChange={handleChange} required disabled={isLoading} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Nova senha</Label>
-                <Input id="password" name="password" type="password" value={form.password} onChange={handleChange} required disabled={isLoading} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Repita a senha</Label>
-                <Input id="confirmPassword" name="confirmPassword" type="password" value={form.confirmPassword} onChange={handleChange} required disabled={isLoading} />
+                <Input 
+                  id="email" 
+                  name="email" 
+                  type="email" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)} 
+                  required 
+                  disabled={isLoading}
+                  placeholder="Seu e-mail cadastrado" 
+                />
               </div>
             </CardContent>
             <CardFooter className="flex flex-col space-y-4">
-              <Button type="submit" className="w-full bg-gradient-primary hover:opacity-90" disabled={isLoading}>
-                {isLoading ? 'Enviando...' : 'Redefinir Senha'}
+              <Button 
+                type="submit" 
+                className="w-full bg-gradient-primary hover:opacity-90" 
+                disabled={isLoading}
+              >
+                {isLoading ? 'Enviando...' : 'Enviar instruções'}
+              </Button>
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="w-full" 
+                onClick={() => navigate('/crm/login')}
+                disabled={isLoading}
+              >
+                Voltar ao login
               </Button>
             </CardFooter>
           </form>
@@ -101,4 +104,4 @@ const CrmResetPassword = () => {
   );
 };
 
-export default CrmResetPassword; 
+export default CrmResetPassword;

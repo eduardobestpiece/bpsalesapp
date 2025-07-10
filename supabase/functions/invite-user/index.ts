@@ -87,45 +87,6 @@ serve(async (req) => {
     const existingUser = existingUsers.users.find(user => user.email === email)
     let auth_id = existingUser?.id
 
-    if (existingUser) {
-      console.log('User already exists in Auth, using existing user:', existingUser.id)
-    } else {
-      console.log('User does not exist in Auth, inviting new user...')
-      
-      // User doesn't exist, so invite them
-      const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
-        email,
-        {
-          redirectTo: `${supabaseUrl.replace('.supabase.co', '.vercel.app')}/crm/redefinir-senha-convite`
-        }
-      )
-
-      if (inviteError) {
-        console.error('Error inviting user:', inviteError)
-        return new Response(
-          JSON.stringify({ error: `Erro ao convidar usuário: ${inviteError.message}` }),
-          { 
-            status: 400, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          }
-        )
-      }
-
-      console.log('User invited successfully:', inviteData)
-      auth_id = inviteData.user?.id
-    }
-
-    if (!auth_id) {
-      console.error('No auth_id available')
-      return new Response(
-        JSON.stringify({ error: 'Falha ao obter ID do usuário' }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        }
-      )
-    }
-
     // Check if user already exists in CRM users table
     console.log('Checking if CRM user already exists...')
     const { data: existingCrmUser, error: checkError } = await supabase
@@ -155,6 +116,56 @@ serve(async (req) => {
         }),
         { 
           status: 200, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
+    if (existingUser) {
+      console.log('User already exists in Auth, using existing user:', existingUser.id)
+    } else {
+      console.log('User does not exist in Auth, inviting new user...')
+      
+      // Get the current origin/domain to build the correct redirect URL
+      const origin = req.headers.get('origin') || req.headers.get('referer')?.split('/').slice(0, 3).join('/') || supabaseUrl.replace('.supabase.co', '.vercel.app')
+      const redirectUrl = `${origin}/crm/redefinir-senha-convite`
+      
+      console.log('Using redirect URL:', redirectUrl)
+      
+      // User doesn't exist, so invite them
+      const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
+        email,
+        {
+          redirectTo: redirectUrl,
+          data: {
+            role: role,
+            company_id: company_id,
+            invited: true
+          }
+        }
+      )
+
+      if (inviteError) {
+        console.error('Error inviting user:', inviteError)
+        return new Response(
+          JSON.stringify({ error: `Erro ao convidar usuário: ${inviteError.message}` }),
+          { 
+            status: 400, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          }
+        )
+      }
+
+      console.log('User invited successfully:', inviteData)
+      auth_id = inviteData.user?.id
+    }
+
+    if (!auth_id) {
+      console.error('No auth_id available')
+      return new Response(
+        JSON.stringify({ error: 'Falha ao obter ID do usuário' }),
+        { 
+          status: 500, 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         }
       )
