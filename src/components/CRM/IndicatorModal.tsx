@@ -41,13 +41,12 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   const [yearOptions, setYearOptions] = useState<number[]>([]);
   const [monthReference, setMonthReference] = useState<number | null>(null);
   const [yearReference, setYearReference] = useState<number | null>(null);
+
   // Estado para modal de alteração de período
   const [showPeriodModal, setShowPeriodModal] = useState(false);
   const [tempPeriod, setTempPeriod] = useState(formData.period_date);
   const [tempMonth, setTempMonth] = useState(monthReference);
   const [tempYear, setTempYear] = useState(yearReference);
-  // Estado para seleção em massa (preparação)
-  const [tempSelectedIndicators, setTempSelectedIndicators] = useState<string[]>([]); // IDs dos indicadores selecionados
 
   // Garantir que o companyId está correto (fallback para o do usuário logado)
   const { crmUser } = useCrmAuth();
@@ -67,10 +66,13 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
       ind.month_reference === formData.month_reference &&
       ind.year_reference === formData.year_reference
   ).map((ind) => ind.period_date)) : [];
+  
   const indicadoresUsuario = Array.isArray(indicators) && selectedFunnel && crmUser ? indicators.filter(
     (ind) => ind.funnel_id === selectedFunnel.id && ind.user_id === crmUser.id
   ) : [];
+  
   const periodosUsuario: string[] = indicadoresUsuario ? indicadoresUsuario.map((ind) => ind.period_date) : [];
+  
   // Filtrar apenas registros com period_end válido
   const indicadoresUsuarioValidos = indicadoresUsuario.filter(ind => !!ind.period_end);
   const ultimoRegistroUsuario = indicadoresUsuarioValidos.length > 0
@@ -85,27 +87,9 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   const hoje = new Date();
 
   if (selectedFunnel && formData.month_reference && formData.year_reference && crmUser) {
-    // Filtrar indicadores do usuário para o funil selecionado
-    // const indicadoresUsuario = (indicators || []).filter(
-    //   (ind) => ind.funnel_id === selectedFunnel.id && ind.user_id === crmUser.id
-    // );
-    // periodosUsuario = indicadoresUsuario.map((ind) => ind.period_date);
-    // ultimoPeriodoUsuario = indicadoresUsuario.length > 0
-    //   ? indicadoresUsuario.sort((a, b) => b.period_date.localeCompare(a.period_date))[0].period_date
-    //   : null;
-
-    // Períodos já registrados por todos usuários (para bloqueio visual)
-    // periodosRegistrados = (indicators || [])
-    //   .filter((ind) =>
-    //     ind.funnel_id === selectedFunnel.id &&
-    //     ind.month_reference === formData.month_reference &&
-    //     ind.year_reference === formData.year_reference
-    //   )
-    //   .map((ind) => ind.period_date);
-
-    // Remover filtro por mês/ano do formulário na busca dos períodos disponíveis
     // Gerar todos os períodos possíveis para o funil, sem limitar por formData.month_reference/year_reference
     let todosPeriodos: { label: string; value: string }[] = [];
+    
     if (selectedFunnel.verification_type === 'daily') {
       todosPeriodos = gerarDiasUltimos90AteHoje();
     } else if (selectedFunnel.verification_type === 'weekly') {
@@ -173,7 +157,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     else {
       if (selectedFunnel.verification_type === 'daily') {
         // Só pode registrar entre o primeiro registro e ontem
-        const primeiroDia = new Date(ultimoRegistroUsuario?.period_end || ultimoPeriodoUsuario!);
+        const primeiroDia = new Date(ultimoRegistroUsuario?.period_end || periodosUsuario[0]!);
         const hoje = new Date();
         todosPeriodos = gerarDiasUltimos90AteHoje().filter(opt => {
           const data = new Date(opt.value);
@@ -192,6 +176,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         const hoje = new Date();
         const dataLimite = new Date(hoje);
         dataLimite.setDate(dataLimite.getDate() - 89);
+        
         if (selectedFunnel.verification_type === 'weekly') {
           todosPeriodos = gerarPeriodosSemanaisUltimos90Dias(selectedFunnel.verification_day ?? 1);
         } else if (selectedFunnel.verification_type === 'monthly') {
@@ -208,14 +193,15 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
             }
           }
         }
+        
         // Sempre derive os períodos já registrados e o último registro APENAS de indicadoresUsuario (filtrados por funil e usuário)
-        // Isso garante que cada funil/usuário tem sua própria linha do tempo de registros
         const periodosRegistradosUsuario = indicadoresUsuario ? indicadoresUsuario.map(ind => {
           if (ind.period_start && ind.period_end) {
             return `${ind.period_start}_${ind.period_end}`;
           }
           return '';
         }) : [];
+        
         const ultimoRegistroUsuario = indicadoresUsuario && indicadoresUsuario.length > 0
           ? indicadoresUsuario.sort((a, b) => {
               // Proteger contra period_end nulo
@@ -224,9 +210,11 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
               return bDate - aDate;
             })[0]
           : null;
+        
         console.log('[DEBUG] Todos os períodos possíveis:', todosPeriodos.map(p => p.value));
         console.log('[DEBUG] Último registro do usuário:', ultimoRegistroUsuario);
         console.log('[DEBUG] period_end do último registro:', ultimoRegistroUsuario ? ultimoRegistroUsuario.period_end : null);
+        
         // Na filtragem dos períodos disponíveis (para semanal/mensal):
         periodOptions = todosPeriodos
           .filter(opt => {
@@ -393,22 +381,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     if (!value) return 0;
     return Number(value.replace(/\./g, '').replace(',', '.'));
   }
-  // Função para extrair todos os meses e anos presentes em cada dia do período
-  function getAllMonthsAndYears(start: string, end: string) {
-    if (!start || !end) return { months: [], years: [] };
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-    let monthsSet = new Set();
-    let yearsSet = new Set();
-    let d = new Date(startDate);
-    while (d <= endDate) {
-      monthsSet.add(d.getMonth() + 1);
-      yearsSet.add(d.getFullYear());
-      d.setDate(d.getDate() + 1);
-    }
-    return { months: Array.from(monthsSet), years: Array.from(yearsSet) };
-  }
-
+  
   // Função para extrair datas do valor do select de período
   function extractPeriodDates(periodString: string) {
     // Formato 1: 'YYYY-MM-DD_YYYY-MM-DD'
@@ -508,6 +481,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         user_id: crmUser.id,
         company_id: companyId,
         funnel_id: formData.funnel_id,
+        period_date: formData.period_date,
         period_start: periodStart,
         period_end: periodEnd,
         month_reference: monthReference,
@@ -657,20 +631,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                 )}
               </div>
             )}
-            {/* Botão Alterar Período no modo edição */}
-            {indicator && (
-              <div className="col-span-2 flex items-center gap-2">
-                <Button type="button" variant="outline" onClick={() => {
-                  setTempPeriod(formData.period_date);
-                  setTempMonth(monthReference);
-                  setTempYear(yearReference);
-                  setShowPeriodModal(true);
-                }}>
-                  Alterar Período
-                </Button>
-                <span className="text-xs text-muted-foreground">Período atual: {periodStart && periodEnd ? `De ${new Date(periodStart).toLocaleDateString('pt-BR')} até ${new Date(periodEnd).toLocaleDateString('pt-BR')}` : '-'}</span>
-              </div>
-            )}
 
             {/* Campo Funil */}
             <div>
@@ -707,6 +667,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                 </SelectContent>
               </Select>
             </div>
+            
             {/* Período */}
             {isOpen && !indicator && (
               <div>
@@ -748,69 +709,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                     ))}
                   </SelectContent>
                 </Select>
-                {/* Exibir data/hora de criação no modo edição */}
-                {indicator && indicator.created_at && (
-                  <div className="text-xs text-muted-foreground mt-1">
-                    Preenchido em: {new Date(indicator.created_at).toLocaleString('pt-BR')}
-                  </div>
-                )}
               </div>
-            )}
-            {/* Exibir data/hora de criação no modo edição acima do botão de alterar período */}
-            {indicator && indicator.created_at && (
-              <div className="text-xs text-muted-foreground mb-2">
-                Preenchido em: {new Date(indicator.created_at).toLocaleString('pt-BR')}
-              </div>
-            )}
-            {/* CAMPOS RESTRITOS MASTER/ADMIN */}
-            {selectedFunnel && ['master', 'admin'].includes(crmUser?.role || '') && (
-              <>
-                {/* Campo Valor das Vendas */}
-                <div>
-                  <Label htmlFor="sales_value">Valor das Vendas</Label>
-                  {selectedFunnel.sales_value_mode === 'manual' ? (
-                    <Input
-                      id="sales_value"
-                      type="text"
-                      value={isAutoLoading ? '...' : salesValue}
-                      onChange={e => setSalesValue(e.target.value)}
-                      placeholder="0,00"
-                      inputMode="decimal"
-                    />
-                  ) : (
-                    <Input
-                      id="sales_value"
-                      type="number"
-                      value={isAutoLoading ? '...' : salesValue}
-                      disabled
-                      placeholder="Calculado automaticamente"
-                    />
-                  )}
-                </div>
-                {/* Campo Número de Recomendações */}
-                <div>
-                  <Label htmlFor="recommendations_count">Número de Recomendações</Label>
-                  {selectedFunnel.recommendations_mode === 'manual' ? (
-                    <Input
-                      id="recommendations_count"
-                      type="number"
-                      min="0"
-                      value={recommendationsCount}
-                      onChange={e => setRecommendationsCount(Number(e.target.value) || 0)}
-                      placeholder="Digite o número de recomendações"
-                      disabled={isLoading}
-                    />
-                  ) : (
-                    <Input
-                      id="recommendations_count"
-                      type="number"
-                      value={isAutoLoading ? '...' : recommendationsCount}
-                      disabled
-                      placeholder="Calculado automaticamente"
-                    />
-                  )}
-                </div>
-              </>
             )}
           </div>
 
@@ -872,91 +771,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
           </div>
         </form>
       </DialogContent>
-      {/* Modal secundário para alterar período */}
-      {showPeriodModal && (
-        <Dialog open={showPeriodModal} onOpenChange={setShowPeriodModal}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Alterar Período</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              {/* (Futuro) Campo de seleção múltipla de indicadores */}
-              {/* <div>
-                <Label>Indicadores selecionados</Label>
-                <Select multiple value={tempSelectedIndicators} onValueChange={setTempSelectedIndicators}>
-                  ... opções ...
-                </Select>
-              </div> */}
-              <div>
-                <Label htmlFor="period_date_modal">Período *</Label>
-                <Select
-                  value={tempPeriod}
-                  onValueChange={(value) => {
-                    setTempPeriod(value);
-                    const { start, end } = extractPeriodDates(value);
-                    setPeriodStart(start);
-                    setPeriodEnd(end);
-                    // Preencher mês/ano automaticamente com base na data fim
-                    const endDate = new Date(end);
-                    setTempMonth(endDate.getMonth() + 1);
-                    setTempYear(endDate.getFullYear());
-                  }}
-                  required
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o período" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem key={formData.period_date} value={formData.period_date}>
-                      (Atual) {formData.period_date}
-                    </SelectItem>
-                    {periodOptions.filter(opt => opt.value !== formData.period_date).map(opt => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label>Mês *</label>
-                <select value={tempMonth ?? ''} onChange={e => setTempMonth(Number(e.target.value))} required>
-                  <option value="">Selecione</option>
-                  {monthOptions.map(m => (
-                    <option key={m} value={m}>{new Date(2000, m - 1, 1).toLocaleString('pt-BR', { month: 'long' })}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label>Ano *</label>
-                <select value={tempYear ?? ''} onChange={e => setTempYear(Number(e.target.value))} required>
-                  <option value="">Selecione</option>
-                  {yearOptions.map(y => (
-                    <option key={y} value={y}>{y}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex gap-2 justify-end">
-                <Button type="button" variant="outline" onClick={() => setShowPeriodModal(false)}>Cancelar</Button>
-                <Button type="button" onClick={() => {
-                  if (tempSelectedIndicators.length > 1) {
-                    // Seleção em massa: aplicar para todos
-                    console.log('Aplicar para múltiplos:', tempSelectedIndicators, tempPeriod, tempMonth, tempYear);
-                    // Aqui entraria a lógica de atualização em massa (futura)
-                  } else {
-                    // Seleção única
-                    setFormData(prev => ({ ...prev, period_date: tempPeriod }));
-                    setMonthReference(tempMonth);
-                    setYearReference(tempYear);
-                    const { start, end } = extractPeriodDates(tempPeriod);
-                    setPeriodStart(start);
-                    setPeriodEnd(end);
-                  }
-                  setShowPeriodModal(false);
-                }}>Salvar</Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
     </Dialog>
   );
 };

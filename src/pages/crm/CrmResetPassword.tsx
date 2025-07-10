@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -72,7 +73,7 @@ const CrmResetPassword = () => {
                 </Alert>
               )}
               {success && (
-                <Alert variant="success">
+                <Alert>
                   <AlertDescription>Solicitação enviada! Verifique seu e-mail.</AlertDescription>
                 </Alert>
               )}
@@ -101,4 +102,4 @@ const CrmResetPassword = () => {
   );
 };
 
-export default CrmResetPassword; 
+export default CrmResetPassword;

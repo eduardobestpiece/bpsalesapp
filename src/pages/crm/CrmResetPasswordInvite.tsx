@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -83,7 +84,7 @@ const CrmResetPasswordInvite = () => {
                 </Alert>
               )}
               {success && (
-                <Alert variant="success">
+                <Alert>
                   <AlertDescription>Cadastro atualizado com sucesso!</AlertDescription>
                 </Alert>
               )}
@@ -128,4 +129,4 @@ const CrmResetPasswordInvite = () => {
   );
 };
 
-export default CrmResetPasswordInvite; 
+export default CrmResetPasswordInvite;
