@@ -46,7 +46,10 @@ serve(async (req) => {
       'apikey': serviceKey
     },
     body: JSON.stringify({
-      email
+      email,
+      options: {
+        redirectTo: 'https://monteo-app.vercel.app/crm/cadastro' // ajuste para a URL real da página de cadastro
+      }
     })
   })
   const inviteData = await inviteRes.json()
