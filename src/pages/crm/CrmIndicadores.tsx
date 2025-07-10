@@ -219,19 +219,29 @@ const CrmIndicadores = () => {
   // Permissões de abas
   const [allowedTabs, setAllowedTabs] = useState<string[]>([]);
   const [defaultTab, setDefaultTab] = useState<string>('performance');
+  const [tabsLoading, setTabsLoading] = useState(true);
+  const [tabsError, setTabsError] = useState<string | null>(null);
   useEffect(() => {
     if (!companyId || !crmUser?.role) return;
+    setTabsLoading(true);
+    setTabsError(null);
     supabase
       .from('role_page_permissions')
       .select('page, allowed')
       .eq('company_id', companyId)
       .eq('role', crmUser.role)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) {
+          setTabsError('Erro ao carregar permissões.');
+          setTabsLoading(false);
+          return;
+        }
         const tabs = [];
         if (data?.find((p: any) => p.page === 'indicadores_performance' && p.allowed !== false)) tabs.push('performance');
         if (data?.find((p: any) => p.page === 'indicadores_registro' && p.allowed !== false)) tabs.push('registro');
         setAllowedTabs(tabs);
         setDefaultTab(tabs[0] || 'performance');
+        setTabsLoading(false);
       });
   }, [companyId, crmUser?.role]);
 
@@ -241,6 +251,17 @@ const CrmIndicadores = () => {
       setSelectedFunnelId(funnels[0].id);
     }
   }, [funnels]);
+
+  // Fallback visual para loading, erro ou ausência de abas
+  if (tabsLoading) {
+    return <div className="flex items-center justify-center min-h-[400px]"><span>Carregando permissões...</span></div>;
+  }
+  if (tabsError) {
+    return <div className="flex items-center justify-center min-h-[400px] text-red-500">{tabsError}</div>;
+  }
+  if (allowedTabs.length === 0) {
+    return <div className="flex items-center justify-center min-h-[400px] text-muted-foreground">Você não tem permissão para acessar esta área ou nenhuma aba está disponível para seu perfil.</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">

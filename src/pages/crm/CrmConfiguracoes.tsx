@@ -12,15 +12,24 @@ const CrmConfiguracoes = () => {
   const { companyId, userRole } = useCrmAuth();
   const [allowedTabs, setAllowedTabs] = useState<string[]>([]);
   const [defaultTab, setDefaultTab] = useState<string>('funnels');
+  const [tabsLoading, setTabsLoading] = useState(true);
+  const [tabsError, setTabsError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!companyId || !userRole) return;
+    setTabsLoading(true);
+    setTabsError(null);
     supabase
       .from('role_page_permissions')
       .select('page, allowed')
       .eq('company_id', companyId)
       .eq('role', userRole)
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) {
+          setTabsError('Erro ao carregar permissões.');
+          setTabsLoading(false);
+          return;
+        }
         const tabs = [];
         if (data?.find((p: any) => p.page === 'crm_config_funnels' && p.allowed !== false)) tabs.push('funnels');
         if (data?.find((p: any) => p.page === 'crm_config_sources' && p.allowed !== false)) tabs.push('sources');
@@ -28,8 +37,20 @@ const CrmConfiguracoes = () => {
         if (data?.find((p: any) => p.page === 'crm_config_users' && p.allowed !== false)) tabs.push('users');
         setAllowedTabs(tabs);
         setDefaultTab(tabs[0] || 'funnels');
+        setTabsLoading(false);
       });
   }, [companyId, userRole]);
+
+  // Fallback visual para loading, erro ou ausência de abas
+  if (tabsLoading) {
+    return <div className="flex items-center justify-center min-h-[400px]"><span>Carregando permissões...</span></div>;
+  }
+  if (tabsError) {
+    return <div className="flex items-center justify-center min-h-[400px] text-red-500">{tabsError}</div>;
+  }
+  if (allowedTabs.length === 0) {
+    return <div className="flex items-center justify-center min-h-[400px] text-muted-foreground">Você não tem permissão para acessar esta área ou nenhuma aba está disponível para seu perfil.</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
