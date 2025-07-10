@@ -18,8 +18,17 @@ import CrmMasterConfig from "./pages/crm/CrmMasterConfig";
 import NotFound from "./pages/NotFound";
 import CrmResetPasswordInvite from "./pages/crm/CrmResetPasswordInvite";
 import CrmResetPassword from "./pages/crm/CrmResetPassword";
+import Home from "./pages/Home";
+import { useCrmAuth } from "@/contexts/CrmAuthContext";
 
 const queryClient = new QueryClient();
+
+function CrmLoginRedirect() {
+  const { user, loading } = useCrmAuth();
+  if (loading) return null;
+  if (user) return <Navigate to="/home" replace />;
+  return <CrmLogin />;
+}
 
 function App() {
   return (
@@ -32,12 +41,13 @@ function App() {
               <div className="min-h-screen bg-gray-50">
                 <main>
                   <Routes>
-                    {/* Redirecionar home para login */}
-                    <Route path="/" element={<Navigate to="/crm/login" replace />} />
+                    {/* Redirecionar home para login se não autenticado, senão para /home */}
+                    <Route path="/" element={<ProtectedRoute><Navigate to="/home" replace /></ProtectedRoute>} />
+                    <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
                     <Route path="/configuracoes" element={<Configuracoes />} />
                     
                     {/* Rota de login do CRM */}
-                    <Route path="/crm/login" element={<CrmLogin />} />
+                    <Route path="/crm/login" element={<CrmLoginRedirect />} />
                     <Route path="/crm/redefinir-senha-convite" element={<CrmResetPasswordInvite />} />
                     <Route path="/crm/redefinir-senha" element={<CrmResetPassword />} />
                     
