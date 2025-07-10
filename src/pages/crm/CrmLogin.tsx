@@ -47,7 +47,8 @@ const CrmLogin = () => {
         console.error('Login error:', error);
       } else {
         toast.success('Login realizado com sucesso!');
-        // Redirect will be handled by useEffect
+        navigate('/home', { replace: true }); // Redirecionamento imediato
+        // Redirect também será tratado pelo useEffect
       }
     } catch (err) {
       console.error('Unexpected login error:', err);

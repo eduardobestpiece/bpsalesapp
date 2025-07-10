@@ -1,22 +1,19 @@
-# Requisição Atual
+# Requisição em andamento (10/07/2024)
 
-**Data:** 10/07/2024
-**Solicitante:** Usuário
-**Descrição:**
-- Estudo completo da plataforma para entendimento das páginas e fluxos.
-- Ajustes no header das páginas do CRM (remover header, manter apenas menu lateral).
-- Ajuste na página de configurações do simulador (remover header e garantir menu lateral).
-- Atualizar logo do menu lateral esquerdo do CRM e Simulador para @monteo_policromia_horizontal (1).png.
-- Atualizar logo da página de login para @monteo_policromia_vertical.png, removendo textos e botão "Voltar para o Simulador".
-- Redirecionar login para /home ao invés de /crm/login.
+## Problemas reportados
+- Após login, usuário não é redirecionado para /home (fica na tela de login).
+- Módulo CRM não exibe dados, erros 406 nas queries para role_page_permissions e funnel_column_settings.
 
-## Checklist
-- [ ] Estudar toda a plataforma e mapear páginas/componentes
-- [ ] Remover header das páginas do CRM
-- [ ] Ajustar página de configurações do simulador (remover header e garantir menu lateral)
-- [ ] Atualizar logo do menu lateral esquerdo (CRM e Simulador)
-- [ ] Atualizar logo da página de login, remover textos e botão "Voltar para o Simulador"
-- [ ] Redirecionar login para /home
-- [ ] Validar todas as alterações
-- [ ] Executar deploy
-- [ ] Solicitar conferência do usuário 
+## Diagnóstico
+- Falta de redirecionamento automático após login.
+- Erros 406 indicam problemas de RLS ou permissões no Supabase.
+
+## Plano de ação
+1. Corrigir redirecionamento pós-login.
+2. Revisar e ajustar políticas RLS das tabelas role_page_permissions e funnel_column_settings.
+3. Testar login e navegação no CRM.
+4. Testar carregamento das abas e dados.
+5. Atualizar histórico e documentação.
+
+## Status
+- Iniciando pela etapa 1: corrigir redirecionamento pós-login. 
