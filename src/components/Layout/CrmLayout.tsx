@@ -2,6 +2,7 @@
 import { ReactNode } from 'react';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { CrmSidebar } from './CrmSidebar';
+import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
 
 interface CrmLayoutProps {
   children: ReactNode;
@@ -15,6 +16,7 @@ export const CrmLayout = ({ children }: CrmLayoutProps) => {
         <SidebarInset className="flex-1">
           <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
             <SidebarTrigger className="-ml-1" />
+            <ThemeSwitch />
             <div className="flex items-center space-x-2 text-sm text-secondary/70 bg-blue-50/70 px-3 py-1.5 rounded-full">
               <span className="font-medium">Gerencie seus leads</span>
             </div>

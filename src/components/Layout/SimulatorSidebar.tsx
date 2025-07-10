@@ -1,5 +1,5 @@
 
-import { Calculator, TrendingUp, Settings, User, Users, LogOut } from 'lucide-react';
+import { Calculator, Settings, Users, LogOut, ChevronDown } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useEffect, useState } from 'react';
@@ -16,10 +16,13 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { UserMenu } from './UserMenu';
-import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { useModule } from '@/contexts/ModuleContext';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export const SimulatorSidebar = () => {
   const location = useLocation();
@@ -52,18 +55,50 @@ export const SimulatorSidebar = () => {
   const handleAvatarClick = () => {
     window.location.href = '/crm/perfil';
   };
+
   const handleLogout = async () => {
     await signOut();
     window.location.href = '/crm/login';
   };
 
+  const handleStayInSimulator = () => {
+    navigate('/simulador');
+  };
+
+  const handleLogoClick = () => {
+    navigate('/simulador');
+  };
+
   return (
     <Sidebar className="border-r border-gray-200">
-      <SidebarHeader className="p-4 flex flex-col items-center">
-        <img src="/favicon.ico" alt="Logo Monteo" className="h-10 w-10 mb-2" />
-        <span className="font-bold text-lg text-gray-800 tracking-wide">MONTEO</span>
-        <span className="text-xs text-secondary/60 font-medium mb-2">INVESTIMENTOS</span>
+      <SidebarHeader className="p-4">
+        <div className="flex flex-col items-start">
+          <div className="cursor-pointer mb-2" onClick={handleLogoClick}>
+            <img src="/favicon.ico" alt="Logo Monteo" className="h-10 w-10" />
+          </div>
+          <span className="font-bold text-lg text-gray-800 tracking-wide mb-4">Simulador</span>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center justify-between w-full p-2 text-sm bg-gray-100 rounded-md hover:bg-gray-200 transition-colors">
+                <span>Módulo</span>
+                <ChevronDown className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-40">
+              <DropdownMenuItem onClick={handleStayInSimulator}>
+                Simulador
+              </DropdownMenuItem>
+              {pagePermissions['indicadores'] !== false && (
+                <DropdownMenuItem onClick={handleGoToCrm}>
+                  CRM
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </SidebarHeader>
+      
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
@@ -89,21 +124,11 @@ export const SimulatorSidebar = () => {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
-
-              {pagePermissions['indicadores'] !== false && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild onClick={handleGoToCrm}>
-                    <span className="flex items-center cursor-pointer">
-                      <Users className="h-4 w-4" />
-                      <span>CRM</span>
-                    </span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      
       <SidebarFooter className="p-4">
         <div className="flex items-center gap-3">
           <div className="cursor-pointer" onClick={handleAvatarClick}>

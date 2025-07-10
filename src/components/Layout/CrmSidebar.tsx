@@ -1,6 +1,6 @@
 
-import { Users, BarChart3, Settings, User, Shield } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import { Users, BarChart3, Settings, Shield, ChevronDown } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -16,16 +16,19 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { CrmUserMenu } from './CrmUserMenu';
-import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
-import { useModule } from '@/contexts/ModuleContext';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { LogOut } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 export const CrmSidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { userRole, companyId, crmUser, signOut } = useCrmAuth();
-  const { currentModule, setModule } = useModule();
   const [pagePermissions, setPagePermissions] = useState<any>({});
 
   useEffect(() => {
@@ -49,34 +52,55 @@ export const CrmSidebar = () => {
   const handleAvatarClick = () => {
     window.location.href = '/crm/perfil';
   };
+
   const handleLogout = async () => {
     await signOut();
     window.location.href = '/crm/login';
   };
 
+  const handleGoToSimulator = () => {
+    navigate('/simulador');
+  };
+
+  const handleGoToIndicators = () => {
+    navigate('/crm/indicadores');
+  };
+
+  const handleLogoClick = () => {
+    navigate('/crm/indicadores');
+  };
+
   return (
     <Sidebar className="border-r border-gray-200">
-      <SidebarHeader className="p-4 flex flex-col items-center">
-        <img src="/favicon.ico" alt="Logo Monteo" className="h-10 w-10 mb-2" />
-        <span className="font-bold text-lg text-gray-800 tracking-wide">MONTEO</span>
-        <span className="text-xs text-secondary/60 font-medium mb-2">INVESTIMENTOS</span>
-      </SidebarHeader>
-      <SidebarContent>
-        {/* Seletor de módulo */}
-        <div className="flex justify-center mb-4">
-          {pagePermissions['indicadores'] !== false && (
-            <button
-              className={`px-3 py-1 rounded-l-lg border ${currentModule === 'crm' ? 'bg-primary text-white' : 'bg-gray-100'}`}
-              onClick={() => setModule('crm')}
-            >Indicadores</button>
-          )}
-          {pagePermissions['simulator'] !== false && (
-            <button
-              className={`px-3 py-1 rounded-r-lg border-l-0 border ${currentModule === 'simulator' ? 'bg-primary text-white' : 'bg-gray-100'}`}
-              onClick={() => setModule('simulator')}
-            >Simulador</button>
-          )}
+      <SidebarHeader className="p-4">
+        <div className="flex flex-col items-start">
+          <div className="cursor-pointer mb-2" onClick={handleLogoClick}>
+            <img src="/favicon.ico" alt="Logo Monteo" className="h-10 w-10" />
+          </div>
+          <span className="font-bold text-lg text-gray-800 tracking-wide mb-4">CRM</span>
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center justify-between w-full p-2 text-sm bg-gray-100 rounded-md hover:bg-gray-200 transition-colors">
+                <span>Módulo</span>
+                <ChevronDown className="h-4 w-4" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-40">
+              {pagePermissions['simulator'] !== false && (
+                <DropdownMenuItem onClick={handleGoToSimulator}>
+                  Simulador
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem onClick={handleGoToIndicators}>
+                CRM
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
+      </SidebarHeader>
+      
+      <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -125,6 +149,7 @@ export const CrmSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      
       <SidebarFooter className="p-4">
         <div className="flex items-center gap-3">
           <div className="cursor-pointer" onClick={handleAvatarClick}>
