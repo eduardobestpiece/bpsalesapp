@@ -163,12 +163,7 @@ const CrmLogin = () => {
           </form>
         </Card>
 
-        <div className="mt-6 text-center text-sm text-secondary/60">
-          <p>Dados de teste:</p>
-          <p className="font-mono text-xs bg-white/50 p-2 rounded mt-1">
-            eduardocosta@bestpiece.com.br
-          </p>
-        </div>
+        {/* Bloco de dados de teste removido */}
       </div>
     </div>
   );

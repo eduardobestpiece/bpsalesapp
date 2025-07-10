@@ -30,7 +30,7 @@ const CrmDashboard = () => {
             <div className="bg-white rounded-[calc(1.5rem-4px)] p-8 shadow-sm min-h-[600px]">
               
               <div className="text-center space-y-2 mb-8">
-                <h2 className="text-2xl font-bold">Dashboard CRM</h2>
+                <h2 className="text-2xl font-bold">Comercial</h2>
                 <p className="text-muted-foreground">
                   Gerencie seus leads e vendas
                 </p>
