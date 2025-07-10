@@ -18,10 +18,14 @@ import {
 } from '@/components/ui/sidebar';
 import { CrmUserMenu } from './CrmUserMenu';
 import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
+import { useModule } from '@/contexts/ModuleContext';
+import { Avatar } from '@/components/ui/avatar';
+import { LogOut } from 'lucide-react';
 
 export const CrmSidebar = () => {
   const location = useLocation();
-  const { userRole, companyId } = useCrmAuth();
+  const { userRole, companyId, crmUser, signOut } = useCrmAuth();
+  const { currentModule, setModule } = useModule();
   const [pagePermissions, setPagePermissions] = useState<any>({});
 
   useEffect(() => {
@@ -42,36 +46,41 @@ export const CrmSidebar = () => {
 
   const isActivePath = (path: string) => location.pathname === path;
 
+  const handleAvatarClick = () => {
+    window.location.href = '/crm/perfil';
+  };
+  const handleLogout = async () => {
+    await signOut();
+    window.location.href = '/crm/login';
+  };
+
   return (
     <Sidebar className="border-r border-gray-200">
-      <SidebarHeader className="p-4">
-        <Link to="/crm" className="flex items-center space-x-3">
-          <div className="bg-gradient-primary p-2 rounded-xl shadow-lg">
-            <Users className="h-6 w-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-gradient-primary">Monteo CRM</h1>
-            <span className="text-xs text-secondary/60 font-medium">Sistema de Gestão</span>
-          </div>
-        </Link>
+      <SidebarHeader className="p-4 flex flex-col items-center">
+        <img src="/favicon.ico" alt="Logo Monteo" className="h-10 w-10 mb-2" />
+        <span className="font-bold text-lg text-gray-800 tracking-wide">MONTEO</span>
+        <span className="text-xs text-secondary/60 font-medium mb-2">INVESTIMENTOS</span>
       </SidebarHeader>
-
       <SidebarContent>
+        {/* Seletor de módulo */}
+        <div className="flex justify-center mb-4">
+          {pagePermissions['indicadores'] !== false && (
+            <button
+              className={`px-3 py-1 rounded-l-lg border ${currentModule === 'crm' ? 'bg-primary text-white' : 'bg-gray-100'}`}
+              onClick={() => setModule('crm')}
+            >Indicadores</button>
+          )}
+          {pagePermissions['simulator'] !== false && (
+            <button
+              className={`px-3 py-1 rounded-r-lg border-l-0 border ${currentModule === 'simulator' ? 'bg-primary text-white' : 'bg-gray-100'}`}
+              onClick={() => setModule('simulator')}
+            >Simulador</button>
+          )}
+        </div>
         <SidebarGroup>
           <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {pagePermissions['comercial'] !== false && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActivePath('/crm')}>
-                    <Link to="/crm">
-                      <Users className="h-4 w-4" />
-                      <span>Comercial</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-              
               {pagePermissions['indicadores'] !== false && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActivePath('/crm/indicadores')}>
@@ -82,17 +91,17 @@ export const CrmSidebar = () => {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
-
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActivePath('/crm/perfil')}>
-                  <Link to="/crm/perfil">
-                    <User className="h-4 w-4" />
-                    <span>Perfil</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-
-              {(userRole === 'admin' || userRole === 'master') && (
+              {pagePermissions['comercial'] !== false && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActivePath('/crm')}>
+                    <Link to="/crm">
+                      <Users className="h-4 w-4" />
+                      <span>Comercial</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+              {(userRole === 'admin' || userRole === 'master') && pagePermissions['crm_config'] !== false && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActivePath('/crm/configuracoes')}>
                     <Link to="/crm/configuracoes">
@@ -102,8 +111,7 @@ export const CrmSidebar = () => {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
-
-              {userRole === 'master' && (
+              {userRole === 'master' && pagePermissions['crm_master'] !== false && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActivePath('/crm/master')}>
                     <Link to="/crm/master">
@@ -117,11 +125,21 @@ export const CrmSidebar = () => {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-
-      <SidebarFooter className="p-4 space-y-2">
-        <div className="flex items-center justify-between">
-          <ThemeSwitch />
-          <CrmUserMenu pagePermissions={pagePermissions} />
+      <SidebarFooter className="p-4">
+        <div className="flex items-center gap-3">
+          <div className="cursor-pointer" onClick={handleAvatarClick}>
+            <Avatar>
+              <Avatar.Image src={crmUser?.avatar_url || undefined} alt={crmUser?.first_name} />
+              <Avatar.Fallback>{crmUser?.first_name?.[0]}{crmUser?.last_name?.[0]}</Avatar.Fallback>
+            </Avatar>
+          </div>
+          <div className="flex flex-col flex-1 min-w-0">
+            <span className="font-medium text-sm truncate">{crmUser?.first_name} {crmUser?.last_name}</span>
+            <span className="text-xs text-secondary/60 truncate">{crmUser?.email}</span>
+          </div>
+          <button className="ml-2 p-2 rounded hover:bg-red-50" onClick={handleLogout} title="Sair">
+            <LogOut className="h-5 w-5 text-red-500" />
+          </button>
         </div>
       </SidebarFooter>
     </Sidebar>

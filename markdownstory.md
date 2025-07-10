@@ -28,3 +28,18 @@
 - Se uma página for desmarcada para uma função, ela não aparecerá nem no menu, nem nos botões de navegação, nem será acessível diretamente pela URL.
 - Não existe ainda uma tabela de permissões de páginas por função no banco.
 - Status: Início do planejamento e análise. 
+
+## [2024-07-10] Entrega: Integração real de permissões de acesso
+
+- Permissões de páginas/abas agora são salvas e carregadas do Supabase.
+- Menus e botões (Simulador, Comercial, Indicadores, etc.) só aparecem se o usuário tiver permissão.
+- Proteção de rotas: usuário sem permissão é redirecionado para a Home.
+- Aba "Acessos" permite edição e salvamento real das permissões.
+- Deploy realizado.
+- Aguardando validação do usuário. 
+
+## [2024-07-10] Sincronização com GitHub
+
+- Realizado `git pull` para trazer todas as alterações do repositório remoto para o ambiente local.
+- Novos arquivos, componentes e ajustes do time foram incorporados ao projeto local.
+- Recomenda-se revisar e testar as novidades trazidas do repositório. 
