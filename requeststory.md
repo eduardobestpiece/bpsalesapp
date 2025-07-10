@@ -5,8 +5,8 @@
 **Solicitante:** Usuário
 
 **Descrição:**
-- Projeto local sincronizado com o repositório remoto (GitHub) via `git pull`.
-- Todas as alterações recentes do time foram incorporadas ao ambiente local.
-- Recomenda-se revisar e testar as novidades trazidas do repositório.
+- Novo layout dos menus CRM e Simulador entregue.
+- Logo Monteo no topo, seletor de módulo, avatar, permissões e favicon atualizados.
+- Deploy realizado.
 
 **Status:** Aguardando validação do usuário. 

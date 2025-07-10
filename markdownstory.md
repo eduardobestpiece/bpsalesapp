@@ -43,3 +43,13 @@
 - Realizado `git pull` para trazer todas as alterações do repositório remoto para o ambiente local.
 - Novos arquivos, componentes e ajustes do time foram incorporados ao projeto local.
 - Recomenda-se revisar e testar as novidades trazidas do repositório. 
+
+## [2024-07-10] Entrega: Novo layout dos menus CRM e Simulador
+
+- Menus laterais CRM e Simulador atualizados com a logo Monteo (imagem + texto) no topo.
+- Seletor de módulo (Indicadores/Simulador) no menu CRM, conforme permissão.
+- Itens exibidos na ordem solicitada e conforme permissões do usuário.
+- Avatar, nome, e-mail e botão de sair na mesma linha no rodapé, clicando no avatar abre o perfil.
+- Favicon atualizado para a logo Monteo.
+- Deploy realizado.
+- Aguardando validação do usuário. 

@@ -129,13 +129,13 @@ export const CrmSidebar = () => {
         <div className="flex items-center gap-3">
           <div className="cursor-pointer" onClick={handleAvatarClick}>
             <Avatar>
-              <Avatar.Image src={crmUser?.avatar_url || undefined} alt={crmUser?.first_name} />
-              <Avatar.Fallback>{crmUser?.first_name?.[0]}{crmUser?.last_name?.[0]}</Avatar.Fallback>
+              <Avatar.Image src={crmUser?.avatar_url || undefined} alt={crmUser?.first_name || 'Usuário'} />
+              <Avatar.Fallback>{(crmUser?.first_name?.[0] || 'U')}{(crmUser?.last_name?.[0] || '')}</Avatar.Fallback>
             </Avatar>
           </div>
           <div className="flex flex-col flex-1 min-w-0">
-            <span className="font-medium text-sm truncate">{crmUser?.first_name} {crmUser?.last_name}</span>
-            <span className="text-xs text-secondary/60 truncate">{crmUser?.email}</span>
+            <span className="font-medium text-sm truncate">{crmUser?.first_name || 'Usuário'} {crmUser?.last_name || ''}</span>
+            <span className="text-xs text-secondary/60 truncate">{crmUser?.email || 'sem-email'}</span>
           </div>
           <button className="ml-2 p-2 rounded hover:bg-red-50" onClick={handleLogout} title="Sair">
             <LogOut className="h-5 w-5 text-red-500" />
