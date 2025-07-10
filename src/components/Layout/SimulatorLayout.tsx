@@ -1,5 +1,6 @@
 
 import { ReactNode } from 'react';
+import { TrendingUp } from 'lucide-react';
 import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { SimulatorSidebar } from './SimulatorSidebar';
 
