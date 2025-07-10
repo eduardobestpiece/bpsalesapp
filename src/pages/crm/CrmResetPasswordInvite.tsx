@@ -50,7 +50,7 @@ const CrmResetPasswordInvite = () => {
       });
     } else {
       // Se não há token de convite, mostrar erro
-      setError('Link de convite inválido. Entre em contato com o administrador.');
+      // setError('Link de convite inválido. Entre em contato com o administrador.'); // Removido para não mostrar erro ao abrir a página sem token
     }
   }, [searchParams]);
 
@@ -192,8 +192,8 @@ const CrmResetPasswordInvite = () => {
                   value={form.email} 
                   onChange={handleChange} 
                   required 
-                  disabled={true}
                   placeholder="Seu e-mail" 
+                  disabled={isLoading}
                 />
               </div>
               <div className="space-y-2">
