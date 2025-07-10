@@ -1,6 +1,6 @@
 
 import { User, Settings, LogOut, Calculator, Shield } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useModule } from '@/contexts/ModuleContext';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import {
@@ -17,6 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 export const CrmUserMenu = () => {
   const { setModule } = useModule();
   const { crmUser, signOut, userRole } = useCrmAuth();
+  const navigate = useNavigate();
 
   const handleGoToSimulator = () => {
     setModule('simulator');
@@ -24,6 +25,7 @@ export const CrmUserMenu = () => {
 
   const handleSignOut = async () => {
     await signOut();
+    navigate('/crm/login');
   };
 
   const userInitials = crmUser 
