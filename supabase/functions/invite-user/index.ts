@@ -37,8 +37,8 @@ serve(async (req) => {
   const serviceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpiaG9jZ2hiaWVxeGp3c2RzdGdtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTg1NDExNywiZXhwIjoyMDY3NDMwMTE3fQ.THDbqsymTMNTaEyr3FxKp6maGlct6kr5jH8fIvDRTyE';
   const supabaseUrl = 'https://jbhocghbieqxjwsdstgm.supabase.co';
 
-  // 1. Convidar usuário no Auth (envia e-mail automático)
-  const inviteRes = await fetch(`${supabaseUrl}/auth/v1/invite`, {
+  // 1. Criar usuário no Auth (não envia e-mail automático)
+  const adminRes = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -46,20 +46,17 @@ serve(async (req) => {
       'apikey': serviceKey
     },
     body: JSON.stringify({
-      email,
-      options: {
-        redirectTo: 'https://monteo-app.vercel.app/crm/cadastro'
-      }
+      email
     })
   })
-  const inviteData = await inviteRes.json()
-  if (!inviteRes.ok) {
-    return new Response(JSON.stringify({ error: inviteData, debugHeaders, bodyJson, serviceKey, supabaseUrl }), {
+  const adminData = await adminRes.json()
+  if (!adminRes.ok) {
+    return new Response(JSON.stringify({ error: adminData, debugHeaders, bodyJson }), {
       status: 400,
       headers: corsHeaders
     });
   }
-  const auth_id = inviteData.user?.id
+  const auth_id = adminData.user?.id;
 
   // 2. Inserir usuário na tabela crm_users
   const dbRes = await fetch(`${supabaseUrl}/rest/v1/crm_users`, {
