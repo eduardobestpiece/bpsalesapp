@@ -1,5 +1,7 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 
+export const config = { runtime: 'nodejs' };
+
 export default async function handler(req, res) {
   try {
     if (req.method !== 'POST') {
