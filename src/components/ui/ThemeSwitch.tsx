@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { Moon, Sun } from 'lucide-react';
 
 export function ThemeSwitch() {
+  // Sempre começa como claro
   const [dark, setDark] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('theme') === 'dark' || window.matchMedia('(prefers-color-scheme: dark)').matches;
+      return localStorage.getItem('theme') === 'dark';
     }
     return false;
   });

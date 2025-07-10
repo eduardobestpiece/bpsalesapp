@@ -245,6 +245,15 @@ const CrmMasterConfig = () => {
     );
   }
 
+  // Antes de usar allowedTabs, garantir que é array
+  const safeAllowedTabs = Array.isArray(allowedTabs) ? allowedTabs : [];
+
+  // Antes de usar companies, garantir que é array
+  const safeCompanies = Array.isArray(companies) ? companies : [];
+
+  // Antes de usar archivedItems, garantir que é array
+  const safeArchivedItems = Array.isArray(archivedItems) ? archivedItems : [];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
       <main className="container mx-auto px-4 py-8">
@@ -259,20 +268,20 @@ const CrmMasterConfig = () => {
                 </p>
               </div>
 
-              {allowedTabs.length > 0 && (
+              {safeAllowedTabs.length > 0 && (
                 <Tabs defaultValue={defaultTab} className="w-full">
-                  <TabsList className={`grid w-full grid-cols-${allowedTabs.length}`}>
-                    {allowedTabs.includes('companies') && (
+                  <TabsList className={`grid w-full grid-cols-${safeAllowedTabs.length}`}>
+                    {safeAllowedTabs.includes('companies') && (
                       <TabsTrigger value="companies">Empresas</TabsTrigger>
                     )}
-                    {allowedTabs.includes('archived') && (
+                    {safeAllowedTabs.includes('archived') && (
                       <TabsTrigger value="archived">Itens arquivados</TabsTrigger>
                     )}
-                    {allowedTabs.includes('accesses') && (
+                    {safeAllowedTabs.includes('accesses') && (
                       <TabsTrigger value="accesses">Acessos</TabsTrigger>
                     )}
                   </TabsList>
-                  {allowedTabs.includes('companies') && (
+                  {safeAllowedTabs.includes('companies') && (
                     <TabsContent value="companies" className="mt-6">
                       <Card>
                         <CardHeader>
@@ -328,12 +337,12 @@ const CrmMasterConfig = () => {
                           <div className="space-y-4">
                             {companiesLoading ? (
                               <p className="text-center py-8 text-muted-foreground">Carregando empresas...</p>
-                            ) : companies.length === 0 ? (
+                            ) : safeCompanies.length === 0 ? (
                               <p className="text-center py-8 text-muted-foreground">
                                 Nenhuma empresa encontrada. Crie a primeira empresa para começar.
                               </p>
                             ) : (
-                              companies.map((company) => (
+                              safeCompanies.map((company) => (
                                 <div
                                   key={company.id}
                                   className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow"
@@ -369,7 +378,7 @@ const CrmMasterConfig = () => {
                       </Card>
                     </TabsContent>
                   )}
-                  {allowedTabs.includes('archived') && (
+                  {safeAllowedTabs.includes('archived') && (
                     <TabsContent value="archived" className="mt-6">
                       <Card>
                         <CardHeader>
@@ -429,7 +438,7 @@ const CrmMasterConfig = () => {
                       </Card>
                     </TabsContent>
                   )}
-                  {allowedTabs.includes('accesses') && (
+                  {safeAllowedTabs.includes('accesses') && (
                     <TabsContent value="accesses" className="mt-6">
                       <Card>
                         <CardHeader>
@@ -552,6 +561,9 @@ function AccessPermissionsTable() {
     setSaving(false);
   };
 
+  // No AccessPermissionsTable, garantir que permissions é sempre objeto
+  const safePermissions = permissions && typeof permissions === 'object' ? permissions : {};
+
   if (loading) {
     return <div className="text-center py-8 text-muted-foreground">Carregando permissões...</div>;
   }
@@ -575,7 +587,7 @@ function AccessPermissionsTable() {
                 <td key={role.key} className="px-2 py-1 text-center">
                   <input
                     type="checkbox"
-                    checked={permissions?.[role.key]?.[item.key] ?? true}
+                    checked={safePermissions?.[role.key]?.[item.key] ?? true}
                     onChange={e => handleChange(role.key, item.key, e.target.checked)}
                   />
                 </td>

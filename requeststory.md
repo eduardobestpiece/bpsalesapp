@@ -1,19 +1,15 @@
-# Requisição em andamento (10/07/2024)
+# Requisição em andamento - 11/07/2024
 
-## Problemas reportados
-- Após login, navegação funciona, mas ao atualizar a página (F5) fica carregando para sempre.
-- As páginas do módulo CRM aparecem em branco, sem conteúdo (conforme print).
+## Correção de visualização
 
-## Diagnóstico
-- Os componentes principais do CRM dependem do array allowedTabs e de dados carregados via hooks.
-- Se allowedTabs.length === 0, nada é renderizado (nem mensagem de erro, nem “sem permissão”, nem “sem dados”).
-- Se algum hook não retorna dados (por erro, delay ou permissão), a tela pode ficar em branco.
-- Não há fallback visual nem tratamento de erro/loading explícito.
+### Problemas relatados
+- Ao acessar as páginas "Comercial", "Configurações" e "Master Config", aparece a mensagem: "Você não tem permissão para acessar esta área ou nenhuma aba está disponível para seu perfil."
+- O tema escuro (darkmode) está sendo ativado automaticamente e a plataforma fica atualizando. Deseja-se que o tema padrão seja o claro, e o darkmode só seja ativado se o usuário clicar.
 
-## Plano de ação
-1. Adicionar fallback visual para ausência de abas permitidas em todos os componentes principais do CRM.
-2. Adicionar tratamento de erro e loading explícito.
-3. Garantir que, mesmo sem dados, a página nunca fique em branco ou carregando para sempre.
-
-## Status
-- Iniciando pela etapa 1: ajuste no CrmIndicadores e replicar padrão para os demais. 
+### Checklist
+1. Registrar a requisição em `requeststory.md`
+2. Analisar e corrigir o controle de permissões das páginas citadas
+3. Verificar e corrigir a lógica do tema (darkmode) para ser claro por padrão e só ativar se o usuário clicar
+4. Testar as correções localmente
+5. Executar o deploy (aguardar confirmação do usuário)
+6. Solicitar validação do funcionamento 

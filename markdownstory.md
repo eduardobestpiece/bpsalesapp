@@ -64,3 +64,13 @@
 - Deploy realizado para o GitHub.
 
 --- 
+
+## 11/07/2024 - Correção em andamento
+
+- Iniciada a correção do erro React #310 ao acessar a página Master Config (possível problema de renderização de arrays ou dados indefinidos).
+- Corrigido o darkmode: agora o tema padrão é claro e só ativa o darkmode se o usuário clicar manualmente.
+- Próximos passos: revisar e corrigir o código da página Master Config e componentes filhos para garantir renderização segura e sem loops/reloads. 
+
+- Correções concluídas na página Master Config para evitar erro React #310 (renderização segura de arrays e objetos).
+- Darkmode corrigido: tema claro por padrão, só ativa escuro manualmente.
+- Realizando deploy para testes finais do usuário. 
