@@ -28,6 +28,7 @@ export interface CrmUser {
   password_hash: string;
   created_at: string;
   updated_at: string;
+  funnels?: string[];
 }
 
 export interface Team {

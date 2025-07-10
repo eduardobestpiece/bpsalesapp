@@ -214,6 +214,9 @@ const CrmIndicadores = () => {
   const lastStage = sortedStages.length > 0 ? sortedStages[sortedStages.length - 1] : null;
   const recommendationStage = sortedStages.find((s: any) => s.name.toLowerCase().includes('reuni') || s.name.toLowerCase().includes('recomend'));
 
+  const isUser = crmUser?.role === 'user';
+  const allowedFunnels = isUser ? (funnels || []).filter(f => crmUser.funnels?.includes(f.id)) : (funnels || []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
       <CrmHeader />
@@ -246,7 +249,7 @@ const CrmIndicadores = () => {
                             <div>
                               <select value={selectedFunnelId} onChange={e => setSelectedFunnelId(e.target.value)} className="border rounded-lg px-3 py-2 text-base">
                                 <option value="">Todos os funis</option>
-                                {funnels?.map(f => (
+                                {allowedFunnels.map(f => (
                                   <option key={f.id} value={f.id}>{f.name}</option>
                                 ))}
                               </select>
