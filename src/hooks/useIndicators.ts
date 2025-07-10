@@ -1,4 +1,3 @@
-
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Indicator, IndicatorValue } from '@/types/crm';
@@ -11,38 +10,57 @@ export const useIndicators = (companyId?: string, userId?: string) => {
   return useQuery({
     queryKey: ['indicators', companyId, userId],
     queryFn: async () => {
-      let query = supabase
-        .from('indicators')
-        .select(`
-          *,
-          values:indicator_values(*)
-        `)
-        .order('period_date', { ascending: false });
-
-      // Filtro para não trazer arquivados
-      query = query.is('archived_at', null);
-
-      if (companyId) {
-        query = query.eq('company_id', companyId);
+      console.log('[useIndicators] Iniciando busca de indicadores para companyId:', companyId, 'userId:', userId);
+      
+      if (!companyId) {
+        console.log('[useIndicators] CompanyId não fornecido, retornando array vazio');
+        return [] as IndicatorWithValues[];
       }
 
-      if (userId) {
-        query = query.eq('user_id', userId);
-      }
+      try {
+        let query = supabase
+          .from('indicators')
+          .select(`
+            *,
+            values:indicator_values(*)
+          `)
+          .order('period_date', { ascending: false });
 
-      const { data, error } = await query;
+        // Filtro para não trazer arquivados
+        query = query.is('archived_at', null);
 
-      if (error) {
-        console.error('Error fetching indicators:', error);
-        if (error.code === 'PGRST301' || error.message.includes('RLS')) {
-          return [] as IndicatorWithValues[];
+        if (companyId) {
+          query = query.eq('company_id', companyId);
         }
-        throw error;
-      }
 
-      return data as IndicatorWithValues[];
+        if (userId) {
+          query = query.eq('user_id', userId);
+        }
+
+        console.log('[useIndicators] Executando query...');
+        const { data, error } = await query;
+
+        if (error) {
+          console.error('[useIndicators] Erro ao buscar indicadores:', error);
+          if (error.code === 'PGRST301' || error.message.includes('RLS')) {
+            console.log('[useIndicators] Erro de RLS, retornando array vazio');
+            return [] as IndicatorWithValues[];
+          }
+          throw error;
+        }
+
+        console.log('[useIndicators] Indicadores carregados com sucesso:', data?.length || 0);
+        return data as IndicatorWithValues[];
+      } catch (err) {
+        console.error('[useIndicators] Erro inesperado:', err);
+        throw err;
+      }
     },
     enabled: !!companyId,
+    staleTime: 30000, // 30 segundos
+    gcTime: 300000, // 5 minutos
+    retry: 2,
+    retryDelay: 1000,
   });
 };
 
