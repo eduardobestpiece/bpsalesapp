@@ -10,6 +10,8 @@ import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useFunnels } from '@/hooks/useFunnels';
+// Adiciona a chave pública do Supabase para uso no header apikey
+const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpiaG9jZ2hiaWVxeGp3c2RzdGdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE4NTQxMTcsImV4cCI6MjA2NzQzMDExN30.L1KLc1360o0uE7kXkD2d3CzMMlztKwAmWheGTmU_ZNc";
 
 interface UserModalProps {
   isOpen: boolean;
@@ -96,6 +98,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'apikey': SUPABASE_PUBLISHABLE_KEY,
             ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {})
           },
           body: JSON.stringify({
