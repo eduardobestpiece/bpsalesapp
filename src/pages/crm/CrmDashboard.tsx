@@ -1,11 +1,31 @@
 
+import { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LeadsList } from '@/components/CRM/LeadsList';
 import { SalesList } from '@/components/CRM/SalesList';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const CrmDashboard = () => {
-  const { companyId } = useCrmAuth();
+  const { companyId, userRole } = useCrmAuth();
+  const [allowedTabs, setAllowedTabs] = useState<string[]>([]);
+  const [defaultTab, setDefaultTab] = useState<string>('leads');
+
+  useEffect(() => {
+    if (!companyId || !userRole) return;
+    supabase
+      .from('role_page_permissions')
+      .select('page, allowed')
+      .eq('company_id', companyId)
+      .eq('role', userRole)
+      .then(({ data }) => {
+        const tabs = [];
+        if (data?.find((p: any) => p.page === 'comercial_leads' && p.allowed !== false)) tabs.push('leads');
+        if (data?.find((p: any) => p.page === 'comercial_sales' && p.allowed !== false)) tabs.push('sales');
+        setAllowedTabs(tabs);
+        setDefaultTab(tabs[0] || 'leads');
+      });
+  }, [companyId, userRole]);
 
   if (!companyId) {
     return (
@@ -33,20 +53,28 @@ const CrmDashboard = () => {
                 </p>
               </div>
 
-              <Tabs defaultValue="leads" className="w-full">
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="leads">Leads</TabsTrigger>
-                  <TabsTrigger value="sales">Vendas</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="leads" className="mt-6">
-                  <LeadsList companyId={companyId} />
-                </TabsContent>
-                
-                <TabsContent value="sales" className="mt-6">
-                  <SalesList companyId={companyId} />
-                </TabsContent>
-              </Tabs>
+              {allowedTabs.length > 0 && (
+                <Tabs defaultValue={defaultTab} className="w-full">
+                  <TabsList className={`grid w-full grid-cols-${allowedTabs.length}`}>
+                    {allowedTabs.includes('leads') && (
+                      <TabsTrigger value="leads">Leads</TabsTrigger>
+                    )}
+                    {allowedTabs.includes('sales') && (
+                      <TabsTrigger value="sales">Vendas</TabsTrigger>
+                    )}
+                  </TabsList>
+                  {allowedTabs.includes('leads') && (
+                    <TabsContent value="leads" className="mt-6">
+                      <LeadsList companyId={companyId} />
+                    </TabsContent>
+                  )}
+                  {allowedTabs.includes('sales') && (
+                    <TabsContent value="sales" className="mt-6">
+                      <SalesList companyId={companyId} />
+                    </TabsContent>
+                  )}
+                </Tabs>
+              )}
             </div>
           </div>
         </div>

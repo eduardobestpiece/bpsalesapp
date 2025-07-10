@@ -20,10 +20,30 @@ interface Company {
 }
 
 const CrmMasterConfig = () => {
-  const { userRole } = useCrmAuth();
+  const { userRole, companyId } = useCrmAuth();
   const queryClient = useQueryClient();
   const [newCompanyName, setNewCompanyName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+
+  // Permissões de abas
+  const [allowedTabs, setAllowedTabs] = useState<string[]>([]);
+  const [defaultTab, setDefaultTab] = useState<string>('companies');
+  useEffect(() => {
+    if (!companyId || !userRole) return;
+    supabase
+      .from('role_page_permissions')
+      .select('page, allowed')
+      .eq('company_id', companyId)
+      .eq('role', userRole)
+      .then(({ data }) => {
+        const tabs = [];
+        if (data?.find((p: any) => p.page === 'crm_master_companies' && p.allowed !== false)) tabs.push('companies');
+        if (data?.find((p: any) => p.page === 'crm_master_archived' && p.allowed !== false)) tabs.push('archived');
+        if (data?.find((p: any) => p.page === 'crm_master_accesses' && p.allowed !== false)) tabs.push('accesses');
+        setAllowedTabs(tabs);
+        setDefaultTab(tabs[0] || 'companies');
+      });
+  }, [companyId, userRole]);
 
   // Fetch companies
   const { data: companies = [], isLoading: companiesLoading } = useQuery({
@@ -218,180 +238,193 @@ const CrmMasterConfig = () => {
                 </p>
               </div>
 
-              <Tabs defaultValue="companies" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="companies">Empresas</TabsTrigger>
-                  <TabsTrigger value="archived">Itens arquivados</TabsTrigger>
-                  <TabsTrigger value="accesses">Acessos</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="companies" className="mt-6">
-                  <Card>
-                    <CardHeader>
-                      <div className="flex justify-between items-center">
-                        <div>
-                          <CardTitle className="flex items-center gap-2">
-                            <Building className="h-5 w-5" />
-                            Gerenciar Empresas
-                          </CardTitle>
-                          <CardDescription>
-                            Gerencie todas as empresas do sistema
-                          </CardDescription>
-                        </div>
-                        <Button onClick={() => setIsCreating(true)}>
-                          <Plus className="w-4 h-4 mr-2" />
-                          Nova Empresa
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      {isCreating && (
-                        <form onSubmit={handleCreateCompany} className="mb-6 p-4 border rounded-lg bg-muted/50">
-                          <div className="flex gap-4">
-                            <div className="flex-1">
-                              <Label htmlFor="company-name">Nome da Empresa</Label>
-                              <Input
-                                id="company-name"
-                                value={newCompanyName}
-                                onChange={(e) => setNewCompanyName(e.target.value)}
-                                placeholder="Digite o nome da empresa"
-                                required
-                              />
+              {allowedTabs.length > 0 && (
+                <Tabs defaultValue={defaultTab} className="w-full">
+                  <TabsList className={`grid w-full grid-cols-${allowedTabs.length}`}>
+                    {allowedTabs.includes('companies') && (
+                      <TabsTrigger value="companies">Empresas</TabsTrigger>
+                    )}
+                    {allowedTabs.includes('archived') && (
+                      <TabsTrigger value="archived">Itens arquivados</TabsTrigger>
+                    )}
+                    {allowedTabs.includes('accesses') && (
+                      <TabsTrigger value="accesses">Acessos</TabsTrigger>
+                    )}
+                  </TabsList>
+                  {allowedTabs.includes('companies') && (
+                    <TabsContent value="companies" className="mt-6">
+                      <Card>
+                        <CardHeader>
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <CardTitle className="flex items-center gap-2">
+                                <Building className="h-5 w-5" />
+                                Gerenciar Empresas
+                              </CardTitle>
+                              <CardDescription>
+                                Gerencie todas as empresas do sistema
+                              </CardDescription>
                             </div>
-                            <div className="flex items-end gap-2">
-                              <Button type="submit" disabled={createCompanyMutation.isPending}>
-                                {createCompanyMutation.isPending ? 'Criando...' : 'Criar'}
-                              </Button>
-                              <Button 
-                                type="button" 
-                                variant="outline" 
-                                onClick={() => {
-                                  setIsCreating(false);
-                                  setNewCompanyName('');
-                                }}
-                              >
-                                Cancelar
-                              </Button>
-                            </div>
+                            <Button onClick={() => setIsCreating(true)}>
+                              <Plus className="w-4 h-4 mr-2" />
+                              Nova Empresa
+                            </Button>
                           </div>
-                        </form>
-                      )}
-
-                      <div className="space-y-4">
-                        {companiesLoading ? (
-                          <p className="text-center py-8 text-muted-foreground">Carregando empresas...</p>
-                        ) : companies.length === 0 ? (
-                          <p className="text-center py-8 text-muted-foreground">
-                            Nenhuma empresa encontrada. Crie a primeira empresa para começar.
-                          </p>
-                        ) : (
-                          companies.map((company) => (
-                            <div
-                              key={company.id}
-                              className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow"
-                            >
-                              <div className="flex-1">
-                                <div className="flex items-center gap-3 mb-2">
-                                  <h3 className="font-medium">{company.name}</h3>
-                                  <Badge variant={company.status === 'active' ? 'default' : 'secondary'}>
-                                    {company.status === 'active' ? 'Ativa' : 'Arquivada'}
-                                  </Badge>
+                        </CardHeader>
+                        <CardContent>
+                          {isCreating && (
+                            <form onSubmit={handleCreateCompany} className="mb-6 p-4 border rounded-lg bg-muted/50">
+                              <div className="flex gap-4">
+                                <div className="flex-1">
+                                  <Label htmlFor="company-name">Nome da Empresa</Label>
+                                  <Input
+                                    id="company-name"
+                                    value={newCompanyName}
+                                    onChange={(e) => setNewCompanyName(e.target.value)}
+                                    placeholder="Digite o nome da empresa"
+                                    required
+                                  />
                                 </div>
-                                <p className="text-sm text-muted-foreground">
-                                  Criada em: {new Date(company.created_at).toLocaleDateString('pt-BR')}
-                                </p>
-                              </div>
-                              {company.status === 'active' && (
-                                <div className="flex gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleArchiveCompany(company.id)}
-                                    disabled={archiveCompanyMutation.isPending}
+                                <div className="flex items-end gap-2">
+                                  <Button type="submit" disabled={createCompanyMutation.isPending}>
+                                    {createCompanyMutation.isPending ? 'Criando...' : 'Criar'}
+                                  </Button>
+                                  <Button 
+                                    type="button" 
+                                    variant="outline" 
+                                    onClick={() => {
+                                      setIsCreating(false);
+                                      setNewCompanyName('');
+                                    }}
                                   >
-                                    <Trash2 className="w-4 h-4" />
+                                    Cancelar
                                   </Button>
                                 </div>
-                              )}
-                            </div>
-                          ))
-                        )}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                <TabsContent value="archived" className="mt-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Itens arquivados</CardTitle>
-                      <CardDescription>Consulte e gerencie todos os itens arquivados do sistema</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      {/* Filtros */}
-                      <div className="flex gap-4 mb-4">
-                        <div>
-                          <Label htmlFor="filter-type">Tipo</Label>
-                          <select id="filter-type" className="block w-full border rounded px-2 py-1" value={archivedType} onChange={e => setArchivedType(e.target.value)}>
-                            <option value="">Todos</option>
-                            <option value="indicator">Indicador</option>
-                            <option value="lead">Lead</option>
-                            <option value="sale">Venda</option>
-                          </select>
-                        </div>
-                        <div>
-                          <Label htmlFor="filter-date">Data</Label>
-                          <Input id="filter-date" type="date" className="block w-full" value={archivedDate} onChange={e => setArchivedDate(e.target.value)} />
-                        </div>
-                      </div>
-                      {/* Lista de itens arquivados */}
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full border-separate border-spacing-y-1">
-                          <thead>
-                            <tr className="bg-muted">
-                              <th className="px-2 py-1 text-left font-semibold">Data arquivamento</th>
-                              <th className="px-2 py-1 text-left font-semibold">Tipo</th>
-                              <th className="px-2 py-1 text-left font-semibold">Descrição</th>
-                              <th className="px-2 py-1 text-center font-semibold">Ações</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {isLoadingArchived ? (
-                              <tr><td colSpan={4} className="text-center py-4">Carregando...</td></tr>
-                            ) : filteredArchived.length === 0 ? (
-                              <tr><td colSpan={4} className="text-center py-4">Nenhum item arquivado encontrado.</td></tr>
-                            ) : filteredArchived.map(item => (
-                              <tr key={item.type + '-' + item.id}>
-                                <td className="px-2 py-1">{item.archived_at ? new Date(item.archived_at).toLocaleDateString('pt-BR') : '-'}</td>
-                                <td className="px-2 py-1">{item.type === 'indicator' ? 'Indicador' : item.type === 'lead' ? 'Lead' : 'Venda'}</td>
-                                <td className="px-2 py-1">{item.description}</td>
-                                <td className="px-2 py-1 text-center">
-                                  <div className="flex gap-2 justify-center">
-                                    <Button variant="outline" size="sm" onClick={() => handleRecover(item)}>Recuperar</Button>
-                                    <Button variant="destructive" size="sm" onClick={() => handleDelete(item)}>Excluir</Button>
+                              </div>
+                            </form>
+                          )}
+
+                          <div className="space-y-4">
+                            {companiesLoading ? (
+                              <p className="text-center py-8 text-muted-foreground">Carregando empresas...</p>
+                            ) : companies.length === 0 ? (
+                              <p className="text-center py-8 text-muted-foreground">
+                                Nenhuma empresa encontrada. Crie a primeira empresa para começar.
+                              </p>
+                            ) : (
+                              companies.map((company) => (
+                                <div
+                                  key={company.id}
+                                  className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow"
+                                >
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-3 mb-2">
+                                      <h3 className="font-medium">{company.name}</h3>
+                                      <Badge variant={company.status === 'active' ? 'default' : 'secondary'}>
+                                        {company.status === 'active' ? 'Ativa' : 'Arquivada'}
+                                      </Badge>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                      Criada em: {new Date(company.created_at).toLocaleDateString('pt-BR')}
+                                    </p>
                                   </div>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-                <TabsContent value="accesses" className="mt-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Permissões de Acesso</CardTitle>
-                      <CardDescription>
-                        Defina quais páginas e abas cada função pode acessar. Desmarque para ocultar do menu, botões e impedir acesso direto.
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <AccessPermissionsTable />
-                    </CardContent>
-                  </Card>
-                </TabsContent>
-              </Tabs>
+                                  {company.status === 'active' && (
+                                    <div className="flex gap-2">
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleArchiveCompany(company.id)}
+                                        disabled={archiveCompanyMutation.isPending}
+                                      >
+                                        <Trash2 className="w-4 h-4" />
+                                      </Button>
+                                    </div>
+                                  )}
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                  )}
+                  {allowedTabs.includes('archived') && (
+                    <TabsContent value="archived" className="mt-6">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Itens arquivados</CardTitle>
+                          <CardDescription>Consulte e gerencie todos os itens arquivados do sistema</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          {/* Filtros */}
+                          <div className="flex gap-4 mb-4">
+                            <div>
+                              <Label htmlFor="filter-type">Tipo</Label>
+                              <select id="filter-type" className="block w-full border rounded px-2 py-1" value={archivedType} onChange={e => setArchivedType(e.target.value)}>
+                                <option value="">Todos</option>
+                                <option value="indicator">Indicador</option>
+                                <option value="lead">Lead</option>
+                                <option value="sale">Venda</option>
+                              </select>
+                            </div>
+                            <div>
+                              <Label htmlFor="filter-date">Data</Label>
+                              <Input id="filter-date" type="date" className="block w-full" value={archivedDate} onChange={e => setArchivedDate(e.target.value)} />
+                            </div>
+                          </div>
+                          {/* Lista de itens arquivados */}
+                          <div className="overflow-x-auto">
+                            <table className="min-w-full border-separate border-spacing-y-1">
+                              <thead>
+                                <tr className="bg-muted">
+                                  <th className="px-2 py-1 text-left font-semibold">Data arquivamento</th>
+                                  <th className="px-2 py-1 text-left font-semibold">Tipo</th>
+                                  <th className="px-2 py-1 text-left font-semibold">Descrição</th>
+                                  <th className="px-2 py-1 text-center font-semibold">Ações</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {isLoadingArchived ? (
+                                  <tr><td colSpan={4} className="text-center py-4">Carregando...</td></tr>
+                                ) : filteredArchived.length === 0 ? (
+                                  <tr><td colSpan={4} className="text-center py-4">Nenhum item arquivado encontrado.</td></tr>
+                                ) : filteredArchived.map(item => (
+                                  <tr key={item.type + '-' + item.id}>
+                                    <td className="px-2 py-1">{item.archived_at ? new Date(item.archived_at).toLocaleDateString('pt-BR') : '-'}</td>
+                                    <td className="px-2 py-1">{item.type === 'indicator' ? 'Indicador' : item.type === 'lead' ? 'Lead' : 'Venda'}</td>
+                                    <td className="px-2 py-1">{item.description}</td>
+                                    <td className="px-2 py-1 text-center">
+                                      <div className="flex gap-2 justify-center">
+                                        <Button variant="outline" size="sm" onClick={() => handleRecover(item)}>Recuperar</Button>
+                                        <Button variant="destructive" size="sm" onClick={() => handleDelete(item)}>Excluir</Button>
+                                      </div>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                  )}
+                  {allowedTabs.includes('accesses') && (
+                    <TabsContent value="accesses" className="mt-6">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Permissões de Acesso</CardTitle>
+                          <CardDescription>
+                            Defina quais páginas e abas cada função pode acessar. Desmarque para ocultar do menu, botões e impedir acesso direto.
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <AccessPermissionsTable />
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                  )}
+                </Tabs>
+              )}
             </div>
           </div>
         </div>

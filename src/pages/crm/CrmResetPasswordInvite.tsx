@@ -128,7 +128,7 @@ const CrmResetPasswordInvite = () => {
 
       setSuccess(true);
       toast.success('Cadastro completado com sucesso! Redirecionando para o login...');
-      setTimeout(() => navigate('/crm/login'), 2000);
+      setTimeout(() => navigate('/home'), 2000);
     } catch (err: any) {
       console.error('Unexpected error:', err);
       setError('Erro inesperado ao completar cadastro. Tente novamente.');

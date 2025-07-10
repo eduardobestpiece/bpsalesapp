@@ -35,7 +35,7 @@ const CrmResetPassword = () => {
       
       setSuccess(true);
       toast.success('Se o e-mail estiver correto, você receberá instruções para redefinir sua senha.');
-      setTimeout(() => navigate('/crm/login'), 3000);
+      setTimeout(() => navigate('/home'), 3000);
     } catch (err: any) {
       setError('Erro ao solicitar redefinição. Tente novamente.');
     } finally {

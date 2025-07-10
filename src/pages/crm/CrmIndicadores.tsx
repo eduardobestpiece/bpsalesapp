@@ -216,6 +216,32 @@ const CrmIndicadores = () => {
   const isUser = crmUser?.role === 'user';
   const allowedFunnels = isUser ? (funnels || []).filter(f => crmUser.funnels?.includes(f.id)) : (funnels || []);
 
+  // Permissões de abas
+  const [allowedTabs, setAllowedTabs] = useState<string[]>([]);
+  const [defaultTab, setDefaultTab] = useState<string>('performance');
+  useEffect(() => {
+    if (!companyId || !crmUser?.role) return;
+    supabase
+      .from('role_page_permissions')
+      .select('page, allowed')
+      .eq('company_id', companyId)
+      .eq('role', crmUser.role)
+      .then(({ data }) => {
+        const tabs = [];
+        if (data?.find((p: any) => p.page === 'indicadores_performance' && p.allowed !== false)) tabs.push('performance');
+        if (data?.find((p: any) => p.page === 'indicadores_registro' && p.allowed !== false)) tabs.push('registro');
+        setAllowedTabs(tabs);
+        setDefaultTab(tabs[0] || 'performance');
+      });
+  }, [companyId, crmUser?.role]);
+
+  // Seleção automática do primeiro funil
+  useEffect(() => {
+    if (funnels && funnels.length > 0 && !selectedFunnelId) {
+      setSelectedFunnelId(funnels[0].id);
+    }
+  }, [funnels]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
       <main className="container mx-auto px-4 py-8">
@@ -223,15 +249,23 @@ const CrmIndicadores = () => {
           <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-100/50 p-1">
             <div className="bg-white rounded-[calc(1.5rem-4px)] p-8 shadow-sm min-h-[600px]">
               
-              <Tabs defaultValue="performance">
-                <TabsList className="mb-6">
-                  <TabsTrigger value="performance">Performance</TabsTrigger>
-                  <TabsTrigger value="registro">Registro de Indicadores</TabsTrigger>
-                </TabsList>
-                <TabsContent value="performance">
-                  <CrmPerformance embedded />
-                </TabsContent>
-                <TabsContent value="registro">
+              {allowedTabs.length > 0 && (
+                <Tabs defaultValue={defaultTab}>
+                  <TabsList className="mb-6">
+                    {allowedTabs.includes('performance') && (
+                      <TabsTrigger value="performance">Performance</TabsTrigger>
+                    )}
+                    {allowedTabs.includes('registro') && (
+                      <TabsTrigger value="registro">Registro de Indicadores</TabsTrigger>
+                    )}
+                  </TabsList>
+                  {allowedTabs.includes('performance') && (
+                    <TabsContent value="performance">
+                      <CrmPerformance embedded />
+                    </TabsContent>
+                  )}
+                  {allowedTabs.includes('registro') && (
+                    <TabsContent value="registro">
               <Card>
                 <CardHeader>
                   <div className="flex justify-between items-center">

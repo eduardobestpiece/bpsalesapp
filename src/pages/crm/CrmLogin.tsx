@@ -24,7 +24,6 @@ const CrmLogin = () => {
 
   useEffect(() => {
     if (user && !authLoading) {
-      console.log('User authenticated, redirecting to Home');
       navigate('/home', { replace: true });
     }
   }, [user, authLoading, navigate]);

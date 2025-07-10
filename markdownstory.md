@@ -53,3 +53,15 @@
 - Favicon atualizado para a logo Monteo.
 - Deploy realizado.
 - Aguardando validação do usuário. 
+
+## [Concluído em 10/07/2024]
+
+### Ajustes visuais e de navegação
+- Remoção do header superior das páginas do CRM e do Simulador (agora apenas menu lateral).
+- Atualização da logo do menu lateral (CRM e Simulador) para @monteo_policromia_horizontal (1).png.
+- Página de login do CRM agora exibe a logo vertical (@monteo_policromia_vertical.png), sem textos extras e sem botão "Voltar para o Simulador".
+- Redirecionamento do login para /home.
+- Página de configurações do simulador agora utiliza o menu lateral e não exibe mais header superior.
+- Deploy realizado para o GitHub.
+
+--- 

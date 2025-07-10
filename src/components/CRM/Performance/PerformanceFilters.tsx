@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,13 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
   const isRegularUser = !canSeeAllTeams && !canSeeTeamUsers;
   const isUser = crmUser?.role === 'user';
   const allowedFunnels = isUser ? funnels.filter(f => crmUser.funnels?.includes(f.id)) : funnels;
+
+  // Seleção automática do primeiro funil permitido
+  useEffect(() => {
+    if (allowedFunnels.length > 0 && !selectedFunnel) {
+      setSelectedFunnel(allowedFunnels[0].id);
+    }
+  }, [allowedFunnels]);
 
   // Filter teams based on permissions
   const availableTeams = canSeeAllTeams 
