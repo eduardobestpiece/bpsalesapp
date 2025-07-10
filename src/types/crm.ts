@@ -105,14 +105,9 @@ export interface Indicator {
   user_id: string;
   funnel_id: string;
   period_date: string;
-  period_start?: string;
-  period_end?: string;
   month_reference: number;
   year_reference: number;
   company_id: string;
-  team_id?: string;
-  sales_value?: number;
-  recommendations_count?: number;
   created_at: string;
   updated_at: string;
 }
