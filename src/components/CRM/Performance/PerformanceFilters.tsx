@@ -32,6 +32,8 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
   const canSeeAllTeams = hasPermission('admin');
   const canSeeTeamUsers = hasPermission('leader');
   const isRegularUser = !canSeeAllTeams && !canSeeTeamUsers;
+  const isUser = crmUser?.role === 'user';
+  const allowedFunnels = isUser ? funnels.filter(f => crmUser.funnels?.includes(f.id)) : funnels;
 
   // Filter teams based on permissions
   const availableTeams = canSeeAllTeams 
@@ -84,7 +86,7 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
                 <SelectValue placeholder="Selecione o funil" />
               </SelectTrigger>
               <SelectContent>
-                {funnels.map(funnel => (
+                {allowedFunnels.map(funnel => (
                   <SelectItem key={funnel.id} value={funnel.id}>
                     {funnel.name}
                   </SelectItem>
