@@ -91,14 +91,11 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
         });
         toast.success('Usuário atualizado com sucesso!');
       } else {
-        // Chamar Edge Function invite-user com autenticação
-        const session = await supabase.auth.getSession();
-        const accessToken = session.data.session?.access_token;
-        const res = await fetch('https://jbhocghbieqxjwsdstgm.supabase.co/functions/v1/invite-user', {
+        // Chamar API serverless da Vercel para convite de usuário
+        const res = await fetch('/api/invite-user', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            ...(accessToken ? { 'Authorization': `Bearer ${accessToken}` } : {})
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
             email: formData.email.trim(),
