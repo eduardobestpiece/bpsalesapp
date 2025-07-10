@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { CrmUserMenu } from './CrmUserMenu';
 import { Calculator, Users, BarChart3, TrendingUp } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
+import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
 
 export const CrmHeader = () => {
   const location = useLocation();
@@ -51,6 +52,7 @@ export const CrmHeader = () => {
         </div>
         
         <div className="flex items-center space-x-4">
+          <ThemeSwitch />
           <div className="hidden md:flex items-center space-x-2 text-sm text-secondary/70 bg-blue-50/70 px-3 py-1.5 rounded-full">
             <Users className="h-4 w-4 text-blue-600" />
             <span className="font-medium">Gerencie seus leads</span>
