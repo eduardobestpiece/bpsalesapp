@@ -56,12 +56,11 @@
 
 ## [Concluído em 10/07/2024]
 
-### Ajustes visuais e de navegação
-- Remoção do header superior das páginas do CRM e do Simulador (agora apenas menu lateral).
-- Atualização da logo do menu lateral (CRM e Simulador) para @monteo_policromia_horizontal (1).png.
-- Página de login do CRM agora exibe a logo vertical (@monteo_policromia_vertical.png), sem textos extras e sem botão "Voltar para o Simulador".
-- Redirecionamento do login para /home.
-- Página de configurações do simulador agora utiliza o menu lateral e não exibe mais header superior.
+### Permissões e experiência do usuário
+- Permissões dinâmicas de abas aplicadas em todas as páginas principais (Dashboard, Indicadores, Configurações, MasterConfig).
+- Usuário só visualiza as abas para as quais tem permissão, inclusive nas abas internas.
+- Seleção automática do primeiro funil permitido nos filtros de performance e registro de indicadores.
+- Ajustes para garantir que master e admin possam editar o campo “preenchido dentro/fora do prazo” (estrutura pronta para edição avançada).
 - Deploy realizado para o GitHub.
 
 --- 

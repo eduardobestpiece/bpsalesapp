@@ -435,6 +435,8 @@ const CrmIndicadores = () => {
                   </Card>
                 </TabsContent>
               </Tabs>
+              )}
+              {/* Fechamento correto do Tabs */}
             </div>
           </div>
         </div>
