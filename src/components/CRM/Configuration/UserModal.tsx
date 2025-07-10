@@ -5,13 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useCreateCrmUser, useUpdateCrmUser } from '@/hooks/useCrmUsers';
+import { useUpdateCrmUser } from '@/hooks/useCrmUsers';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useFunnels } from '@/hooks/useFunnels';
-// Adiciona a chave pública do Supabase para uso no header apikey
-const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpiaG9jZ2hiaWVxeGp3c2RzdGdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE4NTQxMTcsImV4cCI6MjA2NzQzMDExN30.L1KLc1360o0uE7kXkD2d3CzMMlztKwAmWheGTmU_ZNc";
 
 interface UserModalProps {
   isOpen: boolean;
@@ -31,7 +29,6 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const { companyId, crmUser } = useCrmAuth();
-  const createUserMutation = useCreateCrmUser();
   const updateUserMutation = useUpdateCrmUser();
   const { data: funnels = [] } = useFunnels(companyId);
 
@@ -91,33 +88,36 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
         });
         toast.success('Usuário atualizado com sucesso!');
       } else {
-        // Chamar API serverless da Vercel para convite de usuário
-        const res = await fetch('/api/invite-user', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
+        // Chamar Edge Function do Supabase para convite de usuário
+        console.log('Calling invite-user function with data:', {
+          email: formData.email.trim(),
+          role: formData.role,
+          funnels: formData.funnels,
+          company_id: companyId
+        });
+
+        const { data, error } = await supabase.functions.invoke('invite-user', {
+          body: {
             email: formData.email.trim(),
             role: formData.role,
             funnels: formData.funnels,
             company_id: companyId
-          })
-        });
-        const data = await res.json();
-        if (!res.ok) {
-          // Se o erro for um objeto, mostrar a mensagem interna
-          let errorMsg = '';
-          if (typeof data?.error === 'string') {
-            errorMsg = data.error;
-          } else if (typeof data?.error === 'object' && data?.error?.message) {
-            errorMsg = data.error.message;
-          } else {
-            errorMsg = JSON.stringify(data?.error || data);
           }
-          throw new Error(errorMsg);
+        });
+
+        console.log('Function response:', { data, error });
+
+        if (error) {
+          console.error('Supabase function error:', error);
+          throw new Error(error.message || 'Erro ao convidar usuário');
         }
-        toast.success('Usuário convidado com sucesso! O usuário receberá um e-mail para redefinir a senha.');
+
+        if (data?.error) {
+          console.error('Function returned error:', data.error);
+          throw new Error(data.error);
+        }
+
+        toast.success(data?.message || 'Usuário convidado com sucesso! O usuário receberá um e-mail para redefinir a senha.');
       }
 
       onClose();

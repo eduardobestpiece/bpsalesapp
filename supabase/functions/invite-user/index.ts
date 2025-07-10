@@ -1,90 +1,130 @@
-// Edge Function para convite seguro de usuário no Supabase
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+}
 
 serve(async (req) => {
-  // Log de debug: headers recebidos
-  const debugHeaders = {};
-  for (const [key, value] of req.headers.entries()) {
-    debugHeaders[key] = value;
+  console.log('Invite user function called')
+
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
   }
 
-  // Tratar preflight (OPTIONS)
-  if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
-  if (req.method !== 'POST') {
-    return new Response('Método não permitido', { status: 405, headers: corsHeaders })
-  }
-
-  let bodyJson = null;
   try {
-    bodyJson = await req.json();
-  } catch (e) {
-    return new Response(JSON.stringify({ error: 'Corpo da requisição inválido', debugHeaders }), { status: 400, headers: corsHeaders });
-  }
-  const { email, role, funnels, company_id } = bodyJson;
-  if (!email || !role || !company_id) {
-    return new Response(JSON.stringify({ error: 'Dados obrigatórios ausentes', debugHeaders, bodyJson }), { status: 400, headers: corsHeaders });
-  }
+    if (req.method !== 'POST') {
+      return new Response(
+        JSON.stringify({ error: 'Método não permitido' }),
+        { 
+          status: 405, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
 
-  // Definir manualmente as chaves para debug
-  const serviceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpiaG9jZ2hiaWVxeGp3c2RzdGdtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MTg1NDExNywiZXhwIjoyMDY3NDMwMTE3fQ.THDbqsymTMNTaEyr3FxKp6maGlct6kr5jH8fIvDRTyE';
-  const supabaseUrl = 'https://jbhocghbieqxjwsdstgm.supabase.co';
+    const { email, role, funnels, company_id } = await req.json()
+    console.log('Received data:', { email, role, funnels, company_id })
 
-  // 1. Criar usuário no Auth (não envia e-mail automático)
-  const adminRes = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${serviceKey}`,
-      'apikey': serviceKey
-    },
-    body: JSON.stringify({
-      email
+    if (!email || !role || !company_id) {
+      return new Response(
+        JSON.stringify({ error: 'Dados obrigatórios ausentes' }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+
+    // Create Supabase client with service role
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
     })
-  })
-  const adminData = await adminRes.json()
-  if (!adminRes.ok) {
-    return new Response(JSON.stringify({ error: adminData, debugHeaders, bodyJson }), {
-      status: 400,
-      headers: corsHeaders
-    });
-  }
-  const auth_id = adminData.user?.id;
 
-  // 2. Inserir usuário na tabela crm_users
-  const dbRes = await fetch(`${supabaseUrl}/rest/v1/crm_users`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${serviceKey}`,
-      'Prefer': 'return=representation'
-    },
-    body: JSON.stringify({
+    console.log('Inviting user via Supabase Auth...')
+
+    // 1. Convidar usuário no Auth (envia e-mail automático)
+    const { data: inviteData, error: inviteError } = await supabase.auth.admin.inviteUserByEmail(
       email,
-      role,
-      funnels,
-      company_id,
-      status: 'active',
-      auth_id
-    })
-  })
-  const dbData = await dbRes.json()
-  if (!dbRes.ok) {
-    return new Response(JSON.stringify({ error: dbData }), {
-      status: 400,
-      headers: corsHeaders
-    });
-  }
+      {
+        redirectTo: `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '.vercel.app') || 'https://monteo-app.vercel.app'}/crm/cadastro`
+      }
+    )
 
-  return new Response(JSON.stringify({ success: true, user: dbData }), {
-    headers: { ...corsHeaders, "Content-Type": "application/json" },
-    status: 200
-  })
-}) 
+    if (inviteError) {
+      console.error('Error inviting user:', inviteError)
+      return new Response(
+        JSON.stringify({ error: inviteError.message }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
+    console.log('User invited successfully:', inviteData)
+    const auth_id = inviteData.user?.id
+
+    // 2. Inserir usuário na tabela crm_users
+    console.log('Creating CRM user record...')
+    const { data: crmUserData, error: crmUserError } = await supabase
+      .from('crm_users')
+      .insert({
+        email,
+        role,
+        funnels: funnels || [],
+        company_id,
+        status: 'active',
+        auth_id,
+        first_name: '',
+        last_name: '',
+        password_hash: 'temp_hash' // Will be updated when user completes registration
+      })
+      .select()
+      .single()
+
+    if (crmUserError) {
+      console.error('Error creating CRM user:', crmUserError)
+      return new Response(
+        JSON.stringify({ error: crmUserError.message }),
+        { 
+          status: 400, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      )
+    }
+
+    console.log('CRM user created successfully:', crmUserData)
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        user: crmUserData,
+        message: 'Usuário convidado com sucesso! O usuário receberá um e-mail para completar o cadastro.'
+      }),
+      { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
+
+  } catch (error) {
+    console.error('Unexpected error:', error)
+    return new Response(
+      JSON.stringify({ error: error?.message || 'Erro interno inesperado' }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      }
+    )
+  }
+})

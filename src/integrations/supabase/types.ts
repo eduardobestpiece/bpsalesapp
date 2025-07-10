@@ -265,6 +265,35 @@ export type Database = {
           },
         ]
       }
+      funnel_column_settings: {
+        Row: {
+          columns: Json
+          funnel_id: string | null
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          columns: Json
+          funnel_id?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          columns?: Json
+          funnel_id?: string | null
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funnel_column_settings_funnel_id_fkey"
+            columns: ["funnel_id"]
+            isOneToOne: false
+            referencedRelation: "funnels"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       funnel_stages: {
         Row: {
           created_at: string | null
@@ -311,34 +340,43 @@ export type Database = {
           company_id: string
           created_at: string | null
           id: string
+          indicator_deadline_hours: number
           name: string
+          recommendation_stage_id: string | null
+          recommendations_mode: Database["public"]["Enums"]["funnel_mode"]
+          sales_value_mode: Database["public"]["Enums"]["funnel_mode"]
           status: Database["public"]["Enums"]["entity_status"] | null
           updated_at: string | null
           verification_day: number | null
           verification_type: Database["public"]["Enums"]["funnel_verification"]
-          indicator_deadline_hours: number | null // Prazo de preenchimento do indicador em horas
         }
         Insert: {
           company_id: string
           created_at?: string | null
           id?: string
+          indicator_deadline_hours?: number
           name: string
+          recommendation_stage_id?: string | null
+          recommendations_mode?: Database["public"]["Enums"]["funnel_mode"]
+          sales_value_mode?: Database["public"]["Enums"]["funnel_mode"]
           status?: Database["public"]["Enums"]["entity_status"] | null
           updated_at?: string | null
           verification_day?: number | null
           verification_type: Database["public"]["Enums"]["funnel_verification"]
-          indicator_deadline_hours?: number | null
         }
         Update: {
           company_id?: string
           created_at?: string | null
           id?: string
+          indicator_deadline_hours?: number
           name?: string
+          recommendation_stage_id?: string | null
+          recommendations_mode?: Database["public"]["Enums"]["funnel_mode"]
+          sales_value_mode?: Database["public"]["Enums"]["funnel_mode"]
           status?: Database["public"]["Enums"]["entity_status"] | null
           updated_at?: string | null
           verification_day?: number | null
           verification_type?: Database["public"]["Enums"]["funnel_verification"]
-          indicator_deadline_hours?: number | null
         }
         Relationships: [
           {
@@ -346,6 +384,13 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funnels_recommendation_stage_id_fkey"
+            columns: ["recommendation_stage_id"]
+            isOneToOne: false
+            referencedRelation: "funnel_stages"
             referencedColumns: ["id"]
           },
         ]
@@ -394,34 +439,49 @@ export type Database = {
       }
       indicators: {
         Row: {
+          archived_at: string | null
           company_id: string
           created_at: string | null
           funnel_id: string
           id: string
           month_reference: number
-          period_date: string
+          period_date: string | null
+          period_end: string | null
+          period_start: string | null
+          recommendations_count: number | null
+          sales_value: number | null
           updated_at: string | null
           user_id: string
           year_reference: number
         }
         Insert: {
+          archived_at?: string | null
           company_id: string
           created_at?: string | null
           funnel_id: string
           id?: string
           month_reference: number
-          period_date: string
+          period_date?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          recommendations_count?: number | null
+          sales_value?: number | null
           updated_at?: string | null
           user_id: string
           year_reference: number
         }
         Update: {
+          archived_at?: string | null
           company_id?: string
           created_at?: string | null
           funnel_id?: string
           id?: string
           month_reference?: number
-          period_date?: string
+          period_date?: string | null
+          period_end?: string | null
+          period_start?: string | null
+          recommendations_count?: number | null
+          sales_value?: number | null
           updated_at?: string | null
           user_id?: string
           year_reference?: number
@@ -505,6 +565,7 @@ export type Database = {
       }
       leads: {
         Row: {
+          archived_at: string | null
           company_id: string
           created_at: string | null
           current_stage_id: string
@@ -519,6 +580,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          archived_at?: string | null
           company_id: string
           created_at?: string | null
           current_stage_id: string
@@ -533,6 +595,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          archived_at?: string | null
           company_id?: string
           created_at?: string | null
           current_stage_id?: string
@@ -684,6 +747,7 @@ export type Database = {
       }
       sales: {
         Row: {
+          archived_at: string | null
           company_id: string
           created_at: string | null
           id: string
@@ -696,6 +760,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          archived_at?: string | null
           company_id: string
           created_at?: string | null
           id?: string
@@ -708,6 +773,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          archived_at?: string | null
           company_id?: string
           created_at?: string | null
           id?: string
@@ -846,6 +912,7 @@ export type Database = {
     }
     Enums: {
       entity_status: "active" | "archived"
+      funnel_mode: "manual" | "sistema"
       funnel_verification: "daily" | "weekly" | "monthly"
       user_role: "master" | "admin" | "leader" | "user"
     }
@@ -976,6 +1043,7 @@ export const Constants = {
   public: {
     Enums: {
       entity_status: ["active", "archived"],
+      funnel_mode: ["manual", "sistema"],
       funnel_verification: ["daily", "weekly", "monthly"],
       user_role: ["master", "admin", "leader", "user"],
     },
