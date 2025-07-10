@@ -7,6 +7,12 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Log de debug: headers recebidos
+  const debugHeaders = {};
+  for (const [key, value] of req.headers.entries()) {
+    debugHeaders[key] = value;
+  }
+
   // Tratar preflight (OPTIONS)
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -16,9 +22,15 @@ serve(async (req) => {
     return new Response('Método não permitido', { status: 405, headers: corsHeaders })
   }
 
-  const { email, role, funnels, company_id } = await req.json()
+  let bodyJson = null;
+  try {
+    bodyJson = await req.json();
+  } catch (e) {
+    return new Response(JSON.stringify({ error: 'Corpo da requisição inválido', debugHeaders }), { status: 400, headers: corsHeaders });
+  }
+  const { email, role, funnels, company_id } = bodyJson;
   if (!email || !role || !company_id) {
-    return new Response('Dados obrigatórios ausentes', { status: 400, headers: corsHeaders })
+    return new Response(JSON.stringify({ error: 'Dados obrigatórios ausentes', debugHeaders, bodyJson }), { status: 400, headers: corsHeaders });
   }
 
   // Chave de serviço (Service Role) do Supabase
@@ -38,7 +50,7 @@ serve(async (req) => {
   })
   const inviteData = await inviteRes.json()
   if (!inviteRes.ok) {
-    return new Response(JSON.stringify({ error: inviteData }), {
+    return new Response(JSON.stringify({ error: inviteData, debugHeaders, bodyJson }), {
       status: 400,
       headers: corsHeaders
     });
