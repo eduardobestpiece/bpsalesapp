@@ -74,7 +74,7 @@ export const SimulatorSidebar = () => {
       <SidebarHeader className="p-4">
         <div className="flex flex-col items-start">
           <div className="cursor-pointer mb-2" onClick={handleLogoClick}>
-            <img src="/favicon.ico" alt="Logo Monteo" className="h-10 w-10" />
+            <img src="/monteo_policromia_horizontal (1).png" alt="Logo Monteo" className="h-10 w-auto max-w-[140px]" />
           </div>
           <span className="font-bold text-lg text-gray-800 tracking-wide mb-4">Simulador</span>
           

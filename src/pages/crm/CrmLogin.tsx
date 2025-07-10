@@ -70,11 +70,7 @@ const CrmLogin = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="bg-gradient-primary p-3 rounded-2xl shadow-lg inline-block mb-4">
-            <Users className="h-8 w-8 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold text-gradient-primary">Monteo CRM</h1>
-          <p className="text-secondary/60 mt-2">Sistema de Gestão de Relacionamento</p>
+          <img src="/monteo_policromia_vertical.png" alt="Logo Monteo" className="h-24 mx-auto mb-2" />
         </div>
 
         <Card className="shadow-lg border-0">
@@ -161,12 +157,6 @@ const CrmLogin = () => {
                 >
                   Esqueci a senha
                 </button>
-                <Link 
-                  to="/" 
-                  className="text-primary hover:underline"
-                >
-                  Voltar para o Simulador
-                </Link>
               </div>
             </CardFooter>
           </form>

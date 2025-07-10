@@ -1,5 +1,4 @@
 
-import { CrmHeader } from '@/components/Layout/CrmHeader';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LeadsList } from '@/components/CRM/LeadsList';
 import { SalesList } from '@/components/CRM/SalesList';
@@ -11,7 +10,6 @@ const CrmDashboard = () => {
   if (!companyId) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
-        <CrmHeader />
         <main className="container mx-auto px-4 py-8">
           <div className="text-center">
             <p className="text-muted-foreground">Carregando informações da empresa...</p>
@@ -23,7 +21,6 @@ const CrmDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
-      <CrmHeader />
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-full mx-auto">
           <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-100/50 p-1">

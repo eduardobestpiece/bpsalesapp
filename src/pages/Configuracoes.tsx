@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Search } from 'lucide-react';
 
-import { Header } from '@/components/Layout/Header';
+import { SimulatorLayout } from '@/components/Layout/SimulatorLayout';
 import { AdministratorModal } from '@/components/Administrators/AdministratorModal';
 import { AdministratorsList } from '@/components/Administrators/AdministratorsList';
 import { ProductModal } from '@/components/Administrators/ProductModal';
@@ -108,8 +108,7 @@ export default function Configuracoes() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
-      <Header />
+    <SimulatorLayout>
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
@@ -452,6 +451,6 @@ export default function Configuracoes() {
           />
         </div>
       </div>
-    </div>
+    </SimulatorLayout>
   );
 }
