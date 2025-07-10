@@ -109,12 +109,30 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
 
         if (error) {
           console.error('Supabase function error:', error);
-          throw new Error(error.message || 'Erro ao convidar usuário');
+          
+          // Tentar extrair mais detalhes do erro
+          let errorMessage = 'Erro ao convidar usuário';
+          
+          if (error.message) {
+            errorMessage = error.message;
+          }
+          
+          // Se for um erro de função Edge, tentar obter mais detalhes
+          if (error.message?.includes('Edge Function')) {
+            errorMessage = 'Erro interno no servidor. Verifique se todos os dados estão corretos.';
+          }
+          
+          throw new Error(errorMessage);
         }
 
         if (data?.error) {
           console.error('Function returned error:', data.error);
           throw new Error(data.error);
+        }
+
+        if (!data?.success) {
+          console.error('Function did not return success:', data);
+          throw new Error('Falha ao processar convite do usuário');
         }
 
         toast.success(data?.message || 'Usuário convidado com sucesso! O usuário receberá um e-mail para redefinir a senha.');
