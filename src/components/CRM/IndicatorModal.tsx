@@ -640,14 +640,25 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   }
   const prazoStatus = getPrazoStatus();
 
-  if (isEditing && (!indicator || !Array.isArray(indicator.values) || !indicator.period_start || !indicator.period_end)) {
+  // Proteção reforçada no início do componente:
+  if (isEditing && (
+    !indicator ||
+    !immutableFields ||
+    !immutableFields.period_start ||
+    !immutableFields.period_end ||
+    !immutableFields.funnel_id ||
+    !immutableFields.month_reference ||
+    !immutableFields.year_reference ||
+    !Array.isArray(indicator.values) ||
+    indicator.values.length === 0
+  )) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Erro ao abrir indicador</DialogTitle>
           </DialogHeader>
-          <div className="text-red-500">Não foi possível carregar os dados do indicador para edição. Verifique se o indicador está completo no banco de dados.</div>
+          <div className="text-red-500">Não foi possível carregar os dados do indicador para edição. Verifique se o indicador está completo no banco de dados (período, funil, etapas, mês e ano).</div>
           <div className="flex justify-end mt-4">
             <Button type="button" variant="outline" onClick={onClose}>Fechar</Button>
           </div>
