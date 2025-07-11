@@ -627,6 +627,14 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   }
   const prazoStatus = getPrazoStatus();
 
+  // 1. Inicializar os temporários ao abrir o modal de período
+  const openPeriodModal = () => {
+    setTempPeriod(formData.period_date);
+    setTempMonth(monthReference);
+    setTempYear(yearReference);
+    setShowPeriodModal(true);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
@@ -680,12 +688,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
             {/* Botão Alterar Período no modo edição */}
             {indicator && (
               <div className="col-span-2 flex items-center gap-2">
-                <Button type="button" variant="outline" onClick={() => {
-                  setTempPeriod(formData.period_date);
-                  setTempMonth(monthReference);
-                  setTempYear(yearReference);
-                  setShowPeriodModal(true);
-                }}>
+                <Button type="button" variant="outline" onClick={openPeriodModal}>
                   Alterar Período
                 </Button>
                 <span className="text-xs text-muted-foreground">Período atual: {periodStart && periodEnd ? `De ${new Date(periodStart).toLocaleDateString('pt-BR')} até ${new Date(periodEnd).toLocaleDateString('pt-BR')}` : '-'}</span>
@@ -891,6 +894,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
               </div>
             )}
             <div className="flex justify-end space-x-2 w-full md:w-auto">
+              {/* 2. No modal secundário, botão Cancelar reseta os temporários e fecha o modal */}
               <Button type="button" variant="outline" onClick={() => {
                 setTempPeriod(formData.period_date);
                 setTempMonth(monthReference);
@@ -967,21 +971,14 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                 </select>
               </div>
               <div className="flex gap-2 justify-end">
-                <Button type="button" variant="outline" onClick={() => setShowPeriodModal(false)}>Cancelar</Button>
-                <Button type="button" onClick={() => {
-                  if (tempSelectedIndicators.length > 1) {
-                    // Seleção em massa: aplicar para todos
-                    console.log('Aplicar para múltiplos:', tempSelectedIndicators, tempPeriod, tempMonth, tempYear);
-                    // Aqui entraria a lógica de atualização em massa (futura)
-                  } else {
-                    // Seleção única
-                    setFormData(prev => ({ ...prev, period_date: tempPeriod }));
-                    setMonthReference(tempMonth);
-                    setYearReference(tempYear);
-                    const { start, end } = extractPeriodDates(tempPeriod);
-                    setPeriodStart(start);
-                    setPeriodEnd(end);
-                  }
+                {/* 3. No botão Salvar do modal secundário, só aí atualizar o estado principal */}
+                <Button type="button" variant="outline" onClick={() => {
+                  setFormData(prev => ({ ...prev, period_date: tempPeriod }));
+                  setMonthReference(tempMonth);
+                  setYearReference(tempYear);
+                  const { start, end } = extractPeriodDates(tempPeriod);
+                  setPeriodStart(start);
+                  setPeriodEnd(end);
                   setShowPeriodModal(false);
                 }}>Salvar</Button>
               </div>
