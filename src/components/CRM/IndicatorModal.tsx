@@ -640,6 +640,22 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   }
   const prazoStatus = getPrazoStatus();
 
+  if (isEditing && (!indicator || !Array.isArray(indicator.values) || !indicator.period_start || !indicator.period_end)) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Erro ao abrir indicador</DialogTitle>
+          </DialogHeader>
+          <div className="text-red-500">Não foi possível carregar os dados do indicador para edição. Verifique se o indicador está completo no banco de dados.</div>
+          <div className="flex justify-end mt-4">
+            <Button type="button" variant="outline" onClick={onClose}>Fechar</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
@@ -664,7 +680,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                 <Input id="recommendations_count" type="number" value={recommendationsCount} onChange={e => setRecommendationsCount(Number(e.target.value))} />
               </div>
               {/* Resultados por Etapa */}
-              {indicator?.values && indicator.values.map((v: any) => (
+              {indicator?.values && Array.isArray(indicator.values) && indicator.values.map((v: any) => (
                 <div key={v.stage_id}>
                   <Label>{v.stage_name}</Label>
                   <Input type="number" value={stages[v.stage_id] || 0} onChange={e => setStages(s => ({ ...s, [v.stage_id]: Number(e.target.value) }))} />
