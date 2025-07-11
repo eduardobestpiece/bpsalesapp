@@ -64,6 +64,12 @@ export const SimulatorSidebar = () => {
       });
   }, [companyId, userRole]);
 
+  useEffect(() => {
+    if (userRole === 'master' && companies.length > 0 && !selectedCompanyId) {
+      setSelectedCompanyId(companies[0].id);
+    }
+  }, [userRole, companies, selectedCompanyId, setSelectedCompanyId]);
+
   const isActivePath = (path: string) => location.pathname === path;
 
   const handleGoToCrm = () => {
@@ -106,7 +112,6 @@ export const SimulatorSidebar = () => {
                 onChange={e => setSelectedCompanyId(e.target.value)}
                 disabled={companiesLoading}
               >
-                <option value="">Selecione a empresa</option>
                 {companies.map((c: any) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}

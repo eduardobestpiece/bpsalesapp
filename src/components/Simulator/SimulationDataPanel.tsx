@@ -10,6 +10,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { supabase } from '@/integrations/supabase/client';
 import { BidTypeSelector } from './BidTypeSelector';
 import { DollarSign, Target, TrendingUp, Settings } from 'lucide-react';
+import { useCompany } from '@/contexts/CompanyContext';
 
 interface SimulationData {
   administrator: string;
@@ -28,6 +29,7 @@ interface SimulationDataPanelProps {
 }
 
 export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps) => {
+  const { selectedCompanyId } = useCompany();
   const [administrators, setAdministrators] = useState<any[]>([]);
   const [installmentTypes, setInstallmentTypes] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
@@ -35,15 +37,17 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
   const [showCalculationModal, setShowCalculationModal] = useState(false);
 
   useEffect(() => {
-    fetchAdministrators();
-  }, []);
+    if (selectedCompanyId) {
+      fetchAdministrators();
+    }
+  }, [selectedCompanyId]);
 
   useEffect(() => {
-    if (data.administrator) {
+    if (data.administrator && selectedCompanyId) {
       fetchInstallmentTypes(data.administrator);
       fetchProducts(data.administrator);
     }
-  }, [data.administrator]);
+  }, [data.administrator, selectedCompanyId]);
 
   const fetchAdministrators = async () => {
     try {
@@ -51,6 +55,7 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
         .from('administrators')
         .select('id, name')
         .eq('is_archived', false)
+        .eq('company_id', selectedCompanyId)
         .order('name');
       
       if (error) throw error;
@@ -67,6 +72,7 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
         .select('*')
         .eq('administrator_id', administratorId)
         .eq('is_archived', false)
+        .eq('company_id', selectedCompanyId)
         .order('name');
       
       if (error) throw error;
@@ -83,6 +89,7 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
         .select('*')
         .eq('administrator_id', administratorId)
         .eq('is_archived', false)
+        .eq('company_id', selectedCompanyId)
         .order('credit_value');
       
       if (error) throw error;

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { LeverageModal } from '@/components/Administrators/LeverageModal';
 import { supabase } from '@/integrations/supabase/client';
+import { useCompany } from '@/contexts/CompanyContext';
 
 interface Leverage {
   id: string;
@@ -25,13 +26,16 @@ interface LeverageSelectorProps {
 }
 
 export const LeverageSelector = ({ selectedLeverage, onLeverageChange, onLeverageData }: LeverageSelectorProps) => {
+  const { selectedCompanyId } = useCompany();
   const [leverages, setLeverages] = useState<Leverage[]>([]);
   const [showLeverageModal, setShowLeverageModal] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
-    fetchLeverages();
-  }, [refreshKey]);
+    if (selectedCompanyId) {
+      fetchLeverages();
+    }
+  }, [refreshKey, selectedCompanyId]);
 
   useEffect(() => {
     if (selectedLeverage) {
@@ -48,6 +52,7 @@ export const LeverageSelector = ({ selectedLeverage, onLeverageChange, onLeverag
         .from('leverages')
         .select('*')
         .eq('is_archived', false)
+        .eq('company_id', selectedCompanyId)
         .order('name');
       
       if (error) throw error;

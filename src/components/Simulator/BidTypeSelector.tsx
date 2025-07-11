@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
+import { useCompany } from '@/contexts/CompanyContext';
 
 interface BidType {
   id: string;
@@ -17,16 +18,17 @@ interface BidTypeSelectorProps {
 }
 
 export const BidTypeSelector = ({ administratorId, value, onValueChange }: BidTypeSelectorProps) => {
+  const { selectedCompanyId } = useCompany();
   const [bidTypes, setBidTypes] = useState<BidType[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (administratorId) {
+    if (administratorId && selectedCompanyId) {
       fetchBidTypes();
     } else {
       setBidTypes([]);
     }
-  }, [administratorId]);
+  }, [administratorId, selectedCompanyId]);
 
   const fetchBidTypes = async () => {
     setLoading(true);
@@ -36,6 +38,7 @@ export const BidTypeSelector = ({ administratorId, value, onValueChange }: BidTy
         .select('*')
         .eq('administrator_id', administratorId)
         .eq('is_archived', false)
+        .eq('company_id', selectedCompanyId)
         .order('name');
       
       if (error) throw error;

@@ -1,41 +1,41 @@
-# Requisição em andamento (10/07/2024)
+# Requisição em andamento (11/07/2024)
 
 ## Problemas relatados
 
-1. **Seletor de empresas no Simulador**
-   - O campo de selecionar empresa do menu à esquerda não existe no menu do módulo simulador.
-2. **Exibição dos Indicadores**
-   - Na aba "Registro de Indicadores" da página "Indicadores" os indicadores não estão sendo filtrados baseado na empresa.
-3. **Modal de Edição do Usuário**
-   - Na aba "Registro de Indicadores" da página "Indicadores", ao selecionar "Não" em "Preenchido com atraso?", o aviso de preenchido com atraso não some e não aparece a mensagem de preenchido dentro do prazo.
-4. **Modal de Registro do Usuário**
-   - Os campos "Valor das Vendas" e "Número de Recomendações" não aparecem para os usuários. Todos que têm permissão à página de indicadores devem ver esses campos no modal de registro de usuário e utilizá-los (exceto submasters).
-5. **Permissões de usuários criados**
-   - Ao adicionar um novo usuário, as permissões de empresa e funil não são aplicadas corretamente no primeiro acesso, sendo necessário editar o usuário após criado.
-6. **Atualização estranha da página**
-   - A página fica atualizando sozinha sem motivo aparente. Logs do console sugerem possível loop de autenticação ou efeito colateral em hooks/contextos.
+1. **Troca de página zera seleção de empresa**
+   - Sempre que troca de página, a seleção de empresa volta para "Todas as empresas" (que não deveria existir).
+   - A seleção de empresa deve ser obrigatória e persistente por usuário até que ele troque manualmente.
+2. **Permissões (Master sem acesso)**
+   - Mesmo como master, ao acessar "Comercial" e "Configurações" aparece mensagem de falta de permissão.
+3. **Editor de Indicador**
+   - Modal não reconhece o período do indicador, impedindo salvar alterações.
+   - Campo "Preenchido com atraso?" só aparece para master/admin, mas deve ser editável e refletir corretamente o status.
+4. **Empresa no Simulador**
+   - Seleção de empresa no Simulador não altera os dados exibidos.
+   - Pode ser necessário garantir que todos os dados estejam ligados à empresa "Best Piece".
+5. **Atualização desnecessária ao trocar de aba**
+   - Ao trocar de aba, ocorre atualização/reload maluco, com múltiplos fetchs e logs de autenticação.
+   - Plataforma deve ser estável, sem recarregar a cada navegação.
 
 ---
 
 ## Plano de ação
 
-1. Adicionar seletor de empresa no menu do Simulador
-2. Corrigir filtro de indicadores por empresa na aba "Registro de Indicadores"
-3. Ajustar aviso de preenchimento com atraso no modal de edição
-4. Exibir campos adicionais no modal de registro de usuário (exceto submaster)
-5. Corrigir associação de empresa/funil ao criar usuário
-6. Investigar e corrigir atualização automática da página
+1. Persistir seleção de empresa por usuário (sem opção "todas")
+2. Corrigir permissões de acesso (role_page_permissions)
+3. Corrigir editor de indicador (período e campo atraso)
+4. Filtrar dados do Simulador pela empresa
+5. Eliminar atualização desnecessária ao trocar de aba
 
 ---
 
 ## Checklist
 
 - [ ] Atualizar requeststory.md com a requisição detalhada
-- [ ] Adicionar seletor de empresa no menu do Simulador
-- [ ] Corrigir filtro de indicadores por empresa
-- [ ] Ajustar aviso de preenchimento com atraso no modal de edição
-- [ ] Exibir campos adicionais no modal de registro de usuário (exceto submaster)
-- [ ] Corrigir associação de empresa/funil ao criar usuário
-- [ ] Investigar e corrigir atualização automática da página
-- [ ] Executar deploy (aguardar confirmação do usuário)
+- [ ] Persistir seleção de empresa por usuário (sem opção "todas")
+- [ ] Corrigir permissões de acesso (role_page_permissions)
+- [ ] Corrigir editor de indicador (período e campo atraso)
+- [ ] Filtrar dados do Simulador pela empresa
+- [ ] Eliminar atualização desnecessária ao trocar de aba
+- [ ] Executar deploy
 - [ ] Solicitar validação do funcionamento 

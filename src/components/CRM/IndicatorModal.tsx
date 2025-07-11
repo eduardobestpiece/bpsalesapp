@@ -282,6 +282,12 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
       setSalesValue(indicator.sales_value || '0,00');
       setRecommendationsCount(indicator.recommendations_count || 0);
       setIsDelayed(indicator.is_delayed || false);
+      // NOVO: Preencher periodStart e periodEnd corretamente ao editar
+      if (indicator.period_date) {
+        const { start, end } = extractPeriodDates(indicator.period_date);
+        setPeriodStart(start);
+        setPeriodEnd(end);
+      }
     } else {
       const today = new Date().toISOString().split('T')[0];
       setFormData({
@@ -294,6 +300,8 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
       setSalesValue('0,00');
       setRecommendationsCount(0);
       setIsDelayed(false);
+      setPeriodStart(today);
+      setPeriodEnd(today);
     }
   }, [indicator]);
 
@@ -831,20 +839,20 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                     />
                   )}
                 </div>
-                {indicator && (
-                  <div>
+                {['master', 'admin'].includes(crmUser?.role || '') && (
+                  <div className="mb-2">
                     <Label htmlFor="is_delayed">Preenchido com atraso?</Label>
                     <Select
-                      value={isDelayed ? 'true' : 'false'}
-                      onValueChange={v => setIsDelayed(v === 'true')}
-                      disabled={isLoading}
+                      value={isDelayed ? 'sim' : 'nao'}
+                      onValueChange={val => setIsDelayed(val === 'sim')}
+                      id="is_delayed"
                     >
                       <SelectTrigger>
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="false">Não</SelectItem>
-                        <SelectItem value="true">Sim</SelectItem>
+                        <SelectItem value="sim">Sim</SelectItem>
+                        <SelectItem value="nao">Não</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

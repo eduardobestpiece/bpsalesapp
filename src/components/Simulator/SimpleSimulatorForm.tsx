@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Calculator, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useCompany } from '@/contexts/CompanyContext';
 
 interface SimulatorConfig {
   searchType: 'credit_value' | 'contribution_value';
@@ -21,6 +22,7 @@ interface SimulatorConfig {
 }
 
 export const SimpleSimulatorForm = () => {
+  const { selectedCompanyId } = useCompany();
   const [administrators, setAdministrators] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [config, setConfig] = useState<SimulatorConfig>({
@@ -39,6 +41,7 @@ export const SimpleSimulatorForm = () => {
         .from('administrators')
         .select('id, name')
         .eq('is_archived', false)
+        .eq('company_id', selectedCompanyId)
         .order('name');
       
       if (error) throw error;
@@ -57,6 +60,7 @@ export const SimpleSimulatorForm = () => {
         .select('*')
         .eq('administrator_id', administratorId)
         .eq('is_archived', false)
+        .eq('company_id', selectedCompanyId)
         .order('credit_value');
       
       if (error) throw error;
@@ -67,14 +71,16 @@ export const SimpleSimulatorForm = () => {
   };
 
   useEffect(() => {
-    fetchAdministrators();
-  }, []);
+    if (selectedCompanyId) {
+      fetchAdministrators();
+    }
+  }, [selectedCompanyId]);
 
   useEffect(() => {
-    if (config.administrator) {
+    if (config.administrator && selectedCompanyId) {
       fetchProducts(config.administrator);
     }
-  }, [config.administrator]);
+  }, [config.administrator, selectedCompanyId]);
 
   const calculateByContribution = (contributionValue: number) => {
     // Encontrar o produto cujo valor de parcela mais se aproxima do valor de aporte

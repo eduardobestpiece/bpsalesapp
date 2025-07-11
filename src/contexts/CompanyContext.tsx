@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 
 interface CompanyContextType {
   selectedCompanyId: string;
@@ -21,7 +21,24 @@ interface CompanyProviderProps {
 }
 
 export const CompanyProvider = ({ children, defaultCompanyId = '' }: CompanyProviderProps) => {
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string>(defaultCompanyId);
+  const [selectedCompanyId, setSelectedCompanyIdState] = useState<string>(() => {
+    return localStorage.getItem('selectedCompanyId') || defaultCompanyId;
+  });
+
+  // Atualiza localStorage sempre que selectedCompanyId mudar
+  useEffect(() => {
+    if (selectedCompanyId) {
+      localStorage.setItem('selectedCompanyId', selectedCompanyId);
+    }
+  }, [selectedCompanyId]);
+
+  // Setter que também atualiza o localStorage
+  const setSelectedCompanyId = (id: string) => {
+    setSelectedCompanyIdState(id);
+    if (id) {
+      localStorage.setItem('selectedCompanyId', id);
+    }
+  };
 
   return (
     <CompanyContext.Provider value={{ selectedCompanyId, setSelectedCompanyId }}>
