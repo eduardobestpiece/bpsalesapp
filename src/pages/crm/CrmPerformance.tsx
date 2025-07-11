@@ -8,6 +8,8 @@ import { useIndicators } from '@/hooks/useIndicators';
 import { useFunnels } from '@/hooks/useFunnels';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { FunnelComparisonChart } from '@/components/CRM/Performance/FunnelChart';
+import { aggregateFunnelIndicators } from '@/utils/calculationHelpers';
 
 interface PerformanceFilters {
   funnelId: string;
@@ -61,6 +63,45 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
       });
   };
 
+  // Função para montar dados do gráfico duplo e comparativo
+  const getFunnelComparisonData = () => {
+    if (!selectedFunnel || !filters) return { stages: [], comparativo: [] };
+    const orderedStages = selectedFunnel.stages?.sort((a, b) => a.stage_order - b.stage_order) || [];
+    // Dados semanais
+    const weekly = aggregateFunnelIndicators(
+      indicators.filter(i => i.funnel_id === selectedFunnel.id),
+      orderedStages,
+      'week'
+    );
+    // Dados mensais
+    const monthly = aggregateFunnelIndicators(
+      indicators.filter(i => i.funnel_id === selectedFunnel.id),
+      orderedStages,
+      'month'
+    );
+    // Monta array para o gráfico duplo
+    const stages = orderedStages.map((stage, idx) => ({
+      name: stage.name,
+      weeklyValue: weekly[idx]?.value || 0,
+      weeklyConversion: weekly[idx]?.conversion || 0,
+      monthlyValue: monthly[idx]?.value || 0,
+      monthlyConversion: monthly[idx]?.conversion || 0,
+    }));
+    // Comparativo: exemplo com conversão final, recomendações, vendas
+    const lastStage = stages[stages.length - 1];
+    const recommendations = indicators.filter(i => i.funnel_id === selectedFunnel.id && i.recommendations_count).reduce((sum, i) => sum + (i.recommendations_count || 0), 0);
+    const vendas = indicators.filter(i => i.funnel_id === selectedFunnel.id && i.sales_value).reduce((sum, i) => sum + (i.sales_value || 0), 0);
+    const comparativo = [
+      { label: 'Conversão', value: lastStage ? `${lastStage.monthlyConversion}%` : '-' },
+      { label: 'Recomendações', value: recommendations },
+      { label: 'Vendas', value: vendas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) },
+      { label: 'Comparativo', value: 'Período anterior' },
+    ];
+    return { stages, comparativo };
+  };
+
+  const funnelComparisonData = getFunnelComparisonData();
+
   const getPerformanceStats = () => {
     // Mock data for now - in a real implementation, this would be calculated from actual data
     return {
@@ -84,14 +125,11 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     <div className="space-y-6">
       {/* Filtros dinâmicos */}
       <PerformanceFilters onFiltersChange={setFilters} funnelOnly />
-      {/* Gráfico do funil e comparativo serão implementados aqui */}
-      <div className="text-center py-12">
-        <div className="text-6xl mb-4">🪄</div>
-        <h3 className="text-xl font-semibold mb-2">Funil em construção</h3>
-        <p className="text-muted-foreground">
-          Em breve: gráfico dinâmico, comparativo e filtros avançados conforme especificação.
-        </p>
-      </div>
+      {/* Gráfico do funil e comparativo */}
+      <FunnelComparisonChart
+        stages={funnelComparisonData.stages}
+        comparativo={funnelComparisonData.comparativo}
+      />
     </div>
   );
 
