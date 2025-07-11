@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Search, Edit, Archive, User } from 'lucide-react';
 import { useLeads } from '@/hooks/useLeads';
 import { LeadModal } from './LeadModal';
-import { useCrmAuth } from '@/hooks/useCrmAuth';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
 
 interface LeadsListProps {
   companyId: string;

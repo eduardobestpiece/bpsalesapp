@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Search, Edit, Archive, User } from 'lucide-react';
 import { useSales } from '@/hooks/useSales';
 import { SaleModal } from './SaleModal';
-import { useCrmAuth } from '@/hooks/useCrmAuth';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
 
 interface SalesListProps {
   companyId: string;
