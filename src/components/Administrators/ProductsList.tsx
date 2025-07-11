@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
@@ -27,13 +26,15 @@ interface ProductsListProps {
   statusFilter: 'all' | 'active' | 'archived';
   selectedAdministrator: string;
   onEdit: (product: Product) => void;
+  onCreate: () => void;
 }
 
 export const ProductsList: React.FC<ProductsListProps> = ({
   searchTerm,
   statusFilter,
   selectedAdministrator,
-  onEdit
+  onEdit,
+  onCreate
 }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);

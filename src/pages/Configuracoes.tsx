@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -64,6 +63,11 @@ export default function Configuracoes() {
   const handleEditAdministrator = (administrator: any) => {
     setSelectedAdministrator(administrator);
     setShowAdministratorModal(true);
+  };
+
+  const handleCreateProduct = () => {
+    setSelectedProduct(null);
+    setShowProductModal(true);
   };
 
   const handleEditProduct = (product: any) => {
@@ -215,8 +219,9 @@ export default function Configuracoes() {
                       key={refreshKey}
                       searchTerm={productSearchTerm}
                       statusFilter={productStatusFilter}
-                      selectedAdministrator={productAdminFilter || null}
+                      selectedAdministrator={productAdminFilter || ''}
                       onEdit={handleEditProduct}
+                      onCreate={handleCreateProduct}
                     />
                   </div>
                 </TabsContent>

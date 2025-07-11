@@ -447,6 +447,7 @@ export type Database = {
           created_at: string | null
           funnel_id: string
           id: string
+          is_delayed: boolean | null
           month_reference: number
           period_date: string | null
           period_end: string | null
@@ -463,6 +464,7 @@ export type Database = {
           created_at?: string | null
           funnel_id: string
           id?: string
+          is_delayed?: boolean | null
           month_reference: number
           period_date?: string | null
           period_end?: string | null
@@ -479,6 +481,7 @@ export type Database = {
           created_at?: string | null
           funnel_id?: string
           id?: string
+          is_delayed?: boolean | null
           month_reference?: number
           period_date?: string | null
           period_end?: string | null
