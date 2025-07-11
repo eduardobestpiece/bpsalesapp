@@ -46,3 +46,9 @@
 - Não deve permitir editar funil ou período.
 - Modal de criação permanece exatamente como está.
 - Iniciando refatoração. 
+
+## [2024-07-10] Nova regra para seleção de período na criação de indicador
+
+- Solicitação: Ao criar indicador, exibir todos os períodos dos últimos 90 dias.
+- Períodos já preenchidos devem aparecer em cinza claro, com '(preenchido)' e não podem ser selecionados.
+- Iniciando implementação. 

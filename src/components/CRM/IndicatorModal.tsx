@@ -769,21 +769,18 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                           <SelectContent>
                             {periodOptions.length === 0 && (
                               <div className="px-4 py-2 text-muted-foreground text-sm">
-                                {periodosUsuario.length === 0
-                                  ? 'Nenhum período disponível para registro neste mês/ano. Só é possível registrar períodos cujo último dia já passou e estejam dentro dos últimos 90 dias.'
-                                  : 'Nenhum período disponível entre o último registrado e o período atual. Não há períodos pendentes para registro neste mês/ano.'}
+                                Nenhum período disponível para registro nos últimos 90 dias.
                               </div>
                             )}
                             {periodOptions.map(opt => (
                               <SelectItem
                                 key={opt.value}
                                 value={opt.value}
-                                disabled={(!opt.isAllowed) || ((Array.isArray(periodosRegistrados) ? periodosRegistrados : []).includes(opt.value) && (!indicator || indicator.period_date !== opt.value))}
+                                disabled={opt.preenchido}
+                                className={opt.preenchido ? 'text-gray-400 bg-gray-100 cursor-not-allowed' : ''}
                               >
-                                <span className={opt.isMissing && destacarFaltantes ? 'text-red-500' : ''}>{opt.label}</span>
-                                {(Array.isArray(periodosRegistrados) ? periodosRegistrados : []).includes(opt.value) && (!indicator || indicator.period_date !== opt.value) && (
-                                  <span className="ml-2 text-xs text-muted-foreground">(já registrado)</span>
-                                )}
+                                <span>{opt.label}</span>
+                                {opt.preenchido && <span className="ml-2 text-xs text-gray-400">(preenchido)</span>}
                               </SelectItem>
                             ))}
                           </SelectContent>

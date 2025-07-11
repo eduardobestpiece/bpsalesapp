@@ -51,3 +51,7 @@ Bloco 1
     - Não é mais possível editar funil, período, mês ou ano ao editar um indicador.
     - Modal de criação permanece igual.
     - Commit e deploy realizados.
+- [2024-07-10] Refatoração radical do modal de edição do indicador:
+    - Edição agora é 100% imutável para período, funil, mês e ano: nenhum efeito colateral ou estado pode sobrescrever esses campos.
+    - Lógica de criação e edição totalmente separadas.
+    - Commit e deploy realizados.
