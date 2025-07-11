@@ -38,8 +38,11 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const fetchCrmUser = useCallback(async (email: string) => {
     console.log('[CrmAuth] Buscando CRM user para:', email);
     try {
-      // Timeout de 8 segundos para evitar travamento
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout ao buscar usuário CRM')), 8000));
+      // Timeout de 15 segundos para evitar travamento
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => {
+        console.error('[CrmAuth] Timeout de 15s ao buscar usuário CRM');
+        reject(new Error('Timeout ao buscar usuário CRM'));
+      }, 15000));
       const fetchPromise = supabase
         .from('crm_users')
         .select('*')
