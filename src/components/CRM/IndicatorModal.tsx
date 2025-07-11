@@ -304,8 +304,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     if (formData.funnel_id && funnels) {
       const funnel = funnels.find(f => f.id === formData.funnel_id);
       setSelectedFunnel(funnel);
-      
-      // Initialize stages with empty values if not editing
+      // Initialize stages with empty values apenas na criação
       if (!indicator && funnel?.stages) {
         const newStages: Record<string, number> = {};
         funnel.stages.forEach((stage: any) => {
@@ -313,19 +312,17 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         });
         setFormData(prev => ({ ...prev, stages: newStages }));
       }
-      // Inicializar campos de vendas/recomendações
-      if (funnel) {
+      // Inicializar campos de vendas/recomendações apenas na criação
+      if (!indicator && funnel) {
         if (funnel.sales_value_mode === 'manual') {
-          setSalesValue(indicator?.sales_value || '0,00');
+          setSalesValue('0,00');
         } else {
-          // Aqui você pode buscar/calcular o valor das vendas do sistema
-          setSalesValue('0,00'); // Substitua por lógica real
+          setSalesValue('0,00');
         }
         if (funnel.recommendations_mode === 'manual') {
-          setRecommendationsCount(indicator?.recommendations_count || 0);
+          setRecommendationsCount(0);
         } else {
-          // Aqui você pode buscar/calcular o número de recomendações do sistema
-          setRecommendationsCount(0); // Substitua por lógica real
+          setRecommendationsCount(0);
         }
       }
     }
