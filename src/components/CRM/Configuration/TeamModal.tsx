@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { MultiSelect } from '@/components/ui/multiselect';
 import { useCreateTeam, useUpdateTeam } from '@/hooks/useTeams';
 import { useCrmUsers } from '@/hooks/useCrmUsers';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
@@ -28,10 +29,11 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
   const createTeamMutation = useCreateTeam();
   const updateTeamMutation = useUpdateTeam();
 
-  // Filtrar usuários que podem ser líderes
-  const leaders = users.filter(user => 
-    user.role === 'leader' || user.role === 'admin' || user.role === 'master'
-  );
+  // Todos os usuários da empresa
+  const allUsers = users;
+
+  // Estado para membros do time (apenas na edição)
+  const [members, setMembers] = useState<string[]>(team?.user_ids || []);
 
   useEffect(() => {
     if (team) {
@@ -39,11 +41,13 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
         name: team.name,
         leader_id: team.leader_id,
       });
+      setMembers(team.user_ids || []);
     } else {
       setFormData({
         name: '',
         leader_id: '',
       });
+      setMembers([]);
     }
   }, [team]);
 
@@ -75,7 +79,8 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
           name: formData.name.trim(),
           leader_id: formData.leader_id,
           company_id: companyId,
-          status: 'active'
+          status: 'active',
+          user_ids: members
         });
         toast.success('Time atualizado com sucesso!');
       } else {
@@ -84,13 +89,15 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
           name: formData.name.trim(),
           leader_id: formData.leader_id,
           company_id: companyId,
-          status: 'active'
+          status: 'active',
+          user_ids: members
         });
         toast.success('Time criado com sucesso!');
       }
 
       onClose();
       setFormData({ name: '', leader_id: '' });
+      setMembers([]);
     } catch (error: any) {
       console.error('Erro ao salvar time:', error);
       toast.error(error.message || 'Erro ao salvar time');
@@ -132,13 +139,25 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
                 <SelectValue placeholder="Selecione o líder" />
               </SelectTrigger>
               <SelectContent>
-                {leaders.map(leader => (
-                  <SelectItem key={leader.id} value={leader.id}>
-                    {leader.first_name} {leader.last_name} ({leader.role})
+                {allUsers.map(user => (
+                  <SelectItem key={user.id} value={user.id}>
+                    {user.first_name} {user.last_name} ({user.role})
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Campo de membros do time (sempre visível na edição e criação) */}
+          <div>
+            <Label htmlFor="members">Usuários do Time</Label>
+            <MultiSelect
+              options={allUsers.map(u => ({ value: u.id, label: `${u.first_name} ${u.last_name} (${u.role})` }))}
+              value={members}
+              onChange={setMembers}
+              placeholder="Selecione os membros do time"
+              disabled={isLoading}
+            />
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">

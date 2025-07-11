@@ -10,6 +10,7 @@ import { UserModal } from './UserModal';
 import { useUpdateCrmUser } from '@/hooks/useCrmUsers';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
+import { useCompany } from '@/contexts/CompanyContext';
 
 export const UsersList = () => {
   const [showModal, setShowModal] = useState(false);
@@ -17,11 +18,14 @@ export const UsersList = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const { data: users = [], isLoading } = useCrmUsers();
   const updateUserMutation = useUpdateCrmUser();
-  const { userRole } = useCrmAuth();
+  const { userRole, crmUser } = useCrmAuth();
+  const { selectedCompanyId } = useCompany();
   const isSubMaster = userRole === 'submaster';
 
   const handleEdit = (user: any) => {
-    setSelectedUser(user);
+    // Buscar o usuário atualizado da lista pelo ID
+    const freshUser = users.find((u) => u.id === user.id) || user;
+    setSelectedUser(freshUser);
     setShowModal(true);
   };
 
@@ -62,10 +66,18 @@ export const UsersList = () => {
     }
   };
 
+  // Filtrar usuários por empresa
   const filteredUsers = users.filter(user => {
+    // Se master, mostrar apenas usuários da empresa selecionada
+    if (userRole === 'master') {
+      return user.company_id === selectedCompanyId;
+    }
+    // Se não for master, mostrar apenas usuários da empresa do usuário logado
+    return user.company_id === crmUser?.company_id;
+  }).filter(user => {
+    // Filtro de busca
     const fullName = `${user.first_name} ${user.last_name}`.toLowerCase();
     const searchLower = searchTerm.toLowerCase();
-    
     return fullName.includes(searchLower) ||
            user.email?.toLowerCase().includes(searchLower) ||
            user.phone?.toLowerCase().includes(searchLower);
@@ -115,7 +127,7 @@ export const UsersList = () => {
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
-                    {(userRole === 'admin' || userRole === 'master') && user.status === 'active' && (
+                    {(userRole === 'admin' || userRole === 'master') && user.status === 'active' && user.role !== 'master' && user.email !== 'master@master.com' && (
                       <Button
                         variant="outline"
                         size="sm"
