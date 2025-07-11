@@ -519,6 +519,10 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     setIsLoading(true);
 
     try {
+      // Garantir que salesValue é string antes de usar .replace
+      let salesValueStr = salesValue;
+      if (typeof salesValueStr === 'number') salesValueStr = salesValueStr.toString();
+      if (typeof salesValueStr !== 'string') salesValueStr = '0,00';
       const indicatorData = {
         user_id: crmUser.id,
         company_id: companyId,
@@ -527,7 +531,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         period_end: periodEnd,
         month_reference: monthReference,
         year_reference: yearReference,
-        sales_value: parseFloat(salesValue.replace(',', '.')),
+        sales_value: parseMonetaryValue(salesValueStr),
         recommendations_count: recommendationsCount,
         is_delayed: isDelayed
       };
