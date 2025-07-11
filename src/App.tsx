@@ -30,7 +30,10 @@ function AppContent() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="text-muted-foreground text-sm mt-2">Carregando... Pode demorar alguns segundos na primeira vez.</span>
+        </div>
       </div>
     );
   }

@@ -65,6 +65,7 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   useEffect(() => {
     let mounted = true;
+    let alreadyFetched = false;
     
     console.log('[CrmAuth] Initializing auth...');
     
@@ -72,28 +73,26 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
         console.log('[CrmAuth] Auth state changed:', event, newSession?.user?.email);
-        
         if (!mounted) return;
-        
         setSession(newSession);
         setUser(newSession?.user ?? null);
-        
-        if (newSession?.user?.email) {
-          // Fetch CRM user data
+        // Só buscar usuário CRM na primeira vez
+        if (!alreadyFetched && newSession?.user?.email) {
+          alreadyFetched = true;
+          console.log(`[CrmAuth] Buscando CRM user para: ${newSession.user.email} (evento: ${event})`);
           const crmUserData = await fetchCrmUser(newSession.user.email);
           if (mounted) {
             setCrmUser(crmUserData);
             setUserRole(crmUserData?.role ?? null);
             setCompanyId(crmUserData?.company_id ?? null);
           }
-        } else {
+        } else if (!newSession?.user?.email) {
           if (mounted) {
             setCrmUser(null);
             setUserRole(null);
             setCompanyId(null);
           }
         }
-        
         if (mounted) {
           setLoading(false);
         }
@@ -102,9 +101,10 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      if (mounted && initialSession) {
+      if (mounted && initialSession && !alreadyFetched) {
+        alreadyFetched = true;
         console.log('[CrmAuth] Initial session found:', initialSession.user.email);
-        // The onAuthStateChange will handle the session
+        // A busca será feita pelo onAuthStateChange
       } else if (mounted) {
         console.log('[CrmAuth] No initial session');
         setLoading(false);
