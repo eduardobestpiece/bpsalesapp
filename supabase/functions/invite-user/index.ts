@@ -182,7 +182,8 @@ serve(async (req) => {
         status: 'active',
         first_name: '',
         last_name: '',
-        password_hash: 'temp_hash'
+        password_hash: 'temp_hash',
+        funnels: funnels || []
       })
       .select()
       .single()

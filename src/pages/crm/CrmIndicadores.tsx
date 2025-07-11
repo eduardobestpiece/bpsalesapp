@@ -13,6 +13,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useTeams } from '@/hooks/useTeams';
 import { useCrmUsers } from '@/hooks/useCrmUsers';
+import { useCompany } from '@/contexts/CompanyContext';
 
 // Função utilitária para status visual do prazo
 function getPrazoStatus(indicator: any, funnel: any) {
@@ -37,7 +38,8 @@ const CrmIndicadores = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedIndicator, setSelectedIndicator] = useState<any>(null);
   const { crmUser } = useCrmAuth();
-  const companyId = crmUser?.company_id || '';
+  const { selectedCompanyId } = useCompany();
+  const companyId = selectedCompanyId || crmUser?.company_id || '';
 
   console.log('[CrmIndicadores] CompanyId:', companyId);
   console.log('[CrmIndicadores] CrmUser:', crmUser);

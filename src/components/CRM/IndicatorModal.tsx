@@ -621,12 +621,23 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
             <DialogTitle>
               {indicator ? 'Editar Indicador' : 'Registrar Indicador'}
             </DialogTitle>
-            {indicator && prazoStatus && (
+            {indicator && (
               <div className="flex items-center gap-2">
-                {prazoStatus.icon}
-                <span className={`text-xs ${
-                  prazoStatus.color === 'green' ? 'text-green-600' : prazoStatus.color === 'yellow' ? 'text-yellow-600' : 'text-red-600'
-                }`}>{prazoStatus.msg}</span>
+                {isDelayed ? (
+                  prazoStatus && (
+                    <>
+                      {prazoStatus.icon}
+                      <span className={`text-xs ${
+                        prazoStatus.color === 'green' ? 'text-green-600' : prazoStatus.color === 'yellow' ? 'text-yellow-600' : 'text-red-600'
+                      }`}>{prazoStatus.msg}</span>
+                    </>
+                  )
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4 text-green-500" />
+                    <span className="text-xs text-green-600">Preenchido dentro do prazo</span>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -772,7 +783,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
               </div>
             )}
             {/* CAMPOS RESTRITOS MASTER/ADMIN */}
-            {selectedFunnel && ['master', 'admin'].includes(crmUser?.role || '') && (
+            {selectedFunnel && crmUser?.role !== 'submaster' && (
               <>
                 {/* Campo Valor das Vendas */}
                 <div>

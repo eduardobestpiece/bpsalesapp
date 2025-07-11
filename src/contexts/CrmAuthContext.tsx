@@ -96,29 +96,10 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      console.log('[CrmAuth] Initial session check:', session?.user?.email);
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(true);
-      try {
-        if (session?.user?.email) {
-          const crmUserData = await fetchCrmUser(session.user.email);
-          setCrmUser(crmUserData);
-          setUserRole(crmUserData?.role ?? null);
-          setCompanyId(crmUserData?.company_id ?? null);
-        } else {
-          setCrmUser(null);
-          setUserRole(null);
-          setCompanyId(null);
-        }
-      } catch (err) {
-        console.error('[CrmAuth] Erro inesperado no check inicial:', err);
-      } finally {
-        setLoading(false);
-      }
-    });
+    // Remover o getSession inicial duplicado
+    //supabase.auth.getSession().then(async ({ data: { session } }) => {
+    //  ...
+    //});
 
     return () => subscription.unsubscribe();
   }, []);
