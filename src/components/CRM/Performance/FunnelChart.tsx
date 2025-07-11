@@ -1,13 +1,14 @@
 
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const funnelColors = [
   'from-primary-500 to-primary-300', // azul principal
-  'from-green-500 to-green-300',     // verde
-  'from-yellow-400 to-yellow-200',   // amarelo
-  'from-orange-500 to-orange-300',   // laranja
-  'from-purple-500 to-purple-300',   // roxo
+  'from-primary-500 to-primary-300', // azul principal (repetido para manter padrão)
+  'from-primary-500 to-primary-300', // azul principal
+  'from-primary-500 to-primary-300', // azul principal
+  'from-green-500 to-green-300',     // degradê verde na última faixa
 ];
 
 interface StageData {
@@ -23,75 +24,48 @@ interface FunnelComparisonChartProps {
   comparativo: { label: string; value: string | number }[];
 }
 
-export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps> = ({ stages, comparativo }) => {
-  // Função para calcular largura relativa das etapas
-  const getWidth = (idx: number, type: 'weekly' | 'monthly') => {
-    const max = Math.max(...stages.map(s => type === 'weekly' ? s.weeklyValue : s.monthlyValue), 1);
-    const val = type === 'weekly' ? stages[idx].weeklyValue : stages[idx].monthlyValue;
-    return `${60 + (val / max) * 40}%`;
+export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filterType?: 'user' | 'team', filterId?: string, users?: any[], teams?: any[], onCompare?: (compareId: string) => void, compareData?: any }> = ({ stages, comparativo, filterType, filterId, users = [], teams = [], onCompare, compareData }) => {
+  // Função para calcular largura relativa das etapas (cada faixa menor que a anterior)
+  const getWidth = (idx: number) => {
+    const base = 100;
+    const step = 12;
+    return `${base - idx * step}%`;
   };
 
   const [showComparativoModal, setShowComparativoModal] = useState(false);
-
+  const [compareId, setCompareId] = useState('');
+  // Só exibe botão de comparação se filtrado para usuário ou equipe específica
+  const canCompare = filterType && filterId;
   return (
     <div className="flex flex-col md:flex-row gap-8 w-full items-center justify-center">
-      {/* Funil visual central */}
+      {/* Funil colorido */}
       <div className="flex flex-col items-center w-full max-w-xs md:max-w-sm">
         <h3 className="text-center font-bold mb-2 text-lg">FUNIL DE VENDAS</h3>
         <div className="flex flex-col items-center w-full">
           {stages.map((stage, idx) => (
             <div
               key={stage.name}
-              className={`w-full flex items-center justify-center mb-[-18px] z-${10-idx}`}
+              className="w-full flex items-center justify-center mb-[-18px] z-[${10-idx}]"
               style={{ zIndex: 10 - idx }}
             >
               <div
-                className={`transition-all duration-300 bg-gradient-to-r ${funnelColors[idx % funnelColors.length]} rounded-b-2xl rounded-t-[${idx === 0 ? '1.5rem' : '0'}] shadow-lg flex flex-col items-center justify-center`}
+                className={`transition-all duration-300 bg-gradient-to-r ${funnelColors[idx % funnelColors.length]} shadow-lg flex items-center justify-between px-6 py-3`}
                 style={{
-                  width: getWidth(idx, 'weekly'),
-                  minHeight: 48 - idx * 2,
+                  width: getWidth(idx),
+                  minHeight: 44,
                   maxWidth: '100%',
                   marginBottom: idx < stages.length - 1 ? -18 : 0,
-                  borderRadius: idx === 0 ? '1.5rem 1.5rem 1rem 1rem' : '1rem',
+                  borderRadius: idx === 0 ? '1.5rem 1.5rem 1rem 1rem' : idx === stages.length - 1 ? '0 0 1.5rem 1.5rem' : '1rem',
                   boxShadow: '0 4px 16px 0 rgba(0,0,0,0.08)',
                 }}
               >
-                <span className="font-bold text-white text-base drop-shadow-md">{stage.name}</span>
-                <span className="text-white text-xs drop-shadow-md">{stage.weeklyValue} / {stage.monthlyValue}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      {/* Dados semanais e mensais lado a lado */}
-      <div className="flex-1 flex flex-col md:flex-row gap-8 w-full">
-        {/* Dados Semanais */}
-        <div className="flex-1">
-          <h3 className="text-center font-bold mb-2">DADOS SEMANAIS</h3>
-          {stages.map((stage, idx) => (
-            <div key={stage.name} className="flex items-center mb-2">
-              <div className="w-10 text-right text-xs font-bold">{stage.weeklyValue}</div>
-              <div className="flex-1 flex flex-col items-center">
-                <div className="bg-gray-200 rounded-full px-2 py-1 text-xs font-semibold truncate w-full text-center">
-                  {stage.name}
+                <span className="font-bold text-white text-base drop-shadow-md w-16 text-left">{stage.weeklyValue}</span>
+                <div className="flex-1 flex flex-col items-center">
+                  <span className="font-bold text-white text-base drop-shadow-md text-center">{stage.name}</span>
+                  <span className="text-xs text-white drop-shadow-md">{idx > 0 ? `Conversão ${stage.weeklyConversion}%` : ''}</span>
                 </div>
-                <div className="text-[10px] text-gray-500">Conversão {stage.weeklyConversion}%</div>
+                <span className="font-bold text-white text-base drop-shadow-md w-16 text-right">{stage.monthlyValue}</span>
               </div>
-            </div>
-          ))}
-        </div>
-        {/* Dados Mensais */}
-        <div className="flex-1">
-          <h3 className="text-center font-bold mb-2">DADOS MENSAIS</h3>
-          {stages.map((stage, idx) => (
-            <div key={stage.name} className="flex items-center mb-2">
-              <div className="flex-1 flex flex-col items-center">
-                <div className="bg-gray-200 rounded-full px-2 py-1 text-xs font-semibold truncate w-full text-center">
-                  {stage.name}
-                </div>
-                <div className="text-[10px] text-gray-500">Conversão {stage.monthlyConversion}%</div>
-              </div>
-              <div className="w-10 text-left text-xs font-bold">{stage.monthlyValue}</div>
             </div>
           ))}
         </div>
@@ -100,9 +74,11 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps> = ({ st
       <div className="flex flex-col items-center min-w-[180px]">
         <div className="flex items-center gap-2 mb-2">
           <h3 className="font-bold">COMPARATIVO</h3>
-          <button className="ml-2 p-1 rounded hover:bg-gray-100" title="Detalhar comparativo" onClick={() => setShowComparativoModal(true)}>
-            <span role="img" aria-label="engrenagem">⚙️</span>
-          </button>
+          {canCompare && (
+            <button className="ml-2 p-1 rounded hover:bg-gray-100" title="Comparar com outro" onClick={() => setShowComparativoModal(true)}>
+              <span role="img" aria-label="comparar">🔀</span>
+            </button>
+          )}
         </div>
         <div className="grid grid-cols-2 gap-2">
           {comparativo.map((item, idx) => (
@@ -112,27 +88,61 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps> = ({ st
             </div>
           ))}
         </div>
-        {/* Modal de detalhamento do comparativo */}
-        <Dialog open={showComparativoModal} onOpenChange={setShowComparativoModal}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Detalhamento do Comparativo</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-2">
-              {comparativo.map((item, idx) => (
-                <div key={idx} className="flex justify-between border-b pb-1">
-                  <span className="font-semibold">{item.label}</span>
-                  <span>{item.value}</span>
+        {/* Modal de filtro comparativo */}
+        {canCompare && (
+          <Dialog open={showComparativoModal} onOpenChange={setShowComparativoModal}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Comparar Funil</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div>
+                  <label className="block mb-1 text-sm font-medium">Comparar com:</label>
+                  <Select value={compareId} onValueChange={setCompareId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={filterType === 'user' ? 'Selecione outro usuário' : 'Selecione outra equipe'} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {filterType === 'user' && users.filter(u => u.id !== filterId).map(u => (
+                        <SelectItem key={u.id} value={u.id}>{u.first_name} {u.last_name}</SelectItem>
+                      ))}
+                      {filterType === 'team' && teams.filter(t => t.id !== filterId).map(t => (
+                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              ))}
-            </div>
-            <div className="flex justify-end pt-2">
-              <button className="px-4 py-2 rounded bg-primary-500 text-white" onClick={() => setShowComparativoModal(false)}>
-                Fechar
-              </button>
-            </div>
-          </DialogContent>
-        </Dialog>
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex-1">
+                    <h4 className="font-semibold mb-2">Funil Atual</h4>
+                    {stages.map((stage, idx) => (
+                      <div key={stage.name} className="flex items-center justify-between mb-1">
+                        <span className="text-xs font-bold">{stage.name}</span>
+                        <span className="text-xs">{stage.weeklyValue} / {stage.monthlyValue}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {compareData && (
+                    <div className="flex-1">
+                      <h4 className="font-semibold mb-2">Comparativo</h4>
+                      {compareData.stages.map((stage, idx) => (
+                        <div key={stage.name} className="flex items-center justify-between mb-1">
+                          <span className="text-xs font-bold">{stage.name}</span>
+                          <span className="text-xs">{stage.weeklyValue} / {stage.monthlyValue}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                <div className="flex justify-end pt-2">
+                  <button className="px-4 py-2 rounded bg-primary-500 text-white" onClick={() => { onCompare && onCompare(compareId); setShowComparativoModal(false); }}>
+                    Comparar
+                  </button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
       </div>
     </div>
   );

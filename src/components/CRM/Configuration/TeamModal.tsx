@@ -9,6 +9,7 @@ import { MultiSelect } from '@/components/ui/multiselect';
 import { useCreateTeam, useUpdateTeam } from '@/hooks/useTeams';
 import { useCrmUsers } from '@/hooks/useCrmUsers';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -26,7 +27,12 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const { companyId } = useCrmAuth();
+  const { selectedCompanyId } = useCompany();
   const { data: users = [] } = useCrmUsers();
+  // Filtrar usuários pela empresa selecionada
+  const filteredUsers = users.filter(u => u.company_id === (selectedCompanyId || companyId));
+  // Se um líder for escolhido, removê-lo da lista de membros
+  const availableMembers = filteredUsers.filter(u => u.id !== formData.leader_id);
   const createTeamMutation = useCreateTeam();
   const updateTeamMutation = useUpdateTeam();
 
@@ -175,7 +181,7 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
                 <SelectValue placeholder="Selecione o líder" />
               </SelectTrigger>
               <SelectContent>
-                {allUsers.map(user => (
+                {filteredUsers.map(user => (
                   <SelectItem key={user.id} value={user.id}>
                     {user.first_name} {user.last_name} ({user.role})
                   </SelectItem>
@@ -188,7 +194,7 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
           <div>
             <Label htmlFor="members">Usuários do Time</Label>
             <MultiSelect
-              options={allUsers.map(u => ({ value: u.id, label: `${u.first_name} ${u.last_name} (${u.role})` }))}
+              options={availableMembers.map(u => ({ value: u.id, label: `${u.first_name} ${u.last_name} (${u.role})` }))}
               value={members}
               onChange={setMembers}
               placeholder="Selecione os membros do time"

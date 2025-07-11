@@ -74,59 +74,14 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   const allowedFunnels = isUser ? (funnels || []).filter(f => crmUser.funnels?.includes(f.id)) : (funnels || []);
 
   // NOVA LÓGICA DE PERÍODOS
-  let periodOptions: { label: string; value: string; isMissing?: boolean; isAllowed?: boolean }[] = [];
-  const periodosRegistrados: string[] = Array.isArray(indicators) ? (indicators.filter(
-    (ind) =>
-      selectedFunnel &&
-      ind.funnel_id === selectedFunnel.id &&
-      ind.month_reference === formData.month_reference &&
-      ind.year_reference === formData.year_reference
-  ).map((ind) => ind.period_date)) : [];
-  const indicadoresUsuario = Array.isArray(indicators) && selectedFunnel && crmUser ? indicators.filter(
-    (ind) => ind.funnel_id === selectedFunnel.id && ind.user_id === crmUser.id
-  ) : [];
-  const periodosUsuario: string[] = indicadoresUsuario ? indicadoresUsuario.map((ind) => ind.period_date) : [];
-  // Filtrar apenas registros com period_end válido
-  const indicadoresUsuarioValidos = indicadoresUsuario.filter(ind => !!ind.period_end);
-  const ultimoRegistroUsuario = indicadoresUsuarioValidos.length > 0
-    ? indicadoresUsuarioValidos.sort((a, b) => {
-        // Proteger contra period_end nulo
-        const aDate = a.period_end ? new Date(a.period_end).getTime() : 0;
-        const bDate = b.period_end ? new Date(b.period_end).getTime() : 0;
-        return bDate - aDate;
-      })[0]
-    : null;
-
-  const hoje = new Date();
-
+  let periodOptions: { label: string; value: string; preenchido?: boolean }[] = [];
   if (selectedFunnel && formData.month_reference && formData.year_reference && crmUser) {
-    // Filtrar indicadores do usuário para o funil selecionado
-    // const indicadoresUsuario = (indicators || []).filter(
-    //   (ind) => ind.funnel_id === selectedFunnel.id && ind.user_id === crmUser.id
-    // );
-    // periodosUsuario = indicadoresUsuario.map((ind) => ind.period_date);
-    // ultimoPeriodoUsuario = indicadoresUsuario.length > 0
-    //   ? indicadoresUsuario.sort((a, b) => b.period_date.localeCompare(a.period_date))[0].period_date
-    //   : null;
-
-    // Períodos já registrados por todos usuários (para bloqueio visual)
-    // periodosRegistrados = (indicators || [])
-    //   .filter((ind) =>
-    //     ind.funnel_id === selectedFunnel.id &&
-    //     ind.month_reference === formData.month_reference &&
-    //     ind.year_reference === formData.year_reference
-    //   )
-    //   .map((ind) => ind.period_date);
-
-    // Remover filtro por mês/ano do formulário na busca dos períodos disponíveis
-    // Gerar todos os períodos possíveis para o funil, sem limitar por formData.month_reference/year_reference
     let todosPeriodos: { label: string; value: string }[] = [];
     if (selectedFunnel.verification_type === 'daily') {
       todosPeriodos = gerarDiasUltimos90AteHoje();
     } else if (selectedFunnel.verification_type === 'weekly') {
       todosPeriodos = gerarPeriodosSemanaisUltimos90Dias(selectedFunnel.verification_day ?? 1);
     } else if (selectedFunnel.verification_type === 'monthly') {
-      // Mensal: últimos 3 períodos, respeitando o dia de início do funil
       const hoje = new Date();
       todosPeriodos = [];
       let mes = hoje.getMonth() + 1;
@@ -140,134 +95,15 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         }
       }
     }
-
-    // 1. PRIMEIRO REGISTRO DO USUÁRIO PARA O FUNIL
-    if (periodosUsuario.length === 0) {
-      if (selectedFunnel.verification_type === 'weekly') {
-        // Gerar períodos semanais dos últimos 90 dias, respeitando o dia de início do funil
-        todosPeriodos = gerarPeriodosSemanaisUltimos90Dias(selectedFunnel.verification_day ?? 1);
-      } else if (selectedFunnel.verification_type === 'daily') {
-        // Diários: últimos 90 dias até ontem
-        todosPeriodos = gerarDiasUltimos90AteHoje();
-      } else if (selectedFunnel.verification_type === 'monthly') {
-        // Mensal: últimos 3 períodos, respeitando o dia de início do funil
-        const hoje = new Date();
-        todosPeriodos = [];
-        let mes = hoje.getMonth() + 1;
-        let ano = hoje.getFullYear();
-        for (let i = 0; i < 3; i++) {
-          todosPeriodos.push(...gerarPeriodosMensaisCustom(mes, ano, selectedFunnel.verification_day ?? 1, 1));
-          mes--;
-          if (mes === 0) {
-            mes = 12;
-            ano--;
-          }
-        }
-      }
-      // Filtrar períodos cujo último dia já passou e está dentro dos últimos 90 dias
-      const hoje = new Date();
-      const dataLimite = new Date(hoje);
-      dataLimite.setDate(dataLimite.getDate() - 89); // 90 dias incluindo hoje
-      periodOptions = todosPeriodos
-        .filter(opt => {
-          const ultimoDia = new Date(getUltimoDiaPeriodo(opt.value));
-          return ultimoDia >= dataLimite && ultimoDia < hoje;
-        })
-        .sort((a, b) => new Date(getUltimoDiaPeriodo(b.value)).getTime() - new Date(getUltimoDiaPeriodo(a.value)).getTime())
-        .map(opt => {
-          const ultimoDia = new Date(getUltimoDiaPeriodo(opt.value));
-          const isAllowed = hoje > ultimoDia;
-          return {
-            ...opt,
-            isAllowed,
-            isMissing: true // sempre vermelho pois é o primeiro
-          };
-        });
-    }
-    // 2. SEGUNDO REGISTRO OU MAIS
-    else {
-      if (selectedFunnel.verification_type === 'daily') {
-        // Só pode registrar entre o primeiro registro e ontem
-        const primeiroDia = new Date(ultimoRegistroUsuario?.period_end || ultimoPeriodoUsuario!);
-        const hoje = new Date();
-        todosPeriodos = gerarDiasUltimos90AteHoje().filter(opt => {
-          const data = new Date(opt.value);
-          return data >= primeiroDia && data < hoje;
-        });
-        periodOptions = todosPeriodos.map(opt => {
-          const isMissing = !(Array.isArray(periodosUsuario) ? periodosUsuario : []).includes(opt.value);
-          return {
-            ...opt,
-            isMissing,
-            isAllowed: true
-          };
-        });
-      } else {
-        // Para semanal/mensal: comparar period_date salvo (data final) com o último dia do período
-        const hoje = new Date();
-        const dataLimite = new Date(hoje);
-        dataLimite.setDate(dataLimite.getDate() - 89);
-        if (selectedFunnel.verification_type === 'weekly') {
-          todosPeriodos = gerarPeriodosSemanaisUltimos90Dias(selectedFunnel.verification_day ?? 1);
-        } else if (selectedFunnel.verification_type === 'monthly') {
-          const hoje = new Date();
-          todosPeriodos = [];
-          let mes = hoje.getMonth() + 1;
-          let ano = hoje.getFullYear();
-          for (let i = 0; i < 3; i++) {
-            todosPeriodos.push(...gerarPeriodosMensaisCustom(mes, ano, selectedFunnel.verification_day ?? 1, 1));
-            mes--;
-            if (mes === 0) {
-              mes = 12;
-              ano--;
-            }
-          }
-        }
-        // Sempre derive os períodos já registrados e o último registro APENAS de indicadoresUsuario (filtrados por funil e usuário)
-        // Isso garante que cada funil/usuário tem sua própria linha do tempo de registros
-        const periodosRegistradosUsuario = indicadoresUsuario ? indicadoresUsuario.map(ind => {
-          if (ind.period_start && ind.period_end) {
-            return `${ind.period_start}_${ind.period_end}`;
-          }
-          return '';
-        }) : [];
-        const ultimoRegistroUsuario = indicadoresUsuario && indicadoresUsuario.length > 0
-          ? indicadoresUsuario.sort((a, b) => {
-              // Proteger contra period_end nulo
-              const aDate = a.period_end ? new Date(a.period_end).getTime() : 0;
-              const bDate = b.period_end ? new Date(b.period_end).getTime() : 0;
-              return bDate - aDate;
-            })[0]
-          : null;
-        console.log('[DEBUG] Todos os períodos possíveis:', todosPeriodos.map(p => p.value));
-        console.log('[DEBUG] Último registro do usuário:', ultimoRegistroUsuario);
-        console.log('[DEBUG] period_end do último registro:', ultimoRegistroUsuario ? ultimoRegistroUsuario.period_end : null);
-        // Na filtragem dos períodos disponíveis (para semanal/mensal):
-        periodOptions = todosPeriodos
-          .filter(opt => {
-            let primeiroDiaPeriodo = null;
-            let identificadorPeriodo = opt.value;
-            if (opt.value.includes('_')) {
-              primeiroDiaPeriodo = new Date(opt.value.split('_')[0]);
-            } else {
-              primeiroDiaPeriodo = new Date(opt.value);
-            }
-            // Só mostrar períodos cujo início seja estritamente maior que o period_end do último registro
-            const isValid = (!ultimoRegistroUsuario || primeiroDiaPeriodo > new Date(ultimoRegistroUsuario.period_end))
-              && primeiroDiaPeriodo < hoje
-              && !periodosRegistradosUsuario.includes(identificadorPeriodo);
-            if (!isValid) {
-              console.log('[DEBUG] Período filtrado:', identificadorPeriodo, 'primeiroDiaPeriodo:', primeiroDiaPeriodo, 'ultimoRegistroUsuario.period_end:', ultimoRegistroUsuario ? ultimoRegistroUsuario.period_end : null);
-            }
-            return isValid;
-          })
-          .map(opt => ({
-            ...opt,
-            isMissing: false,
-            isAllowed: true
-          }));
-      }
-    }
+    // Sempre mostrar todos os períodos dos últimos 90 dias
+    // Marcar como preenchido os períodos já registrados pelo usuário
+    const periodosUsuario = Array.isArray(indicators) && selectedFunnel && crmUser ? indicators.filter(
+      (ind) => ind.funnel_id === selectedFunnel.id && ind.user_id === crmUser.id
+    ).map((ind) => ind.period_date) : [];
+    periodOptions = todosPeriodos.map(opt => ({
+      ...opt,
+      preenchido: periodosUsuario.includes(opt.value)
+    }));
   }
 
   // Regra: só destacar faltantes em vermelho a partir do segundo registro

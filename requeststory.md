@@ -1,31 +1,36 @@
 # Requisição em andamento
 
-## [12/07/2024] Bloco 2 - Indicadores, Filtros, Usuários e Funil de Performance (atualizado)
+## [13/07/2024] Bloco 3 - Ajustes Times, Funil Colorido, Comparativo e Indicadores
 
-### Problemas e Ajustes
-- Mesmo sem o campo de alterar período, ao editar um indicador pela segunda vez, o período é alterado automaticamente para “De 10/07/2025 até 10/07/2025”.
-- Corrigir bug do modal de detalhamento do comparativo (não abre).
-- Melhorar visual do funil de performance conforme print enviado (funil colorido, visual mais bonito, mantendo as cores do projeto).
-- Substituir filtro de período do funil por ícone de calendário/modal customizado, com campos para espaço de tempo, mês e ano.
-- Ajustes em modais/listas e permissões conforme histórico.
+### Modal de Criação/Edição de Times
+- Exibir apenas usuários da empresa selecionada no menu lateral.
+- Se um líder for escolhido, ele deve sumir da lista de membros da equipe (pois já pertence à equipe como líder).
 
-### Novas Referências Visuais
-- Foram adicionadas imagens de referência para o novo layout do funil de vendas e para o comparativo semanal/mensal.
-- O novo funil deve seguir o visual do print enviado, mas mantendo as cores do projeto e integrando com o que já está construído.
+### Gráfico Funil
+- Remover o funil sem cor (deixar apenas o funil colorido e o comparativo).
+- Funil colorido: faixas uma abaixo da outra, cada uma menor que a anterior, cores seguindo o padrão da plataforma, última faixa com degradê verde.
+- Exibir nome da fase centralizado, valor semanal à esquerda, valor do período à direita, taxa de conversão entre etapas.
+- Corrigir aglomeração e garantir responsividade e visual limpo.
+
+### Modal de “Detalhamento do Comparativo”
+- Transformar o modal em um filtro comparativo: só aparece se estiver filtrado para usuário/equipe específica.
+- Permitir comparar o funil atual com outro usuário/equipe (seleção no modal).
+- Exibir lado a lado os dados do funil filtrado e do comparativo.
+
+### Modal de Edição de Indicador
+- Exibir sempre todos os períodos dos últimos 90 dias, independente de quantos indicadores já foram adicionados.
+- Períodos já preenchidos aparecem como “(preenchido)” e ficam desabilitados para seleção.
 
 ---
 
-**Checklist atualizado:**
-- [x] Diminuir fontes da lista de indicadores (cabeçalho e linhas)
-- [ ] Remover a data de criação do topo do modal de edição de indicador
-- [ ] Exibir seletor de funil apenas para usuários com mais de um funil atribuído
-- [ ] Bloquear atribuição de papel de líder pelo modal de usuário
-- [ ] Substituir filtro de período do funil por ícone de calendário/modal customizado
-- [ ] Atualizar design do funil de performance para o novo visual (referência da imagem)
-- [ ] Corrigir abertura do modal de detalhamento do comparativo
-- [ ] Testar todos os fluxos corrigidos
-- [ ] Atualizar histórico e realizar deploy (deploy só ao final de tudo)
+**Checklist:**
+- [ ] Ajustar modal de times (empresa e líder)
+- [ ] Atualizar funil colorido (layout, cores, valores, conversão)
+- [ ] Transformar modal de comparativo em filtro comparativo
+- [ ] Ajustar modal de edição de indicador (períodos dos últimos 90 dias)
+- [ ] Testar todos os fluxos
+- [ ] Atualizar histórico e realizar deploy
 
 ## Observações
-- O deploy só será realizado após a conclusão de todas as etapas acima, conforme orientação do usuário.
-- As imagens de referência estão registradas no chat e devem ser consideradas para o novo layout do funil e do comparativo. 
+- Deploy só será realizado após a conclusão de todas as etapas acima, conforme orientação do usuário.
+- Prints e regras estão registrados no chat e devem ser seguidos à risca. 
