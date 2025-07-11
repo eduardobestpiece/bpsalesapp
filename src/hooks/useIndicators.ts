@@ -7,6 +7,7 @@ import { useMemo } from 'react';
 
 interface IndicatorWithValues extends Indicator {
   values: IndicatorValue[];
+  archived_at?: string | null;
 }
 
 export const useIndicators = (companyId?: string, userId?: string) => {
@@ -49,12 +50,25 @@ export const useIndicators = (companyId?: string, userId?: string) => {
         
         // Filter out null/undefined indicators and ensure they have required properties
         const validData = (data || []).filter((indicator): indicator is IndicatorWithValues => {
-          return indicator !== null && 
-                 indicator !== undefined && 
-                 typeof indicator === 'object' &&
-                 'id' in indicator &&
-                 'user_id' in indicator &&
-                 'funnel_id' in indicator;
+          if (!indicator || typeof indicator !== 'object') {
+            console.log('[useIndicators] Null or invalid indicator found:', indicator);
+            return false;
+          }
+          
+          // Check for required properties
+          const hasRequiredProps = 'id' in indicator && 
+                                 'user_id' in indicator && 
+                                 'funnel_id' in indicator &&
+                                 'company_id' in indicator &&
+                                 'month_reference' in indicator &&
+                                 'year_reference' in indicator;
+          
+          if (!hasRequiredProps) {
+            console.log('[useIndicators] Indicator missing required properties:', indicator);
+            return false;
+          }
+          
+          return true;
         });
         
         console.log('[useIndicators] Dados válidos retornados:', validData.length);

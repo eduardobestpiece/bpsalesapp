@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -123,25 +124,32 @@ const CrmIndicadores = () => {
   const accessibleIndicators = useMemo(() => {
     console.log('[CrmIndicadores] Processing indicators:', indicators?.length || 0);
     
-    if (!indicators || !crmUser) {
+    if (!indicators || !Array.isArray(indicators) || !crmUser) {
       console.log('[CrmIndicadores] No indicators or user, returning empty array');
       return [];
     }
     
     // Filtragem mais rigorosa para garantir que não há valores null
     const validIndicators = indicators.filter((ind): ind is NonNullable<typeof ind> => {
-      const isValid = ind !== null && 
-                     ind !== undefined && 
-                     typeof ind === 'object' &&
-                     'id' in ind &&
-                     'user_id' in ind &&
-                     'funnel_id' in ind;
-      
-      if (!isValid) {
-        console.log('[CrmIndicadores] Filtering out invalid indicator:', ind);
+      if (!ind || typeof ind !== 'object') {
+        console.log('[CrmIndicadores] Filtering out null/invalid indicator:', ind);
+        return false;
       }
       
-      return isValid;
+      // Verificar propriedades essenciais
+      const hasEssentialProps = ind.id && 
+                               ind.user_id && 
+                               ind.funnel_id && 
+                               ind.company_id &&
+                               typeof ind.month_reference === 'number' &&
+                               typeof ind.year_reference === 'number';
+      
+      if (!hasEssentialProps) {
+        console.log('[CrmIndicadores] Indicator missing essential props:', ind);
+        return false;
+      }
+      
+      return true;
     });
     
     console.log('[CrmIndicadores] Valid indicators after filtering:', validIndicators.length);
@@ -164,7 +172,7 @@ const CrmIndicadores = () => {
     let result = accessibleIndicators.filter(indicator => {
       // Verificação rigorosa de null no início
       if (!indicator || typeof indicator !== 'object') {
-        console.log('[CrmIndicadores] Null or invalid indicator found');
+        console.log('[CrmIndicadores] Null or invalid indicator found during filtering');
         return false;
       }
       
@@ -179,10 +187,7 @@ const CrmIndicadores = () => {
       }
       
       // Filtros de período - só aplicar se ambos period_start e period_end existirem
-      if (filters.periodStart && filters.periodEnd) {
-        if (!indicator.period_start || !indicator.period_end) {
-          return false;
-        }
+      if (filters.periodStart && filters.periodEnd && indicator.period_start && indicator.period_end) {
         if (indicator.period_start < filters.periodStart || indicator.period_end > filters.periodEnd) {
           return false;
         }
@@ -343,31 +348,36 @@ const CrmIndicadores = () => {
                                 </tr>
                               ) : (
                                 filteredIndicators.map((indicator, idx) => {
-                                  // Verificação rigorosa de segurança no início da iteração
-                                  if (!indicator || typeof indicator !== 'object') {
+                                  // Verificação de segurança ainda mais rigorosa
+                                  if (!indicator || typeof indicator !== 'object' || !indicator.id) {
                                     console.log('[CrmIndicadores] Skipping invalid indicator in render:', indicator);
                                     return null;
                                   }
                                   
-                                  // Buscar funil e etapas
-                                  const funnel = funnels?.find(f => f.id === indicator.funnel_id);
-                                  const stages = (funnel?.stages || []).sort((a: any, b: any) => a.stage_order - b.stage_order);
+                                  // Buscar funil e etapas com verificações de segurança
+                                  const funnel = funnels?.find(f => f && f.id === indicator.funnel_id);
+                                  if (!funnel) {
+                                    console.log('[CrmIndicadores] Funnel not found for indicator:', indicator.id);
+                                    return null;
+                                  }
+                                  
+                                  const stages = (funnel.stages || []).sort((a: any, b: any) => a.stage_order - b.stage_order);
                                   const lastStageLocal = stages[stages.length - 1];
                                   const penultimateStage = stages[stages.length - 2];
                                   const firstStage = stages[0];
-                                  const lastValue = (indicator.values || []).find((v: any) => v.stage_id === lastStageLocal?.id)?.value || 0;
-                                  const penultimateValue = (indicator.values || []).find((v: any) => v.stage_id === penultimateStage?.id)?.value || 0;
-                                  const firstValue = (indicator.values || []).find((v: any) => v.stage_id === firstStage?.id)?.value || 0;
+                                  const lastValue = (indicator.values || []).find((v: any) => v && v.stage_id === lastStageLocal?.id)?.value || 0;
+                                  const penultimateValue = (indicator.values || []).find((v: any) => v && v.stage_id === penultimateStage?.id)?.value || 0;
+                                  const firstValue = (indicator.values || []).find((v: any) => v && v.stage_id === firstStage?.id)?.value || 0;
                                   const salesValue = indicator.sales_value || 0;
                                   const ticketMedio = lastValue > 0 ? salesValue / lastValue : 0;
                                   const taxaConversao = penultimateValue > 0 ? (lastValue / penultimateValue) * 100 : 0;
                                   const conversaoFunil = firstValue > 0 ? (lastValue / firstValue) * 100 : 0;
-                                  const recommendationStageLocal = stages.find((s: any) => s.name.toLowerCase().includes('reuni') || s.name.toLowerCase().includes('recomend'));
-                                  const recommendationStageValue = (indicator.values || []).find((v: any) => v.stage_id === recommendationStageLocal?.id)?.value || 0;
+                                  const recommendationStageLocal = stages.find((s: any) => s && s.name && (s.name.toLowerCase().includes('reuni') || s.name.toLowerCase().includes('recomend')));
+                                  const recommendationStageValue = (indicator.values || []).find((v: any) => v && v.stage_id === recommendationStageLocal?.id)?.value || 0;
                                   const recommendationsCount = indicator.recommendations_count || 0;
                                   const mediaRecomendacoes = recommendationStageValue > 0 ? recommendationsCount / recommendationStageValue : 0;
                                   const prazoStatus = getPrazoStatus(indicator, funnel);
-                                  const user = crmUsers.find(u => u.id === indicator.user_id);
+                                  const user = crmUsers.find(u => u && u.id === indicator.user_id);
 
                                   return (
                                     <tr key={indicator.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-muted/40'}>
@@ -381,7 +391,7 @@ const CrmIndicadores = () => {
                                       <td className="px-2 py-2">
                                         {indicator.period_start && indicator.period_end
                                           ? `De ${new Date(indicator.period_start).toLocaleDateString('pt-BR')} até ${new Date(indicator.period_end).toLocaleDateString('pt-BR')}`
-                                          : '-'
+                                          : 'Período não definido'
                                         }
                                       </td>
                                       {lastStageLocal && <td className="px-2 py-2 text-center font-bold text-base">{lastValue}</td>}
@@ -400,7 +410,6 @@ const CrmIndicadores = () => {
                                           <Button variant="outline" size="sm" onClick={() => handleEdit(indicator)}>
                                             <Edit className="w-4 h-4" />
                                           </Button>
-                                          {/* Permitir arquivamento para todos os usuários */}
                                           <Button variant="outline" size="sm" onClick={() => handleArchive(indicator)}>
                                             <Archive className="w-4 h-4" />
                                           </Button>
