@@ -42,3 +42,7 @@ Bloco 1
     - Corrigido bug do período do indicador: ao editar, o período nunca é sobrescrito automaticamente, apenas se o usuário escolher.
     - Corrigido bug de times: campo user_ids removido do payload, membros do time agora são atualizados corretamente via team_id dos usuários.
     - Commit e deploy realizados após rebase.
+- [2024-07-10] Correção definitiva:
+    - Período do indicador agora é totalmente imutável durante edição, nunca sobrescrito por efeitos colaterais.
+    - Membros do time são buscados corretamente ao abrir o modal e persistidos corretamente no banco.
+    - Commit e deploy realizados.

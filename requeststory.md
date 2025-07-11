@@ -34,3 +34,14 @@
 - O bug do período do indicador persiste: mesmo sem campo de alteração, o período é sobrescrito ao editar. Será garantida imutabilidade total do período durante a edição.
 - O bug dos membros do time persiste: membros não permanecem salvos ao reabrir o modal. Será garantida busca correta dos membros ao abrir e update correto no banco.
 - Nova rodada de correção iniciada. 
+
+## [2024-07-10] Redesign do modal de indicador
+
+- Requisição: Excluir o modal de edição do indicador.
+- Novo modal deve exibir apenas:
+  - Valor de Vendas
+  - Número de Recomendações
+  - Resultados por Etapa
+  - Data de preenchimento no final, perto dos botões
+- Não deve permitir edição de funil ou período.
+- Iniciando ajuste conforme solicitado. 
