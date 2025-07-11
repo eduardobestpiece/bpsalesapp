@@ -34,49 +34,41 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [fetchingCrmUser, setFetchingCrmUser] = useState(false);
 
   const fetchCrmUser = useCallback(async (email: string) => {
-    // Evitar múltiplas chamadas simultâneas
-    if (fetchingCrmUser) {
-      console.log('[CrmAuth] Busca CRM já em andamento, pulando...');
-      return null;
-    }
-
     console.log('[CrmAuth] Buscando CRM user para:', email);
-    setFetchingCrmUser(true);
-    
     try {
-      const { data, error } = await supabase
+      // Timeout de 15 segundos para evitar travamento
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => {
+        console.error('[CrmAuth] Timeout de 15s ao buscar usuário CRM');
+        reject(new Error('Timeout ao buscar usuário CRM'));
+      }, 15000));
+      const fetchPromise = supabase
         .from('crm_users')
         .select('*')
         .eq('email', email)
         .eq('status', 'active')
         .single();
-
+      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
       if (error) {
         console.error('[CrmAuth] Erro ao buscar CRM user:', error);
         return null;
       }
-
       if (!data) {
         console.warn('[CrmAuth] Nenhum usuário CRM encontrado para:', email);
         return null;
       }
-
       console.log('[CrmAuth] CRM user encontrado:', data);
       return data as CrmUser;
     } catch (err) {
       console.error('[CrmAuth] Erro inesperado ao buscar CRM user:', err);
       return null;
-    } finally {
-      setFetchingCrmUser(false);
     }
-  }, [fetchingCrmUser]);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
-    let initializing = true;
+    let alreadyFetched = false;
     
     console.log('[CrmAuth] Initializing auth...');
     
@@ -84,24 +76,12 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
         console.log('[CrmAuth] Auth state changed:', event, newSession?.user?.email);
-        
         if (!mounted) return;
-
-        // Atualizar session e user sempre
         setSession(newSession);
         setUser(newSession?.user ?? null);
-
-        // Se não há sessão, limpar tudo
-        if (!newSession?.user?.email) {
-          setCrmUser(null);
-          setUserRole(null);
-          setCompanyId(null);
-          setLoading(false);
-          return;
-        }
-
-        // Buscar CRM user apenas quando necessário e não durante inicialização
-        if (!initializing && newSession.user.email) {
+        // Só buscar usuário CRM na primeira vez
+        if (!alreadyFetched && newSession?.user?.email) {
+          alreadyFetched = true;
           console.log(`[CrmAuth] Buscando CRM user para: ${newSession.user.email} (evento: ${event})`);
           const crmUserData = await fetchCrmUser(newSession.user.email);
           if (mounted) {
@@ -109,33 +89,28 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
             setUserRole(crmUserData?.role ?? null);
             setCompanyId(crmUserData?.company_id ?? null);
           }
+        } else if (!newSession?.user?.email) {
+          if (mounted) {
+            setCrmUser(null);
+            setUserRole(null);
+            setCompanyId(null);
+          }
         }
-
         if (mounted) {
           setLoading(false);
         }
       }
     );
 
-    // Get initial session - fazer apenas uma vez
-    supabase.auth.getSession().then(async ({ data: { session: initialSession } }) => {
-      if (!mounted) return;
-
-      console.log('[CrmAuth] Initial session check:', initialSession?.user?.email || 'No session');
-      
-      if (initialSession?.user?.email) {
-        // Buscar CRM user apenas na inicialização
-        const crmUserData = await fetchCrmUser(initialSession.user.email);
-        if (mounted) {
-          setCrmUser(crmUserData);
-          setUserRole(crmUserData?.role ?? null);
-          setCompanyId(crmUserData?.company_id ?? null);
-        }
-      }
-      
-      if (mounted) {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      if (mounted && initialSession && !alreadyFetched) {
+        alreadyFetched = true;
+        console.log('[CrmAuth] Initial session found:', initialSession.user.email);
+        // A busca será feita pelo onAuthStateChange
+      } else if (mounted) {
+        console.log('[CrmAuth] No initial session');
         setLoading(false);
-        initializing = false; // Marcar inicialização como concluída
       }
     });
 
