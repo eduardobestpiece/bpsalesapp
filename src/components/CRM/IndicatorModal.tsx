@@ -640,25 +640,15 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   }
   const prazoStatus = getPrazoStatus();
 
-  // Proteção reforçada no início do componente:
-  if (isEditing && (
-    !indicator ||
-    !immutableFields ||
-    !immutableFields.period_start ||
-    !immutableFields.period_end ||
-    !immutableFields.funnel_id ||
-    !immutableFields.month_reference ||
-    !immutableFields.year_reference ||
-    !Array.isArray(indicator.values) ||
-    indicator.values.length === 0
-  )) {
+  // Remover checagem excessiva no início do componente:
+  if (isEditing && !indicator) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Erro ao abrir indicador</DialogTitle>
           </DialogHeader>
-          <div className="text-red-500">Não foi possível carregar os dados do indicador para edição. Verifique se o indicador está completo no banco de dados (período, funil, etapas, mês e ano).</div>
+          <div className="text-red-500">Não foi possível carregar os dados do indicador para edição.</div>
           <div className="flex justify-end mt-4">
             <Button type="button" variant="outline" onClick={onClose}>Fechar</Button>
           </div>
@@ -860,6 +850,9 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
             </div>
           )}
           <div className="flex justify-end space-x-2 w-full md:w-auto">
+            {!isEditing && (
+              <Button type="submit" disabled={isLoading}>Salvar</Button>
+            )}
             <Button type="button" variant="outline" onClick={onClose}>Fechar</Button>
           </div>
         </form>
