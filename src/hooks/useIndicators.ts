@@ -46,7 +46,19 @@ export const useIndicators = (companyId?: string, userId?: string) => {
           }
           throw error;
         }
-        return data as IndicatorWithValues[];
+        
+        // Filter out null/undefined indicators and ensure they have required properties
+        const validData = (data || []).filter((indicator): indicator is IndicatorWithValues => {
+          return indicator !== null && 
+                 indicator !== undefined && 
+                 typeof indicator === 'object' &&
+                 'id' in indicator &&
+                 'user_id' in indicator &&
+                 'funnel_id' in indicator;
+        });
+        
+        console.log('[useIndicators] Dados válidos retornados:', validData.length);
+        return validData;
       } catch (err) {
         console.error('[useIndicators] Erro ao buscar indicadores:', err);
         return [] as IndicatorWithValues[];

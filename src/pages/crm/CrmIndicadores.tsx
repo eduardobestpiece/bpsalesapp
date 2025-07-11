@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -120,12 +119,32 @@ const CrmIndicadores = () => {
     window.location.reload();
   }, []);
 
-  // Filtragem de indicadores por perfil - memoizado
+  // Filtragem de indicadores por perfil - memoizado com verificações rigorosas de null
   const accessibleIndicators = useMemo(() => {
-    if (!indicators || !crmUser) return [];
+    console.log('[CrmIndicadores] Processing indicators:', indicators?.length || 0);
     
-    // Filter out null indicators and add null checks
-    const validIndicators = indicators.filter(ind => ind && typeof ind === 'object');
+    if (!indicators || !crmUser) {
+      console.log('[CrmIndicadores] No indicators or user, returning empty array');
+      return [];
+    }
+    
+    // Filtragem mais rigorosa para garantir que não há valores null
+    const validIndicators = indicators.filter((ind): ind is NonNullable<typeof ind> => {
+      const isValid = ind !== null && 
+                     ind !== undefined && 
+                     typeof ind === 'object' &&
+                     'id' in ind &&
+                     'user_id' in ind &&
+                     'funnel_id' in ind;
+      
+      if (!isValid) {
+        console.log('[CrmIndicadores] Filtering out invalid indicator:', ind);
+      }
+      
+      return isValid;
+    });
+    
+    console.log('[CrmIndicadores] Valid indicators after filtering:', validIndicators.length);
     
     if (crmUser.role === 'master' || crmUser.role === 'admin') {
       return validIndicators; // vê todos da empresa
@@ -138,25 +157,62 @@ const CrmIndicadores = () => {
     return [];
   }, [indicators, crmUser, crmUsers]);
 
-  // Substituir filteredIndicators para não exibir os arquivados localmente
+  // Filtros aplicados com verificações ainda mais rigorosas
   const filteredIndicators = useMemo(() => {
+    console.log('[CrmIndicadores] Filtering accessible indicators:', accessibleIndicators.length);
+    
     let result = accessibleIndicators.filter(indicator => {
-      // Add null check for indicator
-      if (!indicator || archivedIndicatorIds.includes(indicator.id)) return false;
-      if (selectedFunnelId && indicator.funnel_id !== selectedFunnelId) return false;
-      if (filters.periodStart && filters.periodEnd) {
-        if (!indicator.period_start || !indicator.period_end) return false;
-        if (indicator.period_start < filters.periodStart || indicator.period_end > filters.periodEnd) return false;
+      // Verificação rigorosa de null no início
+      if (!indicator || typeof indicator !== 'object') {
+        console.log('[CrmIndicadores] Null or invalid indicator found');
+        return false;
       }
-      if (filters.month && Number(indicator.month_reference) !== Number(filters.month)) return false;
-      if (filters.year && String(indicator.year_reference) !== String(filters.year)) return false;
-      if (filters.teamId && indicator.user_id !== filters.teamId) return false;
-      if (filters.userId && indicator.user_id !== filters.userId) return false;
+      
+      // Verificar se está arquivado
+      if (archivedIndicatorIds.includes(indicator.id)) {
+        return false;
+      }
+      
+      // Filtros de funil
+      if (selectedFunnelId && indicator.funnel_id !== selectedFunnelId) {
+        return false;
+      }
+      
+      // Filtros de período - só aplicar se ambos period_start e period_end existirem
+      if (filters.periodStart && filters.periodEnd) {
+        if (!indicator.period_start || !indicator.period_end) {
+          return false;
+        }
+        if (indicator.period_start < filters.periodStart || indicator.period_end > filters.periodEnd) {
+          return false;
+        }
+      }
+      
+      // Filtros por mês e ano
+      if (filters.month && Number(indicator.month_reference) !== Number(filters.month)) {
+        return false;
+      }
+      if (filters.year && String(indicator.year_reference) !== String(filters.year)) {
+        return false;
+      }
+      
+      // Filtros por equipe e usuário
+      if (filters.teamId && indicator.user_id !== filters.teamId) {
+        return false;
+      }
+      if (filters.userId && indicator.user_id !== filters.userId) {
+        return false;
+      }
+      
       return true;
     });
+    
+    // Aplicar filtro "Meus Indicadores" se ativo
     if (showOnlyMine && crmUser) {
       result = result.filter(ind => ind && ind.user_id === crmUser.id);
     }
+    
+    console.log('[CrmIndicadores] Final filtered indicators:', result.length);
     return result;
   }, [accessibleIndicators, selectedFunnelId, filters, showOnlyMine, crmUser, archivedIndicatorIds]);
 
@@ -287,8 +343,11 @@ const CrmIndicadores = () => {
                                 </tr>
                               ) : (
                                 filteredIndicators.map((indicator, idx) => {
-                                  // Add null checks for indicator
-                                  if (!indicator) return null;
+                                  // Verificação rigorosa de segurança no início da iteração
+                                  if (!indicator || typeof indicator !== 'object') {
+                                    console.log('[CrmIndicadores] Skipping invalid indicator in render:', indicator);
+                                    return null;
+                                  }
                                   
                                   // Buscar funil e etapas
                                   const funnel = funnels?.find(f => f.id === indicator.funnel_id);
