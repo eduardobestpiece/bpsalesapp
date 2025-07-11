@@ -505,6 +505,35 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     }
   }, [periodStart, periodEnd]);
 
+  // No modo edição, liberar edição dos campos de vendas, recomendações e etapas:
+  // Substituir disabled={isEditing} por disabled={false} nesses campos
+  // Garantir que o período exibido é sempre o do indicador:
+  // No useEffect de inicialização do modo edição, sempre setar periodStart/periodEnd a partir do indicador
+  useEffect(() => {
+    if (isEditing && indicator) {
+      setFormData({
+        period_date: indicator.period_date || '',
+        funnel_id: indicator.funnel_id || '',
+        month_reference: indicator.month_reference,
+        year_reference: indicator.year_reference,
+        stages: (indicator.values || []).reduce((acc: any, v: any) => {
+          acc[v.stage_id] = v.value;
+          return acc;
+        }, {})
+      });
+      setSalesValue(indicator.sales_value?.toString() || '0,00');
+      setRecommendationsCount(indicator.recommendations_count || 0);
+      setIsDelayed(indicator.is_delayed || false);
+      if (indicator.period_date) {
+        const { start, end } = extractPeriodDates(indicator.period_date);
+        setPeriodStart(start);
+        setPeriodEnd(end);
+        setMonthReference(indicator.month_reference);
+        setYearReference(indicator.year_reference);
+      }
+    }
+  }, [isEditing, indicator]);
+
   const handleStageValueChange = (stageId: string, value: number) => {
     setFormData(prev => ({
       ...prev,
@@ -785,12 +814,12 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                 {/* Campo Valor das Vendas */}
                 <div>
                   <Label htmlFor="sales_value">Valor das Vendas</Label>
-                  <Input id="sales_value" type="text" value={salesValue} onChange={e => setSalesValue(e.target.value)} placeholder="0,00" inputMode="decimal" disabled={isEditing} />
+                  <Input id="sales_value" type="text" value={salesValue} onChange={e => setSalesValue(e.target.value)} placeholder="0,00" inputMode="decimal" disabled={false} />
                 </div>
                 {/* Campo Número de Recomendações */}
                 <div>
                   <Label htmlFor="recommendations_count">Número de Recomendações</Label>
-                  <Input id="recommendations_count" type="number" value={recommendationsCount} onChange={e => setRecommendationsCount(Number(e.target.value))} disabled={isEditing} />
+                  <Input id="recommendations_count" type="number" value={recommendationsCount} onChange={e => setRecommendationsCount(Number(e.target.value))} disabled={false} />
                 </div>
               </>
             )}
@@ -825,7 +854,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                               value={valor}
                               onChange={(e) => handleStageValueChange(stage.id, parseInt(e.target.value) || 0)}
                               placeholder="Digite o resultado"
-                              disabled={isEditing}
+                              disabled={false}
                             />
                           </div>
                           <div className="flex flex-col items-start md:items-end min-w-[180px]">
