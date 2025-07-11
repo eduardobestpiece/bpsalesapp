@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Session, User } from '@supabase/supabase-js';
 import { CrmUser, UserRole } from '@/types/crm';
@@ -34,9 +34,9 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const [initialized, setInitialized] = useState(false);
 
-  const fetchCrmUser = async (email: string) => {
+  const fetchCrmUser = useCallback(async (email: string) => {
     console.log('[CrmAuth] Buscando CRM user para:', email);
     try {
       const { data, error } = await supabase
@@ -56,82 +56,83 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
       console.error('[CrmAuth] Erro inesperado ao buscar CRM user:', err);
       return null;
     }
-  };
+  }, []);
+
+  const updateAuthState = useCallback(async (newSession: Session | null) => {
+    console.log('[CrmAuth] Updating auth state, session:', !!newSession);
+    
+    setSession(newSession);
+    setUser(newSession?.user ?? null);
+    
+    if (newSession?.user?.email) {
+      const crmUserData = await fetchCrmUser(newSession.user.email);
+      setCrmUser(crmUserData);
+      setUserRole(crmUserData?.role ?? null);
+      setCompanyId(crmUserData?.company_id ?? null);
+    } else {
+      setCrmUser(null);
+      setUserRole(null);
+      setCompanyId(null);
+    }
+    
+    if (initialized) {
+      setLoading(false);
+    }
+  }, [fetchCrmUser, initialized]);
 
   useEffect(() => {
-    let isSubscriptionActive = true;
-
+    let isMounted = true;
+    
     const initializeAuth = async () => {
       try {
-        // Get initial session
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        console.log('[CrmAuth] Initializing auth...');
         
-        if (isSubscriptionActive) {
-          setSession(initialSession);
-          setUser(initialSession?.user ?? null);
-          
-          if (initialSession?.user?.email) {
-            const crmUserData = await fetchCrmUser(initialSession.user.email);
-            if (isSubscriptionActive) {
-              setCrmUser(crmUserData);
-              setUserRole(crmUserData?.role ?? null);
-              setCompanyId(crmUserData?.company_id ?? null);
+        // Setup auth state listener first
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+          async (event, session) => {
+            console.log('[CrmAuth] Auth state changed:', event, session?.user?.email);
+            
+            if (!isMounted) return;
+            
+            // Avoid infinite loops by checking if session actually changed
+            if (event === 'SIGNED_IN' && session) {
+              await updateAuthState(session);
+            } else if (event === 'SIGNED_OUT') {
+              await updateAuthState(null);
             }
           }
-          
+        );
+
+        // Then get initial session
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        
+        if (isMounted) {
+          await updateAuthState(initialSession);
+          setInitialized(true);
           setLoading(false);
-          setIsInitialized(true);
         }
+
+        return () => {
+          subscription.unsubscribe();
+        };
       } catch (error) {
-        console.error('[CrmAuth] Erro na inicialização:', error);
-        if (isSubscriptionActive) {
+        console.error('[CrmAuth] Error during initialization:', error);
+        if (isMounted) {
           setLoading(false);
-          setIsInitialized(true);
+          setInitialized(true);
         }
       }
     };
 
-    // Setup auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('[CrmAuth] Auth state changed:', event, session?.user?.email);
-        
-        if (!isSubscriptionActive) return;
-        
-        // Prevent multiple rapid changes
-        if (event === 'SIGNED_IN' && session?.user?.email === user?.email) {
-          return;
-        }
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user?.email) {
-          const crmUserData = await fetchCrmUser(session.user.email);
-          if (isSubscriptionActive) {
-            setCrmUser(crmUserData);
-            setUserRole(crmUserData?.role ?? null);
-            setCompanyId(crmUserData?.company_id ?? null);
-          }
-        } else {
-          setCrmUser(null);
-          setUserRole(null);
-          setCompanyId(null);
-        }
-        
-        if (isInitialized) {
-          setLoading(false);
-        }
-      }
-    );
-
-    initializeAuth();
-
+    const cleanup = initializeAuth();
+    
     return () => {
-      isSubscriptionActive = false;
-      subscription.unsubscribe();
+      isMounted = false;
+      if (cleanup) {
+        cleanup.then(cleanupFn => cleanupFn?.());
+      }
     };
-  }, []);
+  }, [updateAuthState]);
 
   const signIn = async (email: string, password: string) => {
     console.log('Attempting sign in for:', email);

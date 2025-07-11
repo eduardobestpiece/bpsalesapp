@@ -1,12 +1,12 @@
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Users, Eye, EyeOff, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
 import ForgotPasswordModal from '@/components/Auth/ForgotPasswordModal';
@@ -19,14 +19,8 @@ const CrmLogin = () => {
   const [error, setError] = useState('');
   const [showForgotModal, setShowForgotModal] = useState(false);
   
-  const { signIn, user, loading: authLoading } = useCrmAuth();
+  const { signIn } = useCrmAuth();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (user && !authLoading) {
-      navigate('/home', { replace: true });
-    }
-  }, [user, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,8 +41,7 @@ const CrmLogin = () => {
         console.error('Login error:', error);
       } else {
         toast.success('Login realizado com sucesso!');
-        navigate('/home', { replace: true }); // Redirecionamento imediato
-        // Redirect também será tratado pelo useEffect
+        // Navigation will be handled by AuthGuard
       }
     } catch (err) {
       console.error('Unexpected login error:', err);
@@ -57,14 +50,6 @@ const CrmLogin = () => {
       setIsLoading(false);
     }
   };
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
