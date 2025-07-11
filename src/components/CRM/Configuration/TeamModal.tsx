@@ -42,7 +42,15 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
         name: team.name,
         leader_id: team.leader_id,
       });
-      setMembers(team.user_ids || []);
+      // Buscar todos os usuários da empresa e filtrar os que pertencem ao time
+      (async () => {
+        const { data: allUsersDb } = await supabase
+          .from('crm_users')
+          .select('id, team_id')
+          .eq('company_id', companyId);
+        const memberIds = (allUsersDb || []).filter(u => u.team_id === team.id).map(u => u.id);
+        setMembers(memberIds);
+      })();
     } else {
       setFormData({
         name: '',
@@ -50,7 +58,7 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
       });
       setMembers([]);
     }
-  }, [team]);
+  }, [team, companyId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

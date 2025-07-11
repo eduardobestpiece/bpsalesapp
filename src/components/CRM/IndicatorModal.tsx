@@ -286,6 +286,8 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         const { start, end } = extractPeriodDates(indicator.period_date);
         setPeriodStart(start);
         setPeriodEnd(end);
+        setMonthReference(indicator.month_reference);
+        setYearReference(indicator.year_reference);
       }
     } else {
       const today = new Date().toISOString().split('T')[0];
@@ -301,16 +303,18 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
       setIsDelayed(false);
       setPeriodStart(today);
       setPeriodEnd(today);
+      setMonthReference(new Date().getMonth() + 1);
+      setYearReference(new Date().getFullYear());
     }
   }, [indicator]);
 
   // useEffect para seleção de funil: só inicializa campos se NÃO estiver editando
   useEffect(() => {
-    if (formData.funnel_id && funnels) {
+    if (formData.funnel_id && funnels && !isEditing) {
       const funnel = funnels.find(f => f.id === formData.funnel_id);
       setSelectedFunnel(funnel);
       // Initialize stages with empty values apenas na criação
-      if (!isEditing && funnel?.stages) {
+      if (funnel?.stages) {
         const newStages: Record<string, number> = {};
         funnel.stages.forEach((stage: any) => {
           newStages[stage.id] = 0;
@@ -318,7 +322,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         setFormData(prev => ({ ...prev, stages: newStages }));
       }
       // Inicializar campos de vendas/recomendações apenas na criação
-      if (!isEditing && funnel) {
+      if (funnel) {
         if (funnel.sales_value_mode === 'manual') {
           setSalesValue('0,00');
         } else {
@@ -330,6 +334,10 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
           setRecommendationsCount(0);
         }
       }
+    } else if (formData.funnel_id && funnels) {
+      // Sempre setar o funil selecionado para exibir etapas, mas não mexer em mais nada
+      const funnel = funnels.find(f => f.id === formData.funnel_id);
+      setSelectedFunnel(funnel);
     }
   }, [formData.funnel_id, funnels]);
 

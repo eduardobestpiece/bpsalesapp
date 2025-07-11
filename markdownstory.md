@@ -38,3 +38,7 @@ Bloco 1
     - Gráfico duplo e comparativo agora usam dados reais do Supabase, respeitando filtros dinâmicos.
     - Deploy automático realizado após commit.
     - Usuário orientado a validar se tudo está funcionando corretamente.
+- [2024-07-10] Correção de bugs críticos:
+    - Corrigido bug do período do indicador: ao editar, o período nunca é sobrescrito automaticamente, apenas se o usuário escolher.
+    - Corrigido bug de times: campo user_ids removido do payload, membros do time agora são atualizados corretamente via team_id dos usuários.
+    - Commit e deploy realizados após rebase.
