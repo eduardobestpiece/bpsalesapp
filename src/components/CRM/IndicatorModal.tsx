@@ -107,7 +107,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   }
 
   // Regra: só destacar faltantes em vermelho a partir do segundo registro
-  const destacarFaltantes = periodosUsuario.length > 0;
+  const destacarFaltantes = periodOptions.length > 0;
 
   // useEffect de inicialização do indicador
   useEffect(() => {
