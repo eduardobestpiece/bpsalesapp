@@ -761,11 +761,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
               </div>
             )}
             {/* Exibir data/hora de criação no modo edição acima do botão de alterar período */}
-            {indicator && indicator.created_at && (
-              <div className="text-xs text-muted-foreground mb-2">
-                Preenchido em: {new Date(indicator.created_at).toLocaleString('pt-BR')}
-              </div>
-            )}
             {/* CAMPOS RESTRITOS MASTER/ADMIN */}
             {selectedFunnel && crmUser?.role !== 'submaster' && (
               <>

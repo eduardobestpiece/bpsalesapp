@@ -229,18 +229,20 @@ const CrmIndicadores = () => {
                                   <UserIcon className="w-5 h-5" />
                                 </Button>
                               )}
-                              <div>
-                                <select 
-                                  value={selectedFunnelId} 
-                                  onChange={e => setSelectedFunnelId(e.target.value)} 
-                                  className="border rounded-lg px-3 py-2 text-base"
-                                >
-                                  <option value="">Todos os funis</option>
-                                  {allowedFunnels.map(f => (
-                                    <option key={f.id} value={f.id}>{f.name}</option>
-                                  ))}
-                                </select>
-                              </div>
+                              {allowedFunnels.length > 1 && (
+                                <div>
+                                  <select 
+                                    value={selectedFunnelId} 
+                                    onChange={e => setSelectedFunnelId(e.target.value)} 
+                                    className="border rounded-lg px-3 py-2 text-sm"
+                                  >
+                                    <option value="">Todos os funis</option>
+                                    {allowedFunnels.map(f => (
+                                      <option key={f.id} value={f.id}>{f.name}</option>
+                                    ))}
+                                  </select>
+                                </div>
+                              )}
                               <Button variant="outline" onClick={() => setShowFiltersModal(true)}>
                                 <Filter className="w-4 h-4 mr-2" />
                                 Filtros
@@ -258,7 +260,7 @@ const CrmIndicadores = () => {
                           <table className="min-w-full border-separate border-spacing-y-1">
                             <thead className="sticky top-0 z-10 bg-muted">
                               <tr>
-                                <th className="px-2 py-2 text-center font-semibold rounded-tl-2xl"></th>
+                                <th className="px-2 py-2 text-center font-semibold rounded-tl-2xl text-xs"></th>
                                 <th className="px-2 py-2 text-left font-semibold">Período</th>
                                 {funnelData.lastStage && <th className="px-2 py-2 text-left font-semibold">{funnelData.lastStage.name}</th>}
                                 <th className="px-2 py-2 text-left font-semibold">Valor das Vendas</th>

@@ -270,7 +270,6 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="user">Usuário</SelectItem>
-                <SelectItem value="leader">Líder</SelectItem>
                 {canCreateAdmin && <SelectItem value="admin">Administrador</SelectItem>}
                 {canCreateSubMaster && <SelectItem value="submaster">SubMaster (visualização total, sem edição)</SelectItem>}
                 {crmUser?.role === 'master' && <SelectItem value="master">Master</SelectItem>}
