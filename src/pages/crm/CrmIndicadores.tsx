@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Filter, Edit, Archive, Trash2, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
+import { Plus, Filter, Edit, Archive, Trash2, CheckCircle, AlertCircle, XCircle, User as UserIcon } from 'lucide-react';
 import { IndicatorModal } from '@/components/CRM/IndicatorModal';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useIndicators } from '@/hooks/useIndicators';
@@ -131,7 +131,7 @@ const CrmIndicadores = () => {
 
   // Filtrar indicadores pelo funil selecionado - memoizado
   const filteredIndicators = useMemo(() => {
-    return accessibleIndicators.filter(indicator => {
+    let result = accessibleIndicators.filter(indicator => {
       if (selectedFunnelId && indicator.funnel_id !== selectedFunnelId) return false;
       if (filters.periodStart && filters.periodEnd) {
         if (!indicator.period_start || !indicator.period_end) return false;
@@ -143,7 +143,11 @@ const CrmIndicadores = () => {
       if (filters.userId && indicator.user_id !== filters.userId) return false;
       return true;
     });
-  }, [accessibleIndicators, selectedFunnelId, filters]);
+    if (showOnlyMine && crmUser) {
+      result = result.filter(ind => ind.user_id === crmUser.id);
+    }
+    return result;
+  }, [accessibleIndicators, selectedFunnelId, filters, showOnlyMine, crmUser]);
 
   // Dados do funil selecionado - memoizado
   const funnelData = useMemo(() => {
@@ -171,6 +175,9 @@ const CrmIndicadores = () => {
       </div>
     );
   }
+
+  const isGestor = crmUser?.role === 'admin' || crmUser?.role === 'master' || crmUser?.role === 'leader';
+  const [showOnlyMine, setShowOnlyMine] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
@@ -207,6 +214,17 @@ const CrmIndicadores = () => {
                           </div>
                           <div className="flex gap-2">
                             <div className="flex items-center gap-4">
+                              {isGestor && (
+                                <Button
+                                  variant={showOnlyMine ? 'default' : 'outline'}
+                                  size="icon"
+                                  className="mr-2"
+                                  title="Meus Indicadores"
+                                  onClick={() => setShowOnlyMine(v => !v)}
+                                >
+                                  <UserIcon className="w-5 h-5" />
+                                </Button>
+                              )}
                               <div>
                                 <select 
                                   value={selectedFunnelId} 
@@ -244,6 +262,7 @@ const CrmIndicadores = () => {
                                 <th className="px-2 py-2 text-left font-semibold">Taxa de Conversão</th>
                                 <th className="px-2 py-2 text-left font-semibold">Conversão do Funil</th>
                                 {funnelData.recommendationStage && <th className="px-2 py-2 text-left font-semibold">Média de Recomendações</th>}
+                                {isGestor && <th className="px-2 py-2 text-left font-semibold">Usuário</th>}
                                 <th className="px-2 py-2 text-center font-semibold rounded-tr-2xl">Ações</th>
                               </tr>
                             </thead>
@@ -274,6 +293,7 @@ const CrmIndicadores = () => {
                                   const recommendationsCount = indicator.recommendations_count || 0;
                                   const mediaRecomendacoes = recommendationStageValue > 0 ? recommendationsCount / recommendationStageValue : 0;
                                   const prazoStatus = getPrazoStatus(indicator, funnel);
+                                  const user = crmUsers.find(u => u.id === indicator.user_id);
 
                                   return (
                                     <tr key={indicator.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-muted/40'}>
@@ -296,16 +316,20 @@ const CrmIndicadores = () => {
                                       <td className="px-2 py-2 text-center">{penultimateValue > 0 ? taxaConversao.toFixed(1) + '%' : '-'}</td>
                                       <td className="px-2 py-2 text-center">{firstValue > 0 ? conversaoFunil.toFixed(1) + '%' : '-'}</td>
                                       {recommendationStageLocal && <td className="px-2 py-2 text-center">{recommendationStageValue > 0 ? mediaRecomendacoes.toFixed(2) : '-'}</td>}
+                                      {isGestor && (
+                                        <td className="px-2 py-2 text-left">
+                                          {user ? `${user.first_name} ${user.last_name}` : '-'}
+                                        </td>
+                                      )}
                                       <td className="px-2 py-2 text-center">
                                         <div className="flex gap-2 justify-center">
                                           <Button variant="outline" size="sm" onClick={() => handleEdit(indicator)}>
                                             <Edit className="w-4 h-4" />
                                           </Button>
-                                          {crmUser?.role === 'master' && (
-                                            <Button variant="outline" size="sm" onClick={() => handleArchive(indicator)}>
-                                              <Archive className="w-4 h-4" />
-                                            </Button>
-                                          )}
+                                          {/* Permitir arquivamento para todos os usuários */}
+                                          <Button variant="outline" size="sm" onClick={() => handleArchive(indicator)}>
+                                            <Archive className="w-4 h-4" />
+                                          </Button>
                                         </div>
                                       </td>
                                     </tr>

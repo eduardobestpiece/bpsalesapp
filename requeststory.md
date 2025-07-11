@@ -64,3 +64,34 @@
 5. Executar deploy e pedir validação.
 
 **Status:** Em andamento. 
+
+---
+
+# Requisição em andamento: Ajustes no Modal e Lista de Indicadores
+
+**Solicitante:** Usuário
+**Data:** (preencher com a data atual)
+
+## Ajustes Solicitados
+
+### Modal de edição de indicador
+- Corrigir para que, ao editar, o período original seja mantido (não sobrescrever com data de hoje).
+- Remover o campo "Preenchido com atraso?" do modal.
+- Mover a data de preenchimento para baixo, alinhada à esquerda, na mesma linha dos botões "Cancelar" e "Atualizar".
+
+### Lista de indicadores
+- Permitir que todos os usuários possam arquivar (excluir) indicadores preenchidos.
+- Adicionar coluna "Usuário" (visível apenas para administradores, master e líderes) mostrando quem preencheu o indicador.
+- Adicionar ícone de "homenzinho" ao lado esquerdo do seletor de funil, que filtra para "meus indicadores" (visível apenas para administradores, master e líderes).
+
+## Plano de ação
+1. Corrigir o modal de edição para manter o período original e remover o campo "Preenchido com atraso?".
+2. Ajustar layout do modal conforme solicitado.
+3. Permitir arquivamento de indicadores para todos os usuários.
+4. Adicionar coluna "Usuário" na lista, visível apenas para administradores, master e líderes.
+5. Adicionar filtro "meus indicadores" com ícone de homenzinho, visível apenas para administradores, master e líderes.
+6. Testar e validar.
+7. Executar deploy.
+8. Solicitar validação ao usuário.
+
+**Status:** Em andamento. 

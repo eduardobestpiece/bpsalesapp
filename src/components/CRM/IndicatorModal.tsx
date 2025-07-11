@@ -527,13 +527,15 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         user_id: crmUser.id,
         company_id: companyId,
         funnel_id: formData.funnel_id,
+        // Garantir que ao editar, o período original é mantido
         period_start: periodStart,
         period_end: periodEnd,
         month_reference: monthReference,
         year_reference: yearReference,
         sales_value: parseMonetaryValue(salesValueStr),
         recommendations_count: recommendationsCount,
-        is_delayed: isDelayed
+        // Remover is_delayed do payload
+        // is_delayed: isDelayed
       };
 
       const stageValues = Object.entries(formData.stages).map(([stageId, value]) => ({
@@ -635,21 +637,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
             </DialogTitle>
             {indicator && (
               <div className="flex items-center gap-2">
-                {isDelayed ? (
-                  prazoStatus && (
-                    <>
-                      {prazoStatus.icon}
-                      <span className={`text-xs ${
-                        prazoStatus.color === 'green' ? 'text-green-600' : prazoStatus.color === 'yellow' ? 'text-yellow-600' : 'text-red-600'
-                      }`}>{prazoStatus.msg}</span>
-                    </>
-                  )
-                ) : (
-                  <>
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    <span className="text-xs text-green-600">Preenchido dentro do prazo</span>
-                  </>
-                )}
+                {/* Remover status de prazo do topo */}
               </div>
             )}
           </div>
@@ -843,24 +831,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                     />
                   )}
                 </div>
-                {['master', 'admin'].includes(crmUser?.role || '') && (
-                  <div className="mb-2">
-                    <Label htmlFor="is_delayed">Preenchido com atraso?</Label>
-                    <Select
-                      value={isDelayed ? 'sim' : 'nao'}
-                      onValueChange={val => setIsDelayed(val === 'sim')}
-                      id="is_delayed"
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="sim">Sim</SelectItem>
-                        <SelectItem value="nao">Não</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
               </>
             )}
           </div>
@@ -913,13 +883,21 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
             </Card>
           )}
 
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isLoading || !formData.funnel_id || isSubMaster}>
-              {isLoading ? 'Salvando...' : (indicator ? 'Atualizar' : 'Registrar Indicador')}
-            </Button>
+          <div className="flex flex-col md:flex-row md:items-center justify-between pt-4 gap-2">
+            {/* Data de preenchimento embaixo, alinhada à esquerda */}
+            {indicator && indicator.created_at && (
+              <div className="text-xs text-muted-foreground">
+                Preenchido em: {new Date(indicator.created_at).toLocaleString('pt-BR')}
+              </div>
+            )}
+            <div className="flex justify-end space-x-2 w-full md:w-auto">
+              <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={isLoading || !formData.funnel_id || isSubMaster}>
+                {isLoading ? 'Salvando...' : (indicator ? 'Atualizar' : 'Registrar Indicador')}
+              </Button>
+            </div>
           </div>
         </form>
       </DialogContent>
