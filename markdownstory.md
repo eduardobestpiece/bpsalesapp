@@ -87,3 +87,11 @@ Bloco 1
 - Modal de registro de indicador: sempre exibe todos os períodos dos últimos 90 dias, marcando como “(preenchido)” e desabilitando períodos já registrados.
 - Deploy automático realizado.
 - Aguardando validação do usuário para marcar como concluído.
+
+## 11/07/2024 - Ajustes Finais Bloco 1
+
+- Gráfico do funil: todas as faixas com altura igual, espaçamento mínimo, largura adaptativa conforme nome da última faixa, textos sem quebra de linha.
+- Modal de registro de indicador: períodos já preenchidos aparecem com aviso “(já preenchido)” em cinza e desabilitados.
+- Funis, Origens e Times: criação, edição e listagem agora sempre vinculados à empresa selecionada no menu lateral.
+- Deploy automático realizado.
+- Aguardando validação do usuário para marcar como concluído.

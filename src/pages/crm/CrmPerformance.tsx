@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { CrmHeader } from '@/components/Layout/CrmHeader';
 import { PerformanceFilters } from '@/components/CRM/Performance/PerformanceFilters';
 import { PerformanceStats } from '@/components/CRM/Performance/PerformanceStats';
@@ -35,6 +35,16 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
 
   const selectedFunnel = filters ? funnels.find(f => f.id === filters.funnelId) : null;
 
+  // Exibir automaticamente o funil do primeiro disponível
+  useEffect(() => {
+    if (!filters && funnels.length > 0) {
+      setFilters({
+        funnelId: funnels[0].id,
+        period: 'custom',
+      });
+    }
+  }, [filters, funnels]);
+
   // Process indicators data to create funnel chart data
   const getFunnelChartData = () => {
     if (!selectedFunnel || !filters) return [];
@@ -69,7 +79,7 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
       });
   };
 
-  // Função para montar dados do gráfico duplo e comparativo
+  // Função para montar dados do gráfico duplo e comparativo, agora com comparativo do período anterior
   const getFunnelComparisonData = () => {
     if (!selectedFunnel || !filters) return { stages: [], comparativo: [] };
     const orderedStages = selectedFunnel.stages?.sort((a, b) => a.stage_order - b.stage_order) || [];
@@ -84,15 +94,33 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
       }
       return true;
     });
-    // Dados semanais
-    const weekly = aggregateFunnelIndicators(filteredIndicators, orderedStages, 'week');
-    // Dados mensais
-    const monthly = aggregateFunnelIndicators(filteredIndicators, orderedStages, 'month');
+    // Agrupar por semana
+    const groupByPeriod = {};
+    filteredIndicators.forEach(ind => {
+      const date = new Date(ind.period_start || ind.period_date);
+      const year = date.getFullYear();
+      const week = (date.getMonth() + 1) + '-' + date.getDate(); // simplificado para exemplo
+      const key = `${year}-W${week}`;
+      if (!groupByPeriod[key]) groupByPeriod[key] = [];
+      groupByPeriod[key].push(ind);
+    });
+    const periods = Object.keys(groupByPeriod).sort().reverse();
+    const latestPeriod = periods[0];
+    const previousPeriod = periods[1];
+    const periodIndicators = groupByPeriod[latestPeriod] || [];
+    const previousIndicators = groupByPeriod[previousPeriod] || [];
+    // Dados semanais atuais
+    const weekly = aggregateFunnelIndicators(periodIndicators, orderedStages, 'week');
+    // Dados semanais anteriores
+    const previousWeekly = aggregateFunnelIndicators(previousIndicators, orderedStages, 'week');
+    // Dados mensais (mantém igual)
+    const monthly = aggregateFunnelIndicators(periodIndicators, orderedStages, 'month');
     // Monta array para o gráfico duplo
     const stages = orderedStages.map((stage, idx) => ({
       name: stage.name,
       weeklyValue: weekly[idx]?.value || 0,
       weeklyConversion: weekly[idx]?.conversion || 0,
+      previousWeeklyValue: previousWeekly[idx]?.value || 0,
       monthlyValue: monthly[idx]?.value || 0,
       monthlyConversion: monthly[idx]?.conversion || 0,
     }));
@@ -108,6 +136,22 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     ];
     return { stages, comparativo };
   };
+
+  // Função utilitária para montar o label do período
+  function getPeriodoLabel() {
+    if (!filters) return 'Todo Período';
+    if (filters.period === 'custom' && filters.start && filters.end) {
+      return `De ${new Date(filters.start).toLocaleDateString('pt-BR')} até ${new Date(filters.end).toLocaleDateString('pt-BR')}`;
+    }
+    if (filters.month && filters.year) {
+      const mes = new Date(2000, filters.month - 1, 1).toLocaleString('pt-BR', { month: 'long' });
+      return `${mes.charAt(0).toUpperCase() + mes.slice(1)} de ${filters.year}`;
+    }
+    if (filters.year) {
+      return `${filters.year}`;
+    }
+    return 'Todo Período';
+  }
 
   const funnelComparisonData = getFunnelComparisonData();
 
@@ -138,6 +182,7 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
       <FunnelComparisonChart
         stages={funnelComparisonData.stages}
         comparativo={funnelComparisonData.comparativo}
+        periodoLabel={getPeriodoLabel()}
       />
     </div>
   );
@@ -145,46 +190,10 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
   const content = (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
       <TabsList className="mb-6">
-        <TabsTrigger value="overview">Performance Geral</TabsTrigger>
+        {/* Removido: <TabsTrigger value="overview">Performance Geral</TabsTrigger> */}
         <TabsTrigger value="funnel">Funil</TabsTrigger>
       </TabsList>
-      <TabsContent value="overview">
-        {/* Filters */}
-        <PerformanceFilters onFiltersChange={setFilters} />
-        {filters && (
-          <>
-            {/* Statistics */}
-            <PerformanceStats {...statsData} />
-            {/* Show message instead of non-existent FunnelChart */}
-            {funnelData.length > 0 ? (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">📊</div>
-                <h3 className="text-xl font-semibold mb-2">Dados do funil carregados</h3>
-                <p className="text-muted-foreground">
-                  {funnelData.length} etapas encontradas para o funil {selectedFunnel?.name}
-                </p>
-              </div>
-            ) : (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">📊</div>
-                <h3 className="text-xl font-semibold mb-2">Sem dados de performance</h3>
-                <p className="text-muted-foreground">
-                  Não há indicadores registrados para este funil no período selecionado.
-                </p>
-              </div>
-            )}
-          </>
-        )}
-        {!filters && (
-          <div className="text-center py-12">
-            <div className="text-6xl mb-4">🎯</div>
-            <h3 className="text-xl font-semibold mb-2">Selecione os filtros</h3>
-            <p className="text-muted-foreground">
-              Configure os filtros acima para visualizar a performance do funil.
-            </p>
-          </div>
-        )}
-      </TabsContent>
+      {/* Removido: <TabsContent value="overview">...</TabsContent> */}
       <TabsContent value="funnel">{funnelTabContent}</TabsContent>
     </Tabs>
   );

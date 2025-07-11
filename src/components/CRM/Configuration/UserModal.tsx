@@ -180,30 +180,32 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
         
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Seleção de empresa */}
-          <div>
-            <Label htmlFor="company_id">Empresa *</Label>
-            <Select
-              value={selectedCompanyId || companyId || ''}
-              onValueChange={(value) => setSelectedCompanyId(value)}
-              disabled={isLoading || companiesLoading}
-              required
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione a empresa" />
-              </SelectTrigger>
-              <SelectContent>
-                {companiesLoading ? (
-                  <div className="px-4 py-2 text-muted-foreground text-sm">Carregando empresas...</div>
-                ) : companies.length > 0 ? (
-                  companies.map((c: any) => (
-                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                  ))
-                ) : (
-                  <div className="px-4 py-2 text-muted-foreground text-sm">Nenhuma empresa encontrada</div>
-                )}
-              </SelectContent>
-            </Select>
-          </div>
+          {crmUser?.role === 'master' && (
+            <div>
+              <Label htmlFor="company_id">Empresa *</Label>
+              <Select
+                value={selectedCompanyId || companyId || ''}
+                onValueChange={(value) => setSelectedCompanyId(value)}
+                disabled={isLoading || companiesLoading}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a empresa" />
+                </SelectTrigger>
+                <SelectContent>
+                  {companiesLoading ? (
+                    <div className="px-4 py-2 text-muted-foreground text-sm">Carregando empresas...</div>
+                  ) : companies.length > 0 ? (
+                    companies.map((c: any) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))
+                  ) : (
+                    <div className="px-4 py-2 text-muted-foreground text-sm">Nenhuma empresa encontrada</div>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           {user && (
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -277,46 +279,48 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
               </SelectContent>
             </Select>
           </div>
-          {/* Campo Funis permitidos (filtrado pela empresa) */}
-          <div>
-            <Label>Funis permitidos</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="w-full flex justify-between items-center"
-                  disabled={isLoading || !selectedCompanyId}
-                >
-                  {formData.funnels.length > 0
-                    ? funnels.filter(f => formData.funnels.includes(f.id)).map(f => f.name).join(', ')
-                    : 'Selecione os funis'}
-                  <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-72 p-2">
-                <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
-                  {funnels.map((f: any) => (
-                    <label key={f.id} className="flex items-center gap-2 cursor-pointer">
-                      <Checkbox
-                        checked={formData.funnels.includes(f.id)}
-                        onCheckedChange={checked => {
-                          setFormData(prev => ({
-                            ...prev,
-                            funnels: checked
-                              ? [...prev.funnels, f.id]
-                              : prev.funnels.filter((id) => id !== f.id)
-                          }));
-                        }}
-                        disabled={isLoading}
-                      />
-                      <span>{f.name}</span>
-                    </label>
-                  ))}
-                </div>
-              </PopoverContent>
-            </Popover>
-          </div>
+          {/* Funis permitidos */}
+          {(crmUser?.role === 'master' || crmUser?.role === 'admin' || crmUser?.role === 'leader') && (
+            <div>
+              <Label>Funis permitidos</Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full flex justify-between items-center"
+                    disabled={isLoading || !selectedCompanyId}
+                  >
+                    {formData.funnels.length > 0
+                      ? funnels.filter(f => formData.funnels.includes(f.id)).map(f => f.name).join(', ')
+                      : 'Selecione os funis'}
+                    <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-72 p-2">
+                  <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
+                    {funnels.map((f: any) => (
+                      <label key={f.id} className="flex items-center gap-2 cursor-pointer">
+                        <Checkbox
+                          checked={formData.funnels.includes(f.id)}
+                          onCheckedChange={checked => {
+                            setFormData(prev => ({
+                              ...prev,
+                              funnels: checked
+                                ? [...prev.funnels, f.id]
+                                : prev.funnels.filter((id) => id !== f.id)
+                            }));
+                          }}
+                          disabled={isLoading}
+                        />
+                        <span>{f.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
           <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
               Cancelar

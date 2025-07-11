@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ArrowUp, ArrowDown } from 'lucide-react';
 
 const funnelColors = [
   'from-primary-500 to-primary-300', // azul principal
@@ -17,14 +18,16 @@ interface StageData {
   weeklyConversion: number;
   monthlyValue: number;
   monthlyConversion: number;
+  previousWeeklyValue?: number; // Added for comparison
 }
 
 interface FunnelComparisonChartProps {
   stages: StageData[];
   comparativo: { label: string; value: string | number }[];
+  periodoLabel?: string;
 }
 
-export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filterType?: 'user' | 'team', filterId?: string, users?: any[], teams?: any[], onCompare?: (compareId: string) => void, compareData?: any }> = ({ stages, comparativo, filterType, filterId, users = [], teams = [], onCompare, compareData }) => {
+export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filterType?: 'user' | 'team', filterId?: string, users?: any[], teams?: any[], onCompare?: (compareId: string) => void, compareData?: any }> = ({ stages, comparativo, filterType, filterId, users = [], teams = [], onCompare, compareData, periodoLabel }) => {
   // Função para calcular largura relativa das etapas (cada faixa menor que a anterior)
   const getWidth = (idx: number) => {
     // Se a última faixa tiver nome grande, aumentar largura de todas proporcionalmente
@@ -57,34 +60,55 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
     <div className="flex flex-col md:flex-row gap-8 w-full items-center justify-center">
       {/* Funil colorido */}
       <div className="flex flex-col items-center w-full max-w-xs md:max-w-sm">
-        <h3 className="text-center font-bold mb-2 text-lg">FUNIL DE VENDAS</h3>
+        {/* Header customizado */}
+        <div className="flex items-center justify-between w-full mb-2">
+          <span className="text-xs text-muted-foreground">Média semanal</span>
+          <h3 className="text-center font-bold text-lg flex-1">FUNIL DE VENDAS</h3>
+          <span className="text-xs text-muted-foreground text-right min-w-[90px]">{periodoLabel || 'Todo Período'}</span>
+        </div>
         <div className="flex flex-col items-center w-full">
-          {stages.map((stage, idx) => (
-            <div
-              key={stage.name}
-              className="w-full flex items-center justify-center mb-1 z-[${10-idx}]"
-              style={{ zIndex: 10 - idx }}
-            >
+          {stages.map((stage, idx) => {
+            const diff = stage.weeklyValue - (stage.previousWeeklyValue || 0);
+            const isUp = diff > 0;
+            const isDown = diff < 0;
+            return (
               <div
-                className={`transition-all duration-300 bg-gradient-to-r ${funnelColors[idx % funnelColors.length]} shadow-lg flex items-center justify-between px-6`}
-                style={{
-                  width: getWidth(idx),
-                  height: fixedHeight,
-                  maxWidth: '100%',
-                  marginBottom: idx < stages.length - 1 ? 4 : 0, // Espaçamento mínimo
-                  borderRadius: idx === 0 ? '1rem 1rem 0.5rem 0.5rem' : idx === stages.length - 1 ? '0 0 1rem 1rem' : '0.5rem',
-                  boxShadow: '0 4px 16px 0 rgba(0,0,0,0.08)',
-                }}
+                key={stage.name}
+                className="w-full flex items-center justify-center mb-1 z-[${10-idx}]"
+                style={{ zIndex: 10 - idx }}
               >
-                <span className={`font-bold text-white text-base drop-shadow-md w-16 text-left ${noWrap}`}>{stage.weeklyValue}</span>
-                <div className="flex-1 flex flex-col items-center">
-                  <span className={`font-bold text-white drop-shadow-md text-center text-base ${noWrap}`}>{stage.name}</span>
-                  <span className={`text-xs text-white drop-shadow-md ${noWrap}`}>{idx > 0 ? `Conversão ${stage.weeklyConversion}%` : ''}</span>
+                {/* Comparativo visual à esquerda */}
+                <div className="flex items-center justify-center w-10 mr-2">
+                  {diff !== 0 && (
+                    <span className={`flex items-center font-bold text-xs ${isUp ? 'text-green-600' : 'text-red-600'}`}> 
+                      {isUp && <ArrowUp className="w-4 h-4 mr-1" />} 
+                      {isDown && <ArrowDown className="w-4 h-4 mr-1" />} 
+                      {diff > 0 ? `+${diff}` : diff}
+                    </span>
+                  )}
+                  {diff === 0 && <span className="text-xs text-gray-400">=</span>}
                 </div>
-                <span className={`font-bold text-white text-base drop-shadow-md w-16 text-right ${noWrap}`}>{stage.monthlyValue}</span>
+                <div
+                  className={`transition-all duration-300 bg-gradient-to-r ${funnelColors[idx % funnelColors.length]} shadow-lg flex items-center justify-between px-6`}
+                  style={{
+                    width: getWidth(idx),
+                    height: fixedHeight,
+                    maxWidth: '100%',
+                    marginBottom: idx < stages.length - 1 ? 4 : 0, // Espaçamento mínimo
+                    borderRadius: idx === 0 ? '1rem 1rem 0.5rem 0.5rem' : idx === stages.length - 1 ? '0 0 1rem 1rem' : '0.5rem',
+                    boxShadow: '0 4px 16px 0 rgba(0,0,0,0.08)',
+                  }}
+                >
+                  <span className={`font-bold text-white text-base drop-shadow-md w-16 text-left ${noWrap}`}>{stage.weeklyValue}</span>
+                  <div className="flex-1 flex flex-col items-center">
+                    <span className={`font-bold text-white drop-shadow-md text-center text-base ${noWrap}`}>{stage.name}</span>
+                    <span className={`text-xs text-white drop-shadow-md ${noWrap}`}>{idx < stages.length - 1 ? `Conversão ${stage.weeklyConversion}%` : ''}</span>
+                  </div>
+                  <span className={`font-bold text-white text-base drop-shadow-md w-16 text-right ${noWrap}`}>{stage.monthlyValue}</span>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
       {/* Comparativo */}

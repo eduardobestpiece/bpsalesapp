@@ -716,6 +716,9 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
             {!isEditing && (
               <Button type="submit" disabled={isLoading}>Salvar</Button>
             )}
+            {isEditing && (
+              <Button type="submit" disabled={isLoading}>Salvar</Button>
+            )}
             <Button type="button" variant="outline" onClick={onClose}>Fechar</Button>
           </div>
         </form>
