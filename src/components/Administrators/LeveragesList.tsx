@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Edit, Archive, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { useCrmAuth } from '@/hooks/use-crm-auth';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
 
 interface LeveragesListProps {
   searchTerm: string;

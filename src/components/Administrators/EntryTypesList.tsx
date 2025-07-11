@@ -25,7 +25,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { useCrmAuth } from '@/hooks/use-crm-auth';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
 
 interface EntryTypesListProps {
   searchTerm: string;
