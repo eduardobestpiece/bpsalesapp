@@ -45,6 +45,22 @@ const Administrators = () => {
   const [showLeverageModal, setShowLeverageModal] = useState(false);
   const [selectedLeverage, setSelectedLeverage] = useState<any>(null);
 
+  // Estados para filtros dos tipos de componentes
+  const [bidTypeSearchTerm, setBidTypeSearchTerm] = useState('');
+  const [bidTypeStatusFilter, setBidTypeStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
+  const [bidTypeAdminFilter, setBidTypeAdminFilter] = useState('');
+
+  const [entryTypeSearchTerm, setEntryTypeSearchTerm] = useState('');
+  const [entryTypeStatusFilter, setEntryTypeStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
+  const [entryTypeAdminFilter, setEntryTypeAdminFilter] = useState('');
+
+  const [installmentTypeSearchTerm, setInstallmentTypeSearchTerm] = useState('');
+  const [installmentTypeStatusFilter, setInstallmentTypeStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
+  const [installmentTypeAdminFilter, setInstallmentTypeAdminFilter] = useState('');
+
+  const [leverageSearchTerm, setLeverageSearchTerm] = useState('');
+  const [leverageStatusFilter, setLeverageStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
+
   // Estado para refresh
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -213,57 +229,81 @@ const Administrators = () => {
           </TabsContent>
 
           <TabsContent value="bid-types">
-            <BidTypesList key={refreshKey} onEdit={setSelectedBidType} />
+            <BidTypesList 
+              key={refreshKey} 
+              searchTerm={bidTypeSearchTerm}
+              statusFilter={bidTypeStatusFilter}
+              selectedAdministrator={bidTypeAdminFilter}
+              onEdit={setSelectedBidType} 
+            />
           </TabsContent>
 
           <TabsContent value="entry-types">
-            <EntryTypesList key={refreshKey} onEdit={setSelectedEntryType} />
+            <EntryTypesList 
+              key={refreshKey} 
+              searchTerm={entryTypeSearchTerm}
+              statusFilter={entryTypeStatusFilter}
+              selectedAdministrator={entryTypeAdminFilter}
+              onEdit={setSelectedEntryType} 
+            />
           </TabsContent>
 
           <TabsContent value="installment-types">
-            <InstallmentTypesList key={refreshKey} onEdit={setSelectedInstallmentType} />
+            <InstallmentTypesList 
+              key={refreshKey} 
+              searchTerm={installmentTypeSearchTerm}
+              statusFilter={installmentTypeStatusFilter}
+              selectedAdministrator={installmentTypeAdminFilter}
+              onEdit={setSelectedInstallmentType} 
+            />
           </TabsContent>
 
           <TabsContent value="leverages">
-            <LeveragesList key={refreshKey} onEdit={setSelectedLeverage} />
+            <LeveragesList 
+              key={refreshKey} 
+              searchTerm={leverageSearchTerm}
+              statusFilter={leverageStatusFilter}
+              onEdit={setSelectedLeverage} 
+            />
           </TabsContent>
         </Tabs>
 
         {/* Modals */}
         <AdministratorModal
-          isOpen={showAdministratorModal}
+          open={showAdministratorModal}
           onClose={handleCloseAdministratorModal}
           administrator={selectedAdministrator}
         />
 
         <ProductModal
-          isOpen={showProductModal}
+          open={showProductModal}
           onClose={handleCloseProductModal}
           product={selectedProduct}
         />
 
         <BidTypeModal
-          isOpen={showBidTypeModal}
+          open={showBidTypeModal}
           onClose={() => { setShowBidTypeModal(false); setSelectedBidType(null); handleRefresh(); }}
           bidType={selectedBidType}
         />
 
         <EntryTypeModal
-          isOpen={showEntryTypeModal}
+          open={showEntryTypeModal}
           onClose={() => { setShowEntryTypeModal(false); setSelectedEntryType(null); handleRefresh(); }}
           entryType={selectedEntryType}
         />
 
         <InstallmentTypeModal
-          isOpen={showInstallmentTypeModal}
+          open={showInstallmentTypeModal}
           onClose={() => { setShowInstallmentTypeModal(false); setSelectedInstallmentType(null); handleRefresh(); }}
           installmentType={selectedInstallmentType}
         />
 
         <LeverageModal
-          isOpen={showLeverageModal}
+          open={showLeverageModal}
           onClose={() => { setShowLeverageModal(false); setSelectedLeverage(null); handleRefresh(); }}
           leverage={selectedLeverage}
+          onSave={handleRefresh}
         />
       </div>
     </div>

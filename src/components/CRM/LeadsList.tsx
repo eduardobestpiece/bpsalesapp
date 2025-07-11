@@ -100,7 +100,6 @@ export const LeadsList = ({ companyId }: LeadsListProps) => {
         onClose={handleCloseModal}
         companyId={companyId}
         lead={selectedLead}
-        disabled={isSubMaster}
       />
     </>
   );

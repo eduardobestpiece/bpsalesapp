@@ -7,9 +7,10 @@ interface LeadModalProps {
   onClose: () => void;
   companyId: string;
   lead?: any;
+  disabled?: boolean;
 }
 
-export const LeadModal = ({ isOpen, onClose, companyId, lead }: LeadModalProps) => {
+export const LeadModal = ({ isOpen, onClose, companyId, lead, disabled = false }: LeadModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[400px]">
@@ -26,7 +27,7 @@ export const LeadModal = ({ isOpen, onClose, companyId, lead }: LeadModalProps) 
             Esta funcionalidade estará disponível em breve.
           </p>
           
-          <Button onClick={onClose} className="mt-6">
+          <Button onClick={onClose} className="mt-6" disabled={disabled}>
             Fechar
           </Button>
         </div>
