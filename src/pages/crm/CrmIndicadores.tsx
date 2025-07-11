@@ -34,6 +34,7 @@ function getPrazoStatus(indicator: any, funnel: any) {
 const CrmIndicadores = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedIndicator, setSelectedIndicator] = useState<any>(null);
+  const [showOnlyMine, setShowOnlyMine] = useState(false);
   const { crmUser, loading: authLoading } = useCrmAuth();
   const { selectedCompanyId } = useCompany();
   const companyId = selectedCompanyId || crmUser?.company_id || '';
@@ -177,7 +178,6 @@ const CrmIndicadores = () => {
   }
 
   const isGestor = crmUser?.role === 'admin' || crmUser?.role === 'master' || crmUser?.role === 'leader';
-  const [showOnlyMine, setShowOnlyMine] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
