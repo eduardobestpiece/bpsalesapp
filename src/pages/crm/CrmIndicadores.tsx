@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -122,13 +123,17 @@ const CrmIndicadores = () => {
   // Filtragem de indicadores por perfil - memoizado
   const accessibleIndicators = useMemo(() => {
     if (!indicators || !crmUser) return [];
+    
+    // Filter out null indicators and add null checks
+    const validIndicators = indicators.filter(ind => ind && typeof ind === 'object');
+    
     if (crmUser.role === 'master' || crmUser.role === 'admin') {
-      return indicators; // vê todos da empresa
+      return validIndicators; // vê todos da empresa
     } else if (crmUser.role === 'leader') {
       const teamMembers = crmUsers.filter(u => u.team_id === crmUser.team_id).map(u => u.id);
-      return indicators.filter(ind => teamMembers.includes(ind.user_id) || ind.user_id === crmUser.id);
+      return validIndicators.filter(ind => teamMembers.includes(ind.user_id) || ind.user_id === crmUser.id);
     } else if (crmUser.role === 'user') {
-      return indicators.filter(ind => ind.user_id === crmUser.id);
+      return validIndicators.filter(ind => ind.user_id === crmUser.id);
     }
     return [];
   }, [indicators, crmUser, crmUsers]);
@@ -136,7 +141,8 @@ const CrmIndicadores = () => {
   // Substituir filteredIndicators para não exibir os arquivados localmente
   const filteredIndicators = useMemo(() => {
     let result = accessibleIndicators.filter(indicator => {
-      if (archivedIndicatorIds.includes(indicator.id)) return false;
+      // Add null check for indicator
+      if (!indicator || archivedIndicatorIds.includes(indicator.id)) return false;
       if (selectedFunnelId && indicator.funnel_id !== selectedFunnelId) return false;
       if (filters.periodStart && filters.periodEnd) {
         if (!indicator.period_start || !indicator.period_end) return false;
@@ -149,7 +155,7 @@ const CrmIndicadores = () => {
       return true;
     });
     if (showOnlyMine && crmUser) {
-      result = result.filter(ind => ind.user_id === crmUser.id);
+      result = result.filter(ind => ind && ind.user_id === crmUser.id);
     }
     return result;
   }, [accessibleIndicators, selectedFunnelId, filters, showOnlyMine, crmUser, archivedIndicatorIds]);
@@ -281,6 +287,9 @@ const CrmIndicadores = () => {
                                 </tr>
                               ) : (
                                 filteredIndicators.map((indicator, idx) => {
+                                  // Add null checks for indicator
+                                  if (!indicator) return null;
+                                  
                                   // Buscar funil e etapas
                                   const funnel = funnels?.find(f => f.id === indicator.funnel_id);
                                   const stages = (funnel?.stages || []).sort((a: any, b: any) => a.stage_order - b.stage_order);
