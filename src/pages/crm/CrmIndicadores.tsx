@@ -330,9 +330,9 @@ const CrmIndicadores = () => {
                       <CardContent>
                         <div className="overflow-x-auto rounded-2xl shadow border bg-white">
                           <table className="min-w-full border-separate border-spacing-y-1">
-                            <thead className="sticky top-0 z-10 bg-muted">
+                            <thead className="sticky top-0 z-10 bg-muted text-xs">
                               <tr>
-                                <th className="px-2 py-2 text-center font-semibold rounded-tl-2xl text-xs"></th>
+                                <th className="px-2 py-2 text-center font-semibold rounded-tl-2xl"> </th>
                                 <th className="px-2 py-2 text-left font-semibold">Período</th>
                                 {funnelData.lastStage && <th className="px-2 py-2 text-left font-semibold">{funnelData.lastStage.name}</th>}
                                 <th className="px-2 py-2 text-left font-semibold">Valor das Vendas</th>
@@ -344,7 +344,7 @@ const CrmIndicadores = () => {
                                 <th className="px-2 py-2 text-center font-semibold rounded-tr-2xl">Ações</th>
                               </tr>
                             </thead>
-                            <tbody>
+                            <tbody className="text-sm">
                               {filteredIndicators.length === 0 ? (
                                 <tr>
                                   <td colSpan={10} className="text-center text-muted-foreground py-8">
