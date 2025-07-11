@@ -9,13 +9,15 @@ import { useCrmUsers } from '@/hooks/useCrmData';
 import { useTeams, useDeleteTeam } from '@/hooks/useTeams';
 import { TeamModal } from './TeamModal';
 import { toast } from 'sonner';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
 
 export const TeamsList = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const { data: users = [], isLoading: usersLoading } = useCrmUsers();
-  const { data: teams = [], isLoading: teamsLoading } = useTeams();
+  const { companyId } = useCrmAuth();
+  const { data: users = [], isLoading: usersLoading } = useCrmUsers(companyId);
+  const { data: teams = [], isLoading: teamsLoading } = useTeams(companyId);
   const deleteTeamMutation = useDeleteTeam();
 
   const handleEdit = (team: any) => {

@@ -8,12 +8,14 @@ import { Plus, Edit, Search } from 'lucide-react';
 import { useSources, useDeleteSource } from '@/hooks/useSources';
 import { SourceModal } from './SourceModal';
 import { toast } from 'sonner';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
 
 export const SourcesList = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedSource, setSelectedSource] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const { data: sources = [], isLoading } = useSources();
+  const { companyId } = useCrmAuth();
+  const { data: sources = [], isLoading } = useSources(companyId);
   const deleteSourceMutation = useDeleteSource();
 
   const handleEdit = (source: any) => {

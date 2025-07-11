@@ -1,36 +1,27 @@
-# Requisição em andamento
+# Requisição em andamento - 11/07/2024
 
-## [13/07/2024] Bloco 3 - Ajustes Times, Funil Colorido, Comparativo e Indicadores
+## Ajustes Solicitados
 
-### Modal de Criação/Edição de Times
-- Exibir apenas usuários da empresa selecionada no menu lateral.
-- Se um líder for escolhido, ele deve sumir da lista de membros da equipe (pois já pertence à equipe como líder).
+### Gráfico do Funil
+- Corrigir empilhamento das faixas (espaçamento vertical).
+- Reduzir o arredondamento das faixas.
+- Responsividade: última faixa pode ser maior e texto menor se necessário.
 
-### Gráfico Funil
-- Remover o funil sem cor (deixar apenas o funil colorido e o comparativo).
-- Funil colorido: faixas uma abaixo da outra, cada uma menor que a anterior, cores seguindo o padrão da plataforma, última faixa com degradê verde.
-- Exibir nome da fase centralizado, valor semanal à esquerda, valor do período à direita, taxa de conversão entre etapas.
-- Corrigir aglomeração e garantir responsividade e visual limpo.
+### Página de Configurações (Abas Funis, Origens, Times)
+- Garantir que ao criar/editar itens, eles sejam sempre vinculados à empresa selecionada no menu lateral.
+- Cada empresa só pode ver seus próprios dados.
 
-### Modal de “Detalhamento do Comparativo”
-- Transformar o modal em um filtro comparativo: só aparece se estiver filtrado para usuário/equipe específica.
-- Permitir comparar o funil atual com outro usuário/equipe (seleção no modal).
-- Exibir lado a lado os dados do funil filtrado e do comparativo.
-
-### Modal de Edição de Indicador
-- Exibir sempre todos os períodos dos últimos 90 dias, independente de quantos indicadores já foram adicionados.
+### Modal de Registro de Indicador
+- Exibir sempre todos os períodos dos últimos 90 dias, independentemente de quantos indicadores já existem.
 - Períodos já preenchidos aparecem como “(preenchido)” e ficam desabilitados para seleção.
 
 ---
 
-**Checklist:**
-- [ ] Ajustar modal de times (empresa e líder)
-- [ ] Atualizar funil colorido (layout, cores, valores, conversão)
-- [ ] Transformar modal de comparativo em filtro comparativo
-- [ ] Ajustar modal de edição de indicador (períodos dos últimos 90 dias)
-- [ ] Testar todos os fluxos
-- [ ] Atualizar histórico e realizar deploy
-
-## Observações
-- Deploy só será realizado após a conclusão de todas as etapas acima, conforme orientação do usuário.
-- Prints e regras estão registrados no chat e devem ser seguidos à risca. 
+## Checklist
+- [ ] Ajustar gráfico do funil (espaçamento, responsividade, border-radius)
+- [ ] Corrigir vinculação e visualização por empresa nas abas Funis, Origens e Times
+- [ ] Ajustar modal de registro de indicador (períodos dos últimos 90 dias, preenchidos desabilitados)
+- [ ] Testar localmente
+- [ ] Atualizar `requeststory.md`
+- [ ] Deploy automático
+- [ ] Solicitar validação 

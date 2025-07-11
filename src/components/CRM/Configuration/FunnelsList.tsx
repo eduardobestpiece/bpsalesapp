@@ -9,12 +9,14 @@ import { useFunnels } from '@/hooks/useCrmData';
 import { useDeleteFunnel } from '@/hooks/useFunnels';
 import { toast } from 'sonner';
 import { FunnelModal } from './FunnelModal';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
 
 export const FunnelsList = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedFunnel, setSelectedFunnel] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const { data: funnels = [], isLoading } = useFunnels();
+  const { companyId } = useCrmAuth();
+  const { data: funnels = [], isLoading } = useFunnels(companyId);
   const deleteFunnelMutation = useDeleteFunnel();
 
   const handleEdit = (funnel: any) => {

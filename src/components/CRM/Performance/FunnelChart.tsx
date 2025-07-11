@@ -29,7 +29,19 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
   const getWidth = (idx: number) => {
     const base = 100;
     const step = 12;
+    // Última faixa pode ser maior se o nome for grande
+    if (idx === stages.length - 1 && stages[idx].name.length > 12) {
+      return `${base - idx * step + 8}%`;
+    }
     return `${base - idx * step}%`;
+  };
+
+  // Função para calcular tamanho da fonte da última faixa
+  const getFontSize = (idx: number) => {
+    if (idx === stages.length - 1 && stages[idx].name.length > 12) {
+      return 'text-sm';
+    }
+    return 'text-base';
   };
 
   const [showComparativoModal, setShowComparativoModal] = useState(false);
@@ -45,7 +57,7 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
           {stages.map((stage, idx) => (
             <div
               key={stage.name}
-              className="w-full flex items-center justify-center mb-[-18px] z-[${10-idx}]"
+              className="w-full flex items-center justify-center mb-2 z-[${10-idx}]"
               style={{ zIndex: 10 - idx }}
             >
               <div
@@ -54,14 +66,14 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
                   width: getWidth(idx),
                   minHeight: 44,
                   maxWidth: '100%',
-                  marginBottom: idx < stages.length - 1 ? -18 : 0,
-                  borderRadius: idx === 0 ? '1.5rem 1.5rem 1rem 1rem' : idx === stages.length - 1 ? '0 0 1.5rem 1.5rem' : '1rem',
+                  marginBottom: idx < stages.length - 1 ? 8 : 0, // Espaçamento maior
+                  borderRadius: idx === 0 ? '1rem 1rem 0.5rem 0.5rem' : idx === stages.length - 1 ? '0 0 1rem 1rem' : '0.5rem', // Menos arredondado
                   boxShadow: '0 4px 16px 0 rgba(0,0,0,0.08)',
                 }}
               >
                 <span className="font-bold text-white text-base drop-shadow-md w-16 text-left">{stage.weeklyValue}</span>
                 <div className="flex-1 flex flex-col items-center">
-                  <span className="font-bold text-white text-base drop-shadow-md text-center">{stage.name}</span>
+                  <span className={`font-bold text-white drop-shadow-md text-center ${getFontSize(idx)}`}>{stage.name}</span>
                   <span className="text-xs text-white drop-shadow-md">{idx > 0 ? `Conversão ${stage.weeklyConversion}%` : ''}</span>
                 </div>
                 <span className="font-bold text-white text-base drop-shadow-md w-16 text-right">{stage.monthlyValue}</span>
