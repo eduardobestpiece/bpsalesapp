@@ -8,27 +8,43 @@ import { supabase } from '@/integrations/supabase/client';
 export default function Home() {
   const navigate = useNavigate();
   const { userRole, companyId } = useCrmAuth();
-  const [pagePermissions, setPagePermissions] = useState<any>({});
+  const [pagePermissions, setPagePermissions] = useState<Record<string, boolean>>({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!companyId) return;
+    if (!companyId || !userRole) {
+      setLoading(false);
+      return;
+    }
+    
     supabase
       .from('role_page_permissions')
       .select('*')
       .eq('company_id', companyId)
       .eq('role', userRole)
       .then(({ data }) => {
-        const perms: any = {};
+        const perms: Record<string, boolean> = {};
         data?.forEach((row: any) => {
           perms[row.page] = row.allowed;
         });
         setPagePermissions(perms);
+        setLoading(false);
       });
   }, [companyId, userRole]);
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary-50/80 via-white to-primary-100 p-4 dark:bg-gradient-to-br dark:from-gray-900 dark:via-gray-950 dark:to-gray-800">
-      <h1 className="text-3xl md:text-4xl font-bold mb-8 text-primary-900 text-center drop-shadow dark:text-white">Bem-vindo à Plataforma Monteo</h1>
+      <h1 className="text-3xl md:text-4xl font-bold mb-8 text-primary-900 text-center drop-shadow dark:text-white">
+        Bem-vindo à Plataforma Monteo
+      </h1>
       <div className="flex flex-col md:flex-row gap-8 w-full max-w-2xl justify-center">
         {/* Botão Simulador */}
         {pagePermissions['simulator'] !== false && (
@@ -56,4 +72,4 @@ export default function Home() {
       </div>
     </div>
   );
-} 
+}

@@ -28,15 +28,18 @@ export const useIndicators = (companyId?: string, userId?: string) => {
         let query = supabase
           .from('indicators')
           .select(`*, values:indicator_values(*)`)
+          .is('archived_at', null)
           .order('period_date', { ascending: false });
-        query = query.is('archived_at', null);
+        
         if (effectiveCompanyId) {
           query = query.eq('company_id', effectiveCompanyId);
         }
         if (userId) {
           query = query.eq('user_id', userId);
         }
+        
         const { data, error } = await query;
+        
         if (error) {
           if (error.code === 'PGRST301' || error.message.includes('RLS')) {
             return [] as IndicatorWithValues[];
@@ -45,6 +48,7 @@ export const useIndicators = (companyId?: string, userId?: string) => {
         }
         return data as IndicatorWithValues[];
       } catch (err) {
+        console.error('[useIndicators] Erro ao buscar indicadores:', err);
         return [] as IndicatorWithValues[];
       }
     },

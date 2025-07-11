@@ -34,7 +34,6 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
 
   const fetchCrmUser = useCallback(async (email: string) => {
     console.log('[CrmAuth] Buscando CRM user para:', email);
@@ -58,81 +57,59 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   }, []);
 
-  const updateAuthState = useCallback(async (newSession: Session | null) => {
-    console.log('[CrmAuth] Updating auth state, session:', !!newSession);
-    
-    setSession(newSession);
-    setUser(newSession?.user ?? null);
-    
-    if (newSession?.user?.email) {
-      const crmUserData = await fetchCrmUser(newSession.user.email);
-      setCrmUser(crmUserData);
-      setUserRole(crmUserData?.role ?? null);
-      setCompanyId(crmUserData?.company_id ?? null);
-    } else {
-      setCrmUser(null);
-      setUserRole(null);
-      setCompanyId(null);
-    }
-    
-    if (initialized) {
-      setLoading(false);
-    }
-  }, [fetchCrmUser, initialized]);
-
   useEffect(() => {
-    let isMounted = true;
+    let mounted = true;
     
-    const initializeAuth = async () => {
-      try {
-        console.log('[CrmAuth] Initializing auth...');
+    console.log('[CrmAuth] Initializing auth...');
+    
+    // Setup auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, newSession) => {
+        console.log('[CrmAuth] Auth state changed:', event, newSession?.user?.email);
         
-        // Setup auth state listener first
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, session) => {
-            console.log('[CrmAuth] Auth state changed:', event, session?.user?.email);
-            
-            if (!isMounted) return;
-            
-            // Avoid infinite loops by checking if session actually changed
-            if (event === 'SIGNED_IN' && session) {
-              await updateAuthState(session);
-            } else if (event === 'SIGNED_OUT') {
-              await updateAuthState(null);
-            }
+        if (!mounted) return;
+        
+        setSession(newSession);
+        setUser(newSession?.user ?? null);
+        
+        if (newSession?.user?.email) {
+          // Fetch CRM user data
+          const crmUserData = await fetchCrmUser(newSession.user.email);
+          if (mounted) {
+            setCrmUser(crmUserData);
+            setUserRole(crmUserData?.role ?? null);
+            setCompanyId(crmUserData?.company_id ?? null);
           }
-        );
-
-        // Then get initial session
-        const { data: { session: initialSession } } = await supabase.auth.getSession();
+        } else {
+          if (mounted) {
+            setCrmUser(null);
+            setUserRole(null);
+            setCompanyId(null);
+          }
+        }
         
-        if (isMounted) {
-          await updateAuthState(initialSession);
-          setInitialized(true);
+        if (mounted) {
           setLoading(false);
-        }
-
-        return () => {
-          subscription.unsubscribe();
-        };
-      } catch (error) {
-        console.error('[CrmAuth] Error during initialization:', error);
-        if (isMounted) {
-          setLoading(false);
-          setInitialized(true);
         }
       }
-    };
+    );
 
-    const cleanup = initializeAuth();
-    
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      if (mounted && initialSession) {
+        console.log('[CrmAuth] Initial session found:', initialSession.user.email);
+        // The onAuthStateChange will handle the session
+      } else if (mounted) {
+        console.log('[CrmAuth] No initial session');
+        setLoading(false);
+      }
+    });
+
     return () => {
-      isMounted = false;
-      if (cleanup) {
-        cleanup.then(cleanupFn => cleanupFn?.());
-      }
+      mounted = false;
+      subscription.unsubscribe();
     };
-  }, [updateAuthState]);
+  }, [fetchCrmUser]);
 
   const signIn = async (email: string, password: string) => {
     console.log('Attempting sign in for:', email);
@@ -152,7 +129,7 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const signUp = async (email: string, password: string, userData: any) => {
     console.log('Attempting sign up for:', email);
     
-    const redirectUrl = `${window.location.origin}/crm`;
+    const redirectUrl = `${window.location.origin}/home`;
     
     const { error } = await supabase.auth.signUp({
       email,
