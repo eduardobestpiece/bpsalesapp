@@ -35,6 +35,33 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Função para salvar no cache local
+  const saveCrmUserCache = (email: string, data: any) => {
+    if (!email || !data) return;
+    localStorage.setItem('crmUserCache', JSON.stringify({ email, data, ts: Date.now() }));
+  };
+
+  // Função para ler do cache local
+  const getCrmUserCache = (email: string) => {
+    try {
+      const raw = localStorage.getItem('crmUserCache');
+      if (!raw) return null;
+      const cache = JSON.parse(raw);
+      // Cache válido por 24h e para o mesmo email
+      if (cache.email === email && Date.now() - cache.ts < 24 * 60 * 60 * 1000) {
+        return cache.data;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  };
+
+  // Função para limpar o cache
+  const clearCrmUserCache = () => {
+    localStorage.removeItem('crmUserCache');
+  };
+
   const fetchCrmUser = useCallback(async (email: string) => {
     console.log('[CrmAuth] Buscando CRM user para:', email);
     try {
@@ -59,6 +86,7 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
         return null;
       }
       console.log('[CrmAuth] CRM user encontrado:', data);
+      saveCrmUserCache(email, data); // Salva no cache
       return data as CrmUser;
     } catch (err) {
       console.error('[CrmAuth] Erro inesperado ao buscar CRM user:', err);
@@ -82,21 +110,41 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
         // Só buscar usuário CRM na primeira vez
         if (!alreadyFetched && newSession?.user?.email) {
           alreadyFetched = true;
-          console.log(`[CrmAuth] Buscando CRM user para: ${newSession.user.email} (evento: ${event})`);
+          // 1. Tenta carregar do cache local
+          const cached = getCrmUserCache(newSession.user.email);
+          if (cached) {
+            console.log('[CrmAuth] Usuário CRM carregado do cache local:', cached);
+            setCrmUser(cached);
+            setUserRole(cached.role ?? null);
+            setCompanyId(cached.company_id ?? null);
+            setLoading(false);
+            // 2. Atualiza em background
+            fetchCrmUser(newSession.user.email).then((crmUserData) => {
+              if (crmUserData && mounted) {
+                setCrmUser(crmUserData);
+                setUserRole(crmUserData.role ?? null);
+                setCompanyId(crmUserData.company_id ?? null);
+              }
+            });
+            return;
+          }
+          // Se não houver cache, busca normalmente
           const crmUserData = await fetchCrmUser(newSession.user.email);
           if (mounted) {
             setCrmUser(crmUserData);
             setUserRole(crmUserData?.role ?? null);
             setCompanyId(crmUserData?.company_id ?? null);
+            setLoading(false);
           }
         } else if (!newSession?.user?.email) {
           if (mounted) {
             setCrmUser(null);
             setUserRole(null);
             setCompanyId(null);
+            clearCrmUserCache(); // Limpa cache no logout
           }
         }
-        if (mounted) {
+        if (mounted && !loading) {
           setLoading(false);
         }
       }
