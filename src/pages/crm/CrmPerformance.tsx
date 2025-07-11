@@ -2,7 +2,6 @@
 import { useState } from 'react';
 import { CrmHeader } from '@/components/Layout/CrmHeader';
 import { PerformanceFilters } from '@/components/CRM/Performance/PerformanceFilters';
-import { FunnelChart } from '@/components/CRM/Performance/FunnelChart';
 import { PerformanceStats } from '@/components/CRM/Performance/PerformanceStats';
 import { useIndicators } from '@/hooks/useIndicators';
 import { useFunnels } from '@/hooks/useFunnels';

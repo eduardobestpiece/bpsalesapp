@@ -32,3 +32,9 @@ Bloco 1
 - Corrigido: O modal de alterar período agora só altera o período do indicador ao clicar em Salvar. Ao cancelar, nada do estado principal é alterado.
 - Deploy automático realizado.
 - Solicitação registrada e checklist atualizado em `requeststory.md`.
+
+- [2024-07-10] Implementação da lógica real do gráfico duplo do funil e comparativo na aba Performance do CRM:
+    - Função utilitária criada para agrupar indicadores por semana/mês e calcular conversão por etapa.
+    - Gráfico duplo e comparativo agora usam dados reais do Supabase, respeitando filtros dinâmicos.
+    - Deploy automático realizado após commit.
+    - Usuário orientado a validar se tudo está funcionando corretamente.
