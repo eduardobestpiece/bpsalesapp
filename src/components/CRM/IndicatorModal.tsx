@@ -41,11 +41,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   const [yearOptions, setYearOptions] = useState<number[]>([]);
   const [monthReference, setMonthReference] = useState<number | null>(null);
   const [yearReference, setYearReference] = useState<number | null>(null);
-  // Estado para modal de alteração de período
-  const [showPeriodModal, setShowPeriodModal] = useState(false);
-  const [tempPeriod, setTempPeriod] = useState(formData.period_date);
-  const [tempMonth, setTempMonth] = useState(monthReference);
-  const [tempYear, setTempYear] = useState(yearReference);
   // Estado para seleção em massa (preparação)
   const [tempSelectedIndicators, setTempSelectedIndicators] = useState<string[]>([]); // IDs dos indicadores selecionados
   const [isDelayed, setIsDelayed] = useState<boolean>(indicator?.is_delayed || false);
@@ -627,14 +622,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   }
   const prazoStatus = getPrazoStatus();
 
-  // 1. Inicializar os temporários ao abrir o modal de período
-  const openPeriodModal = () => {
-    setTempPeriod(formData.period_date);
-    setTempMonth(monthReference);
-    setTempYear(yearReference);
-    setShowPeriodModal(true);
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
@@ -688,9 +675,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
             {/* Botão Alterar Período no modo edição */}
             {indicator && (
               <div className="col-span-2 flex items-center gap-2">
-                <Button type="button" variant="outline" onClick={openPeriodModal}>
-                  Alterar Período
-                </Button>
                 <span className="text-xs text-muted-foreground">Período atual: {periodStart && periodEnd ? `De ${new Date(periodStart).toLocaleDateString('pt-BR')} até ${new Date(periodEnd).toLocaleDateString('pt-BR')}` : '-'}</span>
               </div>
             )}
@@ -896,10 +880,12 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
             <div className="flex justify-end space-x-2 w-full md:w-auto">
               {/* 2. No modal secundário, botão Cancelar reseta os temporários e fecha o modal */}
               <Button type="button" variant="outline" onClick={() => {
-                setTempPeriod(formData.period_date);
-                setTempMonth(monthReference);
-                setTempYear(yearReference);
-                setShowPeriodModal(false);
+                setFormData(prev => ({ ...prev, period_date: formData.period_date }));
+                setMonthReference(monthReference);
+                setYearReference(yearReference);
+                const { start, end } = extractPeriodDates(formData.period_date);
+                setPeriodStart(start);
+                setPeriodEnd(end);
               }}>Cancelar</Button>
               <Button type="submit" disabled={isLoading || !formData.funnel_id || isSubMaster}>
                 {isLoading ? 'Salvando...' : (indicator ? 'Atualizar' : 'Registrar Indicador')}
@@ -908,84 +894,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
           </div>
         </form>
       </DialogContent>
-      {/* Modal secundário para alterar período */}
-      {showPeriodModal && (
-        <Dialog open={showPeriodModal} onOpenChange={setShowPeriodModal}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Alterar Período</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              {/* (Futuro) Campo de seleção múltipla de indicadores */}
-              {/* <div>
-                <Label>Indicadores selecionados</Label>
-                <Select multiple value={tempSelectedIndicators} onValueChange={setTempSelectedIndicators}>
-                  ... opções ...
-                </Select>
-              </div> */}
-              <div>
-                <Label htmlFor="period_date_modal">Período *</Label>
-                <Select
-                  value={tempPeriod}
-                  onValueChange={(value) => {
-                    setTempPeriod(value);
-                    const { start, end } = extractPeriodDates(value);
-                    // Atualize apenas os estados temporários
-                    // NÃO chame setPeriodStart/setPeriodEnd aqui
-                    // Preencher mês/ano automaticamente com base na data fim
-                    const endDate = new Date(end);
-                    setTempMonth(endDate.getMonth() + 1);
-                    setTempYear(endDate.getFullYear());
-                  }}
-                  required
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o período" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem key={formData.period_date} value={formData.period_date}>
-                      (Atual) {formData.period_date}
-                    </SelectItem>
-                    {periodOptions.filter(opt => opt.value !== formData.period_date).map(opt => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <label>Mês *</label>
-                <select value={tempMonth ?? ''} onChange={e => setTempMonth(Number(e.target.value))} required>
-                  <option value="">Selecione</option>
-                  {monthOptions.map(m => (
-                    <option key={m} value={m}>{new Date(2000, m - 1, 1).toLocaleString('pt-BR', { month: 'long' })}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label>Ano *</label>
-                <select value={tempYear ?? ''} onChange={e => setTempYear(Number(e.target.value))} required>
-                  <option value="">Selecione</option>
-                  {yearOptions.map(y => (
-                    <option key={y} value={y}>{y}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex gap-2 justify-end">
-                {/* 3. No botão Salvar do modal secundário, só aí atualizar o estado principal */}
-                <Button type="button" variant="outline" onClick={() => {
-                  setFormData(prev => ({ ...prev, period_date: tempPeriod }));
-                  setMonthReference(tempMonth);
-                  setYearReference(tempYear);
-                  const { start, end } = extractPeriodDates(tempPeriod);
-                  setPeriodStart(start);
-                  setPeriodEnd(end);
-                  setShowPeriodModal(false);
-                }}>Salvar</Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
     </Dialog>
   );
 };
