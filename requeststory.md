@@ -35,13 +35,14 @@
 - O bug dos membros do time persiste: membros não permanecem salvos ao reabrir o modal. Será garantida busca correta dos membros ao abrir e update correto no banco.
 - Nova rodada de correção iniciada. 
 
-## [2024-07-10] Redesign do modal de indicador
+## [2024-07-10] Refatoração do modal de edição do indicador
 
-- Requisição: Excluir o modal de edição do indicador.
-- Novo modal deve exibir apenas:
+- Solicitação: Excluir o modal de edição do indicador atual.
+- Novo modal de edição deve exibir apenas:
   - Valor de Vendas
   - Número de Recomendações
   - Resultados por Etapa
-  - Data de preenchimento no final, perto dos botões
-- Não deve permitir edição de funil ou período.
-- Iniciando ajuste conforme solicitado. 
+  - Data de preenchimento no final (próximo aos botões)
+- Não deve permitir editar funil ou período.
+- Modal de criação permanece exatamente como está.
+- Iniciando refatoração. 
