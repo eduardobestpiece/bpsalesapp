@@ -55,3 +55,7 @@ Bloco 1
     - Edição agora é 100% imutável para período, funil, mês e ano: nenhum efeito colateral ou estado pode sobrescrever esses campos.
     - Lógica de criação e edição totalmente separadas.
     - Commit e deploy realizados.
+- [2024-07-10] Nova regra aplicada na criação de indicador:
+    - Todos os períodos dos últimos 90 dias aparecem para seleção.
+    - Períodos já preenchidos aparecem em cinza claro, desabilitados e com '(preenchido)'.
+    - Commit e deploy realizados.
