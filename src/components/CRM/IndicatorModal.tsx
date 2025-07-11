@@ -48,6 +48,18 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   // Adicionar flag para saber se está em modo edição
   const isEditing = !!indicator;
 
+  // Se for edição, inicializar campos imutáveis uma única vez
+  const [immutableFields] = useState(() =>
+    indicator ? {
+      period_date: indicator.period_date,
+      period_start: indicator.period_start,
+      period_end: indicator.period_end,
+      month_reference: indicator.month_reference,
+      year_reference: indicator.year_reference,
+      funnel_id: indicator.funnel_id
+    } : null
+  );
+
   // Garantir que o companyId está correto (fallback para o do usuário logado)
   const { crmUser } = useCrmAuth();
   // Garantir que o companyId nunca é undefined
@@ -588,30 +600,26 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     }
   };
 
-  const handleUpdate = async (e: React.FormEvent) => {
+  // Submit de edição: só envia campos mutáveis
+  const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
       const indicatorData = {
-        period_start: periodStart,
-        period_end: periodEnd,
-        month_reference: monthReference,
-        year_reference: yearReference,
+        period_start: immutableFields.period_start,
+        period_end: immutableFields.period_end,
+        month_reference: immutableFields.month_reference,
+        year_reference: immutableFields.year_reference,
+        funnel_id: immutableFields.funnel_id,
         sales_value: parseMonetaryValue(salesValue),
         recommendations_count: recommendationsCount,
-        is_delayed: isDelayed
       };
-      const { error } = await supabase
-        .from('indicators')
-        .update(indicatorData)
-        .eq('id', indicator.id);
-      if (error) throw error;
-      onClose();
-    } catch (err) {
-      // tratamento de erro
-    } finally {
-      setIsLoading(false);
-    }
+      const stageValues = Object.entries(stages).map(([stageId, value]) => ({ stage_id, value }));
+      await updateIndicator({ id: indicator.id, indicator: indicatorData, values: stageValues }, {
+        onSuccess: () => { toast.success('Indicador atualizado com sucesso!'); onClose(); },
+        onError: (error: any) => { toast.error(error.message || 'Erro ao atualizar indicador'); }
+      });
+    } catch (err) { toast.error('Erro ao atualizar indicador'); } finally { setIsLoading(false); }
   };
 
   // Função utilitária para calcular status do prazo
@@ -636,260 +644,285 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
-          <div className="flex items-center justify-between">
-            <DialogTitle>
-              {indicator ? 'Editar Indicador' : 'Registrar Indicador'}
-            </DialogTitle>
-            {indicator && (
-              <div className="flex items-center gap-2">
-                {/* Remover status de prazo do topo */}
-              </div>
-            )}
-          </div>
+          <DialogTitle>{isEditing ? 'Editar Indicador' : 'Registrar Indicador'}</DialogTitle>
         </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Campos de Mês, Ano, Funil e Período: só na criação */}
-            {!indicator && (
-              <>
-                {/* Campo Mês */}
-                <div>
-                  <label>Mês *</label>
-                  {monthOptions.length === 1 && monthReference ? (
-                    <div>{new Date(2000, monthReference - 1, 1).toLocaleString('pt-BR', { month: 'long' })}</div>
-                  ) : (
-                    <select value={monthReference ?? ''} onChange={e => setMonthReference(Number(e.target.value))} required>
-                      <option value="">Selecione</option>
-                      {monthOptions.map(m => (
-                        <option key={m} value={m}>{new Date(2000, m - 1, 1).toLocaleString('pt-BR', { month: 'long' })}</option>
-                      ))}
-                    </select>
-                  )}
+        <form onSubmit={isEditing ? handleEditSubmit : handleSubmit} className="space-y-6">
+          {/* Se for edição, só renderiza campos mutáveis e data de preenchimento */}
+          {isEditing ? (
+            <>
+              <div className="col-span-2 flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Período: {immutableFields.period_start && immutableFields.period_end ? `De ${new Date(immutableFields.period_start).toLocaleDateString('pt-BR')} até ${new Date(immutableFields.period_end).toLocaleDateString('pt-BR')}` : '-'}</span>
+              </div>
+              {/* Valor das Vendas */}
+              <div>
+                <Label htmlFor="sales_value">Valor das Vendas</Label>
+                <Input id="sales_value" type="text" value={salesValue} onChange={e => setSalesValue(e.target.value)} placeholder="0,00" inputMode="decimal" />
+              </div>
+              {/* Número de Recomendações */}
+              <div>
+                <Label htmlFor="recommendations_count">Número de Recomendações</Label>
+                <Input id="recommendations_count" type="number" value={recommendationsCount} onChange={e => setRecommendationsCount(Number(e.target.value))} />
+              </div>
+              {/* Resultados por Etapa */}
+              {indicator?.values && indicator.values.map((v: any) => (
+                <div key={v.stage_id}>
+                  <Label>{v.stage_name}</Label>
+                  <Input type="number" value={stages[v.stage_id] || 0} onChange={e => setStages(s => ({ ...s, [v.stage_id]: Number(e.target.value) }))} />
                 </div>
-                {/* Campo Ano */}
-                <div>
-                  <label>Ano *</label>
-                  {yearOptions.length === 1 && yearReference ? (
-                    <div>{yearReference}</div>
-                  ) : (
-                    <select value={yearReference ?? ''} onChange={e => setYearReference(Number(e.target.value))} required>
-                      <option value="">Selecione</option>
-                      {yearOptions.map(y => (
-                        <option key={y} value={y}>{y}</option>
-                      ))}
-                    </select>
-                  )}
-                </div>
-                {/* Campo Funil */}
-                <div>
-                  <Label htmlFor="funnel_id">Funil *</Label>
-                  <Select 
-                    value={formData.funnel_id} 
-                    onValueChange={(value) => setFormData(prev => ({ ...prev, funnel_id: value }))}
-                    disabled={isLoading}
-                    required
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione um funil" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {funnelsError ? (
-                        <div className="px-4 py-2 text-red-500 text-sm">
-                          Erro ao carregar funis: {funnelsError.message || 'Erro desconhecido'}
-                        </div>
-                      ) : isFunnelsLoading ? (
-                        <div className="px-4 py-2 text-muted-foreground text-sm">
-                          Carregando funis...
-                        </div>
-                      ) : allowedFunnels.length > 0 ? (
-                        allowedFunnels.map((funnel) => (
-                          <SelectItem key={funnel.id} value={funnel.id}>
-                            {funnel.name}
-                          </SelectItem>
-                        ))
+              ))}
+              {/* Data de preenchimento (apenas leitura) */}
+              <div className="text-xs text-muted-foreground mt-2">Data de preenchimento: {indicator?.created_at ? new Date(indicator.created_at).toLocaleString('pt-BR') : '-'}</div>
+              <div className="flex justify-end gap-2 mt-4">
+                <Button type="button" variant="outline" onClick={onClose}>Cancelar</Button>
+                <Button type="submit" disabled={isLoading}>Salvar</Button>
+              </div>
+            </>
+          ) : (
+            // ... renderização do formulário de criação (como já está) ...
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Campos de Mês, Ano, Funil e Período: só na criação */}
+                {!indicator && (
+                  <>
+                    {/* Campo Mês */}
+                    <div>
+                      <label>Mês *</label>
+                      {monthOptions.length === 1 && monthReference ? (
+                        <div>{new Date(2000, monthReference - 1, 1).toLocaleString('pt-BR', { month: 'long' })}</div>
                       ) : (
-                        <div className="px-4 py-2 text-muted-foreground text-sm">
-                          Nenhum funil disponível para seleção.
-                        </div>
+                        <select value={monthReference ?? ''} onChange={e => setMonthReference(Number(e.target.value))} required>
+                          <option value="">Selecione</option>
+                          {monthOptions.map(m => (
+                            <option key={m} value={m}>{new Date(2000, m - 1, 1).toLocaleString('pt-BR', { month: 'long' })}</option>
+                          ))}
+                        </select>
                       )}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {/* Período */}
-                {isOpen && (
-                  <div>
-                    <Label htmlFor="period_date">Período *</Label>
-                    <Select
-                      value={formData.period_date}
-                      onValueChange={(value) => {
-                        setFormData({ ...formData, period_date: value });
-                        const { start, end } = extractPeriodDates(value);
-                        setPeriodStart(start);
-                        setPeriodEnd(end);
-                        console.log('[Indicador] Período selecionado:', value, '| Início:', start, '| Fim:', end);
-                      }}
-                      disabled={isLoading || !formData.funnel_id}
-                      required
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o período" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {periodOptions.length === 0 && (
-                          <div className="px-4 py-2 text-muted-foreground text-sm">
-                            {periodosUsuario.length === 0
-                              ? 'Nenhum período disponível para registro neste mês/ano. Só é possível registrar períodos cujo último dia já passou e estejam dentro dos últimos 90 dias.'
-                              : 'Nenhum período disponível entre o último registrado e o período atual. Não há períodos pendentes para registro neste mês/ano.'}
-                          </div>
-                        )}
-                        {periodOptions.map(opt => (
-                          <SelectItem
-                            key={opt.value}
-                            value={opt.value}
-                            disabled={(!opt.isAllowed) || ((Array.isArray(periodosRegistrados) ? periodosRegistrados : []).includes(opt.value) && (!indicator || indicator.period_date !== opt.value))}
-                          >
-                            <span className={opt.isMissing && destacarFaltantes ? 'text-red-500' : ''}>{opt.label}</span>
-                            {(Array.isArray(periodosRegistrados) ? periodosRegistrados : []).includes(opt.value) && (!indicator || indicator.period_date !== opt.value) && (
-                              <span className="ml-2 text-xs text-muted-foreground">(já registrado)</span>
+                    </div>
+                    {/* Campo Ano */}
+                    <div>
+                      <label>Ano *</label>
+                      {yearOptions.length === 1 && yearReference ? (
+                        <div>{yearReference}</div>
+                      ) : (
+                        <select value={yearReference ?? ''} onChange={e => setYearReference(Number(e.target.value))} required>
+                          <option value="">Selecione</option>
+                          {yearOptions.map(y => (
+                            <option key={y} value={y}>{y}</option>
+                          ))}
+                        </select>
+                      )}
+                    </div>
+                    {/* Campo Funil */}
+                    <div>
+                      <Label htmlFor="funnel_id">Funil *</Label>
+                      <Select 
+                        value={formData.funnel_id} 
+                        onValueChange={(value) => setFormData(prev => ({ ...prev, funnel_id: value }))}
+                        disabled={isLoading}
+                        required
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione um funil" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {funnelsError ? (
+                            <div className="px-4 py-2 text-red-500 text-sm">
+                              Erro ao carregar funis: {funnelsError.message || 'Erro desconhecido'}
+                            </div>
+                          ) : isFunnelsLoading ? (
+                            <div className="px-4 py-2 text-muted-foreground text-sm">
+                              Carregando funis...
+                            </div>
+                          ) : allowedFunnels.length > 0 ? (
+                            allowedFunnels.map((funnel) => (
+                              <SelectItem key={funnel.id} value={funnel.id}>
+                                {funnel.name}
+                              </SelectItem>
+                            ))
+                          ) : (
+                            <div className="px-4 py-2 text-muted-foreground text-sm">
+                              Nenhum funil disponível para seleção.
+                            </div>
+                          )}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    {/* Período */}
+                    {isOpen && (
+                      <div>
+                        <Label htmlFor="period_date">Período *</Label>
+                        <Select
+                          value={formData.period_date}
+                          onValueChange={(value) => {
+                            setFormData({ ...formData, period_date: value });
+                            const { start, end } = extractPeriodDates(value);
+                            setPeriodStart(start);
+                            setPeriodEnd(end);
+                            console.log('[Indicador] Período selecionado:', value, '| Início:', start, '| Fim:', end);
+                          }}
+                          disabled={isLoading || !formData.funnel_id}
+                          required
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione o período" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {periodOptions.length === 0 && (
+                              <div className="px-4 py-2 text-muted-foreground text-sm">
+                                {periodosUsuario.length === 0
+                                  ? 'Nenhum período disponível para registro neste mês/ano. Só é possível registrar períodos cujo último dia já passou e estejam dentro dos últimos 90 dias.'
+                                  : 'Nenhum período disponível entre o último registrado e o período atual. Não há períodos pendentes para registro neste mês/ano.'}
+                              </div>
                             )}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                            {periodOptions.map(opt => (
+                              <SelectItem
+                                key={opt.value}
+                                value={opt.value}
+                                disabled={(!opt.isAllowed) || ((Array.isArray(periodosRegistrados) ? periodosRegistrados : []).includes(opt.value) && (!indicator || indicator.period_date !== opt.value))}
+                              >
+                                <span className={opt.isMissing && destacarFaltantes ? 'text-red-500' : ''}>{opt.label}</span>
+                                {(Array.isArray(periodosRegistrados) ? periodosRegistrados : []).includes(opt.value) && (!indicator || indicator.period_date !== opt.value) && (
+                                  <span className="ml-2 text-xs text-muted-foreground">(já registrado)</span>
+                                )}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+                  </>
+                )}
+                {/* Período atual: só exibe no modo edição */}
+                {indicator && (
+                  <div className="col-span-2 flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">Período atual: {periodStart && periodEnd ? `De ${new Date(periodStart).toLocaleDateString('pt-BR')} até ${new Date(periodEnd).toLocaleDateString('pt-BR')}` : '-'}</span>
                   </div>
                 )}
-              </>
-            )}
-            {/* Período atual: só exibe no modo edição */}
-            {indicator && (
-              <div className="col-span-2 flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">Período atual: {periodStart && periodEnd ? `De ${new Date(periodStart).toLocaleDateString('pt-BR')} até ${new Date(periodEnd).toLocaleDateString('pt-BR')}` : '-'}</span>
+                {/* Valor das Vendas, Recomendações e Resultados por Etapa: sempre exibidos */}
+                {selectedFunnel && crmUser?.role !== 'submaster' && (
+                  <>
+                    {/* Campo Valor das Vendas */}
+                    <div>
+                      <Label htmlFor="sales_value">Valor das Vendas</Label>
+                      {selectedFunnel.sales_value_mode === 'manual' ? (
+                        <Input
+                          id="sales_value"
+                          type="text"
+                          value={isAutoLoading ? '...' : salesValue}
+                          onChange={e => setSalesValue(e.target.value)}
+                          placeholder="0,00"
+                          inputMode="decimal"
+                          disabled={isSubMaster}
+                        />
+                      ) : (
+                        <Input
+                          id="sales_value"
+                          type="number"
+                          value={isAutoLoading ? '...' : salesValue}
+                          disabled
+                          placeholder="Calculado automaticamente"
+                        />
+                      )}
+                    </div>
+                    {/* Campo Número de Recomendações */}
+                    <div>
+                      <Label htmlFor="recommendations_count">Número de Recomendações</Label>
+                      {selectedFunnel.recommendations_mode === 'manual' ? (
+                        <Input
+                          id="recommendations_count"
+                          type="number"
+                          min="0"
+                          value={recommendationsCount}
+                          onChange={e => setRecommendationsCount(Number(e.target.value) || 0)}
+                          placeholder="Digite o número de recomendações"
+                          disabled={isLoading}
+                        />
+                      ) : (
+                        <Input
+                          id="recommendations_count"
+                          type="number"
+                          value={isAutoLoading ? '...' : recommendationsCount}
+                          disabled
+                          placeholder="Calculado automaticamente"
+                        />
+                      )}
+                    </div>
+                  </>
+                )}
               </div>
-            )}
-            {/* Valor das Vendas, Recomendações e Resultados por Etapa: sempre exibidos */}
-            {selectedFunnel && crmUser?.role !== 'submaster' && (
-              <>
-                {/* Campo Valor das Vendas */}
-                <div>
-                  <Label htmlFor="sales_value">Valor das Vendas</Label>
-                  {selectedFunnel.sales_value_mode === 'manual' ? (
-                    <Input
-                      id="sales_value"
-                      type="text"
-                      value={isAutoLoading ? '...' : salesValue}
-                      onChange={e => setSalesValue(e.target.value)}
-                      placeholder="0,00"
-                      inputMode="decimal"
-                      disabled={isSubMaster}
-                    />
-                  ) : (
-                    <Input
-                      id="sales_value"
-                      type="number"
-                      value={isAutoLoading ? '...' : salesValue}
-                      disabled
-                      placeholder="Calculado automaticamente"
-                    />
-                  )}
-                </div>
-                {/* Campo Número de Recomendações */}
-                <div>
-                  <Label htmlFor="recommendations_count">Número de Recomendações</Label>
-                  {selectedFunnel.recommendations_mode === 'manual' ? (
-                    <Input
-                      id="recommendations_count"
-                      type="number"
-                      min="0"
-                      value={recommendationsCount}
-                      onChange={e => setRecommendationsCount(Number(e.target.value) || 0)}
-                      placeholder="Digite o número de recomendações"
-                      disabled={isLoading}
-                    />
-                  ) : (
-                    <Input
-                      id="recommendations_count"
-                      type="number"
-                      value={isAutoLoading ? '...' : recommendationsCount}
-                      disabled
-                      placeholder="Calculado automaticamente"
-                    />
-                  )}
-                </div>
-              </>
-            )}
-          </div>
 
-          {selectedFunnel?.stages && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Resultados por Etapa</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col gap-4">
-                  {selectedFunnel.stages
-                    .sort((a: any, b: any) => a.stage_order - b.stage_order)
-                    .map((stage: any) => {
-                      const valor = formData.stages[stage.id] || 0;
-                      const meta = stage.target_value || 0;
-                      const percentual = meta > 0 ? Math.round((valor / meta) * 100) : 0;
-                      const atingiu = valor >= meta && meta > 0;
-                      return (
-                        <div key={stage.id} className="flex flex-col md:flex-row md:items-center gap-2 p-2 border rounded-lg">
-                          <div className="flex-1">
-                            <Label htmlFor={`stage_${stage.id}`}>{stage.name}
-                              {stage.target_value && (
-                                <span className="text-sm text-muted-foreground ml-2">(Meta: {stage.target_value})</span>
-                              )}
-                            </Label>
-                            <Input
-                              id={`stage_${stage.id}`}
-                              type="number"
-                              min="0"
-                              value={valor}
-                              onChange={(e) => handleStageValueChange(stage.id, parseInt(e.target.value) || 0)}
-                              placeholder="Digite o resultado"
-                              disabled={isLoading}
-                            />
-                          </div>
-                          <div className="flex flex-col items-start md:items-end min-w-[180px]">
-                            <span className="text-xs">{percentual}% da meta</span>
-                            {atingiu ? (
-                              <span className="text-green-600 text-xs font-semibold">Meta atingida. Parabéns!</span>
-                            ) : (
-                              <span className="text-red-600 text-xs font-semibold">Meta não atingida, consulte seu líder</span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
+              {selectedFunnel?.stages && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Resultados por Etapa</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col gap-4">
+                      {selectedFunnel.stages
+                        .sort((a: any, b: any) => a.stage_order - b.stage_order)
+                        .map((stage: any) => {
+                          const valor = formData.stages[stage.id] || 0;
+                          const meta = stage.target_value || 0;
+                          const percentual = meta > 0 ? Math.round((valor / meta) * 100) : 0;
+                          const atingiu = valor >= meta && meta > 0;
+                          return (
+                            <div key={stage.id} className="flex flex-col md:flex-row md:items-center gap-2 p-2 border rounded-lg">
+                              <div className="flex-1">
+                                <Label htmlFor={`stage_${stage.id}`}>{stage.name}
+                                  {stage.target_value && (
+                                    <span className="text-sm text-muted-foreground ml-2">(Meta: {stage.target_value})</span>
+                                  )}
+                                </Label>
+                                <Input
+                                  id={`stage_${stage.id}`}
+                                  type="number"
+                                  min="0"
+                                  value={valor}
+                                  onChange={(e) => handleStageValueChange(stage.id, parseInt(e.target.value) || 0)}
+                                  placeholder="Digite o resultado"
+                                  disabled={isLoading}
+                                />
+                              </div>
+                              <div className="flex flex-col items-start md:items-end min-w-[180px]">
+                                <span className="text-xs">{percentual}% da meta</span>
+                                {atingiu ? (
+                                  <span className="text-green-600 text-xs font-semibold">Meta atingida. Parabéns!</span>
+                                ) : (
+                                  <span className="text-red-600 text-xs font-semibold">Meta não atingida, consulte seu líder</span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              <div className="flex flex-col md:flex-row md:items-center justify-between pt-4 gap-2">
+                {/* Data de preenchimento embaixo, alinhada à esquerda */}
+                {indicator && indicator.created_at && (
+                  <div className="text-xs text-muted-foreground">
+                    Preenchido em: {new Date(indicator.created_at).toLocaleString('pt-BR')}
+                  </div>
+                )}
+                <div className="flex justify-end space-x-2 w-full md:w-auto">
+                  {/* 2. No modal secundário, botão Cancelar reseta os temporários e fecha o modal */}
+                  <Button type="button" variant="outline" onClick={() => {
+                    setFormData(prev => ({ ...prev, period_date: formData.period_date }));
+                    setMonthReference(monthReference);
+                    setYearReference(yearReference);
+                    const { start, end } = extractPeriodDates(formData.period_date);
+                    setPeriodStart(start);
+                    setPeriodEnd(end);
+                  }}>Cancelar</Button>
+                  <Button type="submit" disabled={isLoading || (!formData.funnel_id && !indicator) || isSubMaster}>
+                    {isLoading ? 'Salvando...' : (indicator ? 'Atualizar' : 'Registrar Indicador')}
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+            </>
           )}
-
-          <div className="flex flex-col md:flex-row md:items-center justify-between pt-4 gap-2">
-            {/* Data de preenchimento embaixo, alinhada à esquerda */}
-            {indicator && indicator.created_at && (
-              <div className="text-xs text-muted-foreground">
-                Preenchido em: {new Date(indicator.created_at).toLocaleString('pt-BR')}
-              </div>
-            )}
-            <div className="flex justify-end space-x-2 w-full md:w-auto">
-              {/* 2. No modal secundário, botão Cancelar reseta os temporários e fecha o modal */}
-              <Button type="button" variant="outline" onClick={() => {
-                setFormData(prev => ({ ...prev, period_date: formData.period_date }));
-                setMonthReference(monthReference);
-                setYearReference(yearReference);
-                const { start, end } = extractPeriodDates(formData.period_date);
-                setPeriodStart(start);
-                setPeriodEnd(end);
-              }}>Cancelar</Button>
-              <Button type="submit" disabled={isLoading || (!formData.funnel_id && !indicator) || isSubMaster}>
-                {isLoading ? 'Salvando...' : (indicator ? 'Atualizar' : 'Registrar Indicador')}
-              </Button>
-            </div>
-          </div>
         </form>
       </DialogContent>
     </Dialog>

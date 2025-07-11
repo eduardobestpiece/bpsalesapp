@@ -46,3 +46,8 @@ Bloco 1
     - Período do indicador agora é totalmente imutável durante edição, nunca sobrescrito por efeitos colaterais.
     - Membros do time são buscados corretamente ao abrir o modal e persistidos corretamente no banco.
     - Commit e deploy realizados.
+- [2024-07-10] Refatoração do modal de edição do indicador:
+    - Modal de edição agora só exibe Valor de Vendas, Número de Recomendações, Resultados por Etapa e data de preenchimento no final.
+    - Não é mais possível editar funil, período, mês ou ano ao editar um indicador.
+    - Modal de criação permanece igual.
+    - Commit e deploy realizados.
