@@ -145,12 +145,15 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
           <>
             {/* Statistics */}
             <PerformanceStats {...statsData} />
-            {/* Funnel Chart */}
+            {/* Show message instead of non-existent FunnelChart */}
             {funnelData.length > 0 ? (
-              <FunnelChart 
-                stages={funnelData}
-                title={`Funil: ${selectedFunnel?.name} - ${filters.period === 'day' ? 'Diário' : filters.period === 'week' ? 'Semanal' : 'Mensal'}`}
-              />
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">📊</div>
+                <h3 className="text-xl font-semibold mb-2">Dados do funil carregados</h3>
+                <p className="text-muted-foreground">
+                  {funnelData.length} etapas encontradas para o funil {selectedFunnel?.name}
+                </p>
+              </div>
             ) : (
               <div className="text-center py-12">
                 <div className="text-6xl mb-4">📊</div>
