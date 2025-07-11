@@ -33,6 +33,22 @@ Bloco 1
 - Deploy automático realizado.
 - Solicitação registrada e checklist atualizado em `requeststory.md`.
 
+## [12/07/2024] Ajuste visual concluído - Lista de Indicadores
+
+- Diminuído o tamanho das fontes do cabeçalho e das linhas da lista de indicadores para melhor aproveitamento do espaço e visual mais limpo.
+- Deploy automático realizado.
+- Checklist atualizado em requeststory.md.
+
+## [12/07/2024] Início do Bloco - Funil de Performance e Filtros Customizados
+
+- Iniciada execução das tarefas:
+  - Substituição do filtro de período por ícone de calendário/modal customizado na aba de Performance.
+  - Atualização do design do funil de performance para o visual colorido e moderno, conforme print enviado.
+  - Correção do bug do modal de detalhamento do comparativo.
+  - Ajustes finais em modais/listas e permissões.
+- Deploy será realizado apenas ao final de todas as etapas, conforme orientação do usuário.
+- Todas as imagens e prints de referência estão registradas no chat e consideradas para o novo layout.
+
 - [2024-07-10] Implementação da lógica real do gráfico duplo do funil e comparativo na aba Performance do CRM:
     - Função utilitária criada para agrupar indicadores por semana/mês e calcular conversão por etapa.
     - Gráfico duplo e comparativo agora usam dados reais do Supabase, respeitando filtros dinâmicos.
@@ -58,4 +74,8 @@ Bloco 1
 - [2024-07-10] Nova regra aplicada na criação de indicador:
     - Todos os períodos dos últimos 90 dias aparecem para seleção.
     - Períodos já preenchidos aparecem em cinza claro, desabilitados e com '(preenchido)'.
+    - Commit e deploy realizados.
+- [2024-07-11] Refatoração do modal de edição de indicador:
+    - Modal de edição agora é idêntico ao de registro, mas sem seleção de período/funil.
+    - Todos os campos são preenchidos apenas com os dados já cadastrados do indicador, sem edição de período/funil.
     - Commit e deploy realizados.

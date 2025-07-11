@@ -14,7 +14,11 @@ interface PerformanceFilters {
   funnelId: string;
   teamId?: string;
   userId?: string;
-  period: 'day' | 'week' | 'month';
+  period: 'day' | 'week' | 'month' | 'custom';
+  start?: string;
+  end?: string;
+  month?: number;
+  year?: number;
 }
 
 const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
@@ -35,19 +39,22 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
   const getFunnelChartData = () => {
     if (!selectedFunnel || !filters) return [];
 
-    // Filter indicators by funnel and period
+    // Novo filtro customizado de período
     const relevantIndicators = indicators.filter(indicator => {
       if (indicator.funnel_id !== filters.funnelId) return false;
-      
-      // Here you would implement period filtering logic
-      // For now, we'll take the most recent indicator
+      // Filtro por intervalo de datas
+      if (filters.period === 'custom') {
+        if (filters.start && indicator.period_start < filters.start) return false;
+        if (filters.end && indicator.period_end > filters.end) return false;
+        if (filters.month && String(indicator.month_reference) !== String(filters.month)) return false;
+        if (filters.year && String(indicator.year_reference) !== String(filters.year)) return false;
+      }
       return true;
     });
 
     if (relevantIndicators.length === 0) return [];
 
     const latestIndicator = relevantIndicators[0];
-    
     return selectedFunnel.stages
       .sort((a, b) => a.stage_order - b.stage_order)
       .map(stage => {
@@ -66,18 +73,21 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
   const getFunnelComparisonData = () => {
     if (!selectedFunnel || !filters) return { stages: [], comparativo: [] };
     const orderedStages = selectedFunnel.stages?.sort((a, b) => a.stage_order - b.stage_order) || [];
+    // Filtrar indicadores conforme período customizado
+    const filteredIndicators = indicators.filter(i => {
+      if (i.funnel_id !== selectedFunnel.id) return false;
+      if (filters.period === 'custom') {
+        if (filters.start && i.period_start < filters.start) return false;
+        if (filters.end && i.period_end > filters.end) return false;
+        if (filters.month && String(i.month_reference) !== String(filters.month)) return false;
+        if (filters.year && String(i.year_reference) !== String(filters.year)) return false;
+      }
+      return true;
+    });
     // Dados semanais
-    const weekly = aggregateFunnelIndicators(
-      indicators.filter(i => i.funnel_id === selectedFunnel.id),
-      orderedStages,
-      'week'
-    );
+    const weekly = aggregateFunnelIndicators(filteredIndicators, orderedStages, 'week');
     // Dados mensais
-    const monthly = aggregateFunnelIndicators(
-      indicators.filter(i => i.funnel_id === selectedFunnel.id),
-      orderedStages,
-      'month'
-    );
+    const monthly = aggregateFunnelIndicators(filteredIndicators, orderedStages, 'month');
     // Monta array para o gráfico duplo
     const stages = orderedStages.map((stage, idx) => ({
       name: stage.name,
@@ -88,8 +98,8 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     }));
     // Comparativo: exemplo com conversão final, recomendações, vendas
     const lastStage = stages[stages.length - 1];
-    const recommendations = indicators.filter(i => i.funnel_id === selectedFunnel.id && i.recommendations_count).reduce((sum, i) => sum + (i.recommendations_count || 0), 0);
-    const vendas = indicators.filter(i => i.funnel_id === selectedFunnel.id && i.sales_value).reduce((sum, i) => sum + (i.sales_value || 0), 0);
+    const recommendations = filteredIndicators.filter(i => i.recommendations_count).reduce((sum, i) => sum + (i.recommendations_count || 0), 0);
+    const vendas = filteredIndicators.filter(i => i.sales_value).reduce((sum, i) => sum + (i.sales_value || 0), 0);
     const comparativo = [
       { label: 'Conversão', value: lastStage ? `${lastStage.monthlyConversion}%` : '-' },
       { label: 'Recomendações', value: recommendations },

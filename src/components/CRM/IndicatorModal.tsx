@@ -524,13 +524,11 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
       setSalesValue(indicator.sales_value?.toString() || '0,00');
       setRecommendationsCount(indicator.recommendations_count || 0);
       setIsDelayed(indicator.is_delayed || false);
-      if (indicator.period_date) {
-        const { start, end } = extractPeriodDates(indicator.period_date);
-        setPeriodStart(start);
-        setPeriodEnd(end);
-        setMonthReference(indicator.month_reference);
-        setYearReference(indicator.year_reference);
-      }
+      // CORREÇÃO: usar period_start e period_end do Supabase
+      setPeriodStart(indicator.period_start || '');
+      setPeriodEnd(indicator.period_end || '');
+      setMonthReference(indicator.month_reference);
+      setYearReference(indicator.year_reference);
     }
   }, [isEditing, indicator]);
 

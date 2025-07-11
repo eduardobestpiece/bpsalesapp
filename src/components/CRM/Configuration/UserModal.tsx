@@ -273,6 +273,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
                 {canCreateAdmin && <SelectItem value="admin">Administrador</SelectItem>}
                 {canCreateSubMaster && <SelectItem value="submaster">SubMaster (visualização total, sem edição)</SelectItem>}
                 {crmUser?.role === 'master' && <SelectItem value="master">Master</SelectItem>}
+                {/* Remover opção de líder do modal de usuário */}
               </SelectContent>
             </Select>
           </div>
