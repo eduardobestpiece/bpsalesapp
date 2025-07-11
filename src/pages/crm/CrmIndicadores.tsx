@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, Filter, Edit, Archive, Trash2, CheckCircle, AlertCircle, XCircle } from 'lucide-react';
@@ -33,34 +32,28 @@ function getPrazoStatus(indicator: any, funnel: any) {
 }
 
 const CrmIndicadores = () => {
-  console.log('[CrmIndicadores] Componente iniciando...');
-  
   const [showModal, setShowModal] = useState(false);
   const [selectedIndicator, setSelectedIndicator] = useState<any>(null);
-  const { crmUser } = useCrmAuth();
+  const { crmUser, loading: authLoading } = useCrmAuth();
   const { selectedCompanyId } = useCompany();
   const companyId = selectedCompanyId || crmUser?.company_id || '';
 
-  console.log('[CrmIndicadores] CompanyId:', companyId);
-  console.log('[CrmIndicadores] CrmUser:', crmUser);
+  // Buscar indicadores conforme perfil - memoizado para evitar mudanças desnecessárias
+  const userIdForIndicators = useMemo(() => {
+    if (!crmUser) return undefined;
+    if (crmUser.role === 'user') return crmUser.id;
+    if (crmUser.role === 'leader') return undefined; // pega todos da equipe via filtragem abaixo
+    if (crmUser.role === 'admin' || crmUser.role === 'master') return undefined; // pega todos da empresa
+    return undefined;
+  }, [crmUser]);
 
-  // Hooks de dados com logs
-  // Buscar indicadores conforme perfil
-  let userIdForIndicators = undefined;
-  if (crmUser?.role === 'user') userIdForIndicators = crmUser.id;
-  if (crmUser?.role === 'leader') userIdForIndicators = undefined; // pega todos da equipe via filtragem abaixo
-  if (crmUser?.role === 'admin' || crmUser?.role === 'master') userIdForIndicators = undefined; // pega todos da empresa
+  // Hooks de dados com memoização
   const { data: indicators, isLoading: isIndicatorsLoading, error: indicatorsError } = useIndicators(companyId, userIdForIndicators);
   const { data: funnels, isLoading: isFunnelsLoading, error: funnelsError } = useFunnels(companyId, 'active');
   const { data: teams = [], isLoading: isTeamsLoading } = useTeams();
   const { data: crmUsers = [], isLoading: isUsersLoading } = useCrmUsers();
 
-  console.log('[CrmIndicadores] Indicators loading:', isIndicatorsLoading, 'Error:', indicatorsError);
-  console.log('[CrmIndicadores] Funnels loading:', isFunnelsLoading, 'Error:', funnelsError);
-  console.log('[CrmIndicadores] Teams loading:', isTeamsLoading);
-  console.log('[CrmIndicadores] Users loading:', isUsersLoading);
-
-  // Estados simplificados
+  // Estados simplificados com memoização
   const [selectedFunnelId, setSelectedFunnelId] = useState<string>('');
   const [showFiltersModal, setShowFiltersModal] = useState(false);
   const [filters, setFilters] = useState({
@@ -73,59 +66,70 @@ const CrmIndicadores = () => {
   });
 
   // Permissões de abas
-  const [allowedTabs, setAllowedTabs] = useState<string[]>(['performance', 'registro']);
+  const [allowedTabs] = useState<string[]>(['performance', 'registro']);
   const [defaultTab] = useState<string>('performance');
-  const [tabsLoading, setTabsLoading] = useState(false);
 
-  // Seleção automática do primeiro funil
-  useEffect(() => {
-    console.log('[CrmIndicadores] Funnels effect:', funnels);
-    if (funnels && funnels.length > 0 && !selectedFunnelId) {
-      console.log('[CrmIndicadores] Selecionando primeiro funil:', funnels[0].id);
-      setSelectedFunnelId(funnels[0].id);
+  // Seleção automática do primeiro funil - memoizado
+  const selectedFunnel = useMemo(() => {
+    if (!funnels || funnels.length === 0) return null;
+    if (selectedFunnelId) {
+      return funnels.find(f => f.id === selectedFunnelId) || funnels[0];
     }
+    return funnels[0];
   }, [funnels, selectedFunnelId]);
 
-  // Carregar permissões simplificado - apenas define abas padrão
+  // Atualizar funil selecionado apenas quando necessário
   useEffect(() => {
-    if (!companyId || !crmUser?.role) {
-      return;
+    if (selectedFunnel && selectedFunnel.id !== selectedFunnelId) {
+      setSelectedFunnelId(selectedFunnel.id);
     }
-    
-    setTabsLoading(true);
-    
-    // Definir abas padrão com base no role
-    const tabs = ['performance', 'registro'];
-    console.log('[CrmIndicadores] Abas permitidas:', tabs);
-    setAllowedTabs(tabs);
-    setTabsLoading(false);
-  }, [companyId, crmUser?.role]);
+  }, [selectedFunnel, selectedFunnelId]);
 
-  const handleEdit = (indicator: any) => {
+  // Callbacks memoizados
+  const handleEdit = useCallback((indicator: any) => {
     setSelectedIndicator(indicator);
     setShowModal(true);
-  };
+  }, []);
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setShowModal(false);
     setSelectedIndicator(null);
-  };
+  }, []);
 
-  // Filtragem de indicadores por perfil
+  const handleArchive = useCallback(async (indicator: any) => {
+    if (!indicator) return;
+    await supabase
+      .from('indicators')
+      .update({ archived_at: new Date().toISOString() })
+      .eq('id', indicator.id);
+    window.location.reload();
+  }, []);
+
+  const handleDelete = useCallback(async (indicator: any) => {
+    if (!indicator) return;
+    if (!window.confirm('Tem certeza que deseja excluir este indicador? Essa ação não pode ser desfeita.')) return;
+    await supabase
+      .from('indicators')
+      .delete()
+      .eq('id', indicator.id);
+    window.location.reload();
+  }, []);
+
+  // Filtragem de indicadores por perfil - memoizado
   const accessibleIndicators = useMemo(() => {
-    if (!indicators) return [];
-    if (crmUser?.role === 'master' || crmUser?.role === 'admin') {
+    if (!indicators || !crmUser) return [];
+    if (crmUser.role === 'master' || crmUser.role === 'admin') {
       return indicators; // vê todos da empresa
-    } else if (crmUser?.role === 'leader') {
+    } else if (crmUser.role === 'leader') {
       const teamMembers = crmUsers.filter(u => u.team_id === crmUser.team_id).map(u => u.id);
       return indicators.filter(ind => teamMembers.includes(ind.user_id) || ind.user_id === crmUser.id);
-    } else if (crmUser?.role === 'user') {
+    } else if (crmUser.role === 'user') {
       return indicators.filter(ind => ind.user_id === crmUser.id);
     }
     return [];
   }, [indicators, crmUser, crmUsers]);
 
-  // Filtrar indicadores pelo funil selecionado
+  // Filtrar indicadores pelo funil selecionado - memoizado
   const filteredIndicators = useMemo(() => {
     return accessibleIndicators.filter(indicator => {
       if (selectedFunnelId && indicator.funnel_id !== selectedFunnelId) return false;
@@ -141,59 +145,32 @@ const CrmIndicadores = () => {
     });
   }, [accessibleIndicators, selectedFunnelId, filters]);
 
-  const handleArchive = async (indicator: any) => {
-    if (!indicator) return;
-    await supabase
-      .from('indicators')
-      .update({ archived_at: new Date().toISOString() })
-      .eq('id', indicator.id);
-    window.location.reload();
-  };
+  // Dados do funil selecionado - memoizado
+  const funnelData = useMemo(() => {
+    if (!selectedFunnel) return { sortedStages: [], lastStage: null, recommendationStage: null };
+    
+    const sortedStages = (selectedFunnel.stages || []).sort((a: any, b: any) => a.stage_order - b.stage_order);
+    const lastStage = sortedStages.length > 0 ? sortedStages[sortedStages.length - 1] : null;
+    const recommendationStage = sortedStages.find((s: any) => s.name.toLowerCase().includes('reuni') || s.name.toLowerCase().includes('recomend'));
+    
+    return { sortedStages, lastStage, recommendationStage };
+  }, [selectedFunnel]);
 
-  const handleDelete = async (indicator: any) => {
-    if (!indicator) return;
-    if (!window.confirm('Tem certeza que deseja excluir este indicador? Essa ação não pode ser desfeita.')) return;
-    await supabase
-      .from('indicators')
-      .delete()
-      .eq('id', indicator.id);
-    window.location.reload();
-  };
-
-  const selectedFunnel = funnels?.find(f => f.id === selectedFunnelId);
-  const sortedStages = (selectedFunnel?.stages || []).sort((a: any, b: any) => a.stage_order - b.stage_order);
-  const lastStage = sortedStages.length > 0 ? sortedStages[sortedStages.length - 1] : null;
-  const recommendationStage = sortedStages.find((s: any) => s.name.toLowerCase().includes('reuni') || s.name.toLowerCase().includes('recomend'));
-
-  const isUser = crmUser?.role === 'user';
-  const allowedFunnels = isUser ? (funnels || []).filter(f => crmUser.funnels?.includes(f.id)) : (funnels || []);
+  // Funis permitidos para o usuário - memoizado
+  const allowedFunnels = useMemo(() => {
+    if (!funnels || !crmUser) return [];
+    const isUser = crmUser.role === 'user';
+    return isUser ? funnels.filter(f => crmUser.funnels?.includes(f.id)) : funnels;
+  }, [funnels, crmUser]);
 
   // Loading states
-  if (tabsLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <span>Carregando permissões...</span>
-      </div>
-    );
-  }
-  
-  if (allowedTabs.length === 0) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px] text-muted-foreground">
-        Carregando dados...
-      </div>
-    );
-  }
-
-  if (isIndicatorsLoading || isFunnelsLoading) {
+  if (authLoading || isIndicatorsLoading || isFunnelsLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <span>Carregando dados...</span>
       </div>
     );
   }
-
-  console.log('[CrmIndicadores] Renderizando componente principal');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
@@ -261,12 +238,12 @@ const CrmIndicadores = () => {
                               <tr>
                                 <th className="px-2 py-2 text-center font-semibold rounded-tl-2xl"></th>
                                 <th className="px-2 py-2 text-left font-semibold">Período</th>
-                                {selectedFunnel && lastStage && <th className="px-2 py-2 text-left font-semibold">{lastStage.name}</th>}
+                                {funnelData.lastStage && <th className="px-2 py-2 text-left font-semibold">{funnelData.lastStage.name}</th>}
                                 <th className="px-2 py-2 text-left font-semibold">Valor das Vendas</th>
                                 <th className="px-2 py-2 text-left font-semibold">Ticket Médio</th>
                                 <th className="px-2 py-2 text-left font-semibold">Taxa de Conversão</th>
                                 <th className="px-2 py-2 text-left font-semibold">Conversão do Funil</th>
-                                {selectedFunnel && recommendationStage && <th className="px-2 py-2 text-left font-semibold">Média de Recomendações</th>}
+                                {funnelData.recommendationStage && <th className="px-2 py-2 text-left font-semibold">Média de Recomendações</th>}
                                 <th className="px-2 py-2 text-center font-semibold rounded-tr-2xl">Ações</th>
                               </tr>
                             </thead>

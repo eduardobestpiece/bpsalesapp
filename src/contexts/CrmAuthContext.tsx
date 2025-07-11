@@ -23,8 +23,8 @@ const roleHierarchy: Record<UserRole, number> = {
   user: 1,
   leader: 2,
   admin: 3,
-  submaster: 4, // SubMaster tem o mesmo nível de visualização do master, mas sem permissão de edição
-  master: 4,
+  submaster: 4,
+  master: 5,
 };
 
 export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -34,24 +34,18 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const fetchCrmUser = async (email: string) => {
     console.log('[CrmAuth] Buscando CRM user para:', email);
-    let timeoutId: NodeJS.Timeout | null = null;
     try {
-      const timeoutPromise = new Promise((_, reject) => {
-        timeoutId = setTimeout(() => reject(new Error('Timeout ao buscar CRM user')), 8000);
-      });
-      const queryPromise = supabase
+      const { data, error } = await supabase
         .from('crm_users')
         .select('*')
         .eq('email', email)
         .eq('status', 'active')
         .single();
       
-      const { data, error } = await Promise.race([queryPromise, timeoutPromise]) as any;
-      
-      if (timeoutId) clearTimeout(timeoutId);
       if (error) {
         console.error('[CrmAuth] Erro ao buscar CRM user:', error);
         return null;
@@ -59,49 +53,84 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
       console.log('[CrmAuth] CRM user encontrado:', data);
       return data as CrmUser;
     } catch (err) {
-      if (timeoutId) clearTimeout(timeoutId);
       console.error('[CrmAuth] Erro inesperado ao buscar CRM user:', err);
       return null;
     }
   };
 
   useEffect(() => {
-    // Setup auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        console.log('[CrmAuth] Auth state changed:', event, session?.user?.email);
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(true);
+    let isSubscriptionActive = true;
+
+    const initializeAuth = async () => {
+      try {
+        // Get initial session
+        const { data: { session: initialSession } } = await supabase.auth.getSession();
         
-        // Use setTimeout to prevent blocking the auth callback
-        setTimeout(async () => {
-          try {
-            if (session?.user?.email) {
-              const crmUserData = await fetchCrmUser(session.user.email!);
+        if (isSubscriptionActive) {
+          setSession(initialSession);
+          setUser(initialSession?.user ?? null);
+          
+          if (initialSession?.user?.email) {
+            const crmUserData = await fetchCrmUser(initialSession.user.email);
+            if (isSubscriptionActive) {
               setCrmUser(crmUserData);
               setUserRole(crmUserData?.role ?? null);
               setCompanyId(crmUserData?.company_id ?? null);
-            } else {
-              setCrmUser(null);
-              setUserRole(null);
-              setCompanyId(null);
             }
-          } catch (err) {
-            console.error('[CrmAuth] Erro inesperado no listener:', err);
-          } finally {
-            setLoading(false);
           }
-        }, 0);
+          
+          setLoading(false);
+          setIsInitialized(true);
+        }
+      } catch (error) {
+        console.error('[CrmAuth] Erro na inicialização:', error);
+        if (isSubscriptionActive) {
+          setLoading(false);
+          setIsInitialized(true);
+        }
+      }
+    };
+
+    // Setup auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('[CrmAuth] Auth state changed:', event, session?.user?.email);
+        
+        if (!isSubscriptionActive) return;
+        
+        // Prevent multiple rapid changes
+        if (event === 'SIGNED_IN' && session?.user?.email === user?.email) {
+          return;
+        }
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user?.email) {
+          const crmUserData = await fetchCrmUser(session.user.email);
+          if (isSubscriptionActive) {
+            setCrmUser(crmUserData);
+            setUserRole(crmUserData?.role ?? null);
+            setCompanyId(crmUserData?.company_id ?? null);
+          }
+        } else {
+          setCrmUser(null);
+          setUserRole(null);
+          setCompanyId(null);
+        }
+        
+        if (isInitialized) {
+          setLoading(false);
+        }
       }
     );
 
-    // Remover o getSession inicial duplicado
-    //supabase.auth.getSession().then(async ({ data: { session } }) => {
-    //  ...
-    //});
+    initializeAuth();
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isSubscriptionActive = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {

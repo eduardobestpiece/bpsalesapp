@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Indicator, IndicatorValue } from '@/types/crm';
 import { useCompany } from '@/contexts/CompanyContext';
+import { useMemo } from 'react';
 
 interface IndicatorWithValues extends Indicator {
   values: IndicatorValue[];
@@ -11,8 +12,12 @@ interface IndicatorWithValues extends Indicator {
 export const useIndicators = (companyId?: string, userId?: string) => {
   const { selectedCompanyId } = useCompany();
   const effectiveCompanyId = companyId || selectedCompanyId;
+  
+  // Memoize the query key to prevent unnecessary re-renders
+  const queryKey = useMemo(() => ['indicators', effectiveCompanyId, userId], [effectiveCompanyId, userId]);
+  
   return useQuery({
-    queryKey: ['indicators', effectiveCompanyId, userId],
+    queryKey,
     queryFn: async () => {
       console.log('[useIndicators] Iniciando busca de indicadores para companyId:', effectiveCompanyId, 'userId:', userId);
       if (!effectiveCompanyId) {
