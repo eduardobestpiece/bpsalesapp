@@ -891,9 +891,12 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
               </div>
             )}
             <div className="flex justify-end space-x-2 w-full md:w-auto">
-              <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
-                Cancelar
-              </Button>
+              <Button type="button" variant="outline" onClick={() => {
+                setTempPeriod(formData.period_date);
+                setTempMonth(monthReference);
+                setTempYear(yearReference);
+                setShowPeriodModal(false);
+              }}>Cancelar</Button>
               <Button type="submit" disabled={isLoading || !formData.funnel_id || isSubMaster}>
                 {isLoading ? 'Salvando...' : (indicator ? 'Atualizar' : 'Registrar Indicador')}
               </Button>
@@ -923,8 +926,8 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                   onValueChange={(value) => {
                     setTempPeriod(value);
                     const { start, end } = extractPeriodDates(value);
-                    setPeriodStart(start);
-                    setPeriodEnd(end);
+                    // Atualize apenas os estados temporários
+                    // NÃO chame setPeriodStart/setPeriodEnd aqui
                     // Preencher mês/ano automaticamente com base na data fim
                     const endDate = new Date(end);
                     setTempMonth(endDate.getMonth() + 1);

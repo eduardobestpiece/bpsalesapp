@@ -66,8 +66,12 @@ export const UsersList = () => {
     }
   };
 
-  // Filtrar usuários por empresa
+  // Filtrar usuários por empresa e ocultar master para todos exceto ele mesmo
   const filteredUsers = users.filter(user => {
+    // Ocultar master para todos, exceto se o usuário logado for master
+    if (user.role === 'master' && user.id !== crmUser?.id) {
+      return false;
+    }
     // Se master, mostrar apenas usuários da empresa selecionada
     if (userRole === 'master') {
       return user.company_id === selectedCompanyId;

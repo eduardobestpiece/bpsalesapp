@@ -97,13 +97,16 @@ const CrmIndicadores = () => {
     setSelectedIndicator(null);
   }, []);
 
+  const [archivedIndicatorIds, setArchivedIndicatorIds] = useState<string[]>([]);
+
   const handleArchive = useCallback(async (indicator: any) => {
     if (!indicator) return;
     await supabase
       .from('indicators')
       .update({ archived_at: new Date().toISOString() })
       .eq('id', indicator.id);
-    window.location.reload();
+    // Em vez de recarregar a página, apenas atualize o estado local
+    setArchivedIndicatorIds(prev => [...prev, indicator.id]);
   }, []);
 
   const handleDelete = useCallback(async (indicator: any) => {
@@ -130,15 +133,16 @@ const CrmIndicadores = () => {
     return [];
   }, [indicators, crmUser, crmUsers]);
 
-  // Filtrar indicadores pelo funil selecionado - memoizado
+  // Substituir filteredIndicators para não exibir os arquivados localmente
   const filteredIndicators = useMemo(() => {
     let result = accessibleIndicators.filter(indicator => {
+      if (archivedIndicatorIds.includes(indicator.id)) return false;
       if (selectedFunnelId && indicator.funnel_id !== selectedFunnelId) return false;
       if (filters.periodStart && filters.periodEnd) {
         if (!indicator.period_start || !indicator.period_end) return false;
         if (indicator.period_start < filters.periodStart || indicator.period_end > filters.periodEnd) return false;
       }
-      if (filters.month && String(indicator.month_reference) !== String(filters.month)) return false;
+      if (filters.month && Number(indicator.month_reference) !== Number(filters.month)) return false;
       if (filters.year && String(indicator.year_reference) !== String(filters.year)) return false;
       if (filters.teamId && indicator.user_id !== filters.teamId) return false;
       if (filters.userId && indicator.user_id !== filters.userId) return false;
@@ -148,7 +152,7 @@ const CrmIndicadores = () => {
       result = result.filter(ind => ind.user_id === crmUser.id);
     }
     return result;
-  }, [accessibleIndicators, selectedFunnelId, filters, showOnlyMine, crmUser]);
+  }, [accessibleIndicators, selectedFunnelId, filters, showOnlyMine, crmUser, archivedIndicatorIds]);
 
   // Dados do funil selecionado - memoizado
   const funnelData = useMemo(() => {
