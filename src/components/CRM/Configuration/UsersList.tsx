@@ -18,6 +18,7 @@ export const UsersList = () => {
   const { data: users = [], isLoading } = useCrmUsers();
   const updateUserMutation = useUpdateCrmUser();
   const { userRole } = useCrmAuth();
+  const isSubMaster = userRole === 'submaster';
 
   const handleEdit = (user: any) => {
     setSelectedUser(user);
@@ -78,67 +79,39 @@ export const UsersList = () => {
     <>
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle>Usuários</CardTitle>
-              <CardDescription>
-                Gerencie os usuários da empresa
-              </CardDescription>
-            </div>
-            <Button onClick={() => setShowModal(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Novo Usuário
-            </Button>
-          </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
-              placeholder="Pesquisar por nome, email ou telefone..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
+          <CardTitle>Usuários</CardTitle>
+          <CardDescription>Gerencie os usuários da empresa.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {filteredUsers.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
-                {searchTerm ? 'Nenhum usuário encontrado com este termo.' : 'Nenhum usuário encontrado.'}
-              </p>
+          <div className="flex justify-between mb-4">
+            <Input
+              placeholder="Buscar usuário..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="max-w-xs"
+              disabled={isSubMaster}
+            />
+            <Button onClick={() => setShowModal(true)} disabled={isSubMaster}>
+              <Plus className="w-4 h-4 mr-2" /> Novo Usuário
+            </Button>
+          </div>
+          <div className="space-y-2">
+            {isLoading ? (
+              <div>Carregando...</div>
             ) : (
               filteredUsers.map((user) => (
-                <div
-                  key={user.id}
-                  className="flex items-center justify-between p-4 border rounded-lg"
-                >
+                <div key={user.id} className="flex items-center justify-between border rounded p-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center">
-                      <User className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-medium">
-                          {user.first_name} {user.last_name}
-                        </h3>
-                        <Badge variant={getRoleBadgeVariant(user.role)}>
-                          {getRoleLabel(user.role)}
-                        </Badge>
-                        <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
-                          {user.status === 'active' ? 'Ativo' : 'Arquivado'}
-                        </Badge>
-                      </div>
-                      <p className="text-sm text-muted-foreground">{user.email}</p>
-                      {user.phone && (
-                        <p className="text-sm text-muted-foreground">{user.phone}</p>
-                      )}
-                    </div>
+                    <User className="w-5 h-5 text-primary" />
+                    <span className="font-medium">{user.first_name} {user.last_name}</span>
+                    <Badge variant="outline">{getRoleLabel(user.role)}</Badge>
                   </div>
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleEdit(user)}
+                      disabled={isSubMaster}
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
@@ -147,6 +120,7 @@ export const UsersList = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleDeactivate(user.id)}
+                        disabled={isSubMaster}
                       >
                         Desativar
                       </Button>
@@ -158,11 +132,11 @@ export const UsersList = () => {
           </div>
         </CardContent>
       </Card>
-
       <UserModal
         isOpen={showModal}
         onClose={handleCloseModal}
         user={selectedUser}
+        disabled={isSubMaster}
       />
     </>
   );

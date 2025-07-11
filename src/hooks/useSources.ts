@@ -2,6 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
 import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
 type Source = Tables<'sources'>;
@@ -9,21 +10,21 @@ type SourceInsert = TablesInsert<'sources'>;
 type SourceUpdate = TablesUpdate<'sources'>;
 
 export const useSources = () => {
-  const { companyId } = useCrmAuth();
+  const { selectedCompanyId } = useCompany();
 
   return useQuery({
-    queryKey: ['sources', companyId],
+    queryKey: ['sources', selectedCompanyId],
     queryFn: async () => {
-      if (!companyId) {
+      if (!selectedCompanyId) {
         console.log('No company ID available for sources query');
         return [];
       }
 
-      console.log('Fetching sources for company:', companyId);
+      console.log('Fetching sources for company:', selectedCompanyId);
       const { data, error } = await supabase
         .from('sources')
         .select('*')
-        .eq('company_id', companyId)
+        .eq('company_id', selectedCompanyId)
         .eq('status', 'active')
         .order('name');
 
@@ -35,13 +36,13 @@ export const useSources = () => {
       console.log('Sources fetched:', data);
       return data as Source[];
     },
-    enabled: !!companyId
+    enabled: !!selectedCompanyId
   });
 };
 
 export const useCreateSource = () => {
   const queryClient = useQueryClient();
-  const { companyId } = useCrmAuth();
+  const { selectedCompanyId } = useCompany();
 
   return useMutation({
     mutationFn: async (source: SourceInsert) => {
@@ -61,14 +62,14 @@ export const useCreateSource = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sources', companyId] });
+      queryClient.invalidateQueries({ queryKey: ['sources', selectedCompanyId] });
     }
   });
 };
 
 export const useUpdateSource = () => {
   const queryClient = useQueryClient();
-  const { companyId } = useCrmAuth();
+  const { selectedCompanyId } = useCompany();
 
   return useMutation({
     mutationFn: async ({ id, ...source }: SourceUpdate & { id: string }) => {
@@ -89,14 +90,14 @@ export const useUpdateSource = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sources', companyId] });
+      queryClient.invalidateQueries({ queryKey: ['sources', selectedCompanyId] });
     }
   });
 };
 
 export const useDeleteSource = () => {
   const queryClient = useQueryClient();
-  const { companyId } = useCrmAuth();
+  const { selectedCompanyId } = useCompany();
 
   return useMutation({
     mutationFn: async (id: string) => {
@@ -114,7 +115,7 @@ export const useDeleteSource = () => {
       console.log('Source deleted:', id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['sources', companyId] });
+      queryClient.invalidateQueries({ queryKey: ['sources', selectedCompanyId] });
     }
   });
 };

@@ -2,6 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
 import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
 type Funnel = Tables<'funnels'>;
@@ -9,8 +10,8 @@ type FunnelInsert = TablesInsert<'funnels'>;
 type FunnelUpdate = TablesUpdate<'funnels'>;
 
 export const useFunnels = (companyId?: string | null, status: 'active' | 'archived' | 'all' = 'active') => {
-  const { companyId: authCompanyId } = useCrmAuth();
-  const effectiveCompanyId = companyId || authCompanyId;
+  const { selectedCompanyId } = useCompany();
+  const effectiveCompanyId = companyId || selectedCompanyId;
 
   return useQuery({
     queryKey: ['funnels', effectiveCompanyId, status],
@@ -45,7 +46,7 @@ export const useFunnels = (companyId?: string | null, status: 'active' | 'archiv
 
 export const useCreateFunnel = () => {
   const queryClient = useQueryClient();
-  const { companyId } = useCrmAuth();
+  const { selectedCompanyId } = useCompany();
 
   return useMutation({
     mutationFn: async (funnel: FunnelInsert) => {
@@ -65,14 +66,14 @@ export const useCreateFunnel = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['funnels', companyId] });
+      queryClient.invalidateQueries({ queryKey: ['funnels', selectedCompanyId] });
     }
   });
 };
 
 export const useUpdateFunnel = () => {
   const queryClient = useQueryClient();
-  const { companyId } = useCrmAuth();
+  const { selectedCompanyId } = useCompany();
 
   return useMutation({
     mutationFn: async ({ id, ...funnel }: FunnelUpdate & { id: string }) => {
@@ -93,14 +94,14 @@ export const useUpdateFunnel = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['funnels', companyId] });
+      queryClient.invalidateQueries({ queryKey: ['funnels', selectedCompanyId] });
     }
   });
 };
 
 export const useDeleteFunnel = () => {
   const queryClient = useQueryClient();
-  const { companyId } = useCrmAuth();
+  const { selectedCompanyId } = useCompany();
 
   return useMutation({
     mutationFn: async (id: string) => {
@@ -118,7 +119,7 @@ export const useDeleteFunnel = () => {
       console.log('Funnel deleted:', id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['funnels', companyId] });
+      queryClient.invalidateQueries({ queryKey: ['funnels', selectedCompanyId] });
     }
   });
 };

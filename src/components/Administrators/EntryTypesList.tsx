@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useCrmAuth } from '@/hooks/use-crm-auth';
 
 interface EntryTypesListProps {
   searchTerm: string;
@@ -40,6 +41,8 @@ export const EntryTypesList: React.FC<EntryTypesListProps> = ({
   onEdit,
 }) => {
   const { toast } = useToast();
+  const { userRole } = useCrmAuth();
+  const isSubMaster = userRole === 'submaster';
 
   const { data: entryTypes, isLoading, refetch } = useQuery({
     queryKey: ['entry-types', searchTerm, statusFilter, selectedAdministrator],
@@ -168,6 +171,7 @@ export const EntryTypesList: React.FC<EntryTypesListProps> = ({
                     variant="outline"
                     size="sm"
                     onClick={() => onEdit(entryType)}
+                    disabled={isSubMaster}
                   >
                     <Edit className="w-4 h-4" />
                   </Button>
@@ -178,6 +182,7 @@ export const EntryTypesList: React.FC<EntryTypesListProps> = ({
                         variant="outline"
                         size="sm"
                         className={entryType.is_archived ? 'text-green-600' : 'text-red-600'}
+                        disabled={isSubMaster}
                       >
                         {entryType.is_archived ? (
                           <RotateCcw className="w-4 h-4" />

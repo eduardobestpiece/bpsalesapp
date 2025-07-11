@@ -2,64 +2,50 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Indicator, IndicatorValue } from '@/types/crm';
+import { useCompany } from '@/contexts/CompanyContext';
 
 interface IndicatorWithValues extends Indicator {
   values: IndicatorValue[];
 }
 
 export const useIndicators = (companyId?: string, userId?: string) => {
+  const { selectedCompanyId } = useCompany();
+  const effectiveCompanyId = companyId || selectedCompanyId;
   return useQuery({
-    queryKey: ['indicators', companyId, userId],
+    queryKey: ['indicators', effectiveCompanyId, userId],
     queryFn: async () => {
-      console.log('[useIndicators] Iniciando busca de indicadores para companyId:', companyId, 'userId:', userId);
-      
-      if (!companyId) {
+      console.log('[useIndicators] Iniciando busca de indicadores para companyId:', effectiveCompanyId, 'userId:', userId);
+      if (!effectiveCompanyId) {
         console.log('[useIndicators] CompanyId não fornecido, retornando array vazio');
         return [] as IndicatorWithValues[];
       }
-
       try {
         let query = supabase
           .from('indicators')
-          .select(`
-            *,
-            values:indicator_values(*)
-          `)
+          .select(`*, values:indicator_values(*)`)
           .order('period_date', { ascending: false });
-
-        // Filtro para não trazer arquivados
         query = query.is('archived_at', null);
-
-        if (companyId) {
-          query = query.eq('company_id', companyId);
+        if (effectiveCompanyId) {
+          query = query.eq('company_id', effectiveCompanyId);
         }
-
         if (userId) {
           query = query.eq('user_id', userId);
         }
-
-        console.log('[useIndicators] Executando query...');
         const { data, error } = await query;
-
         if (error) {
-          console.error('[useIndicators] Erro ao buscar indicadores:', error);
           if (error.code === 'PGRST301' || error.message.includes('RLS')) {
-            console.log('[useIndicators] Erro de RLS, retornando array vazio');
             return [] as IndicatorWithValues[];
           }
           throw error;
         }
-
-        console.log('[useIndicators] Indicadores carregados com sucesso:', data?.length || 0);
         return data as IndicatorWithValues[];
       } catch (err) {
-        console.error('[useIndicators] Erro inesperado:', err);
         return [] as IndicatorWithValues[];
       }
     },
-    enabled: !!companyId,
-    staleTime: 30000, // 30 segundos
-    gcTime: 300000, // 5 minutos
+    enabled: !!effectiveCompanyId,
+    staleTime: 30000,
+    gcTime: 300000,
     retry: 1,
     retryDelay: 1000,
   });

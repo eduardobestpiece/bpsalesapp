@@ -60,6 +60,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   const { data: indicators } = useIndicators(effectiveCompanyId);
 
   const isUser = crmUser?.role === 'user';
+  const isSubMaster = crmUser?.role === 'submaster';
   const allowedFunnels = isUser ? (funnels || []).filter(f => crmUser.funnels?.includes(f.id)) : (funnels || []);
 
   // NOVA LÓGICA DE PERÍODOS
@@ -784,6 +785,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                       onChange={e => setSalesValue(e.target.value)}
                       placeholder="0,00"
                       inputMode="decimal"
+                      disabled={isSubMaster}
                     />
                   ) : (
                     <Input
@@ -892,7 +894,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
             <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading || !formData.funnel_id}>
+            <Button type="submit" disabled={isLoading || !formData.funnel_id || isSubMaster}>
               {isLoading ? 'Salvando...' : (indicator ? 'Atualizar' : 'Registrar Indicador')}
             </Button>
           </div>

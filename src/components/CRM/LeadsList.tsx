@@ -4,9 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Edit, Archive } from 'lucide-react';
+import { Plus, Search, Edit, Archive, User } from 'lucide-react';
 import { useLeads } from '@/hooks/useLeads';
 import { LeadModal } from './LeadModal';
+import { useCrmAuth } from '@/hooks/useCrmAuth';
 
 interface LeadsListProps {
   companyId: string;
@@ -17,6 +18,8 @@ export const LeadsList = ({ companyId }: LeadsListProps) => {
   const [selectedLead, setSelectedLead] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { data: leads = [], isLoading } = useLeads();
+  const { userRole } = useCrmAuth();
+  const isSubMaster = userRole === 'submaster';
 
   const handleEdit = (lead: any) => {
     setSelectedLead(lead);
@@ -42,70 +45,38 @@ export const LeadsList = ({ companyId }: LeadsListProps) => {
     <>
       <Card>
         <CardHeader>
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle>Leads</CardTitle>
-              <CardDescription>
-                Gerencie seus leads e prospects
-              </CardDescription>
-            </div>
-            <Button onClick={() => setShowModal(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Novo Lead
-            </Button>
-          </div>
+          <CardTitle>Leads</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input
-                placeholder="Pesquisar por nome, email ou telefone..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+          <div className="flex justify-between mb-4">
+            <Input
+              placeholder="Buscar lead..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="max-w-xs"
+              disabled={isSubMaster}
+            />
+            <Button onClick={() => setShowModal(true)} disabled={isSubMaster}>
+              <Plus className="w-4 h-4 mr-2" /> Novo Lead
+            </Button>
           </div>
-
-          <div className="space-y-4">
-            {filteredLeads.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
-                {searchTerm ? 'Nenhum lead encontrado para a pesquisa.' : 'Nenhum lead cadastrado. Adicione o primeiro lead para começar.'}
-              </p>
+          <div className="space-y-2">
+            {isLoading ? (
+              <div>Carregando...</div>
             ) : (
               filteredLeads.map((lead) => (
-                <div
-                  key={lead.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow"
-                >
-                  <div className="flex-1 grid grid-cols-1 md:grid-cols-5 gap-4">
-                    <div>
-                      <p className="font-medium">{lead.name}</p>
-                      <p className="text-sm text-muted-foreground">Nome do Lead</p>
-                    </div>
-                    <div>
-                      <p className="text-sm">{lead.email || 'Não informado'}</p>
-                      <p className="text-sm text-muted-foreground">Email</p>
-                    </div>
-                    <div>
-                      <p className="text-sm">{lead.phone || 'Não informado'}</p>
-                      <p className="text-sm text-muted-foreground">Telefone</p>
-                    </div>
-                    <div>
-                      <p className="text-sm">Responsável</p>
-                      <p className="text-sm text-muted-foreground">Usuário</p>
-                    </div>
-                    <div>
-                      <Badge variant="outline">Fase</Badge>
-                      <p className="text-sm text-muted-foreground">Etapa do Funil</p>
-                    </div>
+                <div key={lead.id} className="flex items-center justify-between border rounded p-3">
+                  <div className="flex items-center gap-3">
+                    <User className="w-5 h-5 text-primary" />
+                    <span className="font-medium">{lead.name}</span>
+                    <Badge variant="outline">{lead.email}</Badge>
                   </div>
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleEdit(lead)}
+                      disabled={isSubMaster}
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
@@ -113,6 +84,7 @@ export const LeadsList = ({ companyId }: LeadsListProps) => {
                       variant="outline"
                       size="sm"
                       onClick={() => {}}
+                      disabled={isSubMaster}
                     >
                       <Archive className="w-4 h-4" />
                     </Button>
@@ -123,12 +95,12 @@ export const LeadsList = ({ companyId }: LeadsListProps) => {
           </div>
         </CardContent>
       </Card>
-
       <LeadModal
         isOpen={showModal}
         onClose={handleCloseModal}
         companyId={companyId}
         lead={selectedLead}
+        disabled={isSubMaster}
       />
     </>
   );

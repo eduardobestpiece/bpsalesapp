@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Edit, Archive, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useCrmAuth } from '@/hooks/useCrmAuth';
 
 interface BidType {
   id: string;
@@ -37,6 +38,8 @@ export const BidTypesList: React.FC<BidTypesListProps> = ({
 }) => {
   const [bidTypes, setBidTypes] = useState<BidType[]>([]);
   const [loading, setLoading] = useState(true);
+  const { userRole } = useCrmAuth();
+  const isSubMaster = userRole === 'submaster';
 
   const fetchBidTypes = async () => {
     try {
@@ -158,6 +161,7 @@ export const BidTypesList: React.FC<BidTypesListProps> = ({
                     variant="ghost"
                     size="sm"
                     onClick={() => onEdit(bidType)}
+                    disabled={isSubMaster}
                   >
                     <Edit className="w-4 h-4" />
                   </Button>
@@ -165,6 +169,7 @@ export const BidTypesList: React.FC<BidTypesListProps> = ({
                     variant="ghost"
                     size="sm"
                     onClick={() => handleArchive(bidType.id, bidType.is_archived)}
+                    disabled={isSubMaster}
                   >
                     <Archive className="w-4 h-4" />
                   </Button>
@@ -173,6 +178,7 @@ export const BidTypesList: React.FC<BidTypesListProps> = ({
                     size="sm"
                     onClick={() => handleDelete(bidType.id)}
                     className="text-red-600 hover:text-red-700"
+                    disabled={isSubMaster}
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>

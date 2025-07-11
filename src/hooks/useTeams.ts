@@ -2,6 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
 import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
 type Team = Tables<'teams'>;
@@ -9,39 +10,29 @@ type TeamInsert = TablesInsert<'teams'>;
 type TeamUpdate = TablesUpdate<'teams'>;
 
 export const useTeams = () => {
-  const { companyId } = useCrmAuth();
-
+  const { selectedCompanyId } = useCompany();
   return useQuery({
-    queryKey: ['teams', companyId],
+    queryKey: ['teams', selectedCompanyId],
     queryFn: async () => {
-      if (!companyId) {
-        console.log('No company ID available for teams query');
+      if (!selectedCompanyId) {
         return [];
       }
-
-      console.log('Fetching teams for company:', companyId);
       const { data, error } = await supabase
         .from('teams')
         .select('*')
-        .eq('company_id', companyId)
+        .eq('company_id', selectedCompanyId)
         .eq('status', 'active')
         .order('name');
-
-      if (error) {
-        console.error('Error fetching teams:', error);
-        throw error;
-      }
-
-      console.log('Teams fetched:', data);
+      if (error) throw error;
       return data as Team[];
     },
-    enabled: !!companyId
+    enabled: !!selectedCompanyId
   });
 };
 
 export const useCreateTeam = () => {
   const queryClient = useQueryClient();
-  const { companyId } = useCrmAuth();
+  const { selectedCompanyId } = useCompany();
 
   return useMutation({
     mutationFn: async (team: TeamInsert) => {
@@ -61,14 +52,14 @@ export const useCreateTeam = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['teams', companyId] });
+      queryClient.invalidateQueries({ queryKey: ['teams', selectedCompanyId] });
     }
   });
 };
 
 export const useUpdateTeam = () => {
   const queryClient = useQueryClient();
-  const { companyId } = useCrmAuth();
+  const { selectedCompanyId } = useCompany();
 
   return useMutation({
     mutationFn: async ({ id, ...team }: TeamUpdate & { id: string }) => {
@@ -89,14 +80,14 @@ export const useUpdateTeam = () => {
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['teams', companyId] });
+      queryClient.invalidateQueries({ queryKey: ['teams', selectedCompanyId] });
     }
   });
 };
 
 export const useDeleteTeam = () => {
   const queryClient = useQueryClient();
-  const { companyId } = useCrmAuth();
+  const { selectedCompanyId } = useCompany();
 
   return useMutation({
     mutationFn: async (id: string) => {
@@ -114,7 +105,7 @@ export const useDeleteTeam = () => {
       console.log('Team deleted:', id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['teams', companyId] });
+      queryClient.invalidateQueries({ queryKey: ['teams', selectedCompanyId] });
     }
   });
 };

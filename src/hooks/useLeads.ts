@@ -2,53 +2,47 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { LeadWithRelations } from '@/types/crm';
+import { useCompany } from '@/contexts/CompanyContext';
 
 export const useLeads = () => {
+  const { selectedCompanyId } = useCompany();
   return useQuery({
-    queryKey: ['leads'],
+    queryKey: ['leads', selectedCompanyId],
     queryFn: async () => {
+      if (!selectedCompanyId) return [];
       const { data, error } = await supabase
         .from('leads')
-        .select(`
-          *,
-          responsible:crm_users!responsible_id(first_name, last_name),
-          funnel:funnels(name),
-          current_stage:funnel_stages(name),
-          source:sources(name)
-        `)
+        .select(`*, responsible:crm_users!responsible_id(first_name, last_name), funnel:funnels(name), current_stage:funnel_stages(name), source:sources(name)`)
         .eq('status', 'active')
+        .eq('company_id', selectedCompanyId)
         .order('created_at', { ascending: false });
-
       if (error) {
-        console.error('Error fetching leads:', error);
-        // Se o erro for de RLS (usuário não autenticado), retornar array vazio
         if (error.code === 'PGRST301' || error.message.includes('RLS')) {
-          return [] as LeadWithRelations[];
+          return [];
         }
         throw error;
       }
-
-      return data as LeadWithRelations[];
+      return data;
     },
+    enabled: !!selectedCompanyId
   });
 };
 
 export const useCreateLead = () => {
   const queryClient = useQueryClient();
-
+  const { selectedCompanyId } = useCompany();
   return useMutation({
     mutationFn: async (leadData: any) => {
       const { data, error } = await supabase
         .from('leads')
-        .insert(leadData)
+        .insert([{ ...leadData, company_id: selectedCompanyId }])
         .select()
         .single();
-
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['leads'] });
+      queryClient.invalidateQueries({ queryKey: ['leads', selectedCompanyId] });
     },
   });
 };

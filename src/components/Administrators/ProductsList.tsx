@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Edit, Archive, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useCrmAuth } from '@/hooks/useCrmAuth';
+import { Input } from '@/components/ui/input';
 
 interface Product {
   id: string;
@@ -35,6 +37,8 @@ export const ProductsList: React.FC<ProductsListProps> = ({
 }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const { userRole } = useCrmAuth();
+  const isSubMaster = userRole === 'submaster';
 
   const fetchProducts = async () => {
     try {
@@ -115,6 +119,18 @@ export const ProductsList: React.FC<ProductsListProps> = ({
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-between mb-4">
+        <Input
+          placeholder="Buscar produto..."
+          value={searchTerm}
+          onChange={e => setSearchTerm(e.target.value)}
+          className="max-w-xs"
+          disabled={isSubMaster}
+        />
+        <Button onClick={onCreate} disabled={isSubMaster}>
+          Novo Produto
+        </Button>
+      </div>
       <Table>
         <TableHeader>
           <TableRow>
@@ -163,6 +179,7 @@ export const ProductsList: React.FC<ProductsListProps> = ({
                     variant="ghost"
                     size="sm"
                     onClick={() => onEdit(product)}
+                    disabled={isSubMaster}
                   >
                     <Edit className="w-4 h-4" />
                   </Button>
@@ -170,6 +187,7 @@ export const ProductsList: React.FC<ProductsListProps> = ({
                     variant="ghost"
                     size="sm"
                     onClick={() => handleArchive(product.id, product.is_archived)}
+                    disabled={isSubMaster}
                   >
                     <Archive className="w-4 h-4" />
                   </Button>
@@ -178,6 +196,7 @@ export const ProductsList: React.FC<ProductsListProps> = ({
                     size="sm"
                     onClick={() => handleDelete(product.id)}
                     className="text-red-600 hover:text-red-700"
+                    disabled={isSubMaster}
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>

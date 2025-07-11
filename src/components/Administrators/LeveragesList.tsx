@@ -6,6 +6,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Edit, Archive, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useCrmAuth } from '@/hooks/use-crm-auth';
 
 interface LeveragesListProps {
   searchTerm: string;
@@ -17,6 +18,8 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
   const { toast } = useToast();
   const [leverages, setLeverages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { userRole } = useCrmAuth();
+  const isSubMaster = userRole === 'submaster';
 
   const loadLeverages = async () => {
     try {
@@ -173,6 +176,7 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
                   size="sm"
                   onClick={() => onEdit(leverage)}
                   className="hover:bg-blue-50 hover:border-blue-200"
+                  disabled={isSubMaster}
                 >
                   <Edit className="w-4 h-4" />
                 </Button>
@@ -184,6 +188,7 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
                     "hover:bg-green-50 hover:border-green-200" : 
                     "hover:bg-red-50 hover:border-red-200"
                   }
+                  disabled={isSubMaster}
                 >
                   {leverage.is_archived ? (
                     <RotateCcw className="w-4 h-4" />

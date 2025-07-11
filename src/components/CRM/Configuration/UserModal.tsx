@@ -53,6 +53,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
 
   // Verificar se o usuário atual pode criar administradores
   const canCreateAdmin = crmUser?.role === 'master' || crmUser?.role === 'admin';
+  const canCreateSubMaster = crmUser?.role === 'master';
 
   useEffect(() => {
     if (user) {
@@ -255,19 +256,24 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
               />
             </div>
           )}
+          {/* Seleção de papel */}
           <div>
-            <Label htmlFor="role">Função *</Label>
+            <Label htmlFor="role">Papel *</Label>
             <Select
               value={formData.role}
-              onValueChange={(value: 'admin' | 'user') => setFormData(prev => ({ ...prev, role: value }))}
+              onValueChange={(value) => setFormData((prev) => ({ ...prev, role: value as any }))}
               disabled={isLoading}
+              required
             >
               <SelectTrigger>
-                <SelectValue />
+                <SelectValue placeholder="Selecione o papel" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="user">Usuário</SelectItem>
-                <SelectItem value="admin">Administrador</SelectItem>
+                <SelectItem value="leader">Líder</SelectItem>
+                {canCreateAdmin && <SelectItem value="admin">Administrador</SelectItem>}
+                {canCreateSubMaster && <SelectItem value="submaster">SubMaster (visualização total, sem edição)</SelectItem>}
+                {crmUser?.role === 'master' && <SelectItem value="master">Master</SelectItem>}
               </SelectContent>
             </Select>
           </div>

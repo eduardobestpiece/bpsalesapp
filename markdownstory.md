@@ -98,3 +98,14 @@
 - Solicitação registrada em `requeststory.md`.
 
 --- 
+
+## [11/07/2024] Filtro Global de Empresa e Papel SubMaster
+
+- Implementado contexto global de empresa e seletor para Master.
+- Todos os dados do CRM e Simulador agora são filtrados pela empresa selecionada.
+- Criado o papel SubMaster (visualização total, sem permissão de edição/criação/exclusão).
+- Ajustados todos os módulos (Usuários, Leads, Vendas, Indicadores, Produtos, Administradores, Tipos de Entrada, Lances, Alavancagens, etc) para bloquear qualquer ação para SubMaster.
+- Telas, botões e formulários de ação agora respeitam o bloqueio para SubMaster.
+- Solicitação registrada e checklist atualizado em `requeststory.md`.
+
+--- 

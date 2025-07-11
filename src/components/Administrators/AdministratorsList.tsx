@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Edit, Archive, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useCrmAuth } from '@/hooks/useCrmAuth';
 
 interface Administrator {
   id: string;
@@ -32,6 +33,8 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
 }) => {
   const [administrators, setAdministrators] = useState<Administrator[]>([]);
   const [loading, setLoading] = useState(true);
+  const { userRole } = useCrmAuth();
+  const isSubMaster = userRole === 'submaster';
 
   const fetchAdministrators = async () => {
     try {
@@ -136,6 +139,7 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
                     variant="ghost"
                     size="sm"
                     onClick={() => onEdit(admin)}
+                    disabled={isSubMaster}
                   >
                     <Edit className="w-4 h-4" />
                   </Button>
@@ -143,6 +147,7 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
                     variant="ghost"
                     size="sm"
                     onClick={() => handleArchive(admin.id, admin.is_archived)}
+                    disabled={isSubMaster}
                   >
                     <Archive className="w-4 h-4" />
                   </Button>
@@ -151,6 +156,7 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
                     size="sm"
                     onClick={() => handleDelete(admin.id)}
                     className="text-red-600 hover:text-red-700"
+                    disabled={isSubMaster}
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>

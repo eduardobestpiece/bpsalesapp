@@ -4,9 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Search, Edit, Archive } from 'lucide-react';
+import { Plus, Search, Edit, Archive, User } from 'lucide-react';
 import { useSales } from '@/hooks/useSales';
 import { SaleModal } from './SaleModal';
+import { useCrmAuth } from '@/hooks/useCrmAuth';
 
 interface SalesListProps {
   companyId: string;
@@ -17,6 +18,8 @@ export const SalesList = ({ companyId }: SalesListProps) => {
   const [selectedSale, setSelectedSale] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { data: sales = [], isLoading } = useSales();
+  const { userRole } = useCrmAuth();
+  const isSubMaster = userRole === 'submaster';
 
   const handleEdit = (sale: any) => {
     setSelectedSale(sale);
@@ -51,78 +54,42 @@ export const SalesList = ({ companyId }: SalesListProps) => {
                 Gerencie suas vendas e resultados
               </CardDescription>
             </div>
-            <Button onClick={() => setShowModal(true)}>
+            <Button onClick={() => setShowModal(true)} disabled={isSubMaster}>
               <Plus className="w-4 h-4 mr-2" />
               Nova Venda
             </Button>
           </div>
         </CardHeader>
         <CardContent>
-          <div className="mb-4">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-              <Input
-                placeholder="Pesquisar por data, lead, responsável ou valor..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+          <div className="flex justify-between mb-4">
+            <Input
+              placeholder="Buscar venda..."
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              className="max-w-xs"
+              disabled={isSubMaster}
+            />
+            <Button onClick={() => setShowModal(true)} disabled={isSubMaster}>
+              <Plus className="w-4 h-4 mr-2" /> Nova Venda
+            </Button>
           </div>
-
-          <div className="space-y-4">
-            {filteredSales.length === 0 ? (
-              <p className="text-muted-foreground text-center py-8">
-                {searchTerm ? 'Nenhuma venda encontrada para a pesquisa.' : 'Nenhuma venda cadastrada. Adicione a primeira venda para começar.'}
-              </p>
+          <div className="space-y-2">
+            {isLoading ? (
+              <div>Carregando...</div>
             ) : (
               filteredSales.map((sale) => (
-                <div
-                  key={sale.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow"
-                >
-                  <div className="flex-1 grid grid-cols-1 md:grid-cols-5 gap-4">
-                    <div>
-                      <p className="font-medium">{sale.sale_date ? new Date(sale.sale_date).toLocaleDateString('pt-BR') : 'Data não informada'}</p>
-                      <p className="text-sm text-muted-foreground">Data da Venda</p>
-                    </div>
-                    <div>
-                      <p className="text-sm">{sale.lead?.name || 'Lead não informado'}</p>
-                      <p className="text-sm text-muted-foreground">Nome do Lead</p>
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium">
-                        {sale.sale_value ? 
-                          new Intl.NumberFormat('pt-BR', { 
-                            style: 'currency', 
-                            currency: 'BRL' 
-                          }).format(sale.sale_value) : 
-                          'Valor não informado'
-                        }
-                      </p>
-                      <p className="text-sm text-muted-foreground">Valor da Venda</p>
-                    </div>
-                    <div>
-                      <p className="text-sm">
-                        {sale.responsible ? 
-                          `${sale.responsible.first_name} ${sale.responsible.last_name}` : 
-                          'Responsável não informado'
-                        }
-                      </p>
-                      <p className="text-sm text-muted-foreground">Responsável</p>
-                    </div>
-                    <div>
-                      <Badge variant="outline">
-                        {sale.team?.name || 'Equipe não informada'}
-                      </Badge>
-                      <p className="text-sm text-muted-foreground">Equipe</p>
-                    </div>
+                <div key={sale.id} className="flex items-center justify-between border rounded p-3">
+                  <div className="flex items-center gap-3">
+                    <User className="w-5 h-5 text-primary" />
+                    <span className="font-medium">{sale.lead?.name}</span>
+                    <Badge variant="outline">{sale.sale_value}</Badge>
                   </div>
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleEdit(sale)}
+                      disabled={isSubMaster}
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
@@ -130,6 +97,7 @@ export const SalesList = ({ companyId }: SalesListProps) => {
                       variant="outline"
                       size="sm"
                       onClick={() => {}}
+                      disabled={isSubMaster}
                     >
                       <Archive className="w-4 h-4" />
                     </Button>
@@ -140,12 +108,12 @@ export const SalesList = ({ companyId }: SalesListProps) => {
           </div>
         </CardContent>
       </Card>
-
       <SaleModal
         isOpen={showModal}
         onClose={handleCloseModal}
         companyId={companyId}
         sale={selectedSale}
+        disabled={isSubMaster}
       />
     </>
   );

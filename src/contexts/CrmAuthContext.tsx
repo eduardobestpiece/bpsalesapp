@@ -23,6 +23,7 @@ const roleHierarchy: Record<UserRole, number> = {
   user: 1,
   leader: 2,
   admin: 3,
+  submaster: 4, // SubMaster tem o mesmo nível de visualização do master, mas sem permissão de edição
   master: 4,
 };
 
