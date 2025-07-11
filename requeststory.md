@@ -39,3 +39,28 @@
 - [ ] Eliminar atualização desnecessária ao trocar de aba
 - [ ] Executar deploy
 - [ ] Solicitar validação do funcionamento 
+
+---
+
+# Requisição em andamento: Carregamento infinito global após F5
+
+**Sintoma:** Ao atualizar (F5) qualquer página, o app entra em carregamento infinito. No console:
+```
+[CrmAuth] Initializing auth...
+[CrmAuth] Auth state changed: SIGNED_IN ...
+[CrmAuth] Buscando CRM user para: ...
+```
+
+**Contexto:**
+- O contexto de autenticação depende do usuário CRM e da empresa.
+- Se o usuário CRM não existe ou não tem empresa, o app pode não renderizar nada útil.
+- O loading global só termina se a promise de busca do usuário CRM resolver.
+
+**Plano de ação:**
+1. Revisar fluxo de inicialização do contexto de autenticação global.
+2. Garantir que o loading sempre finalize, mesmo se o usuário CRM não existir.
+3. Adicionar fallback visual global para usuário CRM inexistente ou sem empresa.
+4. Corrigir o fluxo para nunca travar o loading global.
+5. Executar deploy e pedir validação.
+
+**Status:** Em andamento. 

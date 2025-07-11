@@ -25,12 +25,36 @@ import { Loader2 } from "lucide-react";
 const queryClient = new QueryClient();
 
 function AppContent() {
-  const { user, loading } = useCrmAuth();
+  const { user, crmUser, companyId, loading } = useCrmAuth();
   
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Fallback global para usuário autenticado mas não encontrado no CRM
+  if (user && !crmUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-destructive mb-2">Usuário não encontrado no CRM</h2>
+          <p className="text-secondary/60">Seu usuário está autenticado, mas não foi localizado na base de usuários do CRM. Contate o administrador do sistema.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback global para usuário sem empresa associada
+  if (user && crmUser && !companyId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-destructive mb-2">Empresa não associada</h2>
+          <p className="text-secondary/60">Seu usuário não está associado a nenhuma empresa ativa. Contate o administrador do sistema.</p>
+        </div>
       </div>
     );
   }
