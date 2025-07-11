@@ -32,6 +32,22 @@ function getPrazoStatus(indicator: any, funnel: any) {
   }
 }
 
+// Função para validar se um indicador é válido
+function isValidIndicator(indicator: any): boolean {
+  return !!(
+    indicator &&
+    typeof indicator === 'object' &&
+    indicator.id &&
+    indicator.user_id &&
+    indicator.funnel_id &&
+    indicator.company_id &&
+    typeof indicator.month_reference === 'number' &&
+    typeof indicator.year_reference === 'number' &&
+    indicator.created_at &&
+    indicator.updated_at
+  );
+}
+
 const CrmIndicadores = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedIndicator, setSelectedIndicator] = useState<any>(null);
@@ -101,7 +117,7 @@ const CrmIndicadores = () => {
   const [archivedIndicatorIds, setArchivedIndicatorIds] = useState<string[]>([]);
 
   const handleArchive = useCallback(async (indicator: any) => {
-    if (!indicator) return;
+    if (!indicator || !indicator.id) return;
     await supabase
       .from('indicators')
       .update({ archived_at: new Date().toISOString() })
@@ -111,7 +127,7 @@ const CrmIndicadores = () => {
   }, []);
 
   const handleDelete = useCallback(async (indicator: any) => {
-    if (!indicator) return;
+    if (!indicator || !indicator.id) return;
     if (!window.confirm('Tem certeza que deseja excluir este indicador? Essa ação não pode ser desfeita.')) return;
     await supabase
       .from('indicators')
@@ -131,24 +147,10 @@ const CrmIndicadores = () => {
     
     // Filtragem mais rigorosa para garantir que não há valores null
     const validIndicators = indicators.filter((ind): ind is NonNullable<typeof ind> => {
-      if (!ind || typeof ind !== 'object') {
-        console.log('[CrmIndicadores] Filtering out null/invalid indicator:', ind);
+      if (!isValidIndicator(ind)) {
+        console.log('[CrmIndicadores] Filtering out invalid indicator:', ind);
         return false;
       }
-      
-      // Verificar propriedades essenciais
-      const hasEssentialProps = ind.id && 
-                               ind.user_id && 
-                               ind.funnel_id && 
-                               ind.company_id &&
-                               typeof ind.month_reference === 'number' &&
-                               typeof ind.year_reference === 'number';
-      
-      if (!hasEssentialProps) {
-        console.log('[CrmIndicadores] Indicator missing essential props:', ind);
-        return false;
-      }
-      
       return true;
     });
     
@@ -157,7 +159,7 @@ const CrmIndicadores = () => {
     if (crmUser.role === 'master' || crmUser.role === 'admin') {
       return validIndicators; // vê todos da empresa
     } else if (crmUser.role === 'leader') {
-      const teamMembers = crmUsers.filter(u => u.team_id === crmUser.team_id).map(u => u.id);
+      const teamMembers = crmUsers.filter(u => u && u.team_id === crmUser.team_id).map(u => u.id);
       return validIndicators.filter(ind => teamMembers.includes(ind.user_id) || ind.user_id === crmUser.id);
     } else if (crmUser.role === 'user') {
       return validIndicators.filter(ind => ind.user_id === crmUser.id);
@@ -170,9 +172,9 @@ const CrmIndicadores = () => {
     console.log('[CrmIndicadores] Filtering accessible indicators:', accessibleIndicators.length);
     
     let result = accessibleIndicators.filter(indicator => {
-      // Verificação rigorosa de null no início
-      if (!indicator || typeof indicator !== 'object') {
-        console.log('[CrmIndicadores] Null or invalid indicator found during filtering');
+      // Verificação rigorosa de null no início - dupla verificação
+      if (!isValidIndicator(indicator)) {
+        console.log('[CrmIndicadores] Invalid indicator found during filtering');
         return false;
       }
       
@@ -216,6 +218,9 @@ const CrmIndicadores = () => {
     if (showOnlyMine && crmUser) {
       result = result.filter(ind => ind && ind.user_id === crmUser.id);
     }
+    
+    // Validação final - garantir que nenhum indicator null passe
+    result = result.filter(isValidIndicator);
     
     console.log('[CrmIndicadores] Final filtered indicators:', result.length);
     return result;
@@ -348,8 +353,8 @@ const CrmIndicadores = () => {
                                 </tr>
                               ) : (
                                 filteredIndicators.map((indicator, idx) => {
-                                  // Verificação de segurança ainda mais rigorosa
-                                  if (!indicator || typeof indicator !== 'object' || !indicator.id) {
+                                  // Verificação de segurança final antes do render - verificação tripla
+                                  if (!isValidIndicator(indicator)) {
                                     console.log('[CrmIndicadores] Skipping invalid indicator in render:', indicator);
                                     return null;
                                   }
@@ -417,7 +422,7 @@ const CrmIndicadores = () => {
                                       </td>
                                     </tr>
                                   );
-                                })
+                                }).filter(Boolean) // Remove any null entries
                               )}
                             </tbody>
                           </table>

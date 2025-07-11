@@ -55,17 +55,24 @@ export const useIndicators = (companyId?: string, userId?: string) => {
             return false;
           }
           
-          // Check for required properties
-          const hasRequiredProps = 'id' in indicator && 
-                                 'user_id' in indicator && 
-                                 'funnel_id' in indicator &&
-                                 'company_id' in indicator &&
-                                 'month_reference' in indicator &&
-                                 'year_reference' in indicator;
+          // Check for required properties - all must be present and not null
+          const hasRequiredProps = indicator.id && 
+                                 indicator.user_id && 
+                                 indicator.funnel_id &&
+                                 indicator.company_id &&
+                                 typeof indicator.month_reference === 'number' &&
+                                 typeof indicator.year_reference === 'number' &&
+                                 indicator.created_at &&
+                                 indicator.updated_at;
           
           if (!hasRequiredProps) {
             console.log('[useIndicators] Indicator missing required properties:', indicator);
             return false;
+          }
+          
+          // Ensure values array exists
+          if (!Array.isArray(indicator.values)) {
+            indicator.values = [];
           }
           
           return true;
