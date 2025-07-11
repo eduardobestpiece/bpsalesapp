@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { useCreateSource, useUpdateSource } from '@/hooks/useSources';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
+import { useCompany } from '@/contexts/CompanyContext';
 
 interface SourceModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export const SourceModal = ({ isOpen, onClose, source }: SourceModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const { companyId } = useCrmAuth();
+  const { selectedCompanyId } = useCompany();
   const createSourceMutation = useCreateSource();
   const updateSourceMutation = useUpdateSource();
 
@@ -57,7 +59,7 @@ export const SourceModal = ({ isOpen, onClose, source }: SourceModalProps) => {
         await updateSourceMutation.mutateAsync({
           id: source.id,
           name: formData.name.trim(),
-          company_id: companyId,
+          company_id: selectedCompanyId || companyId,
           status: 'active'
         });
         toast.success('Origem atualizada com sucesso!');
@@ -65,7 +67,7 @@ export const SourceModal = ({ isOpen, onClose, source }: SourceModalProps) => {
         // Criar nova origem
         await createSourceMutation.mutateAsync({
           name: formData.name.trim(),
-          company_id: companyId,
+          company_id: selectedCompanyId || companyId,
           status: 'active'
         });
         toast.success('Origem criada com sucesso!');

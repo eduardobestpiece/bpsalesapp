@@ -79,3 +79,11 @@ Bloco 1
     - Modal de edição agora é idêntico ao de registro, mas sem seleção de período/funil.
     - Todos os campos são preenchidos apenas com os dados já cadastrados do indicador, sem edição de período/funil.
     - Commit e deploy realizados.
+
+## 11/07/2024 - Ajustes Funil, Configurações e Indicadores
+
+- Gráfico do funil ajustado: faixas espaçadas, responsivas, com menos arredondamento e última faixa adaptativa para nomes grandes.
+- Abas de configurações (Funis, Origens, Times): agora só exibem, criam e editam dados vinculados à empresa selecionada no menu lateral.
+- Modal de registro de indicador: sempre exibe todos os períodos dos últimos 90 dias, marcando como “(preenchido)” e desabilitando períodos já registrados.
+- Deploy automático realizado.
+- Aguardando validação do usuário para marcar como concluído.

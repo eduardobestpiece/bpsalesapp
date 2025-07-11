@@ -627,7 +627,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                             className={opt.preenchido ? 'text-gray-400 bg-gray-100 cursor-not-allowed' : ''}
                           >
                             <span>{opt.label}</span>
-                            {opt.preenchido && <span className="ml-2 text-xs text-gray-400">(preenchido)</span>}
+                            {opt.preenchido && <span className="ml-2 text-xs text-gray-400">(já preenchido)</span>}
                           </SelectItem>
                         ))}
                       </SelectContent>

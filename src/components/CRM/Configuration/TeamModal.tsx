@@ -94,7 +94,7 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
           id: team.id,
           name: formData.name.trim(),
           leader_id: formData.leader_id,
-          company_id: companyId,
+          company_id: selectedCompanyId || companyId,
           status: 'active'
         });
         teamId = team.id;
@@ -103,7 +103,7 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
         const result = await createTeamMutation.mutateAsync({
           name: formData.name.trim(),
           leader_id: formData.leader_id,
-          company_id: companyId,
+          company_id: selectedCompanyId || companyId,
           status: 'active'
         });
         teamId = result?.id;

@@ -1,27 +1,28 @@
-# Requisição em andamento - 11/07/2024
+# Requisição em andamento - 11/07/2024 (Bloco 1)
 
 ## Ajustes Solicitados
 
 ### Gráfico do Funil
-- Corrigir empilhamento das faixas (espaçamento vertical).
-- Reduzir o arredondamento das faixas.
-- Responsividade: última faixa pode ser maior e texto menor se necessário.
+- Reduzir o espaçamento vertical entre as faixas (espaço mínimo, sem sobreposição).
+- Todas as faixas com a mesma altura.
+- Impedir quebra de linha nos textos das faixas.
+- Se o nome da última faixa for grande, aumentar a largura horizontal da faixa (e das superiores proporcionalmente), nunca a altura.
+- Cada faixa terá largura diferente, mas altura igual.
 
-### Página de Configurações (Abas Funis, Origens, Times)
-- Garantir que ao criar/editar itens, eles sejam sempre vinculados à empresa selecionada no menu lateral.
-- Cada empresa só pode ver seus próprios dados.
+### Modal de Registro de Indicadores
+- Exibir períodos já preenchidos com o aviso “(já preenchido)” em cinza no campo “Período” do modal, desabilitando a seleção.
 
-### Modal de Registro de Indicador
-- Exibir sempre todos os períodos dos últimos 90 dias, independentemente de quantos indicadores já existem.
-- Períodos já preenchidos aparecem como “(preenchido)” e ficam desabilitados para seleção.
+### Página de Configurações do CRM (Funis, Origens, Times)
+- Garantir que ao criar/editar qualquer item, ele seja sempre vinculado à empresa selecionada no menu lateral esquerdo.
+- Cada empresa só pode ver e manipular seus próprios dados.
 
 ---
 
 ## Checklist
-- [ ] Ajustar gráfico do funil (espaçamento, responsividade, border-radius)
-- [ ] Corrigir vinculação e visualização por empresa nas abas Funis, Origens e Times
-- [ ] Ajustar modal de registro de indicador (períodos dos últimos 90 dias, preenchidos desabilitados)
-- [ ] Testar localmente
-- [ ] Atualizar `requeststory.md`
-- [ ] Deploy automático
-- [ ] Solicitar validação 
+- [ ] Ajustar gráfico do funil: altura igual, espaçamento mínimo, impedir quebra de linha, largura adaptativa.
+- [ ] Ajustar modal de indicador: exibir “(já preenchido)” em cinza nos períodos preenchidos.
+- [ ] Corrigir cadastro/edição/listagem nas abas de configurações para sempre usar a empresa selecionada.
+- [ ] Testar localmente.
+- [ ] Atualizar `requeststory.md`.
+- [ ] Deploy automático.
+- [ ] Solicitar validação. 

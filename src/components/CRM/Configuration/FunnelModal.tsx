@@ -12,6 +12,7 @@ import { useCreateFunnel, useUpdateFunnel, insertFunnelStages, updateFunnelStage
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useCompany } from '@/contexts/CompanyContext';
 
 interface FunnelStage {
   id?: string;
@@ -46,6 +47,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
   const [canSelectRecommendationStage, setCanSelectRecommendationStage] = useState(false);
 
   const { companyId, crmUser } = useCrmAuth();
+  const { selectedCompanyId } = useCompany();
   const createFunnelMutation = useCreateFunnel();
   const updateFunnelMutation = useUpdateFunnel();
 
@@ -224,7 +226,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
         name: formData.name.trim(),
         verification_type: formData.verification_type,
         verification_day: formData.verification_type === 'daily' ? null : formData.verification_day,
-        company_id: companyId,
+        company_id: selectedCompanyId || companyId,
         status: 'active' as const,
         sales_value_mode: formData.sales_value_mode,
         recommendations_mode: formData.recommendations_mode,
