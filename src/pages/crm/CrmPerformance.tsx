@@ -7,6 +7,7 @@ import { PerformanceStats } from '@/components/CRM/Performance/PerformanceStats'
 import { useIndicators } from '@/hooks/useIndicators';
 import { useFunnels } from '@/hooks/useFunnels';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 interface PerformanceFilters {
   funnelId: string;
@@ -18,6 +19,7 @@ interface PerformanceFilters {
 const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
   const { companyId, crmUser } = useCrmAuth();
   const [filters, setFilters] = useState<PerformanceFilters | null>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'funnel'>('overview');
   
   const { data: indicators = [] } = useIndicators(
     companyId, 
@@ -78,41 +80,63 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
   const funnelData = getFunnelChartData();
   const statsData = getPerformanceStats();
 
-  const content = (
+  const funnelTabContent = (
     <div className="space-y-6">
-      {/* Filters */}
-      <PerformanceFilters onFiltersChange={setFilters} />
-      {filters && (
-        <>
-          {/* Statistics */}
-          <PerformanceStats {...statsData} />
-          {/* Funnel Chart */}
-          {funnelData.length > 0 ? (
-            <FunnelChart 
-              stages={funnelData}
-              title={`Funil: ${selectedFunnel?.name} - ${filters.period === 'day' ? 'Diário' : filters.period === 'week' ? 'Semanal' : 'Mensal'}`}
-            />
-          ) : (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">📊</div>
-              <h3 className="text-xl font-semibold mb-2">Sem dados de performance</h3>
-              <p className="text-muted-foreground">
-                Não há indicadores registrados para este funil no período selecionado.
-              </p>
-            </div>
-          )}
-        </>
-      )}
-      {!filters && (
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4">🎯</div>
-          <h3 className="text-xl font-semibold mb-2">Selecione os filtros</h3>
-          <p className="text-muted-foreground">
-            Configure os filtros acima para visualizar a performance do funil.
-          </p>
-        </div>
-      )}
+      {/* Filtros dinâmicos */}
+      <PerformanceFilters onFiltersChange={setFilters} funnelOnly />
+      {/* Gráfico do funil e comparativo serão implementados aqui */}
+      <div className="text-center py-12">
+        <div className="text-6xl mb-4">🪄</div>
+        <h3 className="text-xl font-semibold mb-2">Funil em construção</h3>
+        <p className="text-muted-foreground">
+          Em breve: gráfico dinâmico, comparativo e filtros avançados conforme especificação.
+        </p>
+      </div>
     </div>
+  );
+
+  const content = (
+    <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <TabsList className="mb-6">
+        <TabsTrigger value="overview">Performance Geral</TabsTrigger>
+        <TabsTrigger value="funnel">Funil</TabsTrigger>
+      </TabsList>
+      <TabsContent value="overview">
+        {/* Filters */}
+        <PerformanceFilters onFiltersChange={setFilters} />
+        {filters && (
+          <>
+            {/* Statistics */}
+            <PerformanceStats {...statsData} />
+            {/* Funnel Chart */}
+            {funnelData.length > 0 ? (
+              <FunnelChart 
+                stages={funnelData}
+                title={`Funil: ${selectedFunnel?.name} - ${filters.period === 'day' ? 'Diário' : filters.period === 'week' ? 'Semanal' : 'Mensal'}`}
+              />
+            ) : (
+              <div className="text-center py-12">
+                <div className="text-6xl mb-4">📊</div>
+                <h3 className="text-xl font-semibold mb-2">Sem dados de performance</h3>
+                <p className="text-muted-foreground">
+                  Não há indicadores registrados para este funil no período selecionado.
+                </p>
+              </div>
+            )}
+          </>
+        )}
+        {!filters && (
+          <div className="text-center py-12">
+            <div className="text-6xl mb-4">🎯</div>
+            <h3 className="text-xl font-semibold mb-2">Selecione os filtros</h3>
+            <p className="text-muted-foreground">
+              Configure os filtros acima para visualizar a performance do funil.
+            </p>
+          </div>
+        )}
+      </TabsContent>
+      <TabsContent value="funnel">{funnelTabContent}</TabsContent>
+    </Tabs>
   );
 
   if (embedded) {
