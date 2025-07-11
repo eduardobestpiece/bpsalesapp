@@ -48,6 +48,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   const [tempYear, setTempYear] = useState(yearReference);
   // Estado para seleção em massa (preparação)
   const [tempSelectedIndicators, setTempSelectedIndicators] = useState<string[]>([]); // IDs dos indicadores selecionados
+  const [isDelayed, setIsDelayed] = useState<boolean>(indicator?.is_delayed || false);
 
   // Garantir que o companyId está correto (fallback para o do usuário logado)
   const { crmUser } = useCrmAuth();
@@ -279,6 +280,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
       });
       setSalesValue(indicator.sales_value || '0,00');
       setRecommendationsCount(indicator.recommendations_count || 0);
+      setIsDelayed(indicator.is_delayed || false);
     } else {
       const today = new Date().toISOString().split('T')[0];
       setFormData({
@@ -290,6 +292,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
       });
       setSalesValue('0,00');
       setRecommendationsCount(0);
+      setIsDelayed(false);
     }
   }, [indicator]);
 
@@ -516,7 +519,8 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         month_reference: monthReference,
         year_reference: yearReference,
         sales_value: parseFloat(salesValue.replace(',', '.')),
-        recommendations_count: recommendationsCount
+        recommendations_count: recommendationsCount,
+        is_delayed: isDelayed
       };
 
       const stageValues = Object.entries(formData.stages).map(([stageId, value]) => ({
@@ -574,7 +578,8 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         month_reference: monthReference,
         year_reference: yearReference,
         sales_value: parseMonetaryValue(salesValue),
-        recommendations_count: recommendationsCount
+        recommendations_count: recommendationsCount,
+        is_delayed: isDelayed
       };
       const { error } = await supabase
         .from('indicators')
@@ -813,6 +818,24 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                     />
                   )}
                 </div>
+                {indicator && (
+                  <div>
+                    <Label htmlFor="is_delayed">Preenchido com atraso?</Label>
+                    <Select
+                      value={isDelayed ? 'true' : 'false'}
+                      onValueChange={v => setIsDelayed(v === 'true')}
+                      disabled={isLoading}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="false">Não</SelectItem>
+                        <SelectItem value="true">Sim</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </>
             )}
           </div>

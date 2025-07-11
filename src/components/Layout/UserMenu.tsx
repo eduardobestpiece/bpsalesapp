@@ -22,6 +22,12 @@ export const UserMenu = () => {
     navigate('/crm/indicadores');
   };
 
+  // Exemplo de logout para referência futura:
+  // const handleLogout = async () => {
+  //   await signOut();
+  //   navigate('/crm/login');
+  // };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

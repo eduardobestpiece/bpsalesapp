@@ -43,7 +43,12 @@ const CrmIndicadores = () => {
   console.log('[CrmIndicadores] CrmUser:', crmUser);
 
   // Hooks de dados com logs
-  const { data: indicators, isLoading: isIndicatorsLoading, error: indicatorsError } = useIndicators(companyId, crmUser?.id);
+  // Buscar indicadores conforme perfil
+  let userIdForIndicators = undefined;
+  if (crmUser?.role === 'user') userIdForIndicators = crmUser.id;
+  if (crmUser?.role === 'leader') userIdForIndicators = undefined; // pega todos da equipe via filtragem abaixo
+  if (crmUser?.role === 'admin' || crmUser?.role === 'master') userIdForIndicators = undefined; // pega todos da empresa
+  const { data: indicators, isLoading: isIndicatorsLoading, error: indicatorsError } = useIndicators(companyId, userIdForIndicators);
   const { data: funnels, isLoading: isFunnelsLoading, error: funnelsError } = useFunnels(companyId, 'active');
   const { data: teams = [], isLoading: isTeamsLoading } = useTeams();
   const { data: crmUsers = [], isLoading: isUsersLoading } = useCrmUsers();
@@ -107,15 +112,15 @@ const CrmIndicadores = () => {
   // Filtragem de indicadores por perfil
   const accessibleIndicators = useMemo(() => {
     if (!indicators) return [];
-    
-    let result = indicators;
-    if (crmUser?.role === 'leader') {
+    if (crmUser?.role === 'master' || crmUser?.role === 'admin') {
+      return indicators; // vê todos da empresa
+    } else if (crmUser?.role === 'leader') {
       const teamMembers = crmUsers.filter(u => u.team_id === crmUser.team_id).map(u => u.id);
-      result = result.filter(ind => teamMembers.includes(ind.user_id) || ind.user_id === crmUser.id);
+      return indicators.filter(ind => teamMembers.includes(ind.user_id) || ind.user_id === crmUser.id);
     } else if (crmUser?.role === 'user') {
-      result = result.filter(ind => ind.user_id === crmUser.id);
+      return indicators.filter(ind => ind.user_id === crmUser.id);
     }
-    return result;
+    return [];
   }, [indicators, crmUser, crmUsers]);
 
   // Filtrar indicadores pelo funil selecionado

@@ -111,6 +111,12 @@ export interface Indicator {
   company_id: string;
   created_at: string;
   updated_at: string;
+  // Campos extras do banco
+  period_start?: string;
+  period_end?: string;
+  sales_value?: number;
+  recommendations_count?: number;
+  is_delayed?: boolean;
 }
 
 export interface IndicatorValue {

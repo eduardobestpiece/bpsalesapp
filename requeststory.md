@@ -1,15 +1,26 @@
-# Requisição em andamento - 11/07/2024
+# Solicitação em andamento (11/07/2024)
 
-## Correção de visualização
+**Solicitante:** Usuário
+**Descrição:**
 
-### Problemas relatados
-- Ao acessar as páginas "Comercial", "Configurações" e "Master Config", aparece a mensagem: "Você não tem permissão para acessar esta área ou nenhuma aba está disponível para seu perfil."
-- O tema escuro (darkmode) está sendo ativado automaticamente e a plataforma fica atualizando. Deseja-se que o tema padrão seja o claro, e o darkmode só seja ativado se o usuário clicar.
+## Página de Configurações CRM - Aba Usuários
+- Ao cadastrar um usuário, deve ser possível associá-lo a uma empresa (campo obrigatório antes do funil).
+- A seleção de funil só deve mostrar os funis da empresa escolhida.
 
-### Checklist
-1. Registrar a requisição em `requeststory.md`
-2. Analisar e corrigir o controle de permissões das páginas citadas
-3. Verificar e corrigir a lógica do tema (darkmode) para ser claro por padrão e só ativar se o usuário clicar
-4. Testar as correções localmente
-5. Executar o deploy (aguardar confirmação do usuário)
-6. Solicitar validação do funcionamento 
+## Página Indicadores - Aba Registro de Indicadores
+- Administradores e master devem poder editar o campo “preenchido com atraso” nos indicadores.
+- O master deve visualizar indicadores de todos os usuários de todas as empresas.
+- O administrador deve visualizar todos os indicadores da sua empresa.
+- O líder deve visualizar todos os indicadores da sua equipe na empresa.
+- O usuário só pode ver seus próprios indicadores.
+
+**Checklist:**
+- [x] Adicionar campo de seleção de empresa no cadastro/edição de usuário
+- [x] Garantir que a seleção de funil só traga funis da empresa escolhida
+- [x] Permitir edição do campo “preenchido com atraso” para admin/master
+- [x] Ajustar visualização dos indicadores conforme perfil
+- [x] Testar todos os fluxos
+- [x] Atualizar histórico e documentação
+- [ ] Realizar deploy ao final
+
+--- 

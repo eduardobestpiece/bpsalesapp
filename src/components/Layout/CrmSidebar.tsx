@@ -55,6 +55,7 @@ export const CrmSidebar = () => {
 
   const handleLogout = async () => {
     await signOut();
+    // Redireciona para a página de login do CRM após logout
     window.location.href = '/crm/login';
   };
 

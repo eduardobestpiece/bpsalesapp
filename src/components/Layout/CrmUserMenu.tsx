@@ -26,6 +26,7 @@ export const CrmUserMenu = ({ pagePermissions = {} }: { pagePermissions?: any })
 
   const handleSignOut = async () => {
     await signOut();
+    // Redireciona para a página de login do CRM após logout
     navigate('/crm/login');
   };
 

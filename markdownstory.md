@@ -74,3 +74,27 @@
 - Correções concluídas na página Master Config para evitar erro React #310 (renderização segura de arrays e objetos).
 - Darkmode corrigido: tema claro por padrão, só ativa escuro manualmente.
 - Realizando deploy para testes finais do usuário. 
+
+## [11/07/2024] Ajuste de redirecionamento após logout
+
+- Revisado e padronizado o fluxo de logout em todos os menus (CRM, Simulador, Sidebar) para garantir que o usuário seja sempre redirecionado para a página de login ("/crm/login") ao sair.
+- Comentários adicionados no código para facilitar futuras manutenções.
+- O redirecionamento após login permanece para "/home".
+- Solicitação registrada em `requeststory.md`.
+
+--- 
+
+## [11/07/2024] Ajustes CRM: Usuários, Empresas e Indicadores
+
+- Adicionado campo de seleção de empresa no cadastro/edição de usuário (Configurações CRM).
+- Filtro de funis agora depende da empresa selecionada.
+- Campo "preenchido com atraso" (is_delayed) agora pode ser editado por administradores e master no registro de indicadores.
+- Regras de visualização dos indicadores ajustadas:
+  - Master: vê todos os indicadores de todas as empresas.
+  - Administrador: vê todos os indicadores da própria empresa.
+  - Líder: vê todos os indicadores da equipe da empresa.
+  - Usuário: vê apenas seus próprios indicadores.
+- Tipagem ajustada para refletir os campos extras do banco.
+- Solicitação registrada em `requeststory.md`.
+
+--- 

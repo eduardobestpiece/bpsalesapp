@@ -13,6 +13,7 @@ import { useFunnels } from '@/hooks/useFunnels';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ChevronDown } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 
 interface UserModalProps {
   isOpen: boolean;
@@ -30,10 +31,25 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
     funnels: [] as string[],
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
 
   const { companyId, crmUser } = useCrmAuth();
   const updateUserMutation = useUpdateCrmUser();
-  const { data: funnels = [] } = useFunnels(companyId);
+  // Buscar empresas
+  const { data: companies = [], isLoading: companiesLoading } = useQuery({
+    queryKey: ['companies'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('companies')
+        .select('id, name, status')
+        .eq('status', 'active')
+        .order('name');
+      if (error) throw error;
+      return data;
+    },
+  });
+  // Funis filtrados pela empresa selecionada
+  const { data: funnels = [] } = useFunnels(selectedCompanyId || companyId);
 
   // Verificar se o usuário atual pode criar administradores
   const canCreateAdmin = crmUser?.role === 'master' || crmUser?.role === 'admin';
@@ -68,7 +84,8 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
       return;
     }
 
-    if (!companyId) {
+    const finalCompanyId = selectedCompanyId || companyId;
+    if (!finalCompanyId) {
       toast.error('Erro: Empresa não identificada');
       return;
     }
@@ -86,7 +103,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
           email: formData.email.trim(),
           role: formData.role,
           funnels: formData.funnels,
-          company_id: companyId,
+          company_id: finalCompanyId,
           status: 'active'
         });
         toast.success('Usuário atualizado com sucesso!');
@@ -96,7 +113,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
           email: formData.email.trim(),
           role: formData.role,
           funnels: formData.funnels,
-          company_id: companyId
+          company_id: finalCompanyId
         });
 
         const { data, error } = await supabase.functions.invoke('invite-user', {
@@ -104,7 +121,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
             email: formData.email.trim(),
             role: formData.role,
             funnels: formData.funnels,
-            company_id: companyId
+            company_id: finalCompanyId
           }
         });
 
@@ -161,6 +178,31 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Seleção de empresa */}
+          <div>
+            <Label htmlFor="company_id">Empresa *</Label>
+            <Select
+              value={selectedCompanyId || companyId || ''}
+              onValueChange={(value) => setSelectedCompanyId(value)}
+              disabled={isLoading || companiesLoading}
+              required
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a empresa" />
+              </SelectTrigger>
+              <SelectContent>
+                {companiesLoading ? (
+                  <div className="px-4 py-2 text-muted-foreground text-sm">Carregando empresas...</div>
+                ) : companies.length > 0 ? (
+                  companies.map((c: any) => (
+                    <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                  ))
+                ) : (
+                  <div className="px-4 py-2 text-muted-foreground text-sm">Nenhuma empresa encontrada</div>
+                )}
+              </SelectContent>
+            </Select>
+          </div>
           {user && (
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -229,6 +271,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
               </SelectContent>
             </Select>
           </div>
+          {/* Campo Funis permitidos (filtrado pela empresa) */}
           <div>
             <Label>Funis permitidos</Label>
             <Popover>
@@ -237,7 +280,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
                   type="button"
                   variant="outline"
                   className="w-full flex justify-between items-center"
-                  disabled={isLoading}
+                  disabled={isLoading || !selectedCompanyId}
                 >
                   {formData.funnels.length > 0
                     ? funnels.filter(f => formData.funnels.includes(f.id)).map(f => f.name).join(', ')
