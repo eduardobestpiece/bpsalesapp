@@ -45,6 +45,9 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   const [tempSelectedIndicators, setTempSelectedIndicators] = useState<string[]>([]); // IDs dos indicadores selecionados
   const [isDelayed, setIsDelayed] = useState<boolean>(indicator?.is_delayed || false);
 
+  // Adicionar flag para saber se está em modo edição
+  const isEditing = !!indicator;
+
   // Garantir que o companyId está correto (fallback para o do usuário logado)
   const { crmUser } = useCrmAuth();
   // Garantir que o companyId nunca é undefined
@@ -258,6 +261,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   // Regra: só destacar faltantes em vermelho a partir do segundo registro
   const destacarFaltantes = periodosUsuario.length > 0;
 
+  // useEffect de inicialização do indicador
   useEffect(() => {
     if (indicator) {
       // Preencher stages a partir de indicator.values
@@ -277,7 +281,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
       setSalesValue(indicator.sales_value || '0,00');
       setRecommendationsCount(indicator.recommendations_count || 0);
       setIsDelayed(indicator.is_delayed || false);
-      // NOVO: Preencher periodStart e periodEnd corretamente ao editar
+      // Preencher periodStart e periodEnd corretamente ao editar
       if (indicator.period_date) {
         const { start, end } = extractPeriodDates(indicator.period_date);
         setPeriodStart(start);
@@ -300,12 +304,13 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     }
   }, [indicator]);
 
+  // useEffect para seleção de funil: só inicializa campos se NÃO estiver editando
   useEffect(() => {
     if (formData.funnel_id && funnels) {
       const funnel = funnels.find(f => f.id === formData.funnel_id);
       setSelectedFunnel(funnel);
       // Initialize stages with empty values apenas na criação
-      if (!indicator && funnel?.stages) {
+      if (!isEditing && funnel?.stages) {
         const newStages: Record<string, number> = {};
         funnel.stages.forEach((stage: any) => {
           newStages[stage.id] = 0;
@@ -313,7 +318,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         setFormData(prev => ({ ...prev, stages: newStages }));
       }
       // Inicializar campos de vendas/recomendações apenas na criação
-      if (!indicator && funnel) {
+      if (!isEditing && funnel) {
         if (funnel.sales_value_mode === 'manual') {
           setSalesValue('0,00');
         } else {
@@ -326,7 +331,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         }
       }
     }
-  }, [formData.funnel_id, funnels, indicator]);
+  }, [formData.funnel_id, funnels]);
 
   useEffect(() => {
     async function fetchAutoValues() {
@@ -447,7 +452,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
 
   // Atualiza opções de mês/ano ao mudar datas
   useEffect(() => {
-    if (periodStart && periodEnd) {
+    if (!isEditing && periodStart && periodEnd) {
       const startDate = new Date(periodStart);
       const endDate = new Date(periodEnd);
       const startMonth = startDate.getMonth() + 1;
@@ -472,7 +477,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
       }
       setMonthOptions(months);
       setYearOptions(years);
-    } else {
+    } else if (!isEditing) {
       setMonthOptions([]);
       setYearOptions([]);
       setMonthReference(null);

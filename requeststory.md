@@ -28,3 +28,15 @@
 - Usuário autorizou prosseguir com checklist, deploy e finalização da funcionalidade da nova aba Funil na página de Performance do CRM, conforme wireframe e regras detalhadas.
 - Próximos passos: finalizar lógica real dos dados, modal de configuração do comparativo, responsividade/adaptação dos nomes das etapas, e realizar deploy.
 - Histórico e contexto completos registrados no markdownstory.md. 
+
+## [2024-07-10] Correção de bugs críticos
+
+### Problema 1: Período do indicador é sobrescrito ao editar
+- Diagnóstico: O estado do período (period_date, period_start, period_end) está sendo sobrescrito por efeitos colaterais ao abrir o modal de edição, causando datas erradas.
+- Solução: Garantir que, ao editar, o período nunca seja alterado automaticamente, apenas se o usuário escolher explicitamente.
+
+### Problema 2: Erro ao salvar time (teams)
+- Diagnóstico: O frontend envia o campo user_ids ao salvar times, mas a tabela teams não possui esse campo. O relacionamento é via team_id em crm_users.
+- Solução: Remover user_ids do payload de teams e atualizar o campo team_id dos usuários ao salvar membros do time.
+
+- Plano de ação criado, iniciando correção dos dois fluxos. 

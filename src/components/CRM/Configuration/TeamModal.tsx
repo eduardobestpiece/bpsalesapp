@@ -10,6 +10,7 @@ import { useCreateTeam, useUpdateTeam } from '@/hooks/useTeams';
 import { useCrmUsers } from '@/hooks/useCrmUsers';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface TeamModalProps {
   isOpen: boolean;
@@ -72,29 +73,56 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
     setIsLoading(true);
 
     try {
+      let teamId = team?.id;
       if (team) {
-        // Editar time existente
+        // Editar time existente (NÃO enviar user_ids)
         await updateTeamMutation.mutateAsync({
           id: team.id,
           name: formData.name.trim(),
           leader_id: formData.leader_id,
           company_id: companyId,
-          status: 'active',
-          user_ids: members
+          status: 'active'
         });
-        toast.success('Time atualizado com sucesso!');
+        teamId = team.id;
       } else {
-        // Criar novo time
-        await createTeamMutation.mutateAsync({
+        // Criar novo time (NÃO enviar user_ids)
+        const result = await createTeamMutation.mutateAsync({
           name: formData.name.trim(),
           leader_id: formData.leader_id,
           company_id: companyId,
-          status: 'active',
-          user_ids: members
+          status: 'active'
         });
-        toast.success('Time criado com sucesso!');
+        teamId = result?.id;
       }
 
+      // Atualizar membros do time: setar team_id nos usuários selecionados, remover dos não selecionados
+      if (teamId) {
+        // Buscar todos usuários da empresa
+        const { data: allUsersDb } = await supabase
+          .from('crm_users')
+          .select('id, team_id')
+          .eq('company_id', companyId);
+        const allUserIds = (allUsersDb || []).map(u => u.id);
+        // Usuários que devem estar no time
+        const selectedUserIds = members;
+        // Atualizar: setar team_id = teamId nos selecionados
+        if (selectedUserIds.length > 0) {
+          await supabase
+            .from('crm_users')
+            .update({ team_id: teamId })
+            .in('id', selectedUserIds);
+        }
+        // Remover: setar team_id = null nos que não estão mais no time
+        const toRemove = allUserIds.filter(uid => !selectedUserIds.includes(uid) && allUsersDb.find(u => u.id === uid)?.team_id === teamId);
+        if (toRemove.length > 0) {
+          await supabase
+            .from('crm_users')
+            .update({ team_id: null })
+            .in('id', toRemove);
+        }
+      }
+
+      toast.success(team ? 'Time atualizado com sucesso!' : 'Time criado com sucesso!');
       onClose();
       setFormData({ name: '', leader_id: '' });
       setMembers([]);
