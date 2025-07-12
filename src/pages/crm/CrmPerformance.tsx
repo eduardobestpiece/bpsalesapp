@@ -256,8 +256,8 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     const numIndicadores = filteredIndicators.length || 1;
     // Agregar valores por etapa do funil (usando aggregateFunnelIndicators para garantir soma correta)
     const orderedStages = selectedFunnel.stages?.sort((a, b) => a.stage_order - b.stage_order) || [];
-    const periodStages = aggregateFunnelIndicators(filteredIndicators, orderedStages, 'month');
-    const weeklyStages = aggregateFunnelIndicators(filteredIndicators, orderedStages, 'week');
+    const periodStages = aggregateFunnelIndicators(filteredIndicators, orderedStages, 'month', true);
+    const weeklyStages = aggregateFunnelIndicators(filteredIndicators, orderedStages, 'week', true);
     // Soma primeira/última etapa
     const somaPrimeiraEtapaPeriodo = periodStages[0]?.value || 0;
     const somaUltimaEtapaPeriodo = periodStages[periodStages.length - 1]?.value || 0;

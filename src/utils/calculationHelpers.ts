@@ -48,9 +48,10 @@ export const validateRange = (value: number, min: number, max: number): boolean 
  * @param indicators Lista de indicadores (com values)
  * @param stages Lista de etapas do funil (ordenadas)
  * @param periodType 'week' | 'month'
+ * @param sumAll Se true, soma todos os registros do período filtrado (não só o mais recente)
  * @returns Array de objetos com nome da etapa, valor semanal/mensal e conversão
  */
-export function aggregateFunnelIndicators(indicators, stages, periodType = 'month') {
+export function aggregateFunnelIndicators(indicators, stages, periodType = 'month', sumAll = false) {
   // Agrupa por período (semana/mês)
   const groupByPeriod = {};
   indicators.forEach(ind => {
@@ -71,10 +72,16 @@ export function aggregateFunnelIndicators(indicators, stages, periodType = 'mont
     groupByPeriod[key].push(ind);
   });
 
-  // Pega o período mais recente
-  const periods = Object.keys(groupByPeriod).sort().reverse();
-  const latestPeriod = periods[0];
-  const periodIndicators = groupByPeriod[latestPeriod] || [];
+  let periodIndicators = [];
+  if (sumAll) {
+    // Soma todos os registros de todos os períodos filtrados
+    periodIndicators = Object.values(groupByPeriod).flat();
+  } else {
+    // Pega o período mais recente
+    const periods = Object.keys(groupByPeriod).sort().reverse();
+    const latestPeriod = periods[0];
+    periodIndicators = groupByPeriod[latestPeriod] || [];
+  }
 
   // Para cada etapa, soma os valores do período
   const stageData = stages.map((stage, idx) => {
