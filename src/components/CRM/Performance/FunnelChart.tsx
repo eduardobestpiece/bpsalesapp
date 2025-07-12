@@ -89,9 +89,9 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
 
   return (
     <div className="flex flex-col w-full items-center justify-center">
-      {/* Linha única: cards esquerda, título central, cards direita, com proporções 25/50/25 */}
+      {/* Linha principal: três colunas (esquerda, centro, direita) */}
       <div className="w-full flex flex-col md:flex-row items-start justify-between mb-0 gap-0 md:gap-2">
-        {/* Cards de Média semanal à esquerda */}
+        {/* Esquerda: Dados semanais */}
         <div className="md:basis-1/4 w-full md:w-1/4 flex flex-col gap-1 md:gap-2 min-w-[180px] items-start">
           <span className="text-xs text-muted-foreground font-semibold mb-0.5">Dados semanais</span>
           <MetricCard label="Conversão do funil (semana)" value={`${((somaUltimaEtapaPeriodo / somaPrimeiraEtapaPeriodo) / numWeeks * 100 || 0).toFixed(1)}%`} />
@@ -99,75 +99,74 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
           <MetricCard label="Ticket Médio (semana)" value={ticketMedioSemanal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
           <MetricCard label="Média de Recomendações (semana)" value={etapaRecomendacoesSemanal > 0 ? (recomendacoesSemanal / etapaRecomendacoesSemanal).toFixed(2) : '0'} />
         </div>
-        {/* Título centralizado */}
+        {/* Centro: Título + Gráfico do funil */}
         <div className="md:basis-2/4 w-full md:w-2/4 flex flex-col items-center justify-center flex-1">
-          <span className="text-xs text-muted-foreground font-semibold mb-0.5"> </span>
-          <h2 className="text-xl font-bold text-center">Resultados do Funil {funnelName || ''}</h2>
+          <h2 className="text-xl font-bold text-center mb-2">Resultados do Funil {funnelName || ''}</h2>
+          {/* Gráfico do funil centralizado */}
+          <div className="flex w-full gap-0 items-start justify-center">
+            <div className="flex flex-col items-center w-full max-w-xl md:w-4/5">
+              <div className="flex flex-col items-center w-full">
+                {stages.map((stage, idx) => {
+                  const diff = stage.value - (stage.compareValue || 0);
+                  const isUp = diff > 0;
+                  const isDown = diff < 0;
+                  // Valor semanal da etapa (média por indicador)
+                  const valorSemanalEtapa = numIndicadores > 0 ? (stage.value / numIndicadores) : 0;
+                  return (
+                    <div
+                      key={stage.name}
+                      className={`w-full flex items-center justify-center mb-1 z-[${10-idx}]`}
+                      style={{ zIndex: 10 - idx }}
+                    >
+                      {/* Comparativo fora da faixa à esquerda */}
+                      <div className="flex items-center justify-center w-14 mr-2">
+                        {typeof stage.compareValue === 'undefined' ? (
+                          <span className="text-xs text-gray-400">0%</span>
+                        ) : diff !== 0 ? (
+                          <span className={`flex items-center font-bold text-xs ${isUp ? 'text-green-600' : 'text-red-600'}`}> 
+                            {isUp && <ArrowUp className="w-4 h-4 mr-1" />} 
+                            {isDown && <ArrowDown className="w-4 h-4 mr-1" />} 
+                            {diff > 0 ? `+${diff}` : diff}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-gray-400">0%</span>
+                        )}
+                      </div>
+                      {/* Faixa do funil */}
+                      <div
+                        className={`transition-all duration-300 bg-gradient-to-r ${funnelColors[idx % funnelColors.length]} shadow-lg flex items-center justify-between px-6`}
+                        style={{
+                          width: getWidth(idx),
+                          height: fixedHeight,
+                          maxWidth: '100%',
+                          marginBottom: idx < stages.length - 1 ? 4 : 0,
+                          borderRadius: idx === 0 ? '1rem 1rem 0.5rem 0.5rem' : idx === stages.length - 1 ? '0 0 1rem 1rem' : '0.5rem',
+                          boxShadow: '0 4px 16px 0 rgba(0,0,0,0.08)',
+                        }}
+                      >
+                        {/* Esquerda dentro da faixa: valor semanal da etapa */}
+                        <span className={`font-bold text-white text-base drop-shadow-md w-16 text-left ${noWrap}`}>{valorSemanalEtapa.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}</span>
+                        <div className="flex-1 flex flex-col items-center">
+                          <span className={`font-bold text-white drop-shadow-md text-center text-base ${noWrap}`}>{stage.name}</span>
+                          <span className={`text-xs text-white drop-shadow-md ${noWrap}`}>{idx < stages.length - 1 ? `Conversão ${(stage.value && stages[idx + 1]?.value ? ((stages[idx + 1].value / stage.value) * 100).toFixed(1) : '0')}%` : ''}</span>
+                        </div>
+                        {/* Direita dentro da faixa: valor total da etapa no período */}
+                        <span className={`font-bold text-white text-base drop-shadow-md w-16 text-right ${noWrap}`}>{stage.value}</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
         </div>
-        {/* Cards de Período à direita */}
+        {/* Direita: Dados do Período */}
         <div className="md:basis-1/4 w-full md:w-1/4 flex flex-col gap-1 md:gap-2 min-w-[180px] items-end">
           <span className="text-xs text-muted-foreground font-semibold mb-0.5">Dados do Período</span>
           <MetricCard label="Conversão do funil (período)" value={`${(somaUltimaEtapaPeriodo / somaPrimeiraEtapaPeriodo * 100 || 0).toFixed(1)}%`} />
           <MetricCard label="Valor das vendas (período)" value={vendasPeriodo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
           <MetricCard label="Ticket Médio (período)" value={ticketMedioPeriodo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
           <MetricCard label="Média de Recomendações (período)" value={etapaRecomendacoesPeriodo > 0 ? (recomendacoesPeriodo / etapaRecomendacoesPeriodo).toFixed(2) : '0'} />
-        </div>
-      </div>
-      {/* Gráfico do funil imediatamente abaixo, centralizado */}
-      <div className="flex w-full gap-0 items-start justify-center">
-        <div className="flex flex-col items-center w-full max-w-xl md:w-4/5">
-          <div className="flex flex-col items-center w-full">
-            {stages.map((stage, idx) => {
-              const diff = stage.value - (stage.compareValue || 0);
-              const isUp = diff > 0;
-              const isDown = diff < 0;
-              // Valor semanal da etapa (média por indicador)
-              const valorSemanalEtapa = numIndicadores > 0 ? (stage.value / numIndicadores) : 0;
-              return (
-                <div
-                  key={stage.name}
-                  className={`w-full flex items-center justify-center mb-1 z-[${10-idx}]`}
-                  style={{ zIndex: 10 - idx }}
-                >
-                  {/* Comparativo fora da faixa à esquerda */}
-                  <div className="flex items-center justify-center w-14 mr-2">
-                    {typeof stage.compareValue === 'undefined' ? (
-                      <span className="text-xs text-gray-400">0%</span>
-                    ) : diff !== 0 ? (
-                      <span className={`flex items-center font-bold text-xs ${isUp ? 'text-green-600' : 'text-red-600'}`}> 
-                        {isUp && <ArrowUp className="w-4 h-4 mr-1" />} 
-                        {isDown && <ArrowDown className="w-4 h-4 mr-1" />} 
-                        {diff > 0 ? `+${diff}` : diff}
-                      </span>
-                    ) : (
-                      <span className="text-xs text-gray-400">0%</span>
-                    )}
-                  </div>
-                  {/* Faixa do funil */}
-                  <div
-                    className={`transition-all duration-300 bg-gradient-to-r ${funnelColors[idx % funnelColors.length]} shadow-lg flex items-center justify-between px-6`}
-                    style={{
-                      width: getWidth(idx),
-                      height: fixedHeight,
-                      maxWidth: '100%',
-                      marginBottom: idx < stages.length - 1 ? 4 : 0,
-                      borderRadius: idx === 0 ? '1rem 1rem 0.5rem 0.5rem' : idx === stages.length - 1 ? '0 0 1rem 1rem' : '0.5rem',
-                      boxShadow: '0 4px 16px 0 rgba(0,0,0,0.08)',
-                    }}
-                  >
-                    {/* Esquerda dentro da faixa: valor semanal da etapa */}
-                    <span className={`font-bold text-white text-base drop-shadow-md w-16 text-left ${noWrap}`}>{valorSemanalEtapa.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}</span>
-                    <div className="flex-1 flex flex-col items-center">
-                      <span className={`font-bold text-white drop-shadow-md text-center text-base ${noWrap}`}>{stage.name}</span>
-                      <span className={`text-xs text-white drop-shadow-md ${noWrap}`}>{idx < stages.length - 1 ? `Conversão ${(stage.value && stages[idx + 1]?.value ? ((stages[idx + 1].value / stage.value) * 100).toFixed(1) : '0')}%` : ''}</span>
-                    </div>
-                    {/* Direita dentro da faixa: valor total da etapa no período */}
-                    <span className={`font-bold text-white text-base drop-shadow-md w-16 text-right ${noWrap}`}>{stage.value}</span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
         </div>
       </div>
     </div>
