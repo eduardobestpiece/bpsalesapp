@@ -231,3 +231,9 @@ Próximos passos: ajustes no gráfico do funil, modais de indicadores, permissõ
 - Corrigida a lógica de filtragem do funil: ao selecionar um time, o sistema filtra os indicadores de todos os usuários daquele time, mostrando os dados agregados corretamente.
 - Deploy automático realizado para o GitHub.
 - Aguardando validação do usuário para marcar como concluído.
+
+## 12/07/2025 — Ajuste no Modal de Times (MultiSelect)
+
+- Ajustado o modal de edição de times para forçar atualização do MultiSelect usando a prop 'key', garantindo que os membros do time apareçam sempre marcados corretamente ao abrir o modal.
+- Deploy automático realizado para o GitHub.
+- Orientação: testar novamente a edição de times e, no funil, clicar em "Aplicar Filtros" após selecionar o time.
