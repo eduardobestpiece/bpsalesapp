@@ -40,47 +40,30 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
   const { data: teams = [] } = useTeams();
   const { data: users = [] } = useCrmUsers();
 
-  const canSeeAllTeams = hasPermission('admin');
-  const canSeeTeamUsers = hasPermission('leader');
-  const isRegularUser = !canSeeAllTeams && !canSeeTeamUsers;
-  const isUser = crmUser?.role === 'user';
-  const allowedFunnels = isUser ? funnels.filter(f => crmUser.funnels?.includes(f.id)) : funnels.filter(f => f.company_id === selectedCompanyId);
-
   // Seleção automática do primeiro funil permitido
   useEffect(() => {
-    if (allowedFunnels.length > 0 && !selectedFunnel) {
-      setSelectedFunnel(allowedFunnels[0].id);
+    if (funnels.length > 0 && !selectedFunnel) {
+      setSelectedFunnel(funnels[0].id);
     }
-  }, [allowedFunnels]);
+  }, [funnels]);
 
   // Resetar funil selecionado e allowedFunnels ao trocar de empresa
   useEffect(() => {
     setSelectedFunnel('');
   }, [selectedCompanyId]);
 
-  // Filter teams based on permissions
-  const availableTeams = canSeeAllTeams 
-    ? teams 
-    : teams.filter(team => 
-        canSeeTeamUsers && crmUser?.team_id === team.id
-      );
-
   // Filter users based on permissions
   const availableUsers = () => {
-    if (isRegularUser) {
+    if (crmUser?.role === 'user') {
       return users.filter(user => user.id === crmUser?.id);
     }
-    if (canSeeTeamUsers && selectedTeam) {
+    if (selectedTeam) {
       return users.filter(user => user.team_id === selectedTeam);
     }
-    if (canSeeAllTeams) {
-      return selectedTeam 
-        ? users.filter(user => user.team_id === selectedTeam)
-        : users;
-    }
-    return [];
+    return users;
   };
 
+  // Atualizar handleApplyFilters para passar teamId corretamente
   const handleApplyFilters = () => {
     if (!selectedFunnel) {
       onFiltersChange(null);
@@ -91,7 +74,7 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
       teamId: selectedTeam || undefined,
       userId: selectedUser || undefined,
       compareId: compareId || undefined,
-      period: 'custom', // novo tipo para indicar filtro customizado
+      period: 'custom',
       ...customPeriod
     });
   };
@@ -110,7 +93,7 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
                 <SelectValue placeholder="Selecione o funil" />
               </SelectTrigger>
               <SelectContent>
-                {allowedFunnels.map(funnel => (
+                {funnels.map(funnel => (
                   <SelectItem key={funnel.id} value={funnel.id}>
                     {funnel.name}
                   </SelectItem>
@@ -119,33 +102,32 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
             </Select>
           </div>
 
-          {!isRegularUser && (
-            <div>
-              <Label htmlFor="team">Equipe</Label>
-              <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Todas as equipes" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas as equipes</SelectItem>
-                  {availableTeams.map(team => (
-                    <SelectItem key={team.id} value={team.id}>
-                      {team.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          {/* Filtro de Time (Equipe) - NOVO */}
+          <div>
+            <Label htmlFor="team">Equipe</Label>
+            <Select value={selectedTeam} onValueChange={setSelectedTeam}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione a equipe (opcional)" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todas as equipes</SelectItem>
+                {teams.map(team => (
+                  <SelectItem key={team.id} value={team.id}>
+                    {team.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
 
           <div>
             <Label htmlFor="user">Usuário</Label>
             <Select value={selectedUser} onValueChange={setSelectedUser}>
               <SelectTrigger>
-                <SelectValue placeholder={isRegularUser ? "Você" : "Todos os usuários"} />
+                <SelectValue placeholder={crmUser?.role === 'user' ? "Você" : "Todos os usuários"} />
               </SelectTrigger>
               <SelectContent>
-                {!isRegularUser && (
+                {crmUser?.role === 'user' && (
                   <SelectItem value="all">Todos os usuários</SelectItem>
                 )}
                 {availableUsers().map(user => (
@@ -168,7 +150,7 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
         </div>
 
         {/* Opção de comparação */}
-        {((canSeeAllTeams && selectedTeam && selectedTeam !== 'all') || (selectedUser && selectedUser !== 'all')) && (
+        {selectedTeam && selectedTeam !== 'all' && (
           <div>
             <Label>Comparar com</Label>
             <Select value={compareId} onValueChange={setCompareId}>
@@ -176,10 +158,10 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
                 <SelectValue placeholder={selectedTeam ? 'Selecione outro time' : 'Selecione outro usuário'} />
               </SelectTrigger>
               <SelectContent>
-                {selectedTeam && selectedTeam !== 'all' && teams.filter(t => t.id !== selectedTeam).map(team => (
+                {teams.filter(t => t.id !== selectedTeam).map(team => (
                   <SelectItem key={team.id} value={team.id}>{team.name}</SelectItem>
                 ))}
-                {selectedUser && selectedUser !== 'all' && users.filter(u => u.id !== selectedUser).map(user => (
+                {users.filter(u => u.id !== crmUser?.id).map(user => (
                   <SelectItem key={user.id} value={user.id}>{user.first_name} {user.last_name}</SelectItem>
                 ))}
               </SelectContent>

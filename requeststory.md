@@ -1,27 +1,22 @@
-# Requisição em Andamento — 12/07/2025
+# Solicitação em andamento
 
-## Problemas Relatados
-- Usuários associados ao time não aparecem marcados no modal de edição.
-- Ao selecionar um time no funil, não filtra para os dados de todos os usuários daquele time.
+## Data: 2024-07-10
 
-## Diagnóstico
-- Associação dos usuários ao time está correta no banco (`team_id` preenchido).
-- Modal de times busca membros corretamente, mas pode haver problema de sincronização no MultiSelect.
-- Filtro do funil não busca todos os usuários do time selecionado, apenas filtra por `userId` individual.
+### Requisição
+- **Resumo:** Apagar o campo/filtro de time (Equipe) da tela de performance e refazê-lo do zero, garantindo que funcione corretamente e de forma simples.
+- **Contexto:** O filtro anterior apresentava problemas de lógica e permissões, dificultando a filtragem correta dos dados por equipe.
+- **Objetivo:** Permitir ao usuário selecionar uma equipe ativa da empresa para filtrar os dados de performance, sem lógica complexa de permissão. O filtro deve ser simples, funcional e intuitivo.
+- **Checklist:**
+  - [x] Analisar implementação atual do filtro de time
+  - [x] Analisar hooks de times e usuários
+  - [x] Analisar tipagens
+  - [x] Remover filtro antigo de time
+  - [x] Implementar novo filtro de time (apenas times ativos da empresa)
+  - [ ] Testar integração do novo filtro com a tela de performance
+  - [ ] Validar funcionamento correto com dados reais
+  - [ ] Realizar deploy
+  - [ ] Solicitar validação do usuário
 
-## Plano de Ação
-1. Corrigir MultiSelect do modal para garantir marcação correta dos membros.
-2. Corrigir lógica de filtragem do funil para, ao selecionar um time, filtrar indicadores de todos os usuários daquele time.
-3. Testar e validar.
-4. Executar deploy.
-5. Solicitar conferência do usuário.
-
-## Checklist
-- [x] Verificar associação dos usuários ao time no banco.
-- [x] Analisar modal de edição de times.
-- [x] Analisar lógica de filtragem do funil.
-- [ ] Corrigir MultiSelect do modal para garantir marcação correta dos membros.
-- [ ] Corrigir lógica de filtragem do funil por time.
-- [ ] Testar e validar.
-- [ ] Executar deploy.
-- [ ] Solicitar conferência. 
+### Status
+- Primeira etapa concluída: filtro antigo removido e novo filtro implementado.
+- Próximo passo: testar integração e funcionamento do novo filtro. 
