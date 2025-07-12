@@ -1,18 +1,16 @@
 # Requisição em Andamento
 
-## Bloco 1.2: Performance - Correção do Gráfico do Funil e Agregação de Dados
+## Bloco 1.3: Correção de Erro de Referência no Gráfico do Funil
 
 ### Diagnóstico
-- O gráfico do funil estava afastado do título e dos cards, prejudicando o layout visual.
-- Os dados do funil para "Todos os usuários" estavam zerados, pois a soma dos indicadores não estava correta para admin, master e líder.
-- Os cards de "Dados semanais" e "Dados do Período" não estavam mostrando os valores corretos: semana deveria ser a média por semana, período o total do período.
+- Após a última atualização, ao acessar o módulo CRM, ocorreu o erro ReferenceError: periodStages is not defined.
+- O erro foi causado por uso de variáveis não definidas em casos de ausência de dados ou renderização condicional.
 
 ### Ações Realizadas
-- Refatorado o cálculo dos dados semanais e do período no container, agregando todos os indicadores filtrados corretamente.
-- Ajustado o layout do gráfico do funil para bloco visual único, com cards e título juntos e gráfico imediatamente abaixo.
-- Cards agora mostram os valores corretos para semana (média) e período (total), mesmo para "Todos os usuários".
+- Adicionado fallback seguro para garantir que periodStages e weeklyStages sempre existam antes de serem usados.
+- O FunnelComparisonChart agora só é renderizado quando os dados estão prontos, evitando erro de referência.
 
 ### Próximos Passos
-- Testar localmente as correções.
+- Testar localmente.
 - Realizar o deploy automático.
 - Solicitar validação/teste ao usuário. 

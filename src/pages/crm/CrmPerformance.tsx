@@ -281,20 +281,27 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
   const funnelData = getFunnelChartData();
   const statsData = getPerformanceStats();
 
+  // Dentro do funnelTabContent, passar os dados corretos para o FunnelChart
+  const { periodStages = [], weeklyStages = [], numWeeks = 1 } = getAggregatedFunnelData() || {};
+
   const funnelTabContent = (
     <div className="space-y-6">
       {/* Filtros dinâmicos */}
       <PerformanceFilters onFiltersChange={setFilters} funnelOnly />
       {/* Gráfico do funil e comparativo */}
-      <FunnelComparisonChart
-        stages={periodStages}
-        weeklyStages={weeklyStages}
-        numWeeks={numWeeks}
-        comparativo={funnelComparisonData.comparativo}
-        compareStages={funnelComparisonData.compareStages}
-        periodoLabel={getPeriodoLabel()}
-        funnelName={selectedFunnel?.name || ''}
-      />
+      {selectedFunnel && periodStages.length > 0 && weeklyStages.length > 0 ? (
+        <FunnelComparisonChart
+          stages={periodStages}
+          weeklyStages={weeklyStages}
+          numWeeks={numWeeks}
+          comparativo={funnelComparisonData.comparativo}
+          compareStages={funnelComparisonData.compareStages}
+          periodoLabel={getPeriodoLabel()}
+          funnelName={selectedFunnel?.name || ''}
+        />
+      ) : (
+        <div className="text-center text-muted-foreground py-8">Nenhum dado para exibir o funil.</div>
+      )}
     </div>
   );
 
