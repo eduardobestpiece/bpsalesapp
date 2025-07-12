@@ -77,6 +77,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
     }
   }, [user]);
 
+  // Corrigir envio do campo funnels para garantir array de strings
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -94,6 +95,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
     setIsLoading(true);
 
     try {
+      const funisArray = Array.isArray(formData.funnels) ? formData.funnels : (typeof formData.funnels === 'string' ? [formData.funnels] : []);
       if (user) {
         // Editar usuário existente
         await updateUserMutation.mutateAsync({
@@ -103,7 +105,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
           phone: formData.phone.trim() || null,
           email: formData.email.trim(),
           role: formData.role,
-          funnels: formData.funnels,
+          funnels: funisArray,
           company_id: finalCompanyId,
           status: 'active'
         });
@@ -113,7 +115,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
         console.log('Calling invite-user function with data:', {
           email: formData.email.trim(),
           role: formData.role,
-          funnels: formData.funnels,
+          funnels: funisArray,
           company_id: finalCompanyId
         });
 
@@ -121,7 +123,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
           body: {
             email: formData.email.trim(),
             role: formData.role,
-            funnels: formData.funnels,
+            funnels: funisArray,
             company_id: finalCompanyId
           }
         });

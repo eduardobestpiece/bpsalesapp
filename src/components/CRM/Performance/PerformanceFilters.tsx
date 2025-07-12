@@ -51,6 +51,11 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
     }
   }, [allowedFunnels]);
 
+  // Resetar funil selecionado ao trocar de empresa
+  useEffect(() => {
+    setSelectedFunnel('');
+  }, [companyId]);
+
   // Filter teams based on permissions
   const availableTeams = canSeeAllTeams 
     ? teams 
