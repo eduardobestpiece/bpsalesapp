@@ -106,6 +106,23 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
     return [];
   };
 
+  // Filtro de usuários para líderes: incluir o próprio líder além dos membros das equipes
+  const getUserOptions = () => {
+    if (isAdmin) {
+      // Admin/master/submaster: todos os usuários da empresa
+      return users;
+    }
+    if (isLeader) {
+      // Líder: membros das equipes que lidera + ele mesmo
+      const teamsLed = leaderTeams;
+      const teamMemberIds = teamsLed.flatMap(t => users.filter(u => u.team_id === t.id).map(u => u.id));
+      const uniqueUserIds = Array.from(new Set([...teamMemberIds, crmUser?.id]));
+      return users.filter(u => uniqueUserIds.includes(u.id));
+    }
+    // Usuário comum: só ele mesmo
+    return users.filter(u => u.id === crmUser?.id);
+  };
+
   // Atualizar handleApplyFilters para tratar 'all' como seleção vazia
   const handleApplyFilters = () => {
     if (!selectedFunnel) {
@@ -169,11 +186,10 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
               <Label htmlFor="user">Usuário</Label>
               <Select value={selectedUser} onValueChange={setSelectedUser}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Todos os usuários" />
+                  <SelectValue placeholder="Selecione o usuário" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Todos os usuários</SelectItem>
-                  {availableUsers().map(user => (
+                  {getUserOptions().map(user => (
                     <SelectItem key={user.id} value={user.id}>
                       {user.first_name} {user.last_name}
                     </SelectItem>
