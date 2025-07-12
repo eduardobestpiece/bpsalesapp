@@ -216,3 +216,4 @@ Bloco 1
 Próximos passos: ajustes no gráfico do funil, modais de indicadores, permissões e filtros de empresa/funil para usuários.
 
 - Removido todo e qualquer espaçamento vertical (gap, margin, padding) entre o bloco superior (cards + título) e o gráfico do funil, garantindo que o gráfico fique imediatamente abaixo do bloco superior, conforme o print ideal do usuário.
+- Reduzida a largura máxima do gráfico do funil para 80% do valor anterior (max-w-xl/md:w-4/5), tornando-o mais compacto e aproximando-o do bloco superior, conforme solicitado pelo usuário.

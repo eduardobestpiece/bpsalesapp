@@ -115,7 +115,7 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
       </div>
       {/* Gráfico do funil imediatamente abaixo, centralizado */}
       <div className="flex w-full gap-0 items-start justify-center">
-        <div className="flex flex-col items-center w-full max-w-2xl">
+        <div className="flex flex-col items-center w-full max-w-xl md:w-4/5">
           <div className="flex flex-col items-center w-full">
             {stages.map((stage, idx) => {
               const diff = stage.value - (stage.compareValue || 0);
