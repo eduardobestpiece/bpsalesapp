@@ -63,7 +63,7 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
     return users;
   };
 
-  // Atualizar handleApplyFilters para passar teamId corretamente
+  // Atualizar handleApplyFilters para tratar 'all' como seleção vazia
   const handleApplyFilters = () => {
     if (!selectedFunnel) {
       onFiltersChange(null);
@@ -71,7 +71,7 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
     }
     onFiltersChange({
       funnelId: selectedFunnel,
-      teamId: selectedTeam || undefined,
+      teamId: selectedTeam && selectedTeam !== 'all' ? selectedTeam : undefined,
       userId: selectedUser || undefined,
       compareId: compareId || undefined,
       period: 'custom',
@@ -110,7 +110,7 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
                 <SelectValue placeholder="Selecione a equipe (opcional)" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas as equipes</SelectItem>
+                <SelectItem value="all">Todas as equipes</SelectItem>
                 {teams.map(team => (
                   <SelectItem key={team.id} value={team.id}>
                     {team.name}
