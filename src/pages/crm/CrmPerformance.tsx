@@ -31,10 +31,18 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
   const [filters, setFilters] = useState<PerformanceFilters | null>(null);
   const [activeTab, setActiveTab] = useState<'funnel'>('funnel');
   
+  // Determinar userId a ser passado para o hook useIndicators
+  let userIdForIndicators: string | undefined = undefined;
+  if (filters?.userId && filters.userId !== 'all') {
+    userIdForIndicators = filters.userId;
+  } else if (crmUser?.role === 'user') {
+    userIdForIndicators = crmUser.id;
+  }
+  console.log('[CrmPerformance] Chamada do useIndicators:', {companyId: selectedCompanyId, userId: userIdForIndicators, filtroTime: filters?.teamId});
+
   const { data: indicators = [] } = useIndicators(
     selectedCompanyId,
-    (filters?.userId && filters.userId !== 'all') ? filters.userId :
-      (crmUser?.role === 'user' ? crmUser.id : undefined)
+    userIdForIndicators
   );
   
   const { data: funnels = [] } = useFunnels(selectedCompanyId);
