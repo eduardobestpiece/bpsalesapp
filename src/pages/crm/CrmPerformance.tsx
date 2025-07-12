@@ -218,9 +218,9 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     return 'Todo Período';
   }
 
-  // Função para calcular dados agregados do funil (período e semana)
+  // Função para calcular dados agregados do funil (período e semana) e métricas detalhadas
   function getAggregatedFunnelData() {
-    if (!selectedFunnel || !filters) return { periodStages: [], weeklyStages: [], numWeeks: 1 };
+    if (!selectedFunnel || !filters) return { periodStages: [], weeklyStages: [], numWeeks: 1, vendasPeriodo: 0, vendasSemanal: 0, ticketMedioPeriodo: 0, ticketMedioSemanal: 0, recomendacoesPeriodo: 0, recomendacoesSemanal: 0, etapaRecomendacoesPeriodo: 0, etapaRecomendacoesSemanal: 0, somaPrimeiraEtapaPeriodo: 0, somaUltimaEtapaPeriodo: 0, somaPrimeiraEtapaSemanal: 0, somaUltimaEtapaSemanal: 0, numIndicadores: 1 };
     // Filtrar indicadores conforme perfil do usuário
     let filteredIndicators = indicators.filter(i => i.funnel_id === selectedFunnel.id);
     if (crmUser?.role === 'user') {
@@ -247,6 +247,7 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
         numWeeks = Math.max(1, differenceInCalendarWeeks(parseISO(maxDate), parseISO(minDate)) + 1);
       }
     }
+    const numIndicadores = filteredIndicators.length || 1;
     // Agregar valores por etapa do funil
     const orderedStages = selectedFunnel.stages?.sort((a, b) => a.stage_order - b.stage_order) || [];
     const periodStages = orderedStages.map(stage => {
@@ -257,7 +258,44 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
       return { name: stage.name, value: total };
     });
     const weeklyStages = periodStages.map(stage => ({ ...stage, value: numWeeks > 0 ? stage.value / numWeeks : 0 }));
-    return { periodStages, weeklyStages, numWeeks };
+    // Soma primeira/última etapa
+    const somaPrimeiraEtapaPeriodo = periodStages[0]?.value || 0;
+    const somaUltimaEtapaPeriodo = periodStages[periodStages.length - 1]?.value || 0;
+    const somaPrimeiraEtapaSemanal = weeklyStages[0]?.value || 0;
+    const somaUltimaEtapaSemanal = weeklyStages[weeklyStages.length - 1]?.value || 0;
+    // Vendas e ticket médio
+    const vendasPeriodo = filteredIndicators.reduce((sum, i) => sum + (i.sales_value || 0), 0);
+    const vendasSemanal = numWeeks > 0 ? vendasPeriodo / numWeeks : 0;
+    const ticketMedioPeriodo = somaUltimaEtapaPeriodo > 0 ? vendasPeriodo / somaUltimaEtapaPeriodo : 0;
+    const ticketMedioSemanal = somaUltimaEtapaSemanal > 0 ? vendasSemanal / somaUltimaEtapaSemanal : 0;
+    // Recomendações
+    const recomendacoesPeriodo = filteredIndicators.reduce((sum, i) => sum + (i.recommendations_count || 0), 0);
+    // Etapa de recomendações: buscar etapa que contenha 'reuni' ou 'recomend'
+    const etapaRecomendacoes = orderedStages.find(s => s.name.toLowerCase().includes('reuni') || s.name.toLowerCase().includes('recomend'));
+    const etapaRecomendacoesPeriodo = etapaRecomendacoes ? periodStages.find(s => s.name === etapaRecomendacoes.name)?.value || 0 : 0;
+    const etapaRecomendacoesSemanal = etapaRecomendacoes ? weeklyStages.find(s => s.name === etapaRecomendacoes.name)?.value || 0 : 0;
+    const mediaRecomendacoesPeriodo = etapaRecomendacoesPeriodo > 0 ? recomendacoesPeriodo / etapaRecomendacoesPeriodo : 0;
+    const mediaRecomendacoesSemanal = etapaRecomendacoesSemanal > 0 ? (recomendacoesPeriodo / numWeeks) / etapaRecomendacoesSemanal : 0;
+    return {
+      periodStages,
+      weeklyStages,
+      numWeeks,
+      vendasPeriodo,
+      vendasSemanal,
+      ticketMedioPeriodo,
+      ticketMedioSemanal,
+      recomendacoesPeriodo,
+      recomendacoesSemanal: recomendacoesPeriodo / numWeeks,
+      etapaRecomendacoesPeriodo,
+      etapaRecomendacoesSemanal,
+      mediaRecomendacoesPeriodo,
+      mediaRecomendacoesSemanal,
+      somaPrimeiraEtapaPeriodo,
+      somaUltimaEtapaPeriodo,
+      somaPrimeiraEtapaSemanal,
+      somaUltimaEtapaSemanal,
+      numIndicadores
+    };
   }
 
   const funnelComparisonData = getFunnelComparisonData();
@@ -282,7 +320,26 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
   const statsData = getPerformanceStats();
 
   // Dentro do funnelTabContent, passar os dados corretos para o FunnelChart
-  const { periodStages = [], weeklyStages = [], numWeeks = 1 } = getAggregatedFunnelData() || {};
+  const {
+    periodStages = [],
+    weeklyStages = [],
+    numWeeks = 1,
+    vendasPeriodo = 0,
+    vendasSemanal = 0,
+    ticketMedioPeriodo = 0,
+    ticketMedioSemanal = 0,
+    recomendacoesPeriodo = 0,
+    recomendacoesSemanal = 0,
+    etapaRecomendacoesPeriodo = 0,
+    etapaRecomendacoesSemanal = 0,
+    mediaRecomendacoesPeriodo = 0,
+    mediaRecomendacoesSemanal = 0,
+    somaPrimeiraEtapaPeriodo = 0,
+    somaUltimaEtapaPeriodo = 0,
+    somaPrimeiraEtapaSemanal = 0,
+    somaUltimaEtapaSemanal = 0,
+    numIndicadores = 1
+  } = getAggregatedFunnelData() || {};
 
   const funnelTabContent = (
     <div className="space-y-6">
@@ -294,6 +351,21 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
           stages={periodStages}
           weeklyStages={weeklyStages}
           numWeeks={numWeeks}
+          vendasPeriodo={vendasPeriodo}
+          vendasSemanal={vendasSemanal}
+          ticketMedioPeriodo={ticketMedioPeriodo}
+          ticketMedioSemanal={ticketMedioSemanal}
+          recomendacoesPeriodo={recomendacoesPeriodo}
+          recomendacoesSemanal={recomendacoesSemanal}
+          etapaRecomendacoesPeriodo={etapaRecomendacoesPeriodo}
+          etapaRecomendacoesSemanal={etapaRecomendacoesSemanal}
+          mediaRecomendacoesPeriodo={mediaRecomendacoesPeriodo}
+          mediaRecomendacoesSemanal={mediaRecomendacoesSemanal}
+          somaPrimeiraEtapaPeriodo={somaPrimeiraEtapaPeriodo}
+          somaUltimaEtapaPeriodo={somaUltimaEtapaPeriodo}
+          somaPrimeiraEtapaSemanal={somaPrimeiraEtapaSemanal}
+          somaUltimaEtapaSemanal={somaUltimaEtapaSemanal}
+          numIndicadores={numIndicadores}
           comparativo={funnelComparisonData.comparativo}
           compareStages={funnelComparisonData.compareStages}
           periodoLabel={getPeriodoLabel()}

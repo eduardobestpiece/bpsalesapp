@@ -1,14 +1,16 @@
 # Requisição em Andamento
 
-## Bloco 1.3: Correção de Erro de Referência no Gráfico do Funil
+## Bloco 2: Refatoração Final do Gráfico de Funil (Layout e Cálculos)
 
 ### Diagnóstico
-- Após a última atualização, ao acessar o módulo CRM, ocorreu o erro ReferenceError: periodStages is not defined.
-- O erro foi causado por uso de variáveis não definidas em casos de ausência de dados ou renderização condicional.
+- O layout do gráfico de funil precisava alinhar o título na mesma linha dos textos "Dados semanais" e "Dados do Período".
+- Os cards de dados semanais e do período deveriam ficar um abaixo do outro, alinhados à esquerda e à direita, respectivamente.
+- Os cálculos dos cards e das faixas do funil precisavam seguir fórmulas específicas para semana e período, conforme detalhado pelo usuário.
 
 ### Ações Realizadas
-- Adicionado fallback seguro para garantir que periodStages e weeklyStages sempre existam antes de serem usados.
-- O FunnelComparisonChart agora só é renderizado quando os dados estão prontos, evitando erro de referência.
+- Refatorado o layout para alinhar título e cards em uma única linha, com o gráfico imediatamente abaixo.
+- Implementados todos os cálculos exatos para cada card e faixa, conforme solicitado (conversão, vendas, ticket médio, recomendações, valores semanais e totais).
+- Garantido que os dados sejam exibidos corretamente para todos os filtros (empresa, time, usuário).
 
 ### Próximos Passos
 - Testar localmente.
