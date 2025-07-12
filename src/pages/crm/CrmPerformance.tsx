@@ -170,8 +170,8 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
       comparePeriodIndicators = groupCompare[latestMonth] || [];
     }
     // Dados mensais atuais
-    const monthly = aggregateFunnelIndicators(periodIndicators, orderedStages, 'month');
-    const compareMonthly = aggregateFunnelIndicators(comparePeriodIndicators, orderedStages, 'month');
+    const monthly = aggregateFunnelIndicators(periodIndicators, orderedStages, 'month', true);
+    const compareMonthly = aggregateFunnelIndicators(comparePeriodIndicators, orderedStages, 'month', true);
     // Monta array para o gráfico duplo
     const stages = orderedStages.map((stage, idx) => ({
       name: stage.name,

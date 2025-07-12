@@ -222,3 +222,5 @@ Próximos passos: ajustes no gráfico do funil, modais de indicadores, permissõ
 - Ajustada a lógica de filtragem dos dados dos gráficos de performance conforme regras de permissão: master/admin veem todos os dados da empresa, líder vê todas as equipes que lidera, usuário vê apenas seus próprios dados. Nenhuma alteração de layout.
 - Corrigida a agregação dos indicadores: agora, ao não selecionar usuário/time específico, o gráfico soma corretamente todos os registros de todos os usuários daquele funil/empresa/time, usando aggregateFunnelIndicators para garantir soma correta.
 - Corrigida a função de agregação: agora soma todos os registros do período filtrado (não só o mais recente), garantindo cálculo coletivo correto para empresa, time e todos os usuários.
+- Corrigida a soma coletiva do funil: agora soma todos os registros do período filtrado em todos os fluxos, inclusive comparativo.
+- Corrigido o modal de editar time: usuários já associados ao time aparecem marcados corretamente ao abrir o modal.

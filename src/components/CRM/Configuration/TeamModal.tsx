@@ -54,6 +54,7 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
           .from('crm_users')
           .select('id, team_id')
           .eq('company_id', companyId);
+        // Corrigir: garantir que todos os usuários com team_id igual ao do time estejam marcados
         const memberIds = (allUsersDb || []).filter(u => u.team_id === team.id).map(u => u.id);
         setMembers(memberIds);
       })();
@@ -198,7 +199,7 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
               value={members}
               onChange={setMembers}
               placeholder="Selecione os membros do time"
-              disabled={isLoading}
+              key={team?.id || 'new'} // força atualização do MultiSelect ao trocar de time
             />
           </div>
 
