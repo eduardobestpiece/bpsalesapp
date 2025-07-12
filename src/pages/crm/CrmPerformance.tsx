@@ -84,6 +84,9 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
       if (filters.year) relevantIndicators = relevantIndicators.filter(i => String(i.year_reference) === String(filters.year));
     }
     console.log('[CrmPerformance] Indicadores filtrados usados no gráfico:', relevantIndicators);
+    relevantIndicators.forEach(ind => {
+      console.log('[CrmPerformance] Indicator', ind.id, 'values:', ind.values);
+    });
     if (relevantIndicators.length === 0) return [];
 
     // Corrigir: usar agregação dos indicadores filtrados
