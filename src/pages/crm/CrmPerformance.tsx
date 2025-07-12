@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { CrmHeader } from '@/components/Layout/CrmHeader';
 import { PerformanceFilters } from '@/components/CRM/Performance/PerformanceFilters';
@@ -38,21 +37,17 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     }
   }, [crmUser, selectedCompanyId, setSelectedCompanyId]);
 
-  // CORREÇÃO: Lógica mais precisa para determinar userId para indicadores
+  // Fixed logic for determining userId for indicators
   let userIdForIndicators: string | undefined = undefined;
-  if (filters?.userId && filters.userId !== 'all') {
-    // Se um usuário específico foi selecionado no filtro, usar esse usuário
-    userIdForIndicators = filters.userId;
-  } else if (crmUser?.role === 'user') {
-    // Se o usuário logado é do tipo 'user', sempre mostrar apenas seus próprios dados
+  if (crmUser?.role === 'user') {
+    // Users can only see their own data
     userIdForIndicators = crmUser.id;
   }
-  // Para admin, master e leader: se não há filtro específico, pegar todos os indicadores acessíveis
+  // For admin, master, and leader: fetch all accessible indicators without pre-filtering
 
-  console.log('[CrmPerformance] Chamada do useIndicators:', {
+  console.log('[CrmPerformance] useIndicators call:', {
     companyId: selectedCompanyId, 
     userId: userIdForIndicators, 
-    filtroTeam: filters?.teamId,
     crmUserRole: crmUser?.role,
     crmUserId: crmUser?.id
   });
@@ -80,44 +75,71 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
   const getFunnelChartData = () => {
     if (!selectedFunnel || !filters) return [];
 
-    let relevantIndicators = indicators.filter(indicator => indicator.funnel_id === filters.funnelId);
+    console.log('[CrmPerformance] Starting getFunnelChartData with filters:', filters);
+    console.log('[CrmPerformance] All indicators:', indicators.length);
+
+    let relevantIndicators = indicators.filter(indicator => {
+      if (!indicator || indicator.funnel_id !== filters.funnelId) return false;
+      return true;
+    });
     
-    // CORREÇÃO: Aplicar filtros de forma mais precisa
-    if (filters.teamId && filters.teamId !== 'all') {
+    console.log('[CrmPerformance] After funnel filter:', relevantIndicators.length);
+
+    // Apply user/team filtering with proper logic
+    if (filters.userId && filters.userId !== 'all') {
+      console.log('[CrmPerformance] Filtering by specific userId:', filters.userId);
+      relevantIndicators = relevantIndicators.filter(indicator => {
+        const matches = indicator.user_id === filters.userId;
+        console.log('[CrmPerformance] Indicator', indicator.id, 'user_id:', indicator.user_id, 'matches:', matches);
+        return matches;
+      });
+    } else if (filters.teamId && filters.teamId !== 'all') {
+      console.log('[CrmPerformance] Filtering by team:', filters.teamId);
       const teamMembers = crmUsers.filter(u => u.team_id === filters.teamId).map(u => u.id);
+      console.log('[CrmPerformance] Team members:', teamMembers);
       relevantIndicators = relevantIndicators.filter(indicator => teamMembers.includes(indicator.user_id));
-    } else if (filters.userId && filters.userId !== 'all') {
-      // CORREÇÃO: Quando usuário específico é selecionado, filtrar APENAS por esse usuário
-      relevantIndicators = relevantIndicators.filter(indicator => indicator.user_id === filters.userId);
     } else if (crmUser?.role === 'leader') {
-      // Se é líder e não há filtro específico, mostrar todos da equipe + ele mesmo
+      // Leaders see their team members + themselves
       const leaderTeams = teams.filter(t => t.leader_id === crmUser.id).map(t => t.id);
       const teamMembers = crmUsers.filter(u => leaderTeams.includes(u.team_id)).map(u => u.id);
       relevantIndicators = relevantIndicators.filter(indicator => 
         teamMembers.includes(indicator.user_id) || indicator.user_id === crmUser.id
       );
     } else if (crmUser?.role === 'user') {
-      // Se é user, mostrar apenas os seus próprios indicadores
+      // Users only see their own indicators (already filtered by useIndicators)
       relevantIndicators = relevantIndicators.filter(indicator => indicator.user_id === crmUser.id);
     }
     
-    // Filtro por intervalo de datas
+    console.log('[CrmPerformance] After user/team filter:', relevantIndicators.length);
+    
+    // Apply date filtering
     if (filters.period === 'custom') {
-      if (filters.start) relevantIndicators = relevantIndicators.filter(i => i.period_start >= filters.start);
-      if (filters.end) relevantIndicators = relevantIndicators.filter(i => i.period_end <= filters.end);
-      if (filters.month) relevantIndicators = relevantIndicators.filter(i => String(i.month_reference) === String(filters.month));
-      if (filters.year) relevantIndicators = relevantIndicators.filter(i => String(i.year_reference) === String(filters.year));
+      if (filters.start) {
+        relevantIndicators = relevantIndicators.filter(i => i.period_start && i.period_start >= filters.start);
+      }
+      if (filters.end) {
+        relevantIndicators = relevantIndicators.filter(i => i.period_end && i.period_end <= filters.end);
+      }
+      if (filters.month) {
+        relevantIndicators = relevantIndicators.filter(i => String(i.month_reference) === String(filters.month));
+      }
+      if (filters.year) {
+        relevantIndicators = relevantIndicators.filter(i => String(i.year_reference) === String(filters.year));
+      }
     }
     
-    console.log('[CrmPerformance] Indicadores filtrados usados no gráfico:', relevantIndicators);
+    console.log('[CrmPerformance] Final filtered indicators:', relevantIndicators.length);
     relevantIndicators.forEach(ind => {
-      console.log('[CrmPerformance] Indicator', ind.id, 'values:', ind.values);
+      console.log('[CrmPerformance] Final indicator', ind.id, 'user_id:', ind.user_id, 'values:', ind.values?.length || 0);
     });
     
     if (relevantIndicators.length === 0) return [];
 
     const orderedStages = selectedFunnel.stages?.sort((a, b) => a.stage_order - b.stage_order) || [];
     const aggregatedStages = aggregateFunnelIndicators(relevantIndicators, orderedStages, 'month', true);
+    
+    console.log('[CrmPerformance] Aggregated stages:', aggregatedStages);
+    
     return orderedStages.map((stage, idx) => ({
       id: stage.id,
       name: stage.name,
@@ -155,17 +177,17 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
 
   const getFunnelComparisonData = () => {
     if (!selectedFunnel || !filters) return { stages: [], comparativo: [], compareStages: [] };
+    
     const orderedStages = selectedFunnel.stages?.sort((a, b) => a.stage_order - b.stage_order) || [];
     
     let filteredIndicators = indicators.filter(i => i.funnel_id === selectedFunnel.id);
     
-    // CORREÇÃO: Aplicar mesma lógica de filtragem
-    if (filters.teamId && filters.teamId !== 'all') {
+    // Apply same filtering logic as getFunnelChartData
+    if (filters.userId && filters.userId !== 'all') {
+      filteredIndicators = filteredIndicators.filter(i => i.user_id === filters.userId);
+    } else if (filters.teamId && filters.teamId !== 'all') {
       const teamMembers = crmUsers.filter(u => u.team_id === filters.teamId).map(u => u.id);
       filteredIndicators = filteredIndicators.filter(i => teamMembers.includes(i.user_id));
-    } else if (filters.userId && filters.userId !== 'all') {
-      // CORREÇÃO: Filtrar APENAS pelo usuário selecionado
-      filteredIndicators = filteredIndicators.filter(i => i.user_id === filters.userId);
     } else if (crmUser?.role === 'leader') {
       const leaderTeams = teams.filter(t => t.leader_id === crmUser.id).map(t => t.id);
       const teamMembers = crmUsers.filter(u => leaderTeams.includes(u.team_id)).map(u => u.id);
@@ -177,8 +199,8 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     }
     
     if (filters.period === 'custom') {
-      if (filters.start) filteredIndicators = filteredIndicators.filter(i => i.period_start >= filters.start);
-      if (filters.end) filteredIndicators = filteredIndicators.filter(i => i.period_end <= filters.end);
+      if (filters.start) filteredIndicators = filteredIndicators.filter(i => i.period_start && i.period_start >= filters.start);
+      if (filters.end) filteredIndicators = filteredIndicators.filter(i => i.period_end && i.period_end <= filters.end);
       if (filters.month) filteredIndicators = filteredIndicators.filter(i => String(i.month_reference) === String(filters.month));
       if (filters.year) filteredIndicators = filteredIndicators.filter(i => String(i.year_reference) === String(filters.year));
     }
@@ -252,40 +274,35 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     return { stages, comparativo, compareStages: compareMonthly };
   };
 
-  function getPeriodoLabel() {
-    if (!filters) return 'Todo Período';
-    if (filters.period === 'custom' && filters.start && filters.end) {
-      return `De ${new Date(filters.start).toLocaleDateString('pt-BR')} até ${new Date(filters.end).toLocaleDateString('pt-BR')}`;
-    }
-    if (filters.month && filters.year) {
-      const mes = new Date(2000, filters.month - 1, 1).toLocaleString('pt-BR', { month: 'long' });
-      return `${mes.charAt(0).toUpperCase() + mes.slice(1)} de ${filters.year}`;
-    }
-    if (filters.year) {
-      return `${filters.year}`;
-    }
-    return 'Todo Período';
-  }
-
   function getAggregatedFunnelData() {
-    if (!selectedFunnel || !filters) return { periodStages: [], weeklyStages: [], numWeeks: 1, vendasPeriodo: 0, vendasSemanal: 0, ticketMedioPeriodo: 0, ticketMedioSemanal: 0, recomendacoesPeriodo: 0, recomendacoesSemanal: 0, etapaRecomendacoesPeriodo: 0, etapaRecomendacoesSemanal: 0, somaPrimeiraEtapaPeriodo: 0, somaUltimaEtapaPeriodo: 0, somaPrimeiraEtapaSemanal: 0, somaUltimaEtapaSemanal: 0, numIndicadores: 1 };
+    if (!selectedFunnel || !filters) return { 
+      periodStages: [], weeklyStages: [], numWeeks: 1, vendasPeriodo: 0, vendasSemanal: 0, 
+      ticketMedioPeriodo: 0, ticketMedioSemanal: 0, recomendacoesPeriodo: 0, recomendacoesSemanal: 0, 
+      etapaRecomendacoesPeriodo: 0, etapaRecomendacoesSemanal: 0, somaPrimeiraEtapaPeriodo: 0, 
+      somaUltimaEtapaPeriodo: 0, somaPrimeiraEtapaSemanal: 0, somaUltimaEtapaSemanal: 0, numIndicadores: 1 
+    };
     
     let filteredIndicators = indicators.filter(i => i.funnel_id === selectedFunnel.id);
     
-    // CORREÇÃO: Aplicar mesma lógica de filtragem
-    if (filters.teamId && filters.teamId !== 'all') {
+    // Apply same filtering logic
+    if (filters.userId && filters.userId !== 'all') {
+      filteredIndicators = filteredIndicators.filter(i => i.user_id === filters.userId);
+    } else if (filters.teamId && filters.teamId !== 'all') {
       const teamMembers = crmUsers.filter(u => u.team_id === filters.teamId).map(u => u.id);
       filteredIndicators = filteredIndicators.filter(i => teamMembers.includes(i.user_id));
-    } else if (filters.userId && filters.userId !== 'all') {
-      // CORREÇÃO: Filtrar APENAS pelo usuário selecionado
-      filteredIndicators = filteredIndicators.filter(i => i.user_id === filters.userId);
+    } else if (crmUser?.role === 'leader') {
+      const leaderTeams = teams.filter(t => t.leader_id === crmUser.id).map(t => t.id);
+      const teamMembers = crmUsers.filter(u => leaderTeams.includes(u.team_id)).map(u => u.id);
+      filteredIndicators = filteredIndicators.filter(i => 
+        teamMembers.includes(i.user_id) || i.user_id === crmUser.id
+      );
     } else if (crmUser?.role === 'user') {
       filteredIndicators = filteredIndicators.filter(i => i.user_id === crmUser.id);
     }
     
     if (filters.period === 'custom') {
-      if (filters.start) filteredIndicators = filteredIndicators.filter(i => i.period_start >= filters.start);
-      if (filters.end) filteredIndicators = filteredIndicators.filter(i => i.period_end <= filters.end);
+      if (filters.start) filteredIndicators = filteredIndicators.filter(i => i.period_start && i.period_start >= filters.start);
+      if (filters.end) filteredIndicators = filteredIndicators.filter(i => i.period_end && i.period_end <= filters.end);
       if (filters.month) filteredIndicators = filteredIndicators.filter(i => String(i.month_reference) === String(filters.month));
       if (filters.year) filteredIndicators = filteredIndicators.filter(i => String(i.year_reference) === String(filters.year));
     }
@@ -383,6 +400,21 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     somaUltimaEtapaSemanal = 0,
     numIndicadores = 1
   } = getAggregatedFunnelData() || {};
+
+  function getPeriodoLabel() {
+    if (!filters) return 'Todo Período';
+    if (filters.period === 'custom' && filters.start && filters.end) {
+      return `De ${new Date(filters.start).toLocaleDateString('pt-BR')} até ${new Date(filters.end).toLocaleDateString('pt-BR')}`;
+    }
+    if (filters.month && filters.year) {
+      const mes = new Date(2000, filters.month - 1, 1).toLocaleString('pt-BR', { month: 'long' });
+      return `${mes.charAt(0).toUpperCase() + mes.slice(1)} de ${filters.year}`;
+    }
+    if (filters.year) {
+      return `${filters.year}`;
+    }
+    return 'Todo Período';
+  }
 
   const funnelTabContent = (
     <div>

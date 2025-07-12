@@ -5,7 +5,7 @@ import { Indicator, IndicatorValue } from '@/types/crm';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useMemo } from 'react';
 
-interface IndicatorWithValues extends Indicator {
+interface IndicatorWithValues extends Omit<Indicator, 'archived_at'> {
   values: IndicatorValue[];
   archived_at?: string | null;
 }
@@ -20,11 +20,12 @@ export const useIndicators = (companyId?: string, userId?: string) => {
   return useQuery({
     queryKey,
     queryFn: async () => {
-      console.log('[useIndicators] Iniciando busca de indicadores para companyId:', effectiveCompanyId, 'userId:', userId);
+      console.log('[useIndicators] Starting fetch for companyId:', effectiveCompanyId, 'userId:', userId);
       if (!effectiveCompanyId) {
-        console.log('[useIndicators] CompanyId não fornecido, retornando array vazio');
+        console.log('[useIndicators] No companyId provided, returning empty array');
         return [] as IndicatorWithValues[];
       }
+      
       try {
         let query = supabase
           .from('indicators')
@@ -43,16 +44,20 @@ export const useIndicators = (companyId?: string, userId?: string) => {
         
         if (error) {
           if (error.code === 'PGRST301' || error.message.includes('RLS')) {
+            console.log('[useIndicators] RLS restriction, returning empty array');
             return [] as IndicatorWithValues[];
           }
+          console.error('[useIndicators] Database error:', error);
           throw error;
         }
         
-        // Garantir que cada indicador tenha o array 'values' preenchido
+        // Filter and validate data more carefully
         const validData = (data || []).filter((indicator): indicator is IndicatorWithValues => {
           if (!indicator || typeof indicator !== 'object') {
+            console.log('[useIndicators] Invalid indicator object:', indicator);
             return false;
           }
+          
           // Check for required properties
           const hasRequiredProps = indicator.id && 
                                  indicator.user_id && 
@@ -62,28 +67,40 @@ export const useIndicators = (companyId?: string, userId?: string) => {
                                  typeof indicator.year_reference === 'number' &&
                                  indicator.created_at &&
                                  indicator.updated_at;
+          
           if (!hasRequiredProps) {
+            console.log('[useIndicators] Missing required properties:', indicator);
             return false;
           }
-          // Se não vier o array values, buscar manualmente
+          
+          // Ensure values array exists
           if (!Array.isArray(indicator.values)) {
             indicator.values = [];
           }
+          
           return true;
         });
-        // Se algum indicador não tiver values, buscar manualmente
+        
+        // Fetch missing values manually if needed
         for (const ind of validData) {
           if (!ind.values || ind.values.length === 0) {
-            const { data: values } = await supabase
-              .from('indicator_values')
-              .select('*')
-              .eq('indicator_id', ind.id);
-            ind.values = values || [];
+            try {
+              const { data: values } = await supabase
+                .from('indicator_values')
+                .select('*')
+                .eq('indicator_id', ind.id);
+              ind.values = values || [];
+            } catch (valuesError) {
+              console.error('[useIndicators] Error fetching values for indicator:', ind.id, valuesError);
+              ind.values = [];
+            }
           }
         }
+        
+        console.log('[useIndicators] Successfully fetched', validData.length, 'indicators');
         return validData;
       } catch (err) {
-        console.error('[useIndicators] Erro ao buscar indicadores:', err);
+        console.error('[useIndicators] Error fetching indicators:', err);
         return [] as IndicatorWithValues[];
       }
     },
@@ -113,19 +130,22 @@ export const useCreateIndicator = () => {
       if (indicatorError) throw indicatorError;
 
       // Then create the indicator values
-      const valuesToInsert = indicatorData.values.map(value => ({
-        ...value,
-        indicator_id: indicator.id
-      }));
-      console.log('Salvando indicator_values:', valuesToInsert);
+      if (indicatorData.values.length > 0) {
+        const valuesToInsert = indicatorData.values.map(value => ({
+          ...value,
+          indicator_id: indicator.id
+        }));
+        
+        console.log('Saving indicator_values:', valuesToInsert);
 
-      const { error: valuesError } = await supabase
-        .from('indicator_values')
-        .insert(valuesToInsert);
+        const { error: valuesError } = await supabase
+          .from('indicator_values')
+          .insert(valuesToInsert);
 
-      if (valuesError) {
-        console.error('Erro ao salvar indicator_values:', valuesError);
-        throw valuesError;
+        if (valuesError) {
+          console.error('Error saving indicator_values:', valuesError);
+          throw valuesError;
+        }
       }
 
       return indicator;
@@ -165,16 +185,18 @@ export const useUpdateIndicator = () => {
         .delete()
         .eq('indicator_id', id);
 
-      const valuesToInsert = values.map(value => ({
-        ...value,
-        indicator_id: id
-      }));
+      if (values.length > 0) {
+        const valuesToInsert = values.map(value => ({
+          ...value,
+          indicator_id: id
+        }));
 
-      const { error: valuesError } = await supabase
-        .from('indicator_values')
-        .insert(valuesToInsert);
+        const { error: valuesError } = await supabase
+          .from('indicator_values')
+          .insert(valuesToInsert);
 
-      if (valuesError) throw valuesError;
+        if (valuesError) throw valuesError;
+      }
 
       return updatedIndicator;
     },
