@@ -342,7 +342,7 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
   } = getAggregatedFunnelData() || {};
 
   const funnelTabContent = (
-    <div className="space-y-6">
+    <div>
       {/* Filtros dinâmicos */}
       <PerformanceFilters onFiltersChange={setFilters} funnelOnly />
       {/* Gráfico do funil e comparativo */}

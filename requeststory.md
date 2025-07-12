@@ -1,8 +1,6 @@
-# Solicitação em andamento
+# Atualização da solicitação
 
 **Data:** (preencher com data atual)
-**Solicitante:** Usuário
+**Resumo:** A tentativa anterior de ajuste de layout não surtiu efeito visual. Foi identificado que o container pai do gráfico (em CrmPerformance.tsx) utilizava 'space-y-6', causando afastamento vertical. O espaçamento foi removido para garantir que o gráfico fique imediatamente abaixo do bloco superior.
 
-**Resumo:** Ajustar o layout do componente de funil para aproximar o gráfico do bloco superior (cards + título), reduzindo o espaçamento vertical e mantendo responsividade. Não alterar cálculos, apenas layout.
-
-**Status:** Em andamento 
+**Status:** Ajuste aplicado, aguardando validação. 
