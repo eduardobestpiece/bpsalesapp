@@ -19,6 +19,7 @@ interface PerformanceFilters {
   end?: string;
   month?: number;
   year?: number;
+  compareId?: string; // Novo: receber compareId do filtro
 }
 
 const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
@@ -79,16 +80,44 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
       });
   };
 
-  // Função para montar dados do gráfico duplo e comparativo, agora com comparativo do período anterior
+  // Novo: receber compareId do filtro
+  const [compareData, setCompareData] = useState(null);
+
+  // Função para buscar indicadores do time/usuário a ser comparado
+  const getCompareIndicators = (compareId: string, type: 'team' | 'user') => {
+    if (!selectedFunnel) return [];
+    let compareIndicators = indicators.filter(i => i.funnel_id === selectedFunnel.id);
+    if (type === 'team') {
+      compareIndicators = compareIndicators.filter(i => i.team_id === compareId);
+    } else if (type === 'user') {
+      compareIndicators = compareIndicators.filter(i => i.user_id === compareId);
+    }
+    // Filtros customizados
+    if (filters?.period === 'custom') {
+      if (filters.start) compareIndicators = compareIndicators.filter(i => i.period_start >= filters.start);
+      if (filters.end) compareIndicators = compareIndicators.filter(i => i.period_end <= filters.end);
+      if (filters.month) compareIndicators = compareIndicators.filter(i => String(i.month_reference) === String(filters.month));
+      if (filters.year) compareIndicators = compareIndicators.filter(i => String(i.year_reference) === String(filters.year));
+    }
+    return compareIndicators;
+  };
+
+  // Função para calcular percentuais de diferença
+  const calculateDiff = (main, compare) => {
+    if (!main || !compare) return 0;
+    if (compare === 0) return 0;
+    return (((main - compare) / compare) * 100).toFixed(1);
+  };
+
+  // Função para montar dados do gráfico duplo e comparativo, agora com comparação
   const getFunnelComparisonData = () => {
-    if (!selectedFunnel || !filters) return { stages: [], comparativo: [] };
+    if (!selectedFunnel || !filters) return { stages: [], comparativo: [], compareStages: [] };
     const orderedStages = selectedFunnel.stages?.sort((a, b) => a.stage_order - b.stage_order) || [];
     // Filtrar indicadores conforme perfil do usuário
     let filteredIndicators = indicators.filter(i => i.funnel_id === selectedFunnel.id);
     if (crmUser?.role === 'user') {
       filteredIndicators = filteredIndicators.filter(i => i.user_id === crmUser.id);
     } else if (crmUser?.role === 'leader') {
-      // Suporte a múltiplas equipes se necessário
       const teamIds = Array.isArray(crmUser.team_id) ? crmUser.team_id : [crmUser.team_id];
       filteredIndicators = filteredIndicators.filter(i => teamIds.includes(i.team_id));
     } else if (crmUser?.role === 'admin' || crmUser?.role === 'master') {
@@ -101,6 +130,18 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
       if (filters.month) filteredIndicators = filteredIndicators.filter(i => String(i.month_reference) === String(filters.month));
       if (filters.year) filteredIndicators = filteredIndicators.filter(i => String(i.year_reference) === String(filters.year));
     }
+    // Indicadores do comparativo
+    let compareIndicators = [];
+    let compareType: 'team' | 'user' | null = null;
+    if (filters.compareId) {
+      if (filters.teamId && filters.teamId !== 'all') {
+        compareType = 'team';
+        compareIndicators = getCompareIndicators(filters.compareId, 'team');
+      } else if (filters.userId && filters.userId !== 'all') {
+        compareType = 'user';
+        compareIndicators = getCompareIndicators(filters.compareId, 'user');
+      }
+    }
     // Agrupar por mês/ano para comparação correta
     const groupByMonthYear = {};
     filteredIndicators.forEach(ind => {
@@ -110,32 +151,52 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     });
     const months = Object.keys(groupByMonthYear).sort().reverse();
     const latestMonth = months[0];
-    const previousMonth = months[1];
     const periodIndicators = groupByMonthYear[latestMonth] || [];
-    const previousIndicators = groupByMonthYear[previousMonth] || [];
-    // Dados mensais atuais e anteriores
+    // Agrupar comparativo
+    let comparePeriodIndicators = [];
+    if (compareIndicators.length > 0) {
+      const groupCompare = {};
+      compareIndicators.forEach(ind => {
+        const key = `${ind.year_reference}-${ind.month_reference}`;
+        if (!groupCompare[key]) groupCompare[key] = [];
+        groupCompare[key].push(ind);
+      });
+      comparePeriodIndicators = groupCompare[latestMonth] || [];
+    }
+    // Dados mensais atuais
     const monthly = aggregateFunnelIndicators(periodIndicators, orderedStages, 'month');
-    const previousMonthly = aggregateFunnelIndicators(previousIndicators, orderedStages, 'month');
+    const compareMonthly = aggregateFunnelIndicators(comparePeriodIndicators, orderedStages, 'month');
     // Monta array para o gráfico duplo
     const stages = orderedStages.map((stage, idx) => ({
       name: stage.name,
-      weeklyValue: monthly[idx]?.value || 0,
-      weeklyConversion: monthly[idx]?.conversion || 0,
-      previousWeeklyValue: previousMonthly[idx]?.value || 0,
-      monthlyValue: monthly[idx]?.value || 0,
-      monthlyConversion: monthly[idx]?.conversion || 0,
+      value: monthly[idx]?.value || 0,
+      compareValue: compareMonthly[idx]?.value || 0,
+      diff: calculateDiff(monthly[idx]?.value || 0, compareMonthly[idx]?.value || 0),
     }));
     // Comparativo: exemplo com conversão final, recomendações, vendas
     const lastStage = stages[stages.length - 1];
+    const firstStage = stages[0];
     const recommendations = periodIndicators.filter(i => i.recommendations_count).reduce((sum, i) => sum + (i.recommendations_count || 0), 0);
     const vendas = periodIndicators.filter(i => i.sales_value).reduce((sum, i) => sum + (i.sales_value || 0), 0);
+    // Cálculos do período
+    const conversaoFunil = firstStage && lastStage && firstStage.value > 0 ? (lastStage.value / firstStage.value) * 100 : 0;
+    const ticketMedio = lastStage && lastStage.value > 0 ? vendas / lastStage.value : 0;
+    // Cálculos do comparativo
+    const compareLastStage = stages[stages.length - 1];
+    const compareFirstStage = stages[0];
+    const compareVendas = comparePeriodIndicators.filter(i => i.sales_value).reduce((sum, i) => sum + (i.sales_value || 0), 0);
+    const compareConversaoFunil = compareFirstStage && compareLastStage && compareFirstStage.compareValue > 0 ? (compareLastStage.compareValue / compareFirstStage.compareValue) * 100 : 0;
+    const compareTicketMedio = compareLastStage && compareLastStage.compareValue > 0 ? compareVendas / compareLastStage.compareValue : 0;
+    // Percentuais de diferença
+    const diffConversao = calculateDiff(conversaoFunil, compareConversaoFunil);
+    const diffTicket = calculateDiff(ticketMedio, compareTicketMedio);
+    // Comparativo final
     const comparativo = [
-      { label: 'Conversão', value: lastStage ? `${lastStage.monthlyConversion}%` : '-' },
-      { label: 'Recomendações', value: recommendations },
-      { label: 'Vendas', value: vendas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) },
-      { label: 'Comparativo', value: previousMonth ? 'Período anterior' : '0%' },
+      { label: 'Conversão', value: conversaoFunil.toFixed(1) + '%', diff: diffConversao },
+      { label: 'Vendas', value: vendas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), diff: calculateDiff(vendas, compareVendas) },
+      { label: 'Ticket Médio', value: ticketMedio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), diff: diffTicket },
     ];
-    return { stages, comparativo };
+    return { stages, comparativo, compareStages: compareMonthly };
   };
 
   // Função utilitária para montar o label do período
@@ -183,6 +244,7 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
       <FunnelComparisonChart
         stages={funnelComparisonData.stages}
         comparativo={funnelComparisonData.comparativo}
+        compareStages={funnelComparisonData.compareStages}
         periodoLabel={getPeriodoLabel()}
       />
     </div>

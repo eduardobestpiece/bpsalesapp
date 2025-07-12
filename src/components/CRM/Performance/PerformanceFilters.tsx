@@ -21,6 +21,7 @@ interface PerformanceFiltersProps {
     end?: string;
     month?: string;
     year?: string;
+    compareId?: string;
   } | null) => void;
 }
 
@@ -31,6 +32,7 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
   const [selectedUser, setSelectedUser] = useState('');
   const [showPeriodModal, setShowPeriodModal] = useState(false);
   const [customPeriod, setCustomPeriod] = useState({ start: '', end: '', month: '', year: '' });
+  const [compareId, setCompareId] = useState('');
 
   const { data: funnels = [] } = useFunnels(companyId);
   const { data: teams = [] } = useTeams();
@@ -81,6 +83,7 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
       funnelId: selectedFunnel,
       teamId: selectedTeam || undefined,
       userId: selectedUser || undefined,
+      compareId: compareId || undefined,
       period: 'custom', // novo tipo para indicar filtro customizado
       ...customPeriod
     });
@@ -156,6 +159,26 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
             </Button>
           </div>
         </div>
+
+        {/* Opção de comparação */}
+        {((canSeeAllTeams && selectedTeam && selectedTeam !== 'all') || (selectedUser && selectedUser !== 'all')) && (
+          <div>
+            <Label>Comparar com</Label>
+            <Select value={compareId} onValueChange={setCompareId}>
+              <SelectTrigger>
+                <SelectValue placeholder={selectedTeam ? 'Selecione outro time' : 'Selecione outro usuário'} />
+              </SelectTrigger>
+              <SelectContent>
+                {selectedTeam && selectedTeam !== 'all' && teams.filter(t => t.id !== selectedTeam).map(team => (
+                  <SelectItem key={team.id} value={team.id}>{team.name}</SelectItem>
+                ))}
+                {selectedUser && selectedUser !== 'all' && users.filter(u => u.id !== selectedUser).map(user => (
+                  <SelectItem key={user.id} value={user.id}>{user.first_name} {user.last_name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
 
         <div className="flex justify-end">
           <Button 
