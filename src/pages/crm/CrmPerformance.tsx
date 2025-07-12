@@ -119,11 +119,14 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     // Filtrar indicadores conforme perfil do usuário
     let filteredIndicators = indicators.filter(i => i.funnel_id === selectedFunnel.id);
     if (crmUser?.role === 'user') {
+      // Usuário comum: só vê seus próprios indicadores
       filteredIndicators = filteredIndicators.filter(i => i.user_id === crmUser.id);
     } else if (crmUser?.role === 'leader') {
+      // Líder: vê todos os indicadores das equipes que lidera
       const teamIds = Array.isArray(crmUser.team_id) ? crmUser.team_id : [crmUser.team_id];
       filteredIndicators = filteredIndicators.filter(i => teamIds.includes(i.team_id));
     } else if (crmUser?.role === 'admin' || crmUser?.role === 'master') {
+      // Master/Admin: vê todos os indicadores da empresa selecionada
       filteredIndicators = filteredIndicators.filter(i => i.company_id === selectedCompanyId);
     }
     // Filtros customizados
@@ -224,11 +227,14 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     // Filtrar indicadores conforme perfil do usuário
     let filteredIndicators = indicators.filter(i => i.funnel_id === selectedFunnel.id);
     if (crmUser?.role === 'user') {
+      // Usuário comum: só vê seus próprios indicadores
       filteredIndicators = filteredIndicators.filter(i => i.user_id === crmUser.id);
     } else if (crmUser?.role === 'leader') {
+      // Líder: vê todos os indicadores das equipes que lidera
       const teamIds = Array.isArray(crmUser.team_id) ? crmUser.team_id : [crmUser.team_id];
       filteredIndicators = filteredIndicators.filter(i => teamIds.includes(i.team_id));
     } else if (crmUser?.role === 'admin' || crmUser?.role === 'master') {
+      // Master/Admin: vê todos os indicadores da empresa selecionada
       filteredIndicators = filteredIndicators.filter(i => i.company_id === selectedCompanyId);
     }
     // Filtros customizados
