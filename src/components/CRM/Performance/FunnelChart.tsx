@@ -77,16 +77,17 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
                 className="w-full flex items-center justify-center mb-1 z-[${10-idx}]"
                 style={{ zIndex: 10 - idx }}
               >
-                {/* Comparativo visual à esquerda */}
-                <div className="flex items-center justify-center w-10 mr-2">
-                  {diff !== 0 && (
+                {/* Comparativo visual à esquerda da faixa, alinhado verticalmente */}
+                <div className="flex items-center justify-center w-14 mr-2">
+                  {diff !== 0 ? (
                     <span className={`flex items-center font-bold text-xs ${isUp ? 'text-green-600' : 'text-red-600'}`}> 
                       {isUp && <ArrowUp className="w-4 h-4 mr-1" />} 
                       {isDown && <ArrowDown className="w-4 h-4 mr-1" />} 
                       {diff > 0 ? `+${diff}` : diff}
                     </span>
+                  ) : (
+                    <span className="text-xs text-gray-400">0%</span>
                   )}
-                  {diff === 0 && <span className="text-xs text-gray-400">=</span>}
                 </div>
                 <div
                   className={`transition-all duration-300 bg-gradient-to-r ${funnelColors[idx % funnelColors.length]} shadow-lg flex items-center justify-between px-6`}

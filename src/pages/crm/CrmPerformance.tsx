@@ -24,7 +24,7 @@ interface PerformanceFilters {
 const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
   const { companyId, crmUser } = useCrmAuth();
   const [filters, setFilters] = useState<PerformanceFilters | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'funnel'>('overview');
+  const [activeTab, setActiveTab] = useState<'funnel'>('funnel');
   
   const { data: indicators = [] } = useIndicators(
     companyId, 
@@ -190,10 +190,8 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
   const content = (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
       <TabsList className="mb-6">
-        {/* Removido: <TabsTrigger value="overview">Performance Geral</TabsTrigger> */}
         <TabsTrigger value="funnel">Funil</TabsTrigger>
       </TabsList>
-      {/* Removido: <TabsContent value="overview">...</TabsContent> */}
       <TabsContent value="funnel">{funnelTabContent}</TabsContent>
     </Tabs>
   );

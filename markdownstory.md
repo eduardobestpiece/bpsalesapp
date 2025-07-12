@@ -95,3 +95,24 @@ Bloco 1
 - Funis, Origens e Times: criação, edição e listagem agora sempre vinculados à empresa selecionada no menu lateral.
 - Deploy automático realizado.
 - Aguardando validação do usuário para marcar como concluído.
+
+## 11/07/2024 - Bloco 1 Finalizado
+
+- Removida a aba “Performance Geral” da página de Indicadores.
+- Gráfico do funil: percentuais ajustados, comparativo visual do período anterior, header com média semanal e período, exibição automática do funil ao entrar na página.
+- Modal de registro de indicador: períodos preenchidos exibem “(já preenchido)” em cinza.
+- Modal de edição de indicador: botão de salvar adicionado.
+- Registro/edição de usuários: campo de empresa só para Master; administradores/líderes podem atribuir funis a usuários da própria empresa.
+- Configurações: filtro de funis respeita empresa selecionada, inclusive para Master/Admin.
+- Deploy automático realizado.
+- Aguardando validação do usuário para marcar como concluído.
+
+# Histórico de Atividades
+
+## 11/07/2024 - Ajustes Avançados CRM/Simulador
+
+- Iniciada execução do checklist avançado conforme requisição registrada em `requeststory.md`.
+- **Removida a aba 'Performance geral'** da página de Indicadores/Performance. Agora, apenas a aba 'Funil' é exibida na navegação, conforme solicitado.
+- Checklist atualizado e plano de ação detalhado.
+
+Próximos passos: ajustes no gráfico do funil, modais de indicadores, permissões e filtros de empresa/funil para usuários.

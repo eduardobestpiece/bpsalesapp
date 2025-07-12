@@ -20,14 +20,27 @@
 ---
 
 ## Checklist
-- [ ] Remover aba “Performance geral” da página de Indicadores.
-- [ ] Ajustar gráfico do funil (percentuais, comparativo, header, exibição automática).
-- [ ] Corrigir aviso de “(já preenchido)” no modal de registro de indicador.
-- [ ] Adicionar botão de salvar no modal de edição de indicador.
-- [ ] Campo de seleção de empresa no registro/edição de usuário só para Master.
-- [ ] Permitir atribuição de funil a usuários por administradores/líderes.
-- [ ] Corrigir filtro de funis por empresa selecionada (inclusive para Master).
-- [ ] Testar localmente.
-- [ ] Atualizar `requeststory.md`.
-- [ ] Deploy automático.
-- [ ] Solicitar validação. 
+- [x] Análise do histórico, contexto e estrutura do projeto
+- [x] Localização dos pontos de ajuste nas páginas e componentes
+- [ ] Remover aba “Performance geral” da página de Indicadores
+- [ ] Ajustar gráfico do funil (percentuais, comparativo, header, exibição automática)
+- [ ] Corrigir aviso de “(já preenchido)” no modal de registro de indicador
+- [ ] Adicionar botão de salvar no modal de edição de indicador
+- [ ] Campo de seleção de empresa no registro/edição de usuário só para Master
+- [ ] Permitir atribuição de funil a usuários por administradores/líderes
+- [ ] Corrigir filtro de funis por empresa selecionada (inclusive para Master)
+- [ ] Testar localmente
+- [ ] Atualizar `requeststory.md`
+- [ ] Deploy automático
+- [ ] Solicitar validação
+
+---
+
+### Plano de Ação
+1. Remover a aba “Performance geral” da página de Indicadores (src/pages/crm/CrmPerformance.tsx e src/pages/crm/CrmIndicadores.tsx)
+2. Ajustar o gráfico do funil conforme solicitado (src/components/CRM/Performance/FunnelChart.tsx)
+3. Corrigir aviso e botão no modal de indicadores (src/components/CRM/IndicatorModal.tsx)
+4. Ajustar permissões e filtros de empresa/funil para usuários (src/pages/crm/Configuration e src/components/CRM/Configuration/UsersList.tsx)
+5. Testar localmente e atualizar históricos
+6. Realizar deploy automático
+7. Solicitar validação ao usuário 
