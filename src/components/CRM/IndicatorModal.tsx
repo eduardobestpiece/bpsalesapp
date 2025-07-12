@@ -350,6 +350,11 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     }
   }, [isEditing, indicator]);
 
+  // Permissão de edição: só pode editar se for admin/master/submaster ou o próprio usuário
+  const canEdit = !isEditing || (isEditing && (
+    crmUser?.role === 'admin' || crmUser?.role === 'master' || crmUser?.role === 'submaster' || (indicator && crmUser?.id === indicator.user_id)
+  ));
+
   const handleStageValueChange = (stageId: string, value: number) => {
     setFormData(prev => ({
       ...prev,
@@ -522,7 +527,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                   {monthOptions.length === 1 && monthReference ? (
                     <div>{new Date(2000, monthReference - 1, 1).toLocaleString('pt-BR', { month: 'long' })}</div>
                   ) : (
-                    <select value={monthReference ?? ''} onChange={e => setMonthReference(Number(e.target.value))} required>
+                    <select value={monthReference ?? ''} onChange={e => setMonthReference(Number(e.target.value))} required disabled={!canEdit}>
                       <option value="">Selecione</option>
                       {monthOptions.map(m => (
                         <option key={m} value={m}>{new Date(2000, m - 1, 1).toLocaleString('pt-BR', { month: 'long' })}</option>
@@ -536,7 +541,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                   {yearOptions.length === 1 && yearReference ? (
                     <div>{yearReference}</div>
                   ) : (
-                    <select value={yearReference ?? ''} onChange={e => setYearReference(Number(e.target.value))} required>
+                    <select value={yearReference ?? ''} onChange={e => setYearReference(Number(e.target.value))} required disabled={!canEdit}>
                       <option value="">Selecione</option>
                       {yearOptions.map(y => (
                         <option key={y} value={y}>{y}</option>
@@ -550,7 +555,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                   <Select 
                     value={formData.funnel_id} 
                     onValueChange={(value) => setFormData(prev => ({ ...prev, funnel_id: value }))}
-                    disabled={isLoading}
+                    disabled={isLoading || !canEdit}
                     required
                   >
                     <SelectTrigger>
@@ -592,7 +597,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                         setPeriodEnd(end);
                         console.log('[Indicador] Período selecionado:', value, '| Início:', start, '| Fim:', end);
                       }}
-                      disabled={isLoading || !formData.funnel_id}
+                      disabled={isLoading || !formData.funnel_id || !canEdit}
                       required
                     >
                       <SelectTrigger>
@@ -633,12 +638,12 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                 {/* Campo Valor das Vendas */}
                 <div>
                   <Label htmlFor="sales_value">Valor das Vendas</Label>
-                  <Input id="sales_value" type="text" value={salesValue} onChange={e => setSalesValue(e.target.value)} placeholder="0,00" inputMode="decimal" disabled={false} />
+                  <Input id="sales_value" type="text" value={salesValue} onChange={e => setSalesValue(e.target.value)} placeholder="0,00" inputMode="decimal" disabled={!canEdit} />
                 </div>
                 {/* Campo Número de Recomendações */}
                 <div>
                   <Label htmlFor="recommendations_count">Número de Recomendações</Label>
-                  <Input id="recommendations_count" type="number" value={recommendationsCount} onChange={e => setRecommendationsCount(Number(e.target.value))} disabled={false} />
+                  <Input id="recommendations_count" type="number" value={recommendationsCount} onChange={e => setRecommendationsCount(Number(e.target.value))} disabled={!canEdit} />
                 </div>
               </>
             )}
@@ -673,7 +678,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                               value={valor}
                               onChange={(e) => handleStageValueChange(stage.id, parseInt(e.target.value) || 0)}
                               placeholder="Digite o resultado"
-                              disabled={false}
+                              disabled={!canEdit}
                             />
                           </div>
                           <div className="flex flex-col items-start md:items-end min-w-[180px]">
@@ -698,10 +703,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
             </div>
           )}
           <div className="flex justify-end space-x-2 w-full md:w-auto">
-            {!isEditing && (
-              <Button type="submit" disabled={isLoading}>Salvar</Button>
-            )}
-            {isEditing && (
+            {canEdit && (
               <Button type="submit" disabled={isLoading}>Salvar</Button>
             )}
             <Button type="button" variant="outline" onClick={onClose}>Fechar</Button>
