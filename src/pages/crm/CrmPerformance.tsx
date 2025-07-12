@@ -65,10 +65,10 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     if (!selectedFunnel || !filters) return [];
 
     let relevantIndicators = indicators.filter(indicator => indicator.funnel_id === filters.funnelId);
-    let teamMembers: string[] = [];
-    console.log('[CrmPerformance] crmUsers recebidos:', crmUsers.map(u => ({id: u.id, nome: u.first_name + ' ' + u.last_name, team_id: u.team_id})));
+    
+    // Filtro por time: pegar IDs dos usuários do time selecionado
     if (filters.teamId && filters.teamId !== 'all') {
-      teamMembers = crmUsers.filter(u => u.team_id === filters.teamId).map(u => u.id);
+      const teamMembers = crmUsers.filter(u => u.team_id === filters.teamId).map(u => u.id);
       console.log('[CrmPerformance] Membros do time selecionado:', teamMembers);
       relevantIndicators = relevantIndicators.filter(indicator => teamMembers.includes(indicator.user_id));
     } else if (filters.userId && filters.userId !== 'all') {
@@ -76,6 +76,7 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     } else if (crmUser?.role === 'user') {
       relevantIndicators = relevantIndicators.filter(indicator => indicator.user_id === crmUser.id);
     }
+    
     // Filtro por intervalo de datas
     if (filters.period === 'custom') {
       if (filters.start) relevantIndicators = relevantIndicators.filter(i => i.period_start >= filters.start);
@@ -109,7 +110,8 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     if (!selectedFunnel) return [];
     let compareIndicators = indicators.filter(i => i.funnel_id === selectedFunnel.id);
     if (type === 'team') {
-      compareIndicators = compareIndicators.filter(i => i.team_id === compareId);
+      const teamMembers = crmUsers.filter(u => u.team_id === compareId).map(u => u.id);
+      compareIndicators = compareIndicators.filter(i => teamMembers.includes(i.user_id));
     } else if (type === 'user') {
       compareIndicators = compareIndicators.filter(i => i.user_id === compareId);
     }
@@ -134,10 +136,12 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
   const getFunnelComparisonData = () => {
     if (!selectedFunnel || !filters) return { stages: [], comparativo: [], compareStages: [] };
     const orderedStages = selectedFunnel.stages?.sort((a, b) => a.stage_order - b.stage_order) || [];
+    
     // Filtrar indicadores conforme perfil do usuário
     let filteredIndicators = indicators.filter(i => i.funnel_id === selectedFunnel.id);
+    
+    // Aplicar filtro por equipe corretamente
     if (filters.teamId && filters.teamId !== 'all') {
-      // Buscar todos os usuários do time selecionado
       const teamMembers = crmUsers.filter(u => u.team_id === filters.teamId).map(u => u.id);
       filteredIndicators = filteredIndicators.filter(i => teamMembers.includes(i.user_id));
     } else if (filters.userId && filters.userId !== 'all') {
@@ -145,6 +149,7 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     } else if (crmUser?.role === 'user') {
       filteredIndicators = filteredIndicators.filter(i => i.user_id === crmUser.id);
     }
+    
     // Filtros customizados
     if (filters.period === 'custom') {
       if (filters.start) filteredIndicators = filteredIndicators.filter(i => i.period_start >= filters.start);
@@ -152,6 +157,7 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
       if (filters.month) filteredIndicators = filteredIndicators.filter(i => String(i.month_reference) === String(filters.month));
       if (filters.year) filteredIndicators = filteredIndicators.filter(i => String(i.year_reference) === String(filters.year));
     }
+    
     // Indicadores do comparativo
     let compareIndicators = [];
     let compareType: 'team' | 'user' | null = null;
@@ -164,6 +170,7 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
         compareIndicators = getCompareIndicators(filters.compareId, 'user');
       }
     }
+    
     // Agrupar por mês/ano para comparação correta
     const groupByMonthYear = {};
     filteredIndicators.forEach(ind => {
@@ -174,6 +181,7 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     const months = Object.keys(groupByMonthYear).sort().reverse();
     const latestMonth = months[0];
     const periodIndicators = groupByMonthYear[latestMonth] || [];
+    
     // Agrupar comparativo
     let comparePeriodIndicators = [];
     if (compareIndicators.length > 0) {
@@ -185,9 +193,11 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
       });
       comparePeriodIndicators = groupCompare[latestMonth] || [];
     }
+    
     // Dados mensais atuais
     const monthly = aggregateFunnelIndicators(periodIndicators, orderedStages, 'month', true);
     const compareMonthly = aggregateFunnelIndicators(comparePeriodIndicators, orderedStages, 'month', true);
+    
     // Monta array para o gráfico duplo
     const stages = orderedStages.map((stage, idx) => ({
       name: stage.name,
@@ -195,29 +205,35 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
       compareValue: compareMonthly[idx]?.value || 0,
       diff: calculateDiff(monthly[idx]?.value || 0, compareMonthly[idx]?.value || 0),
     }));
+    
     // Comparativo: exemplo com conversão final, recomendações, vendas
     const lastStage = stages[stages.length - 1];
     const firstStage = stages[0];
     const recommendations = periodIndicators.filter(i => i.recommendations_count).reduce((sum, i) => sum + (i.recommendations_count || 0), 0);
     const vendas = periodIndicators.filter(i => i.sales_value).reduce((sum, i) => sum + (i.sales_value || 0), 0);
+    
     // Cálculos do período
     const conversaoFunil = firstStage && lastStage && firstStage.value > 0 ? (lastStage.value / firstStage.value) * 100 : 0;
     const ticketMedio = lastStage && lastStage.value > 0 ? vendas / lastStage.value : 0;
+    
     // Cálculos do comparativo
     const compareLastStage = stages[stages.length - 1];
     const compareFirstStage = stages[0];
     const compareVendas = comparePeriodIndicators.filter(i => i.sales_value).reduce((sum, i) => sum + (i.sales_value || 0), 0);
     const compareConversaoFunil = compareFirstStage && compareLastStage && compareFirstStage.compareValue > 0 ? (compareLastStage.compareValue / compareFirstStage.compareValue) * 100 : 0;
     const compareTicketMedio = compareLastStage && compareLastStage.compareValue > 0 ? compareVendas / compareLastStage.compareValue : 0;
+    
     // Percentuais de diferença
     const diffConversao = calculateDiff(conversaoFunil, compareConversaoFunil);
     const diffTicket = calculateDiff(ticketMedio, compareTicketMedio);
+    
     // Comparativo final
     const comparativo = [
       { label: 'Conversão', value: conversaoFunil.toFixed(1) + '%', diff: diffConversao },
       { label: 'Vendas', value: vendas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), diff: calculateDiff(vendas, compareVendas) },
       { label: 'Ticket Médio', value: ticketMedio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }), diff: diffTicket },
     ];
+    
     return { stages, comparativo, compareStages: compareMonthly };
   };
 
@@ -240,19 +256,20 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
   // Função para calcular dados agregados do funil (período e semana) e métricas detalhadas
   function getAggregatedFunnelData() {
     if (!selectedFunnel || !filters) return { periodStages: [], weeklyStages: [], numWeeks: 1, vendasPeriodo: 0, vendasSemanal: 0, ticketMedioPeriodo: 0, ticketMedioSemanal: 0, recomendacoesPeriodo: 0, recomendacoesSemanal: 0, etapaRecomendacoesPeriodo: 0, etapaRecomendacoesSemanal: 0, somaPrimeiraEtapaPeriodo: 0, somaUltimaEtapaPeriodo: 0, somaPrimeiraEtapaSemanal: 0, somaUltimaEtapaSemanal: 0, numIndicadores: 1 };
+    
     // Filtrar indicadores conforme perfil do usuário
     let filteredIndicators = indicators.filter(i => i.funnel_id === selectedFunnel.id);
-    if (crmUser?.role === 'user') {
-      // Usuário comum: só vê seus próprios indicadores
+    
+    // Aplicar filtro por equipe corretamente
+    if (filters.teamId && filters.teamId !== 'all') {
+      const teamMembers = crmUsers.filter(u => u.team_id === filters.teamId).map(u => u.id);
+      filteredIndicators = filteredIndicators.filter(i => teamMembers.includes(i.user_id));
+    } else if (filters.userId && filters.userId !== 'all') {
+      filteredIndicators = filteredIndicators.filter(i => i.user_id === filters.userId);
+    } else if (crmUser?.role === 'user') {
       filteredIndicators = filteredIndicators.filter(i => i.user_id === crmUser.id);
-    } else if (crmUser?.role === 'leader') {
-      // Líder: vê todos os indicadores das equipes que lidera
-      const teamIds = Array.isArray(crmUser.team_id) ? crmUser.team_id : [crmUser.team_id];
-      filteredIndicators = filteredIndicators.filter(i => teamIds.includes(i.team_id));
-    } else if (crmUser?.role === 'admin' || crmUser?.role === 'master') {
-      // Master/Admin: vê todos os indicadores da empresa selecionada
-      filteredIndicators = filteredIndicators.filter(i => i.company_id === selectedCompanyId);
     }
+    
     // Filtros customizados
     if (filters.period === 'custom') {
       if (filters.start) filteredIndicators = filteredIndicators.filter(i => i.period_start >= filters.start);
@@ -260,6 +277,7 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
       if (filters.month) filteredIndicators = filteredIndicators.filter(i => String(i.month_reference) === String(filters.month));
       if (filters.year) filteredIndicators = filteredIndicators.filter(i => String(i.year_reference) === String(filters.year));
     }
+    
     // Calcular número de semanas do período filtrado
     let numWeeks = 1;
     if (filteredIndicators.length > 0) {
@@ -270,20 +288,24 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
       }
     }
     const numIndicadores = filteredIndicators.length || 1;
+    
     // Agregar valores por etapa do funil (usando aggregateFunnelIndicators para garantir soma correta)
     const orderedStages = selectedFunnel.stages?.sort((a, b) => a.stage_order - b.stage_order) || [];
     const periodStages = aggregateFunnelIndicators(filteredIndicators, orderedStages, 'month', true);
     const weeklyStages = aggregateFunnelIndicators(filteredIndicators, orderedStages, 'week', true);
+    
     // Soma primeira/última etapa
     const somaPrimeiraEtapaPeriodo = periodStages[0]?.value || 0;
     const somaUltimaEtapaPeriodo = periodStages[periodStages.length - 1]?.value || 0;
     const somaPrimeiraEtapaSemanal = weeklyStages[0]?.value || 0;
     const somaUltimaEtapaSemanal = weeklyStages[weeklyStages.length - 1]?.value || 0;
+    
     // Vendas e ticket médio
     const vendasPeriodo = filteredIndicators.reduce((sum, i) => sum + (i.sales_value || 0), 0);
     const vendasSemanal = numWeeks > 0 ? vendasPeriodo / numWeeks : 0;
     const ticketMedioPeriodo = somaUltimaEtapaPeriodo > 0 ? vendasPeriodo / somaUltimaEtapaPeriodo : 0;
     const ticketMedioSemanal = somaUltimaEtapaSemanal > 0 ? vendasSemanal / somaUltimaEtapaSemanal : 0;
+    
     // Recomendações
     const recomendacoesPeriodo = filteredIndicators.reduce((sum, i) => sum + (i.recommendations_count || 0), 0);
     // Etapa de recomendações: buscar etapa que contenha 'reuni' ou 'recomend'
@@ -292,6 +314,7 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     const etapaRecomendacoesSemanal = etapaRecomendacoes ? weeklyStages.find(s => s.name === etapaRecomendacoes.name)?.value || 0 : 0;
     const mediaRecomendacoesPeriodo = etapaRecomendacoesPeriodo > 0 ? recomendacoesPeriodo / etapaRecomendacoesPeriodo : 0;
     const mediaRecomendacoesSemanal = etapaRecomendacoesSemanal > 0 ? (recomendacoesPeriodo / numWeeks) / etapaRecomendacoesSemanal : 0;
+    
     return {
       periodStages,
       weeklyStages,
