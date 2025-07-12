@@ -67,9 +67,43 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [funnels]);
 
-  // Filter users: apenas usuários da empresa selecionada
+  // Função para saber se é admin/master/submaster
+  const isAdmin = crmUser?.role === 'admin' || crmUser?.role === 'master' || crmUser?.role === 'submaster';
+  const isLeader = crmUser?.role === 'leader';
+  const isUser = crmUser?.role === 'user';
+
+  // Equipes que o líder gerencia
+  const leaderTeams = isLeader ? teams.filter(team => team.leader_id === crmUser?.id) : [];
+
+  // Seleção automática da equipe para líder
+  useEffect(() => {
+    if (isLeader && leaderTeams.length === 1 && selectedTeam !== leaderTeams[0].id) {
+      setSelectedTeam(leaderTeams[0].id);
+    }
+  }, [isLeader, leaderTeams, selectedTeam]);
+
+  // Usuários disponíveis para o filtro
   const availableUsers = () => {
-    return users.filter(user => user.company_id === selectedCompanyId);
+    if (isAdmin) {
+      return users.filter(user => user.company_id === selectedCompanyId);
+    }
+    if (isLeader) {
+      // Usuários das equipes que lidera
+      const teamIds = leaderTeams.map(t => t.id);
+      return users.filter(user => teamIds.includes(user.team_id || ''));
+    }
+    return [];
+  };
+
+  // Equipes disponíveis para o filtro
+  const availableTeams = () => {
+    if (isAdmin) {
+      return teams;
+    }
+    if (isLeader) {
+      return leaderTeams;
+    }
+    return [];
   };
 
   // Atualizar handleApplyFilters para tratar 'all' como seleção vazia
@@ -110,42 +144,44 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
             </Select>
           </div>
 
-          {/* Filtro de Time (Equipe) - NOVO */}
-          <div>
-            <Label htmlFor="team">Equipe</Label>
-            <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione a equipe" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas as equipes</SelectItem>
-                {teams.map(team => (
-                  <SelectItem key={team.id} value={team.id}>
-                    {team.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          {/* Filtro de Equipe: só para admin, master, submaster e líder */}
+          { (isAdmin || isLeader) && (
+            <div>
+              <Label htmlFor="team">Equipe</Label>
+              <Select value={selectedTeam} onValueChange={setSelectedTeam}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a equipe" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableTeams().map(team => (
+                    <SelectItem key={team.id} value={team.id}>
+                      {team.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
-          <div>
-            <Label htmlFor="user">Usuário</Label>
-            <Select value={selectedUser} onValueChange={setSelectedUser}>
-              <SelectTrigger>
-                <SelectValue placeholder={crmUser?.role === 'user' ? "Você" : "Todos os usuários"} />
-              </SelectTrigger>
-              <SelectContent>
-                {crmUser?.role === 'user' && (
+          {/* Filtro de Usuário: só para admin, master, submaster e líder */}
+          { (isAdmin || isLeader) && (
+            <div>
+              <Label htmlFor="user">Usuário</Label>
+              <Select value={selectedUser} onValueChange={setSelectedUser}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Todos os usuários" />
+                </SelectTrigger>
+                <SelectContent>
                   <SelectItem value="all">Todos os usuários</SelectItem>
-                )}
-                {availableUsers().map(user => (
-                  <SelectItem key={user.id} value={user.id}>
-                    {user.first_name} {user.last_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+                  {availableUsers().map(user => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {user.first_name} {user.last_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {/* Substituir select de período por ícone de calendário */}
           <div className="flex flex-col gap-1">
