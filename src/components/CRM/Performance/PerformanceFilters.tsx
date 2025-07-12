@@ -34,7 +34,6 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
   const [selectedUser, setSelectedUser] = useState('');
   const [showPeriodModal, setShowPeriodModal] = useState(false);
   const [customPeriod, setCustomPeriod] = useState({ start: '', end: '', month: '', year: '' });
-  const [compareId, setCompareId] = useState('');
 
   const { data: funnels = [] } = useFunnels(selectedCompanyId);
   const { data: teams = [] } = useTeams();
@@ -73,7 +72,6 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
       funnelId: selectedFunnel,
       teamId: selectedTeam && selectedTeam !== 'all' ? selectedTeam : undefined,
       userId: selectedUser || undefined,
-      compareId: compareId || undefined,
       period: 'custom',
       ...customPeriod
     });
@@ -150,29 +148,11 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
         </div>
 
         {/* Opção de comparação */}
-        {selectedTeam && selectedTeam !== 'all' && (
-          <div>
-            <Label>Comparar com</Label>
-            <Select value={compareId} onValueChange={setCompareId}>
-              <SelectTrigger>
-                <SelectValue placeholder={selectedTeam ? 'Selecione outro time' : 'Selecione outro usuário'} />
-              </SelectTrigger>
-              <SelectContent>
-                {teams.filter(t => t.id !== selectedTeam).map(team => (
-                  <SelectItem key={team.id} value={team.id}>{team.name}</SelectItem>
-                ))}
-                {users.filter(u => u.id !== crmUser?.id).map(user => (
-                  <SelectItem key={user.id} value={user.id}>{user.first_name} {user.last_name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        )}
 
         <div className="flex justify-end">
           <Button 
             onClick={handleApplyFilters}
-            disabled={!selectedFunnel}
+            disabled={!selectedFunnel || selectedFunnel === ''}
           >
             Aplicar Filtros
           </Button>
