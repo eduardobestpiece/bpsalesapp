@@ -32,7 +32,7 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
   // Filtrar usuários pela empresa selecionada
   const filteredUsers = users.filter(u => u.company_id === (selectedCompanyId || companyId));
   // Se um líder for escolhido, removê-lo da lista de membros
-  const availableMembers = filteredUsers.filter(u => u.id !== formData.leader_id);
+  const availableMembers = filteredUsers.filter(u => u.id !== formData.leader_id && u.first_name && u.last_name);
   const createTeamMutation = useCreateTeam();
   const updateTeamMutation = useUpdateTeam();
 

@@ -31,8 +31,9 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
   const [activeTab, setActiveTab] = useState<'funnel'>('funnel');
   
   const { data: indicators = [] } = useIndicators(
-    selectedCompanyId, 
-    filters?.userId || crmUser?.id
+    selectedCompanyId,
+    (filters?.userId && filters.userId !== 'all') ? filters.userId :
+      (crmUser?.role === 'user' ? crmUser.id : undefined)
   );
   
   const { data: funnels = [] } = useFunnels(selectedCompanyId);
