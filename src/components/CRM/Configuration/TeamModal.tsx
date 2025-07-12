@@ -40,7 +40,7 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
   const allUsers = users;
 
   // Estado para membros do time (apenas na edição)
-  const [members, setMembers] = useState<string[]>(team?.user_ids || []);
+  const [members, setMembers] = useState<string[]>([]);
 
   useEffect(() => {
     if (team) {
@@ -66,6 +66,12 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
       setMembers([]);
     }
   }, [team, companyId]);
+
+  // Corrigir: garantir que todos os membros estejam nas opções do MultiSelect
+  const allAvailableMembers = [
+    ...availableMembers,
+    ...users.filter(u => members.includes(u.id) && !availableMembers.some(a => a.id === u.id))
+  ];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -195,11 +201,9 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
           <div>
             <Label htmlFor="members">Usuários do Time</Label>
             <MultiSelect
-              options={availableMembers.map(u => ({ value: u.id, label: `${u.first_name} ${u.last_name} (${u.role})` }))}
+              options={allAvailableMembers.map(u => ({ value: u.id, label: `${u.first_name} ${u.last_name} (${u.role})` }))}
               value={members}
               onChange={setMembers}
-              placeholder="Selecione os membros do time"
-              key={team?.id || 'new'} // força atualização do MultiSelect ao trocar de time
             />
           </div>
 
