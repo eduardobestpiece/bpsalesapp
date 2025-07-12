@@ -254,16 +254,10 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
       }
     }
     const numIndicadores = filteredIndicators.length || 1;
-    // Agregar valores por etapa do funil
+    // Agregar valores por etapa do funil (usando aggregateFunnelIndicators para garantir soma correta)
     const orderedStages = selectedFunnel.stages?.sort((a, b) => a.stage_order - b.stage_order) || [];
-    const periodStages = orderedStages.map(stage => {
-      const total = filteredIndicators.reduce((sum, ind) => {
-        const v = ind.values?.find(val => val.stage_id === stage.id);
-        return sum + (v?.value || 0);
-      }, 0);
-      return { name: stage.name, value: total };
-    });
-    const weeklyStages = periodStages.map(stage => ({ ...stage, value: numWeeks > 0 ? stage.value / numWeeks : 0 }));
+    const periodStages = aggregateFunnelIndicators(filteredIndicators, orderedStages, 'month');
+    const weeklyStages = aggregateFunnelIndicators(filteredIndicators, orderedStages, 'week');
     // Soma primeira/última etapa
     const somaPrimeiraEtapaPeriodo = periodStages[0]?.value || 0;
     const somaUltimaEtapaPeriodo = periodStages[periodStages.length - 1]?.value || 0;
