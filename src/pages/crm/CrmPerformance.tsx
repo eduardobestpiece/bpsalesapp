@@ -83,7 +83,7 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
       if (filters.month) relevantIndicators = relevantIndicators.filter(i => String(i.month_reference) === String(filters.month));
       if (filters.year) relevantIndicators = relevantIndicators.filter(i => String(i.year_reference) === String(filters.year));
     }
-    console.log('[CrmPerformance] Indicadores filtrados por time:', relevantIndicators.map(i => i.user_id));
+    console.log('[CrmPerformance] Indicadores filtrados usados no gráfico:', relevantIndicators);
     if (relevantIndicators.length === 0) return [];
 
     const latestIndicator = relevantIndicators[0];
