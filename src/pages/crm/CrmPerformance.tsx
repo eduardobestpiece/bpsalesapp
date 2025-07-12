@@ -86,19 +86,16 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     console.log('[CrmPerformance] Indicadores filtrados usados no gráfico:', relevantIndicators);
     if (relevantIndicators.length === 0) return [];
 
-    const latestIndicator = relevantIndicators[0];
-    return selectedFunnel.stages
-      .sort((a, b) => a.stage_order - b.stage_order)
-      .map(stage => {
-        const stageValue = latestIndicator.values?.find(v => v.stage_id === stage.id);
-        return {
-          id: stage.id,
-          name: stage.name,
-          actual: stageValue?.value || 0,
-          target: stage.target_value || 0,
-          targetPercentage: stage.target_percentage
-        };
-      });
+    // Corrigir: usar agregação dos indicadores filtrados
+    const orderedStages = selectedFunnel.stages?.sort((a, b) => a.stage_order - b.stage_order) || [];
+    const aggregatedStages = aggregateFunnelIndicators(relevantIndicators, orderedStages, 'month', true);
+    return orderedStages.map((stage, idx) => ({
+      id: stage.id,
+      name: stage.name,
+      actual: aggregatedStages[idx]?.value || 0,
+      target: stage.target_value || 0,
+      targetPercentage: stage.target_percentage
+    }));
   };
 
   // Novo: receber compareId do filtro
