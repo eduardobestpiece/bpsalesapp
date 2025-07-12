@@ -69,11 +69,13 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
 
   // Função para saber se é admin/master/submaster
   const isAdmin = crmUser?.role === 'admin' || crmUser?.role === 'master' || crmUser?.role === 'submaster';
-  const isLeader = crmUser?.role === 'leader';
-  const isUser = crmUser?.role === 'user';
 
-  // Equipes que o líder gerencia
-  const leaderTeams = isLeader ? teams.filter(team => team.leader_id === crmUser?.id) : [];
+  // Equipes que o usuário lidera (pode ser admin, leader ou user)
+  const leaderTeams = teams.filter(team => team.leader_id === crmUser?.id);
+
+  // Novo: é líder se for role 'leader' OU se for leader_id de algum time
+  const isLeader = !isAdmin && (crmUser?.role === 'leader' || leaderTeams.length > 0);
+  const isUser = !isAdmin && !isLeader;
 
   // Seleção automática da equipe para líder
   useEffect(() => {
