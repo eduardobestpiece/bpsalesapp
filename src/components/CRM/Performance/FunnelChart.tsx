@@ -90,7 +90,7 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
   return (
     <div className="flex flex-col w-full items-center justify-center">
       {/* Linha única: cards esquerda, título central, cards direita, com proporções 25/50/25 */}
-      <div className="w-full flex flex-col md:flex-row items-start justify-between mb-0 gap-2 md:gap-4">
+      <div className="w-full flex flex-col md:flex-row items-start justify-between mb-0 gap-0 md:gap-2">
         {/* Cards de Média semanal à esquerda */}
         <div className="md:basis-1/4 w-full md:w-1/4 flex flex-col gap-1 md:gap-2 min-w-[180px] items-start">
           <span className="text-xs text-muted-foreground font-semibold mb-0.5">Dados semanais</span>
@@ -114,7 +114,7 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
         </div>
       </div>
       {/* Gráfico do funil imediatamente abaixo, centralizado */}
-      <div className="flex w-full gap-8 items-start justify-center mt-0 md:mt-1">
+      <div className="flex w-full gap-0 items-start justify-center">
         <div className="flex flex-col items-center w-full max-w-2xl">
           <div className="flex flex-col items-center w-full">
             {stages.map((stage, idx) => {
