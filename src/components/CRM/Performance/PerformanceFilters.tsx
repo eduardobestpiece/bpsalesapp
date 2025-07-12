@@ -51,15 +51,25 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
     setSelectedFunnel('');
   }, [selectedCompanyId]);
 
-  // Filter users based on permissions
+  // 1. Selecionar automaticamente o primeiro funil disponível ao abrir a página e aplicar o filtro
+  useEffect(() => {
+    if (funnels.length > 0 && !selectedFunnel) {
+      setSelectedFunnel(funnels[0].id);
+      // Aplicar filtro automaticamente ao selecionar o primeiro funil
+      onFiltersChange({
+        funnelId: funnels[0].id,
+        teamId: undefined,
+        userId: undefined,
+        period: 'custom',
+        ...customPeriod
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [funnels]);
+
+  // Filter users: apenas usuários da empresa selecionada
   const availableUsers = () => {
-    if (crmUser?.role === 'user') {
-      return users.filter(user => user.id === crmUser?.id);
-    }
-    if (selectedTeam) {
-      return users.filter(user => user.team_id === selectedTeam);
-    }
-    return users;
+    return users.filter(user => user.company_id === selectedCompanyId);
   };
 
   // Atualizar handleApplyFilters para tratar 'all' como seleção vazia
@@ -105,7 +115,7 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
             <Label htmlFor="team">Equipe</Label>
             <Select value={selectedTeam} onValueChange={setSelectedTeam}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecione a equipe (opcional)" />
+                <SelectValue placeholder="Selecione a equipe" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todas as equipes</SelectItem>
