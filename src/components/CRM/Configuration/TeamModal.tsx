@@ -50,10 +50,12 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
       });
       // Buscar todos os usuários da empresa e filtrar os que pertencem ao time
       (async () => {
+        const empresaId = selectedCompanyId || companyId;
+        console.log('[TeamModal] Usando empresaId na query:', empresaId);
         const { data: allUsersDb } = await supabase
           .from('crm_users')
           .select('id, team_id')
-          .eq('company_id', companyId);
+          .eq('company_id', empresaId);
         // Corrigir: garantir que todos os usuários com team_id igual ao do time estejam marcados
         const memberIds = (allUsersDb || []).filter(u => u.team_id === team.id).map(u => u.id);
         console.log('[TeamModal] Membros carregados do banco:', memberIds);
@@ -66,7 +68,7 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
       });
       setMembers([]);
     }
-  }, [team, companyId]);
+  }, [team, companyId, selectedCompanyId]);
 
   // Corrigir: garantir que todos os membros estejam nas opções do MultiSelect
   const allAvailableMembers = [
