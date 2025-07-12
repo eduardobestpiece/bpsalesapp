@@ -80,9 +80,10 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
       const teamMembers = crmUsers.filter(u => u.team_id === filters.teamId).map(u => u.id);
       relevantIndicators = relevantIndicators.filter(indicator => teamMembers.includes(indicator.user_id));
     } else if (filters.userId && filters.userId !== 'all') {
+      // Corrigir: se o líder seleciona a si mesmo, filtrar apenas pelo seu user_id
       relevantIndicators = relevantIndicators.filter(indicator => indicator.user_id === filters.userId);
     } else if (crmUser?.role === 'leader') {
-      // Corrigir: buscar todos os times onde o usuário é leader_id
+      // Se não há filtro de usuário, mostrar todos os membros dos times que lidera + ele mesmo
       const leaderTeams = teams.filter(t => t.leader_id === crmUser.id).map(t => t.id);
       const teamMembers = crmUsers.filter(u => leaderTeams.includes(u.team_id)).map(u => u.id);
       relevantIndicators = relevantIndicators.filter(indicator => teamMembers.includes(indicator.user_id) || indicator.user_id === crmUser.id);
