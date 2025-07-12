@@ -199,4 +199,18 @@ Bloco 1
 - Realizar o deploy automático.
 - Solicitar validação/teste ao usuário.
 
+## 2024-07-11 - Bloco 2.2: Ajuste de Layout do Funil para Aproximar do Bloco Superior
+
+### Diagnóstico
+- O gráfico do funil estava afastado do título e dos cards, prejudicando o layout visual.
+- O usuário solicitou proporções exatas: 25% para dados semanais, 50% para o funil, 25% para dados do período.
+
+### Ações Realizadas
+- Ajustado o layout do componente de funil para aproximar o gráfico do bloco superior (cards + título), reduzindo o espaçamento vertical e mantendo responsividade, conforme solicitado pelo usuário. Nenhuma alteração de cálculo foi realizada.
+
+### Próximos Passos
+- Testar localmente.
+- Realizar o deploy automático.
+- Solicitar validação/teste ao usuário.
+
 Próximos passos: ajustes no gráfico do funil, modais de indicadores, permissões e filtros de empresa/funil para usuários.
