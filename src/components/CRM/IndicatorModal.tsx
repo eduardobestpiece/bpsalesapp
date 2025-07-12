@@ -41,14 +41,11 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   const [yearOptions, setYearOptions] = useState<number[]>([]);
   const [monthReference, setMonthReference] = useState<number | null>(null);
   const [yearReference, setYearReference] = useState<number | null>(null);
-  // Estado para seleção em massa (preparação)
-  const [tempSelectedIndicators, setTempSelectedIndicators] = useState<string[]>([]); // IDs dos indicadores selecionados
+  const [tempSelectedIndicators, setTempSelectedIndicators] = useState<string[]>([]);
   const [isDelayed, setIsDelayed] = useState<boolean>(indicator?.is_delayed || false);
 
-  // Adicionar flag para saber se está em modo edição
   const isEditing = !!indicator;
 
-  // Se for edição, inicializar campos imutáveis uma única vez
   const [immutableFields] = useState(() =>
     indicator ? {
       period_date: indicator.period_date,
@@ -60,9 +57,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     } : null
   );
 
-  // Garantir que o companyId está correto (fallback para o do usuário logado)
   const { crmUser } = useCrmAuth();
-  // Garantir que o companyId nunca é undefined
   const effectiveCompanyId = companyId || crmUser?.company_id || '';
   const { data: funnels, isLoading: isFunnelsLoading, error: funnelsError } = useFunnels(effectiveCompanyId, 'active');
   const { mutate: createIndicator } = useCreateIndicator();
@@ -73,7 +68,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   const isSubMaster = crmUser?.role === 'submaster';
   const allowedFunnels = isUser ? (funnels || []).filter(f => crmUser.funnels?.includes(f.id)) : (funnels || []);
 
-  // NOVA LÓGICA DE PERÍODOS
   let periodOptions: { label: string; value: string; preenchido?: boolean }[] = [];
   if (selectedFunnel && formData.month_reference && formData.year_reference && crmUser) {
     let todosPeriodos: { label: string; value: string }[] = [];
@@ -95,24 +89,26 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         }
       }
     }
-    // Sempre mostrar todos os períodos dos últimos 90 dias
-    // Marcar como preenchido os períodos já registrados pelo usuário
-    const periodosUsuario = Array.isArray(indicators) && selectedFunnel && crmUser ? indicators.filter(
-      (ind) => ind.funnel_id === selectedFunnel.id && ind.user_id === crmUser.id
-    ).map((ind) => ind.period_date) : [];
+    
+    const periodosUsuario = Array.isArray(indicators) && selectedFunnel && crmUser ? indicators
+      .filter((ind) => 
+        ind.funnel_id === selectedFunnel.id && 
+        ind.user_id === crmUser.id &&
+        (!isEditing || ind.id !== indicator?.id)
+      )
+      .map((ind) => ind.period_date)
+      .filter(Boolean) : [];
+    
     periodOptions = todosPeriodos.map(opt => ({
       ...opt,
       preenchido: periodosUsuario.includes(opt.value)
     }));
   }
 
-  // Regra: só destacar faltantes em vermelho a partir do segundo registro
   const destacarFaltantes = periodOptions.length > 0;
 
-  // useEffect de inicialização do indicador
   useEffect(() => {
     if (indicator) {
-      // Preencher stages a partir de indicator.values
       const stagesValues: Record<string, number> = {};
       if (indicator.values && Array.isArray(indicator.values)) {
         indicator.values.forEach((v: any) => {
@@ -129,7 +125,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
       setSalesValue(indicator.sales_value || '0,00');
       setRecommendationsCount(indicator.recommendations_count || 0);
       setIsDelayed(indicator.is_delayed || false);
-      // Preencher periodStart e periodEnd corretamente ao editar
       if (indicator.period_date) {
         const { start, end } = extractPeriodDates(indicator.period_date);
         setPeriodStart(start);
@@ -156,12 +151,10 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     }
   }, [indicator]);
 
-  // useEffect para seleção de funil: só inicializa campos se NÃO estiver editando
   useEffect(() => {
     if (formData.funnel_id && funnels && !isEditing) {
       const funnel = funnels.find(f => f.id === formData.funnel_id);
       setSelectedFunnel(funnel);
-      // Initialize stages with empty values apenas na criação
       if (funnel?.stages) {
         const newStages: Record<string, number> = {};
         funnel.stages.forEach((stage: any) => {
@@ -169,7 +162,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         });
         setFormData(prev => ({ ...prev, stages: newStages }));
       }
-      // Inicializar campos de vendas/recomendações apenas na criação
       if (funnel) {
         if (funnel.sales_value_mode === 'manual') {
           setSalesValue('0,00');
@@ -183,7 +175,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         }
       }
     } else if (formData.funnel_id && funnels) {
-      // Sempre setar o funil selecionado para exibir etapas, mas não mexer em mais nada
       const funnel = funnels.find(f => f.id === formData.funnel_id);
       setSelectedFunnel(funnel);
     }
@@ -193,7 +184,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     async function fetchAutoValues() {
       if (!selectedFunnel || !crmUser || !formData.funnel_id || !formData.period_date) return;
       setIsAutoLoading(true);
-      // Determinar período (data inicial e final)
       let periodStart = formData.period_date;
       let periodEnd = formData.period_date;
       if (formData.period_date.includes('_')) {
@@ -201,7 +191,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         periodStart = start;
         periodEnd = end;
       }
-      // Buscar valor das vendas
       if (selectedFunnel.sales_value_mode === 'sistema') {
         const { data, error } = await supabase
           .from('sales')
@@ -218,9 +207,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
           setSalesValue('0,00');
         }
       }
-      // Buscar número de recomendações
       if (selectedFunnel.recommendations_mode === 'sistema') {
-        // Buscar id da source "Recomendação"
         const { data: sources } = await supabase
           .from('sources')
           .select('id')
@@ -256,12 +243,11 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     }
   }, [selectedFunnel, crmUser, formData.funnel_id, formData.period_date, companyId]);
 
-  // Função para converter string monetária para número
   function parseMonetaryValue(value: string) {
     if (!value) return 0;
     return Number(value.replace(/\./g, '').replace(',', '.'));
   }
-  // Função para extrair todos os meses e anos presentes em cada dia do período
+
   function getAllMonthsAndYears(start: string, end: string) {
     if (!start || !end) return { months: [], years: [] };
     const startDate = new Date(start);
@@ -277,18 +263,15 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     return { months: Array.from(monthsSet), years: Array.from(yearsSet) };
   }
 
-  // Corrigir extractPeriodDates para não deslocar datas
   function extractPeriodDates(periodString: string) {
     if (!periodString) return { start: '', end: '' };
     if (periodString.includes('_')) {
       const [start, end] = periodString.split('_');
       return { start, end };
     }
-    // Se for uma única data, retorna igual
     return { start: periodString, end: periodString };
   }
 
-  // Atualiza opções de mês/ano ao mudar datas
   useEffect(() => {
     if (!isEditing && periodStart && periodEnd) {
       const startDate = new Date(periodStart);
@@ -304,14 +287,14 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         setMonthReference(startMonth);
       } else {
         months = [startMonth, endMonth];
-        setMonthReference(endMonth); // Seleciona mês da data fim
+        setMonthReference(endMonth);
       }
       if (startYear === endYear) {
         years = [startYear];
         setYearReference(startYear);
       } else {
         years = [startYear, endYear];
-        setYearReference(endYear); // Seleciona ano da data fim
+        setYearReference(endYear);
       }
       setMonthOptions(months);
       setYearOptions(years);
@@ -323,10 +306,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     }
   }, [periodStart, periodEnd]);
 
-  // No modo edição, liberar edição dos campos de vendas, recomendações e etapas:
-  // Substituir disabled={isEditing} por disabled={false} nesses campos
-  // Garantir que o período exibido é sempre o do indicador:
-  // No useEffect de inicialização do modo edição, sempre setar periodStart/periodEnd a partir do indicador
   useEffect(() => {
     if (isEditing && indicator) {
       setFormData({
@@ -342,7 +321,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
       setSalesValue(indicator.sales_value?.toString() || '0,00');
       setRecommendationsCount(indicator.recommendations_count || 0);
       setIsDelayed(indicator.is_delayed || false);
-      // CORREÇÃO: usar period_start e period_end do Supabase
       setPeriodStart(indicator.period_start || '');
       setPeriodEnd(indicator.period_end || '');
       setMonthReference(indicator.month_reference);
@@ -350,7 +328,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     }
   }, [isEditing, indicator]);
 
-  // Permissão de edição: só pode editar se for admin/master/submaster ou o próprio usuário
   const canEdit = !isEditing || (isEditing && (
     crmUser?.role === 'admin' || crmUser?.role === 'master' || crmUser?.role === 'submaster' || (indicator && crmUser?.id === indicator.user_id)
   ));
@@ -386,7 +363,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     setIsLoading(true);
 
     try {
-      // Garantir que salesValue é string antes de usar .replace
       let salesValueStr = salesValue;
       if (typeof salesValueStr === 'number') salesValueStr = salesValueStr.toString();
       if (typeof salesValueStr !== 'string') salesValueStr = '0,00';
@@ -394,15 +370,12 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         user_id: crmUser.id,
         company_id: companyId,
         funnel_id: formData.funnel_id,
-        // Garantir que ao editar, o período original é mantido
         period_start: periodStart,
         period_end: periodEnd,
         month_reference: monthReference,
         year_reference: yearReference,
         sales_value: parseMonetaryValue(salesValueStr),
         recommendations_count: recommendationsCount,
-        // Remover is_delayed do payload
-        // is_delayed: isDelayed
       };
 
       const stageValues = Object.entries(formData.stages).map(([stageId, value]) => ({
@@ -411,7 +384,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
       }));
 
       if (indicator) {
-        // Update existing indicator
         updateIndicator({
           id: indicator.id,
           indicator: indicatorData,
@@ -427,7 +399,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
           }
         });
       } else {
-        // Create new indicator
         createIndicator({
           indicator: indicatorData,
           values: stageValues
@@ -450,12 +421,10 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     }
   };
 
-  // Corrigir handleEditSubmit para garantir que salva corretamente o período
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      // Montar objeto de atualização sem alterar datas
       const updateData = {
         ...formData,
         sales_value: parseMonetaryValue(salesValue),
@@ -475,7 +444,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     }
   };
 
-  // Função utilitária para calcular status do prazo
   function getPrazoStatus() {
     if (!indicator || !selectedFunnel || !indicator.created_at || !indicator.period_end) return null;
     const deadlineHours = selectedFunnel.indicator_deadline_hours ?? 0;
@@ -493,7 +461,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   }
   const prazoStatus = getPrazoStatus();
 
-  // Remover checagem excessiva no início do componente:
   if (isEditing && !indicator) {
     return (
       <Dialog open={isOpen} onOpenChange={onClose}>
@@ -518,10 +485,8 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         </DialogHeader>
         <form onSubmit={isEditing ? handleEditSubmit : handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* No modo edição, não renderiza seleção de período/funil */}
             {!isEditing && (
               <>
-                {/* Campo Mês */}
                 <div>
                   <label>Mês *</label>
                   {monthOptions.length === 1 && monthReference ? (
@@ -535,7 +500,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                     </select>
                   )}
                 </div>
-                {/* Campo Ano */}
                 <div>
                   <label>Ano *</label>
                   {yearOptions.length === 1 && yearReference ? (
@@ -549,7 +513,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                     </select>
                   )}
                 </div>
-                {/* Campo Funil */}
                 <div>
                   <Label htmlFor="funnel_id">Funil *</Label>
                   <Select 
@@ -584,7 +547,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                     </SelectContent>
                   </Select>
                 </div>
-                {/* Período */}
                 {isOpen && (
                   <div>
                     <Label htmlFor="period_date">Período *</Label>
@@ -626,21 +588,17 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                 )}
               </>
             )}
-            {/* Período atual: só exibe no modo edição */}
             {isEditing && (
               <div className="col-span-2 flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">Período: {periodStart && periodEnd ? `De ${formatDate(periodStart)} até ${formatDate(periodEnd)}` : '-'}</span>
               </div>
             )}
-            {/* Valor das Vendas, Recomendações e Resultados por Etapa: sempre exibidos */}
             {selectedFunnel && (
               <>
-                {/* Campo Valor das Vendas */}
                 <div>
                   <Label htmlFor="sales_value">Valor das Vendas</Label>
                   <Input id="sales_value" type="text" value={salesValue} onChange={e => setSalesValue(e.target.value)} placeholder="0,00" inputMode="decimal" disabled={!canEdit} />
                 </div>
-                {/* Campo Número de Recomendações */}
                 <div>
                   <Label htmlFor="recommendations_count">Número de Recomendações</Label>
                   <Input id="recommendations_count" type="number" value={recommendationsCount} onChange={e => setRecommendationsCount(Number(e.target.value))} disabled={!canEdit} />
@@ -648,7 +606,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
               </>
             )}
           </div>
-          {/* Resultados por Etapa */}
           {selectedFunnel?.stages && (
             <Card>
               <CardHeader>
@@ -696,7 +653,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
               </CardContent>
             </Card>
           )}
-          {/* Data de preenchimento embaixo, alinhada à esquerda */}
           {indicator && indicator.created_at && (
             <div className="text-xs text-muted-foreground">
               Preenchido em: {new Date(indicator.created_at).toLocaleString('pt-BR')}
@@ -714,7 +670,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   );
 };
 
-// Função utilitária para formatar data YYYY-MM-DD para dd/MM/yyyy
 function formatDate(dateStr: string) {
   if (!dateStr) return '';
   const [year, month, day] = dateStr.substring(0, 10).split('-');
