@@ -224,3 +224,10 @@ Próximos passos: ajustes no gráfico do funil, modais de indicadores, permissõ
 - Corrigida a função de agregação: agora soma todos os registros do período filtrado (não só o mais recente), garantindo cálculo coletivo correto para empresa, time e todos os usuários.
 - Corrigida a soma coletiva do funil: agora soma todos os registros do período filtrado em todos os fluxos, inclusive comparativo.
 - Corrigido o modal de editar time: usuários já associados ao time aparecem marcados corretamente ao abrir o modal.
+
+## 12/07/2025 — Correção de Times e Filtro do Funil
+
+- Corrigido o MultiSelect do modal de times: agora os membros aparecem sempre marcados corretamente ao editar.
+- Corrigida a lógica de filtragem do funil: ao selecionar um time, o sistema filtra os indicadores de todos os usuários daquele time, mostrando os dados agregados corretamente.
+- Deploy automático realizado para o GitHub.
+- Aguardando validação do usuário para marcar como concluído.

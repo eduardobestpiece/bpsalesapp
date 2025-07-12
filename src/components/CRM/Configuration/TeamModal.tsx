@@ -201,6 +201,7 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
           <div>
             <Label htmlFor="members">Usuários do Time</Label>
             <MultiSelect
+              key={team?.id + '-' + members.join(',')}
               options={allAvailableMembers.map(u => ({ value: u.id, label: `${u.first_name} ${u.last_name} (${u.role})` }))}
               value={members}
               onChange={setMembers}
