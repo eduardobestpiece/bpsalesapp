@@ -1,24 +1,22 @@
-# Requisição em andamento - 11/07/2024 (Bloco 1 - Ajustes Finais)
+# Requisição em andamento - 11/07/2024 (Bloco 1 - Ajustes Finais de Layout e Filtro)
 
 ## Ajustes Solicitados
 
-### Filtros e Gráfico do Funil
-- Filtro de funis responde à empresa selecionada (Master/Admin).
-- Layout dos cards de métricas segue o wireframe (cards individuais, nome acima, valor grande centralizado).
-- Remoção do bloco COMPARATIVO.
+### Gráfico do Funil
+- Título exibe o nome do funil selecionado.
+- Layout dos cards laterais com fontes menores, valor igual ao nome da etapa do funil, nome do item igual ao percentual do funil.
+- Adicionado “Dados semanais” à esquerda e “Dados do Período” à direita acima dos cards.
 
-### Registro/Edição de Usuários
-- Administradores podem selecionar funis da própria empresa ao criar/editar usuários.
-- Correção do envio do campo funnels para garantir array de strings (evitar erro malformed array literal).
+### Filtro de Funil
+- Filtro de funil mostra apenas os funis da empresa selecionada (inclusive para Master/Admin).
+- Troca de empresa atualiza corretamente o filtro e os dados exibidos.
 
 ---
 
 ## Checklist
-- [x] Filtro de funis atualizado conforme empresa selecionada.
-- [x] Layout dos cards de métricas do funil refatorado conforme wireframe.
-- [x] Bloco COMPARATIVO removido.
-- [x] Administradores podem selecionar funis da própria empresa ao criar/editar usuários.
-- [x] Correção do envio do campo funnels (array de strings).
+- [x] Título do gráfico exibe nome do funil.
+- [x] Layout dos cards laterais ajustado (fontes, espaçamentos, títulos acima dos cards).
+- [x] Filtro de funil mostra apenas funis da empresa selecionada.
 - [x] Testar localmente.
 - [x] Atualizar `requeststory.md`.
 - [x] Deploy automático.
@@ -27,9 +25,7 @@
 ---
 
 ### Detalhamento das Alterações
-- Filtro de funis agora responde corretamente à empresa selecionada.
-- Layout dos cards de métricas do funil segue o wireframe: cards individuais, nome acima, valor grande centralizado.
-- Bloco COMPARATIVO removido.
-- Administradores podem selecionar funis da própria empresa ao criar/editar usuários.
-- Correção do envio do campo funnels para garantir array de strings, evitando erro malformed array literal.
+- Título do gráfico agora exibe o nome do funil selecionado.
+- Layout dos cards laterais ajustado: fontes menores, valor igual ao nome da etapa do funil, nome do item igual ao percentual do funil, títulos “Dados semanais” e “Dados do Período” acima dos cards.
+- Filtro de funil mostra apenas os funis da empresa selecionada, inclusive para Master/Admin.
 - Checklist concluído e pronto para deploy. 

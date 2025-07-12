@@ -109,14 +109,12 @@ Bloco 1
 
 # Histórico de Atividades
 
-## 11/07/2024 - Ajustes Avançados CRM/Simulador (Bloco 1 Ajustes Finais Concluído)
+## 11/07/2024 - Ajustes Avançados CRM/Simulador (Bloco 1 Ajustes Finais de Layout e Filtro Concluído)
 
-- Todas as etapas do Bloco 1 (ajustes finais) concluídas:
-  - Filtro de funis responde corretamente à empresa selecionada (Master/Admin).
-  - Layout dos cards de métricas do funil segue o wireframe: cards individuais, nome acima, valor grande centralizado.
-  - Bloco COMPARATIVO removido.
-  - Administradores podem selecionar funis da própria empresa ao criar/editar usuários.
-  - Correção do envio do campo funnels para garantir array de strings, evitando erro malformed array literal.
+- Todas as etapas do Bloco 1 (ajustes finais de layout e filtro) concluídas:
+  - Título do gráfico agora exibe o nome do funil selecionado.
+  - Layout dos cards laterais ajustado: fontes menores, valor igual ao nome da etapa do funil, nome do item igual ao percentual do funil, títulos “Dados semanais” e “Dados do Período” acima dos cards.
+  - Filtro de funil mostra apenas os funis da empresa selecionada, inclusive para Master/Admin.
 - Checklist do Bloco 1 marcado como concluído em `requeststory.md`.
 - Pronto para deploy automático.
 

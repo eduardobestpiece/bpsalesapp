@@ -246,6 +246,7 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
         comparativo={funnelComparisonData.comparativo}
         compareStages={funnelComparisonData.compareStages}
         periodoLabel={getPeriodoLabel()}
+        funnelName={selectedFunnel?.name || ''}
       />
     </div>
   );

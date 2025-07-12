@@ -42,7 +42,7 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
   const canSeeTeamUsers = hasPermission('leader');
   const isRegularUser = !canSeeAllTeams && !canSeeTeamUsers;
   const isUser = crmUser?.role === 'user';
-  const allowedFunnels = isUser ? funnels.filter(f => crmUser.funnels?.includes(f.id)) : funnels;
+  const allowedFunnels = isUser ? funnels.filter(f => crmUser.funnels?.includes(f.id)) : funnels.filter(f => f.company_id === companyId);
 
   // Seleção automática do primeiro funil permitido
   useEffect(() => {
@@ -51,7 +51,7 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
     }
   }, [allowedFunnels]);
 
-  // Resetar funil selecionado ao trocar de empresa
+  // Resetar funil selecionado e allowedFunnels ao trocar de empresa
   useEffect(() => {
     setSelectedFunnel('');
   }, [companyId]);

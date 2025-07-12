@@ -27,9 +27,10 @@ interface FunnelComparisonChartProps {
   stages: StageData[];
   comparativo: { label: string; value: string | number; diff?: string | number }[];
   periodoLabel?: string;
+  funnelName?: string;
 }
 
-export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filterType?: 'user' | 'team', filterId?: string, users?: any[], teams?: any[], onCompare?: (compareId: string) => void, compareData?: any, compareStages?: any[] }> = ({ stages, comparativo, filterType, filterId, users = [], teams = [], onCompare, compareData, periodoLabel, compareStages = [] }) => {
+export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filterType?: 'user' | 'team', filterId?: string, users?: any[], teams?: any[], onCompare?: (compareId: string) => void, compareData?: any, compareStages?: any[] }> = ({ stages, comparativo, filterType, filterId, users = [], teams = [], onCompare, compareData, periodoLabel, compareStages = [], funnelName }) => {
   // Função para calcular largura relativa das etapas (cada faixa menor que a anterior)
   const getWidth = (idx: number) => {
     // Se a última faixa tiver nome grande, aumentar largura de todas proporcionalmente
@@ -75,12 +76,12 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
   const ticketMedioPeriodo = ultimaEtapa && ultimaEtapa.value > 0 ? (valorVendasPeriodo / ultimaEtapa.value) : 0;
   const mediaRecomendacoesPeriodo = 0; // Implementar cálculo real se necessário
 
-  // Função auxiliar para card de métrica
+  // Função auxiliar para card de métrica com fontes menores
   function MetricCard({ label, value }: { label: string; value: string | number }) {
     return (
-      <div className="rounded-2xl border border-gray-200 bg-white px-6 py-4 flex flex-col items-center shadow-sm min-w-[180px] mb-2">
-        <span className="text-base text-muted-foreground mb-1">{label}</span>
-        <span className="text-3xl font-bold tracking-tight">{value}</span>
+      <div className="rounded-2xl border border-gray-200 bg-white px-4 py-3 flex flex-col items-center shadow-sm min-w-[140px] mb-2">
+        <span className="text-xs text-muted-foreground mb-1 font-medium">{label}</span>
+        <span className="text-lg font-bold tracking-tight">{value}</span>
       </div>
     );
   }
@@ -89,11 +90,12 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
     <div className="flex flex-col w-full items-center justify-center">
       {/* Título */}
       <div className="w-full flex flex-col items-center mb-2">
-        <h2 className="text-xl font-bold">Resultados do Funil {ultimaEtapa?.name || ''}</h2>
+        <h2 className="text-xl font-bold">Resultados do Funil {funnelName || ''}</h2>
       </div>
       <div className="flex w-full gap-8 items-start justify-between">
         {/* Cards de Média semanal à esquerda */}
-        <div className="flex flex-col gap-2 min-w-[200px]">
+        <div className="flex flex-col gap-2 min-w-[160px]">
+          <span className="text-xs text-muted-foreground font-semibold mb-1">Dados semanais</span>
           <MetricCard label="Conversão do funil (semana)" value={`${conversaoSemanal.toFixed(1)}%`} />
           <MetricCard label="Valor das vendas (semana)" value={valorVendasSemanal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
           <MetricCard label="Ticket Médio (semana)" value={ticketMedioSemanal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
@@ -151,7 +153,8 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
           </div>
         </div>
         {/* Cards de Período à direita */}
-        <div className="flex flex-col gap-2 min-w-[200px]">
+        <div className="flex flex-col gap-2 min-w-[160px]">
+          <span className="text-xs text-muted-foreground font-semibold mb-1">Dados do Período</span>
           <MetricCard label="Conversão do funil (período)" value={`${conversaoPeriodo.toFixed(1)}%`} />
           <MetricCard label="Valor das vendas (período)" value={valorVendasPeriodo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
           <MetricCard label="Ticket Médio (período)" value={ticketMedioPeriodo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
