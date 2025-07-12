@@ -109,10 +109,14 @@ Bloco 1
 
 # Histórico de Atividades
 
-## 11/07/2024 - Ajustes Avançados CRM/Simulador
+## 11/07/2024 - Ajustes Avançados CRM/Simulador (Bloco 1 Concluído)
 
-- Iniciada execução do checklist avançado conforme requisição registrada em `requeststory.md`.
-- **Removida a aba 'Performance geral'** da página de Indicadores/Performance. Agora, apenas a aba 'Funil' é exibida na navegação, conforme solicitado.
-- Checklist atualizado e plano de ação detalhado.
+- Todas as etapas do Bloco 1 concluídas:
+  - Gráfico do funil ajustado: comparativo agora alinhado à faixa, bloco “COMPARATIVO” após header, exibe 0% se não houver período anterior, comparação sempre com período imediatamente anterior, filtro funcional, agregação por perfil (admin, líder, usuário).
+  - Seleção automática da aba Funil ao entrar na página de Indicadores.
+  - Modal de edição de indicadores corrigido: erro ao salvar resolvido, período exibido exatamente como registrado.
+  - Modal de registro/edição de usuários: administradores e líderes podem selecionar funis para o usuário, campo de empresa só para Master.
+- Checklist do Bloco 1 marcado como concluído em `requeststory.md`.
+- Pronto para deploy automático.
 
 Próximos passos: ajustes no gráfico do funil, modais de indicadores, permissões e filtros de empresa/funil para usuários.

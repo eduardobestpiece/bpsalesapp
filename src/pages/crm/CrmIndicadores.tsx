@@ -87,7 +87,14 @@ const CrmIndicadores = () => {
   const [allowedTabs] = useState<string[]>(['performance', 'registro']);
   const [defaultTab] = useState<string>('performance');
 
-  // Seleção automática do primeiro funil - memoizado
+  // Seleção automática do primeiro funil
+  useEffect(() => {
+    if (funnels && funnels.length > 0 && !selectedFunnelId) {
+      setSelectedFunnelId(funnels[0].id);
+    }
+  }, [funnels, selectedFunnelId]);
+
+  // selectedFunnel memoizado
   const selectedFunnel = useMemo(() => {
     if (!funnels || funnels.length === 0) return null;
     if (selectedFunnelId) {

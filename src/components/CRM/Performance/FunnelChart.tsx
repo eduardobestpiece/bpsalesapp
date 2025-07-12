@@ -57,15 +57,34 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
   // Só exibe botão de comparação se filtrado para usuário ou equipe específica
   const canCompare = filterType && filterId;
   return (
-    <div className="flex flex-col md:flex-row gap-8 w-full items-center justify-center">
+    <div className="flex flex-col w-full items-center justify-center">
+      {/* Header customizado */}
+      <div className="flex items-center justify-between w-full mb-2">
+        <span className="text-xs text-muted-foreground">Média semanal</span>
+        <h3 className="text-center font-bold text-lg flex-1">FUNIL DE VENDAS</h3>
+        <span className="text-xs text-muted-foreground text-right min-w-[90px]">{periodoLabel || 'Todo Período'}</span>
+      </div>
+      {/* Comparativo geral após o header */}
+      <div className="flex flex-col items-center min-w-[180px] mb-4">
+        <div className="flex items-center gap-2 mb-2">
+          <h3 className="font-bold">COMPARATIVO</h3>
+          {canCompare && (
+            <button className="ml-2 p-1 rounded hover:bg-gray-100" title="Comparar com outro" onClick={() => setShowComparativoModal(true)}>
+              <span role="img" aria-label="comparar">🔀</span>
+            </button>
+          )}
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {comparativo.map((item, idx) => (
+            <div key={idx} className="border rounded-lg px-3 py-2 text-xs text-center min-w-[70px]">
+              <div className="font-semibold">{item.label}</div>
+              <div>{item.value}</div>
+            </div>
+          ))}
+        </div>
+      </div>
       {/* Funil colorido */}
       <div className="flex flex-col items-center w-full max-w-xs md:max-w-sm">
-        {/* Header customizado */}
-        <div className="flex items-center justify-between w-full mb-2">
-          <span className="text-xs text-muted-foreground">Média semanal</span>
-          <h3 className="text-center font-bold text-lg flex-1">FUNIL DE VENDAS</h3>
-          <span className="text-xs text-muted-foreground text-right min-w-[90px]">{periodoLabel || 'Todo Período'}</span>
-        </div>
         <div className="flex flex-col items-center w-full">
           {stages.map((stage, idx) => {
             const diff = stage.weeklyValue - (stage.previousWeeklyValue || 0);
@@ -79,7 +98,9 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
               >
                 {/* Comparativo visual à esquerda da faixa, alinhado verticalmente */}
                 <div className="flex items-center justify-center w-14 mr-2">
-                  {diff !== 0 ? (
+                  {typeof stage.previousWeeklyValue === 'undefined' ? (
+                    <span className="text-xs text-gray-400">0%</span>
+                  ) : diff !== 0 ? (
                     <span className={`flex items-center font-bold text-xs ${isUp ? 'text-green-600' : 'text-red-600'}`}> 
                       {isUp && <ArrowUp className="w-4 h-4 mr-1" />} 
                       {isDown && <ArrowDown className="w-4 h-4 mr-1" />} 
@@ -112,80 +133,61 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
           })}
         </div>
       </div>
-      {/* Comparativo */}
-      <div className="flex flex-col items-center min-w-[180px]">
-        <div className="flex items-center gap-2 mb-2">
-          <h3 className="font-bold">COMPARATIVO</h3>
-          {canCompare && (
-            <button className="ml-2 p-1 rounded hover:bg-gray-100" title="Comparar com outro" onClick={() => setShowComparativoModal(true)}>
-              <span role="img" aria-label="comparar">🔀</span>
-            </button>
-          )}
-        </div>
-        <div className="grid grid-cols-2 gap-2">
-          {comparativo.map((item, idx) => (
-            <div key={idx} className="border rounded-lg px-3 py-2 text-xs text-center min-w-[70px]">
-              <div className="font-semibold">{item.label}</div>
-              <div>{item.value}</div>
-            </div>
-          ))}
-        </div>
-        {/* Modal de filtro comparativo */}
-        {canCompare && (
-          <Dialog open={showComparativoModal} onOpenChange={setShowComparativoModal}>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Comparar Funil</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div>
-                  <label className="block mb-1 text-sm font-medium">Comparar com:</label>
-                  <Select value={compareId} onValueChange={setCompareId}>
-                    <SelectTrigger>
-                      <SelectValue placeholder={filterType === 'user' ? 'Selecione outro usuário' : 'Selecione outra equipe'} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {filterType === 'user' && users.filter(u => u.id !== filterId).map(u => (
-                        <SelectItem key={u.id} value={u.id}>{u.first_name} {u.last_name}</SelectItem>
-                      ))}
-                      {filterType === 'team' && teams.filter(t => t.id !== filterId).map(t => (
-                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+      {/* Modal de filtro comparativo permanece igual */}
+      {canCompare && (
+        <Dialog open={showComparativoModal} onOpenChange={setShowComparativoModal}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Comparar Funil</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="block mb-1 text-sm font-medium">Comparar com:</label>
+                <Select value={compareId} onValueChange={setCompareId}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={filterType === 'user' ? 'Selecione outro usuário' : 'Selecione outra equipe'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {filterType === 'user' && users.filter(u => u.id !== filterId).map(u => (
+                      <SelectItem key={u.id} value={u.id}>{u.first_name} {u.last_name}</SelectItem>
+                    ))}
+                    {filterType === 'team' && teams.filter(t => t.id !== filterId).map(t => (
+                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1">
+                  <h4 className="font-semibold mb-2">Funil Atual</h4>
+                  {stages.map((stage, idx) => (
+                    <div key={stage.name} className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-bold">{stage.name}</span>
+                      <span className="text-xs">{stage.weeklyValue} / {stage.monthlyValue}</span>
+                    </div>
+                  ))}
                 </div>
-                <div className="flex flex-col md:flex-row gap-4">
+                {compareData && (
                   <div className="flex-1">
-                    <h4 className="font-semibold mb-2">Funil Atual</h4>
-                    {stages.map((stage, idx) => (
+                    <h4 className="font-semibold mb-2">Comparativo</h4>
+                    {compareData.stages.map((stage, idx) => (
                       <div key={stage.name} className="flex items-center justify-between mb-1">
                         <span className="text-xs font-bold">{stage.name}</span>
                         <span className="text-xs">{stage.weeklyValue} / {stage.monthlyValue}</span>
                       </div>
                     ))}
                   </div>
-                  {compareData && (
-                    <div className="flex-1">
-                      <h4 className="font-semibold mb-2">Comparativo</h4>
-                      {compareData.stages.map((stage, idx) => (
-                        <div key={stage.name} className="flex items-center justify-between mb-1">
-                          <span className="text-xs font-bold">{stage.name}</span>
-                          <span className="text-xs">{stage.weeklyValue} / {stage.monthlyValue}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <div className="flex justify-end pt-2">
-                  <button className="px-4 py-2 rounded bg-primary-500 text-white" onClick={() => { onCompare && onCompare(compareId); setShowComparativoModal(false); }}>
-                    Comparar
-                  </button>
-                </div>
+                )}
               </div>
-            </DialogContent>
-          </Dialog>
-        )}
-      </div>
+              <div className="flex justify-end pt-2">
+                <button className="px-4 py-2 rounded bg-primary-500 text-white" onClick={() => { onCompare && onCompare(compareId); setShowComparativoModal(false); }}>
+                  Comparar
+                </button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

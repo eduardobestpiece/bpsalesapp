@@ -279,46 +279,30 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
               </SelectContent>
             </Select>
           </div>
-          {/* Funis permitidos */}
+          {/* Seleção de funis - visível para master, admin e líder */}
           {(crmUser?.role === 'master' || crmUser?.role === 'admin' || crmUser?.role === 'leader') && (
             <div>
-              <Label>Funis permitidos</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full flex justify-between items-center"
-                    disabled={isLoading || !selectedCompanyId}
-                  >
-                    {formData.funnels.length > 0
-                      ? funnels.filter(f => formData.funnels.includes(f.id)).map(f => f.name).join(', ')
-                      : 'Selecione os funis'}
-                    <ChevronDown className="ml-2 h-4 w-4 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-72 p-2">
-                  <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
-                    {funnels.map((f: any) => (
-                      <label key={f.id} className="flex items-center gap-2 cursor-pointer">
-                        <Checkbox
-                          checked={formData.funnels.includes(f.id)}
-                          onCheckedChange={checked => {
-                            setFormData(prev => ({
-                              ...prev,
-                              funnels: checked
-                                ? [...prev.funnels, f.id]
-                                : prev.funnels.filter((id) => id !== f.id)
-                            }));
-                          }}
-                          disabled={isLoading}
-                        />
-                        <span>{f.name}</span>
-                      </label>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
+              <Label htmlFor="funnels">Funis *</Label>
+              <Select
+                multiple
+                value={formData.funnels}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, funnels: value }))}
+                disabled={isLoading}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione os funis" />
+                </SelectTrigger>
+                <SelectContent>
+                  {funnels.length > 0 ? (
+                    funnels.map((f: any) => (
+                      <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
+                    ))
+                  ) : (
+                    <div className="px-4 py-2 text-muted-foreground text-sm">Nenhum funil encontrado</div>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
           )}
           <div className="flex justify-end space-x-2 pt-4">

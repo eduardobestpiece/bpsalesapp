@@ -277,33 +277,15 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     return { months: Array.from(monthsSet), years: Array.from(yearsSet) };
   }
 
-  // Função para extrair datas do valor do select de período
+  // Corrigir extractPeriodDates para não deslocar datas
   function extractPeriodDates(periodString: string) {
-    // Formato 1: 'YYYY-MM-DD_YYYY-MM-DD'
+    if (!periodString) return { start: '', end: '' };
     if (periodString.includes('_')) {
       const [start, end] = periodString.split('_');
-      console.log('[Indicador] Extraído (ISO):', start, end);
       return { start, end };
     }
-    // Formato 2: 'YYYY-MM-DD' (diário)
-    if (/^\d{4}-\d{2}-\d{2}$/.test(periodString)) {
-      // Período diário: início e fim são iguais
-      console.log('[Indicador] Extraído (diário):', periodString);
-      return { start: periodString, end: periodString };
-    }
-    // Formato 3: 'De dd/mm/yyyy até dd/mm/yyyy'
-    const match = periodString.match(/(\d{2}\/\d{2}\/\d{4}).*?(\d{2}\/\d{2}\/\d{4})/);
-    if (match) {
-      const [_, start, end] = match;
-      const [d1, m1, y1] = start.split('/');
-      const [d2, m2, y2] = end.split('/');
-      const s = `${y1}-${m1}-${d1}`;
-      const e = `${y2}-${m2}-${d2}`;
-      console.log('[Indicador] Extraído (extenso):', s, e);
-      return { start: s, end: e };
-    }
-    console.warn('[Indicador] Não foi possível extrair datas do período:', periodString);
-    return { start: '', end: '' };
+    // Se for uma única data, retorna igual
+    return { start: periodString, end: periodString };
   }
 
   // Atualiza opções de mês/ano ao mudar datas
@@ -463,26 +445,29 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     }
   };
 
-  // Submit de edição: só envia campos mutáveis
+  // Corrigir handleEditSubmit para garantir que salva corretamente o período
   const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      const indicatorData = {
-        period_start: immutableFields.period_start,
-        period_end: immutableFields.period_end,
-        month_reference: immutableFields.month_reference,
-        year_reference: immutableFields.year_reference,
-        funnel_id: immutableFields.funnel_id,
+      // Montar objeto de atualização sem alterar datas
+      const updateData = {
+        ...formData,
         sales_value: parseMonetaryValue(salesValue),
         recommendations_count: recommendationsCount,
+        is_delayed: isDelayed,
       };
-      const stageValues = Object.entries(stages).map(([stageId, value]) => ({ stage_id, value }));
-      await updateIndicator({ id: indicator.id, indicator: indicatorData, values: stageValues }, {
-        onSuccess: () => { toast.success('Indicador atualizado com sucesso!'); onClose(); },
-        onError: (error: any) => { toast.error(error.message || 'Erro ao atualizar indicador'); }
+      await updateIndicator({
+        id: indicator.id,
+        ...updateData,
       });
-    } catch (err) { toast.error('Erro ao atualizar indicador'); } finally { setIsLoading(false); }
+      toast.success('Indicador atualizado com sucesso!');
+      onClose();
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao atualizar indicador');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Função utilitária para calcular status do prazo

@@ -83,56 +83,57 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
   const getFunnelComparisonData = () => {
     if (!selectedFunnel || !filters) return { stages: [], comparativo: [] };
     const orderedStages = selectedFunnel.stages?.sort((a, b) => a.stage_order - b.stage_order) || [];
-    // Filtrar indicadores conforme período customizado
-    const filteredIndicators = indicators.filter(i => {
-      if (i.funnel_id !== selectedFunnel.id) return false;
-      if (filters.period === 'custom') {
-        if (filters.start && i.period_start < filters.start) return false;
-        if (filters.end && i.period_end > filters.end) return false;
-        if (filters.month && String(i.month_reference) !== String(filters.month)) return false;
-        if (filters.year && String(i.year_reference) !== String(filters.year)) return false;
-      }
-      return true;
-    });
-    // Agrupar por semana
-    const groupByPeriod = {};
+    // Filtrar indicadores conforme perfil do usuário
+    let filteredIndicators = indicators.filter(i => i.funnel_id === selectedFunnel.id);
+    if (crmUser?.role === 'user') {
+      filteredIndicators = filteredIndicators.filter(i => i.user_id === crmUser.id);
+    } else if (crmUser?.role === 'leader') {
+      // Suporte a múltiplas equipes se necessário
+      const teamIds = Array.isArray(crmUser.team_id) ? crmUser.team_id : [crmUser.team_id];
+      filteredIndicators = filteredIndicators.filter(i => teamIds.includes(i.team_id));
+    } else if (crmUser?.role === 'admin' || crmUser?.role === 'master') {
+      filteredIndicators = filteredIndicators.filter(i => i.company_id === companyId);
+    }
+    // Filtros customizados
+    if (filters.period === 'custom') {
+      if (filters.start) filteredIndicators = filteredIndicators.filter(i => i.period_start >= filters.start);
+      if (filters.end) filteredIndicators = filteredIndicators.filter(i => i.period_end <= filters.end);
+      if (filters.month) filteredIndicators = filteredIndicators.filter(i => String(i.month_reference) === String(filters.month));
+      if (filters.year) filteredIndicators = filteredIndicators.filter(i => String(i.year_reference) === String(filters.year));
+    }
+    // Agrupar por mês/ano para comparação correta
+    const groupByMonthYear = {};
     filteredIndicators.forEach(ind => {
-      const date = new Date(ind.period_start || ind.period_date);
-      const year = date.getFullYear();
-      const week = (date.getMonth() + 1) + '-' + date.getDate(); // simplificado para exemplo
-      const key = `${year}-W${week}`;
-      if (!groupByPeriod[key]) groupByPeriod[key] = [];
-      groupByPeriod[key].push(ind);
+      const key = `${ind.year_reference}-${ind.month_reference}`;
+      if (!groupByMonthYear[key]) groupByMonthYear[key] = [];
+      groupByMonthYear[key].push(ind);
     });
-    const periods = Object.keys(groupByPeriod).sort().reverse();
-    const latestPeriod = periods[0];
-    const previousPeriod = periods[1];
-    const periodIndicators = groupByPeriod[latestPeriod] || [];
-    const previousIndicators = groupByPeriod[previousPeriod] || [];
-    // Dados semanais atuais
-    const weekly = aggregateFunnelIndicators(periodIndicators, orderedStages, 'week');
-    // Dados semanais anteriores
-    const previousWeekly = aggregateFunnelIndicators(previousIndicators, orderedStages, 'week');
-    // Dados mensais (mantém igual)
+    const months = Object.keys(groupByMonthYear).sort().reverse();
+    const latestMonth = months[0];
+    const previousMonth = months[1];
+    const periodIndicators = groupByMonthYear[latestMonth] || [];
+    const previousIndicators = groupByMonthYear[previousMonth] || [];
+    // Dados mensais atuais e anteriores
     const monthly = aggregateFunnelIndicators(periodIndicators, orderedStages, 'month');
+    const previousMonthly = aggregateFunnelIndicators(previousIndicators, orderedStages, 'month');
     // Monta array para o gráfico duplo
     const stages = orderedStages.map((stage, idx) => ({
       name: stage.name,
-      weeklyValue: weekly[idx]?.value || 0,
-      weeklyConversion: weekly[idx]?.conversion || 0,
-      previousWeeklyValue: previousWeekly[idx]?.value || 0,
+      weeklyValue: monthly[idx]?.value || 0,
+      weeklyConversion: monthly[idx]?.conversion || 0,
+      previousWeeklyValue: previousMonthly[idx]?.value || 0,
       monthlyValue: monthly[idx]?.value || 0,
       monthlyConversion: monthly[idx]?.conversion || 0,
     }));
     // Comparativo: exemplo com conversão final, recomendações, vendas
     const lastStage = stages[stages.length - 1];
-    const recommendations = filteredIndicators.filter(i => i.recommendations_count).reduce((sum, i) => sum + (i.recommendations_count || 0), 0);
-    const vendas = filteredIndicators.filter(i => i.sales_value).reduce((sum, i) => sum + (i.sales_value || 0), 0);
+    const recommendations = periodIndicators.filter(i => i.recommendations_count).reduce((sum, i) => sum + (i.recommendations_count || 0), 0);
+    const vendas = periodIndicators.filter(i => i.sales_value).reduce((sum, i) => sum + (i.sales_value || 0), 0);
     const comparativo = [
       { label: 'Conversão', value: lastStage ? `${lastStage.monthlyConversion}%` : '-' },
       { label: 'Recomendações', value: recommendations },
       { label: 'Vendas', value: vendas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) },
-      { label: 'Comparativo', value: 'Período anterior' },
+      { label: 'Comparativo', value: previousMonth ? 'Período anterior' : '0%' },
     ];
     return { stages, comparativo };
   };

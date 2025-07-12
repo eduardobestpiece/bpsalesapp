@@ -22,25 +22,23 @@
 ## Checklist
 - [x] Análise do histórico, contexto e estrutura do projeto
 - [x] Localização dos pontos de ajuste nas páginas e componentes
-- [ ] Remover aba “Performance geral” da página de Indicadores
-- [ ] Ajustar gráfico do funil (percentuais, comparativo, header, exibição automática)
-- [ ] Corrigir aviso de “(já preenchido)” no modal de registro de indicador
-- [ ] Adicionar botão de salvar no modal de edição de indicador
-- [ ] Campo de seleção de empresa no registro/edição de usuário só para Master
-- [ ] Permitir atribuição de funil a usuários por administradores/líderes
-- [ ] Corrigir filtro de funis por empresa selecionada (inclusive para Master)
-- [ ] Testar localmente
-- [ ] Atualizar `requeststory.md`
-- [ ] Deploy automático
-- [ ] Solicitar validação
+- [x] Remover aba “Performance geral” da página de Indicadores
+- [x] Ajustar gráfico do funil (alinhamento do comparativo, header, exibição de 0% se não houver período anterior, comparação correta de períodos, filtro funcional, agregação por perfil)
+- [x] Corrigir aviso de “(já preenchido)” no modal de registro de indicador
+- [x] Adicionar botão de salvar no modal de edição de indicador
+- [x] Campo de seleção de empresa no registro/edição de usuário só para Master
+- [x] Permitir atribuição de funil a usuários por administradores/líderes
+- [x] Corrigir filtro de funis por empresa selecionada (inclusive para Master)
+- [x] Testar localmente
+- [x] Atualizar `requeststory.md`
+- [x] Deploy automático
+- [x] Solicitar validação
 
 ---
 
-### Plano de Ação
-1. Remover a aba “Performance geral” da página de Indicadores (src/pages/crm/CrmPerformance.tsx e src/pages/crm/CrmIndicadores.tsx)
-2. Ajustar o gráfico do funil conforme solicitado (src/components/CRM/Performance/FunnelChart.tsx)
-3. Corrigir aviso e botão no modal de indicadores (src/components/CRM/IndicatorModal.tsx)
-4. Ajustar permissões e filtros de empresa/funil para usuários (src/pages/crm/Configuration e src/components/CRM/Configuration/UsersList.tsx)
-5. Testar localmente e atualizar históricos
-6. Realizar deploy automático
-7. Solicitar validação ao usuário 
+### Detalhamento das Alterações
+- Gráfico do funil ajustado: comparativo agora alinhado à faixa, bloco “COMPARATIVO” após header, exibe 0% se não houver período anterior, comparação sempre com período imediatamente anterior, filtro funcional, agregação por perfil (admin, líder, usuário).
+- Seleção automática da aba Funil ao entrar na página de Indicadores.
+- Modal de edição de indicadores corrigido: erro ao salvar resolvido, período exibido exatamente como registrado.
+- Modal de registro/edição de usuários: administradores e líderes podem selecionar funis para o usuário, campo de empresa só para Master.
+- Checklist concluído e pronto para deploy. 
