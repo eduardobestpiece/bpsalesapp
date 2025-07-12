@@ -404,7 +404,7 @@ const CrmIndicadores = () => {
                                       </td>
                                       <td className="px-2 py-2">
                                         {indicator.period_start && indicator.period_end
-                                          ? `De ${new Date(indicator.period_start).toLocaleDateString('pt-BR')} até ${new Date(indicator.period_end).toLocaleDateString('pt-BR')}`
+                                          ? `De ${formatDate(indicator.period_start)} até ${formatDate(indicator.period_end)}`
                                           : 'Período não definido'
                                         }
                                       </td>
@@ -525,5 +525,12 @@ const CrmIndicadores = () => {
     </div>
   );
 };
+
+// Função utilitária para formatar data YYYY-MM-DD para dd/MM/yyyy
+function formatDate(dateStr: string) {
+  if (!dateStr) return '';
+  const [year, month, day] = dateStr.substring(0, 10).split('-');
+  return `${day}/${month}/${year}`;
+}
 
 export default CrmIndicadores;
