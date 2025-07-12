@@ -58,6 +58,7 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
 
     let relevantIndicators = indicators.filter(indicator => indicator.funnel_id === filters.funnelId);
     let teamMembers: string[] = [];
+    console.log('[CrmPerformance] crmUsers recebidos:', crmUsers.map(u => ({id: u.id, nome: u.first_name + ' ' + u.last_name, team_id: u.team_id})));
     if (filters.teamId && filters.teamId !== 'all') {
       teamMembers = crmUsers.filter(u => u.team_id === filters.teamId).map(u => u.id);
       console.log('[CrmPerformance] Membros do time selecionado:', teamMembers);

@@ -73,6 +73,7 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
     ...availableMembers,
     ...users.filter(u => members.includes(u.id) && !availableMembers.some(a => a.id === u.id))
   ];
+  console.log('[TeamModal] users recebidos:', users.map(u => ({id: u.id, nome: u.first_name + ' ' + u.last_name, team_id: u.team_id})));
   console.log('[TeamModal] allAvailableMembers:', allAvailableMembers.map(u => u.id));
   console.log('[TeamModal] members selecionados:', members);
 
@@ -203,14 +204,12 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
           {/* Campo de membros do time (sempre visível na edição e criação) */}
           <div>
             <Label htmlFor="members">Usuários do Time</Label>
-            {(team ? members.length > 0 : true) && (
-              <MultiSelect
-                key={team?.id + '-' + members.join(',')}
-                options={allAvailableMembers.map(u => ({ value: u.id, label: `${u.first_name} ${u.last_name} (${u.role})` }))}
-                value={members}
-                onChange={setMembers}
-              />
-            )}
+            <MultiSelect
+              key={team?.id + '-' + members.join(',')}
+              options={allAvailableMembers.map(u => ({ value: u.id, label: `${u.first_name} ${u.last_name} (${u.role})` }))}
+              value={members}
+              onChange={setMembers}
+            />
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
