@@ -10,6 +10,7 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { FunnelComparisonChart } from '@/components/CRM/Performance/FunnelChart';
 import { aggregateFunnelIndicators } from '@/utils/calculationHelpers';
+import { differenceInCalendarWeeks, parseISO } from 'date-fns';
 
 interface PerformanceFilters {
   funnelId: string;
@@ -217,6 +218,48 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     return 'Todo Período';
   }
 
+  // Função para calcular dados agregados do funil (período e semana)
+  function getAggregatedFunnelData() {
+    if (!selectedFunnel || !filters) return { periodStages: [], weeklyStages: [], numWeeks: 1 };
+    // Filtrar indicadores conforme perfil do usuário
+    let filteredIndicators = indicators.filter(i => i.funnel_id === selectedFunnel.id);
+    if (crmUser?.role === 'user') {
+      filteredIndicators = filteredIndicators.filter(i => i.user_id === crmUser.id);
+    } else if (crmUser?.role === 'leader') {
+      const teamIds = Array.isArray(crmUser.team_id) ? crmUser.team_id : [crmUser.team_id];
+      filteredIndicators = filteredIndicators.filter(i => teamIds.includes(i.team_id));
+    } else if (crmUser?.role === 'admin' || crmUser?.role === 'master') {
+      filteredIndicators = filteredIndicators.filter(i => i.company_id === selectedCompanyId);
+    }
+    // Filtros customizados
+    if (filters.period === 'custom') {
+      if (filters.start) filteredIndicators = filteredIndicators.filter(i => i.period_start >= filters.start);
+      if (filters.end) filteredIndicators = filteredIndicators.filter(i => i.period_end <= filters.end);
+      if (filters.month) filteredIndicators = filteredIndicators.filter(i => String(i.month_reference) === String(filters.month));
+      if (filters.year) filteredIndicators = filteredIndicators.filter(i => String(i.year_reference) === String(filters.year));
+    }
+    // Calcular número de semanas do período filtrado
+    let numWeeks = 1;
+    if (filteredIndicators.length > 0) {
+      const minDate = filteredIndicators.reduce((min, i) => i.period_start && i.period_start < min ? i.period_start : min, filteredIndicators[0].period_start);
+      const maxDate = filteredIndicators.reduce((max, i) => i.period_end && i.period_end > max ? i.period_end : max, filteredIndicators[0].period_end);
+      if (minDate && maxDate) {
+        numWeeks = Math.max(1, differenceInCalendarWeeks(parseISO(maxDate), parseISO(minDate)) + 1);
+      }
+    }
+    // Agregar valores por etapa do funil
+    const orderedStages = selectedFunnel.stages?.sort((a, b) => a.stage_order - b.stage_order) || [];
+    const periodStages = orderedStages.map(stage => {
+      const total = filteredIndicators.reduce((sum, ind) => {
+        const v = ind.values?.find(val => val.stage_id === stage.id);
+        return sum + (v?.value || 0);
+      }, 0);
+      return { name: stage.name, value: total };
+    });
+    const weeklyStages = periodStages.map(stage => ({ ...stage, value: numWeeks > 0 ? stage.value / numWeeks : 0 }));
+    return { periodStages, weeklyStages, numWeeks };
+  }
+
   const funnelComparisonData = getFunnelComparisonData();
 
   const getPerformanceStats = () => {
@@ -244,7 +287,9 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
       <PerformanceFilters onFiltersChange={setFilters} funnelOnly />
       {/* Gráfico do funil e comparativo */}
       <FunnelComparisonChart
-        stages={funnelComparisonData.stages}
+        stages={periodStages}
+        weeklyStages={weeklyStages}
+        numWeeks={numWeeks}
         comparativo={funnelComparisonData.comparativo}
         compareStages={funnelComparisonData.compareStages}
         periodoLabel={getPeriodoLabel()}

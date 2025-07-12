@@ -25,12 +25,14 @@ interface StageData {
 
 interface FunnelComparisonChartProps {
   stages: StageData[];
+  weeklyStages: StageData[];
+  numWeeks: number;
   comparativo: { label: string; value: string | number; diff?: string | number }[];
   periodoLabel?: string;
   funnelName?: string;
 }
 
-export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filterType?: 'user' | 'team', filterId?: string, users?: any[], teams?: any[], onCompare?: (compareId: string) => void, compareData?: any, compareStages?: any[] }> = ({ stages, comparativo, filterType, filterId, users = [], teams = [], onCompare, compareData, periodoLabel, compareStages = [], funnelName }) => {
+export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filterType?: 'user' | 'team', filterId?: string, users?: any[], teams?: any[], onCompare?: (compareId: string) => void, compareData?: any, compareStages?: any[] }> = ({ stages, weeklyStages, numWeeks, comparativo, filterType, filterId, users = [], teams = [], onCompare, compareData, periodoLabel, compareStages = [], funnelName }) => {
   // Função para calcular largura relativa das etapas (cada faixa menor que a anterior)
   const getWidth = (idx: number) => {
     // Se a última faixa tiver nome grande, aumentar largura de todas proporcionalmente
@@ -63,17 +65,19 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
   // Novo: calcular dados da média semanal e do período
   const numSemanas = 4; // Exemplo fixo, ajustar para cálculo real se necessário
   const soma = (arr: any[], key: string) => arr.reduce((sum, i) => sum + (i[key] || 0), 0);
-  const primeiraEtapa = stages[0];
-  const ultimaEtapa = stages[stages.length - 1];
   // Dados da média semanal
-  const conversaoSemanal = primeiraEtapa && ultimaEtapa && primeiraEtapa.value > 0 ? ((ultimaEtapa.value / primeiraEtapa.value) / numSemanas) * 100 : 0;
-  const valorVendasSemanal = soma(stages, 'value') / numSemanas;
-  const ticketMedioSemanal = ultimaEtapa && ultimaEtapa.value > 0 ? (valorVendasSemanal / ultimaEtapa.value) : 0;
+  const primeiraEtapaSemanal = weeklyStages[0];
+  const ultimaEtapaSemanal = weeklyStages[weeklyStages.length - 1];
+  const conversaoSemanal = primeiraEtapaSemanal && ultimaEtapaSemanal && primeiraEtapaSemanal.value > 0 ? (ultimaEtapaSemanal.value / primeiraEtapaSemanal.value) * 100 : 0;
+  const valorVendasSemanal = weeklyStages.reduce((sum, s) => sum + (s.value || 0), 0);
+  const ticketMedioSemanal = ultimaEtapaSemanal && ultimaEtapaSemanal.value > 0 ? (valorVendasSemanal / ultimaEtapaSemanal.value) : 0;
   const mediaRecomendacoesSemanal = 0; // Implementar cálculo real se necessário
   // Dados do período
-  const conversaoPeriodo = primeiraEtapa && ultimaEtapa && primeiraEtapa.value > 0 ? (ultimaEtapa.value / primeiraEtapa.value) * 100 : 0;
-  const valorVendasPeriodo = soma(stages, 'value');
-  const ticketMedioPeriodo = ultimaEtapa && ultimaEtapa.value > 0 ? (valorVendasPeriodo / ultimaEtapa.value) : 0;
+  const primeiraEtapaPeriodo = stages[0];
+  const ultimaEtapaPeriodo = stages[stages.length - 1];
+  const conversaoPeriodo = primeiraEtapaPeriodo && ultimaEtapaPeriodo && primeiraEtapaPeriodo.value > 0 ? (ultimaEtapaPeriodo.value / primeiraEtapaPeriodo.value) * 100 : 0;
+  const valorVendasPeriodo = stages.reduce((sum, s) => sum + (s.value || 0), 0);
+  const ticketMedioPeriodo = ultimaEtapaPeriodo && ultimaEtapaPeriodo.value > 0 ? (valorVendasPeriodo / ultimaEtapaPeriodo.value) : 0;
   const mediaRecomendacoesPeriodo = 0; // Implementar cálculo real se necessário
 
   // Função auxiliar para card de métrica com fontes menores
@@ -88,15 +92,14 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
 
   return (
     <div className="flex flex-col w-full items-center justify-center">
-      {/* Linha de cards e título alinhados */}
-      <div className="w-full flex flex-col md:flex-row items-center justify-between mb-4 gap-4">
+      {/* Bloco de cards e título juntos */}
+      <div className="w-full flex flex-col md:flex-row items-center justify-between mb-2 gap-4">
         {/* Cards de Média semanal à esquerda */}
         <div className="flex flex-col gap-2 min-w-[160px] items-center">
           <span className="text-xs text-muted-foreground font-semibold mb-1">Dados semanais</span>
           <MetricCard label="Conversão do funil (semana)" value={`${conversaoSemanal.toFixed(1)}%`} />
           <MetricCard label="Valor das vendas (semana)" value={valorVendasSemanal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
           <MetricCard label="Ticket Médio (semana)" value={ticketMedioSemanal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
-          <MetricCard label="Média de Recomendações (semana)" value={mediaRecomendacoesSemanal} />
         </div>
         {/* Título centralizado */}
         <div className="flex-1 flex flex-col items-center justify-center">
@@ -108,11 +111,10 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
           <MetricCard label="Conversão do funil (período)" value={`${conversaoPeriodo.toFixed(1)}%`} />
           <MetricCard label="Valor das vendas (período)" value={valorVendasPeriodo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
           <MetricCard label="Ticket Médio (período)" value={ticketMedioPeriodo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
-          <MetricCard label="Média de Recomendações (período)" value={mediaRecomendacoesPeriodo} />
         </div>
       </div>
-      {/* Gráfico do funil abaixo */}
-      <div className="flex w-full gap-8 items-start justify-between">
+      {/* Gráfico do funil imediatamente abaixo */}
+      <div className="flex w-full gap-8 items-start justify-between mt-0">
         <div className="flex-1 flex flex-col items-center">
           <div className="flex flex-col items-center w-full max-w-xs md:max-w-sm">
             <div className="flex flex-col items-center w-full">
