@@ -27,10 +27,17 @@ interface PerformanceFilters {
 
 const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
   const { crmUser } = useCrmAuth();
-  const { selectedCompanyId } = useCompany();
+  const { selectedCompanyId, setSelectedCompanyId } = useCompany();
   const [filters, setFilters] = useState<PerformanceFilters | null>(null);
   const [activeTab, setActiveTab] = useState<'funnel'>('funnel');
-  
+
+  // Garantir que para não-masters, a empresa selecionada seja a do usuário
+  useEffect(() => {
+    if (crmUser && crmUser.role !== 'master' && crmUser.company_id && selectedCompanyId !== crmUser.company_id) {
+      setSelectedCompanyId(crmUser.company_id);
+    }
+  }, [crmUser, selectedCompanyId, setSelectedCompanyId]);
+
   // Determinar userId a ser passado para o hook useIndicators
   let userIdForIndicators: string | undefined = undefined;
   if (filters?.userId && filters.userId !== 'all') {
