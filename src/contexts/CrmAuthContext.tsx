@@ -85,9 +85,22 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
         console.warn('[CrmAuth] Nenhum usuário CRM encontrado para:', email);
         return null;
       }
-      console.log('[CrmAuth] CRM user encontrado:', data);
-      saveCrmUserCache(email, data); // Salva no cache
-      return data as CrmUser;
+      // --- NOVO: checar se é líder de algum time ativo ---
+      let dynamicRole = data.role;
+      if (dynamicRole !== 'admin' && dynamicRole !== 'master' && dynamicRole !== 'submaster') {
+        // Buscar times ativos onde o usuário é líder
+        const { data: teams, error: teamError } = await supabase
+          .from('teams')
+          .select('id')
+          .eq('leader_id', data.id)
+          .eq('status', 'active');
+        if (!teamError && teams && teams.length > 0) {
+          dynamicRole = 'leader';
+        }
+      }
+      // ---
+      saveCrmUserCache(email, { ...data, role: dynamicRole }); // Salva no cache
+      return { ...data, role: dynamicRole } as CrmUser;
     } catch (err) {
       console.error('[CrmAuth] Erro inesperado ao buscar CRM user:', err);
       return null;

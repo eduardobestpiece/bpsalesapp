@@ -46,7 +46,7 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     userIdForIndicators = crmUser.id;
   }
   console.log('[CrmPerformance] Chamada do useIndicators:', {companyId: selectedCompanyId, userId: userIdForIndicators, filtroTime: filters?.teamId});
-
+  
   const { data: indicators = [] } = useIndicators(
     selectedCompanyId,
     userIdForIndicators
@@ -101,11 +101,11 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     const orderedStages = selectedFunnel.stages?.sort((a, b) => a.stage_order - b.stage_order) || [];
     const aggregatedStages = aggregateFunnelIndicators(relevantIndicators, orderedStages, 'month', true);
     return orderedStages.map((stage, idx) => ({
-      id: stage.id,
-      name: stage.name,
+          id: stage.id,
+          name: stage.name,
       actual: aggregatedStages[idx]?.value || 0,
-      target: stage.target_value || 0,
-      targetPercentage: stage.target_percentage
+          target: stage.target_value || 0,
+          targetPercentage: stage.target_percentage
     }));
   };
 
@@ -416,8 +416,8 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
           compareStages={funnelComparisonData.compareStages}
           periodoLabel={getPeriodoLabel()}
           funnelName={selectedFunnel?.name || ''}
-        />
-      ) : (
+            />
+          ) : (
         <div className="text-center text-muted-foreground py-8">Nenhum dado para exibir o funil.</div>
       )}
     </div>
