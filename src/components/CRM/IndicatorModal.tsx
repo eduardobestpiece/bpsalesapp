@@ -629,7 +629,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
             {/* Período atual: só exibe no modo edição */}
             {isEditing && (
               <div className="col-span-2 flex items-center gap-2">
-                <span className="text-xs text-muted-foreground">Período: {periodStart && periodEnd ? `De ${new Date(periodStart).toLocaleDateString('pt-BR')} até ${new Date(periodEnd).toLocaleDateString('pt-BR')}` : '-'}</span>
+                <span className="text-xs text-muted-foreground">Período: {periodStart && periodEnd ? `De ${formatDate(periodStart)} até ${formatDate(periodEnd)}` : '-'}</span>
               </div>
             )}
             {/* Valor das Vendas, Recomendações e Resultados por Etapa: sempre exibidos */}
@@ -713,3 +713,10 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     </Dialog>
   );
 };
+
+// Função utilitária para formatar data YYYY-MM-DD para dd/MM/yyyy
+function formatDate(dateStr: string) {
+  if (!dateStr) return '';
+  const [year, month, day] = dateStr.substring(0, 10).split('-');
+  return `${day}/${month}/${year}`;
+}
