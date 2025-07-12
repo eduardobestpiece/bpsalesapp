@@ -28,7 +28,7 @@ export const useIndicators = (companyId?: string, userId?: string) => {
       try {
         let query = supabase
           .from('indicators')
-          .select(`*, values:indicator_values(*)`)
+          .select('*, values:indicator_values(*)')
           .is('archived_at', null)
           .order('period_date', { ascending: false });
         
@@ -48,14 +48,12 @@ export const useIndicators = (companyId?: string, userId?: string) => {
           throw error;
         }
         
-        // Filter out null/undefined indicators and ensure they have required properties
+        // Garantir que cada indicador tenha o array 'values' preenchido
         const validData = (data || []).filter((indicator): indicator is IndicatorWithValues => {
           if (!indicator || typeof indicator !== 'object') {
-            console.log('[useIndicators] Null or invalid indicator found:', indicator);
             return false;
           }
-          
-          // Check for required properties - all must be present and not null
+          // Check for required properties
           const hasRequiredProps = indicator.id && 
                                  indicator.user_id && 
                                  indicator.funnel_id &&
@@ -64,21 +62,25 @@ export const useIndicators = (companyId?: string, userId?: string) => {
                                  typeof indicator.year_reference === 'number' &&
                                  indicator.created_at &&
                                  indicator.updated_at;
-          
           if (!hasRequiredProps) {
-            console.log('[useIndicators] Indicator missing required properties:', indicator);
             return false;
           }
-          
-          // Ensure values array exists
+          // Se não vier o array values, buscar manualmente
           if (!Array.isArray(indicator.values)) {
             indicator.values = [];
           }
-          
           return true;
         });
-        
-        console.log('[useIndicators] Dados válidos retornados:', validData.length);
+        // Se algum indicador não tiver values, buscar manualmente
+        for (const ind of validData) {
+          if (!ind.values || ind.values.length === 0) {
+            const { data: values } = await supabase
+              .from('indicator_values')
+              .select('*')
+              .eq('indicator_id', ind.id);
+            ind.values = values || [];
+          }
+        }
         return validData;
       } catch (err) {
         console.error('[useIndicators] Erro ao buscar indicadores:', err);
