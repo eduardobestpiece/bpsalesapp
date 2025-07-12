@@ -88,20 +88,31 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
 
   return (
     <div className="flex flex-col w-full items-center justify-center">
-      {/* Título */}
-      <div className="w-full flex flex-col items-center mb-2">
-        <h2 className="text-xl font-bold">Resultados do Funil {funnelName || ''}</h2>
-      </div>
-      <div className="flex w-full gap-8 items-start justify-between">
+      {/* Linha de cards e título alinhados */}
+      <div className="w-full flex flex-col md:flex-row items-center justify-between mb-4 gap-4">
         {/* Cards de Média semanal à esquerda */}
-        <div className="flex flex-col gap-2 min-w-[160px]">
+        <div className="flex flex-col gap-2 min-w-[160px] items-center">
           <span className="text-xs text-muted-foreground font-semibold mb-1">Dados semanais</span>
           <MetricCard label="Conversão do funil (semana)" value={`${conversaoSemanal.toFixed(1)}%`} />
           <MetricCard label="Valor das vendas (semana)" value={valorVendasSemanal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
           <MetricCard label="Ticket Médio (semana)" value={ticketMedioSemanal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
           <MetricCard label="Média de Recomendações (semana)" value={mediaRecomendacoesSemanal} />
         </div>
-        {/* Gráfico do funil ao centro */}
+        {/* Título centralizado */}
+        <div className="flex-1 flex flex-col items-center justify-center">
+          <h2 className="text-xl font-bold text-center">Resultados do Funil {funnelName || ''}</h2>
+        </div>
+        {/* Cards de Período à direita */}
+        <div className="flex flex-col gap-2 min-w-[160px] items-center">
+          <span className="text-xs text-muted-foreground font-semibold mb-1">Dados do Período</span>
+          <MetricCard label="Conversão do funil (período)" value={`${conversaoPeriodo.toFixed(1)}%`} />
+          <MetricCard label="Valor das vendas (período)" value={valorVendasPeriodo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
+          <MetricCard label="Ticket Médio (período)" value={ticketMedioPeriodo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
+          <MetricCard label="Média de Recomendações (período)" value={mediaRecomendacoesPeriodo} />
+        </div>
+      </div>
+      {/* Gráfico do funil abaixo */}
+      <div className="flex w-full gap-8 items-start justify-between">
         <div className="flex-1 flex flex-col items-center">
           <div className="flex flex-col items-center w-full max-w-xs md:max-w-sm">
             <div className="flex flex-col items-center w-full">
@@ -112,7 +123,7 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
                 return (
                   <div
                     key={stage.name}
-                    className="w-full flex items-center justify-center mb-1 z-[${10-idx}]"
+                    className={`w-full flex items-center justify-center mb-1 z-[${10-idx}]`}
                     style={{ zIndex: 10 - idx }}
                   >
                     <div className="flex items-center justify-center w-14 mr-2">
@@ -151,14 +162,6 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
               })}
             </div>
           </div>
-        </div>
-        {/* Cards de Período à direita */}
-        <div className="flex flex-col gap-2 min-w-[160px]">
-          <span className="text-xs text-muted-foreground font-semibold mb-1">Dados do Período</span>
-          <MetricCard label="Conversão do funil (período)" value={`${conversaoPeriodo.toFixed(1)}%`} />
-          <MetricCard label="Valor das vendas (período)" value={valorVendasPeriodo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
-          <MetricCard label="Ticket Médio (período)" value={ticketMedioPeriodo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
-          <MetricCard label="Média de Recomendações (período)" value={mediaRecomendacoesPeriodo} />
         </div>
       </div>
     </div>

@@ -8,6 +8,7 @@ import { useFunnels } from '@/hooks/useFunnels';
 import { useTeams } from '@/hooks/useTeams';
 import { useCrmUsers } from '@/hooks/useCrmUsers';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
 import { Calendar } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
@@ -26,7 +27,8 @@ interface PerformanceFiltersProps {
 }
 
 export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps) => {
-  const { crmUser, companyId, hasPermission } = useCrmAuth();
+  const { crmUser, hasPermission } = useCrmAuth();
+  const { selectedCompanyId } = useCompany();
   const [selectedFunnel, setSelectedFunnel] = useState('');
   const [selectedTeam, setSelectedTeam] = useState('');
   const [selectedUser, setSelectedUser] = useState('');
@@ -34,7 +36,7 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
   const [customPeriod, setCustomPeriod] = useState({ start: '', end: '', month: '', year: '' });
   const [compareId, setCompareId] = useState('');
 
-  const { data: funnels = [] } = useFunnels(companyId);
+  const { data: funnels = [] } = useFunnels(selectedCompanyId);
   const { data: teams = [] } = useTeams();
   const { data: users = [] } = useCrmUsers();
 
@@ -42,7 +44,7 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
   const canSeeTeamUsers = hasPermission('leader');
   const isRegularUser = !canSeeAllTeams && !canSeeTeamUsers;
   const isUser = crmUser?.role === 'user';
-  const allowedFunnels = isUser ? funnels.filter(f => crmUser.funnels?.includes(f.id)) : funnels.filter(f => f.company_id === companyId);
+  const allowedFunnels = isUser ? funnels.filter(f => crmUser.funnels?.includes(f.id)) : funnels.filter(f => f.company_id === selectedCompanyId);
 
   // Seleção automática do primeiro funil permitido
   useEffect(() => {
@@ -54,7 +56,7 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
   // Resetar funil selecionado e allowedFunnels ao trocar de empresa
   useEffect(() => {
     setSelectedFunnel('');
-  }, [companyId]);
+  }, [selectedCompanyId]);
 
   // Filter teams based on permissions
   const availableTeams = canSeeAllTeams 

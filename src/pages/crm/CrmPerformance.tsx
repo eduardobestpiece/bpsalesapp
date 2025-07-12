@@ -6,6 +6,7 @@ import { PerformanceStats } from '@/components/CRM/Performance/PerformanceStats'
 import { useIndicators } from '@/hooks/useIndicators';
 import { useFunnels } from '@/hooks/useFunnels';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { FunnelComparisonChart } from '@/components/CRM/Performance/FunnelChart';
 import { aggregateFunnelIndicators } from '@/utils/calculationHelpers';
@@ -23,16 +24,17 @@ interface PerformanceFilters {
 }
 
 const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
-  const { companyId, crmUser } = useCrmAuth();
+  const { crmUser } = useCrmAuth();
+  const { selectedCompanyId } = useCompany();
   const [filters, setFilters] = useState<PerformanceFilters | null>(null);
   const [activeTab, setActiveTab] = useState<'funnel'>('funnel');
   
   const { data: indicators = [] } = useIndicators(
-    companyId, 
+    selectedCompanyId, 
     filters?.userId || crmUser?.id
   );
   
-  const { data: funnels = [] } = useFunnels(companyId);
+  const { data: funnels = [] } = useFunnels(selectedCompanyId);
 
   const selectedFunnel = filters ? funnels.find(f => f.id === filters.funnelId) : null;
 
@@ -121,7 +123,7 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
       const teamIds = Array.isArray(crmUser.team_id) ? crmUser.team_id : [crmUser.team_id];
       filteredIndicators = filteredIndicators.filter(i => teamIds.includes(i.team_id));
     } else if (crmUser?.role === 'admin' || crmUser?.role === 'master') {
-      filteredIndicators = filteredIndicators.filter(i => i.company_id === companyId);
+      filteredIndicators = filteredIndicators.filter(i => i.company_id === selectedCompanyId);
     }
     // Filtros customizados
     if (filters.period === 'custom') {

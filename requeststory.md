@@ -1,31 +1,17 @@
-# Requisição em andamento - 11/07/2024 (Bloco 1 - Ajustes Finais de Layout e Filtro)
+# Requisição em Andamento
 
-## Ajustes Solicitados
+## Bloco 1: Performance - Filtros e Layout do Funil
 
-### Gráfico do Funil
-- Título exibe o nome do funil selecionado.
-- Layout dos cards laterais com fontes menores, valor igual ao nome da etapa do funil, nome do item igual ao percentual do funil.
-- Adicionado “Dados semanais” à esquerda e “Dados do Período” à direita acima dos cards.
+### Diagnóstico
+- O filtro de funis na aba Performance estava utilizando o companyId do contexto de autenticação, não refletindo a empresa selecionada pelo usuário Master.
+- O layout dos cards de "Dados semanais" e "Dados do Período" precisava ser alinhado acima do título do funil, em linha única.
 
-### Filtro de Funil
-- Filtro de funil mostra apenas os funis da empresa selecionada (inclusive para Master/Admin).
-- Troca de empresa atualiza corretamente o filtro e os dados exibidos.
+### Ações Realizadas
+- Corrigido o uso do companyId para sempre priorizar o selectedCompanyId do CompanyContext nos filtros e queries de funis e indicadores.
+- Garantido que, ao trocar de empresa, os funis exibidos sejam apenas daquela empresa.
+- Ajustado o layout do gráfico do funil para alinhar os cards de dados semanais e do período acima do título, todos em uma única linha, centralizados.
 
----
-
-## Checklist
-- [x] Título do gráfico exibe nome do funil.
-- [x] Layout dos cards laterais ajustado (fontes, espaçamentos, títulos acima dos cards).
-- [x] Filtro de funil mostra apenas funis da empresa selecionada.
-- [x] Testar localmente.
-- [x] Atualizar `requeststory.md`.
-- [x] Deploy automático.
-- [x] Solicitar validação.
-
----
-
-### Detalhamento das Alterações
-- Título do gráfico agora exibe o nome do funil selecionado.
-- Layout dos cards laterais ajustado: fontes menores, valor igual ao nome da etapa do funil, nome do item igual ao percentual do funil, títulos “Dados semanais” e “Dados do Período” acima dos cards.
-- Filtro de funil mostra apenas os funis da empresa selecionada, inclusive para Master/Admin.
-- Checklist concluído e pronto para deploy. 
+### Próximos Passos
+- Testar localmente a troca de empresa e o alinhamento visual.
+- Realizar o deploy automático.
+- Solicitar validação/teste ao usuário. 
