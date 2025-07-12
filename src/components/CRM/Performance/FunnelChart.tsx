@@ -89,10 +89,10 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
 
   return (
     <div className="flex flex-col w-full items-center justify-center">
-      {/* Linha única: cards esquerda, título central, cards direita */}
-      <div className="w-full flex flex-row items-start justify-between mb-0 gap-4">
+      {/* Linha única: cards esquerda, título central, cards direita, com proporções 25/50/25 */}
+      <div className="w-full flex flex-col md:flex-row items-start justify-between mb-0 gap-4">
         {/* Cards de Média semanal à esquerda */}
-        <div className="flex flex-col gap-2 min-w-[180px] items-start">
+        <div className="md:basis-1/4 w-full md:w-1/4 flex flex-col gap-2 min-w-[180px] items-start">
           <span className="text-xs text-muted-foreground font-semibold mb-1">Dados semanais</span>
           <MetricCard label="Conversão do funil (semana)" value={`${((somaUltimaEtapaPeriodo / somaPrimeiraEtapaPeriodo) / numWeeks * 100 || 0).toFixed(1)}%`} />
           <MetricCard label="Valor das vendas (semana)" value={vendasSemanal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
@@ -100,12 +100,12 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
           <MetricCard label="Média de Recomendações (semana)" value={etapaRecomendacoesSemanal > 0 ? (recomendacoesSemanal / etapaRecomendacoesSemanal).toFixed(2) : '0'} />
         </div>
         {/* Título centralizado */}
-        <div className="flex flex-col items-center justify-center flex-1">
+        <div className="md:basis-2/4 w-full md:w-2/4 flex flex-col items-center justify-center flex-1">
           <span className="text-xs text-muted-foreground font-semibold mb-1"> </span>
           <h2 className="text-xl font-bold text-center">Resultados do Funil {funnelName || ''}</h2>
         </div>
         {/* Cards de Período à direita */}
-        <div className="flex flex-col gap-2 min-w-[180px] items-end">
+        <div className="md:basis-1/4 w-full md:w-1/4 flex flex-col gap-2 min-w-[180px] items-end">
           <span className="text-xs text-muted-foreground font-semibold mb-1">Dados do Período</span>
           <MetricCard label="Conversão do funil (período)" value={`${(somaUltimaEtapaPeriodo / somaPrimeiraEtapaPeriodo * 100 || 0).toFixed(1)}%`} />
           <MetricCard label="Valor das vendas (período)" value={vendasPeriodo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} />
@@ -113,7 +113,7 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
           <MetricCard label="Média de Recomendações (período)" value={etapaRecomendacoesPeriodo > 0 ? (recomendacoesPeriodo / etapaRecomendacoesPeriodo).toFixed(2) : '0'} />
         </div>
       </div>
-      {/* Gráfico do funil imediatamente abaixo */}
+      {/* Gráfico do funil imediatamente abaixo, centralizado */}
       <div className="flex w-full gap-8 items-start justify-center mt-2">
         <div className="flex flex-col items-center w-full max-w-2xl">
           <div className="flex flex-col items-center w-full">

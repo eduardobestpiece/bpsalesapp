@@ -1,16 +1,15 @@
 # Requisição em Andamento
 
-## Bloco 2: Refatoração Final do Gráfico de Funil (Layout e Cálculos)
+## Bloco 2.1: Ajuste de Layout Responsivo do Gráfico de Funil
 
 ### Diagnóstico
-- O layout do gráfico de funil precisava alinhar o título na mesma linha dos textos "Dados semanais" e "Dados do Período".
-- Os cards de dados semanais e do período deveriam ficar um abaixo do outro, alinhados à esquerda e à direita, respectivamente.
-- Os cálculos dos cards e das faixas do funil precisavam seguir fórmulas específicas para semana e período, conforme detalhado pelo usuário.
+- O gráfico do funil estava desalinhado em relação aos cards de dados semanais e do período, especialmente em telas maiores.
+- O usuário solicitou proporções exatas: 25% para dados semanais, 50% para o funil, 25% para dados do período.
 
 ### Ações Realizadas
-- Refatorado o layout para alinhar título e cards em uma única linha, com o gráfico imediatamente abaixo.
-- Implementados todos os cálculos exatos para cada card e faixa, conforme solicitado (conversão, vendas, ticket médio, recomendações, valores semanais e totais).
-- Garantido que os dados sejam exibidos corretamente para todos os filtros (empresa, time, usuário).
+- Ajustado o layout para usar flex com proporções 25%/50%/25% na linha superior.
+- Garantida responsividade: em telas pequenas, os blocos empilham; em desktop, mantêm a proporção.
+- Nenhuma alteração de cálculo, apenas layout.
 
 ### Próximos Passos
 - Testar localmente.
