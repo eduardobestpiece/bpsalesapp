@@ -12,6 +12,7 @@ import { FunnelComparisonChart } from '@/components/CRM/Performance/FunnelChart'
 import { aggregateFunnelIndicators } from '@/utils/calculationHelpers';
 import { differenceInCalendarWeeks, parseISO } from 'date-fns';
 import { useCrmUsers } from '@/hooks/useCrmUsers';
+import { useTeams } from '@/hooks/useTeams';
 
 interface PerformanceFilters {
   funnelId: string;
@@ -54,6 +55,7 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
   
   const { data: funnels = [] } = useFunnels(selectedCompanyId);
   const { data: crmUsers = [] } = useCrmUsers();
+  const { data: teams = [] } = useTeams();
 
   const selectedFunnel = filters ? funnels.find(f => f.id === filters.funnelId) : null;
 
@@ -76,10 +78,14 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     // Filtro por time: pegar IDs dos usuários do time selecionado
     if (filters.teamId && filters.teamId !== 'all') {
       const teamMembers = crmUsers.filter(u => u.team_id === filters.teamId).map(u => u.id);
-      console.log('[CrmPerformance] Membros do time selecionado:', teamMembers);
       relevantIndicators = relevantIndicators.filter(indicator => teamMembers.includes(indicator.user_id));
     } else if (filters.userId && filters.userId !== 'all') {
       relevantIndicators = relevantIndicators.filter(indicator => indicator.user_id === filters.userId);
+    } else if (crmUser?.role === 'leader') {
+      // Corrigir: buscar todos os times onde o usuário é leader_id
+      const leaderTeams = teams.filter(t => t.leader_id === crmUser.id).map(t => t.id);
+      const teamMembers = crmUsers.filter(u => leaderTeams.includes(u.team_id)).map(u => u.id);
+      relevantIndicators = relevantIndicators.filter(indicator => teamMembers.includes(indicator.user_id) || indicator.user_id === crmUser.id);
     } else if (crmUser?.role === 'user') {
       relevantIndicators = relevantIndicators.filter(indicator => indicator.user_id === crmUser.id);
     }
@@ -153,6 +159,11 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
       filteredIndicators = filteredIndicators.filter(i => teamMembers.includes(i.user_id));
     } else if (filters.userId && filters.userId !== 'all') {
       filteredIndicators = filteredIndicators.filter(i => i.user_id === filters.userId);
+    } else if (crmUser?.role === 'leader') {
+      // Corrigir: buscar todos os times onde o usuário é leader_id
+      const leaderTeams = teams.filter(t => t.leader_id === crmUser.id).map(t => t.id);
+      const teamMembers = crmUsers.filter(u => leaderTeams.includes(u.team_id)).map(u => u.id);
+      filteredIndicators = filteredIndicators.filter(i => teamMembers.includes(i.user_id) || i.user_id === crmUser.id);
     } else if (crmUser?.role === 'user') {
       filteredIndicators = filteredIndicators.filter(i => i.user_id === crmUser.id);
     }

@@ -166,13 +166,15 @@ const CrmIndicadores = () => {
     if (crmUser.role === 'master' || crmUser.role === 'admin') {
       return validIndicators; // vê todos da empresa
     } else if (crmUser.role === 'leader') {
-      const teamMembers = crmUsers.filter(u => u && u.team_id === crmUser.team_id).map(u => u.id);
+      // Corrigir: buscar todos os times onde o usuário é leader_id
+      const leaderTeams = teams.filter(t => t.leader_id === crmUser.id).map(t => t.id);
+      const teamMembers = crmUsers.filter(u => leaderTeams.includes(u.team_id)).map(u => u.id);
       return validIndicators.filter(ind => teamMembers.includes(ind.user_id) || ind.user_id === crmUser.id);
     } else if (crmUser.role === 'user') {
       return validIndicators.filter(ind => ind.user_id === crmUser.id);
     }
     return [];
-  }, [indicators, crmUser, crmUsers]);
+  }, [indicators, crmUser, crmUsers, teams]);
 
   // Filtros aplicados com verificações ainda mais rigorosas
   const filteredIndicators = useMemo(() => {
