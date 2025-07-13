@@ -358,6 +358,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
               value={selectedAdministratorId || ''}
               onChange={(e) => setSelectedAdministratorId(e.target.value)}
             >
+              <option value="" disabled>Selecione uma administradora...</option>
               {administrators.map((admin) => (
                 <option key={admin.id} value={admin.id}>{admin.name}</option>
               ))}
