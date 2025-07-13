@@ -1,21 +1,20 @@
 # Requisição Atual
 
-**Funcionalidade:** Atualização da gestão de Parcelas
+**Funcionalidade:** Padronização da aba Produtos
 
 **Resumo:**
-Atualização concluída conforme checklist: listagem, modal, relação com reduções, duplicação, validação e UX, sem afetar o CRM.
+Padronizar a aba Produtos para seguir exatamente o mesmo padrão visual, estrutural e de UX das abas Administradoras e Parcelas. Incluir todos os campos, validações e ações exigidos, garantindo que nada afete o CRM.
 
 **Checklist:**
-- [x] Atualizar componente de listagem de Parcelas (`InstallmentTypesList.tsx`)
-- [x] Atualizar modal de criação/edição de Parcelas (`InstallmentTypeModal.tsx`)
-- [x] Adicionar campo de redução de parcela (multiseleção, integrando com `installment_reductions` e tabela de relação)
-- [x] Adicionar campo de seguro opcional (Sim/Não)
-- [x] Adicionar campo de número de parcelas
-- [x] Adicionar campo de padrão (apenas uma por administradora)
-- [x] Ajustar ações: arquivar/restaurar, duplicar (com restrição)
-- [x] Garantir integração com modal de administradora
-- [x] Garantir que nada afete o CRM
-- [x] Testar e validar
+- [ ] Atualizar componente de listagem de Produtos (`ProductsList.tsx`) para seguir o padrão visual das outras abas
+- [ ] Atualizar modal de criação/edição de Produtos (`ProductModal.tsx`) com todos os campos e validações exigidos
+- [ ] Adicionar campo de valor da parcela (cálculo automático)
+- [ ] Adicionar campo de Parcelas (dropdown multi seleção)
+- [ ] Adicionar campos: Taxa de administração, Fundo de reserva, Seguro
+- [ ] Adicionar ação de duplicar produto (com restrição de administradora)
+- [ ] Garantir validação de duplicidade
+- [ ] Garantir que nada afete o CRM
+- [ ] Testar e validar
 
 **Status:**
-Concluído e pronto para deploy. 
+Iniciando execução do checklist para Produtos. 

@@ -13,6 +13,7 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { useQuery } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import { ProductModal } from './ProductModal';
 
 interface Product {
   id: string;
@@ -27,6 +28,9 @@ interface Product {
   administrators?: {
     name: string;
   };
+  admin_tax_percent?: number;
+  reserve_fund_percent?: number;
+  insurance_percent?: number;
 }
 
 interface Administrator {
@@ -40,6 +44,7 @@ interface ProductsListProps {
   selectedAdministrator: string;
   onEdit: (product: Product) => void;
   onCreate: () => void;
+  onDuplicate: (product: Product) => void;
 }
 
 export const ProductsList: React.FC<ProductsListProps> = ({
@@ -47,7 +52,8 @@ export const ProductsList: React.FC<ProductsListProps> = ({
   statusFilter,
   selectedAdministrator,
   onEdit,
-  onCreate
+  onCreate,
+  onDuplicate
 }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -63,6 +69,10 @@ export const ProductsList: React.FC<ProductsListProps> = ({
   const [copyModalOpen, setCopyModalOpen] = useState(false);
   const [originCompanyId, setOriginCompanyId] = useState<string>('');
   const [copyLoading, setCopyLoading] = useState(false);
+
+  // Adicionar estados para modal de duplicação:
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [duplicateData, setDuplicateData] = useState<Product | null>(null);
 
   const fetchAdministrators = async () => {
     try {
@@ -169,6 +179,12 @@ export const ProductsList: React.FC<ProductsListProps> = ({
     }
   };
 
+  // Função para abrir modal de duplicação
+  const handleDuplicate = (product: Product) => {
+    setDuplicateData({ ...product, administrator_id: '' }); // Limpa administradora
+    setShowDuplicateModal(true);
+  };
+
   useEffect(() => {
     fetchAdministrators();
   }, []);
@@ -231,37 +247,37 @@ export const ProductsList: React.FC<ProductsListProps> = ({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Tipo</TableHead>
-                  <TableHead>Valor do Crédito</TableHead>
-                  <TableHead>Opções de Prazo</TableHead>
                   <TableHead>Administradora</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Tipo</TableHead>
+                  <TableHead>Valor</TableHead>
+                  <TableHead>Valor da Parcela</TableHead>
+                  <TableHead>Taxa de Administração (%)</TableHead>
+                  <TableHead>Fundo de Reserva (%)</TableHead>
+                  <TableHead>Seguro (%)</TableHead>
                   <TableHead className="text-right">Ações</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredProducts.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                       Nenhum produto encontrado.
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredProducts.map((product) => (
                     <TableRow key={product.id}>
-                      <TableCell className="font-medium">{product.name}</TableCell>
+                      <TableCell>{product.administrators?.name || 'N/A'}</TableCell>
                       <TableCell>{product.type}</TableCell>
                       <TableCell>{formatCurrency(product.credit_value)}</TableCell>
-                      <TableCell>{formatTermOptions(product.term_options)}</TableCell>
-                      <TableCell>
-                        {product.administrators?.name || 'N/A'}
+                      <TableCell>{/* Valor da parcela calculado automaticamente */}
+                        {product.credit_value && product.term_options && product.term_options.length > 0
+                          ? formatCurrency(product.credit_value / Math.max(...product.term_options))
+                          : '-'}
                       </TableCell>
-                      <TableCell>
-                        <Badge variant={product.is_archived ? "secondary" : "default"}>
-                          {product.is_archived ? 'Arquivado' : 'Ativo'}
-                        </Badge>
-                      </TableCell>
+                      <TableCell>{product.admin_tax_percent ?? '-'}</TableCell>
+                      <TableCell>{product.reserve_fund_percent ?? '-'}</TableCell>
+                      <TableCell>{product.insurance_percent ?? '-'}</TableCell>
                       <TableCell className="text-right">
                         <div className="flex gap-2 justify-end">
                           <Button
@@ -277,6 +293,14 @@ export const ProductsList: React.FC<ProductsListProps> = ({
                             onClick={() => handleArchive(product)}
                           >
                             <Archive className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDuplicate(product)}
+                            disabled={product.is_archived}
+                          >
+                            Duplicar
                           </Button>
                         </div>
                       </TableCell>
@@ -324,6 +348,18 @@ export const ProductsList: React.FC<ProductsListProps> = ({
           </div>
         </DialogContent>
       </Dialog>
+      {showDuplicateModal && (
+        <ProductModal
+          open={showDuplicateModal}
+          onOpenChange={setShowDuplicateModal}
+          product={duplicateData}
+          onSuccess={() => {
+            setShowDuplicateModal(false);
+            setDuplicateData(null);
+            fetchProducts();
+          }}
+        />
+      )}
     </Card>
   );
 };

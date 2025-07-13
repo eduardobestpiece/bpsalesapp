@@ -19,6 +19,10 @@ const formSchema = z.object({
   administrator_id: z.string().optional(),
   credit_value: z.number().min(1, 'Valor do crédito é obrigatório'),
   term_options: z.array(z.number()).min(1, 'Pelo menos uma opção de prazo é obrigatória'),
+  admin_tax_percent: z.number().min(0, 'Taxa de administração é obrigatória'),
+  reserve_fund_percent: z.number().min(0, 'Fundo de reserva é obrigatório'),
+  insurance_percent: z.number().min(0, 'Seguro é obrigatório'),
+  installment_types: z.array(z.string()).min(1, 'Selecione pelo menos uma parcela'),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -39,6 +43,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   const [administrators, setAdministrators] = useState<any[]>([]);
   const [termInput, setTermInput] = useState('');
   const [termOptions, setTermOptions] = useState<number[]>(product?.term_options || []);
+  const [installmentTypes, setInstallmentTypes] = useState<any[]>([]);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -48,6 +53,10 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       administrator_id: product?.administrator_id || undefined,
       credit_value: product?.credit_value || 0,
       term_options: product?.term_options || [],
+      admin_tax_percent: product?.admin_tax_percent || 0,
+      reserve_fund_percent: product?.reserve_fund_percent || 0,
+      insurance_percent: product?.insurance_percent || 0,
+      installment_types: product?.installment_types || [],
     }
   });
 
@@ -63,6 +72,20 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       setAdministrators(data || []);
     } catch (error) {
       console.error('Error fetching administrators:', error);
+    }
+  };
+
+  const fetchInstallmentTypes = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('installment_types')
+        .select('id, name')
+        .order('name');
+      
+      if (error) throw error;
+      setInstallmentTypes(data || []);
+    } catch (error) {
+      console.error('Error fetching installment types:', error);
     }
   };
 
@@ -91,7 +114,24 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         administrator_id: data.administrator_id || null,
         credit_value: data.credit_value,
         term_options: data.term_options,
+        admin_tax_percent: data.admin_tax_percent,
+        reserve_fund_percent: data.reserve_fund_percent,
+        insurance_percent: data.insurance_percent,
+        installment_types: data.installment_types,
       };
+
+      // Verificar duplicidade
+      const { data: existing, error: dupError } = await supabase
+        .from('products')
+        .select('id')
+        .eq('administrator_id', data.administrator_id)
+        .eq('type', data.type)
+        .neq('id', product?.id || '')
+        .maybeSingle();
+      if (existing) {
+        toast.error('Já existe um produto com este tipo para esta administradora.');
+        return;
+      }
 
       if (product?.id) {
         // Update
@@ -121,6 +161,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   useEffect(() => {
     if (open) {
       fetchAdministrators();
+      fetchInstallmentTypes();
       setTermOptions(product?.term_options || []);
     }
   }, [open, product]);
@@ -252,6 +293,80 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               {form.formState.errors.term_options && (
                 <p className="text-sm text-red-600">{form.formState.errors.term_options.message}</p>
               )}
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="admin_tax_percent"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Taxa de Administração (%) *</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="0" step="0.01" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="reserve_fund_percent"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Fundo de Reserva (%) *</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="0" step="0.01" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="insurance_percent"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Seguro (%) *</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="0" step="0.01" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="installment_types"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Parcelas *</FormLabel>
+                  <Select multiple value={field.value} onValueChange={field.onChange}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione as parcelas" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {installmentTypes.map((item) => (
+                        <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="mt-4">
+              <FormLabel>Valor da Parcela (automático)</FormLabel>
+              <div className="font-bold">
+                {form.watch('credit_value') && form.watch('term_options') && form.watch('term_options').length > 0
+                  ? (Number(form.watch('credit_value')) / Math.max(...form.watch('term_options'))).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                  : '-'}
+              </div>
             </div>
 
             <div className="flex justify-end space-x-2 pt-4">
