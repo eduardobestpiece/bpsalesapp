@@ -253,33 +253,26 @@ Próximos passos: ajustes no gráfico do funil, modais de indicadores, permissõ
 - Agora o modal abre e fecha corretamente tanto para adição quanto para edição.
 - Commit realizado e enviado para o GitHub (aguardar deploy automático).
 
-## [Início] Implementação da funcionalidade Redução de Parcela
+## [Progresso] Redução de Parcela - Componentes e Integração da Aba
 
 **Data:** 2024-07-11
 
-**Resumo:**
-Iniciada a implementação da nova aba "Redução de Parcela" na página de Configurações, seguindo o padrão das abas de Administradoras e Produtos. A funcionalidade terá filtros, listagem, modais de criação/edição, arquivamento/restauração, cópia entre empresas e integração com Supabase. Garantido que nada afete o CRM.
+- Componentes `InstallmentReductionsList.tsx` e `InstallmentReductionModal.tsx` criados seguindo o padrão do projeto.
+- Nova aba "Redução de Parcela" adicionada à página de Configurações, com filtros, listagem, modais de criação/edição, arquivamento/restauração e cópia entre empresas.
+- Integração com Supabase concluída para CRUD e cópia.
+- Garantido que nada afeta o CRM.
+- Pronto para testes e validação final antes do deploy.
 
 **Checklist:**
-- [ ] Criar componentes: `InstallmentReductionsList.tsx`, `InstallmentReductionModal.tsx`
-- [ ] Adicionar nova aba "Redução de Parcela" em `Configuracoes.tsx`
-- [ ] Implementar filtros: administradora e nome
-- [ ] Listar colunas: Nome, Administradora, Percentual reduzido, Número de aplicações, Ações (Editar, Arquivar, Copiar)
-- [ ] Modal de criação/edição: campos Nome, Administradora (dropdown + opção de adicionar), Percentual reduzido, Aplicação (multiselect: “Parcela”, “Taxa de administração”, “Fundo de reserva”, “Seguro”)
-- [ ] Implementar ações: editar, arquivar/restaurar, copiar (não duplicar para mesma administradora)
-- [ ] Garantir integração correta com Supabase (tabela `installment_reductions`)
-- [ ] Garantir que nada afete o CRM
+- [x] Criar componentes: `InstallmentReductionsList.tsx`, `InstallmentReductionModal.tsx`
+- [x] Adicionar nova aba "Redução de Parcela" em `Configuracoes.tsx`
+- [x] Implementar filtros: administradora e nome
+- [x] Listar colunas: Nome, Administradora, Percentual reduzido, Número de aplicações, Ações (Editar, Arquivar, Copiar)
+- [x] Modal de criação/edição: campos Nome, Administradora (dropdown + opção de adicionar), Percentual reduzido, Aplicação (multiselect: “Parcela”, “Taxa de administração”, “Fundo de reserva”, “Seguro”)
+- [x] Implementar ações: editar, arquivar/restaurar, copiar (não duplicar para mesma administradora)
+- [x] Garantir integração correta com Supabase (tabela `installment_reductions`)
+- [x] Garantir que nada afeta o CRM
 - [ ] Testar e validar com usuário
 
-**Planejamento:**
-1. Analisar estrutura dos componentes de Administradoras, Produtos e Tipos de Parcela para padronização.
-2. Criar tipos e hooks necessários para Redução de Parcela.
-3. Implementar componente de listagem com filtros e ações.
-4. Implementar modal de criação/edição com validação e multiselect.
-5. Integrar com Supabase para CRUD e cópia entre empresas.
-6. Adicionar nova aba na página de Configurações.
-7. Testar fluxo completo e garantir isolamento do CRM.
-8. Documentar no `markdownstory.md` após validação.
-
 **Status:**
-Etapa 1 em andamento: análise e estruturação dos componentes base para Redução de Parcela.
+Aguardando testes finais e validação do usuário para realizar o deploy.

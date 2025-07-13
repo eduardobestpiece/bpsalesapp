@@ -16,6 +16,8 @@ import { InstallmentTypeModal } from '@/components/Administrators/InstallmentTyp
 import { InstallmentTypesList } from '@/components/Administrators/InstallmentTypesList';
 import { LeverageModal } from '@/components/Administrators/LeverageModal';
 import { LeveragesList } from '@/components/Administrators/LeveragesList';
+import { InstallmentReductionsList } from '@/components/Administrators/InstallmentReductionsList';
+import { InstallmentReductionModal } from '@/components/Administrators/InstallmentReductionModal';
 
 export default function Configuracoes() {
   const [selectedAdministrator, setSelectedAdministrator] = useState<any>(null);
@@ -41,6 +43,14 @@ export default function Configuracoes() {
   // Administrator filter for related tables
   const [productAdminFilter, setProductAdminFilter] = useState<string>('');
   const [installmentAdminFilter, setInstallmentAdminFilter] = useState<string>('');
+
+  // Estados para Redução de Parcela
+  const [reductionSearchTerm, setReductionSearchTerm] = useState('');
+  const [reductionStatusFilter, setReductionStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
+  const [reductionAdminFilter, setReductionAdminFilter] = useState<string>('');
+  const [selectedReduction, setSelectedReduction] = useState<any>(null);
+  const [showReductionModal, setShowReductionModal] = useState(false);
+  const [isCopyReduction, setIsCopyReduction] = useState(false);
 
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -73,6 +83,22 @@ export default function Configuracoes() {
     setShowLeverageModal(true);
   };
 
+  const handleEditReduction = (reduction: any) => {
+    setSelectedReduction(reduction);
+    setIsCopyReduction(false);
+    setShowReductionModal(true);
+  };
+  const handleCopyReduction = (reduction: any) => {
+    setSelectedReduction(reduction);
+    setIsCopyReduction(true);
+    setShowReductionModal(true);
+  };
+  const handleCreateReduction = () => {
+    setSelectedReduction(null);
+    setIsCopyReduction(false);
+    setShowReductionModal(true);
+  };
+
   const closeModals = () => {
     setShowCreateAdministratorModal(false);
     setShowEditAdministratorModal(false);
@@ -99,11 +125,12 @@ export default function Configuracoes() {
             <CardContent className="p-0">
               <Tabs defaultValue="administrators" className="w-full">
                 <div className="border-b bg-gray-50/50 px-6 py-4">
-                  <TabsList className="grid grid-cols-4 w-full max-w-3xl mx-auto">
+                  <TabsList className="grid grid-cols-5 w-full max-w-4xl mx-auto">
                     <TabsTrigger value="administrators">Administradoras</TabsTrigger>
                     <TabsTrigger value="products">Produtos</TabsTrigger>
                     <TabsTrigger value="installments">Parcelas</TabsTrigger>
                     <TabsTrigger value="leverages">Alavancas</TabsTrigger>
+                    <TabsTrigger value="reductions">Redução de Parcela</TabsTrigger>
                   </TabsList>
                 </div>
 
@@ -307,6 +334,63 @@ export default function Configuracoes() {
                       searchTerm={leverageSearchTerm}
                       statusFilter={leverageStatusFilter}
                       onEdit={handleEditLeverage}
+                    />
+                  </div>
+                </TabsContent>
+
+                {/* Redução de Parcela Tab */}
+                <TabsContent value="reductions" className="p-6">
+                  <div className="space-y-6">
+                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                      <div>
+                        <h2 className="text-2xl font-semibold text-gray-900">Redução de Parcela</h2>
+                        <p className="text-gray-600 mt-1">Gerencie as regras de redução de parcela</p>
+                      </div>
+                      <Button onClick={handleCreateReduction} className="bg-gradient-primary hover:opacity-90">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Adicionar Redução
+                      </Button>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <Input
+                          placeholder="Buscar reduções..."
+                          value={reductionSearchTerm}
+                          onChange={(e) => setReductionSearchTerm(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+                      <Select value={reductionStatusFilter} onValueChange={(value: 'all' | 'active' | 'archived') => setReductionStatusFilter(value)}>
+                        <SelectTrigger className="w-full sm:w-48">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todas</SelectItem>
+                          <SelectItem value="active">Ativas</SelectItem>
+                          <SelectItem value="archived">Arquivadas</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <InstallmentReductionsList
+                      key={refreshKey}
+                      searchTerm={reductionSearchTerm}
+                      statusFilter={reductionStatusFilter}
+                      selectedAdministrator={reductionAdminFilter || ''}
+                      onEdit={handleEditReduction}
+                      onCopy={handleCopyReduction}
+                    />
+                    <InstallmentReductionModal
+                      open={showReductionModal}
+                      onOpenChange={setShowReductionModal}
+                      reduction={selectedReduction}
+                      onSuccess={() => {
+                        setShowReductionModal(false);
+                        setSelectedReduction(null);
+                        setIsCopyReduction(false);
+                        handleRefresh();
+                      }}
+                      isCopy={isCopyReduction}
                     />
                   </div>
                 </TabsContent>
