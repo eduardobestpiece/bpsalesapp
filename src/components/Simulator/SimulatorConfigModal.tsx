@@ -176,6 +176,36 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
     fetchProducts();
   }, [selectedAdministratorId]);
 
+  // Buscar product_installment_types ao selecionar produto
+  const [productInstallmentTypes, setProductInstallmentTypes] = useState<{ product_id: string, installment_type_id: string }[]>([]);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!selectedProductId) return;
+    const fetchProductInstallmentTypes = async () => {
+      const { data, error } = await supabase
+        .from('product_installment_types')
+        .select('product_id, installment_type_id')
+        .eq('product_id', selectedProductId);
+      if (!error && data) {
+        setProductInstallmentTypes(data);
+      } else {
+        setProductInstallmentTypes([]);
+      }
+    };
+    fetchProductInstallmentTypes();
+  }, [selectedProductId]);
+
+  // Atualizar selectedProductId ao trocar administradora ou tipo de crédito
+  useEffect(() => {
+    if (products.length > 0 && selectedCreditType) {
+      const product = products.find(p => p.type === selectedCreditType);
+      setSelectedProductId(product?.id || null);
+    } else {
+      setSelectedProductId(null);
+    }
+  }, [products, selectedCreditType]);
+
   // Extrair tipos únicos dos produtos e traduzir para português
   const creditTypes = Array.from(new Set(products.map(p => p.type))).filter(Boolean);
   
@@ -280,19 +310,53 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   // Resetar valores ao abrir modal
   useEffect(() => {
     if (open) {
-      setAdminTax('');
-      setReserveFund('');
-      setInsuranceMode('nao_incluir');
-      setInsurancePercent('1');
-      setAnnualUpdate('6');
-      setReductionPercent('');
-      setReductionApplications([]);
-      setUpdatePercent('');
-      setUpdateType('');
-      setUpdateMonth('');
-      setUpdateGrace('');
+      // Se houver configuração salva, carregar os valores
+      const loadConfig = async () => {
+        const userId = localStorage.getItem('user_id');
+        if (!userId || !selectedCompanyId) return;
+        const { data } = await supabase
+          .from('simulator_configurations')
+          .select('configuration')
+          .eq('user_id', userId)
+          .eq('company_id', selectedCompanyId)
+          .single();
+        if (data && data.configuration) {
+          const config = data.configuration;
+          setSelectedAdministratorId(config.administratorId || null);
+          setSelectedBidTypeId(config.bidTypeId || null);
+          setSelectedInstallmentTypeId(config.installmentTypeId || null);
+          setSelectedCreditType(config.creditType || null);
+          setManualFieldsState(config.manualFields || initialManualFields);
+          setAdminTax(config.adminTax || '');
+          setReserveFund(config.reserveFund || '');
+          setInsuranceMode(config.insuranceMode || 'nao_incluir');
+          setInsurancePercent(config.insurancePercent || '1');
+          setAnnualUpdate(config.annualUpdate || '6');
+          setReductionPercent(config.reductionPercent || '');
+          setReductionApplications(config.reductionApplications || []);
+          setUpdatePercent(config.updatePercent || '');
+          setUpdateType(config.updateType || '');
+          setUpdateMonth(config.updateMonth || '');
+          setUpdateGrace(config.updateGrace || '');
+        } else {
+          setAdminTax('');
+          setReserveFund('');
+          setInsuranceMode('nao_incluir');
+          setInsurancePercent('1');
+          setAnnualUpdate('6');
+          setReductionPercent('');
+          setReductionApplications([]);
+          setUpdatePercent('');
+          setUpdateType('');
+          setUpdateMonth('');
+          setUpdateGrace('');
+          setManualFieldsState(initialManualFields);
+          setSelectedInstallmentTypeId(null);
+        }
+      };
+      loadConfig();
     }
-  }, [open]);
+  }, [open, selectedCompanyId]);
 
   // Função para calcular o estado do switch global
   const getGlobalSwitchState = () => {
@@ -479,7 +543,10 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
                 </SelectTrigger>
                 <SelectContent>
                   {installmentTypes
-                    .filter(it => it.administrator_id === selectedAdministratorId && it.type === selectedCreditType)
+                    .filter(it =>
+                      it.administrator_id === selectedAdministratorId &&
+                      productInstallmentTypes.some(pit => pit.installment_type_id === it.id)
+                    )
                     .map((it) => (
                       <SelectItem key={it.id} value={it.id}>
                         {it.name} ({it.installment_count} meses)
@@ -544,6 +611,9 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
               value={annualUpdate}
               onChange={(e) => setAnnualUpdate(e.target.value)}
               disabled={!manualFieldsState.atualizacaoAnual}
+              min={0}
+              max={20}
+              step={0.1}
             />
           </div>
 
@@ -604,6 +674,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
                 value={reductionApplications[0] || ''}
                 onValueChange={(value) => setReductionApplications([value])}
                 disabled={!manualFieldsState.reducaoParcela}
+                multiple
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Aplicação" />
@@ -629,6 +700,73 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
               />
               <span className="text-xs text-muted-foreground">Manual</span>
             </div>
+            {/* Sistema: busca tipo da administradora */}
+            {!manualFieldsState.atualizacaoAnualCredito ? (
+              updateType === 'after_12_installments' ? (
+                <div className="p-3 bg-muted rounded-md">
+                  <span className="text-sm">Após 12 parcelas</span>
+                </div>
+              ) : updateType === 'specific_month' ? (
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    type="number"
+                    placeholder="Mês de Atualização"
+                    value={updateMonth}
+                    disabled
+                  />
+                  <Input
+                    type="number"
+                    placeholder="Carência (em dias)"
+                    value={updateGrace}
+                    disabled
+                  />
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    type="text"
+                    placeholder="Tipo de Atualização"
+                    value={updateType}
+                    disabled
+                  />
+                  <Input
+                    type="text"
+                    placeholder="Percentual/Índice"
+                    value={updatePercent}
+                    disabled
+                  />
+                </div>
+              )
+            ) : (
+              // Manual: campos editáveis
+              <div className="grid grid-cols-2 gap-2">
+                <Select value={updateType} onValueChange={setUpdateType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Tipo de Atualização" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="after_12_installments">Após 12 parcelas</SelectItem>
+                    <SelectItem value="specific_month">Mês específico</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input
+                  type="text"
+                  placeholder="Percentual/Índice"
+                  value={updatePercent}
+                  onChange={(e) => setUpdatePercent(e.target.value)}
+                />
+                {updateType === 'specific_month' && (
+                  <>
+                    <Input
+                      type="number"
+                      placeholder="Mês de Atualização"
+                      value={updateMonth}
+                      onChange={(e) => setUpdateMonth(e.target.value)}
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Carência (em dias)"
+                      value={updateGrace}
             
             {updateType === 'after_12_installments' ? (
               <div className="p-3 bg-muted rounded-md">
