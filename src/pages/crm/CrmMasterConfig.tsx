@@ -168,10 +168,11 @@ const CrmMasterConfig = () => {
     setIsLoadingArchived(true);
     try {
       // Buscar todos os itens arquivados
-      const [indicators, leads, sales] = await Promise.all([
+      const [indicators, leads, sales, administrators] = await Promise.all([
         supabase.from('indicators').select('*').not('archived_at', 'is', null),
         supabase.from('leads').select('*').not('archived_at', 'is', null),
         supabase.from('sales').select('*').not('archived_at', 'is', null),
+        supabase.from('administrators').select('*, companies(name)').eq('is_archived', true),
       ]);
       
       let items: any[] = [];
@@ -192,6 +193,12 @@ const CrmMasterConfig = () => {
         type: 'sale',
         archived_at: s.archived_at,
         description: `Venda: ${s.sale_date ? new Date(s.sale_date).toLocaleDateString('pt-BR') : s.id}`
+      })));
+      if (administrators.data) items = items.concat(administrators.data.map((a: any) => ({
+        id: a.id,
+        type: 'administrator',
+        archived_at: a.updated_at || a.created_at,
+        description: `Administradora: ${a.name} (${a.companies?.name || 'Empresa desconhecida'})`
       })));
       setArchivedItems(items);
     } catch (error) {
@@ -225,7 +232,12 @@ const CrmMasterConfig = () => {
     if (item.type === 'indicator') table = 'indicators';
     if (item.type === 'lead') table = 'leads';
     if (item.type === 'sale') table = 'sales';
-    await supabase.from(table).update({ archived_at: null }).eq('id', item.id);
+    if (item.type === 'administrator') table = 'administrators';
+    if (item.type === 'administrator') {
+      await supabase.from(table).update({ is_archived: false }).eq('id', item.id);
+    } else {
+      await supabase.from(table).update({ archived_at: null }).eq('id', item.id);
+    }
     setArchivedItems(prev => prev.filter(i => i.id !== item.id || i.type !== item.type));
   };
   
@@ -419,6 +431,7 @@ const CrmMasterConfig = () => {
                                 <option value="indicator">Indicador</option>
                                 <option value="lead">Lead</option>
                                 <option value="sale">Venda</option>
+                                <option value="administrator">Administradora</option>
                               </select>
                             </div>
                             <div>
@@ -445,7 +458,7 @@ const CrmMasterConfig = () => {
                                 ) : filteredArchived.map(item => (
                                   <tr key={item.type + '-' + item.id}>
                                     <td className="px-2 py-1">{item.archived_at ? new Date(item.archived_at).toLocaleDateString('pt-BR') : '-'}</td>
-                                    <td className="px-2 py-1">{item.type === 'indicator' ? 'Indicador' : item.type === 'lead' ? 'Lead' : 'Venda'}</td>
+                                    <td className="px-2 py-1">{item.type === 'indicator' ? 'Indicador' : item.type === 'lead' ? 'Lead' : item.type === 'sale' ? 'Venda' : item.type === 'administrator' ? 'Administradora' : ''}</td>
                                     <td className="px-2 py-1">{item.description}</td>
                                     <td className="px-2 py-1 text-center">
                                       <div className="flex gap-2 justify-center">

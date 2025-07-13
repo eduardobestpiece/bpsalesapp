@@ -36,3 +36,26 @@
 - Validar se há mais entidades que precisam da função de cópia.
 - Garantir que nada afeta o CRM.
 - Executar deploy e solicitar conferência. 
+
+## [13/07/2024] Nova solicitação - Ajustes na aba Administradoras
+
+### Regras principais
+- Nada pode afetar o funcionamento do módulo CRM.
+- Usuários só podem arquivar administradoras (não podem excluir).
+- Administradoras arquivadas vão para a aba de itens arquivados do Master Config e podem ser recuperadas pelo master.
+- Modal de criação/edição:
+  - Campo “Tipo de Atualização” com opções: “Mês específico” ou “Após 12 parcelas”.
+  - Se “Mês específico” for selecionado, mostrar campo “Mês de Atualização” com nomes dos meses.
+  - Se “Após 12 parcelas” for selecionado, ocultar campo “Mês de Atualização”.
+  - Botão do modal: “Cadastrar” (criação) e “Salvar” (edição).
+  - Adicionar campo “Administradora padrão” (apenas uma por empresa).
+  - Modal de edição carrega dados da administradora.
+
+### Checklist do Plano
+- [ ] Remover botão de excluir da lista de administradoras.
+- [ ] Garantir que arquivamento funciona e só master pode restaurar.
+- [ ] Atualizar modal de criação/edição conforme regras (tipos, meses, botão, campo padrão).
+- [ ] Garantir que só uma administradora por empresa pode ser padrão.
+- [ ] Atualizar `requeststory.md` com o andamento.
+- [ ] Executar deploy.
+- [ ] Solicitar conferência. 

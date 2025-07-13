@@ -256,7 +256,8 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
                   >
                     <Archive className="w-4 h-4" />
                   </Button>
-                  <Button
+                  {/* Remover botão de excluir */}
+                  {/* <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => handleDelete(admin.id)}
@@ -264,7 +265,7 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
                     disabled={isSubMaster}
                   >
                     <Trash2 className="w-4 h-4" />
-                  </Button>
+                  </Button> */}
                 </div>
               </TableCell>
             </TableRow>
