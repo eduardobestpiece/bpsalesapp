@@ -140,23 +140,31 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
     fetchBidTypes();
   }, [selectedAdministratorId]);
 
-  // Buscar parcelas ao selecionar administradora
+  // Buscar installment_types ao selecionar administradora
   useEffect(() => {
-    if (!selectedAdministratorId) return;
-    const fetchInstallmentTypes = async () => {
-      const { data, error } = await supabase
-        .from('installment_types')
-        .select('*')
-        .eq('administrator_id', selectedAdministratorId)
-        .eq('is_archived', false)
-        .order('installment_count');
-      if (!error && data) {
-        setInstallmentTypes(data);
-        setSelectedInstallmentTypeId(data[0]?.id || null);
-      }
-    };
-    fetchInstallmentTypes();
-  }, [selectedAdministratorId]);
+    let adminId = selectedAdministratorId;
+    if (!adminId && administrators.length > 0) {
+      const defaultAdmin = administrators.find(a => a.is_default);
+      adminId = defaultAdmin ? defaultAdmin.id : administrators[0].id;
+      setSelectedAdministratorId(adminId);
+    }
+    if (adminId) {
+      const fetchInstallmentTypes = async () => {
+        const { data, error } = await supabase
+          .from('installment_types')
+          .select('*')
+          .eq('administrator_id', adminId)
+          .eq('is_archived', false)
+          .order('installment_count');
+        if (!error && data) {
+          setInstallmentTypes(data);
+        } else {
+          setInstallmentTypes([]);
+        }
+      };
+      fetchInstallmentTypes();
+    }
+  }, [selectedAdministratorId, administrators]);
 
   // Buscar produtos ao selecionar administradora
   useEffect(() => {
@@ -532,7 +540,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
               <span className="text-xs text-muted-foreground">Manual</span>
             </div>
             {manualFieldsState.parcelas ? (
-              <Input type="number" placeholder="Número de parcelas (meses)" />
+              <Input type="number" placeholder="Número de parcelas (meses)" min={1} step={1} />
             ) : (
               <Select
                 value={selectedInstallmentTypeId || ''}
@@ -542,16 +550,11 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
                   <SelectValue placeholder="Selecione a quantidade de parcelas..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {installmentTypes
-                    .filter(it =>
-                      it.administrator_id === selectedAdministratorId &&
-                      productInstallmentTypes.some(pit => pit.installment_type_id === it.id)
-                    )
-                    .map((it) => (
-                      <SelectItem key={it.id} value={it.id}>
-                        {it.name} ({it.installment_count} meses)
-                      </SelectItem>
-                    ))}
+                  {installmentTypes.map((it) => (
+                    <SelectItem key={it.id} value={it.id}>
+                      {it.name} ({it.installment_count} meses)
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             )}

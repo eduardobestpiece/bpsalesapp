@@ -29,39 +29,40 @@ export const NewSimulatorLayout = () => {
     setSimulationData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // Buscar administradora padrão e suas opções de parcelas/tipos
+  // Buscar administradora padrão e opções de parcelas
   useEffect(() => {
-    const fetchPadrao = async () => {
-      const { data: admins } = await supabase
-        .from('administrators')
-        .select('id')
-        .eq('is_archived', false)
-        .order('created_at');
-      const adminPadrao = admins?.[0]?.id;
-      if (adminPadrao) {
-        const { data: parcelasData } = await supabase
+    const fetchInstallmentTypes = async () => {
+      let adminId = simulationData.administrator;
+      if (!adminId) {
+        // Buscar administradora padrão
+        const { data: admins } = await supabase
+          .from('administrators')
+          .select('id')
+          .eq('is_default', true)
+          .limit(1);
+        adminId = admins?.[0]?.id || '';
+        if (adminId && !simulationData.administrator) {
+          setSimulationData((prev) => ({ ...prev, administrator: adminId }));
+        }
+      }
+      if (adminId) {
+        const { data: installments } = await supabase
           .from('installment_types')
-          .select('id, installment_count')
-          .eq('administrator_id', adminPadrao)
+          .select('*')
+          .eq('administrator_id', adminId)
           .eq('is_archived', false)
           .order('installment_count');
-        // setParcelas(parcelasData || []); // This line is removed as per the new_code
-        const { data: tiposData } = await supabase
-          .from('installment_reductions')
-          .select('id, name')
-          .eq('administrator_id', adminPadrao)
-          .eq('is_archived', false)
-          .order('name');
-        // setTiposParcela([{ id: 'full', name: 'Parcela Cheia' }, ...(tiposData || [])]); // This line is removed as per the new_code
+        setInstallmentTypes(installments || []);
       }
     };
-    fetchPadrao();
-  }, []);
+    fetchInstallmentTypes();
+  }, [simulationData.administrator]);
 
   const [parcelaSelecionada, setParcelaSelecionada] = useState<string>('');
   const [tiposParcela, setTiposParcela] = useState<any[]>([]);
   const [tipoParcelaSelecionado, setTipoParcelaSelecionado] = useState<string>('full');
   const [showConfigModal, setShowConfigModal] = useState(false);
+  const [installmentTypes, setInstallmentTypes] = useState<any[]>([]);
 
   return (
     <div className="flex flex-col gap-6 h-full">
@@ -91,12 +92,19 @@ export const NewSimulatorLayout = () => {
         </div>
         <div className="flex flex-col gap-2 w-full md:w-1/4">
           <label className="font-medium">Número de parcelas</label>
-          <Input
-            type="number"
-            value={simulationData.term}
-            onChange={e => handleFieldChange('term', e.target.value ? Number(e.target.value) : 0)}
-            placeholder="Ex: 120"
-          />
+          <Select
+            value={simulationData.term.toString()}
+            onValueChange={v => handleFieldChange('term', Number(v))}
+          >
+            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+            <SelectContent>
+              {installmentTypes.map((it: any) => (
+                <SelectItem key={it.id} value={it.installment_count.toString()}>
+                  {it.name} ({it.installment_count} meses)
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex flex-col gap-2 w-full md:w-1/4">
           <label className="font-medium">Tipo de Parcela</label>
