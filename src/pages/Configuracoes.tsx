@@ -249,51 +249,13 @@ export default function Configuracoes() {
 
                 {/* Installment Types Tab */}
                 <TabsContent value="installments" className="p-6">
-                  <div className="space-y-6">
-                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                      <div>
-                        <h2 className="text-2xl font-semibold text-gray-900">Tipos de Parcela</h2>
-                        <p className="text-gray-600 mt-1">Gerencie os tipos de parcela</p>
-                      </div>
-                      <InstallmentTypesList
-                        key={refreshKey}
-                        searchTerm={installmentSearchTerm}
-                        statusFilter={installmentStatusFilter}
-                        selectedAdministrator={installmentAdminFilter || null}
-                        onEdit={handleEditInstallmentType}
-                      />
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        <Input
-                          placeholder="Buscar tipos de parcela..."
-                          value={installmentSearchTerm}
-                          onChange={(e) => setInstallmentSearchTerm(e.target.value)}
-                          className="pl-10"
-                        />
-                      </div>
-                      <Select value={installmentStatusFilter} onValueChange={(value: 'all' | 'active' | 'archived') => setInstallmentStatusFilter(value)}>
-                        <SelectTrigger className="w-full sm:w-48">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Todos</SelectItem>
-                          <SelectItem value="active">Ativos</SelectItem>
-                          <SelectItem value="archived">Arquivados</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <InstallmentTypesList
-                      key={refreshKey}
-                      searchTerm={installmentSearchTerm}
-                      statusFilter={installmentStatusFilter}
-                      selectedAdministrator={installmentAdminFilter || null}
-                      onEdit={handleEditInstallmentType}
-                    />
-                  </div>
+                  <InstallmentTypesList
+                    key={refreshKey}
+                    searchTerm={installmentSearchTerm}
+                    statusFilter={installmentStatusFilter}
+                    selectedAdministrator={installmentAdminFilter || null}
+                    onEdit={handleEditInstallmentType}
+                  />
                 </TabsContent>
 
                 {/* Leverages Tab */}
