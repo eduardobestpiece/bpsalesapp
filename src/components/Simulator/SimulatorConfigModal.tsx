@@ -253,6 +253,18 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
     }
   }, [open]);
 
+  // Resetar parcela selecionada se não existir mais ao trocar administradora ou tipo de crédito
+  useEffect(() => {
+    if (!manualFieldsState.parcelas) {
+      const validInstallments = installmentTypes.filter(
+        it => it.administrator_id === selectedAdministratorId && it.bid_type_id === selectedBidTypeId
+      );
+      if (!validInstallments.find(it => it.id === selectedInstallmentTypeId)) {
+        setSelectedInstallmentTypeId(validInstallments[0]?.id || null);
+      }
+    }
+  }, [selectedAdministratorId, selectedBidTypeId, installmentTypes, manualFieldsState.parcelas]);
+
   // Função para calcular o estado do switch global
   const getGlobalSwitchState = () => {
     const values = Object.values(manualFieldsState);
