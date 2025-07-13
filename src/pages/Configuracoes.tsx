@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, Search } from 'lucide-react';
 
 import { SimulatorLayout } from '@/components/Layout/SimulatorLayout';
-import { AdministratorModal } from '@/components/Administrators/AdministratorModal';
+import { CreateAdministratorModal, EditAdministratorModal } from '@/components/Administrators/AdministratorModal';
 import { AdministratorsList } from '@/components/Administrators/AdministratorsList';
 import { ProductModal } from '@/components/Administrators/ProductModal';
 import { ProductsList } from '@/components/Administrators/ProductsList';
@@ -19,7 +19,8 @@ import { LeveragesList } from '@/components/Administrators/LeveragesList';
 
 export default function Configuracoes() {
   const [selectedAdministrator, setSelectedAdministrator] = useState<any>(null);
-  const [showAdministratorModal, setShowAdministratorModal] = useState(false);
+  const [showCreateAdministratorModal, setShowCreateAdministratorModal] = useState(false);
+  const [showEditAdministratorModal, setShowEditAdministratorModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [showProductModal, setShowProductModal] = useState(false);
   const [selectedInstallmentType, setSelectedInstallmentType] = useState<any>(null);
@@ -49,7 +50,7 @@ export default function Configuracoes() {
 
   const handleEditAdministrator = (administrator: any) => {
     setSelectedAdministrator(administrator);
-    setShowAdministratorModal(true);
+    setShowEditAdministratorModal(true);
   };
 
   const handleCreateProduct = () => {
@@ -73,7 +74,8 @@ export default function Configuracoes() {
   };
 
   const closeModals = () => {
-    setShowAdministratorModal(false);
+    setShowCreateAdministratorModal(false);
+    setShowEditAdministratorModal(false);
     setShowProductModal(false);
     setShowInstallmentTypeModal(false);
     setShowLeverageModal(false);
@@ -113,7 +115,7 @@ export default function Configuracoes() {
                         <h2 className="text-2xl font-semibold text-gray-900">Administradoras</h2>
                         <p className="text-gray-600 mt-1">Gerencie as administradoras de consórcio</p>
                       </div>
-                      <Button onClick={() => setShowAdministratorModal(true)} className="bg-gradient-primary hover:opacity-90">
+                      <Button onClick={() => setShowCreateAdministratorModal(true)} className="bg-gradient-primary hover:opacity-90">
                         <Plus className="w-4 h-4 mr-2" />
                         Adicionar Administradora
                       </Button>
@@ -146,6 +148,27 @@ export default function Configuracoes() {
                       searchTerm={adminSearchTerm}
                       statusFilter={adminStatusFilter}
                       onEdit={handleEditAdministrator}
+                    />
+                    <CreateAdministratorModal
+                      open={showCreateAdministratorModal}
+                      onOpenChange={setShowCreateAdministratorModal}
+                      onSuccess={() => {
+                        setShowCreateAdministratorModal(false);
+                        handleRefresh();
+                      }}
+                    />
+                    <EditAdministratorModal
+                      open={showEditAdministratorModal}
+                      onOpenChange={(open) => {
+                        setShowEditAdministratorModal(open);
+                        if (!open) setSelectedAdministrator(null);
+                      }}
+                      administrator={selectedAdministrator}
+                      onSuccess={() => {
+                        setShowEditAdministratorModal(false);
+                        setSelectedAdministrator(null);
+                        handleRefresh();
+                      }}
                     />
                   </div>
                 </TabsContent>
@@ -292,11 +315,27 @@ export default function Configuracoes() {
           </Card>
 
           {/* Modals */}
-          <AdministratorModal
-            open={showAdministratorModal}
-            onOpenChange={setShowAdministratorModal}
+          <CreateAdministratorModal
+            open={showCreateAdministratorModal}
+            onOpenChange={setShowCreateAdministratorModal}
+            onSuccess={() => {
+              setShowCreateAdministratorModal(false);
+              handleRefresh();
+            }}
+          />
+
+          <EditAdministratorModal
+            open={showEditAdministratorModal}
+            onOpenChange={(open) => {
+              setShowEditAdministratorModal(open);
+              if (!open) setSelectedAdministrator(null);
+            }}
             administrator={selectedAdministrator}
-            onSuccess={closeModals}
+            onSuccess={() => {
+              setShowEditAdministratorModal(false);
+              setSelectedAdministrator(null);
+              handleRefresh();
+            }}
           />
 
           <ProductModal
