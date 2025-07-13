@@ -79,6 +79,7 @@ export const CrmSidebar = () => {
 
   const handleLogout = async () => {
     await signOut();
+    // Redireciona para a página de login do CRM após logout
     window.location.href = '/crm/login';
   };
 
@@ -102,7 +103,6 @@ export const CrmSidebar = () => {
             <img src="/monteo_policromia_horizontal (1).png" alt="Logo Monteo" className="h-10 w-auto max-w-[140px]" />
           </div>
           <span className="font-bold text-lg text-gray-800 tracking-wide mb-4">CRM</span>
-          
           {/* Seletor de empresa para Master */}
           {userRole === 'master' && (
             <div className="w-full mb-4">

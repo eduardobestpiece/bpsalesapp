@@ -66,7 +66,7 @@ const CrmMasterConfig = () => {
     queryFn: async () => {
       console.log('Fetching companies...');
       const { data, error } = await supabase
-        .from('companies' as any)
+        .from('companies')
         .select('*')
         .order('created_at', { ascending: false });
 

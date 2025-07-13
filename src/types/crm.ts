@@ -1,4 +1,5 @@
-export type UserRole = 'user' | 'leader' | 'admin' | 'submaster' | 'master';
+
+export type UserRole = 'master' | 'admin' | 'leader' | 'user' | 'submaster';
 export type EntityStatus = 'active' | 'archived';
 export type FunnelVerification = 'daily' | 'weekly' | 'monthly';
 

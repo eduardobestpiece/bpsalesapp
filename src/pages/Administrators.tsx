@@ -1,134 +1,273 @@
 
-import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AdministratorsList } from "@/components/Administrators/AdministratorsList";
-import { BidTypesList } from "@/components/Administrators/BidTypesList";
-import { EntryTypesList } from "@/components/Administrators/EntryTypesList";
-import { InstallmentTypesList } from "@/components/Administrators/InstallmentTypesList";
-import { ProductsList } from "@/components/Administrators/ProductsList";
-import { LeveragesList } from "@/components/Administrators/LeveragesList";
-import { InstallmentReductionsList } from "@/components/Administrators/InstallmentReductionsList";
+import { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Building2, Package, CreditCard, Percent, Timer } from 'lucide-react';
 
-export default function Administrators() {
+// Import components
+import { AdministratorsList } from '@/components/Administrators/AdministratorsList';
+import { AdministratorModal } from '@/components/Administrators/AdministratorModal';
+import { ProductsList } from '@/components/Administrators/ProductsList';
+import { ProductModal } from '@/components/Administrators/ProductModal';
+import { BidTypesList } from '@/components/Administrators/BidTypesList';
+import { BidTypeModal } from '@/components/Administrators/BidTypeModal';
+import { EntryTypesList } from '@/components/Administrators/EntryTypesList';
+import { EntryTypeModal } from '@/components/Administrators/EntryTypeModal';
+import { InstallmentTypesList } from '@/components/Administrators/InstallmentTypesList';
+import { InstallmentTypeModal } from '@/components/Administrators/InstallmentTypeModal';
+import { LeveragesList } from '@/components/Administrators/LeveragesList';
+import { LeverageModal } from '@/components/Administrators/LeverageModal';
+
+const Administrators = () => {
+  // Estados para administradoras
+  const [administratorSearchTerm, setAdministratorSearchTerm] = useState('');
+  const [administratorStatusFilter, setAdministratorStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
+  const [showAdministratorModal, setShowAdministratorModal] = useState(false);
+  const [selectedAdministrator, setSelectedAdministrator] = useState<any>(null);
+
+  // Estados para produtos
+  const [productSearchTerm, setProductSearchTerm] = useState('');
+  const [productStatusFilter, setProductStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
+  const [productAdminFilter, setProductAdminFilter] = useState('');
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+
+  // Estados para outros modals
+  const [showBidTypeModal, setShowBidTypeModal] = useState(false);
+  const [selectedBidType, setSelectedBidType] = useState<any>(null);
+  const [showEntryTypeModal, setShowEntryTypeModal] = useState(false);
+  const [selectedEntryType, setSelectedEntryType] = useState<any>(null);
+  const [showInstallmentTypeModal, setShowInstallmentTypeModal] = useState(false);
+  const [selectedInstallmentType, setSelectedInstallmentType] = useState<any>(null);
+  const [showLeverageModal, setShowLeverageModal] = useState(false);
+  const [selectedLeverage, setSelectedLeverage] = useState<any>(null);
+
+  // Estado para refresh
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  const handleRefresh = () => {
+    setRefreshKey(prev => prev + 1);
+  };
+
+  const handleEditAdministrator = (administrator: any) => {
+    setSelectedAdministrator(administrator);
+    setShowAdministratorModal(true);
+  };
+
+  const handleCreateProduct = () => {
+    setSelectedProduct(null);
+    setShowProductModal(true);
+  };
+
+  const handleEditProduct = (product: any) => {
+    setSelectedProduct(product);
+    setShowProductModal(true);
+  };
+
+  const handleCloseAdministratorModal = () => {
+    setShowAdministratorModal(false);
+    setSelectedAdministrator(null);
+    handleRefresh();
+  };
+
+  const handleCloseProductModal = () => {
+    setShowProductModal(false);
+    setSelectedProduct(null);
+    handleRefresh();
+  };
+
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight">Administradoras</h1>
-        <p className="text-muted-foreground">
-          Gerencie as administradoras e suas configurações
-        </p>
+    <div className="container mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2">Administração do Sistema</h1>
+          <p className="text-muted-foreground">
+            Gerencie administradoras, produtos e configurações do sistema
+          </p>
+        </div>
+
+        <Tabs defaultValue="administrators" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-6">
+            <TabsTrigger value="administrators" className="flex items-center gap-2">
+              <Building2 className="w-4 h-4" />
+              Administradoras
+            </TabsTrigger>
+            <TabsTrigger value="products" className="flex items-center gap-2">
+              <Package className="w-4 h-4" />
+              Produtos
+            </TabsTrigger>
+            <TabsTrigger value="bid-types" className="flex items-center gap-2">
+              <CreditCard className="w-4 h-4" />
+              Tipos de Lance
+            </TabsTrigger>
+            <TabsTrigger value="entry-types" className="flex items-center gap-2">
+              <Percent className="w-4 h-4" />
+              Tipos de Entrada
+            </TabsTrigger>
+            <TabsTrigger value="installment-types" className="flex items-center gap-2">
+              <Timer className="w-4 h-4" />
+              Tipos de Parcela
+            </TabsTrigger>
+            <TabsTrigger value="leverages" className="flex items-center gap-2">
+              <Building2 className="w-4 h-4" />
+              Alavancagens
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="administrators" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Filtros</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="admin-search">Buscar</Label>
+                    <Input
+                      id="admin-search"
+                      placeholder="Nome da administradora..."
+                      value={administratorSearchTerm}
+                      onChange={(e) => setAdministratorSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="admin-status">Status</Label>
+                    <Select value={administratorStatusFilter} onValueChange={(value: 'all' | 'active' | 'archived') => setAdministratorStatusFilter(value)}>
+                      <SelectTrigger id="admin-status">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        <SelectItem value="active">Ativos</SelectItem>
+                        <SelectItem value="archived">Arquivados</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <AdministratorsList
+              key={refreshKey}
+              searchTerm={administratorSearchTerm}
+              statusFilter={administratorStatusFilter}
+              onEdit={handleEditAdministrator}
+            />
+          </TabsContent>
+
+          <TabsContent value="products" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Filtros</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label htmlFor="product-search">Buscar</Label>
+                    <Input
+                      id="product-search"
+                      placeholder="Nome do produto..."
+                      value={productSearchTerm}
+                      onChange={(e) => setProductSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="product-status">Status</Label>
+                    <Select value={productStatusFilter} onValueChange={(value: 'all' | 'active' | 'archived') => setProductStatusFilter(value)}>
+                      <SelectTrigger id="product-status">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        <SelectItem value="active">Ativos</SelectItem>
+                        <SelectItem value="archived">Arquivados</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="product-admin">Administradora</Label>
+                    <Select value={productAdminFilter} onValueChange={setProductAdminFilter}>
+                      <SelectTrigger id="product-admin">
+                        <SelectValue placeholder="Todas" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">Todas</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <ProductsList
+              key={refreshKey}
+              searchTerm={productSearchTerm}
+              statusFilter={productStatusFilter}
+              selectedAdministrator={productAdminFilter || ''}
+              onEdit={handleEditProduct}
+              onCreate={handleCreateProduct}
+            />
+          </TabsContent>
+
+          <TabsContent value="bid-types">
+            <BidTypesList key={refreshKey} onEdit={setSelectedBidType} />
+          </TabsContent>
+
+          <TabsContent value="entry-types">
+            <EntryTypesList key={refreshKey} onEdit={setSelectedEntryType} />
+          </TabsContent>
+
+          <TabsContent value="installment-types">
+            <InstallmentTypesList key={refreshKey} onEdit={setSelectedInstallmentType} />
+          </TabsContent>
+
+          <TabsContent value="leverages">
+            <LeveragesList key={refreshKey} onEdit={setSelectedLeverage} />
+          </TabsContent>
+        </Tabs>
+
+        {/* Modals */}
+        <AdministratorModal
+          isOpen={showAdministratorModal}
+          onClose={handleCloseAdministratorModal}
+          administrator={selectedAdministrator}
+        />
+
+        <ProductModal
+          isOpen={showProductModal}
+          onClose={handleCloseProductModal}
+          product={selectedProduct}
+        />
+
+        <BidTypeModal
+          isOpen={showBidTypeModal}
+          onClose={() => { setShowBidTypeModal(false); setSelectedBidType(null); handleRefresh(); }}
+          bidType={selectedBidType}
+        />
+
+        <EntryTypeModal
+          isOpen={showEntryTypeModal}
+          onClose={() => { setShowEntryTypeModal(false); setSelectedEntryType(null); handleRefresh(); }}
+          entryType={selectedEntryType}
+        />
+
+        <InstallmentTypeModal
+          isOpen={showInstallmentTypeModal}
+          onClose={() => { setShowInstallmentTypeModal(false); setSelectedInstallmentType(null); handleRefresh(); }}
+          installmentType={selectedInstallmentType}
+        />
+
+        <LeverageModal
+          isOpen={showLeverageModal}
+          onClose={() => { setShowLeverageModal(false); setSelectedLeverage(null); handleRefresh(); }}
+          leverage={selectedLeverage}
+        />
       </div>
-
-      <Tabs defaultValue="administrators" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-7">
-          <TabsTrigger value="administrators">Administradoras</TabsTrigger>
-          <TabsTrigger value="bid-types">Tipos de Lance</TabsTrigger>
-          <TabsTrigger value="entry-types">Tipos de Entrada</TabsTrigger>
-          <TabsTrigger value="installment-types">Tipos de Parcela</TabsTrigger>
-          <TabsTrigger value="products">Produtos</TabsTrigger>
-          <TabsTrigger value="leverages">Alavancagens</TabsTrigger>
-          <TabsTrigger value="reductions">Reduções</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="administrators">
-          <Card>
-            <CardHeader>
-              <CardTitle>Administradoras</CardTitle>
-              <CardDescription>
-                Gerencie as administradoras do consórcio
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <AdministratorsList />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="bid-types">
-          <Card>
-            <CardHeader>
-              <CardTitle>Tipos de Lance</CardTitle>
-              <CardDescription>
-                Configure os tipos de lance disponíveis
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <BidTypesList />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="entry-types">
-          <Card>
-            <CardHeader>
-              <CardTitle>Tipos de Entrada</CardTitle>
-              <CardDescription>
-                Configure os tipos de entrada para os consórcios
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <EntryTypesList />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="installment-types">
-          <Card>
-            <CardHeader>
-              <CardTitle>Tipos de Parcela</CardTitle>
-              <CardDescription>
-                Configure os tipos de parcelamento disponíveis
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <InstallmentTypesList />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="products">
-          <Card>
-            <CardHeader>
-              <CardTitle>Produtos</CardTitle>
-              <CardDescription>
-                Gerencie os produtos de consórcio disponíveis
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ProductsList />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="leverages">
-          <Card>
-            <CardHeader>
-              <CardTitle>Alavancagens</CardTitle>
-              <CardDescription>
-                Configure as opções de alavancagem patrimonial
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <LeveragesList />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="reductions">
-          <Card>
-            <CardHeader>
-              <CardTitle>Reduções de Parcela</CardTitle>
-              <CardDescription>
-                Configure as reduções aplicáveis às parcelas
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <InstallmentReductionsList />
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
     </div>
   );
-}
+};
+
+export default Administrators;

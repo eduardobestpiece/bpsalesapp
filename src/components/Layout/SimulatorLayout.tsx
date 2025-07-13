@@ -1,26 +1,30 @@
 
-import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { ReactNode } from 'react';
+import { TrendingUp } from 'lucide-react';
+import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 import { SimulatorSidebar } from './SimulatorSidebar';
-import { Header } from './Header';
-import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
+import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
 import { CompanyProvider } from '@/contexts/CompanyContext';
 
-export const SimulatorLayout = ({ children }: { children?: React.ReactNode }) => {
+interface SimulatorLayoutProps {
+  children: ReactNode;
+}
+
+export const SimulatorLayout = ({ children }: SimulatorLayoutProps) => {
   return (
     <CompanyProvider>
       <SidebarProvider>
         <div className="min-h-screen flex w-full">
           <SimulatorSidebar />
-          <div className="flex-1 flex flex-col">
-            <header className="h-16 border-b bg-white flex items-center px-4 gap-4">
+          <SidebarInset className="flex-1">
+            <div className="flex items-center gap-2 mb-4">
               <SidebarTrigger />
-              <Header />
-            </header>
-            <main className="flex-1 overflow-auto">
-              {children || <Outlet />}
+              <span className="font-bold text-lg text-gray-800 tracking-wide">Simulador</span>
+            </div>
+            <main className="flex-1 p-6">
+              {children}
             </main>
-          </div>
+          </SidebarInset>
         </div>
       </SidebarProvider>
     </CompanyProvider>

@@ -16,13 +16,11 @@ export type Database = {
     Tables: {
       administrators: {
         Row: {
-          company_id: string | null
           created_at: string
           credit_update_type: string
           grace_period_days: number | null
           id: string
           is_archived: boolean | null
-          is_default: boolean | null
           max_embedded_percentage: number | null
           name: string
           special_entry_fixed_value: number | null
@@ -30,17 +28,14 @@ export type Database = {
           special_entry_percentage: number | null
           special_entry_type: string | null
           update_month: number | null
-          update_type: string | null
           updated_at: string
         }
         Insert: {
-          company_id?: string | null
           created_at?: string
           credit_update_type: string
           grace_period_days?: number | null
           id?: string
           is_archived?: boolean | null
-          is_default?: boolean | null
           max_embedded_percentage?: number | null
           name: string
           special_entry_fixed_value?: number | null
@@ -48,17 +43,14 @@ export type Database = {
           special_entry_percentage?: number | null
           special_entry_type?: string | null
           update_month?: number | null
-          update_type?: string | null
           updated_at?: string
         }
         Update: {
-          company_id?: string | null
           created_at?: string
           credit_update_type?: string
           grace_period_days?: number | null
           id?: string
           is_archived?: boolean | null
-          is_default?: boolean | null
           max_embedded_percentage?: number | null
           name?: string
           special_entry_fixed_value?: number | null
@@ -66,24 +58,14 @@ export type Database = {
           special_entry_percentage?: number | null
           special_entry_type?: string | null
           update_month?: number | null
-          update_type?: string | null
           updated_at?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "administrators_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       bid_types: {
         Row: {
           administrator_id: string | null
           allows_embedded: boolean | null
-          company_id: string | null
           created_at: string
           id: string
           is_archived: boolean | null
@@ -97,7 +79,6 @@ export type Database = {
         Insert: {
           administrator_id?: string | null
           allows_embedded?: boolean | null
-          company_id?: string | null
           created_at?: string
           id?: string
           is_archived?: boolean | null
@@ -111,7 +92,6 @@ export type Database = {
         Update: {
           administrator_id?: string | null
           allows_embedded?: boolean | null
-          company_id?: string | null
           created_at?: string
           id?: string
           is_archived?: boolean | null
@@ -128,13 +108,6 @@ export type Database = {
             columns: ["administrator_id"]
             isOneToOne: false
             referencedRelation: "administrators"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "bid_types_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -248,7 +221,6 @@ export type Database = {
       entry_types: {
         Row: {
           administrator_id: string | null
-          company_id: string | null
           created_at: string
           fixed_value: number | null
           id: string
@@ -262,7 +234,6 @@ export type Database = {
         }
         Insert: {
           administrator_id?: string | null
-          company_id?: string | null
           created_at?: string
           fixed_value?: number | null
           id?: string
@@ -276,7 +247,6 @@ export type Database = {
         }
         Update: {
           administrator_id?: string | null
-          company_id?: string | null
           created_at?: string
           fixed_value?: number | null
           id?: string
@@ -294,13 +264,6 @@ export type Database = {
             columns: ["administrator_id"]
             isOneToOne: false
             referencedRelation: "administrators"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "entry_types_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -553,151 +516,46 @@ export type Database = {
           },
         ]
       }
-      installment_reductions: {
-        Row: {
-          administrator_id: string | null
-          applications: string[]
-          company_id: string
-          created_at: string
-          id: string
-          is_archived: boolean
-          name: string
-          reduction_percent: number
-          updated_at: string
-        }
-        Insert: {
-          administrator_id?: string | null
-          applications?: string[]
-          company_id: string
-          created_at?: string
-          id?: string
-          is_archived?: boolean
-          name: string
-          reduction_percent: number
-          updated_at?: string
-        }
-        Update: {
-          administrator_id?: string | null
-          applications?: string[]
-          company_id?: string
-          created_at?: string
-          id?: string
-          is_archived?: boolean
-          name?: string
-          reduction_percent?: number
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "installment_reductions_administrator_id_fkey"
-            columns: ["administrator_id"]
-            isOneToOne: false
-            referencedRelation: "administrators"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "installment_reductions_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      installment_type_reductions: {
-        Row: {
-          id: string
-          installment_reduction_id: string
-          installment_type_id: string
-        }
-        Insert: {
-          id?: string
-          installment_reduction_id: string
-          installment_type_id: string
-        }
-        Update: {
-          id?: string
-          installment_reduction_id?: string
-          installment_type_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "installment_type_reductions_installment_reduction_id_fkey"
-            columns: ["installment_reduction_id"]
-            isOneToOne: false
-            referencedRelation: "installment_reductions"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "installment_type_reductions_installment_type_id_fkey"
-            columns: ["installment_type_id"]
-            isOneToOne: false
-            referencedRelation: "installment_types"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       installment_types: {
         Row: {
-          admin_tax_percent: number | null
           administrator_id: string | null
-          company_id: string | null
           created_at: string
           id: string
-          installment_count: number | null
-          insurance_percent: number | null
           is_archived: boolean | null
-          is_default: boolean | null
           name: string
-          optional_insurance: boolean | null
           reduces_admin_tax: boolean | null
           reduces_credit: boolean | null
           reduces_insurance: boolean | null
           reduces_reserve_fund: boolean | null
           reduction_percentage: number | null
-          reserve_fund_percent: number | null
           type: string
           updated_at: string
         }
         Insert: {
-          admin_tax_percent?: number | null
           administrator_id?: string | null
-          company_id?: string | null
           created_at?: string
           id?: string
-          installment_count?: number | null
-          insurance_percent?: number | null
           is_archived?: boolean | null
-          is_default?: boolean | null
           name: string
-          optional_insurance?: boolean | null
           reduces_admin_tax?: boolean | null
           reduces_credit?: boolean | null
           reduces_insurance?: boolean | null
           reduces_reserve_fund?: boolean | null
           reduction_percentage?: number | null
-          reserve_fund_percent?: number | null
           type: string
           updated_at?: string
         }
         Update: {
-          admin_tax_percent?: number | null
           administrator_id?: string | null
-          company_id?: string | null
           created_at?: string
           id?: string
-          installment_count?: number | null
-          insurance_percent?: number | null
           is_archived?: boolean | null
-          is_default?: boolean | null
           name?: string
-          optional_insurance?: boolean | null
           reduces_admin_tax?: boolean | null
           reduces_credit?: boolean | null
           reduces_insurance?: boolean | null
           reduces_reserve_fund?: boolean | null
           reduction_percentage?: number | null
-          reserve_fund_percent?: number | null
           type?: string
           updated_at?: string
         }
@@ -707,13 +565,6 @@ export type Database = {
             columns: ["administrator_id"]
             isOneToOne: false
             referencedRelation: "administrators"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "installment_types_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
@@ -804,7 +655,6 @@ export type Database = {
       }
       leverages: {
         Row: {
-          company_id: string | null
           created_at: string | null
           daily_percentage: number | null
           fixed_property_value: number | null
@@ -822,7 +672,6 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
-          company_id?: string | null
           created_at?: string | null
           daily_percentage?: number | null
           fixed_property_value?: number | null
@@ -840,7 +689,6 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
-          company_id?: string | null
           created_at?: string | null
           daily_percentage?: number | null
           fixed_property_value?: number | null
@@ -857,94 +705,38 @@ export type Database = {
           type?: string
           updated_at?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "leverages_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      product_installment_types: {
-        Row: {
-          id: string
-          installment_type_id: string
-          product_id: string
-        }
-        Insert: {
-          id?: string
-          installment_type_id: string
-          product_id: string
-        }
-        Update: {
-          id?: string
-          installment_type_id?: string
-          product_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_installment_types_installment_type_id_fkey"
-            columns: ["installment_type_id"]
-            isOneToOne: false
-            referencedRelation: "installment_types"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "product_installment_types_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       products: {
         Row: {
-          admin_tax_percent: number | null
           administrator_id: string | null
-          company_id: string | null
           created_at: string
           credit_value: number
           id: string
-          installment_value: number | null
-          insurance_percent: number | null
           is_archived: boolean | null
           name: string
-          reserve_fund_percent: number | null
           term_options: number[]
           type: string
           updated_at: string
         }
         Insert: {
-          admin_tax_percent?: number | null
           administrator_id?: string | null
-          company_id?: string | null
           created_at?: string
           credit_value: number
           id?: string
-          installment_value?: number | null
-          insurance_percent?: number | null
           is_archived?: boolean | null
           name: string
-          reserve_fund_percent?: number | null
           term_options: number[]
           type: string
           updated_at?: string
         }
         Update: {
-          admin_tax_percent?: number | null
           administrator_id?: string | null
-          company_id?: string | null
           created_at?: string
           credit_value?: number
           id?: string
-          installment_value?: number | null
-          insurance_percent?: number | null
           is_archived?: boolean | null
           name?: string
-          reserve_fund_percent?: number | null
           term_options?: number[]
           type?: string
           updated_at?: string
@@ -955,13 +747,6 @@ export type Database = {
             columns: ["administrator_id"]
             isOneToOne: false
             referencedRelation: "administrators"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "products_company_id_fkey"
-            columns: ["company_id"]
-            isOneToOne: false
-            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
