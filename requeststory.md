@@ -59,3 +59,26 @@
 - [ ] Atualizar `requeststory.md` com o andamento.
 - [ ] Executar deploy.
 - [ ] Solicitar conferência. 
+
+## Solicitação 2024-07-10
+
+### Problema
+- Ao clicar em "Adicionar administradora", o modal abre em modo de edição.
+- Ao salvar no modal de edição, o modal não fecha automaticamente.
+
+### Diagnóstico
+- Não existe botão de "Adicionar administradora" na tela.
+- O modal só é aberto via edição, nunca em modo de adição.
+- O fechamento do modal depende do prop `onSuccess`, que não está sendo passado.
+
+### Plano
+- Adicionar botão "Adicionar administradora".
+- Corrigir chamada do modal para abrir limpo (adição).
+- Passar corretamente o prop `onSuccess` para fechar o modal ao salvar.
+
+### Checklist
+- [ ] Adicionar botão "Adicionar administradora" na aba de administradoras.
+- [ ] Corrigir chamada do modal para abrir em modo de adição (`selectedAdministrator = null`).
+- [ ] Passar corretamente o prop `onSuccess` para o modal.
+- [ ] Testar: ao clicar em "Adicionar administradora", abrir modal limpo.
+- [ ] Testar: ao salvar, fechar modal e atualizar lista. 

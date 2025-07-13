@@ -150,6 +150,19 @@ const Administrators = () => {
               </CardContent>
             </Card>
 
+            {/* Botão de adicionar administradora */}
+            <div className="flex justify-end">
+              <button
+                className="bg-primary text-white px-4 py-2 rounded hover:opacity-90"
+                onClick={() => {
+                  setSelectedAdministrator(null);
+                  setShowAdministratorModal(true);
+                }}
+              >
+                Adicionar administradora
+              </button>
+            </div>
+
             <AdministratorsList
               key={refreshKey}
               searchTerm={administratorSearchTerm}
@@ -234,6 +247,7 @@ const Administrators = () => {
           isOpen={showAdministratorModal}
           onClose={handleCloseAdministratorModal}
           administrator={selectedAdministrator}
+          onSuccess={handleCloseAdministratorModal}
         />
 
         <ProductModal
