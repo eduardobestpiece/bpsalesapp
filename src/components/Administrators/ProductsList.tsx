@@ -263,7 +263,7 @@ export const ProductsList: React.FC<ProductsListProps> = ({
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : (
-          <div className="rounded-md border">
+          <>
             <Table>
               <TableHeader>
                 <TableRow>
@@ -327,15 +327,15 @@ export const ProductsList: React.FC<ProductsListProps> = ({
                 )}
               </TableBody>
             </Table>
-          </div>
-        )}
-        {/* Botão de cópia de produtos */}
-        {canCopy && (
-          <div className="flex justify-end mt-4">
-            <Button variant="outline" onClick={() => setCopyModalOpen(true)}>
-              Copiar produtos de outra empresa
-            </Button>
-          </div>
+            {/* Botão de cópia de produtos */}
+            {canCopy && (
+              <div className="flex justify-end mt-4">
+                <Button variant="outline" onClick={() => setCopyModalOpen(true)}>
+                  Copiar produtos de outra empresa
+                </Button>
+              </div>
+            )}
+          </>
         )}
         {/* Modal de cópia */}
         <Dialog open={copyModalOpen} onOpenChange={setCopyModalOpen}>
