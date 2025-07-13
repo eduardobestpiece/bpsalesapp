@@ -1,62 +1,58 @@
 
-export type UserRole = 'master' | 'admin' | 'leader' | 'user' | 'submaster';
-export type EntityStatus = 'active' | 'archived';
-export type FunnelVerification = 'daily' | 'weekly' | 'monthly';
-
-export interface Company {
-  id: string;
-  name: string;
-  status: EntityStatus;
-  created_at: string;
-  updated_at: string;
-}
+export type UserRole = 'master' | 'submaster' | 'admin' | 'leader' | 'user';
 
 export interface CrmUser {
   id: string;
   email: string;
   first_name: string;
   last_name: string;
-  phone?: string;
-  birth_date?: string;
-  bio?: string;
-  avatar_url?: string;
   role: UserRole;
   company_id: string;
   team_id?: string;
   leader_id?: string;
-  status: EntityStatus;
-  password_hash: string;
+  status: 'active' | 'archived';
+  avatar_url?: string;
+  phone?: string;
+  bio?: string;
+  birth_date?: string;
+  funnels?: string[];
   created_at: string;
   updated_at: string;
-  funnels?: string[];
+}
+
+export interface Company {
+  id: string;
+  name: string;
+  status: 'active' | 'archived';
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Team {
   id: string;
   name: string;
-  leader_id: string;
   company_id: string;
-  status: EntityStatus;
+  leader_id: string;
+  status: 'active' | 'archived';
   created_at: string;
   updated_at: string;
+  leader?: CrmUser;
+  members?: CrmUser[];
 }
 
-export interface Funnel {
+export interface Source {
   id: string;
   name: string;
-  verification_type: FunnelVerification;
-  verification_day?: number;
   company_id: string;
-  status: EntityStatus;
+  status: 'active' | 'archived';
   created_at: string;
   updated_at: string;
-  indicator_deadline_hours?: number; // Prazo de preenchimento do indicador em horas (0 = até o fim do período, 24 = 1 dia após, etc)
 }
 
 export interface FunnelStage {
   id: string;
-  funnel_id: string;
   name: string;
+  funnel_id: string;
   stage_order: number;
   target_percentage?: number;
   target_value?: number;
@@ -64,13 +60,20 @@ export interface FunnelStage {
   updated_at: string;
 }
 
-export interface Source {
+export interface Funnel {
   id: string;
   name: string;
   company_id: string;
-  status: EntityStatus;
+  status: 'active' | 'archived';
+  verification_type: 'weekly' | 'biweekly' | 'monthly';
+  verification_day?: number;
+  indicator_deadline_hours: number;
+  recommendations_mode: 'manual' | 'automatic';
+  sales_value_mode: 'manual' | 'automatic';
+  recommendation_stage_id?: string;
   created_at: string;
   updated_at: string;
+  stages?: FunnelStage[];
 }
 
 export interface Lead {
@@ -78,14 +81,19 @@ export interface Lead {
   name: string;
   email?: string;
   phone?: string;
-  responsible_id: string;
+  company_id: string;
   funnel_id: string;
   current_stage_id: string;
   source_id?: string;
-  company_id: string;
-  status: EntityStatus;
+  responsible_id: string;
+  status: 'active' | 'archived';
+  archived_at?: string;
   created_at: string;
   updated_at: string;
+  responsible?: CrmUser;
+  source?: Source;
+  current_stage?: FunnelStage;
+  funnel?: Funnel;
 }
 
 export interface Sale {
@@ -96,27 +104,13 @@ export interface Sale {
   responsible_id: string;
   team_id?: string;
   company_id: string;
-  status: EntityStatus;
+  status: 'active' | 'archived';
+  archived_at?: string;
   created_at: string;
   updated_at: string;
-}
-
-export interface Indicator {
-  id: string;
-  user_id: string;
-  funnel_id: string;
-  period_date: string;
-  month_reference: number;
-  year_reference: number;
-  company_id: string;
-  created_at: string;
-  updated_at: string;
-  // Campos extras do banco
-  period_start?: string;
-  period_end?: string;
-  sales_value?: number;
-  recommendations_count?: number;
-  is_delayed?: boolean;
+  lead?: Lead;
+  responsible?: CrmUser;
+  team?: Team;
 }
 
 export interface IndicatorValue {
@@ -126,22 +120,30 @@ export interface IndicatorValue {
   value: number;
   created_at: string;
   updated_at: string;
+  stage?: FunnelStage;
 }
 
-// Extended types for Supabase queries with joins
-export interface FunnelWithStages extends Funnel {
-  stages: FunnelStage[];
+export interface Indicator {
+  id: string;
+  user_id: string;
+  funnel_id: string;
+  company_id: string;
+  month_reference: number;
+  year_reference: number;
+  period_start?: string;
+  period_end?: string;
+  period_date?: string;
+  recommendations_count?: number;
+  sales_value?: number;
+  is_delayed?: boolean;
+  archived_at?: string;
+  created_at: string;
+  updated_at: string;
+  user?: CrmUser;
+  funnel?: Funnel;
+  values?: IndicatorValue[];
 }
 
-export interface LeadWithRelations extends Lead {
-  responsible: Pick<CrmUser, 'first_name' | 'last_name'>;
-  funnel: Pick<Funnel, 'name'>;
-  current_stage: Pick<FunnelStage, 'name'>;
-  source?: Pick<Source, 'name'>;
-}
-
-export interface SaleWithRelations extends Sale {
-  lead: Pick<Lead, 'name'>;
-  responsible: Pick<CrmUser, 'first_name' | 'last_name'>;
-  team?: Pick<Team, 'name'>;
+export interface IndicatorWithValues extends Indicator {
+  values: IndicatorValue[];
 }

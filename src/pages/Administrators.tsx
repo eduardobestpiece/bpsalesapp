@@ -5,17 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Building2, Package, CreditCard, Percent, Timer } from 'lucide-react';
+import { Building2, Package, Timer } from 'lucide-react';
 
 // Import components
 import { AdministratorsList } from '@/components/Administrators/AdministratorsList';
 import { AdministratorModal } from '@/components/Administrators/AdministratorModal';
 import { ProductsList } from '@/components/Administrators/ProductsList';
 import { ProductModal } from '@/components/Administrators/ProductModal';
-import { BidTypesList } from '@/components/Administrators/BidTypesList';
-import { BidTypeModal } from '@/components/Administrators/BidTypeModal';
-import { EntryTypesList } from '@/components/Administrators/EntryTypesList';
-import { EntryTypeModal } from '@/components/Administrators/EntryTypeModal';
 import { InstallmentTypesList } from '@/components/Administrators/InstallmentTypesList';
 import { InstallmentTypeModal } from '@/components/Administrators/InstallmentTypeModal';
 import { LeveragesList } from '@/components/Administrators/LeveragesList';
@@ -36,10 +32,6 @@ const Administrators = () => {
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   // Estados para outros modals
-  const [showBidTypeModal, setShowBidTypeModal] = useState(false);
-  const [selectedBidType, setSelectedBidType] = useState<any>(null);
-  const [showEntryTypeModal, setShowEntryTypeModal] = useState(false);
-  const [selectedEntryType, setSelectedEntryType] = useState<any>(null);
   const [showInstallmentTypeModal, setShowInstallmentTypeModal] = useState(false);
   const [selectedInstallmentType, setSelectedInstallmentType] = useState<any>(null);
   const [showLeverageModal, setShowLeverageModal] = useState(false);
@@ -90,7 +82,7 @@ const Administrators = () => {
         </div>
 
         <Tabs defaultValue="administrators" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="administrators" className="flex items-center gap-2">
               <Building2 className="w-4 h-4" />
               Administradoras
@@ -98,14 +90,6 @@ const Administrators = () => {
             <TabsTrigger value="products" className="flex items-center gap-2">
               <Package className="w-4 h-4" />
               Produtos
-            </TabsTrigger>
-            <TabsTrigger value="bid-types" className="flex items-center gap-2">
-              <CreditCard className="w-4 h-4" />
-              Tipos de Lance
-            </TabsTrigger>
-            <TabsTrigger value="entry-types" className="flex items-center gap-2">
-              <Percent className="w-4 h-4" />
-              Tipos de Entrada
             </TabsTrigger>
             <TabsTrigger value="installment-types" className="flex items-center gap-2">
               <Timer className="w-4 h-4" />
@@ -212,58 +196,53 @@ const Administrators = () => {
             />
           </TabsContent>
 
-          <TabsContent value="bid-types">
-            <BidTypesList key={refreshKey} onEdit={setSelectedBidType} />
-          </TabsContent>
-
-          <TabsContent value="entry-types">
-            <EntryTypesList key={refreshKey} onEdit={setSelectedEntryType} />
-          </TabsContent>
-
           <TabsContent value="installment-types">
-            <InstallmentTypesList key={refreshKey} onEdit={setSelectedInstallmentType} />
+            <InstallmentTypesList 
+              key={refreshKey} 
+              searchTerm=""
+              statusFilter="all"
+              selectedAdministrator={null}
+              onEdit={setSelectedInstallmentType} 
+            />
           </TabsContent>
 
           <TabsContent value="leverages">
-            <LeveragesList key={refreshKey} onEdit={setSelectedLeverage} />
+            <LeveragesList 
+              key={refreshKey} 
+              searchTerm=""
+              statusFilter="all"
+              onEdit={setSelectedLeverage} 
+            />
           </TabsContent>
         </Tabs>
 
         {/* Modals */}
         <AdministratorModal
-          isOpen={showAdministratorModal}
-          onClose={handleCloseAdministratorModal}
+          open={showAdministratorModal}
+          onOpenChange={setShowAdministratorModal}
           administrator={selectedAdministrator}
+          onSuccess={handleCloseAdministratorModal}
         />
 
         <ProductModal
-          isOpen={showProductModal}
-          onClose={handleCloseProductModal}
+          open={showProductModal}
+          onOpenChange={setShowProductModal}
           product={selectedProduct}
-        />
-
-        <BidTypeModal
-          isOpen={showBidTypeModal}
-          onClose={() => { setShowBidTypeModal(false); setSelectedBidType(null); handleRefresh(); }}
-          bidType={selectedBidType}
-        />
-
-        <EntryTypeModal
-          isOpen={showEntryTypeModal}
-          onClose={() => { setShowEntryTypeModal(false); setSelectedEntryType(null); handleRefresh(); }}
-          entryType={selectedEntryType}
+          onSuccess={handleCloseProductModal}
         />
 
         <InstallmentTypeModal
-          isOpen={showInstallmentTypeModal}
-          onClose={() => { setShowInstallmentTypeModal(false); setSelectedInstallmentType(null); handleRefresh(); }}
+          open={showInstallmentTypeModal}
+          onOpenChange={setShowInstallmentTypeModal}
           installmentType={selectedInstallmentType}
+          onSuccess={() => { setShowInstallmentTypeModal(false); setSelectedInstallmentType(null); handleRefresh(); }}
         />
 
         <LeverageModal
           isOpen={showLeverageModal}
           onClose={() => { setShowLeverageModal(false); setSelectedLeverage(null); handleRefresh(); }}
           leverage={selectedLeverage}
+          onSave={() => { setShowLeverageModal(false); setSelectedLeverage(null); handleRefresh(); }}
         />
       </div>
     </div>

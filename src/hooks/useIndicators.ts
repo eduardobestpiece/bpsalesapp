@@ -1,207 +1,128 @@
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Indicator, IndicatorValue } from '@/types/crm';
-import { useCompany } from '@/contexts/CompanyContext';
-import { useMemo } from 'react';
+import { Indicator, IndicatorWithValues } from '@/types/crm';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
 
-interface IndicatorWithValues extends Omit<Indicator, 'archived_at'> {
-  values: IndicatorValue[];
-  archived_at?: string | null;
-}
+export const useIndicators = (companyId?: string) => {
+  const { userRole } = useCrmAuth();
+  const [indicators, setIndicators] = useState<IndicatorWithValues[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-export const useIndicators = (companyId?: string, userId?: string) => {
-  const { selectedCompanyId } = useCompany();
-  const effectiveCompanyId = companyId || selectedCompanyId;
-  
-  // Memoize the query key to prevent unnecessary re-renders
-  const queryKey = useMemo(() => ['indicators', effectiveCompanyId, userId], [effectiveCompanyId, userId]);
-  
-  return useQuery({
-    queryKey,
-    queryFn: async () => {
-      console.log('[useIndicators] Starting fetch for companyId:', effectiveCompanyId, 'userId:', userId);
-      if (!effectiveCompanyId) {
-        console.log('[useIndicators] No companyId provided, returning empty array');
-        return [] as IndicatorWithValues[];
-      }
-      
-      try {
-        let query = supabase
-          .from('indicators')
-          .select('*, values:indicator_values(*)')
-          .is('archived_at', null)
-          .order('period_date', { ascending: false });
-        
-        if (effectiveCompanyId) {
-          query = query.eq('company_id', effectiveCompanyId);
-        }
-        if (userId) {
-          query = query.eq('user_id', userId);
-        }
-        
-        const { data, error } = await query;
-        
-        if (error) {
-          if (error.code === 'PGRST301' || error.message.includes('RLS')) {
-            console.log('[useIndicators] RLS restriction, returning empty array');
-            return [] as IndicatorWithValues[];
-          }
-          console.error('[useIndicators] Database error:', error);
-          throw error;
-        }
-        
-        // Filter and validate data more carefully
-        const validData = (data || []).filter((indicator): indicator is IndicatorWithValues => {
-          if (!indicator || typeof indicator !== 'object') {
-            console.log('[useIndicators] Invalid indicator object:', indicator);
-            return false;
-          }
-          
-          // Check for required properties
-          const hasRequiredProps = indicator.id && 
-                                 indicator.user_id && 
-                                 indicator.funnel_id &&
-                                 indicator.company_id &&
-                                 typeof indicator.month_reference === 'number' &&
-                                 typeof indicator.year_reference === 'number' &&
-                                 indicator.created_at &&
-                                 indicator.updated_at;
-          
-          if (!hasRequiredProps) {
-            console.log('[useIndicators] Missing required properties:', indicator);
-            return false;
-          }
-          
-          // Ensure values array exists
-          if (!Array.isArray(indicator.values)) {
-            indicator.values = [];
-          }
-          
-          return true;
-        });
-        
-        // Fetch missing values manually if needed
-        for (const ind of validData) {
-          if (!ind.values || ind.values.length === 0) {
-            try {
-              const { data: values } = await supabase
-                .from('indicator_values')
-                .select('*')
-                .eq('indicator_id', ind.id);
-              ind.values = values || [];
-            } catch (valuesError) {
-              console.error('[useIndicators] Error fetching values for indicator:', ind.id, valuesError);
-              ind.values = [];
-            }
-          }
-        }
-        
-        console.log('[useIndicators] Successfully fetched', validData.length, 'indicators');
-        return validData;
-      } catch (err) {
-        console.error('[useIndicators] Error fetching indicators:', err);
-        return [] as IndicatorWithValues[];
-      }
-    },
-    enabled: !!effectiveCompanyId,
-    staleTime: 30000,
-    gcTime: 300000,
-    retry: 1,
-    retryDelay: 1000,
-  });
-};
+  const fetchIndicators = async () => {
+    try {
+      setLoading(true);
+      setError(null);
 
-export const useCreateIndicator = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (indicatorData: {
-      indicator: Omit<Indicator, 'id' | 'created_at' | 'updated_at'>;
-      values: Omit<IndicatorValue, 'id' | 'indicator_id' | 'created_at' | 'updated_at'>[];
-    }) => {
-      // First create the indicator
-      const { data: indicator, error: indicatorError } = await supabase
+      let query = supabase
         .from('indicators')
-        .insert(indicatorData.indicator)
+        .select(`
+          *,
+          user:crm_users(*),
+          funnel:funnels(*),
+          values:indicator_values(
+            *,
+            stage:funnel_stages(*)
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (companyId) {
+        query = query.eq('company_id', companyId);
+      }
+
+      const { data, error: fetchError } = await query;
+
+      if (fetchError) {
+        console.error('Error fetching indicators:', fetchError);
+        setError(fetchError.message);
+        return;
+      }
+
+      const transformedData = (data || []).map(indicator => ({
+        ...indicator,
+        values: indicator.values || []
+      })) as IndicatorWithValues[];
+
+      setIndicators(transformedData);
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      setError('Erro inesperado ao carregar indicadores');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isIndicatorWithValues = (indicator: any): indicator is IndicatorWithValues => {
+    return indicator && typeof indicator === 'object' && Array.isArray(indicator.values);
+  };
+
+  useEffect(() => {
+    fetchIndicators();
+  }, [companyId, userRole]);
+
+  const createIndicator = async (indicatorData: Partial<Indicator>) => {
+    try {
+      const { data, error } = await supabase
+        .from('indicators')
+        .insert([indicatorData])
         .select()
         .single();
 
-      if (indicatorError) throw indicatorError;
+      if (error) throw error;
 
-      // Then create the indicator values
-      if (indicatorData.values.length > 0) {
-        const valuesToInsert = indicatorData.values.map(value => ({
-          ...value,
-          indicator_id: indicator.id
-        }));
-        
-        console.log('Saving indicator_values:', valuesToInsert);
+      await fetchIndicators();
+      return { data, error: null };
+    } catch (error: any) {
+      console.error('Error creating indicator:', error);
+      return { data: null, error };
+    }
+  };
 
-        const { error: valuesError } = await supabase
-          .from('indicator_values')
-          .insert(valuesToInsert);
-
-        if (valuesError) {
-          console.error('Error saving indicator_values:', valuesError);
-          throw valuesError;
-        }
-      }
-
-      return indicator;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['indicators'] });
-    },
-  });
-};
-
-export const useUpdateIndicator = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async ({ 
-      id, 
-      indicator, 
-      values 
-    }: {
-      id: string;
-      indicator: Partial<Indicator>;
-      values: Omit<IndicatorValue, 'id' | 'indicator_id' | 'created_at' | 'updated_at'>[];
-    }) => {
-      // Update the indicator
-      const { data: updatedIndicator, error: indicatorError } = await supabase
+  const updateIndicator = async (id: string, updates: Partial<Indicator>) => {
+    try {
+      const { data, error } = await supabase
         .from('indicators')
-        .update(indicator)
+        .update(updates)
         .eq('id', id)
         .select()
         .single();
 
-      if (indicatorError) throw indicatorError;
+      if (error) throw error;
 
-      // Delete existing values and insert new ones
-      await supabase
-        .from('indicator_values')
+      await fetchIndicators();
+      return { data, error: null };
+    } catch (error: any) {
+      console.error('Error updating indicator:', error);
+      return { data: null, error };
+    }
+  };
+
+  const deleteIndicator = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('indicators')
         .delete()
-        .eq('indicator_id', id);
+        .eq('id', id);
 
-      if (values.length > 0) {
-        const valuesToInsert = values.map(value => ({
-          ...value,
-          indicator_id: id
-        }));
+      if (error) throw error;
 
-        const { error: valuesError } = await supabase
-          .from('indicator_values')
-          .insert(valuesToInsert);
+      await fetchIndicators();
+      return { error: null };
+    } catch (error: any) {
+      console.error('Error deleting indicator:', error);
+      return { error };
+    }
+  };
 
-        if (valuesError) throw valuesError;
-      }
-
-      return updatedIndicator;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['indicators'] });
-    },
-  });
+  return {
+    indicators,
+    loading,
+    error,
+    refetch: fetchIndicators,
+    createIndicator,
+    updateIndicator,
+    deleteIndicator,
+  };
 };

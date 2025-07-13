@@ -70,13 +70,17 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
         console.error('[CrmAuth] Timeout de 15s ao buscar usuário CRM');
         reject(new Error('Timeout ao buscar usuário CRM'));
       }, 15000));
+      
       const fetchPromise = supabase
         .from('crm_users')
         .select('*')
         .eq('email', email)
         .eq('status', 'active')
         .single();
-      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
+      
+      const result = await Promise.race([fetchPromise, timeoutPromise]) as any;
+      const { data, error } = result;
+      
       if (error) {
         console.error('[CrmAuth] Erro ao buscar CRM user:', error);
         return null;
