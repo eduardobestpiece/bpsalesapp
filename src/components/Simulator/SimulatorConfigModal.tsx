@@ -372,30 +372,36 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
               value={selectedBidTypeId || ''}
               onChange={(e) => setSelectedBidTypeId(e.target.value)}
             >
+              <option value="" disabled>Selecione um tipo de crédito...</option>
               {bidTypes.map((type) => (
                 <option key={type.id} value={type.id}>{type.name}</option>
               ))}
             </select>
           </div>
           {/* Parcelas */}
-          <div className="flex items-center gap-2">
-            <label className="font-medium">Parcelas</label>
-            <Checkbox checked={manualFieldsState.parcelas} onCheckedChange={(v) => handleFieldSwitch('parcelas', v)} />
-            <span className="text-xs">Manual</span>
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <label className="font-medium">Parcelas</label>
+              <Checkbox checked={manualFieldsState.parcelas} onCheckedChange={(v) => handleFieldSwitch('parcelas', v)} />
+              <span className="text-xs">Manual</span>
+            </div>
+            {manualFieldsState.parcelas ? (
+              <Input type="number" placeholder="Número de parcelas (meses)" />
+            ) : (
+              <select
+                className="w-full border rounded px-2 py-1"
+                value={selectedInstallmentTypeId || ''}
+                onChange={(e) => setSelectedInstallmentTypeId(e.target.value)}
+              >
+                <option value="" disabled>Selecione a quantidade de parcelas...</option>
+                {installmentTypes
+                  .filter(it => it.administrator_id === selectedAdministratorId && it.bid_type_id === selectedBidTypeId)
+                  .map((it) => (
+                    <option key={it.id} value={it.id}>{it.name} ({it.installment_count} meses)</option>
+                  ))}
+              </select>
+            )}
           </div>
-          {manualFieldsState.parcelas ? (
-            <Input type="number" placeholder="Número de parcelas (meses)" />
-          ) : (
-            <select
-              className="w-full border rounded px-2 py-1"
-              value={selectedInstallmentTypeId || ''}
-              onChange={(e) => setSelectedInstallmentTypeId(e.target.value)}
-            >
-              {installmentTypes.map((it) => (
-                <option key={it.id} value={it.id}>{it.name} ({it.installment_count} meses)</option>
-              ))}
-            </select>
-          )}
           {/* Taxa de administração */}
           <div className="flex items-center gap-2">
             <label className="font-medium">Taxa de administração</label>
