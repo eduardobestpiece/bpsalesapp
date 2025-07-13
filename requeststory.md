@@ -1,84 +1,30 @@
-# Requisição em andamento
+# Requisição Atual
 
-## Data: 2024-07-10
+**Funcionalidade:** Redução de Parcela
 
-### Regras principais
-- Nada pode afetar o funcionamento do módulo CRM.
-- Dados de configurações e simulador devem ser únicos por empresa (seleção no menu lateral).
-- Master pode copiar dados entre empresas.
-- Administrador vê/edita apenas dados da própria empresa.
-- SubMaster vê todas as empresas, pode copiar dados, mas não edita/arquiva.
-- Abas de Entradas e Tipos de Lances devem ser removidas.
+**Resumo:**
+Implementar uma nova aba "Redução de Parcela" na página de Configurações, com estrutura idêntica à de Administradoras, incluindo filtros, listagem, modais de criação/edição, arquivamento/restauração, cópia entre empresas e integração com Supabase. Garantir que nada afete o CRM.
 
-### Estrutura do banco (Supabase)
-- Todas as tabelas de configurações/simulador possuem coluna `company_id`.
-- Permissões de acesso por papel já existem na tabela `crm_users` e `role_page_permissions`.
+**Checklist:**
+- [ ] Criar componentes: `InstallmentReductionsList.tsx`, `InstallmentReductionModal.tsx`
+- [ ] Adicionar nova aba "Redução de Parcela" em `Configuracoes.tsx`
+- [ ] Implementar filtros: administradora e nome
+- [ ] Listar colunas: Nome, Administradora, Percentual reduzido, Número de aplicações, Ações (Editar, Arquivar, Copiar)
+- [ ] Modal de criação/edição: campos Nome, Administradora (dropdown + opção de adicionar), Percentual reduzido, Aplicação (multiselect: “Parcela”, “Taxa de administração”, “Fundo de reserva”, “Seguro”)
+- [ ] Implementar ações: editar, arquivar/restaurar, copiar (não duplicar para mesma administradora)
+- [ ] Garantir integração correta com Supabase (tabela `installment_reductions`)
+- [ ] Garantir que nada afete o CRM
+- [ ] Testar e validar com usuário
 
-### Checklist do Plano
-- [x] Verificar estrutura de tabelas no Supabase (MCP) para empresas e permissões.
-- [x] Garantir que todas as queries de configurações/simulador filtram por empresa selecionada.
-- [x] Implementar lógica de cópia de dados entre empresas (apenas para Master/SubMaster) para:
-  - [x] Administradoras
-  - [x] Produtos
-  - [x] Alavancas
-  - [x] Tipos de Parcelas
-  - [x] Tipos de Lances
-- [ ] Garantir que permissões estão corretas no frontend e backend.
-- [ ] Garantir que nada afeta o CRM.
-- [ ] Atualizar `requeststory.md` com o andamento.
-- [ ] Executar deploy.
-- [ ] Solicitar conferência.
+**Planejamento:**
+1. Analisar estrutura dos componentes de Administradoras, Produtos e Tipos de Parcela para padronização.
+2. Criar tipos e hooks necessários para Redução de Parcela.
+3. Implementar componente de listagem com filtros e ações.
+4. Implementar modal de criação/edição com validação e multiselect.
+5. Integrar com Supabase para CRUD e cópia entre empresas.
+6. Adicionar nova aba na página de Configurações.
+7. Testar fluxo completo e garantir isolamento do CRM.
+8. Documentar no `markdownstory.md` após validação.
 
----
-
-**Próximos passos:**
-- Revisar permissões e garantir que apenas Master/SubMaster veem e usam a cópia.
-- Validar se há mais entidades que precisam da função de cópia.
-- Garantir que nada afeta o CRM.
-- Executar deploy e solicitar conferência. 
-
-## [13/07/2024] Nova solicitação - Ajustes na aba Administradoras
-
-### Regras principais
-- Nada pode afetar o funcionamento do módulo CRM.
-- Usuários só podem arquivar administradoras (não podem excluir).
-- Administradoras arquivadas vão para a aba de itens arquivados do Master Config e podem ser recuperadas pelo master.
-- Modal de criação/edição:
-  - Campo “Tipo de Atualização” com opções: “Mês específico” ou “Após 12 parcelas”.
-  - Se “Mês específico” for selecionado, mostrar campo “Mês de Atualização” com nomes dos meses.
-  - Se “Após 12 parcelas” for selecionado, ocultar campo “Mês de Atualização”.
-  - Botão do modal: “Cadastrar” (criação) e “Salvar” (edição).
-  - Adicionar campo “Administradora padrão” (apenas uma por empresa).
-  - Modal de edição carrega dados da administradora.
-
-### Checklist do Plano
-- [ ] Remover botão de excluir da lista de administradoras.
-- [ ] Garantir que arquivamento funciona e só master pode restaurar.
-- [ ] Atualizar modal de criação/edição conforme regras (tipos, meses, botão, campo padrão).
-- [ ] Garantir que só uma administradora por empresa pode ser padrão.
-- [ ] Atualizar `requeststory.md` com o andamento.
-- [ ] Executar deploy.
-- [ ] Solicitar conferência. 
-
-## Solicitação 2024-07-10
-
-### Problema
-- Ao clicar em "Adicionar administradora", o modal abre em modo de edição.
-- Ao salvar no modal de edição, o modal não fecha automaticamente.
-
-### Diagnóstico
-- Não existe botão de "Adicionar administradora" na tela.
-- O modal só é aberto via edição, nunca em modo de adição.
-- O fechamento do modal depende do prop `onSuccess`, que não está sendo passado.
-
-### Plano
-- Adicionar botão "Adicionar administradora".
-- Corrigir chamada do modal para abrir limpo (adição).
-- Passar corretamente o prop `onSuccess` para fechar o modal ao salvar.
-
-### Checklist
-- [ ] Adicionar botão "Adicionar administradora" na aba de administradoras.
-- [ ] Corrigir chamada do modal para abrir em modo de adição (`selectedAdministrator = null`).
-- [ ] Passar corretamente o prop `onSuccess` para o modal.
-- [ ] Testar: ao clicar em "Adicionar administradora", abrir modal limpo.
-- [ ] Testar: ao salvar, fechar modal e atualizar lista. 
+**Status:**
+Iniciando etapa 1: análise e estruturação dos componentes base. 
