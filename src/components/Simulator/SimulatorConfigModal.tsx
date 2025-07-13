@@ -767,44 +767,10 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
                       type="number"
                       placeholder="Carência (em dias)"
                       value={updateGrace}
-            
-            {updateType === 'after_12_installments' ? (
-              <div className="p-3 bg-muted rounded-md">
-                <span className="text-sm">Após 12 parcelas</span>
-              </div>
-            ) : updateType === 'specific_month' ? (
-              <div className="grid grid-cols-2 gap-2">
-                <Input
-                  type="number"
-                  placeholder="Mês de Atualização"
-                  value={updateMonth}
-                  onChange={(e) => setUpdateMonth(e.target.value)}
-                  disabled={!manualFieldsState.atualizacaoAnualCredito}
-                />
-                <Input
-                  type="number"
-                  placeholder="Carência (em dias)"
-                  value={updateGrace}
-                  onChange={(e) => setUpdateGrace(e.target.value)}
-                  disabled={!manualFieldsState.atualizacaoAnualCredito}
-                />
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                <Input
-                  type="text"
-                  placeholder="Tipo de Atualização"
-                  value={updateType}
-                  onChange={(e) => setUpdateType(e.target.value)}
-                  disabled={!manualFieldsState.atualizacaoAnualCredito}
-                />
-                <Input
-                  type="text"
-                  placeholder="Percentual/Índice"
-                  value={updatePercent}
-                  onChange={(e) => setUpdatePercent(e.target.value)}
-                  disabled={!manualFieldsState.atualizacaoAnualCredito}
-                />
+                      onChange={(e) => setUpdateGrace(e.target.value)}
+                    />
+                  </>
+                )}
               </div>
             )}
           </div>
