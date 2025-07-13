@@ -9,7 +9,7 @@ import { Building2, Package, CreditCard, Percent, Timer } from 'lucide-react';
 
 // Import components
 import { AdministratorsList } from '@/components/Administrators/AdministratorsList';
-import { AdministratorModal } from '@/components/Administrators/AdministratorModal';
+import { CreateAdministratorModal, EditAdministratorModal } from '@/components/Administrators/AdministratorModal';
 import { ProductsList } from '@/components/Administrators/ProductsList';
 import { ProductModal } from '@/components/Administrators/ProductModal';
 import { BidTypesList } from '@/components/Administrators/BidTypesList';
@@ -241,19 +241,15 @@ const Administrators = () => {
         </Tabs>
 
         {/* Modal de criação */}
-        <AdministratorModal
-          key="create"
+        <CreateAdministratorModal
           open={showCreateAdministratorModal}
           onOpenChange={setShowCreateAdministratorModal}
-          administrator={null}
           onSuccess={() => {
             setShowCreateAdministratorModal(false);
             handleRefresh();
           }}
         />
-        {/* Modal de edição */}
-        <AdministratorModal
-          key={selectedAdministrator?.id || 'edit'}
+        <EditAdministratorModal
           open={showEditAdministratorModal}
           onOpenChange={(open) => {
             setShowEditAdministratorModal(open);
