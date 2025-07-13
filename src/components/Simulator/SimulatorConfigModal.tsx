@@ -329,29 +329,27 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <div className="flex flex-col h-[80vh] max-h-[80vh]">
-        <DialogTitle>
-          <div className="flex items-center justify-between w-full">
-            <span className="flex items-center gap-2">
-              Mais configurações
-              {globalSwitchState === null && (
-                <Tooltip content="Alguns campos estão em Manual, outros em Sistema">
-                  <Info size={16} className="text-muted-foreground" />
-                </Tooltip>
-              )}
-            </span>
-            <div className="flex items-center gap-2">
-              <span className="text-xs">Sistema</span>
-              <Switch
-                checked={globalSwitchState === true}
-                onCheckedChange={handleGlobalSwitch}
-                className={globalSwitchState === null ? 'bg-gray-400 border border-gray-500' : ''}
-              />
-              <span className="text-xs">Manual</span>
-            </div>
+      <DialogContent className="flex flex-col h-[80vh] max-h-[80vh]">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <DialogTitle>Mais configurações</DialogTitle>
+            {globalSwitchState === null && (
+              <Tooltip content="Alguns campos estão em Manual, outros em Sistema">
+                <Info size={16} className="text-muted-foreground" />
+              </Tooltip>
+            )}
           </div>
-        </DialogTitle>
-        <DialogContent className="flex-1 overflow-y-auto px-6 py-4 space-y-4 bg-background">
+          <div className="flex items-center gap-2">
+            <span className="text-xs">Sistema</span>
+            <Switch
+              checked={globalSwitchState === true}
+              onCheckedChange={handleGlobalSwitch}
+              className={globalSwitchState === null ? 'bg-gray-400 border border-gray-500' : ''}
+            />
+            <span className="text-xs">Manual</span>
+          </div>
+        </div>
+        <div className="flex-1 overflow-y-auto space-y-4">
           {/* Administradora */}
           <div>
             <label className="block font-medium">Administradora</label>
@@ -553,15 +551,13 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
               />
             </div>
           )}
-        </DialogContent>
-        <DialogFooter>
-          <div className="flex gap-2 justify-end w-full">
-            <Button variant="outline" onClick={handleReset}>Redefinir</Button>
-            <Button variant="secondary" onClick={handleApply}>Aplicar</Button>
-            <Button onClick={handleSaveAndApply}>Salvar e Aplicar</Button>
-          </div>
+        </div>
+        <DialogFooter className="mt-4 flex gap-2 justify-end">
+          <Button variant="outline" onClick={handleReset}>Redefinir</Button>
+          <Button variant="secondary" onClick={handleApply}>Aplicar</Button>
+          <Button onClick={handleSaveAndApply}>Salvar e Aplicar</Button>
         </DialogFooter>
-      </div>
+      </DialogContent>
     </Dialog>
   );
 }; 
