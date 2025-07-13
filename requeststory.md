@@ -70,3 +70,15 @@ Criar um modal avançado de configurações para o simulador, contendo os campos
 - **Descrição:** Melhorar o layout do modal de configurações do simulador para que ocupe uma altura máxima padrão (ex: 80vh), centralizado na tela, com rolagem interna do conteúdo caso ultrapasse o limite, mantendo cabeçalho e rodapé visíveis e fixos (rolagem apenas no conteúdo central).
 - **Motivo:** O modal atual está esticado verticalmente e sem limite visual, prejudicando a experiência do usuário. Fixar cabeçalho e rodapé facilita o uso dos botões e a leitura do título.
 - **Status:** Em andamento 
+
+# Ajuste do Switch Global Manual/Sistema no Modal de Configurações
+
+- **Solicitante:** Usuário
+- **Descrição:**
+  - O switch global ao lado do título do modal controla todos os campos "Manual/Sistema" do modal.
+  - Quando ligado (Manual), todos os campos ficam em Manual; quando desligado (Sistema), todos ficam em Sistema.
+  - O usuário pode customizar qualquer campo individualmente, independente do global.
+  - O switch global deve refletir o estado dos campos: ligado se todos estão em Manual, desligado se todos estão em Sistema, e indeterminado se há mistura.
+  - O switch global vem desligado por padrão.
+- **Motivo:** Melhorar a clareza e flexibilidade para o usuário ao configurar o simulador.
+- **Status:** Em andamento 

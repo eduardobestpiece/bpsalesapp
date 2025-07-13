@@ -10,6 +10,8 @@ import type { Database } from '@/integrations/supabase/types';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useEffect, useState } from 'react';
 import { toast } from '../ui/use-toast';
+import { Tooltip } from '../ui/tooltip';
+import { Info } from 'lucide-react';
 
 interface SimulatorConfigModalProps {
   open: boolean;
@@ -226,9 +228,17 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
     }
   }, [open]);
 
-  // Sincronizar todos os campos ao alternar o global
+  // Função para calcular o estado do switch global
+  const getGlobalSwitchState = () => {
+    const values = Object.values(manualFieldsState);
+    if (values.every(v => v)) return true;
+    if (values.every(v => !v)) return false;
+    return null; // misto
+  };
+
+  const globalSwitchState = getGlobalSwitchState();
+
   const handleGlobalSwitch = (checked: boolean) => {
-    setIsManualGlobal(checked);
     setManualFieldsState({
       parcelas: checked,
       taxaAdministracao: checked,
@@ -320,14 +330,25 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <div className="flex flex-col h-[80vh] max-h-[80vh]">
-        <DialogTitle className="flex-shrink-0 flex items-center justify-between px-6 pt-6 pb-2 border-b bg-background z-10">
-          Mais configurações
+        <div className="flex-shrink-0 flex items-center justify-between px-6 pt-6 pb-2 border-b bg-background z-10">
+          <span className="flex items-center gap-2">
+            Mais configurações
+            {globalSwitchState === null && (
+              <Tooltip content="Alguns campos estão em Manual, outros em Sistema">
+                <Info size={16} className="text-muted-foreground" />
+              </Tooltip>
+            )}
+          </span>
           <div className="flex items-center gap-2">
             <span className="text-xs">Sistema</span>
-            <Switch checked={isManualGlobal} onCheckedChange={handleGlobalSwitch} />
+            <Switch
+              checked={globalSwitchState === true}
+              onCheckedChange={handleGlobalSwitch}
+              className={globalSwitchState === null ? 'bg-gray-400 border border-gray-500' : ''}
+            />
             <span className="text-xs">Manual</span>
           </div>
-        </DialogTitle>
+        </div>
         <DialogContent className="flex-1 overflow-y-auto px-6 py-4 space-y-4 bg-background">
           {/* Administradora */}
           <div>

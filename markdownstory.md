@@ -388,3 +388,10 @@ Concluído e pronto para deploy.
 - Modal agora ocupa altura máxima de 80vh, centralizado na tela.
 - Conteúdo com rolagem interna (overflow-y-auto) para melhor usabilidade.
 - Build local passou, deploy automático realizado.
+
+## [Data/Hora: agora] Refatoração visual do modal de configurações do simulador
+
+- Cabeçalho (título) e rodapé (botões) agora ficam fixos no modal.
+- Rolagem ocorre apenas no conteúdo central.
+- Altura máxima mantida (80vh), centralização e responsividade.
+- Build local passou, deploy automático realizado.
