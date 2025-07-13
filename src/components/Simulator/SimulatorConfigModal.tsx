@@ -76,6 +76,9 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   const [selectedBidTypeId, setSelectedBidTypeId] = useState<string | null>(null);
   const [selectedInstallmentTypeId, setSelectedInstallmentTypeId] = useState<string | null>(null);
 
+  // Estado para tipo de crédito selecionado
+  const [selectedCreditType, setSelectedCreditType] = useState<string | null>(null);
+
   // Estados para campos dinâmicos
   const [adminTax, setAdminTax] = useState<string>('');
   const [reserveFund, setReserveFund] = useState<string>('');
@@ -258,17 +261,26 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
     }
   }, [open]);
 
+  // Resetar tipo de crédito selecionado ao trocar administradora
+  useEffect(() => {
+    if (creditTypes.length > 0) {
+      setSelectedCreditType(creditTypes[0]);
+    } else {
+      setSelectedCreditType(null);
+    }
+  }, [selectedAdministratorId, products.length]);
+
   // Resetar parcela selecionada se não existir mais ao trocar administradora ou tipo de crédito
   useEffect(() => {
     if (!manualFieldsState.parcelas) {
       const validInstallments = installmentTypes.filter(
-        it => it.administrator_id === selectedAdministratorId && it.bid_type_id === selectedBidTypeId
+        it => it.administrator_id === selectedAdministratorId && it.type === selectedCreditType
       );
       if (!validInstallments.find(it => it.id === selectedInstallmentTypeId)) {
         setSelectedInstallmentTypeId(validInstallments[0]?.id || null);
       }
     }
-  }, [selectedAdministratorId, selectedBidTypeId, installmentTypes, manualFieldsState.parcelas]);
+  }, [selectedAdministratorId, selectedCreditType, installmentTypes, manualFieldsState.parcelas]);
 
   // Função para calcular o estado do switch global
   const getGlobalSwitchState = () => {
@@ -411,12 +423,12 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
             <label className="block font-medium">Tipo de Crédito</label>
             <select
               className="w-full border rounded px-2 py-1"
-              value={selectedBidTypeId || ''}
-              onChange={(e) => setSelectedBidTypeId(e.target.value)}
+              value={selectedCreditType || ''}
+              onChange={(e) => setSelectedCreditType(e.target.value)}
             >
               <option value="" disabled>Selecione um tipo de crédito...</option>
-              {availableBidTypes.map((type) => (
-                <option key={type.id} value={type.id}>{type.name}</option>
+              {creditTypes.map((type) => (
+                <option key={type} value={type}>{type}</option>
               ))}
             </select>
           </div>
@@ -437,7 +449,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
               >
                 <option value="" disabled>Selecione a quantidade de parcelas...</option>
                 {installmentTypes
-                  .filter(it => it.administrator_id === selectedAdministratorId && it.bid_type_id === selectedBidTypeId)
+                  .filter(it => it.administrator_id === selectedAdministratorId && it.type === selectedCreditType)
                   .map((it) => (
                     <option key={it.id} value={it.id}>{it.name} ({it.installment_count} meses)</option>
                   ))}
