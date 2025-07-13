@@ -165,7 +165,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
         return;
       }
       const cleanData = {
-        name: data.name,
+        name: name, // Usar o nome gerado automaticamente
         administrator_id: data.administrator_id,
         installment_count: data.installment_count,
         admin_tax_percent: data.admin_tax_percent,
@@ -224,19 +224,6 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nome da Parcela</FormLabel>
-                  <FormControl>
-                    <Input {...field} placeholder="Ex: 240 meses, Parcela Cheia, etc." />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
             <FormField
               control={form.control}
               name="administrator_id"
