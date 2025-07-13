@@ -292,3 +292,57 @@ Aguardando testes finais e validação do usuário para realizar o deploy.
 - O botão "+" ao lado do campo Administradora no modal de Redução de Parcela agora abre o modal de criação de administradora, em vez de exibir um campo inline.
 - Após adicionar uma nova administradora, a lista é atualizada automaticamente no modal de Redução de Parcela.
 - Experiência padronizada com o restante do sistema.
+
+## [Início] Atualização da gestão de Parcelas
+
+**Data:** 2024-07-11
+
+**Resumo:**
+Iniciada a atualização da listagem e do modal de criação/edição de Parcelas (tabela installment_types) para contemplar:
+- Novas colunas: Administradora, Número de parcelas, Taxa de administração, Fundo de reserva, Seguro, Seguro opcional (Sim/Não), Parcela reduzida (Sim/Não), Ações (Editar, Arquivar, Duplicar)
+- Modal com campos: Administradora (dropdown + adicionar), Número de parcelas, Taxa de administração, Fundo de reserva, Seguro, Seguro opcional, Redução de parcela (multiseleção), Padrão (apenas uma por administradora)
+- Ações: arquivar/restaurar, duplicar (restrição de administradora)
+- Garantia de que nada afeta o CRM
+
+**Checklist:**
+- [ ] Atualizar componente de listagem de Parcelas (`InstallmentTypesList.tsx`)
+- [ ] Atualizar modal de criação/edição de Parcelas (`InstallmentTypeModal.tsx`)
+- [ ] Adicionar campo de redução de parcela (multiseleção, integrando com `installment_reductions` e tabela de relação)
+- [ ] Adicionar campo de seguro opcional (Sim/Não)
+- [ ] Adicionar campo de número de parcelas
+- [ ] Adicionar campo de padrão (apenas uma por administradora)
+- [ ] Ajustar ações: arquivar/restaurar, duplicar (com restrição)
+- [ ] Garantir integração com modal de administradora
+- [ ] Garantir que nada afete o CRM
+- [ ] Testar e validar
+
+**Status:**
+Iniciando atualização do componente de listagem de Parcelas.
+
+## [Conclusão] Atualização da gestão de Parcelas
+
+**Data:** 2024-07-11
+
+- Listagem de Parcelas atualizada com novas colunas e status de "Parcela reduzida" (Sim/Não).
+- Modal de criação/edição com todos os campos solicitados, integração com reduções (multiseleção), seguro opcional, padrão, etc.
+- Relação entre parcela e reduções implementada (tabela de relação).
+- Duplicação de parcela: abre modal já preenchido, exige seleção de administradora, impede duplicidade.
+- Validação de duplicidade para mesma administradora.
+- UX padronizada, integração com modal de administradora.
+- Garantido que nada afeta o CRM.
+- Pronto para deploy e testes finais.
+
+**Checklist:**
+- [x] Atualizar componente de listagem de Parcelas (`InstallmentTypesList.tsx`)
+- [x] Atualizar modal de criação/edição de Parcelas (`InstallmentTypeModal.tsx`)
+- [x] Adicionar campo de redução de parcela (multiseleção, integrando com `installment_reductions` e tabela de relação)
+- [x] Adicionar campo de seguro opcional (Sim/Não)
+- [x] Adicionar campo de número de parcelas
+- [x] Adicionar campo de padrão (apenas uma por administradora)
+- [x] Ajustar ações: arquivar/restaurar, duplicar (com restrição)
+- [x] Garantir integração com modal de administradora
+- [x] Garantir que nada afete o CRM
+- [x] Testar e validar
+
+**Status:**
+Concluído e pronto para deploy.

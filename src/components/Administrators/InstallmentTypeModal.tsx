@@ -25,18 +25,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
 import { useCompany } from '@/contexts/CompanyContext';
+import MultiSelect from '@/components/ui/multiselect';
+import { CreateAdministratorModal } from '@/components/Administrators/AdministratorModal';
 
 const installmentTypeSchema = z.object({
-  name: z.string().min(1, 'Nome é obrigatório'),
   administrator_id: z.string().min(1, 'Administradora é obrigatória'),
-  type: z.enum(['MEIA', 'REDUZIDA'], {
-    required_error: 'Tipo é obrigatório',
-  }),
-  reduction_percentage: z.number().min(0).max(100).optional(),
-  reduces_credit: z.boolean().default(false),
-  reduces_admin_tax: z.boolean().default(false),
-  reduces_insurance: z.boolean().default(false),
-  reduces_reserve_fund: z.boolean().default(false),
+  installment_count: z.number().min(1, 'Número de parcelas é obrigatório'),
+  admin_tax_percent: z.number().min(0).max(100),
+  reserve_fund_percent: z.number().min(0).max(100),
+  insurance_percent: z.number().min(0).max(100),
+  optional_insurance: z.boolean(),
+  reduction_ids: z.array(z.string()), // IDs das reduções selecionadas
+  is_default: z.boolean(),
 });
 
 type InstallmentTypeFormData = z.infer<typeof installmentTypeSchema>;
@@ -56,77 +56,124 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
 }) => {
   const { toast } = useToast();
   const { selectedCompanyId } = useCompany();
-  
-  const form = useForm<InstallmentTypeFormData>({
+  const [administrators, setAdministrators] = React.useState<any[]>([]);
+  const [reductions, setReductions] = React.useState<any[]>([]);
+  const [showCreateAdminModal, setShowCreateAdminModal] = React.useState(false);
+
+  const form = useForm<any>({
     resolver: zodResolver(installmentTypeSchema),
     defaultValues: {
-      name: installmentType?.name || '',
       administrator_id: installmentType?.administrator_id || '',
-      type: installmentType?.type || 'MEIA',
-      reduction_percentage: installmentType?.reduction_percentage || 50,
-      reduces_credit: installmentType?.reduces_credit || false,
-      reduces_admin_tax: installmentType?.reduces_admin_tax || false,
-      reduces_insurance: installmentType?.reduces_insurance || false,
-      reduces_reserve_fund: installmentType?.reduces_reserve_fund || false,
+      installment_count: installmentType?.installment_count || 1,
+      admin_tax_percent: installmentType?.admin_tax_percent || 0,
+      reserve_fund_percent: installmentType?.reserve_fund_percent || 0,
+      insurance_percent: installmentType?.insurance_percent || 0,
+      optional_insurance: installmentType?.optional_insurance || false,
+      reduction_ids: installmentType?.reduction_ids || [],
+      is_default: installmentType?.is_default || false,
     },
   });
 
-  const { data: administrators } = useQuery({
-    queryKey: ['administrators'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('administrators')
-        .select('id, name')
-        .eq('is_archived', false)
-        .order('name');
-      
-      if (error) throw error;
-      return data;
-    },
-  });
+  React.useEffect(() => {
+    if (open) {
+      fetchAdministrators();
+      if (form.watch('administrator_id')) fetchReductions(form.watch('administrator_id'));
+    }
+  }, [open]);
 
-  const onSubmit = async (data: InstallmentTypeFormData) => {
-    try {
-      const cleanData = {
-        name: data.name,
-        administrator_id: data.administrator_id,
-        type: data.type,
-        reduction_percentage: data.reduction_percentage,
-        reduces_credit: data.reduces_credit,
-        reduces_admin_tax: data.reduces_admin_tax,
-        reduces_insurance: data.reduces_insurance,
-        reduces_reserve_fund: data.reduces_reserve_fund,
-      };
+  const fetchAdministrators = async () => {
+    const { data, error } = await supabase
+      .from('administrators')
+      .select('id, name')
+      .eq('is_archived', false)
+      .order('name');
+    if (!error) setAdministrators(data || []);
+  };
 
-      if (installmentType) {
-        const { error } = await supabase
-          .from('installment_types')
-          .update({
-            ...cleanData,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', installmentType.id);
+  const fetchReductions = async (administratorId: string) => {
+    const { data, error } = await supabase
+      .from('installment_reductions')
+      .select('id, name')
+      .eq('administrator_id', administratorId)
+      .eq('is_archived', false);
+    if (!error) setReductions(data || []);
+  };
 
-        if (error) throw error;
-        toast({ title: 'Tipo de parcela atualizado com sucesso!' });
-      } else {
-        const { error } = await supabase
-          .from('installment_types')
-          .insert({ ...cleanData, company_id: selectedCompanyId });
-
-        if (error) throw error;
-        toast({ title: 'Tipo de parcela criado com sucesso!' });
+  React.useEffect(() => {
+    const subscription = form.watch((value, { name }) => {
+      if (name === 'administrator_id' && value.administrator_id) {
+        fetchReductions(value.administrator_id);
+        form.setValue('reduction_ids', []);
       }
+    });
+    return () => subscription.unsubscribe();
+  }, [form]);
 
+  const onSubmit = async (data: any) => {
+    try {
+      // Verificar duplicidade para a mesma administradora
+      const { data: existing, error: dupError } = await supabase
+        .from('installment_types')
+        .select('*')
+        .eq('administrator_id', data.administrator_id)
+        .eq('installment_count', data.installment_count)
+        .eq('admin_tax_percent', data.admin_tax_percent)
+        .eq('reserve_fund_percent', data.reserve_fund_percent)
+        .eq('insurance_percent', data.insurance_percent)
+        .eq('optional_insurance', data.optional_insurance)
+        .eq('is_archived', false);
+      if (!dupError && existing && existing.length > 0 && (!installmentType || existing[0].id !== installmentType.id)) {
+        toast({ title: 'Já existe uma parcela com esses dados para esta administradora.', variant: 'destructive' });
+        return;
+      }
+      const cleanData = {
+        administrator_id: data.administrator_id,
+        installment_count: data.installment_count,
+        admin_tax_percent: data.admin_tax_percent,
+        reserve_fund_percent: data.reserve_fund_percent,
+        insurance_percent: data.insurance_percent,
+        optional_insurance: data.optional_insurance,
+        is_default: data.is_default,
+        company_id: selectedCompanyId,
+      };
+      let result, installmentTypeId;
+      if (installmentType) {
+        result = await supabase
+          .from('installment_types')
+          .update({ ...cleanData, updated_at: new Date().toISOString() })
+          .eq('id', installmentType.id)
+          .select('id');
+        if (result.error) throw result.error;
+        installmentTypeId = installmentType.id;
+        // Remover relações antigas
+        await supabase
+          .from('installment_type_reductions')
+          .delete()
+          .eq('installment_type_id', installmentTypeId);
+      } else {
+        result = await supabase
+          .from('installment_types')
+          .insert(cleanData)
+          .select('id');
+        if (result.error) throw result.error;
+        installmentTypeId = result.data[0].id;
+      }
+      // Inserir novas relações
+      if (data.reduction_ids && data.reduction_ids.length > 0) {
+        const relations = data.reduction_ids.map((reductionId: string) => ({
+          installment_type_id: installmentTypeId,
+          installment_reduction_id: reductionId,
+        }));
+        const relResult = await supabase
+          .from('installment_type_reductions')
+          .insert(relations);
+        if (relResult.error) throw relResult.error;
+      }
+      toast({ title: installmentType ? 'Parcela atualizada com sucesso!' : 'Parcela cadastrada com sucesso!' });
       form.reset();
       onSuccess();
     } catch (error) {
-      console.error('Erro ao salvar tipo de parcela:', error);
-      toast({
-        title: 'Erro ao salvar tipo de parcela',
-        description: 'Tente novamente em alguns instantes.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erro ao salvar parcela', variant: 'destructive' });
     }
   };
 
@@ -134,181 +181,159 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>
-            {installmentType ? 'Editar Tipo de Parcela' : 'Novo Tipo de Parcela'}
-          </DialogTitle>
+          <DialogTitle>{installmentType ? 'Editar Parcela' : 'Nova Parcela'}</DialogTitle>
         </DialogHeader>
-
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nome</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ex: Meia Parcela Padrão" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <FormField
               control={form.control}
               name="administrator_id"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Administradora</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma administradora" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {administrators?.map((admin) => (
-                        <SelectItem key={admin.id} value={admin.id}>
-                          {admin.name}
+                  <div className="flex gap-2 items-center">
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione uma administradora" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {administrators.map((admin) => (
+                          <SelectItem key={admin.id} value={admin.id}>{admin.name}</SelectItem>
+                        ))}
+                        <SelectItem value="add_admin" onClick={() => setShowCreateAdminModal(true)}>
+                          + Adicionar administradora
                         </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                      </SelectContent>
+                    </Select>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setShowCreateAdminModal(true)}>
+                      +
+                    </Button>
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
-              name="type"
+              name="installment_count"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tipo</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o tipo" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="MEIA">Meia Parcela</SelectItem>
-                      <SelectItem value="REDUZIDA">Parcela Reduzida</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="reduction_percentage"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Percentual de Redução (%)</FormLabel>
+                  <FormLabel>Número de parcelas</FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      min="0"
-                      max="100"
-                      placeholder="50"
-                      {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    <Input type="number" min={1} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="admin_tax_percent"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Taxa de administração (%)</FormLabel>
+                  <FormControl>
+                    <Input type="number" min={0} max={100} step={0.01} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="reserve_fund_percent"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Fundo de reserva (%)</FormLabel>
+                  <FormControl>
+                    <Input type="number" min={0} max={100} step={0.01} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="insurance_percent"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Seguro (%)</FormLabel>
+                  <FormControl>
+                    <Input type="number" min={0} max={100} step={0.01} {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="optional_insurance"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Seguro opcional</FormLabel>
+                  <FormControl>
+                    <Select onValueChange={v => field.onChange(v === 'true')} value={field.value ? 'true' : 'false'}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="true">Sim</SelectItem>
+                        <SelectItem value="false">Não</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="reduction_ids"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Redução de parcela</FormLabel>
+                  <FormControl>
+                    <MultiSelect
+                      options={reductions.map((r: any) => ({ value: r.id, label: r.name }))}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Selecione uma ou mais reduções"
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
-            <div className="space-y-3">
-              <FormLabel>Componentes afetados pela redução:</FormLabel>
-              
-              <FormField
-                control={form.control}
-                name="reduces_credit"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Reduz Crédito</FormLabel>
-                    </div>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="reduces_admin_tax"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Reduz Taxa de Administração</FormLabel>
-                    </div>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="reduces_insurance"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Reduz Seguro</FormLabel>
-                    </div>
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="reduces_reserve_fund"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Reduz Fundo de Reserva</FormLabel>
-                    </div>
-                  </FormItem>
-                )}
-              />
-            </div>
-
+            <FormField
+              control={form.control}
+              name="is_default"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Parcela padrão</FormLabel>
+                  <FormControl>
+                    <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <div className="flex justify-end space-x-2 pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
               <Button type="submit">
-                {installmentType ? 'Atualizar' : 'Criar'}
+                {installmentType ? 'Salvar' : 'Cadastrar'}
               </Button>
             </div>
           </form>
         </Form>
+        <CreateAdministratorModal
+          open={showCreateAdminModal}
+          onOpenChange={setShowCreateAdminModal}
+          onSuccess={fetchAdministrators}
+        />
       </DialogContent>
     </Dialog>
   );

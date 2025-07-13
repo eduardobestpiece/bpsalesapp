@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Edit, Archive, RotateCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,7 @@ import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { InstallmentTypeModal } from './InstallmentTypeModal';
 
 interface InstallmentTypesListProps {
   searchTerm: string;
@@ -54,6 +55,10 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
   const [copyModalOpen, setCopyModalOpen] = useState(false);
   const [originCompanyId, setOriginCompanyId] = useState<string>('');
   const [copyLoading, setCopyLoading] = useState(false);
+
+  // Modal de duplicação
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
+  const [duplicateData, setDuplicateData] = useState<any>(null);
 
   const { data: installmentTypes, isLoading, refetch } = useQuery({
     queryKey: ['installment-types', searchTerm, statusFilter, selectedAdministrator],
@@ -103,6 +108,24 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
     },
     enabled: canCopy,
   });
+
+  const [reductionsMap, setReductionsMap] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const fetchReductionsMap = async () => {
+      const { data, error } = await supabase
+        .from('installment_type_reductions')
+        .select('installment_type_id');
+      if (!error && data) {
+        const map: Record<string, boolean> = {};
+        data.forEach((rel: any) => {
+          map[rel.installment_type_id] = true;
+        });
+        setReductionsMap(map);
+      }
+    };
+    fetchReductionsMap();
+  }, [installmentTypes]);
 
   // Função de cópia de tipos de parcelas
   const handleCopyInstallmentTypes = async () => {
@@ -245,37 +268,41 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
           </div>
         </DialogContent>
       </Dialog>
+      {showDuplicateModal && (
+        <InstallmentTypeModal
+          open={showDuplicateModal}
+          onOpenChange={setShowDuplicateModal}
+          installmentType={duplicateData}
+          onSuccess={() => {
+            setShowDuplicateModal(false);
+            setDuplicateData(null);
+            refetch();
+          }}
+        />
+      )}
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Nome</TableHead>
             <TableHead>Administradora</TableHead>
-            <TableHead>Tipo</TableHead>
-            <TableHead>Redução (%)</TableHead>
-            <TableHead>Componentes Reduzidos</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead>Nº de parcelas</TableHead>
+            <TableHead>Taxa de administração (%)</TableHead>
+            <TableHead>Fundo de reserva (%)</TableHead>
+            <TableHead>Seguro (%)</TableHead>
+            <TableHead>Seguro opcional</TableHead>
+            <TableHead>Parcela reduzida</TableHead>
             <TableHead>Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {installmentTypes.map((installmentType) => (
             <TableRow key={installmentType.id}>
-              <TableCell className="font-medium">{installmentType.name}</TableCell>
               <TableCell>{installmentType.administrators?.name}</TableCell>
-              <TableCell>
-                <Badge variant="outline">
-                  {getTypeLabel(installmentType.type)}
-                </Badge>
-              </TableCell>
-              <TableCell>{installmentType.reduction_percentage}%</TableCell>
-              <TableCell className="text-sm">
-                {getReducedComponents(installmentType)}
-              </TableCell>
-              <TableCell>
-                <Badge variant={installmentType.is_archived ? 'secondary' : 'default'}>
-                  {installmentType.is_archived ? 'Arquivado' : 'Ativo'}
-                </Badge>
-              </TableCell>
+              <TableCell>{installmentType.installment_count}</TableCell>
+              <TableCell>{installmentType.admin_tax_percent ?? '-'}</TableCell>
+              <TableCell>{installmentType.reserve_fund_percent ?? '-'}</TableCell>
+              <TableCell>{installmentType.insurance_percent ?? '-'}</TableCell>
+              <TableCell>{installmentType.optional_insurance ? 'Sim' : 'Não'}</TableCell>
+              <TableCell>{reductionsMap[installmentType.id] ? 'Sim' : 'Não'}</TableCell>
               <TableCell>
                 <div className="flex space-x-2">
                   <Button
@@ -285,7 +312,6 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
                   >
                     <Edit className="w-4 h-4" />
                   </Button>
-                  
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button
@@ -303,10 +329,10 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
                     <AlertDialogContent>
                       <AlertDialogHeader>
                         <AlertDialogTitle>
-                          {installmentType.is_archived ? 'Reativar' : 'Arquivar'} Tipo de Parcela
+                          {installmentType.is_archived ? 'Reativar' : 'Arquivar'} Parcela
                         </AlertDialogTitle>
                         <AlertDialogDescription>
-                          Tem certeza que deseja {installmentType.is_archived ? 'reativar' : 'arquivar'} o tipo de parcela "{installmentType.name}"?
+                          Tem certeza que deseja {installmentType.is_archived ? 'reativar' : 'arquivar'} a parcela?
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
@@ -319,6 +345,17 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setDuplicateData({ ...installmentType, administrator_id: '' });
+                      setShowDuplicateModal(true);
+                    }}
+                    disabled={installmentType.is_archived}
+                  >
+                    Duplicar
+                  </Button>
                 </div>
               </TableCell>
             </TableRow>
