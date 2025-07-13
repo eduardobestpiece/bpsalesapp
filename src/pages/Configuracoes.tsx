@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,10 +14,6 @@ import { ProductModal } from '@/components/Administrators/ProductModal';
 import { ProductsList } from '@/components/Administrators/ProductsList';
 import { InstallmentTypeModal } from '@/components/Administrators/InstallmentTypeModal';
 import { InstallmentTypesList } from '@/components/Administrators/InstallmentTypesList';
-import { BidTypeModal } from '@/components/Administrators/BidTypeModal';
-import { BidTypesList } from '@/components/Administrators/BidTypesList';
-import { EntryTypeModal } from '@/components/Administrators/EntryTypeModal';
-import { EntryTypesList } from '@/components/Administrators/EntryTypesList';
 import { LeverageModal } from '@/components/Administrators/LeverageModal';
 import { LeveragesList } from '@/components/Administrators/LeveragesList';
 
@@ -27,10 +24,6 @@ export default function Configuracoes() {
   const [showProductModal, setShowProductModal] = useState(false);
   const [selectedInstallmentType, setSelectedInstallmentType] = useState<any>(null);
   const [showInstallmentTypeModal, setShowInstallmentTypeModal] = useState(false);
-  const [selectedBidType, setSelectedBidType] = useState<any>(null);
-  const [showBidTypeModal, setShowBidTypeModal] = useState(false);
-  const [selectedEntryType, setSelectedEntryType] = useState<any>(null);
-  const [showEntryTypeModal, setShowEntryTypeModal] = useState(false);
   const [selectedLeverage, setSelectedLeverage] = useState<any>(null);
   const [showLeverageModal, setShowLeverageModal] = useState(false);
 
@@ -41,18 +34,12 @@ export default function Configuracoes() {
   const [productStatusFilter, setProductStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
   const [installmentSearchTerm, setInstallmentSearchTerm] = useState('');
   const [installmentStatusFilter, setInstallmentStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
-  const [bidSearchTerm, setBidSearchTerm] = useState('');
-  const [bidStatusFilter, setBidStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
-  const [entrySearchTerm, setEntrySearchTerm] = useState('');
-  const [entryStatusFilter, setEntryStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
   const [leverageSearchTerm, setLeverageSearchTerm] = useState('');
   const [leverageStatusFilter, setLeverageStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
 
   // Administrator filter for related tables
   const [productAdminFilter, setProductAdminFilter] = useState<string>('');
   const [installmentAdminFilter, setInstallmentAdminFilter] = useState<string>('');
-  const [bidAdminFilter, setBidAdminFilter] = useState<string>('');
-  const [entryAdminFilter, setEntryAdminFilter] = useState<string>('');
 
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -80,16 +67,6 @@ export default function Configuracoes() {
     setShowInstallmentTypeModal(true);
   };
 
-  const handleEditBidType = (bidType: any) => {
-    setSelectedBidType(bidType);
-    setShowBidTypeModal(true);
-  };
-
-  const handleEditEntryType = (entryType: any) => {
-    setSelectedEntryType(entryType);
-    setShowEntryTypeModal(true);
-  };
-
   const handleEditLeverage = (leverage: any) => {
     setSelectedLeverage(leverage);
     setShowLeverageModal(true);
@@ -99,14 +76,10 @@ export default function Configuracoes() {
     setShowAdministratorModal(false);
     setShowProductModal(false);
     setShowInstallmentTypeModal(false);
-    setShowBidTypeModal(false);
-    setShowEntryTypeModal(false);
     setShowLeverageModal(false);
     setSelectedAdministrator(null);
     setSelectedProduct(null);
     setSelectedInstallmentType(null);
-    setSelectedBidType(null);
-    setSelectedEntryType(null);
     setSelectedLeverage(null);
     handleRefresh();
   };
@@ -124,12 +97,10 @@ export default function Configuracoes() {
             <CardContent className="p-0">
               <Tabs defaultValue="administrators" className="w-full">
                 <div className="border-b bg-gray-50/50 px-6 py-4">
-                  <TabsList className="grid grid-cols-6 w-full max-w-4xl mx-auto">
+                  <TabsList className="grid grid-cols-4 w-full max-w-3xl mx-auto">
                     <TabsTrigger value="administrators">Administradoras</TabsTrigger>
                     <TabsTrigger value="products">Produtos</TabsTrigger>
                     <TabsTrigger value="installments">Parcelas</TabsTrigger>
-                    <TabsTrigger value="bids">Tipos de Lance</TabsTrigger>
-                    <TabsTrigger value="entries">Entradas</TabsTrigger>
                     <TabsTrigger value="leverages">Alavancas</TabsTrigger>
                   </TabsList>
                 </div>
@@ -272,98 +243,6 @@ export default function Configuracoes() {
                   </div>
                 </TabsContent>
 
-                {/* Bid Types Tab */}
-                <TabsContent value="bids" className="p-6">
-                  <div className="space-y-6">
-                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                      <div>
-                        <h2 className="text-2xl font-semibold text-gray-900">Tipos de Lance</h2>
-                        <p className="text-gray-600 mt-1">Gerencie os tipos de lance</p>
-                      </div>
-                      <Button onClick={() => setShowBidTypeModal(true)} className="bg-gradient-primary hover:opacity-90">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Adicionar Tipo de Lance
-                      </Button>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        <Input
-                          placeholder="Buscar tipos de lance..."
-                          value={bidSearchTerm}
-                          onChange={(e) => setBidSearchTerm(e.target.value)}
-                          className="pl-10"
-                        />
-                      </div>
-                      <Select value={bidStatusFilter} onValueChange={(value: 'all' | 'active' | 'archived') => setBidStatusFilter(value)}>
-                        <SelectTrigger className="w-full sm:w-48">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Todos</SelectItem>
-                          <SelectItem value="active">Ativos</SelectItem>
-                          <SelectItem value="archived">Arquivados</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <BidTypesList
-                      key={refreshKey}
-                      searchTerm={bidSearchTerm}
-                      statusFilter={bidStatusFilter}
-                      selectedAdministrator={bidAdminFilter || null}
-                      onEdit={handleEditBidType}
-                    />
-                  </div>
-                </TabsContent>
-
-                {/* Entry Types Tab */}
-                <TabsContent value="entries" className="p-6">
-                  <div className="space-y-6">
-                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                      <div>
-                        <h2 className="text-2xl font-semibold text-gray-900">Tipos de Entrada</h2>
-                        <p className="text-gray-600 mt-1">Gerencie os tipos de entrada</p>
-                      </div>
-                      <Button onClick={() => setShowEntryTypeModal(true)} className="bg-gradient-primary hover:opacity-90">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Adicionar Tipo de Entrada
-                      </Button>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        <Input
-                          placeholder="Buscar tipos de entrada..."
-                          value={entrySearchTerm}
-                          onChange={(e) => setEntrySearchTerm(e.target.value)}
-                          className="pl-10"
-                        />
-                      </div>
-                      <Select value={entryStatusFilter} onValueChange={(value: 'all' | 'active' | 'archived') => setEntryStatusFilter(value)}>
-                        <SelectTrigger className="w-full sm:w-48">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Todos</SelectItem>
-                          <SelectItem value="active">Ativos</SelectItem>
-                          <SelectItem value="archived">Arquivados</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <EntryTypesList
-                      key={refreshKey}
-                      searchTerm={entrySearchTerm}
-                      statusFilter={entryStatusFilter}
-                      selectedAdministrator={entryAdminFilter || null}
-                      onEdit={handleEditEntryType}
-                    />
-                  </div>
-                </TabsContent>
-
                 {/* Leverages Tab */}
                 <TabsContent value="leverages" className="p-6">
                   <div className="space-y-6">
@@ -431,20 +310,6 @@ export default function Configuracoes() {
             open={showInstallmentTypeModal}
             onOpenChange={setShowInstallmentTypeModal}
             installmentType={selectedInstallmentType}
-            onSuccess={closeModals}
-          />
-
-          <BidTypeModal
-            open={showBidTypeModal}
-            onOpenChange={setShowBidTypeModal}
-            bidType={selectedBidType}
-            onSuccess={closeModals}
-          />
-
-          <EntryTypeModal
-            open={showEntryTypeModal}
-            onOpenChange={setShowEntryTypeModal}
-            entryType={selectedEntryType}
             onSuccess={closeModals}
           />
 
