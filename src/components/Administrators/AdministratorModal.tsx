@@ -227,6 +227,119 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
                 </FormItem>
               )}
             />
+            <FormField
+              control={form.control}
+              name="special_entry_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo de Entrada Especial</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || 'none'}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="none">Nenhuma</SelectItem>
+                      <SelectItem value="percentage">Percentual</SelectItem>
+                      <SelectItem value="fixed_value">Valor Fixo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {form.watch('special_entry_type') === 'percentage' && (
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="special_entry_percentage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Percentual da Entrada Especial</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="0" 
+                          max="100" 
+                          step="0.01"
+                          placeholder="0.00"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="special_entry_installments"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Parcelas da Entrada</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="0"
+                          placeholder="Número de parcelas"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+            {form.watch('special_entry_type') === 'fixed_value' && (
+              <div className="grid grid-cols-2 gap-4">
+                <FormField
+                  control={form.control}
+                  name="special_entry_fixed_value"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Valor Fixo da Entrada</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="0" 
+                          step="0.01"
+                          placeholder="0.00"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="special_entry_installments"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Parcelas da Entrada</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="0"
+                          placeholder="Número de parcelas"
+                          {...field}
+                          onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
             {/* Botão de ação */}
             <Button type="submit">
               {administrator ? 'Salvar' : 'Cadastrar'}
