@@ -226,15 +226,35 @@ export const ProductsList: React.FC<ProductsListProps> = ({
   return (
     <Card>
       <CardHeader>
-        <div className="flex justify-between items-center">
-          <CardTitle className="flex items-center gap-2">
-            <Search className="w-5 h-5" />
-            Produtos ({filteredProducts.length})
-          </CardTitle>
-          <Button onClick={onCreate} className="flex items-center gap-2">
-            <Plus className="w-4 h-4" />
-            Novo Produto
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-semibold text-gray-900">Produtos</h2>
+            <p className="text-gray-600 mt-1">Gerencie os produtos de consórcio</p>
+          </div>
+          <Button onClick={onCreate} className="bg-amber-600 hover:bg-amber-700 text-white">
+            + Adicionar Produto
           </Button>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-4 mt-4 mb-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              placeholder="Buscar produtos..."
+              value={searchTerm}
+              onChange={e => {/* implementar filtro se necessário */}}
+              className="pl-10"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={v => {/* implementar filtro se necessário */}}>
+            <SelectTrigger className="w-full sm:w-48">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos</SelectItem>
+              <SelectItem value="active">Ativos</SelectItem>
+              <SelectItem value="archived">Arquivados</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </CardHeader>
       <CardContent>
@@ -270,11 +290,9 @@ export const ProductsList: React.FC<ProductsListProps> = ({
                       <TableCell>{product.administrators?.name || 'N/A'}</TableCell>
                       <TableCell>{product.type}</TableCell>
                       <TableCell>{formatCurrency(product.credit_value)}</TableCell>
-                      <TableCell>{/* Valor da parcela calculado automaticamente */}
-                        {product.credit_value && product.term_options && product.term_options.length > 0
-                          ? formatCurrency(product.credit_value / Math.max(...product.term_options))
-                          : '-'}
-                      </TableCell>
+                      <TableCell>{product.credit_value && product.term_options && product.term_options.length > 0
+                        ? formatCurrency(product.credit_value / Math.max(...product.term_options))
+                        : '-'}</TableCell>
                       <TableCell>{product.admin_tax_percent ?? '-'}</TableCell>
                       <TableCell>{product.reserve_fund_percent ?? '-'}</TableCell>
                       <TableCell>{product.insurance_percent ?? '-'}</TableCell>
@@ -311,55 +329,55 @@ export const ProductsList: React.FC<ProductsListProps> = ({
             </Table>
           </div>
         )}
-      </CardContent>
-      {/* Botão de cópia de produtos */}
-      {canCopy && (
-        <div className="flex justify-end">
-          <Button variant="outline" onClick={() => setCopyModalOpen(true)}>
-            Copiar produtos de outra empresa
-          </Button>
-        </div>
-      )}
-      {/* Modal de cópia */}
-      <Dialog open={copyModalOpen} onOpenChange={setCopyModalOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Copiar produtos de outra empresa</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Empresa de origem</label>
-              <Select value={originCompanyId} onValueChange={setOriginCompanyId} disabled={companiesLoading}>
-                <SelectTrigger>
-                  <SelectValue placeholder={companiesLoading ? 'Carregando...' : 'Selecione a empresa'} />
-                </SelectTrigger>
-                <SelectContent>
-                  {companies
-                    .filter((c: any) => c.id !== selectedCompanyId)
-                    .map((c: any) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button onClick={handleCopyProducts} disabled={!originCompanyId || copyLoading}>
-              {copyLoading ? 'Copiando...' : 'Copiar'}
+        {/* Botão de cópia de produtos */}
+        {canCopy && (
+          <div className="flex justify-end mt-4">
+            <Button variant="outline" onClick={() => setCopyModalOpen(true)}>
+              Copiar produtos de outra empresa
             </Button>
           </div>
-        </DialogContent>
-      </Dialog>
-      {showDuplicateModal && (
-        <ProductModal
-          open={showDuplicateModal}
-          onOpenChange={setShowDuplicateModal}
-          product={duplicateData}
-          onSuccess={() => {
-            setShowDuplicateModal(false);
-            setDuplicateData(null);
-            fetchProducts();
-          }}
-        />
-      )}
+        )}
+        {/* Modal de cópia */}
+        <Dialog open={copyModalOpen} onOpenChange={setCopyModalOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Copiar produtos de outra empresa</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Empresa de origem</label>
+                <Select value={originCompanyId} onValueChange={setOriginCompanyId} disabled={companiesLoading}>
+                  <SelectTrigger>
+                    <SelectValue placeholder={companiesLoading ? 'Carregando...' : 'Selecione a empresa'} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {companies
+                      .filter((c: any) => c.id !== selectedCompanyId)
+                      .map((c: any) => (
+                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button onClick={handleCopyProducts} disabled={!originCompanyId || copyLoading}>
+                {copyLoading ? 'Copiando...' : 'Copiar'}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+        {showDuplicateModal && (
+          <ProductModal
+            open={showDuplicateModal}
+            onOpenChange={setShowDuplicateModal}
+            product={duplicateData}
+            onSuccess={() => {
+              setShowDuplicateModal(false);
+              setDuplicateData(null);
+              fetchProducts();
+            }}
+          />
+        )}
+      </CardContent>
     </Card>
   );
 };

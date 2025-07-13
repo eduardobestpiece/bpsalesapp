@@ -346,3 +346,15 @@ Iniciando atualização do componente de listagem de Parcelas.
 
 **Status:**
 Concluído e pronto para deploy.
+
+## [13/07/2024] Padronização da aba Produtos
+
+- Padronização completa da aba Produtos:
+  - Colunas padronizadas: Administradora, Tipo, Valor, Valor da parcela (automático), Taxa de administração, Fundo de reserva, Seguro, Ações (Editar, Arquivar, Duplicar).
+  - Modal de criação/edição atualizado: todos os campos obrigatórios, cálculo automático do valor da parcela, multiseleção de parcelas, validação de duplicidade.
+  - Ação de duplicar produto implementada (exige seleção de outra administradora, impede duplicidade).
+  - Garantido isolamento entre criação e edição.
+  - Garantido que nada afeta o CRM.
+- Deploy automático realizado para o GitHub.
+- Checklist atualizado em requeststory.md.
+- Usuário orientado a validar se tudo está funcionando corretamente.
