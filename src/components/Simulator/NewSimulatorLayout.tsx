@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { SimulatorConfigModal } from './SimulatorConfigModal';
 
 export const NewSimulatorLayout = () => {
   const [modalidade, setModalidade] = useState<'aporte' | 'credito' | 'renda'>('aporte');
@@ -117,20 +118,13 @@ export const NewSimulatorLayout = () => {
         </Card>
       </div>
       {/* Modal de configurações (estrutura inicial) */}
-      {showConfigModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl p-8 shadow-xl min-w-[320px]">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold">Mais configurações</h2>
-              <Button variant="ghost" onClick={() => setShowConfigModal(false)}>Fechar</Button>
-            </div>
-            <div>
-              {/* Conteúdo do modal pode ser expandido depois */}
-              <p>Configurações avançadas aqui...</p>
-            </div>
-          </div>
-        </div>
-      )}
+      <SimulatorConfigModal
+        open={showConfigModal}
+        onClose={() => setShowConfigModal(false)}
+        onApply={() => setShowConfigModal(false)}
+        onSaveAndApply={() => setShowConfigModal(false)}
+        onReset={() => {}}
+      />
     </div>
   );
 };

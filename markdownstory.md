@@ -368,9 +368,11 @@ Concluído e pronto para deploy.
 
 ## 2024-07-10
 
-- Criado componente inicial `SimulatorConfigModal.tsx` em `src/components/Simulator/`.
-  - Estrutura visual do modal de "Mais configurações" do simulador.
-  - Switch global Manual/Sistema no topo.
-  - Campos principais (Administradora, Tipo de Crédito, Parcelas, Taxa de administração, Fundo de reserva, Ativar seguro, Redução de parcela, Atualização anual do crédito) com placeholders.
-  - Botões: Redefinir, Aplicar, Salvar e Aplicar.
-  - Ainda sem integração com Supabase ou lógica dinâmica.
+- Finalizada a implementação do modal de "Mais configurações" do simulador.
+  - Todos os campos dinâmicos (Administradora, Tipo de Crédito, Parcelas, Taxa de administração, Fundo de reserva, Seguro, Redução de parcela, Atualização anual do crédito) com alternância Manual/Sistema e dependências.
+  - Busca automática dos dados do Supabase conforme seleção.
+  - Permite edição manual dos campos quando selecionado.
+  - Botões: Aplicar (local), Salvar e Aplicar (Supabase), Redefinir (padrão).
+  - Persistência das configurações por usuário e empresa na tabela `simulator_configurations`.
+  - Feedback visual (toast) para sucesso e erro em todas as ações.
+  - Pronto para uso real no simulador.
