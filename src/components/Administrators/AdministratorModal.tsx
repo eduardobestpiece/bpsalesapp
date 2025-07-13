@@ -156,15 +156,29 @@ export const CreateAdministratorModal: React.FC<{
                 )}
               />
             )}
-            {/* Campo padrão */}
+            {form.watch('update_type') === 'specific_month' && (
+              <FormField
+                control={form.control}
+                name="grace_period_days"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Carência (em dias)</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="0" step="1" placeholder="0" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             <FormField
               control={form.control}
-              name="is_default"
+              name="max_embedded_percentage"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Administradora padrão</FormLabel>
+                  <FormLabel>Máximo embutido (%)</FormLabel>
                   <FormControl>
-                    <input type="checkbox" checked={field.value} onChange={e => field.onChange(e.target.checked)} />
+                    <Input type="number" min="0" max="100" step="0.01" placeholder="0.00" {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -430,15 +444,29 @@ export const EditAdministratorModal: React.FC<{
                 )}
               />
             )}
-            {/* Campo padrão */}
+            {form.watch('update_type') === 'specific_month' && (
+              <FormField
+                control={form.control}
+                name="grace_period_days"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Carência (em dias)</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="0" step="1" placeholder="0" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} value={field.value || ''} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
             <FormField
               control={form.control}
-              name="is_default"
+              name="max_embedded_percentage"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Administradora padrão</FormLabel>
+                  <FormLabel>Máximo embutido (%)</FormLabel>
                   <FormControl>
-                    <input type="checkbox" checked={field.value} onChange={e => field.onChange(e.target.checked)} />
+                    <Input type="number" min="0" max="100" step="0.01" placeholder="0.00" {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

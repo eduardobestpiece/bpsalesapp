@@ -11,6 +11,7 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { useQuery } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Radio } from '@/components/ui/radio-group';
 
 interface Administrator {
   id: string;
@@ -22,6 +23,7 @@ interface Administrator {
   special_entry_type: string;
   is_archived: boolean;
   created_at: string;
+  is_default: boolean;
 }
 
 interface AdministratorsListProps {
@@ -62,6 +64,8 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
     },
     enabled: canCopy,
   });
+
+  const [defaultAdminId, setDefaultAdminId] = useState<string | null>(null);
 
   // Função de cópia de administradoras
   const handleCopyAdministrators = async () => {
@@ -164,9 +168,30 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
     }
   };
 
+  const handleSetDefault = async (id: string) => {
+    try {
+      // Desmarcar todas e marcar só a selecionada
+      const { error } = await supabase.rpc('set_default_administrator', { admin_id: id, company_id: selectedCompanyId });
+      if (error) throw error;
+      setDefaultAdminId(id);
+      fetchAdministrators();
+      toast.success('Administradora padrão atualizada!');
+    } catch (error) {
+      toast.error('Erro ao definir administradora padrão');
+    }
+  };
+
   useEffect(() => {
     fetchAdministrators();
   }, [searchTerm, statusFilter]);
+
+  // Buscar qual é a administradora padrão ao carregar
+  useEffect(() => {
+    if (administrators.length > 0) {
+      const padrao = administrators.find(a => a.is_default);
+      setDefaultAdminId(padrao?.id || null);
+    }
+  }, [administrators]);
 
   if (loading) {
     return <div className="text-center py-8">Carregando...</div>;
@@ -214,6 +239,7 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead></TableHead>
             <TableHead>Nome</TableHead>
             <TableHead>Tipo de Atualização</TableHead>
             <TableHead>Mês de Atualização</TableHead>
@@ -225,6 +251,15 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
         <TableBody>
           {administrators.map((admin) => (
             <TableRow key={admin.id}>
+              <TableCell>
+                <input
+                  type="radio"
+                  checked={defaultAdminId === admin.id}
+                  onChange={() => handleSetDefault(admin.id)}
+                  name="admin-default"
+                  className="accent-blue-600 w-4 h-4"
+                />
+              </TableCell>
               <TableCell className="font-medium">{admin.name}</TableCell>
               <TableCell>
                 <Badge variant={admin.credit_update_type === 'monthly' ? 'default' : 'secondary'}>
