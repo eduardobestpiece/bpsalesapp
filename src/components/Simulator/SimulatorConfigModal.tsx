@@ -19,6 +19,10 @@ interface SimulatorConfigModalProps {
   onSaveAndApply: () => void;
   onReset: () => void;
   setManualTerm?: (term?: number) => void; // nova prop opcional
+  selectedTerm?: number;
+  setSelectedTerm?: (term: number) => void;
+  adminTaxPercent?: number;
+  reserveFundPercent?: number;
 }
 
 type Administrator = Database['public']['Tables']['administrators']['Row'];
@@ -68,6 +72,10 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   onSaveAndApply,
   onReset,
   setManualTerm,
+  selectedTerm,
+  setSelectedTerm,
+  adminTaxPercent,
+  reserveFundPercent,
 }) => {
   const { selectedCompanyId } = useCompany();
   
@@ -255,14 +263,14 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   // Atualizar valores automáticos ao trocar parcela (Sistema)
   useEffect(() => {
     if (!manualFieldsState.taxaAdministracao && selectedInstallmentTypeId) {
-      const selected = installmentTypes.find((it) => it.id === selectedInstallmentTypeId);
+      const selected = installmentTypes.find((it) => it.installment_count.toString() === selectedInstallmentTypeId);
       setAdminTax(selected?.admin_tax_percent?.toString() || '');
     }
   }, [manualFieldsState.taxaAdministracao, selectedInstallmentTypeId, installmentTypes]);
 
   useEffect(() => {
     if (!manualFieldsState.fundoReserva && selectedInstallmentTypeId) {
-      const selected = installmentTypes.find((it) => it.id === selectedInstallmentTypeId);
+      const selected = installmentTypes.find((it) => it.installment_count.toString() === selectedInstallmentTypeId);
       setReserveFund(selected?.reserve_fund_percent?.toString() || '');
     }
   }, [manualFieldsState.fundoReserva, selectedInstallmentTypeId, installmentTypes]);
@@ -367,6 +375,26 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
       loadConfig();
     }
   }, [open, selectedCompanyId]);
+
+  // Atualizar valores automáticos ao abrir modal ou ao receber novos percentuais
+  useEffect(() => {
+    if (!manualFieldsState.taxaAdministracao && adminTaxPercent !== undefined) {
+      setAdminTax(adminTaxPercent.toString());
+    }
+  }, [manualFieldsState.taxaAdministracao, adminTaxPercent]);
+
+  useEffect(() => {
+    if (!manualFieldsState.fundoReserva && reserveFundPercent !== undefined) {
+      setReserveFund(reserveFundPercent.toString());
+    }
+  }, [manualFieldsState.fundoReserva, reserveFundPercent]);
+
+  // Sincronizar valor inicial ao abrir o modal
+  useEffect(() => {
+    if (selectedTerm && !manualFieldsState.parcelas) {
+      setSelectedInstallmentTypeId(selectedTerm.toString());
+    }
+  }, [selectedTerm, manualFieldsState.parcelas]);
 
   // Função para calcular o estado do switch global
   const getGlobalSwitchState = () => {
@@ -558,6 +586,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
                 onChange={e => {
                   setSelectedInstallmentTypeId(e.target.value);
                   if (setManualTerm) setManualTerm(Number(e.target.value) || undefined);
+                  if (setSelectedTerm) setSelectedTerm(Number(e.target.value) || undefined);
                 }}
               />
             ) : (
@@ -566,6 +595,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
                 onValueChange={v => {
                   setSelectedInstallmentTypeId(v);
                   if (setManualTerm) setManualTerm(undefined);
+                  if (setSelectedTerm) setSelectedTerm(Number(v));
                 }}
               >
                 <SelectTrigger className="w-full">

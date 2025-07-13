@@ -64,6 +64,25 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [installmentTypes, setInstallmentTypes] = useState<any[]>([]);
 
+  // Adicionar estado para sincronizar parcelas
+  const [selectedTerm, setSelectedTerm] = useState<number | undefined>(undefined);
+
+  // Adicionar estados para adminTaxPercent e reserveFundPercent
+  const [adminTaxPercent, setAdminTaxPercent] = useState<number | undefined>(undefined);
+  const [reserveFundPercent, setReserveFundPercent] = useState<number | undefined>(undefined);
+
+  // Atualizar ao receber do painel de dados
+  useEffect(() => {
+    if (simulationData.adminTaxPercent !== undefined) setAdminTaxPercent(simulationData.adminTaxPercent);
+    if (simulationData.reserveFundPercent !== undefined) setReserveFundPercent(simulationData.reserveFundPercent);
+  }, [simulationData.adminTaxPercent, simulationData.reserveFundPercent]);
+
+  // Atualizar selectedTerm ao mudar no simulador
+  const handleTermChange = (value: number) => {
+    setSelectedTerm(value);
+    handleFieldChange('term', value);
+  };
+
   // Se houver valor manual vindo do modal, ele se sobrepõe
   const termValue = manualTerm !== undefined && manualTerm !== null ? manualTerm : simulationData.term;
 
@@ -97,7 +116,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
           <label className="font-medium">Número de parcelas</label>
           <Select
             value={termValue.toString()}
-            onValueChange={v => handleFieldChange('term', Number(v))}
+            onValueChange={v => handleTermChange(Number(v))}
           >
             <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
             <SelectContent>
@@ -137,7 +156,11 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
         onApply={() => setShowConfigModal(false)}
         onSaveAndApply={() => setShowConfigModal(false)}
         onReset={() => {}}
-        setManualTerm={() => {}} // nova prop para sincronizar valor manual
+        setManualTerm={() => {}}
+        selectedTerm={selectedTerm}
+        setSelectedTerm={setSelectedTerm}
+        adminTaxPercent={adminTaxPercent}
+        reserveFundPercent={reserveFundPercent}
       />
     </div>
   );

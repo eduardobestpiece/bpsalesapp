@@ -21,6 +21,8 @@ interface SimulationData {
   updateRate: number;
   searchType: 'contribution' | 'credit';
   bidType?: string;
+  adminTaxPercent?: number;
+  reserveFundPercent?: number;
 }
 
 interface SimulationDataPanelProps {
@@ -35,6 +37,7 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
   const [products, setProducts] = useState<any[]>([]);
   const [includeInsurance, setIncludeInsurance] = useState(false);
   const [showCalculationModal, setShowCalculationModal] = useState(false);
+  const [reductionOptions, setReductionOptions] = useState<any[]>([]);
 
   useEffect(() => {
     if (selectedCompanyId) {
@@ -48,6 +51,65 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
       fetchProducts(data.administrator);
     }
   }, [data.administrator, selectedCompanyId]);
+
+  useEffect(() => {
+    const fetchReductions = async () => {
+      if (!data.term || !data.administrator) {
+        setReductionOptions([]);
+        return;
+      }
+      // Buscar o installment_type correspondente
+      const { data: installmentTypes } = await supabase
+        .from('installment_types')
+        .select('id')
+        .eq('administrator_id', data.administrator)
+        .eq('installment_count', data.term)
+        .eq('is_archived', false)
+        .limit(1);
+      const installmentTypeId = installmentTypes?.[0]?.id;
+      if (!installmentTypeId) {
+        setReductionOptions([]);
+        return;
+      }
+      // Buscar reduções associadas
+      const { data: rels } = await supabase
+        .from('installment_type_reductions')
+        .select('installment_reduction_id')
+        .eq('installment_type_id', installmentTypeId);
+      const reductionIds = rels?.map(r => r.installment_reduction_id) || [];
+      if (reductionIds.length === 0) {
+        setReductionOptions([]);
+        return;
+      }
+      const { data: reductions } = await supabase
+        .from('installment_reductions')
+        .select('id, name')
+        .in('id', reductionIds)
+        .eq('is_archived', false);
+      setReductionOptions(reductions || []);
+    };
+    fetchReductions();
+  }, [data.term, data.administrator]);
+
+  useEffect(() => {
+    const fetchInstallmentTypeDetails = async () => {
+      if (!data.term || !data.administrator) return;
+      const { data: installmentTypes } = await supabase
+        .from('installment_types')
+        .select('*')
+        .eq('administrator_id', data.administrator)
+        .eq('installment_count', data.term)
+        .eq('is_archived', false)
+        .limit(1);
+      const selected = installmentTypes?.[0];
+      if (selected) {
+        if (onChange) {
+          onChange({ ...data, adminTaxPercent: selected.admin_tax_percent, reserveFundPercent: selected.reserve_fund_percent });
+        }
+      }
+    };
+    fetchInstallmentTypeDetails();
+  }, [data.term, data.administrator]);
 
   const fetchAdministrators = async () => {
     try {
@@ -205,10 +267,8 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="full">Parcela Cheia</SelectItem>
-                  {installmentTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id}>
-                      {type.name}
-                    </SelectItem>
+                  {reductionOptions.map((reduction) => (
+                    <SelectItem key={reduction.id} value={reduction.id}>{reduction.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
