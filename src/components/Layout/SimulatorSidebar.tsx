@@ -165,6 +165,17 @@ export const SimulatorSidebar = () => {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
+              {/* Master Config: visível apenas para master */}
+              {userRole === 'master' && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActivePath('/master-config')}>
+                    <Link to="/master-config">
+                      <Settings className="h-4 w-4" />
+                      <span>Master Config</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

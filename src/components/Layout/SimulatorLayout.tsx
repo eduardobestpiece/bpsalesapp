@@ -17,6 +17,10 @@ export const SimulatorLayout = ({ children }: SimulatorLayoutProps) => {
         <div className="min-h-screen flex w-full">
           <SimulatorSidebar />
           <SidebarInset className="flex-1">
+            <div className="flex items-center gap-2 mb-4">
+              <SidebarTrigger />
+              <span className="font-bold text-lg text-gray-800 tracking-wide">Simulador</span>
+            </div>
             <main className="flex-1 p-6">
               {children}
             </main>
