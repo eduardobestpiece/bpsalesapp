@@ -330,8 +330,8 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <div className="flex flex-col h-[80vh] max-h-[80vh]">
-        <DialogTitle asChild>
-          <div className="flex-shrink-0 flex items-center justify-between px-6 pt-6 pb-2 border-b bg-background z-10">
+        <DialogTitle>
+          <div className="flex items-center justify-between w-full">
             <span className="flex items-center gap-2">
               Mais configurações
               {globalSwitchState === null && (
@@ -554,8 +554,8 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
             </div>
           )}
         </DialogContent>
-        <DialogFooter asChild>
-          <div className="flex-shrink-0 px-6 pb-6 pt-2 border-t bg-background z-10 flex gap-2 justify-end">
+        <DialogFooter>
+          <div className="flex gap-2 justify-end w-full">
             <Button variant="outline" onClick={handleReset}>Redefinir</Button>
             <Button variant="secondary" onClick={handleApply}>Aplicar</Button>
             <Button onClick={handleSaveAndApply}>Salvar e Aplicar</Button>
