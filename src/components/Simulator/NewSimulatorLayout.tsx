@@ -63,8 +63,6 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   const [tipoParcelaSelecionado, setTipoParcelaSelecionado] = useState<string>('full');
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [installmentTypes, setInstallmentTypes] = useState<any[]>([]);
-  // Adicionar estado para valor manual
-  const [manualTerm, setManualTerm] = useState<number | undefined>(undefined);
 
   // Se houver valor manual vindo do modal, ele se sobrepõe
   const termValue = manualTerm !== undefined && manualTerm !== null ? manualTerm : simulationData.term;
@@ -139,7 +137,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
         onApply={() => setShowConfigModal(false)}
         onSaveAndApply={() => setShowConfigModal(false)}
         onReset={() => {}}
-        setManualTerm={setManualTerm} // nova prop para sincronizar valor manual
+        setManualTerm={() => {}} // nova prop para sincronizar valor manual
       />
     </div>
   );
