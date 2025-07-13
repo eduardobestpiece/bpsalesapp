@@ -210,7 +210,15 @@ export const InstallmentReductionModal: React.FC<InstallmentReductionModalProps>
                 <FormItem>
                   <FormLabel>Percentual reduzido (%)</FormLabel>
                   <FormControl>
-                    <Input type="number" min={0} max={100} step={0.01} {...field} />
+                    <Input
+                      type="number"
+                      min={0}
+                      max={100}
+                      step={0.01}
+                      {...field}
+                      onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)}
+                      value={field.value || ''}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

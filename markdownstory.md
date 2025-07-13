@@ -276,3 +276,11 @@ Próximos passos: ajustes no gráfico do funil, modais de indicadores, permissõ
 
 **Status:**
 Aguardando testes finais e validação do usuário para realizar o deploy.
+
+## [Correção] Bug de validação no campo Percentual reduzido (%)
+
+**Data:** 2024-07-11
+
+- Corrigido o erro "Expected number, received string" ao cadastrar uma Redução de Parcela.
+- O campo Percentual reduzido (%) agora converte corretamente o valor de string para number no onChange, conforme padrão dos outros modais do projeto.
+- Pronto para novo teste do usuário.
