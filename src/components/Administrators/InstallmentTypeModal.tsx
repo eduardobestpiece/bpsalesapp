@@ -184,8 +184,8 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
       toast({ title: installmentType ? 'Parcela atualizada com sucesso!' : 'Parcela cadastrada com sucesso!' });
       form.reset();
       onSuccess();
-    } catch (error) {
-      toast({ title: 'Erro ao salvar parcela', variant: 'destructive' });
+    } catch (error: any) {
+      toast({ title: 'Erro ao salvar parcela', description: error?.message || JSON.stringify(error), variant: 'destructive' });
     }
   };
 
