@@ -19,6 +19,8 @@ import { EntryTypeModal } from '@/components/Administrators/EntryTypeModal';
 import { EntryTypesList } from '@/components/Administrators/EntryTypesList';
 import { LeverageModal } from '@/components/Administrators/LeverageModal';
 import { LeveragesList } from '@/components/Administrators/LeveragesList';
+import { InstallmentReductionModal } from '@/components/Administrators/InstallmentReductionModal';
+import { InstallmentReductionsList } from '@/components/Administrators/InstallmentReductionsList';
 
 export default function Configuracoes() {
   const [selectedAdministrator, setSelectedAdministrator] = useState<any>(null);
@@ -33,6 +35,8 @@ export default function Configuracoes() {
   const [showEntryTypeModal, setShowEntryTypeModal] = useState(false);
   const [selectedLeverage, setSelectedLeverage] = useState<any>(null);
   const [showLeverageModal, setShowLeverageModal] = useState(false);
+  const [selectedInstallmentReduction, setSelectedInstallmentReduction] = useState<any>(null);
+  const [showInstallmentReductionModal, setShowInstallmentReductionModal] = useState(false);
 
   // Search and filter states
   const [adminSearchTerm, setAdminSearchTerm] = useState('');
@@ -47,12 +51,15 @@ export default function Configuracoes() {
   const [entryStatusFilter, setEntryStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
   const [leverageSearchTerm, setLeverageSearchTerm] = useState('');
   const [leverageStatusFilter, setLeverageStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
+  const [reductionSearchTerm, setReductionSearchTerm] = useState('');
+  const [reductionStatusFilter, setReductionStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
 
   // Administrator filter for related tables
   const [productAdminFilter, setProductAdminFilter] = useState<string>('');
   const [installmentAdminFilter, setInstallmentAdminFilter] = useState<string>('');
   const [bidAdminFilter, setBidAdminFilter] = useState<string>('');
   const [entryAdminFilter, setEntryAdminFilter] = useState<string>('');
+  const [reductionAdminFilter, setReductionAdminFilter] = useState<string>('');
 
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -95,6 +102,11 @@ export default function Configuracoes() {
     setShowLeverageModal(true);
   };
 
+  const handleEditInstallmentReduction = (installmentReduction: any) => {
+    setSelectedInstallmentReduction(installmentReduction);
+    setShowInstallmentReductionModal(true);
+  };
+
   const closeModals = () => {
     setShowAdministratorModal(false);
     setShowProductModal(false);
@@ -102,12 +114,14 @@ export default function Configuracoes() {
     setShowBidTypeModal(false);
     setShowEntryTypeModal(false);
     setShowLeverageModal(false);
+    setShowInstallmentReductionModal(false);
     setSelectedAdministrator(null);
     setSelectedProduct(null);
     setSelectedInstallmentType(null);
     setSelectedBidType(null);
     setSelectedEntryType(null);
     setSelectedLeverage(null);
+    setSelectedInstallmentReduction(null);
     handleRefresh();
   };
 
@@ -124,17 +138,17 @@ export default function Configuracoes() {
             <CardContent className="p-0">
               <Tabs defaultValue="administrators" className="w-full">
                 <div className="border-b bg-gray-50/50 px-6 py-4">
-                  <TabsList className="grid grid-cols-6 w-full max-w-4xl mx-auto">
+                  <TabsList className="grid grid-cols-7 w-full max-w-5xl mx-auto">
                     <TabsTrigger value="administrators">Administradoras</TabsTrigger>
                     <TabsTrigger value="products">Produtos</TabsTrigger>
                     <TabsTrigger value="installments">Parcelas</TabsTrigger>
+                    <TabsTrigger value="reductions">Reduções</TabsTrigger>
                     <TabsTrigger value="bids">Tipos de Lance</TabsTrigger>
                     <TabsTrigger value="entries">Entradas</TabsTrigger>
                     <TabsTrigger value="leverages">Alavancas</TabsTrigger>
                   </TabsList>
                 </div>
 
-                {/* Administrators Tab */}
                 <TabsContent value="administrators" className="p-6">
                   <div className="space-y-6">
                     <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -179,7 +193,6 @@ export default function Configuracoes() {
                   </div>
                 </TabsContent>
 
-                {/* Products Tab */}
                 <TabsContent value="products" className="p-6">
                   <div className="space-y-6">
                     <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -226,7 +239,6 @@ export default function Configuracoes() {
                   </div>
                 </TabsContent>
 
-                {/* Installment Types Tab */}
                 <TabsContent value="installments" className="p-6">
                   <div className="space-y-6">
                     <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -272,7 +284,6 @@ export default function Configuracoes() {
                   </div>
                 </TabsContent>
 
-                {/* Bid Types Tab */}
                 <TabsContent value="bids" className="p-6">
                   <div className="space-y-6">
                     <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -318,7 +329,6 @@ export default function Configuracoes() {
                   </div>
                 </TabsContent>
 
-                {/* Entry Types Tab */}
                 <TabsContent value="entries" className="p-6">
                   <div className="space-y-6">
                     <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -364,7 +374,6 @@ export default function Configuracoes() {
                   </div>
                 </TabsContent>
 
-                {/* Leverages Tab */}
                 <TabsContent value="leverages" className="p-6">
                   <div className="space-y-6">
                     <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -408,11 +417,55 @@ export default function Configuracoes() {
                     />
                   </div>
                 </TabsContent>
+
+                <TabsContent value="reductions" className="p-6">
+                  <div className="space-y-6">
+                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                      <div>
+                        <h2 className="text-2xl font-semibold text-gray-900">Reduções de Parcela</h2>
+                        <p className="text-gray-600 mt-1">Gerencie as reduções aplicáveis às parcelas</p>
+                      </div>
+                      <Button onClick={() => setShowInstallmentReductionModal(true)} className="bg-gradient-primary hover:opacity-90">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Adicionar Redução
+                      </Button>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <Input
+                          placeholder="Buscar reduções..."
+                          value={reductionSearchTerm}
+                          onChange={(e) => setReductionSearchTerm(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+                      <Select value={reductionStatusFilter} onValueChange={(value: 'all' | 'active' | 'archived') => setReductionStatusFilter(value)}>
+                        <SelectTrigger className="w-full sm:w-48">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">Todas</SelectItem>
+                          <SelectItem value="active">Ativas</SelectItem>
+                          <SelectItem value="archived">Arquivadas</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <InstallmentReductionsList
+                      key={refreshKey}
+                      searchTerm={reductionSearchTerm}
+                      statusFilter={reductionStatusFilter}
+                      administratorFilter={reductionAdminFilter}
+                      onEdit={handleEditInstallmentReduction}
+                    />
+                  </div>
+                </TabsContent>
               </Tabs>
             </CardContent>
           </Card>
 
-          {/* Modals */}
           <AdministratorModal
             open={showAdministratorModal}
             onOpenChange={setShowAdministratorModal}
@@ -431,6 +484,13 @@ export default function Configuracoes() {
             open={showInstallmentTypeModal}
             onOpenChange={setShowInstallmentTypeModal}
             installmentType={selectedInstallmentType}
+            onSuccess={closeModals}
+          />
+
+          <InstallmentReductionModal
+            open={showInstallmentReductionModal}
+            onOpenChange={setShowInstallmentReductionModal}
+            installmentReduction={selectedInstallmentReduction}
             onSuccess={closeModals}
           />
 
