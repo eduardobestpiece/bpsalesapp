@@ -29,6 +29,7 @@ import MultiSelect from '@/components/ui/multiselect';
 import { CreateAdministratorModal } from '@/components/Administrators/AdministratorModal';
 
 const installmentTypeSchema = z.object({
+  name: z.string().min(1, 'Nome é obrigatório'),
   administrator_id: z.string().min(1, 'Administradora é obrigatória'),
   installment_count: z.number().min(1, 'Número de parcelas é obrigatório'),
   admin_tax_percent: z.number().min(0).max(100),
@@ -63,6 +64,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
   const form = useForm<any>({
     resolver: zodResolver(installmentTypeSchema),
     defaultValues: {
+      name: installmentType?.name || '',
       administrator_id: installmentType?.administrator_id || '',
       installment_count: installmentType?.installment_count || 1,
       admin_tax_percent: installmentType?.admin_tax_percent || 0,
@@ -81,6 +83,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
       // Resetar valores do formulário ao abrir para edição
       if (installmentType) {
         form.reset({
+          name: installmentType.name || '',
           administrator_id: installmentType.administrator_id || '',
           installment_count: installmentType.installment_count || 1,
           admin_tax_percent: installmentType.admin_tax_percent || 0,
@@ -92,6 +95,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
         });
       } else {
         form.reset({
+          name: '',
           administrator_id: '',
           installment_count: 1,
           admin_tax_percent: 0,
@@ -139,6 +143,10 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
         toast({ title: 'Empresa não selecionada!', variant: 'destructive' });
         return;
       }
+      if (!data.name) {
+        toast({ title: 'Nome é obrigatório!', variant: 'destructive' });
+        return;
+      }
       if (!data.administrator_id) {
         toast({ title: 'Administradora é obrigatória!', variant: 'destructive' });
         return;
@@ -163,6 +171,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
         return;
       }
       const cleanData = {
+        name: data.name,
         administrator_id: data.administrator_id,
         installment_count: data.installment_count,
         admin_tax_percent: data.admin_tax_percent,
@@ -221,6 +230,19 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nome da Parcela</FormLabel>
+                  <FormControl>
+                    <Input {...field} placeholder="Ex: 240 meses, Parcela Cheia, etc." />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="administrator_id"
