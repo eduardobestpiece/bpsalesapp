@@ -24,6 +24,8 @@ interface SimulatorConfigModalProps {
 type Administrator = Database['public']['Tables']['administrators']['Row'];
 type BidType = Database['public']['Tables']['bid_types']['Row'];
 type InstallmentType = Database['public']['Tables']['installment_types']['Row'];
+// Adicionar tipo Product
+type Product = Database['public']['Tables']['products']['Row'];
 
 const manualFields = [
   'parcelas',
@@ -66,6 +68,8 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   const [administrators, setAdministrators] = useState<Administrator[]>([]);
   const [bidTypes, setBidTypes] = useState<BidType[]>([]);
   const [installmentTypes, setInstallmentTypes] = useState<InstallmentType[]>([]);
+  // Estado para produtos
+  const [products, setProducts] = useState<Product[]>([]);
 
   // Seleções do usuário
   const [selectedAdministratorId, setSelectedAdministratorId] = useState<string | null>(null);
@@ -142,6 +146,27 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
     };
     fetchInstallmentTypes();
   }, [selectedAdministratorId, selectedBidTypeId]);
+
+  // Buscar produtos ao selecionar administradora
+  useEffect(() => {
+    if (!selectedAdministratorId) return;
+    const fetchProducts = async () => {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('administrator_id', selectedAdministratorId)
+        .eq('is_archived', false);
+      if (!error && data) {
+        setProducts(data);
+      } else {
+        setProducts([]);
+      }
+    };
+    fetchProducts();
+  }, [selectedAdministratorId]);
+
+  // Extrair tipos únicos dos produtos
+  const creditTypes = Array.from(new Set(products.map(p => p.type))).filter(Boolean);
 
   // Atualizar valores automáticos ao trocar parcela (Sistema)
   useEffect(() => {
@@ -373,8 +398,8 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
               onChange={(e) => setSelectedBidTypeId(e.target.value)}
             >
               <option value="" disabled>Selecione um tipo de crédito...</option>
-              {bidTypes.map((type) => (
-                <option key={type.id} value={type.id}>{type.name}</option>
+              {creditTypes.map((type) => (
+                <option key={type} value={type}>{type}</option>
               ))}
             </select>
           </div>
