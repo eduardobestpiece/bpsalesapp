@@ -29,7 +29,6 @@ import MultiSelect from '@/components/ui/multiselect';
 import { CreateAdministratorModal } from '@/components/Administrators/AdministratorModal';
 
 const installmentTypeSchema = z.object({
-  name: z.string().min(1, 'Nome é obrigatório'),
   administrator_id: z.string().min(1, 'Administradora é obrigatória'),
   installment_count: z.number().min(1, 'Número de parcelas é obrigatório'),
   admin_tax_percent: z.number().min(0).max(100),
@@ -64,7 +63,6 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
   const form = useForm<any>({
     resolver: zodResolver(installmentTypeSchema),
     defaultValues: {
-      name: installmentType?.name || '',
       administrator_id: installmentType?.administrator_id || '',
       installment_count: installmentType?.installment_count || 1,
       admin_tax_percent: installmentType?.admin_tax_percent || 0,
@@ -83,7 +81,6 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
       // Resetar valores do formulário ao abrir para edição
       if (installmentType) {
         form.reset({
-          name: installmentType.name || '',
           administrator_id: installmentType.administrator_id || '',
           installment_count: installmentType.installment_count || 1,
           admin_tax_percent: installmentType.admin_tax_percent || 0,
@@ -95,7 +92,6 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
         });
       } else {
         form.reset({
-          name: '',
           administrator_id: '',
           installment_count: 1,
           admin_tax_percent: 0,
@@ -143,10 +139,6 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
         toast({ title: 'Empresa não selecionada!', variant: 'destructive' });
         return;
       }
-      if (!data.name) {
-        toast({ title: 'Nome é obrigatório!', variant: 'destructive' });
-        return;
-      }
       if (!data.administrator_id) {
         toast({ title: 'Administradora é obrigatória!', variant: 'destructive' });
         return;
@@ -155,6 +147,8 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
         toast({ title: 'Número de parcelas deve ser maior que zero!', variant: 'destructive' });
         return;
       }
+      // Definir o nome automaticamente
+      const name = String(data.installment_count);
       // Verificar duplicidade para a mesma administradora
       const { data: existing, error: dupError } = await supabase
         .from('installment_types')
