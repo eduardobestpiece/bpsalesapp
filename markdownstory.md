@@ -244,3 +244,7 @@ Próximos passos: ajustes no gráfico do funil, modais de indicadores, permissõ
   - Permissões: master/admin editam, submaster apenas visualiza.
   - Busca administradoras da empresa.
   - Pronto para integração com a lista de Redução de Parcela.
+
+- Integrado o modal e a lista de Redução de Parcela na página de Configurações:
+  - Botão de adicionar, filtros por nome/status, abertura/edição conforme permissões.
+  - Padrão visual igual às demais entidades.

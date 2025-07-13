@@ -62,6 +62,10 @@
   - Lógica de permissões: master/admin editam, submaster apenas visualiza.
   - Busca administradoras da empresa.
   - Pronto para integração com a lista de Redução de Parcela.
+- [x] Integrado o modal e a lista de Redução de Parcela (`InstallmentReductionModal` e `InstallmentReductionList`) na página de Configurações.
+  - Adicionado botão de adicionar, filtros por nome/status, abertura/edição conforme permissões.
+  - Modal e lista seguem padrão visual das demais entidades.
+  - Pronto para testes e ajustes finais.
 
 ---
 
