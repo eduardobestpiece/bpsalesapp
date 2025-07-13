@@ -77,7 +77,7 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
 
     console.log('[CrmPerformance] Starting getFunnelChartData with filters:', filters);
     console.log('[CrmPerformance] All indicators:', indicators.length);
-      
+
     let relevantIndicators = indicators.filter(indicator => {
       if (!indicator || indicator.funnel_id !== filters.funnelId) return false;
       return true;
@@ -132,7 +132,7 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     relevantIndicators.forEach(ind => {
       console.log('[CrmPerformance] Final indicator', ind.id, 'user_id:', ind.user_id, 'values:', ind.values?.length || 0);
     });
-
+    
     if (relevantIndicators.length === 0) return [];
 
     const orderedStages = selectedFunnel.stages?.sort((a, b) => a.stage_order - b.stage_order) || [];
@@ -141,11 +141,11 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     console.log('[CrmPerformance] Aggregated stages:', aggregatedStages);
     
     return orderedStages.map((stage, idx) => ({
-          id: stage.id,
-          name: stage.name,
+      id: stage.id,
+      name: stage.name,
       actual: aggregatedStages[idx]?.value || 0,
-          target: stage.target_value || 0,
-          targetPercentage: stage.target_percentage
+      target: stage.target_value || 0,
+      targetPercentage: stage.target_percentage
     }));
   };
 
@@ -443,8 +443,8 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
           compareStages={funnelComparisonData.compareStages}
           periodoLabel={getPeriodoLabel()}
           funnelName={selectedFunnel?.name || ''}
-            />
-          ) : (
+        />
+      ) : (
         <div className="text-center text-muted-foreground py-8">Nenhum dado para exibir o funil.</div>
       )}
     </div>

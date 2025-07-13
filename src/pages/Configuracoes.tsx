@@ -19,50 +19,8 @@ import { EntryTypeModal } from '@/components/Administrators/EntryTypeModal';
 import { EntryTypesList } from '@/components/Administrators/EntryTypesList';
 import { LeverageModal } from '@/components/Administrators/LeverageModal';
 import { LeveragesList } from '@/components/Administrators/LeveragesList';
-import { InstallmentReductionList } from '@/components/Administrators/InstallmentReductionList';
-import { InstallmentReductionModal } from '@/components/Administrators/InstallmentReductionModal';
-import { useCrmAuth } from '@/contexts/CrmAuthContext';
-import { useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-
-// Componente para listar e restaurar administradoras arquivadas (apenas master)
-function ArchivedAdministrators() {
-  const [archived, setArchived] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const fetchArchived = async () => {
-    setLoading(true);
-    const { data, error } = await supabase
-      .from('administrators')
-      .select('*')
-      .eq('is_archived', true);
-    setArchived(data || []);
-    setLoading(false);
-  };
-  const handleRestore = async (id: string) => {
-    await supabase.from('administrators').update({ is_archived: false }).eq('id', id);
-    fetchArchived();
-  };
-  useState(() => { fetchArchived(); }, []);
-  return (
-    <div>
-      <h3 className="font-bold mb-2">Administradoras Arquivadas</h3>
-      {loading ? <div>Carregando...</div> : (
-        <ul className="space-y-2">
-          {archived.map((admin: any) => (
-            <li key={admin.id} className="flex justify-between items-center border p-2 rounded">
-              <span>{admin.name}</span>
-              <button className="text-green-600" onClick={() => handleRestore(admin.id)}>Restaurar</button>
-            </li>
-          ))}
-          {archived.length === 0 && <div className="text-gray-500">Nenhuma administradora arquivada.</div>}
-        </ul>
-      )}
-    </div>
-  );
-}
 
 export default function Configuracoes() {
-  const { userRole } = useCrmAuth();
   const [selectedAdministrator, setSelectedAdministrator] = useState<any>(null);
   const [showAdministratorModal, setShowAdministratorModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
@@ -153,33 +111,6 @@ export default function Configuracoes() {
     handleRefresh();
   };
 
-  // Estados para Redução de Parcela
-  const [reductionSearchTerm, setReductionSearchTerm] = useState('');
-  const [reductionStatusFilter, setReductionStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
-  const [selectedReduction, setSelectedReduction] = useState<any>(null);
-  const [showReductionModal, setShowReductionModal] = useState(false);
-
-  // Handlers para Redução de Parcela
-  const handleEditReduction = (reduction: any) => {
-    setSelectedReduction(reduction);
-    setShowReductionModal(true);
-  };
-  const handleCreateReduction = () => {
-    setSelectedReduction(null);
-    setShowReductionModal(true);
-  };
-  const closeReductionModal = () => {
-    setShowReductionModal(false);
-    setSelectedReduction(null);
-    handleRefresh();
-  };
-  const handleSaveReduction = (data: any) => {
-    // Aqui você pode implementar a lógica de salvar no Supabase, se necessário
-    closeReductionModal();
-  };
-
-  const [tab, setTab] = useState('config');
-
   return (
     <SimulatorLayout>
       <div className="container mx-auto px-4 py-8">
@@ -193,23 +124,15 @@ export default function Configuracoes() {
             <CardContent className="p-0">
               <Tabs defaultValue="administrators" className="w-full">
                 <div className="border-b bg-gray-50/50 px-6 py-4">
-                  <TabsList className="grid grid-cols-7 w-full max-w-5xl mx-auto">
+                  <TabsList className="grid grid-cols-6 w-full max-w-4xl mx-auto">
                     <TabsTrigger value="administrators">Administradoras</TabsTrigger>
                     <TabsTrigger value="products">Produtos</TabsTrigger>
                     <TabsTrigger value="installments">Parcelas</TabsTrigger>
                     <TabsTrigger value="bids">Tipos de Lance</TabsTrigger>
                     <TabsTrigger value="entries">Entradas</TabsTrigger>
                     <TabsTrigger value="leverages">Alavancas</TabsTrigger>
-                    <TabsTrigger value="reductions">Redução de Parcela</TabsTrigger>
                   </TabsList>
                 </div>
-
-                {userRole === 'master' && (
-                  <div className="mb-4">
-                    <button className={tab === 'config' ? 'font-bold' : ''} onClick={() => setTab('config')}>Configurações</button>
-                    <button className={tab === 'archived' ? 'font-bold ml-4' : 'ml-4'} onClick={() => setTab('archived')}>Itens Arquivados</button>
-                  </div>
-                )}
 
                 {/* Administrators Tab */}
                 <TabsContent value="administrators" className="p-6">
@@ -485,64 +408,9 @@ export default function Configuracoes() {
                     />
                   </div>
                 </TabsContent>
-
-                {/* Reductions Tab */}
-                <TabsContent value="reductions" className="p-6">
-                  <div className="space-y-6">
-                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                      <div>
-                        <h2 className="text-2xl font-semibold text-gray-900">Redução de Parcela</h2>
-                        <p className="text-gray-600 mt-1">Gerencie as regras de redução de parcela</p>
-                      </div>
-                      <Button onClick={handleCreateReduction} className="bg-gradient-primary hover:opacity-90">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Adicionar Redução de Parcela
-                      </Button>
-                    </div>
-                    <div className="flex flex-col sm:flex-row gap-4">
-                      <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        <Input
-                          placeholder="Buscar redução de parcela..."
-                          value={reductionSearchTerm}
-                          onChange={(e) => setReductionSearchTerm(e.target.value)}
-                          className="pl-10"
-                        />
-                      </div>
-                      <Select value={reductionStatusFilter} onValueChange={(value: 'all' | 'active' | 'archived') => setReductionStatusFilter(value)}>
-                        <SelectTrigger className="w-full sm:w-48">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="all">Todas</SelectItem>
-                          <SelectItem value="active">Ativas</SelectItem>
-                          <SelectItem value="archived">Arquivadas</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <InstallmentReductionList
-                      key={refreshKey}
-                      searchTerm={reductionSearchTerm}
-                      statusFilter={reductionStatusFilter}
-                      selectedAdministrator={installmentAdminFilter || ''}
-                      onEdit={handleEditReduction}
-                      onCopy={() => {}} // Implementar lógica de cópia depois
-                    />
-                  </div>
-                  <InstallmentReductionModal
-                    open={showReductionModal}
-                    onClose={closeReductionModal}
-                    onSave={handleSaveReduction}
-                    initialData={selectedReduction}
-                    userRole={userRole}
-                    companyId={''} // Passar o companyId correto
-                  />
-                </TabsContent>
               </Tabs>
             </CardContent>
           </Card>
-
-          {userRole === 'master' && tab === 'archived' && <ArchivedAdministrators />}
 
           {/* Modals */}
           <AdministratorModal

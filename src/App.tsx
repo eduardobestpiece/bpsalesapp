@@ -1,117 +1,153 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "next-themes";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ModuleProvider } from "@/contexts/ModuleContext";
+import { CrmAuthProvider, useCrmAuth } from "@/contexts/CrmAuthContext";
+import { ProtectedRoute } from "@/components/CRM/ProtectedRoute";
+import { CrmLayout } from "@/components/Layout/CrmLayout";
 import Index from "./pages/Index";
-import Home from "./pages/Home";
 import Simulador from "./pages/Simulador";
-import Administrators from "./pages/Administrators";
-import MasterConfig from "./pages/MasterConfig";
 import Configuracoes from "./pages/Configuracoes";
-import NotFound from "./pages/NotFound";
-
-// CRM Pages
 import CrmLogin from "./pages/crm/CrmLogin";
-import CrmResetPassword from "./pages/crm/CrmResetPassword";
-import CrmResetPasswordInvite from "./pages/crm/CrmResetPasswordInvite";
 import CrmDashboard from "./pages/crm/CrmDashboard";
-import CrmIndicadores from "./pages/crm/CrmIndicadores";
 import CrmConfiguracoes from "./pages/crm/CrmConfiguracoes";
-import CrmMasterConfig from "./pages/crm/CrmMasterConfig";
+import CrmIndicadores from "./pages/crm/CrmIndicadores";
 import CrmPerfil from "./pages/crm/CrmPerfil";
-import CrmPerformance from "./pages/crm/CrmPerformance";
-
-import { CrmAuthProvider } from "./contexts/CrmAuthContext";
-import { CompanyProvider } from "./contexts/CompanyContext";
-import { ProtectedRoute } from "./components/CRM/ProtectedRoute";
+import CrmMasterConfig from "./pages/crm/CrmMasterConfig";
+import NotFound from "./pages/NotFound";
+import CrmResetPasswordInvite from "./pages/crm/CrmResetPasswordInvite";
+import CrmResetPassword from "./pages/crm/CrmResetPassword";
+import Home from "./pages/Home";
+import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
+
+function AppContent() {
+  const { user, crmUser, companyId, loading } = useCrmAuth();
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <span className="text-muted-foreground text-sm mt-2">Carregando... Pode demorar até 15 segundos na primeira vez.</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback global para usuário autenticado mas não encontrado no CRM
+  if (user && !crmUser) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-destructive mb-2">Usuário não encontrado no CRM</h2>
+          <p className="text-secondary/60">Seu usuário está autenticado, mas não foi localizado na base de usuários do CRM. Contate o administrador do sistema.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback global para usuário sem empresa associada
+  if (user && crmUser && !companyId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-destructive mb-2">Empresa não associada</h2>
+          <p className="text-secondary/60">Seu usuário não está associado a nenhuma empresa ativa. Contate o administrador do sistema.</p>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <main>
+        <Routes>
+          {/* Public routes */}
+          <Route path="/crm/login" element={
+            user ? <Navigate to="/home" replace /> : <CrmLogin />
+          } />
+          <Route path="/crm/redefinir-senha-convite" element={<CrmResetPasswordInvite />} />
+          <Route path="/crm/redefinir-senha" element={<CrmResetPassword />} />
+          
+          {/* Protected routes */}
+          <Route path="/" element={
+            user ? <Navigate to="/home" replace /> : <Navigate to="/crm/login" replace />
+          } />
+          <Route path="/home" element={
+            user ? <Home /> : <Navigate to="/crm/login" replace />
+          } />
+          <Route path="/simulador" element={
+            user ? <Simulador /> : <Navigate to="/crm/login" replace />
+          } />
+          <Route path="/configuracoes" element={
+            user ? <Configuracoes /> : <Navigate to="/crm/login" replace />
+          } />
+          
+          {/* CRM Routes */}
+          <Route path="/crm" element={
+            user ? (
+              <CrmLayout>
+                <CrmDashboard />
+              </CrmLayout>
+            ) : <Navigate to="/crm/login" replace />
+          } />
+          <Route path="/crm/configuracoes" element={
+            user ? (
+              <ProtectedRoute requiredRole="admin">
+                <CrmLayout>
+                  <CrmConfiguracoes />
+                </CrmLayout>
+              </ProtectedRoute>
+            ) : <Navigate to="/crm/login" replace />
+          } />
+          <Route path="/crm/indicadores" element={
+            user ? (
+              <CrmLayout>
+                <CrmIndicadores />
+              </CrmLayout>
+            ) : <Navigate to="/crm/login" replace />
+          } />
+          <Route path="/crm/perfil" element={
+            user ? (
+              <CrmLayout>
+                <CrmPerfil />
+              </CrmLayout>
+            ) : <Navigate to="/crm/login" replace />
+          } />
+          <Route path="/crm/master" element={
+            user ? (
+              <ProtectedRoute requiredRole="master">
+                <CrmLayout>
+                  <CrmMasterConfig />
+                </CrmLayout>
+              </ProtectedRoute>
+            ) : <Navigate to="/crm/login" replace />
+          } />
+          
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </main>
+    </div>
+  );
+}
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <TooltipProvider>
-          <ModuleProvider>
-            <CrmAuthProvider>
-              <CompanyProvider>
-                <BrowserRouter>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/home" element={<Home />} />
-                    <Route path="/simulador" element={<Simulador />} />
-                    <Route path="/administrators" element={<Administrators />} />
-                    <Route path="/master-config" element={<MasterConfig />} />
-                    <Route path="/configuracoes" element={<Configuracoes />} />
-                    
-                    {/* CRM Routes */}
-                    <Route path="/crm/login" element={<CrmLogin />} />
-                    <Route path="/crm/reset-password" element={<CrmResetPassword />} />
-                    <Route path="/crm/reset-password-invite" element={<CrmResetPasswordInvite />} />
-                    
-                    <Route
-                      path="/crm/dashboard"
-                      element={
-                        <ProtectedRoute>
-                          <CrmDashboard />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/crm/indicadores"
-                      element={
-                        <ProtectedRoute>
-                          <CrmIndicadores />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/crm/configuracoes"
-                      element={
-                        <ProtectedRoute>
-                          <CrmConfiguracoes />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/crm/master-config"
-                      element={
-                        <ProtectedRoute>
-                          <CrmMasterConfig />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/crm/perfil"
-                      element={
-                        <ProtectedRoute>
-                          <CrmPerfil />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="/crm/performance"
-                      element={
-                        <ProtectedRoute>
-                          <CrmPerformance />
-                        </ProtectedRoute>
-                      }
-                    />
-                    
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                </BrowserRouter>
-              </CompanyProvider>
-            </CrmAuthProvider>
-          </ModuleProvider>
-          <Toaster />
-          <Sonner />
-        </TooltipProvider>
-      </ThemeProvider>
+      <TooltipProvider>
+        <ModuleProvider>
+          <CrmAuthProvider>
+            <Toaster />
+            <BrowserRouter>
+              <AppContent />
+            </BrowserRouter>
+          </CrmAuthProvider>
+        </ModuleProvider>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }

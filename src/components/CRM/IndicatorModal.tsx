@@ -78,7 +78,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         }
       }
     }
-
+    
     // Check which periods are already filled for the current user and funnel
     const periodosPreenchidos = Array.isArray(indicators) ? indicators
       .filter((ind) => 
@@ -94,7 +94,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     console.log('[IndicatorModal] Todos os períodos disponíveis:', todosPeriodos);
     
     periodOptions = todosPeriodos.map(opt => ({
-            ...opt,
+      ...opt,
       preenchido: periodosPreenchidos.includes(opt.value)
     }));
   }
@@ -171,7 +171,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
       const [start, end] = periodString.split('_');
       return { start, end };
     }
-      return { start: periodString, end: periodString };
+    return { start: periodString, end: periodString };
   }
 
   useEffect(() => {
@@ -311,9 +311,9 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {!isEditing && (
               <>
-              <div>
+                <div>
                   <Label>Mês *</Label>
-                {monthOptions.length === 1 && monthReference ? (
+                  {monthOptions.length === 1 && monthReference ? (
                     <div className="p-2 border rounded">{new Date(2000, monthReference - 1, 1).toLocaleString('pt-BR', { month: 'long' })}</div>
                   ) : (
                     <Select 
@@ -325,18 +325,18 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                         <SelectValue placeholder="Selecione o mês" />
                       </SelectTrigger>
                       <SelectContent>
-                    {monthOptions.map(m => (
+                        {monthOptions.map(m => (
                           <SelectItem key={m} value={m.toString()}>
                             {new Date(2000, m - 1, 1).toLocaleString('pt-BR', { month: 'long' })}
                           </SelectItem>
-                    ))}
+                        ))}
                       </SelectContent>
                     </Select>
-                )}
-              </div>
-              <div>
+                  )}
+                </div>
+                <div>
                   <Label>Ano *</Label>
-                {yearOptions.length === 1 && yearReference ? (
+                  {yearOptions.length === 1 && yearReference ? (
                     <div className="p-2 border rounded">{yearReference}</div>
                   ) : (
                     <Select 
@@ -348,72 +348,72 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                         <SelectValue placeholder="Selecione o ano" />
                       </SelectTrigger>
                       <SelectContent>
-                    {yearOptions.map(y => (
+                        {yearOptions.map(y => (
                           <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
-                    ))}
+                        ))}
                       </SelectContent>
                     </Select>
-                )}
-              </div>
-            <div>
-              <Label htmlFor="funnel_id">Funil *</Label>
-              <Select 
-                value={formData.funnel_id} 
-                onValueChange={(value) => setFormData(prev => ({ ...prev, funnel_id: value }))}
-                    disabled={isLoading || !canEdit}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um funil" />
-                </SelectTrigger>
-                <SelectContent>
-                  {funnelsError ? (
-                    <div className="px-4 py-2 text-red-500 text-sm">
-                      Erro ao carregar funis: {funnelsError.message || 'Erro desconhecido'}
-                    </div>
-                  ) : isFunnelsLoading ? (
-                    <div className="px-4 py-2 text-muted-foreground text-sm">
-                      Carregando funis...
-                    </div>
-                  ) : allowedFunnels.length > 0 ? (
-                    allowedFunnels.map((funnel) => (
-                      <SelectItem key={funnel.id} value={funnel.id}>
-                        {funnel.name}
-                      </SelectItem>
-                    ))
-                  ) : (
-                    <div className="px-4 py-2 text-muted-foreground text-sm">
-                      Nenhum funil disponível para seleção.
-                    </div>
                   )}
-                </SelectContent>
-              </Select>
-            </div>
-              <div>
-                <Label htmlFor="period_date">Período *</Label>
-                <Select
-                  value={formData.period_date}
-                  onValueChange={(value) => {
-                    setFormData({ ...formData, period_date: value });
-                    const { start, end } = extractPeriodDates(value);
-                    setPeriodStart(start);
-                    setPeriodEnd(end);
-                    console.log('[Indicador] Período selecionado:', value, '| Início:', start, '| Fim:', end);
-                  }}
+                </div>
+                <div>
+                  <Label htmlFor="funnel_id">Funil *</Label>
+                  <Select 
+                    value={formData.funnel_id} 
+                    onValueChange={(value) => setFormData(prev => ({ ...prev, funnel_id: value }))}
+                    disabled={isLoading || !canEdit}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um funil" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {funnelsError ? (
+                        <div className="px-4 py-2 text-red-500 text-sm">
+                          Erro ao carregar funis: {funnelsError.message || 'Erro desconhecido'}
+                        </div>
+                      ) : isFunnelsLoading ? (
+                        <div className="px-4 py-2 text-muted-foreground text-sm">
+                          Carregando funis...
+                        </div>
+                      ) : allowedFunnels.length > 0 ? (
+                        allowedFunnels.map((funnel) => (
+                          <SelectItem key={funnel.id} value={funnel.id}>
+                            {funnel.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <div className="px-4 py-2 text-muted-foreground text-sm">
+                          Nenhum funil disponível para seleção.
+                        </div>
+                      )}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="period_date">Período *</Label>
+                  <Select
+                    value={formData.period_date}
+                    onValueChange={(value) => {
+                      setFormData({ ...formData, period_date: value });
+                      const { start, end } = extractPeriodDates(value);
+                      setPeriodStart(start);
+                      setPeriodEnd(end);
+                      console.log('[Indicador] Período selecionado:', value, '| Início:', start, '| Fim:', end);
+                    }}
                     disabled={isLoading || !formData.funnel_id || !canEdit}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione o período" />
-                  </SelectTrigger>
-                  <SelectContent>
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione o período" />
+                    </SelectTrigger>
+                    <SelectContent>
                       {periodOptions.length === 0 ? (
-                      <div className="px-4 py-2 text-muted-foreground text-sm">
+                        <div className="px-4 py-2 text-muted-foreground text-sm">
                           Selecione um funil primeiro
-                      </div>
+                        </div>
                       ) : (
                         periodOptions.map(opt => (
-                      <SelectItem
-                        key={opt.value}
-                        value={opt.value}
+                          <SelectItem
+                            key={opt.value}
+                            value={opt.value}
                             disabled={opt.preenchido}
                             className={opt.preenchido ? 'text-gray-400 cursor-not-allowed' : ''}
                           >
@@ -422,9 +422,9 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                           </SelectItem>
                         ))
                       )}
-                  </SelectContent>
-                </Select>
-                  </div>
+                    </SelectContent>
+                  </Select>
+                </div>
               </>
             )}
             {isEditing && (
@@ -438,21 +438,21 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
               <>
                 <div>
                   <Label htmlFor="sales_value">Valor das Vendas</Label>
-                    <Input
-                      id="sales_value"
-                      type="text"
+                  <Input 
+                    id="sales_value" 
+                    type="text" 
                     value={salesValue} 
-                      onChange={e => setSalesValue(e.target.value)}
-                      placeholder="0,00"
+                    onChange={e => setSalesValue(e.target.value)} 
+                    placeholder="0,00" 
                     disabled={!canEdit} 
                   />
                 </div>
                 <div>
                   <Label htmlFor="recommendations_count">Número de Recomendações</Label>
-                    <Input
-                      id="recommendations_count"
-                      type="number"
-                      value={recommendationsCount}
+                  <Input 
+                    id="recommendations_count" 
+                    type="number" 
+                    value={recommendationsCount} 
                     onChange={e => setRecommendationsCount(Number(e.target.value))} 
                     disabled={!canEdit} 
                   />
@@ -460,7 +460,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
               </>
             )}
           </div>
-
+          
           {selectedFunnel?.stages && (
             <Card>
               <CardHeader>
@@ -509,12 +509,12 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
               </CardContent>
             </Card>
           )}
-
+          
           <div className="flex justify-end space-x-2">
             {canEdit && (
               <Button type="submit" disabled={isLoading}>
                 {isLoading ? 'Salvando...' : 'Salvar'}
-            </Button>
+              </Button>
             )}
             <Button type="button" variant="outline" onClick={onClose}>
               Fechar
