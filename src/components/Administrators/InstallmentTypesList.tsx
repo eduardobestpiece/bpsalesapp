@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Edit, Archive, RotateCcw } from 'lucide-react';
+import { Edit, Archive, RotateCcw, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -30,6 +30,7 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { InstallmentTypeModal } from './InstallmentTypeModal';
+import { Input } from '@/components/ui/input';
 
 interface InstallmentTypesListProps {
   searchTerm: string;
@@ -244,17 +245,40 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
         </div>
       )}
       {/* Botão de criação de tipos de parcelas */}
-      <div className="flex justify-end">
+      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-900">Tipos de Parcela</h2>
+          <p className="text-gray-600 mt-1">Gerencie os tipos de parcela</p>
+        </div>
         <Button
           variant="outline"
           size="sm"
           className="bg-gradient-primary text-white"
-          onClick={() => {
-            setShowCreateModal(true);
-          }}
+          onClick={() => setShowCreateModal(true)}
         >
           + Adicionar Tipo de Parcela
         </Button>
+      </div>
+      <div className="flex flex-col sm:flex-row gap-4 mt-4 mb-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Input
+            placeholder="Buscar tipos de parcela..."
+            value={searchTerm}
+            onChange={e => {/* implementar filtro se necessário */}}
+            className="pl-10"
+          />
+        </div>
+        <Select value={statusFilter} onValueChange={v => {/* implementar filtro se necessário */}}>
+          <SelectTrigger className="w-full sm:w-48">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todos</SelectItem>
+            <SelectItem value="active">Ativos</SelectItem>
+            <SelectItem value="archived">Arquivados</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
       {/* Modal de cópia */}
       <Dialog open={copyModalOpen} onOpenChange={setCopyModalOpen}>
