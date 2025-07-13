@@ -60,6 +60,9 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [duplicateData, setDuplicateData] = useState<any>(null);
 
+  // Modal de criação
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
   const { data: installmentTypes, isLoading, refetch } = useQuery({
     queryKey: ['installment-types', searchTerm, statusFilter, selectedAdministrator],
     queryFn: async () => {
@@ -240,6 +243,19 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
           </Button>
         </div>
       )}
+      {/* Botão de criação de tipos de parcelas */}
+      <div className="flex justify-end">
+        <Button
+          variant="outline"
+          size="sm"
+          className="bg-gradient-primary text-white"
+          onClick={() => {
+            setShowCreateModal(true);
+          }}
+        >
+          + Adicionar Tipo de Parcela
+        </Button>
+      </div>
       {/* Modal de cópia */}
       <Dialog open={copyModalOpen} onOpenChange={setCopyModalOpen}>
         <DialogContent className="max-w-md">
@@ -276,6 +292,17 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
           onSuccess={() => {
             setShowDuplicateModal(false);
             setDuplicateData(null);
+            refetch();
+          }}
+        />
+      )}
+      {showCreateModal && (
+        <InstallmentTypeModal
+          open={showCreateModal}
+          onOpenChange={setShowCreateModal}
+          installmentType={null}
+          onSuccess={() => {
+            setShowCreateModal(false);
             refetch();
           }}
         />

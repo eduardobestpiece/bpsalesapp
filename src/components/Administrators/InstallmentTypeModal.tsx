@@ -179,7 +179,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{installmentType ? 'Editar Parcela' : 'Nova Parcela'}</DialogTitle>
         </DialogHeader>
@@ -222,7 +222,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
                 <FormItem>
                   <FormLabel>Número de parcelas</FormLabel>
                   <FormControl>
-                    <Input type="number" min={1} {...field} />
+                    <Input type="number" min={1} {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : 1)} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -235,7 +235,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
                 <FormItem>
                   <FormLabel>Taxa de administração (%)</FormLabel>
                   <FormControl>
-                    <Input type="number" min={0} max={100} step={0.01} {...field} />
+                    <Input type="number" min={0} max={100} step={0.01} {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -248,7 +248,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
                 <FormItem>
                   <FormLabel>Fundo de reserva (%)</FormLabel>
                   <FormControl>
-                    <Input type="number" min={0} max={100} step={0.01} {...field} />
+                    <Input type="number" min={0} max={100} step={0.01} {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -261,7 +261,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
                 <FormItem>
                   <FormLabel>Seguro (%)</FormLabel>
                   <FormControl>
-                    <Input type="number" min={0} max={100} step={0.01} {...field} />
+                    <Input type="number" min={0} max={100} step={0.01} {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)} value={field.value || ''} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
