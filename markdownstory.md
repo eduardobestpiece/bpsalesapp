@@ -237,3 +237,10 @@ Próximos passos: ajustes no gráfico do funil, modais de indicadores, permissõ
 - Ajustado o modal de edição de times para forçar atualização do MultiSelect usando a prop 'key', garantindo que os membros do time apareçam sempre marcados corretamente ao abrir o modal.
 - Deploy automático realizado para o GitHub.
 - Orientação: testar novamente a edição de times e, no funil, clicar em "Aplicar Filtros" após selecionar o time.
+
+## 2024-07-10
+- Criado o componente `InstallmentReductionModal.tsx` para Redução de Parcela no Simulador:
+  - Campos: nome, administradora (seleção), valor/percentual, datas de início/fim, campo padrão, arquivado (apenas master), botões Cadastrar/Salvar.
+  - Permissões: master/admin editam, submaster apenas visualiza.
+  - Busca administradoras da empresa.
+  - Pronto para integração com a lista de Redução de Parcela.

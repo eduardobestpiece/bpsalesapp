@@ -7,6 +7,7 @@ import { Edit, Archive, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
 
 interface Administrator {
   id: string;
@@ -34,6 +35,7 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
   const [administrators, setAdministrators] = useState<Administrator[]>([]);
   const [loading, setLoading] = useState(true);
   const { userRole } = useCrmAuth();
+  const { selectedCompanyId } = useCompany();
   const isSubMaster = userRole === 'submaster';
 
   const fetchAdministrators = async () => {
@@ -42,6 +44,11 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
         .from('administrators')
         .select('*')
         .order('created_at', { ascending: false });
+
+      // Filtro por empresa selecionada
+      if (selectedCompanyId) {
+        query = query.eq('company_id', selectedCompanyId);
+      }
 
       if (statusFilter !== 'all') {
         query = query.eq('is_archived', statusFilter === 'archived');
@@ -98,7 +105,7 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
 
   useEffect(() => {
     fetchAdministrators();
-  }, [searchTerm, statusFilter]);
+  }, [searchTerm, statusFilter, selectedCompanyId]);
 
   if (loading) {
     return <div className="text-center py-8">Carregando...</div>;
@@ -150,15 +157,6 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
                     disabled={isSubMaster}
                   >
                     <Archive className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(admin.id)}
-                    className="text-red-600 hover:text-red-700"
-                    disabled={isSubMaster}
-                  >
-                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               </TableCell>

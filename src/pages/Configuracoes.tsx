@@ -19,8 +19,48 @@ import { EntryTypeModal } from '@/components/Administrators/EntryTypeModal';
 import { EntryTypesList } from '@/components/Administrators/EntryTypesList';
 import { LeverageModal } from '@/components/Administrators/LeverageModal';
 import { LeveragesList } from '@/components/Administrators/LeveragesList';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+
+// Componente para listar e restaurar administradoras arquivadas (apenas master)
+function ArchivedAdministrators() {
+  const [archived, setArchived] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const fetchArchived = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('administrators')
+      .select('*')
+      .eq('is_archived', true);
+    setArchived(data || []);
+    setLoading(false);
+  };
+  const handleRestore = async (id: string) => {
+    await supabase.from('administrators').update({ is_archived: false }).eq('id', id);
+    fetchArchived();
+  };
+  useState(() => { fetchArchived(); }, []);
+  return (
+    <div>
+      <h3 className="font-bold mb-2">Administradoras Arquivadas</h3>
+      {loading ? <div>Carregando...</div> : (
+        <ul className="space-y-2">
+          {archived.map((admin: any) => (
+            <li key={admin.id} className="flex justify-between items-center border p-2 rounded">
+              <span>{admin.name}</span>
+              <button className="text-green-600" onClick={() => handleRestore(admin.id)}>Restaurar</button>
+            </li>
+          ))}
+          {archived.length === 0 && <div className="text-gray-500">Nenhuma administradora arquivada.</div>}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export default function Configuracoes() {
+  const { userRole } = useCrmAuth();
   const [selectedAdministrator, setSelectedAdministrator] = useState<any>(null);
   const [showAdministratorModal, setShowAdministratorModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
@@ -111,6 +151,8 @@ export default function Configuracoes() {
     handleRefresh();
   };
 
+  const [tab, setTab] = useState('config');
+
   return (
     <SimulatorLayout>
       <div className="container mx-auto px-4 py-8">
@@ -133,6 +175,13 @@ export default function Configuracoes() {
                     <TabsTrigger value="leverages">Alavancas</TabsTrigger>
                   </TabsList>
                 </div>
+
+                {userRole === 'master' && (
+                  <div className="mb-4">
+                    <button className={tab === 'config' ? 'font-bold' : ''} onClick={() => setTab('config')}>Configurações</button>
+                    <button className={tab === 'archived' ? 'font-bold ml-4' : 'ml-4'} onClick={() => setTab('archived')}>Itens Arquivados</button>
+                  </div>
+                )}
 
                 {/* Administrators Tab */}
                 <TabsContent value="administrators" className="p-6">
@@ -411,6 +460,8 @@ export default function Configuracoes() {
               </Tabs>
             </CardContent>
           </Card>
+
+          {userRole === 'master' && tab === 'archived' && <ArchivedAdministrators />}
 
           {/* Modals */}
           <AdministratorModal

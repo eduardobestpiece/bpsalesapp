@@ -10,17 +10,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useCompany } from '@/contexts/CompanyContext';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
-  credit_update_type: z.enum(['monthly', 'annual']),
-  update_month: z.number().min(1).max(12).optional(),
+  credit_update_type: z.enum(['specific_month', 'after_12_installments']),
+  update_month: z.string().optional(), // string para nomes dos meses
   grace_period_days: z.number().min(0).optional(),
   max_embedded_percentage: z.number().min(0).max(100).optional(),
   special_entry_type: z.enum(['none', 'percentage', 'fixed_value']).optional(),
   special_entry_percentage: z.number().min(0).max(100).optional(),
   special_entry_fixed_value: z.number().min(0).optional(),
   special_entry_installments: z.number().min(0).optional(),
+  is_default: z.boolean().optional(),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -38,6 +40,7 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
   administrator,
   onSuccess
 }) => {
+  const { selectedCompanyId } = useCompany();
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -95,6 +98,7 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
         special_entry_percentage: data.special_entry_percentage ?? null,
         special_entry_fixed_value: data.special_entry_fixed_value ?? null,
         special_entry_installments: data.special_entry_installments ?? null,
+        company_id: selectedCompanyId,
       };
 
       if (administrator?.id) {
@@ -147,51 +151,51 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
               )}
             />
 
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="credit_update_type"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Tipo de Atualização *</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Selecione o tipo" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="monthly">Mensal</SelectItem>
-                        <SelectItem value="annual">Anual</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
+            <FormField
+              control={form.control}
+              name="credit_update_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo de Atualização *</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="specific_month">Mês específico</SelectItem>
+                      <SelectItem value="after_12_installments">Após 12 parcelas</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            {form.watch('credit_update_type') === 'specific_month' && (
               <FormField
                 control={form.control}
                 name="update_month"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Mês de Atualização</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        min="1" 
-                        max="12" 
-                        placeholder="1-12"
-                        {...field}
-                        onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
-                        value={field.value || ''}
-                      />
-                    </FormControl>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o mês" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'].map((mes, idx) => (
+                          <SelectItem key={mes} value={String(idx+1)}>{mes}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <FormField
@@ -357,12 +361,24 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
               </div>
             )}
 
+            <FormField
+              control={form.control}
+              name="is_default"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Administradora padrão</FormLabel>
+                  <input type="checkbox" checked={field.value || false} onChange={e => field.onChange(e.target.checked)} />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <div className="flex justify-end space-x-2 pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
               <Button type="submit" className="bg-amber-600 hover:bg-amber-700">
-                {administrator ? 'Atualizar' : 'Criar'}
+                {administrator ? 'Salvar' : 'Cadastrar'}
               </Button>
             </div>
           </form>
