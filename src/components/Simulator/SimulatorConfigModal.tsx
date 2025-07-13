@@ -168,6 +168,11 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   // Extrair tipos únicos dos produtos
   const creditTypes = Array.from(new Set(products.map(p => p.type))).filter(Boolean);
 
+  // Mapear tipos de crédito disponíveis a partir dos produtos, associando ao bid_type_id
+  const availableBidTypes = bidTypes.filter(bt =>
+    products.some(p => p.type && p.type.toLowerCase() === bt.name.toLowerCase())
+  );
+
   // Atualizar valores automáticos ao trocar parcela (Sistema)
   useEffect(() => {
     if (!manualFieldsState.taxaAdministracao && selectedInstallmentTypeId) {
@@ -410,8 +415,8 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
               onChange={(e) => setSelectedBidTypeId(e.target.value)}
             >
               <option value="" disabled>Selecione um tipo de crédito...</option>
-              {creditTypes.map((type) => (
-                <option key={type} value={type}>{type}</option>
+              {availableBidTypes.map((type) => (
+                <option key={type.id} value={type.id}>{type.name}</option>
               ))}
             </select>
           </div>
