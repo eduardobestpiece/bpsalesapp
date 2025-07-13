@@ -365,3 +365,12 @@ Concluído e pronto para deploy.
 - Garantido que a listagem de produtos seja um único bloco visual, sem aninhamento ou duplicidade de seções.
 - Layout padronizado conforme abas Administradoras e Parcelas.
 - Deploy automático realizado para o GitHub.
+
+## 2024-07-10
+
+- Criado componente inicial `SimulatorConfigModal.tsx` em `src/components/Simulator/`.
+  - Estrutura visual do modal de "Mais configurações" do simulador.
+  - Switch global Manual/Sistema no topo.
+  - Campos principais (Administradora, Tipo de Crédito, Parcelas, Taxa de administração, Fundo de reserva, Ativar seguro, Redução de parcela, Atualização anual do crédito) com placeholders.
+  - Botões: Redefinir, Aplicar, Salvar e Aplicar.
+  - Ainda sem integração com Supabase ou lógica dinâmica.
