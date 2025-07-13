@@ -155,8 +155,11 @@ const Administrators = () => {
               <button
                 className="bg-primary text-white px-4 py-2 rounded hover:opacity-90"
                 onClick={() => {
-                  setSelectedAdministrator(null);
-                  setShowAdministratorModal(true);
+                  setShowAdministratorModal(false);
+                  setTimeout(() => {
+                    setSelectedAdministrator(null);
+                    setShowAdministratorModal(true);
+                  }, 50);
                 }}
               >
                 Adicionar administradora

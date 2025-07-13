@@ -18,7 +18,6 @@ const MONTHS = [
 
 const formSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
-  credit_update_type: z.enum(['monthly', 'annual']), // será substituído
   update_type: z.enum(['specific_month', 'after_12_installments']),
   update_month: z.string().optional(),
   grace_period_days: z.number().min(0).optional(),
@@ -165,27 +164,6 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
                   <FormControl>
                     <Input placeholder="Nome da administradora" {...field} />
                   </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="credit_update_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tipo de Atualização de Crédito *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o tipo" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="monthly">Mensal</SelectItem>
-                      <SelectItem value="annual">Anual</SelectItem>
-                    </SelectContent>
-                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
