@@ -73,6 +73,11 @@ export default function Configuracoes() {
     setShowProductModal(true);
   };
 
+  const handleDuplicateProduct = (product: any) => {
+    setSelectedProduct({ ...product, name: `${product.name} - Cópia` });
+    setShowProductModal(true);
+  };
+
   const handleEditInstallmentType = (installmentType: any) => {
     setSelectedInstallmentType(installmentType);
     setShowInstallmentTypeModal(true);
@@ -208,7 +213,7 @@ export default function Configuracoes() {
                         <h2 className="text-2xl font-semibold text-gray-900">Produtos</h2>
                         <p className="text-gray-600 mt-1">Gerencie os produtos de consórcio</p>
                       </div>
-                      <Button onClick={() => setShowProductModal(true)} className="bg-gradient-primary hover:opacity-90">
+                      <Button onClick={handleCreateProduct} className="bg-gradient-primary hover:opacity-90">
                         <Plus className="w-4 h-4 mr-2" />
                         Adicionar Produto
                       </Button>
@@ -243,6 +248,7 @@ export default function Configuracoes() {
                       selectedAdministrator={productAdminFilter || ''}
                       onEdit={handleEditProduct}
                       onCreate={handleCreateProduct}
+                      onDuplicate={handleDuplicateProduct}
                     />
                   </div>
                 </TabsContent>
