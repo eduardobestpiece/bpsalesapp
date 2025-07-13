@@ -133,10 +133,10 @@ export default function Configuracoes() {
                 <div className="border-b bg-gray-50/50 px-6 py-4">
                   <TabsList className="grid grid-cols-6 w-full max-w-5xl mx-auto">
                     <TabsTrigger value="administrators">Administradoras</TabsTrigger>
-                    <TabsTrigger value="products">Produtos</TabsTrigger>
-                    <TabsTrigger value="installments">Parcelas</TabsTrigger>
-                    <TabsTrigger value="leverages">Alavancas</TabsTrigger>
                     <TabsTrigger value="reductions">Redução de Parcela</TabsTrigger>
+                    <TabsTrigger value="installments">Parcelas</TabsTrigger>
+                    <TabsTrigger value="products">Produtos</TabsTrigger>
+                    <TabsTrigger value="leverages">Alavancas</TabsTrigger>
                     <TabsTrigger value="users">Usuários</TabsTrigger>
                   </TabsList>
                 </div>

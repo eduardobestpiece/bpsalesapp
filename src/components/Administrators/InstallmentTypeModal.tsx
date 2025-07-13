@@ -111,6 +111,18 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
 
   const onSubmit = async (data: any) => {
     try {
+      if (!selectedCompanyId) {
+        toast({ title: 'Empresa não selecionada!', variant: 'destructive' });
+        return;
+      }
+      if (!data.administrator_id) {
+        toast({ title: 'Administradora é obrigatória!', variant: 'destructive' });
+        return;
+      }
+      if (!data.installment_count || data.installment_count < 1) {
+        toast({ title: 'Número de parcelas deve ser maior que zero!', variant: 'destructive' });
+        return;
+      }
       // Verificar duplicidade para a mesma administradora
       const { data: existing, error: dupError } = await supabase
         .from('installment_types')
