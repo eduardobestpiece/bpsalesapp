@@ -171,6 +171,27 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
             />
             <FormField
               control={form.control}
+              name="credit_update_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo de Atualização de Crédito *</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="monthly">Mensal</SelectItem>
+                      <SelectItem value="annual">Anual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="update_type"
               render={({ field }) => (
                 <FormItem>
