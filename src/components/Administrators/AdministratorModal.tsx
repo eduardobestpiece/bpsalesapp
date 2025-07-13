@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -45,6 +45,7 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
   administrator,
   onSuccess
 }) => {
+  console.log('AdministratorModal administrator:', administrator);
   const { selectedCompanyId } = useCompany();
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -151,6 +152,7 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
           <DialogTitle>
             {administrator ? 'Editar Administradora' : 'Nova Administradora'}
           </DialogTitle>
+          <DialogDescription />
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

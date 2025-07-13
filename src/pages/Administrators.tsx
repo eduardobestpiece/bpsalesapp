@@ -244,6 +244,7 @@ const Administrators = () => {
 
         {/* Modals */}
         <AdministratorModal
+          key={selectedAdministrator?.id || 'new'}
           open={showAdministratorModal}
           onOpenChange={(open) => {
             setShowAdministratorModal(open);

@@ -246,3 +246,9 @@ Próximos passos: ajustes no gráfico do funil, modais de indicadores, permissõ
 - Padronizadas as props do modal para `isOpen`/`onClose`.
 - Commit realizado e alterações enviadas para o GitHub (deploy automático).
 - Usuário orientado a testar o fluxo após o deploy.
+
+## 2024-07-10 (ajuste props)
+
+- Corrigido: padronização das props do modal de administradora para `open`/`onOpenChange`, compatível com Dialog (Radix UI).
+- Agora o modal abre e fecha corretamente tanto para adição quanto para edição.
+- Commit realizado e enviado para o GitHub (aguardar deploy automático).
