@@ -1,33 +1,67 @@
 
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { Calculator, Building, Settings, Home, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { UserMenu } from './UserMenu';
-import { Calculator, TrendingUp } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
+import { useModule } from '@/contexts/ModuleContext';
 
-export const Header = () => {
+export const Header: React.FC = () => {
+  const location = useLocation();
+  const { currentModule } = useModule();
+  
+  const navigation = [
+    { name: 'Início', href: '/home', icon: Home },
+    { name: 'Simulador', href: '/simulador', icon: Calculator },
+    { name: 'Administradoras', href: '/administrators', icon: Building },
+    { name: 'Master Config', href: '/master-config', icon: Settings },
+    { name: 'CRM', href: '/crm/dashboard', icon: Users },
+  ];
+
+  const isActive = (href: string) => {
+    if (href === '/home') {
+      return location.pathname === '/' || location.pathname === '/home';
+    }
+    return location.pathname.startsWith(href);
+  };
+
   return (
-    <header className="border-b bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50">
-      <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-        <div className="flex items-center space-x-6">
-          <Link to="/" className="flex items-center space-x-3">
-            <div className="bg-gradient-primary p-2 rounded-xl shadow-lg">
-              <Calculator className="h-6 w-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-gradient-primary">Monteo</h1>
-              <span className="text-sm text-secondary/60 font-medium">Simulador Financeiro</span>
-            </div>
-          </Link>
-        </div>
-        
-        <div className="flex items-center space-x-4">
-          <ThemeSwitch />
-          <div className="hidden md:flex items-center space-x-2 text-sm text-secondary/70 bg-primary-50/70 px-3 py-1.5 rounded-full">
-            <TrendingUp className="h-4 w-4 text-success" />
-            <span className="font-medium">Simule sua alavancagem</span>
+    <header className="bg-white border-b border-gray-200 shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16">
+          <div className="flex items-center space-x-8">
+            <Link to="/home" className="flex items-center">
+              <img 
+                src="/monteo_policromia_horizontal (1).png" 
+                alt="Monteo" 
+                className="h-8 w-auto"
+              />
+            </Link>
+            
+            <nav className="hidden md:flex space-x-1">
+              {navigation.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <Link key={item.name} to={item.href}>
+                    <Button
+                      variant={isActive(item.href) ? "default" : "ghost"}
+                      size="sm"
+                      className="flex items-center space-x-2"
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span>{item.name}</span>
+                    </Button>
+                  </Link>
+                );
+              })}
+            </nav>
           </div>
-          <UserMenu />
+
+          <div className="flex items-center space-x-4">
+            <ThemeSwitch />
+            <UserMenu />
+          </div>
         </div>
       </div>
     </header>
