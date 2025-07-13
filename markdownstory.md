@@ -395,3 +395,9 @@ Concluído e pronto para deploy.
 - Rolagem ocorre apenas no conteúdo central.
 - Altura máxima mantida (80vh), centralização e responsividade.
 - Build local passou, deploy automático realizado.
+
+## [Data/Hora: agora] Switch global Manual/Sistema com estado misto
+
+- Switch global ao lado do título agora reflete o estado dos campos: ligado (todos manual), desligado (todos sistema) ou misto (visual cinza e tooltip explicativo).
+- Usuário pode customizar qualquer campo individualmente, independente do global.
+- Build local passou, deploy automático realizado.

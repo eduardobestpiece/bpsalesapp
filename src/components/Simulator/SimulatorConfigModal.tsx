@@ -330,25 +330,27 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <div className="flex flex-col h-[80vh] max-h-[80vh]">
-        <div className="flex-shrink-0 flex items-center justify-between px-6 pt-6 pb-2 border-b bg-background z-10">
-          <span className="flex items-center gap-2">
-            Mais configurações
-            {globalSwitchState === null && (
-              <Tooltip content="Alguns campos estão em Manual, outros em Sistema">
-                <Info size={16} className="text-muted-foreground" />
-              </Tooltip>
-            )}
-          </span>
-          <div className="flex items-center gap-2">
-            <span className="text-xs">Sistema</span>
-            <Switch
-              checked={globalSwitchState === true}
-              onCheckedChange={handleGlobalSwitch}
-              className={globalSwitchState === null ? 'bg-gray-400 border border-gray-500' : ''}
-            />
-            <span className="text-xs">Manual</span>
+        <DialogTitle asChild>
+          <div className="flex-shrink-0 flex items-center justify-between px-6 pt-6 pb-2 border-b bg-background z-10">
+            <span className="flex items-center gap-2">
+              Mais configurações
+              {globalSwitchState === null && (
+                <Tooltip content="Alguns campos estão em Manual, outros em Sistema">
+                  <Info size={16} className="text-muted-foreground" />
+                </Tooltip>
+              )}
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs">Sistema</span>
+              <Switch
+                checked={globalSwitchState === true}
+                onCheckedChange={handleGlobalSwitch}
+                className={globalSwitchState === null ? 'bg-gray-400 border border-gray-500' : ''}
+              />
+              <span className="text-xs">Manual</span>
+            </div>
           </div>
-        </div>
+        </DialogTitle>
         <DialogContent className="flex-1 overflow-y-auto px-6 py-4 space-y-4 bg-background">
           {/* Administradora */}
           <div>
@@ -552,10 +554,12 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
             </div>
           )}
         </DialogContent>
-        <DialogFooter className="flex-shrink-0 px-6 pb-6 pt-2 border-t bg-background z-10">
-          <Button variant="outline" onClick={handleReset}>Redefinir</Button>
-          <Button variant="secondary" onClick={handleApply}>Aplicar</Button>
-          <Button onClick={handleSaveAndApply}>Salvar e Aplicar</Button>
+        <DialogFooter asChild>
+          <div className="flex-shrink-0 px-6 pb-6 pt-2 border-t bg-background z-10 flex gap-2 justify-end">
+            <Button variant="outline" onClick={handleReset}>Redefinir</Button>
+            <Button variant="secondary" onClick={handleApply}>Aplicar</Button>
+            <Button onClick={handleSaveAndApply}>Salvar e Aplicar</Button>
+          </div>
         </DialogFooter>
       </div>
     </Dialog>
