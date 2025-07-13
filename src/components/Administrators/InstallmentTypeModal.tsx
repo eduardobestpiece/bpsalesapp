@@ -78,8 +78,32 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
     if (open) {
       fetchAdministrators();
       if (form.watch('administrator_id')) fetchReductions(form.watch('administrator_id'));
+      // Resetar valores do formulário ao abrir para edição
+      if (installmentType) {
+        form.reset({
+          administrator_id: installmentType.administrator_id || '',
+          installment_count: installmentType.installment_count || 1,
+          admin_tax_percent: installmentType.admin_tax_percent || 0,
+          reserve_fund_percent: installmentType.reserve_fund_percent || 0,
+          insurance_percent: installmentType.insurance_percent || 0,
+          optional_insurance: installmentType.optional_insurance || false,
+          reduction_ids: installmentType.reduction_ids || [],
+          is_default: installmentType.is_default || false,
+        });
+      } else {
+        form.reset({
+          administrator_id: '',
+          installment_count: 1,
+          admin_tax_percent: 0,
+          reserve_fund_percent: 0,
+          insurance_percent: 0,
+          optional_insurance: false,
+          reduction_ids: [],
+          is_default: false,
+        });
+      }
     }
-  }, [open]);
+  }, [open, installmentType]);
 
   const fetchAdministrators = async () => {
     const { data, error } = await supabase
