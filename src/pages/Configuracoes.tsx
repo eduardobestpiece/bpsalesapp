@@ -18,6 +18,7 @@ import { LeverageModal } from '@/components/Administrators/LeverageModal';
 import { LeveragesList } from '@/components/Administrators/LeveragesList';
 import { InstallmentReductionsList } from '@/components/Administrators/InstallmentReductionsList';
 import { InstallmentReductionModal } from '@/components/Administrators/InstallmentReductionModal';
+import { UsersList } from '@/components/CRM/Configuration/UsersList';
 
 export default function Configuracoes() {
   const [selectedAdministrator, setSelectedAdministrator] = useState<any>(null);
@@ -130,12 +131,13 @@ export default function Configuracoes() {
             <CardContent className="p-0">
               <Tabs defaultValue="administrators" className="w-full">
                 <div className="border-b bg-gray-50/50 px-6 py-4">
-                  <TabsList className="grid grid-cols-5 w-full max-w-4xl mx-auto">
+                  <TabsList className="grid grid-cols-6 w-full max-w-5xl mx-auto">
                     <TabsTrigger value="administrators">Administradoras</TabsTrigger>
                     <TabsTrigger value="products">Produtos</TabsTrigger>
                     <TabsTrigger value="installments">Parcelas</TabsTrigger>
                     <TabsTrigger value="leverages">Alavancas</TabsTrigger>
                     <TabsTrigger value="reductions">Redução de Parcela</TabsTrigger>
+                    <TabsTrigger value="users">Usuários</TabsTrigger>
                   </TabsList>
                 </div>
 
@@ -363,6 +365,13 @@ export default function Configuracoes() {
                       }}
                       isCopy={isCopyReduction}
                     />
+                  </div>
+                </TabsContent>
+
+                {/* Users Tab */}
+                <TabsContent value="users" className="p-6">
+                  <div className="space-y-6">
+                    <UsersList />
                   </div>
                 </TabsContent>
               </Tabs>
