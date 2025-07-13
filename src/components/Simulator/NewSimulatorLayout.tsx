@@ -11,7 +11,7 @@ import { Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { SimulatorConfigModal } from './SimulatorConfigModal';
 
-export const NewSimulatorLayout = () => {
+export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   // Estado principal dos dados da simulação
   const [simulationData, setSimulationData] = useState({
     administrator: '',
@@ -63,6 +63,11 @@ export const NewSimulatorLayout = () => {
   const [tipoParcelaSelecionado, setTipoParcelaSelecionado] = useState<string>('full');
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [installmentTypes, setInstallmentTypes] = useState<any[]>([]);
+  // Adicionar estado para valor manual
+  const [manualTerm, setManualTerm] = useState<number | undefined>(undefined);
+
+  // Se houver valor manual vindo do modal, ele se sobrepõe
+  const termValue = manualTerm !== undefined && manualTerm !== null ? manualTerm : simulationData.term;
 
   return (
     <div className="flex flex-col gap-6 h-full">
@@ -93,14 +98,14 @@ export const NewSimulatorLayout = () => {
         <div className="flex flex-col gap-2 w-full md:w-1/4">
           <label className="font-medium">Número de parcelas</label>
           <Select
-            value={simulationData.term.toString()}
+            value={termValue.toString()}
             onValueChange={v => handleFieldChange('term', Number(v))}
           >
             <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
             <SelectContent>
               {installmentTypes.map((it: any) => (
                 <SelectItem key={it.id} value={it.installment_count.toString()}>
-                  {it.name} ({it.installment_count} meses)
+                  {it.installment_count}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -134,6 +139,7 @@ export const NewSimulatorLayout = () => {
         onApply={() => setShowConfigModal(false)}
         onSaveAndApply={() => setShowConfigModal(false)}
         onReset={() => {}}
+        setManualTerm={setManualTerm} // nova prop para sincronizar valor manual
       />
     </div>
   );

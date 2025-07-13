@@ -18,6 +18,7 @@ interface SimulatorConfigModalProps {
   onApply: () => void;
   onSaveAndApply: () => void;
   onReset: () => void;
+  setManualTerm?: (term?: number) => void; // nova prop opcional
 }
 
 type Administrator = Database['public']['Tables']['administrators']['Row'];
@@ -66,6 +67,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   onApply,
   onSaveAndApply,
   onReset,
+  setManualTerm,
 }) => {
   const { selectedCompanyId } = useCompany();
   
@@ -535,24 +537,44 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
               <label className="text-sm font-medium">Parcelas</label>
               <Checkbox 
                 checked={manualFieldsState.parcelas} 
-                onCheckedChange={(checked) => handleFieldSwitch('parcelas', checked as boolean)} 
+                onCheckedChange={(checked) => {
+                  handleFieldSwitch('parcelas', checked as boolean);
+                  if (checked && setManualTerm) {
+                    setManualTerm(Number(selectedInstallmentTypeId) || undefined);
+                  } else if (!checked && setManualTerm) {
+                    setManualTerm(undefined);
+                  }
+                }} 
               />
               <span className="text-xs text-muted-foreground">Manual</span>
             </div>
             {manualFieldsState.parcelas ? (
-              <Input type="number" placeholder="Número de parcelas (meses)" min={1} step={1} />
+              <Input
+                type="number"
+                placeholder="Número de parcelas (meses)"
+                min={1}
+                step={1}
+                value={selectedInstallmentTypeId || ''}
+                onChange={e => {
+                  setSelectedInstallmentTypeId(e.target.value);
+                  if (setManualTerm) setManualTerm(Number(e.target.value) || undefined);
+                }}
+              />
             ) : (
               <Select
                 value={selectedInstallmentTypeId || ''}
-                onValueChange={setSelectedInstallmentTypeId}
+                onValueChange={v => {
+                  setSelectedInstallmentTypeId(v);
+                  if (setManualTerm) setManualTerm(undefined);
+                }}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecione a quantidade de parcelas..." />
                 </SelectTrigger>
                 <SelectContent>
                   {installmentTypes.map((it) => (
-                    <SelectItem key={it.id} value={it.id}>
-                      {it.name} ({it.installment_count} meses)
+                    <SelectItem key={it.id} value={it.installment_count.toString()}>
+                      {it.installment_count}
                     </SelectItem>
                   ))}
                 </SelectContent>
