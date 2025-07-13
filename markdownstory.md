@@ -237,3 +237,12 @@ Próximos passos: ajustes no gráfico do funil, modais de indicadores, permissõ
 - Ajustado o modal de edição de times para forçar atualização do MultiSelect usando a prop 'key', garantindo que os membros do time apareçam sempre marcados corretamente ao abrir o modal.
 - Deploy automático realizado para o GitHub.
 - Orientação: testar novamente a edição de times e, no funil, clicar em "Aplicar Filtros" após selecionar o time.
+
+## 2024-07-10
+
+- Corrigido problema onde o modal de administradora abria sempre em modo de edição.
+- Adicionado botão "Adicionar administradora" para abrir o modal limpo (modo adição).
+- Corrigido fechamento automático do modal ao salvar (edição ou adição).
+- Padronizadas as props do modal para `isOpen`/`onClose`.
+- Commit realizado e alterações enviadas para o GitHub (deploy automático).
+- Usuário orientado a testar o fluxo após o deploy.

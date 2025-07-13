@@ -244,10 +244,17 @@ const Administrators = () => {
 
         {/* Modals */}
         <AdministratorModal
-          isOpen={showAdministratorModal}
-          onClose={handleCloseAdministratorModal}
+          open={showAdministratorModal}
+          onOpenChange={(open) => {
+            setShowAdministratorModal(open);
+            if (!open) setSelectedAdministrator(null);
+          }}
           administrator={selectedAdministrator}
-          onSuccess={handleCloseAdministratorModal}
+          onSuccess={() => {
+            setShowAdministratorModal(false);
+            setSelectedAdministrator(null);
+            handleRefresh();
+          }}
         />
 
         <ProductModal

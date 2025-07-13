@@ -33,15 +33,15 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 interface AdministratorModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   administrator?: any;
   onSuccess: () => void;
 }
 
 export const AdministratorModal: React.FC<AdministratorModalProps> = ({
-  isOpen,
-  onClose,
+  open,
+  onOpenChange,
   administrator,
   onSuccess
 }) => {
@@ -64,7 +64,7 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
 
   // Populate form when editing
   useEffect(() => {
-    if (administrator && isOpen) {
+    if (administrator && open) {
       form.reset({
         name: administrator.name || '',
         update_type: administrator.update_type || 'specific_month',
@@ -77,7 +77,7 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
         special_entry_installments: administrator.special_entry_installments || undefined,
         is_default: administrator.is_default || false,
       });
-    } else if (!administrator && isOpen) {
+    } else if (!administrator && open) {
       form.reset({
         name: '',
         update_type: 'specific_month',
@@ -91,7 +91,7 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
         is_default: false,
       });
     }
-  }, [administrator, isOpen, form]);
+  }, [administrator, open, form]);
 
   // Lógica para garantir apenas uma administradora padrão por empresa
   const handleSetDefault = async () => {
@@ -145,7 +145,7 @@ export const AdministratorModal: React.FC<AdministratorModalProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>
