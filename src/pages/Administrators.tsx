@@ -25,7 +25,8 @@ const Administrators = () => {
   // Estados para administradoras
   const [administratorSearchTerm, setAdministratorSearchTerm] = useState('');
   const [administratorStatusFilter, setAdministratorStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
-  const [showAdministratorModal, setShowAdministratorModal] = useState(false);
+  const [showCreateAdministratorModal, setShowCreateAdministratorModal] = useState(false);
+  const [showEditAdministratorModal, setShowEditAdministratorModal] = useState(false);
   const [selectedAdministrator, setSelectedAdministrator] = useState<any>(null);
 
   // Estados para produtos
@@ -54,7 +55,7 @@ const Administrators = () => {
 
   const handleEditAdministrator = (administrator: any) => {
     setSelectedAdministrator(administrator);
-    setShowAdministratorModal(true);
+    setShowEditAdministratorModal(true);
   };
 
   const handleCreateProduct = () => {
@@ -154,13 +155,7 @@ const Administrators = () => {
             <div className="flex justify-end">
               <button
                 className="bg-primary text-white px-4 py-2 rounded hover:opacity-90"
-                onClick={() => {
-                  setShowAdministratorModal(false);
-                  setTimeout(() => {
-                    setSelectedAdministrator(null);
-                    setShowAdministratorModal(true);
-                  }, 50);
-                }}
+                onClick={() => setShowCreateAdministratorModal(true)}
               >
                 Adicionar administradora
               </button>
@@ -245,17 +240,28 @@ const Administrators = () => {
           </TabsContent>
         </Tabs>
 
-        {/* Modals */}
+        {/* Modal de criação */}
         <AdministratorModal
-          key={selectedAdministrator?.id || 'new'}
-          open={showAdministratorModal}
+          key="create"
+          open={showCreateAdministratorModal}
+          onOpenChange={setShowCreateAdministratorModal}
+          administrator={null}
+          onSuccess={() => {
+            setShowCreateAdministratorModal(false);
+            handleRefresh();
+          }}
+        />
+        {/* Modal de edição */}
+        <AdministratorModal
+          key={selectedAdministrator?.id || 'edit'}
+          open={showEditAdministratorModal}
           onOpenChange={(open) => {
-            setShowAdministratorModal(open);
+            setShowEditAdministratorModal(open);
             if (!open) setSelectedAdministrator(null);
           }}
           administrator={selectedAdministrator}
           onSuccess={() => {
-            setShowAdministratorModal(false);
+            setShowEditAdministratorModal(false);
             setSelectedAdministrator(null);
             handleRefresh();
           }}
