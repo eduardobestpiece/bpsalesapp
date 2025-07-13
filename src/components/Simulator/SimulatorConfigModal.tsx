@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions } from '../ui/dialog';
+import { Dialog, DialogTitle, DialogContent, DialogFooter } from '../ui/dialog';
 import { Button } from '../ui/button';
 import { Switch } from '../ui/switch';
 import { Select } from '../ui/select';
@@ -530,11 +530,11 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
           </div>
         )}
       </DialogContent>
-      <DialogActions>
+      <DialogFooter>
         <Button variant="outline" onClick={handleReset}>Redefinir</Button>
         <Button variant="secondary" onClick={handleApply}>Aplicar</Button>
         <Button onClick={handleSaveAndApply}>Salvar e Aplicar</Button>
-      </DialogActions>
+      </DialogFooter>
     </Dialog>
   );
 }; 
