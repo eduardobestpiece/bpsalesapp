@@ -7,6 +7,10 @@ import { Edit, Archive, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
+import { useQuery } from '@tanstack/react-query';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface BidType {
   id: string;
@@ -40,6 +44,70 @@ export const BidTypesList: React.FC<BidTypesListProps> = ({
   const [loading, setLoading] = useState(true);
   const { userRole } = useCrmAuth();
   const isSubMaster = userRole === 'submaster';
+  const isMaster = userRole === 'master';
+  const canCopy = isMaster || isSubMaster;
+  const { selectedCompanyId } = useCompany();
+
+  // Modal de cópia
+  const [copyModalOpen, setCopyModalOpen] = useState(false);
+  const [originCompanyId, setOriginCompanyId] = useState<string>('');
+  const [copyLoading, setCopyLoading] = useState(false);
+
+  // Buscar empresas para seleção
+  const { data: companies = [], isLoading: companiesLoading } = useQuery({
+    queryKey: ['companies'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('companies')
+        .select('id, name, status')
+        .eq('status', 'active')
+        .order('name');
+      if (error) throw error;
+      return data;
+    },
+    enabled: canCopy,
+  });
+
+  // Função de cópia de tipos de lances
+  const handleCopyBidTypes = async () => {
+    if (!originCompanyId || !selectedCompanyId) {
+      toast.error('Selecione a empresa de origem e destino.');
+      return;
+    }
+    setCopyLoading(true);
+    try {
+      // Buscar tipos de lances da empresa de origem
+      const { data: bidTypesToCopy, error } = await supabase
+        .from('bid_types')
+        .select('*')
+        .eq('company_id', originCompanyId)
+        .eq('is_archived', false);
+      if (error) throw error;
+      if (!bidTypesToCopy || bidTypesToCopy.length === 0) {
+        toast.error('Nenhum tipo de lance encontrado na empresa de origem.');
+        setCopyLoading(false);
+        return;
+      }
+      // Remover campos que não devem ser copiados
+      const bidTypesInsert = bidTypesToCopy.map((type: any) => {
+        const { id, created_at, updated_at, ...rest } = type;
+        return { ...rest, company_id: selectedCompanyId };
+      });
+      // Inserir na empresa de destino
+      const { error: insertError } = await supabase
+        .from('bid_types')
+        .insert(bidTypesInsert);
+      if (insertError) throw insertError;
+      toast.success('Tipos de lances copiados com sucesso!');
+      setCopyModalOpen(false);
+      fetchBidTypes();
+    } catch (err: any) {
+      console.error('Erro ao copiar tipos de lances:', err);
+      toast.error('Erro ao copiar tipos de lances: ' + (err.message || ''));
+    } finally {
+      setCopyLoading(false);
+    }
+  };
 
   const fetchBidTypes = async () => {
     try {
@@ -120,6 +188,42 @@ export const BidTypesList: React.FC<BidTypesListProps> = ({
 
   return (
     <div className="space-y-4">
+      {/* Botão de cópia de tipos de lances */}
+      {canCopy && (
+        <div className="flex justify-end">
+          <Button variant="outline" onClick={() => setCopyModalOpen(true)}>
+            Copiar tipos de lances de outra empresa
+          </Button>
+        </div>
+      )}
+      {/* Modal de cópia */}
+      <Dialog open={copyModalOpen} onOpenChange={setCopyModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Copiar tipos de lances de outra empresa</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Empresa de origem</label>
+              <Select value={originCompanyId} onValueChange={setOriginCompanyId} disabled={companiesLoading}>
+                <SelectTrigger>
+                  <SelectValue placeholder={companiesLoading ? 'Carregando...' : 'Selecione a empresa'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {companies
+                    .filter((c: any) => c.id !== selectedCompanyId)
+                    .map((c: any) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={handleCopyBidTypes} disabled={!originCompanyId || copyLoading}>
+              {copyLoading ? 'Copiando...' : 'Copiar'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       <Table>
         <TableHeader>
           <TableRow>

@@ -7,6 +7,10 @@ import { Edit, Archive, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
+import { useQuery } from '@tanstack/react-query';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface LeveragesListProps {
   searchTerm: string;
@@ -20,6 +24,70 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
   const [loading, setLoading] = useState(true);
   const { userRole } = useCrmAuth();
   const isSubMaster = userRole === 'submaster';
+  const isMaster = userRole === 'master';
+  const canCopy = isMaster || isSubMaster;
+  const { selectedCompanyId } = useCompany();
+
+  // Modal de cópia
+  const [copyModalOpen, setCopyModalOpen] = useState(false);
+  const [originCompanyId, setOriginCompanyId] = useState<string>('');
+  const [copyLoading, setCopyLoading] = useState(false);
+
+  // Buscar empresas para seleção
+  const { data: companies = [], isLoading: companiesLoading } = useQuery({
+    queryKey: ['companies'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('companies')
+        .select('id, name, status')
+        .eq('status', 'active')
+        .order('name');
+      if (error) throw error;
+      return data;
+    },
+    enabled: canCopy,
+  });
+
+  // Função de cópia de alavancas
+  const handleCopyLeverages = async () => {
+    if (!originCompanyId || !selectedCompanyId) {
+      toast.error('Selecione a empresa de origem e destino.');
+      return;
+    }
+    setCopyLoading(true);
+    try {
+      // Buscar alavancas da empresa de origem
+      const { data: leveragesToCopy, error } = await supabase
+        .from('leverages')
+        .select('*')
+        .eq('company_id', originCompanyId)
+        .eq('is_archived', false);
+      if (error) throw error;
+      if (!leveragesToCopy || leveragesToCopy.length === 0) {
+        toast.error('Nenhuma alavanca encontrada na empresa de origem.');
+        setCopyLoading(false);
+        return;
+      }
+      // Remover campos que não devem ser copiados
+      const leveragesInsert = leveragesToCopy.map((lev: any) => {
+        const { id, created_at, updated_at, ...rest } = lev;
+        return { ...rest, company_id: selectedCompanyId };
+      });
+      // Inserir na empresa de destino
+      const { error: insertError } = await supabase
+        .from('leverages')
+        .insert(leveragesInsert);
+      if (insertError) throw insertError;
+      toast.success('Alavancas copiadas com sucesso!');
+      setCopyModalOpen(false);
+      fetchLeverages();
+    } catch (err: any) {
+      console.error('Erro ao copiar alavancas:', err);
+      toast.error('Erro ao copiar alavancas: ' + (err.message || ''));
+    } finally {
+      setCopyLoading(false);
+    }
+  };
 
   const loadLeverages = async () => {
     try {
@@ -128,6 +196,42 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
 
   return (
     <div className="space-y-4">
+      {/* Botão de cópia de alavancas */}
+      {canCopy && (
+        <div className="flex justify-end">
+          <Button variant="outline" onClick={() => setCopyModalOpen(true)}>
+            Copiar alavancas de outra empresa
+          </Button>
+        </div>
+      )}
+      {/* Modal de cópia */}
+      <Dialog open={copyModalOpen} onOpenChange={setCopyModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Copiar alavancas de outra empresa</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Empresa de origem</label>
+              <Select value={originCompanyId} onValueChange={setOriginCompanyId} disabled={companiesLoading}>
+                <SelectTrigger>
+                  <SelectValue placeholder={companiesLoading ? 'Carregando...' : 'Selecione a empresa'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {companies
+                    .filter((c: any) => c.id !== selectedCompanyId)
+                    .map((c: any) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={handleCopyLeverages} disabled={!originCompanyId || copyLoading}>
+              {copyLoading ? 'Copiando...' : 'Copiar'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
       {leverages.map((leverage) => (
         <Card key={leverage.id} className="hover:shadow-md transition-shadow">
           <CardContent className="p-4">

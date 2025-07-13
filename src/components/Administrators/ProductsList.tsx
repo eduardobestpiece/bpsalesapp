@@ -8,6 +8,11 @@ import { Edit, Plus, Archive, Search, Filter } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
+import { useQuery } from '@tanstack/react-query';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { toast } from 'react-toastify';
 
 interface Product {
   id: string;
@@ -47,6 +52,17 @@ export const ProductsList: React.FC<ProductsListProps> = ({
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [administrators, setAdministrators] = useState<Administrator[]>([]);
+
+  const { userRole } = useCrmAuth();
+  const isSubMaster = userRole === 'submaster';
+  const isMaster = userRole === 'master';
+  const canCopy = isMaster || isSubMaster;
+  const { selectedCompanyId } = useCompany();
+
+  // Modal de cópia
+  const [copyModalOpen, setCopyModalOpen] = useState(false);
+  const [originCompanyId, setOriginCompanyId] = useState<string>('');
+  const [copyLoading, setCopyLoading] = useState(false);
 
   const fetchAdministrators = async () => {
     try {
@@ -94,6 +110,62 @@ export const ProductsList: React.FC<ProductsListProps> = ({
       console.error('Erro ao buscar produtos:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Buscar empresas para seleção
+  const { data: companies = [], isLoading: companiesLoading } = useQuery({
+    queryKey: ['companies'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('companies')
+        .select('id, name, status')
+        .eq('status', 'active')
+        .order('name');
+      if (error) throw error;
+      return data;
+    },
+    enabled: canCopy,
+  });
+
+  // Função de cópia de produtos
+  const handleCopyProducts = async () => {
+    if (!originCompanyId || !selectedCompanyId) {
+      toast.error('Selecione a empresa de origem e destino.');
+      return;
+    }
+    setCopyLoading(true);
+    try {
+      // Buscar produtos da empresa de origem
+      const { data: productsToCopy, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('company_id', originCompanyId)
+        .eq('is_archived', false);
+      if (error) throw error;
+      if (!productsToCopy || productsToCopy.length === 0) {
+        toast.error('Nenhum produto encontrado na empresa de origem.');
+        setCopyLoading(false);
+        return;
+      }
+      // Remover campos que não devem ser copiados
+      const productsInsert = productsToCopy.map((product: any) => {
+        const { id, created_at, updated_at, ...rest } = product;
+        return { ...rest, company_id: selectedCompanyId };
+      });
+      // Inserir na empresa de destino
+      const { error: insertError } = await supabase
+        .from('products')
+        .insert(productsInsert);
+      if (insertError) throw insertError;
+      toast.success('Produtos copiados com sucesso!');
+      setCopyModalOpen(false);
+      fetchProducts();
+    } catch (err: any) {
+      console.error('Erro ao copiar produtos:', err);
+      toast.error('Erro ao copiar produtos: ' + (err.message || ''));
+    } finally {
+      setCopyLoading(false);
     }
   };
 
@@ -216,6 +288,42 @@ export const ProductsList: React.FC<ProductsListProps> = ({
           </div>
         )}
       </CardContent>
+      {/* Botão de cópia de produtos */}
+      {canCopy && (
+        <div className="flex justify-end">
+          <Button variant="outline" onClick={() => setCopyModalOpen(true)}>
+            Copiar produtos de outra empresa
+          </Button>
+        </div>
+      )}
+      {/* Modal de cópia */}
+      <Dialog open={copyModalOpen} onOpenChange={setCopyModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Copiar produtos de outra empresa</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Empresa de origem</label>
+              <Select value={originCompanyId} onValueChange={setOriginCompanyId} disabled={companiesLoading}>
+                <SelectTrigger>
+                  <SelectValue placeholder={companiesLoading ? 'Carregando...' : 'Selecione a empresa'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {companies
+                    .filter((c: any) => c.id !== selectedCompanyId)
+                    .map((c: any) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={handleCopyProducts} disabled={!originCompanyId || copyLoading}>
+              {copyLoading ? 'Copiando...' : 'Copiar'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 };

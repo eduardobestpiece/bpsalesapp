@@ -24,6 +24,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useQuery } from '@tanstack/react-query';
+import { useCompany } from '@/contexts/CompanyContext';
 
 const installmentTypeSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -54,6 +55,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
   onSuccess,
 }) => {
   const { toast } = useToast();
+  const { selectedCompanyId } = useCompany();
   
   const form = useForm<InstallmentTypeFormData>({
     resolver: zodResolver(installmentTypeSchema),
@@ -110,7 +112,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
       } else {
         const { error } = await supabase
           .from('installment_types')
-          .insert(cleanData);
+          .insert({ ...cleanData, company_id: selectedCompanyId });
 
         if (error) throw error;
         toast({ title: 'Tipo de parcela criado com sucesso!' });

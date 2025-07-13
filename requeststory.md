@@ -1,22 +1,38 @@
-# Solicitação em andamento
+# Requisição em andamento
 
 ## Data: 2024-07-10
 
-### Requisição
-- **Resumo:** Apagar o campo/filtro de time (Equipe) da tela de performance e refazê-lo do zero, garantindo que funcione corretamente e de forma simples.
-- **Contexto:** O filtro anterior apresentava problemas de lógica e permissões, dificultando a filtragem correta dos dados por equipe.
-- **Objetivo:** Permitir ao usuário selecionar uma equipe ativa da empresa para filtrar os dados de performance, sem lógica complexa de permissão. O filtro deve ser simples, funcional e intuitivo.
-- **Checklist:**
-  - [x] Analisar implementação atual do filtro de time
-  - [x] Analisar hooks de times e usuários
-  - [x] Analisar tipagens
-  - [x] Remover filtro antigo de time
-  - [x] Implementar novo filtro de time (apenas times ativos da empresa)
-  - [ ] Testar integração do novo filtro com a tela de performance
-  - [ ] Validar funcionamento correto com dados reais
-  - [ ] Realizar deploy
-  - [ ] Solicitar validação do usuário
+### Regras principais
+- Nada pode afetar o funcionamento do módulo CRM.
+- Dados de configurações e simulador devem ser únicos por empresa (seleção no menu lateral).
+- Master pode copiar dados entre empresas.
+- Administrador vê/edita apenas dados da própria empresa.
+- SubMaster vê todas as empresas, pode copiar dados, mas não edita/arquiva.
+- Abas de Entradas e Tipos de Lances devem ser removidas.
 
-### Status
-- Primeira etapa concluída: filtro antigo removido e novo filtro implementado.
-- Próximo passo: testar integração e funcionamento do novo filtro. 
+### Estrutura do banco (Supabase)
+- Todas as tabelas de configurações/simulador possuem coluna `company_id`.
+- Permissões de acesso por papel já existem na tabela `crm_users` e `role_page_permissions`.
+
+### Checklist do Plano
+- [x] Verificar estrutura de tabelas no Supabase (MCP) para empresas e permissões.
+- [x] Garantir que todas as queries de configurações/simulador filtram por empresa selecionada.
+- [x] Implementar lógica de cópia de dados entre empresas (apenas para Master/SubMaster) para:
+  - [x] Administradoras
+  - [x] Produtos
+  - [x] Alavancas
+  - [x] Tipos de Parcelas
+  - [x] Tipos de Lances
+- [ ] Garantir que permissões estão corretas no frontend e backend.
+- [ ] Garantir que nada afeta o CRM.
+- [ ] Atualizar `requeststory.md` com o andamento.
+- [ ] Executar deploy.
+- [ ] Solicitar conferência.
+
+---
+
+**Próximos passos:**
+- Revisar permissões e garantir que apenas Master/SubMaster veem e usam a cópia.
+- Validar se há mais entidades que precisam da função de cópia.
+- Garantir que nada afeta o CRM.
+- Executar deploy e solicitar conferência. 
