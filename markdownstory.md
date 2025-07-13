@@ -376,3 +376,9 @@ Concluído e pronto para deploy.
   - Persistência das configurações por usuário e empresa na tabela `simulator_configurations`.
   - Feedback visual (toast) para sucesso e erro em todas as ações.
   - Pronto para uso real no simulador.
+
+## [Data/Hora: agora] Correção de Erro de Deploy (DialogActions/DialogFooter)
+
+- Erro de build na Vercel devido à importação inexistente de `DialogActions`.
+- Corrigido para `DialogFooter` conforme export disponível.
+- Build local passou, deploy automático realizado.

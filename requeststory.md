@@ -55,3 +55,18 @@ Criar um modal avançado de configurações para o simulador, contendo os campos
 - [ ] Solicitar validação do usuário
 
 --- 
+
+# Correção de Erro no Deploy (DialogActions)
+
+- **Problema:** Erro de build na Vercel devido à importação de `DialogActions` de `../ui/dialog`, que não existe.
+- **Diagnóstico:** O componente correto para rodapé de ações é `DialogFooter`, conforme exportado em `src/components/ui/dialog.tsx`.
+- **Ação:** Substituída a importação e o uso de `DialogActions` por `DialogFooter` no arquivo `src/components/Simulator/SimulatorConfigModal.tsx`.
+- **Resultado:** Build local passou com sucesso. Deploy automático realizado para o GitHub.
+- **Próximo passo:** Aguardar Vercel finalizar deploy e testar funcionamento no ambiente de produção. 
+
+# Melhoria Visual do Modal de Configurações do Simulador
+
+- **Solicitante:** Usuário
+- **Descrição:** Melhorar o layout do modal de configurações do simulador para que ocupe uma altura máxima padrão (ex: 80vh), centralizado na tela, com rolagem interna do conteúdo caso ultrapasse o limite, mantendo cabeçalho e rodapé visíveis.
+- **Motivo:** O modal atual está esticado verticalmente e sem limite visual, prejudicando a experiência do usuário.
+- **Status:** Em andamento 
