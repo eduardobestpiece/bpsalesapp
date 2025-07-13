@@ -67,6 +67,6 @@ Criar um modal avançado de configurações para o simulador, contendo os campos
 # Melhoria Visual do Modal de Configurações do Simulador
 
 - **Solicitante:** Usuário
-- **Descrição:** Melhorar o layout do modal de configurações do simulador para que ocupe uma altura máxima padrão (ex: 80vh), centralizado na tela, com rolagem interna do conteúdo caso ultrapasse o limite, mantendo cabeçalho e rodapé visíveis.
-- **Motivo:** O modal atual está esticado verticalmente e sem limite visual, prejudicando a experiência do usuário.
+- **Descrição:** Melhorar o layout do modal de configurações do simulador para que ocupe uma altura máxima padrão (ex: 80vh), centralizado na tela, com rolagem interna do conteúdo caso ultrapasse o limite, mantendo cabeçalho e rodapé visíveis e fixos (rolagem apenas no conteúdo central).
+- **Motivo:** O modal atual está esticado verticalmente e sem limite visual, prejudicando a experiência do usuário. Fixar cabeçalho e rodapé facilita o uso dos botões e a leitura do título.
 - **Status:** Em andamento 

@@ -382,3 +382,9 @@ Concluído e pronto para deploy.
 - Erro de build na Vercel devido à importação inexistente de `DialogActions`.
 - Corrigido para `DialogFooter` conforme export disponível.
 - Build local passou, deploy automático realizado.
+
+## [Data/Hora: agora] Melhoria visual do modal de configurações do simulador
+
+- Modal agora ocupa altura máxima de 80vh, centralizado na tela.
+- Conteúdo com rolagem interna (overflow-y-auto) para melhor usabilidade.
+- Build local passou, deploy automático realizado.

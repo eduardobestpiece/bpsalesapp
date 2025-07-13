@@ -319,222 +319,224 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogTitle className="flex items-center justify-between">
-        Mais configurações
-        <div className="flex items-center gap-2">
-          <span className="text-xs">Sistema</span>
-          <Switch checked={isManualGlobal} onCheckedChange={handleGlobalSwitch} />
-          <span className="text-xs">Manual</span>
-        </div>
-      </DialogTitle>
-      <DialogContent className="space-y-4">
-        {/* Administradora */}
-        <div>
-          <label className="block font-medium">Administradora</label>
-          <select
-            className="w-full border rounded px-2 py-1"
-            value={selectedAdministratorId || ''}
-            onChange={(e) => setSelectedAdministratorId(e.target.value)}
-          >
-            {administrators.map((admin) => (
-              <option key={admin.id} value={admin.id}>{admin.name}</option>
-            ))}
-          </select>
-        </div>
-        {/* Tipo de Crédito */}
-        <div>
-          <label className="block font-medium">Tipo de Crédito</label>
-          <select
-            className="w-full border rounded px-2 py-1"
-            value={selectedBidTypeId || ''}
-            onChange={(e) => setSelectedBidTypeId(e.target.value)}
-          >
-            {bidTypes.map((type) => (
-              <option key={type.id} value={type.id}>{type.name}</option>
-            ))}
-          </select>
-        </div>
-        {/* Parcelas */}
-        <div className="flex items-center gap-2">
-          <label className="font-medium">Parcelas</label>
-          <Checkbox checked={manualFieldsState.parcelas} onCheckedChange={(v) => handleFieldSwitch('parcelas', v)} />
-          <span className="text-xs">Manual</span>
-        </div>
-        {manualFieldsState.parcelas ? (
-          <Input type="number" placeholder="Número de parcelas (meses)" />
-        ) : (
-          <select
-            className="w-full border rounded px-2 py-1"
-            value={selectedInstallmentTypeId || ''}
-            onChange={(e) => setSelectedInstallmentTypeId(e.target.value)}
-          >
-            {installmentTypes.map((it) => (
-              <option key={it.id} value={it.id}>{it.name} ({it.installment_count} meses)</option>
-            ))}
-          </select>
-        )}
-        {/* Taxa de administração */}
-        <div className="flex items-center gap-2">
-          <label className="font-medium">Taxa de administração</label>
-          <Checkbox checked={manualFieldsState.taxaAdministracao} onCheckedChange={(v) => handleFieldSwitch('taxaAdministracao', v)} />
-          <span className="text-xs">Manual</span>
-        </div>
-        <Input
-          type="number"
-          placeholder="%"
-          value={adminTax}
-          onChange={e => setAdminTax(e.target.value)}
-          disabled={!manualFieldsState.taxaAdministracao}
-        />
-        {/* Fundo de reserva */}
-        <div className="flex items-center gap-2">
-          <label className="font-medium">Fundo de reserva</label>
-          <Checkbox checked={manualFieldsState.fundoReserva} onCheckedChange={(v) => handleFieldSwitch('fundoReserva', v)} />
-          <span className="text-xs">Manual</span>
-        </div>
-        <Input
-          type="number"
-          placeholder="%"
-          value={reserveFund}
-          onChange={e => setReserveFund(e.target.value)}
-          disabled={!manualFieldsState.fundoReserva}
-        />
-        {/* Ativar seguro */}
-        <div>
-          <label className="font-medium">Ativar seguro</label>
-          <div className="flex gap-4 mt-1">
-            <label className="flex items-center gap-1">
-              <input
-                type="radio"
-                name="seguro"
-                value="nao_incluir"
-                checked={insuranceMode === 'nao_incluir'}
-                onChange={() => setInsuranceMode('nao_incluir')}
-              /> Não incluir
-            </label>
-            <label className="flex items-center gap-1">
-              <input
-                type="radio"
-                name="seguro"
-                value="incluir"
-                checked={insuranceMode === 'incluir'}
-                onChange={() => setInsuranceMode('incluir')}
-              /> Incluir
-            </label>
+      <div className="flex flex-col h-[80vh] max-h-[80vh]">
+        <DialogTitle className="flex-shrink-0 flex items-center justify-between px-6 pt-6 pb-2 border-b bg-background z-10">
+          Mais configurações
+          <div className="flex items-center gap-2">
+            <span className="text-xs">Sistema</span>
+            <Switch checked={isManualGlobal} onCheckedChange={handleGlobalSwitch} />
+            <span className="text-xs">Manual</span>
           </div>
-          {insuranceMode === 'incluir' && (
-            <Input
-              type="number"
-              placeholder="%"
-              value={insurancePercent}
-              onChange={e => setInsurancePercent(e.target.value)}
-            />
+        </DialogTitle>
+        <DialogContent className="flex-1 overflow-y-auto px-6 py-4 space-y-4 bg-background">
+          {/* Administradora */}
+          <div>
+            <label className="block font-medium">Administradora</label>
+            <select
+              className="w-full border rounded px-2 py-1"
+              value={selectedAdministratorId || ''}
+              onChange={(e) => setSelectedAdministratorId(e.target.value)}
+            >
+              {administrators.map((admin) => (
+                <option key={admin.id} value={admin.id}>{admin.name}</option>
+              ))}
+            </select>
+          </div>
+          {/* Tipo de Crédito */}
+          <div>
+            <label className="block font-medium">Tipo de Crédito</label>
+            <select
+              className="w-full border rounded px-2 py-1"
+              value={selectedBidTypeId || ''}
+              onChange={(e) => setSelectedBidTypeId(e.target.value)}
+            >
+              {bidTypes.map((type) => (
+                <option key={type.id} value={type.id}>{type.name}</option>
+              ))}
+            </select>
+          </div>
+          {/* Parcelas */}
+          <div className="flex items-center gap-2">
+            <label className="font-medium">Parcelas</label>
+            <Checkbox checked={manualFieldsState.parcelas} onCheckedChange={(v) => handleFieldSwitch('parcelas', v)} />
+            <span className="text-xs">Manual</span>
+          </div>
+          {manualFieldsState.parcelas ? (
+            <Input type="number" placeholder="Número de parcelas (meses)" />
+          ) : (
+            <select
+              className="w-full border rounded px-2 py-1"
+              value={selectedInstallmentTypeId || ''}
+              onChange={(e) => setSelectedInstallmentTypeId(e.target.value)}
+            >
+              {installmentTypes.map((it) => (
+                <option key={it.id} value={it.id}>{it.name} ({it.installment_count} meses)</option>
+              ))}
+            </select>
           )}
-        </div>
-        {/* Redução de parcela */}
-        <div className="flex items-center gap-2">
-          <label className="font-medium">Redução de parcela</label>
-          <Checkbox checked={manualFieldsState.reducaoParcela} onCheckedChange={(v) => handleFieldSwitch('reducaoParcela', v)} />
-          <span className="text-xs">Manual</span>
-        </div>
-        {manualFieldsState.reducaoParcela ? (
-          <div className="flex gap-2">
-            <Input
-              type="number"
-              placeholder="Percentual reduzido (%)"
-              value={reductionPercent}
-              onChange={e => setReductionPercent(e.target.value)}
-            />
-            <Input
-              type="text"
-              placeholder="Aplicação"
-              value={reductionApplication}
-              onChange={e => setReductionApplication(e.target.value)}
-            />
+          {/* Taxa de administração */}
+          <div className="flex items-center gap-2">
+            <label className="font-medium">Taxa de administração</label>
+            <Checkbox checked={manualFieldsState.taxaAdministracao} onCheckedChange={(v) => handleFieldSwitch('taxaAdministracao', v)} />
+            <span className="text-xs">Manual</span>
           </div>
-        ) : (
-          <div className="flex gap-2">
-            <Input
-              type="number"
-              placeholder="Percentual reduzido (%)"
-              value={reductionPercent}
-              disabled
-            />
-            <Input
-              type="text"
-              placeholder="Aplicação"
-              value={reductionApplication}
-              disabled
-            />
+          <Input
+            type="number"
+            placeholder="%"
+            value={adminTax}
+            onChange={e => setAdminTax(e.target.value)}
+            disabled={!manualFieldsState.taxaAdministracao}
+          />
+          {/* Fundo de reserva */}
+          <div className="flex items-center gap-2">
+            <label className="font-medium">Fundo de reserva</label>
+            <Checkbox checked={manualFieldsState.fundoReserva} onCheckedChange={(v) => handleFieldSwitch('fundoReserva', v)} />
+            <span className="text-xs">Manual</span>
           </div>
-        )}
-        {/* Atualização anual do crédito */}
-        <div className="flex items-center gap-2">
-          <label className="font-medium">Atualização anual do crédito</label>
-          <Checkbox checked={manualFieldsState.atualizacaoAnual} onCheckedChange={(v) => handleFieldSwitch('atualizacaoAnual', v)} />
-          <span className="text-xs">Manual</span>
-        </div>
-        {manualFieldsState.atualizacaoAnual ? (
-          <div className="grid grid-cols-2 gap-2">
-            <Input
-              type="number"
-              placeholder="Percentual"
-              value={updatePercent}
-              onChange={e => setUpdatePercent(e.target.value)}
-            />
-            <Input
-              type="text"
-              placeholder="Tipo de Atualização"
-              value={updateType}
-              onChange={e => setUpdateType(e.target.value)}
-            />
-            <Input
-              type="number"
-              placeholder="Mês de Atualização"
-              value={updateMonth}
-              onChange={e => setUpdateMonth(e.target.value)}
-            />
-            <Input
-              type="number"
-              placeholder="Carência (em dias)"
-              value={updateGrace}
-              onChange={e => setUpdateGrace(e.target.value)}
-            />
+          <Input
+            type="number"
+            placeholder="%"
+            value={reserveFund}
+            onChange={e => setReserveFund(e.target.value)}
+            disabled={!manualFieldsState.fundoReserva}
+          />
+          {/* Ativar seguro */}
+          <div>
+            <label className="font-medium">Ativar seguro</label>
+            <div className="flex gap-4 mt-1">
+              <label className="flex items-center gap-1">
+                <input
+                  type="radio"
+                  name="seguro"
+                  value="nao_incluir"
+                  checked={insuranceMode === 'nao_incluir'}
+                  onChange={() => setInsuranceMode('nao_incluir')}
+                /> Não incluir
+              </label>
+              <label className="flex items-center gap-1">
+                <input
+                  type="radio"
+                  name="seguro"
+                  value="incluir"
+                  checked={insuranceMode === 'incluir'}
+                  onChange={() => setInsuranceMode('incluir')}
+                /> Incluir
+              </label>
+            </div>
+            {insuranceMode === 'incluir' && (
+              <Input
+                type="number"
+                placeholder="%"
+                value={insurancePercent}
+                onChange={e => setInsurancePercent(e.target.value)}
+              />
+            )}
           </div>
-        ) : (
-          <div className="grid grid-cols-2 gap-2">
-            <Input
-              type="number"
-              placeholder="Percentual"
-              value={updatePercent}
-              disabled
-            />
-            <Input
-              type="text"
-              placeholder="Tipo de Atualização"
-              value={updateType}
-              disabled
-            />
-            <Input
-              type="number"
-              placeholder="Mês de Atualização"
-              value={updateMonth}
-              disabled
-            />
-            <Input
-              type="number"
-              placeholder="Carência (em dias)"
-              value={updateGrace}
-              disabled
-            />
+          {/* Redução de parcela */}
+          <div className="flex items-center gap-2">
+            <label className="font-medium">Redução de parcela</label>
+            <Checkbox checked={manualFieldsState.reducaoParcela} onCheckedChange={(v) => handleFieldSwitch('reducaoParcela', v)} />
+            <span className="text-xs">Manual</span>
           </div>
-        )}
-      </DialogContent>
-      <DialogFooter>
-        <Button variant="outline" onClick={handleReset}>Redefinir</Button>
-        <Button variant="secondary" onClick={handleApply}>Aplicar</Button>
-        <Button onClick={handleSaveAndApply}>Salvar e Aplicar</Button>
-      </DialogFooter>
+          {manualFieldsState.reducaoParcela ? (
+            <div className="flex gap-2">
+              <Input
+                type="number"
+                placeholder="Percentual reduzido (%)"
+                value={reductionPercent}
+                onChange={e => setReductionPercent(e.target.value)}
+              />
+              <Input
+                type="text"
+                placeholder="Aplicação"
+                value={reductionApplication}
+                onChange={e => setReductionApplication(e.target.value)}
+              />
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Input
+                type="number"
+                placeholder="Percentual reduzido (%)"
+                value={reductionPercent}
+                disabled
+              />
+              <Input
+                type="text"
+                placeholder="Aplicação"
+                value={reductionApplication}
+                disabled
+              />
+            </div>
+          )}
+          {/* Atualização anual do crédito */}
+          <div className="flex items-center gap-2">
+            <label className="font-medium">Atualização anual do crédito</label>
+            <Checkbox checked={manualFieldsState.atualizacaoAnual} onCheckedChange={(v) => handleFieldSwitch('atualizacaoAnual', v)} />
+            <span className="text-xs">Manual</span>
+          </div>
+          {manualFieldsState.atualizacaoAnual ? (
+            <div className="grid grid-cols-2 gap-2">
+              <Input
+                type="number"
+                placeholder="Percentual"
+                value={updatePercent}
+                onChange={e => setUpdatePercent(e.target.value)}
+              />
+              <Input
+                type="text"
+                placeholder="Tipo de Atualização"
+                value={updateType}
+                onChange={e => setUpdateType(e.target.value)}
+              />
+              <Input
+                type="number"
+                placeholder="Mês de Atualização"
+                value={updateMonth}
+                onChange={e => setUpdateMonth(e.target.value)}
+              />
+              <Input
+                type="number"
+                placeholder="Carência (em dias)"
+                value={updateGrace}
+                onChange={e => setUpdateGrace(e.target.value)}
+              />
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              <Input
+                type="number"
+                placeholder="Percentual"
+                value={updatePercent}
+                disabled
+              />
+              <Input
+                type="text"
+                placeholder="Tipo de Atualização"
+                value={updateType}
+                disabled
+              />
+              <Input
+                type="number"
+                placeholder="Mês de Atualização"
+                value={updateMonth}
+                disabled
+              />
+              <Input
+                type="number"
+                placeholder="Carência (em dias)"
+                value={updateGrace}
+                disabled
+              />
+            </div>
+          )}
+        </DialogContent>
+        <DialogFooter className="flex-shrink-0 px-6 pb-6 pt-2 border-t bg-background z-10">
+          <Button variant="outline" onClick={handleReset}>Redefinir</Button>
+          <Button variant="secondary" onClick={handleApply}>Aplicar</Button>
+          <Button onClick={handleSaveAndApply}>Salvar e Aplicar</Button>
+        </DialogFooter>
+      </div>
     </Dialog>
   );
 }; 
