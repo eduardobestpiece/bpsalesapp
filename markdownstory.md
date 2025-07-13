@@ -358,3 +358,10 @@ Concluído e pronto para deploy.
 - Deploy automático realizado para o GitHub.
 - Checklist atualizado em requeststory.md.
 - Usuário orientado a validar se tudo está funcionando corretamente.
+
+## [13/07/2024] Correção visual da aba Produtos
+
+- Removido botão duplicado de "Adicionar Produto".
+- Garantido que a listagem de produtos seja um único bloco visual, sem aninhamento ou duplicidade de seções.
+- Layout padronizado conforme abas Administradoras e Parcelas.
+- Deploy automático realizado para o GitHub.

@@ -226,12 +226,12 @@ export const ProductsList: React.FC<ProductsListProps> = ({
   return (
     <Card>
       <CardHeader>
-        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+        <div className="flex flex-row items-center justify-between">
           <div>
             <h2 className="text-2xl font-semibold text-gray-900">Produtos</h2>
             <p className="text-gray-600 mt-1">Gerencie os produtos de consórcio</p>
           </div>
-          <Button onClick={onCreate} className="bg-amber-600 hover:bg-amber-700 text-white">
+          <Button onClick={onCreate} className="bg-[#8B5C2A] hover:bg-[#6d431a] text-white font-semibold px-6 py-2 rounded">
             + Adicionar Produto
           </Button>
         </div>
