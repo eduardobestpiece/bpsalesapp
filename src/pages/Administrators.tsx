@@ -1,180 +1,134 @@
-import { useState } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search } from 'lucide-react';
 
-import { SimulatorLayout } from '@/components/Layout/SimulatorLayout';
-import { AdministratorModal } from '@/components/Administrators/AdministratorModal';
-import { AdministratorsList } from '@/components/Administrators/AdministratorsList';
-import { ProductModal } from '@/components/Administrators/ProductModal';
-import { ProductsList } from '@/components/Administrators/ProductsList';
-import { InstallmentTypeModal } from '@/components/Administrators/InstallmentTypeModal';
-import { InstallmentTypesList } from '@/components/Administrators/InstallmentTypesList';
-import { BidTypeModal } from '@/components/Administrators/BidTypeModal';
-import { BidTypesList } from '@/components/Administrators/BidTypesList';
-import { EntryTypeModal } from '@/components/Administrators/EntryTypeModal';
-import { EntryTypesList } from '@/components/Administrators/EntryTypesList';
-import { LeverageModal } from '@/components/Administrators/LeverageModal';
-import { LeveragesList } from '@/components/Administrators/LeveragesList';
+import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { AdministratorsList } from "@/components/Administrators/AdministratorsList";
+import { BidTypesList } from "@/components/Administrators/BidTypesList";
+import { EntryTypesList } from "@/components/Administrators/EntryTypesList";
+import { InstallmentTypesList } from "@/components/Administrators/InstallmentTypesList";
+import { ProductsList } from "@/components/Administrators/ProductsList";
+import { LeveragesList } from "@/components/Administrators/LeveragesList";
+import { InstallmentReductionsList } from "@/components/Administrators/InstallmentReductionsList";
 
 export default function Administrators() {
-  const [selectedAdministrator, setSelectedAdministrator] = useState<any>(null);
-  const [showAdministratorModal, setShowAdministratorModal] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [showProductModal, setShowProductModal] = useState(false);
-  const [selectedInstallmentType, setSelectedInstallmentType] = useState<any>(null);
-  const [showInstallmentTypeModal, setShowInstallmentTypeModal] = useState(false);
-  const [selectedBidType, setSelectedBidType] = useState<any>(null);
-  const [showBidTypeModal, setShowBidTypeModal] = useState(false);
-  const [selectedEntryType, setSelectedEntryType] = useState<any>(null);
-  const [showEntryTypeModal, setShowEntryTypeModal] = useState(false);
-  const [selectedLeverage, setSelectedLeverage] = useState<any>(null);
-  const [showLeverageModal, setShowLeverageModal] = useState(false);
-
-  // Search and filter states
-  const [adminSearchTerm, setAdminSearchTerm] = useState('');
-  const [adminStatusFilter, setAdminStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
-  const [productSearchTerm, setProductSearchTerm] = useState('');
-  const [productStatusFilter, setProductStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
-  const [installmentSearchTerm, setInstallmentSearchTerm] = useState('');
-  const [installmentStatusFilter, setInstallmentStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
-  const [bidSearchTerm, setBidSearchTerm] = useState('');
-  const [bidStatusFilter, setBidStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
-  const [entrySearchTerm, setEntrySearchTerm] = useState('');
-  const [entryStatusFilter, setEntryStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
-  const [leverageSearchTerm, setLeverageSearchTerm] = useState('');
-  const [leverageStatusFilter, setLeverageStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
-
-  // Administrator filter for related tables
-  const [productAdminFilter, setProductAdminFilter] = useState<string>('');
-  const [installmentAdminFilter, setInstallmentAdminFilter] = useState<string>('');
-  const [bidAdminFilter, setBidAdminFilter] = useState<string>('');
-  const [entryAdminFilter, setEntryAdminFilter] = useState<string>('');
-
-  const [refreshKey, setRefreshKey] = useState(0);
-
-  const handleRefresh = () => {
-    setRefreshKey(prev => prev + 1);
-  };
-
   return (
-    <SimulatorLayout>
-      <div className="container mx-auto px-4 py-8">
-        <Tabs defaultValue="administrators" className="w-full">
-          <div className="border-b bg-gray-50/50 px-6 py-4">
-            <TabsList className="grid grid-cols-7 w-full max-w-5xl mx-auto">
-              <TabsTrigger value="administrators">Administradoras</TabsTrigger>
-              <TabsTrigger value="products">Produtos</TabsTrigger>
-              <TabsTrigger value="installments">Parcelas</TabsTrigger>
-              <TabsTrigger value="bid-types">Tipos de Lance</TabsTrigger>
-              <TabsTrigger value="entry-types">Entradas</TabsTrigger>
-              <TabsTrigger value="installment-types">Tipos de Parcela</TabsTrigger>
-              <TabsTrigger value="leverages">Alavancas</TabsTrigger>
-            </TabsList>
-          </div>
-
-          <TabsContent value="administrators" className="p-6">
-            <AdministratorsList
-              searchTerm=""
-              statusFilter="all"
-              onEdit={() => {}}
-            />
-          </TabsContent>
-
-          <TabsContent value="products" className="p-6">
-            <ProductsList
-              searchTerm=""
-              statusFilter="all"
-              selectedAdministrator=""
-              onEdit={() => {}}
-              onCreate={() => {}}
-            />
-          </TabsContent>
-
-          <TabsContent value="installments" className="p-6">
-            <div>Installments Content</div>
-          </TabsContent>
-        
-          <TabsContent value="bid-types" className="p-6">
-            <BidTypesList
-              searchTerm=""
-              statusFilter="all"
-              selectedAdministrator=""
-              onEdit={() => {}}
-            />
-          </TabsContent>
-
-          <TabsContent value="entry-types" className="p-6">
-            <EntryTypesList
-              searchTerm=""
-              statusFilter="all"
-              selectedAdministrator=""
-              onEdit={() => {}}
-            />
-          </TabsContent>
-
-          <TabsContent value="installment-types" className="p-6">
-            <InstallmentTypesList
-              searchTerm=""
-              statusFilter="all"
-              selectedAdministrator=""
-              onEdit={() => {}}
-            />
-          </TabsContent>
-
-          <TabsContent value="leverages" className="p-6">
-            <LeveragesList
-              searchTerm=""
-              statusFilter="all"
-              onEdit={() => {}}
-            />
-          </TabsContent>
-
-          <AdministratorModal
-            open={showAdministratorModal}
-            onOpenChange={setShowAdministratorModal}
-            administrator={selectedAdministrator}
-            onSuccess={handleRefresh}
-          />
-
-          <ProductModal
-            open={showProductModal}
-            onOpenChange={setShowProductModal}
-            product={selectedProduct}
-            onSuccess={handleRefresh}
-          />
-
-          <BidTypeModal
-            open={showBidTypeModal}
-            onOpenChange={setShowBidTypeModal}
-            bidType={selectedBidType}
-            onSuccess={handleRefresh}
-          />
-
-          <EntryTypeModal
-            open={showEntryTypeModal}
-            onOpenChange={setShowEntryTypeModal}
-            entryType={selectedEntryType}
-            onSuccess={handleRefresh}
-          />
-
-          <InstallmentTypeModal
-            open={showInstallmentTypeModal}
-            onOpenChange={setShowInstallmentTypeModal}
-            installmentType={selectedInstallmentType}
-            onSuccess={handleRefresh}
-          />
-
-          <LeverageModal
-            isOpen={showLeverageModal}
-            onClose={handleRefresh}
-            leverage={selectedLeverage}
-            onSave={handleRefresh}
-          />
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex flex-col gap-2">
+        <h1 className="text-3xl font-bold tracking-tight">Administradoras</h1>
+        <p className="text-muted-foreground">
+          Gerencie as administradoras e suas configurações
+        </p>
       </div>
-    </SimulatorLayout>
+
+      <Tabs defaultValue="administrators" className="space-y-4">
+        <TabsList className="grid w-full grid-cols-7">
+          <TabsTrigger value="administrators">Administradoras</TabsTrigger>
+          <TabsTrigger value="bid-types">Tipos de Lance</TabsTrigger>
+          <TabsTrigger value="entry-types">Tipos de Entrada</TabsTrigger>
+          <TabsTrigger value="installment-types">Tipos de Parcela</TabsTrigger>
+          <TabsTrigger value="products">Produtos</TabsTrigger>
+          <TabsTrigger value="leverages">Alavancagens</TabsTrigger>
+          <TabsTrigger value="reductions">Reduções</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="administrators">
+          <Card>
+            <CardHeader>
+              <CardTitle>Administradoras</CardTitle>
+              <CardDescription>
+                Gerencie as administradoras do consórcio
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <AdministratorsList />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="bid-types">
+          <Card>
+            <CardHeader>
+              <CardTitle>Tipos de Lance</CardTitle>
+              <CardDescription>
+                Configure os tipos de lance disponíveis
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <BidTypesList />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="entry-types">
+          <Card>
+            <CardHeader>
+              <CardTitle>Tipos de Entrada</CardTitle>
+              <CardDescription>
+                Configure os tipos de entrada para os consórcios
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <EntryTypesList />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="installment-types">
+          <Card>
+            <CardHeader>
+              <CardTitle>Tipos de Parcela</CardTitle>
+              <CardDescription>
+                Configure os tipos de parcelamento disponíveis
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <InstallmentTypesList />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="products">
+          <Card>
+            <CardHeader>
+              <CardTitle>Produtos</CardTitle>
+              <CardDescription>
+                Gerencie os produtos de consórcio disponíveis
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ProductsList />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="leverages">
+          <Card>
+            <CardHeader>
+              <CardTitle>Alavancagens</CardTitle>
+              <CardDescription>
+                Configure as opções de alavancagem patrimonial
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <LeveragesList />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="reductions">
+          <Card>
+            <CardHeader>
+              <CardTitle>Reduções de Parcela</CardTitle>
+              <CardDescription>
+                Configure as reduções aplicáveis às parcelas
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <InstallmentReductionsList />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
