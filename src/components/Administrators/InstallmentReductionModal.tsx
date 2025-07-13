@@ -11,6 +11,7 @@ import MultiSelect from '@/components/ui/multiselect';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useCompany } from '@/contexts/CompanyContext';
+import { CreateAdministratorModal } from '@/components/Administrators/AdministratorModal';
 
 const applicationsOptions = [
   { value: 'installment', label: 'Parcela' },
@@ -45,8 +46,7 @@ export const InstallmentReductionModal: React.FC<InstallmentReductionModalProps>
 }) => {
   const { selectedCompanyId } = useCompany();
   const [administrators, setAdministrators] = React.useState<any[]>([]);
-  const [addingAdmin, setAddingAdmin] = React.useState(false);
-  const [newAdminName, setNewAdminName] = React.useState('');
+  const [showCreateAdminModal, setShowCreateAdminModal] = React.useState(false);
 
   const form = useForm<ReductionFormData>({
     resolver: zodResolver(reductionSchema),
@@ -94,23 +94,6 @@ export const InstallmentReductionModal: React.FC<InstallmentReductionModalProps>
       .eq('is_archived', false)
       .order('name');
     if (!error) setAdministrators(data || []);
-  };
-
-  const handleAddAdministrator = async () => {
-    if (!newAdminName) return;
-    const { data, error } = await supabase
-      .from('administrators')
-      .insert({ name: newAdminName, company_id: selectedCompanyId })
-      .select();
-    if (error) {
-      toast.error('Erro ao adicionar administradora');
-      return;
-    }
-    setAdministrators((prev) => [...prev, ...data]);
-    form.setValue('administrator_id', data[0].id);
-    setAddingAdmin(false);
-    setNewAdminName('');
-    toast.success('Administradora adicionada!');
   };
 
   const onSubmit = async (data: ReductionFormData) => {
@@ -182,23 +165,10 @@ export const InstallmentReductionModal: React.FC<InstallmentReductionModalProps>
                         ))}
                       </SelectContent>
                     </Select>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setAddingAdmin((v) => !v)}>
+                    <Button type="button" variant="outline" size="sm" onClick={() => setShowCreateAdminModal(true)}>
                       +
                     </Button>
                   </div>
-                  {addingAdmin && (
-                    <div className="flex gap-2 mt-2">
-                      <Input
-                        placeholder="Nome da administradora"
-                        value={newAdminName}
-                        onChange={e => setNewAdminName(e.target.value)}
-                        className="flex-1"
-                      />
-                      <Button type="button" onClick={handleAddAdministrator}>
-                        Adicionar
-                      </Button>
-                    </div>
-                  )}
                   <FormMessage />
                 </FormItem>
               )}
@@ -249,6 +219,14 @@ export const InstallmentReductionModal: React.FC<InstallmentReductionModalProps>
             </div>
           </form>
         </Form>
+        <CreateAdministratorModal
+          open={showCreateAdminModal}
+          onOpenChange={(open) => setShowCreateAdminModal(open)}
+          onSuccess={() => {
+            setShowCreateAdminModal(false);
+            fetchAdministrators();
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

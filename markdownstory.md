@@ -284,3 +284,11 @@ Aguardando testes finais e validação do usuário para realizar o deploy.
 - Corrigido o erro "Expected number, received string" ao cadastrar uma Redução de Parcela.
 - O campo Percentual reduzido (%) agora converte corretamente o valor de string para number no onChange, conforme padrão dos outros modais do projeto.
 - Pronto para novo teste do usuário.
+
+## [Ajuste UX] Botão de adicionar administradora abre modal dedicado
+
+**Data:** 2024-07-11
+
+- O botão "+" ao lado do campo Administradora no modal de Redução de Parcela agora abre o modal de criação de administradora, em vez de exibir um campo inline.
+- Após adicionar uma nova administradora, a lista é atualizada automaticamente no modal de Redução de Parcela.
+- Experiência padronizada com o restante do sistema.
