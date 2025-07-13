@@ -1,68 +1,52 @@
-
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useUpdateCrmUser } from '@/hooks/useCrmUsers';
-import { useCrmAuth } from '@/contexts/CrmAuthContext';
-import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { useFunnels } from '@/hooks/useFunnels';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ChevronDown } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
+import { UserRole } from '@/types/crm';
 
 interface UserModalProps {
-  isOpen: boolean;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   user?: any;
+  onSuccess: () => void;
 }
 
-export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
+export const UserModal = ({ open, onOpenChange, user, onSuccess }: UserModalProps) => {
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
     email: '',
     phone: '',
-    role: 'user' as 'master' | 'admin' | 'leader' | 'user',
+    role: 'user' as UserRole,
     funnels: [] as string[],
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
+  const [loading, setLoading] = useState(false);
 
-  const { companyId, crmUser } = useCrmAuth();
-  const updateUserMutation = useUpdateCrmUser();
-  // Buscar empresas
-  const { data: companies = [], isLoading: companiesLoading } = useQuery({
-    queryKey: ['companies'],
+  const { data: funnels = [] } = useQuery({
+    queryKey: ['funnels'],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('companies')
-        .select('id, name, status')
-        .eq('status', 'active')
-        .order('name');
+        .from('funnels')
+        .select('*');
       if (error) throw error;
       return data;
-    },
+    }
   });
-  // Funis filtrados pela empresa selecionada
-  const { data: funnels = [] } = useFunnels(selectedCompanyId || companyId);
-
-  // Verificar se o usuário atual pode criar administradores
-  const canCreateAdmin = crmUser?.role === 'master' || crmUser?.role === 'admin';
-  const canCreateSubMaster = crmUser?.role === 'master';
 
   useEffect(() => {
     if (user) {
       setFormData({
         first_name: user.first_name || '',
         last_name: user.last_name || '',
-        email: user.email,
+        email: user.email || '',
         phone: user.phone || '',
-        role: user.role,
+        role: user.role || 'user',
         funnels: user.funnels || [],
       });
     } else {
@@ -75,244 +59,139 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
         funnels: [],
       });
     }
-  }, [user]);
+  }, [user, open]);
 
-  // Corrigir envio do campo funnels para garantir array de strings
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!formData.email.trim()) {
-      toast.error('Email é obrigatório');
-      return;
-    }
-
-    const finalCompanyId = selectedCompanyId || companyId;
-    if (!finalCompanyId) {
-      toast.error('Erro: Empresa não identificada');
-      return;
-    }
-
-    setIsLoading(true);
-
+    setLoading(true);
     try {
-      const funisArray = Array.isArray(formData.funnels) ? formData.funnels : (typeof formData.funnels === 'string' ? [formData.funnels] : []);
       if (user) {
-        // Editar usuário existente
-        await updateUserMutation.mutateAsync({
-          id: user.id,
-          first_name: formData.first_name.trim(),
-          last_name: formData.last_name.trim(),
-          phone: formData.phone.trim() || null,
-          email: formData.email.trim(),
-          role: formData.role,
-          funnels: funisArray,
-          company_id: finalCompanyId,
-          status: 'active'
-        });
+        const { error } = await supabase
+          .from('crm_users')
+          .update(formData)
+          .eq('id', user.id);
+        if (error) throw error;
         toast.success('Usuário atualizado com sucesso!');
       } else {
-        // Chamar Edge Function do Supabase para convite de usuário
-        console.log('Calling invite-user function with data:', {
-          email: formData.email.trim(),
-          role: formData.role,
-          funnels: funisArray,
-          company_id: finalCompanyId
-        });
-
-        const { data, error } = await supabase.functions.invoke('invite-user', {
-          body: {
-            email: formData.email.trim(),
-            role: formData.role,
-            funnels: funisArray,
-            company_id: finalCompanyId
-          }
-        });
-
-        console.log('Function response:', { data, error });
-
-        if (error) {
-          console.error('Supabase function error:', error);
-          
-          // Tentar extrair mais detalhes do erro
-          let errorMessage = 'Erro ao convidar usuário';
-          
-          if (error.message) {
-            errorMessage = error.message;
-          }
-          
-          // Se for um erro de função Edge, tentar obter mais detalhes
-          if (error.message?.includes('Edge Function')) {
-            errorMessage = 'Erro interno no servidor. Verifique se todos os dados estão corretos.';
-          }
-          
-          throw new Error(errorMessage);
-        }
-
-        if (data?.error) {
-          console.error('Function returned error:', data.error);
-          throw new Error(data.error);
-        }
-
-        if (!data?.success) {
-          console.error('Function did not return success:', data);
-          throw new Error('Falha ao processar convite do usuário');
-        }
-
-        toast.success(data?.message || 'Usuário convidado com sucesso! O usuário receberá um e-mail para redefinir a senha.');
+        const { error } = await supabase
+          .from('crm_users')
+          .insert([formData]);
+        if (error) throw error;
+        toast.success('Usuário criado com sucesso!');
       }
-
-      onClose();
-      setFormData({ first_name: '', last_name: '', email: '', phone: '', role: 'user', funnels: [] });
+      onSuccess();
+      onOpenChange(false);
     } catch (error: any) {
-      console.error('Erro ao salvar usuário:', error);
-      toast.error(error.message || 'Erro ao salvar usuário');
+      toast.error('Erro ao salvar usuário: ' + error.message);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
+  const handleFunnelChange = (funnelId: string, checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      funnels: checked
+        ? [...prev.funnels, funnelId]
+        : prev.funnels.filter(id => id !== funnelId)
+    }));
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>
-            {user ? 'Editar Usuário' : 'Novo Usuário'}
-          </DialogTitle>
+          <DialogTitle>{user ? 'Editar' : 'Novo'} Usuário</DialogTitle>
         </DialogHeader>
-        
+
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Seleção de empresa */}
-          {crmUser?.role === 'master' && (
+          <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="company_id">Empresa *</Label>
-              <Select
-                value={selectedCompanyId || companyId || ''}
-                onValueChange={(value) => setSelectedCompanyId(value)}
-                disabled={isLoading || companiesLoading}
+              <Label htmlFor="first_name">Nome</Label>
+              <Input
+                id="first_name"
+                value={formData.first_name}
+                onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
                 required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a empresa" />
-                </SelectTrigger>
-                <SelectContent>
-                  {companiesLoading ? (
-                    <div className="px-4 py-2 text-muted-foreground text-sm">Carregando empresas...</div>
-                  ) : companies.length > 0 ? (
-                    companies.map((c: any) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))
-                  ) : (
-                    <div className="px-4 py-2 text-muted-foreground text-sm">Nenhuma empresa encontrada</div>
-                  )}
-                </SelectContent>
-              </Select>
+              />
             </div>
-          )}
-          {user && (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="first_name">Nome *</Label>
-                <Input
-                  id="first_name"
-                  value={formData.first_name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-              <div>
-                <Label htmlFor="last_name">Sobrenome *</Label>
-                <Input
-                  id="last_name"
-                  value={formData.last_name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
+            <div>
+              <Label htmlFor="last_name">Sobrenome</Label>
+              <Input
+                id="last_name"
+                value={formData.last_name}
+                onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+                required
+              />
             </div>
-          )}
+          </div>
+
           <div>
-            <Label htmlFor="email">Email *</Label>
+            <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
-              disabled={isLoading || !!user}
             />
-            {user && (
-              <p className="text-xs text-muted-foreground mt-1">
-                O email não pode ser alterado após a criação
-              </p>
-            )}
           </div>
-          {user && (
-            <div>
-              <Label htmlFor="phone">Telefone</Label>
-              <Input
-                id="phone"
-                value={formData.phone}
-                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                placeholder="(11) 99999-9999"
-                disabled={isLoading}
-              />
-            </div>
-          )}
-          {/* Seleção de papel */}
+
           <div>
-            <Label htmlFor="role">Papel *</Label>
-            <Select
-              value={formData.role}
-              onValueChange={(value) => setFormData((prev) => ({ ...prev, role: value as any }))}
-              disabled={isLoading}
-              required
-            >
+            <Label htmlFor="phone">Telefone</Label>
+            <Input
+              id="phone"
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="role">Função</Label>
+            <Select value={formData.role} onValueChange={(value: UserRole) => setFormData({ ...formData, role: value })}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecione o papel" />
+                <SelectValue placeholder="Selecione uma função" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="user">Usuário</SelectItem>
-                {canCreateAdmin && <SelectItem value="admin">Administrador</SelectItem>}
-                {canCreateSubMaster && <SelectItem value="submaster">SubMaster (visualização total, sem edição)</SelectItem>}
-                {crmUser?.role === 'master' && <SelectItem value="master">Master</SelectItem>}
-                {/* Remover opção de líder do modal de usuário */}
+                <SelectItem value="leader">Líder</SelectItem>
+                <SelectItem value="admin">Administrador</SelectItem>
               </SelectContent>
             </Select>
           </div>
-          {/* Seleção de funis - visível para master, admin e líder */}
-          {(crmUser?.role === 'master' || crmUser?.role === 'admin' || crmUser?.role === 'leader') && (
-            <div>
-              <Label htmlFor="funnels">Funis *</Label>
-              <Select
-                multiple
-                value={formData.funnels}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, funnels: value }))}
-                disabled={isLoading}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione os funis" />
-                </SelectTrigger>
-                <SelectContent>
-                  {funnels.length > 0 ? (
-                    funnels.map((f: any) => (
-                      <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
-                    ))
-                  ) : (
-                    <div className="px-4 py-2 text-muted-foreground text-sm">Nenhum funil encontrado</div>
-                  )}
-                </SelectContent>
-              </Select>
+
+          <div>
+            <Label>Funis</Label>
+            <div className="grid grid-cols-3 gap-2 mt-2">
+              {funnels.map((funnel: any) => (
+                <div key={funnel.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={funnel.id}
+                    checked={formData.funnels.includes(funnel.id)}
+                    onCheckedChange={(checked) =>
+                      handleFunnelChange(funnel.id, checked as boolean)
+                    }
+                  />
+                  <Label htmlFor={funnel.id} className="text-sm">
+                    {funnel.name}
+                  </Label>
+                </div>
+              ))}
             </div>
-          )}
+          </div>
+
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={loading}
+            >
               Cancelar
             </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Salvando...' : (user ? 'Atualizar' : 'Convidar Usuário')}
+            <Button type="submit" disabled={loading}>
+              {loading ? 'Salvando...' : 'Salvar'}
             </Button>
           </div>
         </form>

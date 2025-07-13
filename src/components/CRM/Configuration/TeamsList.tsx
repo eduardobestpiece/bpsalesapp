@@ -1,152 +1,119 @@
-
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Plus, Edit, Users, Search } from 'lucide-react';
-import { useCrmUsers } from '@/hooks/useCrmData';
-import { useTeams, useDeleteTeam } from '@/hooks/useTeams';
-import { TeamModal } from './TeamModal';
+import { Edit, Archive, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
-import { useCrmAuth } from '@/contexts/CrmAuthContext';
 
-export const TeamsList = () => {
-  const [showModal, setShowModal] = useState(false);
-  const [selectedTeam, setSelectedTeam] = useState<any>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const { companyId } = useCrmAuth();
-  const { data: users = [], isLoading: usersLoading } = useCrmUsers(companyId);
-  const { data: teams = [], isLoading: teamsLoading } = useTeams(companyId);
-  const deleteTeamMutation = useDeleteTeam();
+interface TeamsListProps {
+  searchTerm: string;
+  statusFilter: 'all' | 'active' | 'archived';
+  companyId: string;
+  onEdit: (team: any) => void;
+  refreshKey: number;
+}
 
-  const handleEdit = (team: any) => {
-    setSelectedTeam(team);
-    setShowModal(true);
-  };
+export const TeamsList = ({ searchTerm, statusFilter, companyId, onEdit, refreshKey }: TeamsListProps) => {
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setSelectedTeam(null);
-  };
+  const { data: teams = [], isLoading, refetch } = useQuery({
+    queryKey: ['teams', companyId, searchTerm, statusFilter, refreshKey],
+    queryFn: async () => {
+      let query = supabase
+        .from('teams')
+        .select('*')
+        .eq('company_id', companyId);
 
-  const handleArchive = async (teamId: string) => {
+      if (statusFilter === 'active') {
+        query = query.eq('is_archived', false);
+      } else if (statusFilter === 'archived') {
+        query = query.eq('is_archived', true);
+      }
+
+      const { data, error } = await query
+        .ilike('name', `%${searchTerm}%`)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!companyId
+  });
+
+  const handleArchive = async (id: string, currentStatus: boolean) => {
+    setActionLoading(id);
     try {
-      await deleteTeamMutation.mutateAsync(teamId);
-      toast.success('Time arquivado com sucesso!');
+      const { error } = await supabase
+        .from('teams')
+        .update({ is_archived: !currentStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success(`Time ${!currentStatus ? 'arquivado' : 'restaurado'} com sucesso!`);
+      refetch();
     } catch (error: any) {
-      toast.error(error.message || 'Erro ao arquivar time');
+      toast.error('Erro ao alterar status: ' + error.message);
+    } finally {
+      setActionLoading(null);
     }
   };
 
-  const getLeaderName = (leaderId: string) => {
-    const leader = users.find(user => user.id === leaderId);
-    return leader ? `${leader.first_name} ${leader.last_name}` : 'Líder não encontrado';
-  };
+  if (isLoading) {
+    return <div className="text-center py-8">Carregando times...</div>;
+  }
 
-  const getTeamMembersCount = (teamId: string) => {
-    return users.filter(user => user.team_id === teamId).length;
-  };
-
-  const filteredTeams = teams.filter(team => {
-    const leaderName = getLeaderName(team.leader_id).toLowerCase();
-    return team.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-           leaderName.includes(searchTerm.toLowerCase());
-  });
-
-  if (teamsLoading || usersLoading) {
-    return <div className="text-center py-4">Carregando times...</div>;
+  if (teams.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        Nenhum time encontrado.
+      </div>
+    );
   }
 
   return (
-    <>
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle>Times</CardTitle>
-              <CardDescription>
-                Gerencie os times da empresa
-              </CardDescription>
-            </div>
-            <Button onClick={() => setShowModal(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Novo Time
-            </Button>
-          </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
-              placeholder="Pesquisar por nome ou líder..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredTeams.length === 0 ? (
-              <div className="col-span-full text-center py-8">
-                <p className="text-muted-foreground">
-                  {searchTerm ? 'Nenhum time encontrado com este termo.' : 'Nenhum time encontrado. Crie o primeiro time para começar.'}
-                </p>
+    <div className="space-y-4">
+      {teams.map((team) => (
+        <div key={team.id} className="bg-white border rounded-lg p-4 shadow-sm">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h3 className="font-semibold text-lg">{team.name}</h3>
+                <Badge variant={team.is_archived ? 'secondary' : 'default'}>
+                  {team.is_archived ? 'Arquivado' : 'Ativo'}
+                </Badge>
               </div>
-            ) : (
-              filteredTeams.map((team) => (
-                <div
-                  key={team.id}
-                  className="p-4 border rounded-lg hover:shadow-md transition-shadow"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <h3 className="font-medium">{team.name}</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Líder: {getLeaderName(team.leader_id)}
-                      </p>
-                    </div>
-                    <Badge variant={team.status === 'active' ? 'default' : 'secondary'}>
-                      {team.status === 'active' ? 'Ativo' : 'Arquivado'}
-                    </Badge>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 mb-3">
-                    <Users className="w-4 h-4 text-muted-foreground" />
-                    <span className="text-sm text-muted-foreground">
-                      {getTeamMembersCount(team.id)} membros
-                    </span>
-                  </div>
-                  
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(team)}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    {team.status === 'active' && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleArchive(team.id)}
-                      >
-                        Arquivar
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </CardContent>
-      </Card>
+              <p className="text-sm text-gray-600">
+                {team.description}
+              </p>
+            </div>
 
-      <TeamModal
-        isOpen={showModal}
-        onClose={handleCloseModal}
-        team={selectedTeam}
-      />
-    </>
+            <div className="flex gap-2 ml-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEdit(team)}
+                disabled={!!actionLoading}
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleArchive(team.id, team.is_archived)}
+                disabled={actionLoading === team.id}
+              >
+                {team.is_archived ? (
+                  <RotateCcw className="w-4 h-4" />
+                ) : (
+                  <Archive className="w-4 h-4" />
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 };

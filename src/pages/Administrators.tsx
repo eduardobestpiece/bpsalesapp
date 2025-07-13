@@ -1,273 +1,180 @@
-
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Building2, Package, CreditCard, Percent, Timer } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 
-// Import components
-import { AdministratorsList } from '@/components/Administrators/AdministratorsList';
+import { SimulatorLayout } from '@/components/Layout/SimulatorLayout';
 import { AdministratorModal } from '@/components/Administrators/AdministratorModal';
-import { ProductsList } from '@/components/Administrators/ProductsList';
+import { AdministratorsList } from '@/components/Administrators/AdministratorsList';
 import { ProductModal } from '@/components/Administrators/ProductModal';
-import { BidTypesList } from '@/components/Administrators/BidTypesList';
-import { BidTypeModal } from '@/components/Administrators/BidTypeModal';
-import { EntryTypesList } from '@/components/Administrators/EntryTypesList';
-import { EntryTypeModal } from '@/components/Administrators/EntryTypeModal';
-import { InstallmentTypesList } from '@/components/Administrators/InstallmentTypesList';
+import { ProductsList } from '@/components/Administrators/ProductsList';
 import { InstallmentTypeModal } from '@/components/Administrators/InstallmentTypeModal';
-import { LeveragesList } from '@/components/Administrators/LeveragesList';
+import { InstallmentTypesList } from '@/components/Administrators/InstallmentTypesList';
+import { BidTypeModal } from '@/components/Administrators/BidTypeModal';
+import { BidTypesList } from '@/components/Administrators/BidTypesList';
+import { EntryTypeModal } from '@/components/Administrators/EntryTypeModal';
+import { EntryTypesList } from '@/components/Administrators/EntryTypesList';
 import { LeverageModal } from '@/components/Administrators/LeverageModal';
+import { LeveragesList } from '@/components/Administrators/LeveragesList';
 
-const Administrators = () => {
-  // Estados para administradoras
-  const [administratorSearchTerm, setAdministratorSearchTerm] = useState('');
-  const [administratorStatusFilter, setAdministratorStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
-  const [showAdministratorModal, setShowAdministratorModal] = useState(false);
+export default function Administrators() {
   const [selectedAdministrator, setSelectedAdministrator] = useState<any>(null);
+  const [showAdministratorModal, setShowAdministratorModal] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [showProductModal, setShowProductModal] = useState(false);
+  const [selectedInstallmentType, setSelectedInstallmentType] = useState<any>(null);
+  const [showInstallmentTypeModal, setShowInstallmentTypeModal] = useState(false);
+  const [selectedBidType, setSelectedBidType] = useState<any>(null);
+  const [showBidTypeModal, setShowBidTypeModal] = useState(false);
+  const [selectedEntryType, setSelectedEntryType] = useState<any>(null);
+  const [showEntryTypeModal, setShowEntryTypeModal] = useState(false);
+  const [selectedLeverage, setSelectedLeverage] = useState<any>(null);
+  const [showLeverageModal, setShowLeverageModal] = useState(false);
 
-  // Estados para produtos
+  // Search and filter states
+  const [adminSearchTerm, setAdminSearchTerm] = useState('');
+  const [adminStatusFilter, setAdminStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
   const [productSearchTerm, setProductSearchTerm] = useState('');
   const [productStatusFilter, setProductStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
-  const [productAdminFilter, setProductAdminFilter] = useState('');
-  const [showProductModal, setShowProductModal] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [installmentSearchTerm, setInstallmentSearchTerm] = useState('');
+  const [installmentStatusFilter, setInstallmentStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
+  const [bidSearchTerm, setBidSearchTerm] = useState('');
+  const [bidStatusFilter, setBidStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
+  const [entrySearchTerm, setEntrySearchTerm] = useState('');
+  const [entryStatusFilter, setEntryStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
+  const [leverageSearchTerm, setLeverageSearchTerm] = useState('');
+  const [leverageStatusFilter, setLeverageStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
 
-  // Estados para outros modals
-  const [showBidTypeModal, setShowBidTypeModal] = useState(false);
-  const [selectedBidType, setSelectedBidType] = useState<any>(null);
-  const [showEntryTypeModal, setShowEntryTypeModal] = useState(false);
-  const [selectedEntryType, setSelectedEntryType] = useState<any>(null);
-  const [showInstallmentTypeModal, setShowInstallmentTypeModal] = useState(false);
-  const [selectedInstallmentType, setSelectedInstallmentType] = useState<any>(null);
-  const [showLeverageModal, setShowLeverageModal] = useState(false);
-  const [selectedLeverage, setSelectedLeverage] = useState<any>(null);
+  // Administrator filter for related tables
+  const [productAdminFilter, setProductAdminFilter] = useState<string>('');
+  const [installmentAdminFilter, setInstallmentAdminFilter] = useState<string>('');
+  const [bidAdminFilter, setBidAdminFilter] = useState<string>('');
+  const [entryAdminFilter, setEntryAdminFilter] = useState<string>('');
 
-  // Estado para refresh
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handleRefresh = () => {
     setRefreshKey(prev => prev + 1);
   };
 
-  const handleEditAdministrator = (administrator: any) => {
-    setSelectedAdministrator(administrator);
-    setShowAdministratorModal(true);
-  };
-
-  const handleCreateProduct = () => {
-    setSelectedProduct(null);
-    setShowProductModal(true);
-  };
-
-  const handleEditProduct = (product: any) => {
-    setSelectedProduct(product);
-    setShowProductModal(true);
-  };
-
-  const handleCloseAdministratorModal = () => {
-    setShowAdministratorModal(false);
-    setSelectedAdministrator(null);
-    handleRefresh();
-  };
-
-  const handleCloseProductModal = () => {
-    setShowProductModal(false);
-    setSelectedProduct(null);
-    handleRefresh();
-  };
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Administração do Sistema</h1>
-          <p className="text-muted-foreground">
-            Gerencie administradoras, produtos e configurações do sistema
-          </p>
-        </div>
+    <SimulatorLayout>
+      <div className="container mx-auto px-4 py-8">
+        <Tabs defaultValue="administrators" className="w-full">
+          <div className="border-b bg-gray-50/50 px-6 py-4">
+            <TabsList className="grid grid-cols-7 w-full max-w-5xl mx-auto">
+              <TabsTrigger value="administrators">Administradoras</TabsTrigger>
+              <TabsTrigger value="products">Produtos</TabsTrigger>
+              <TabsTrigger value="installments">Parcelas</TabsTrigger>
+              <TabsTrigger value="bid-types">Tipos de Lance</TabsTrigger>
+              <TabsTrigger value="entry-types">Entradas</TabsTrigger>
+              <TabsTrigger value="installment-types">Tipos de Parcela</TabsTrigger>
+              <TabsTrigger value="leverages">Alavancas</TabsTrigger>
+            </TabsList>
+          </div>
 
-        <Tabs defaultValue="administrators" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="administrators" className="flex items-center gap-2">
-              <Building2 className="w-4 h-4" />
-              Administradoras
-            </TabsTrigger>
-            <TabsTrigger value="products" className="flex items-center gap-2">
-              <Package className="w-4 h-4" />
-              Produtos
-            </TabsTrigger>
-            <TabsTrigger value="bid-types" className="flex items-center gap-2">
-              <CreditCard className="w-4 h-4" />
-              Tipos de Lance
-            </TabsTrigger>
-            <TabsTrigger value="entry-types" className="flex items-center gap-2">
-              <Percent className="w-4 h-4" />
-              Tipos de Entrada
-            </TabsTrigger>
-            <TabsTrigger value="installment-types" className="flex items-center gap-2">
-              <Timer className="w-4 h-4" />
-              Tipos de Parcela
-            </TabsTrigger>
-            <TabsTrigger value="leverages" className="flex items-center gap-2">
-              <Building2 className="w-4 h-4" />
-              Alavancagens
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="administrators" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Filtros</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="admin-search">Buscar</Label>
-                    <Input
-                      id="admin-search"
-                      placeholder="Nome da administradora..."
-                      value={administratorSearchTerm}
-                      onChange={(e) => setAdministratorSearchTerm(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="admin-status">Status</Label>
-                    <Select value={administratorStatusFilter} onValueChange={(value: 'all' | 'active' | 'archived') => setAdministratorStatusFilter(value)}>
-                      <SelectTrigger id="admin-status">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos</SelectItem>
-                        <SelectItem value="active">Ativos</SelectItem>
-                        <SelectItem value="archived">Arquivados</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
+          <TabsContent value="administrators" className="p-6">
             <AdministratorsList
-              key={refreshKey}
-              searchTerm={administratorSearchTerm}
-              statusFilter={administratorStatusFilter}
-              onEdit={handleEditAdministrator}
+              searchTerm=""
+              statusFilter="all"
+              onEdit={() => {}}
             />
           </TabsContent>
 
-          <TabsContent value="products" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Filtros</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="product-search">Buscar</Label>
-                    <Input
-                      id="product-search"
-                      placeholder="Nome do produto..."
-                      value={productSearchTerm}
-                      onChange={(e) => setProductSearchTerm(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="product-status">Status</Label>
-                    <Select value={productStatusFilter} onValueChange={(value: 'all' | 'active' | 'archived') => setProductStatusFilter(value)}>
-                      <SelectTrigger id="product-status">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Todos</SelectItem>
-                        <SelectItem value="active">Ativos</SelectItem>
-                        <SelectItem value="archived">Arquivados</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="product-admin">Administradora</Label>
-                    <Select value={productAdminFilter} onValueChange={setProductAdminFilter}>
-                      <SelectTrigger id="product-admin">
-                        <SelectValue placeholder="Todas" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">Todas</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
+          <TabsContent value="products" className="p-6">
             <ProductsList
-              key={refreshKey}
-              searchTerm={productSearchTerm}
-              statusFilter={productStatusFilter}
-              selectedAdministrator={productAdminFilter || ''}
-              onEdit={handleEditProduct}
-              onCreate={handleCreateProduct}
+              searchTerm=""
+              statusFilter="all"
+              selectedAdministrator=""
+              onEdit={() => {}}
+              onCreate={() => {}}
             />
           </TabsContent>
 
-          <TabsContent value="bid-types">
-            <BidTypesList key={refreshKey} onEdit={setSelectedBidType} />
+          <TabsContent value="installments" className="p-6">
+            <div>Installments Content</div>
+          </TabsContent>
+        
+          <TabsContent value="bid-types" className="p-6">
+            <BidTypesList
+              searchTerm=""
+              statusFilter="all"
+              selectedAdministrator=""
+              onEdit={() => {}}
+            />
           </TabsContent>
 
-          <TabsContent value="entry-types">
-            <EntryTypesList key={refreshKey} onEdit={setSelectedEntryType} />
+          <TabsContent value="entry-types" className="p-6">
+            <EntryTypesList
+              searchTerm=""
+              statusFilter="all"
+              selectedAdministrator=""
+              onEdit={() => {}}
+            />
           </TabsContent>
 
-          <TabsContent value="installment-types">
-            <InstallmentTypesList key={refreshKey} onEdit={setSelectedInstallmentType} />
+          <TabsContent value="installment-types" className="p-6">
+            <InstallmentTypesList
+              searchTerm=""
+              statusFilter="all"
+              selectedAdministrator=""
+              onEdit={() => {}}
+            />
           </TabsContent>
 
-          <TabsContent value="leverages">
-            <LeveragesList key={refreshKey} onEdit={setSelectedLeverage} />
+          <TabsContent value="leverages" className="p-6">
+            <LeveragesList
+              searchTerm=""
+              statusFilter="all"
+              onEdit={() => {}}
+            />
           </TabsContent>
-        </Tabs>
 
-        {/* Modals */}
-        <AdministratorModal
-          isOpen={showAdministratorModal}
-          onClose={handleCloseAdministratorModal}
-          administrator={selectedAdministrator}
-        />
+          <AdministratorModal
+            open={showAdministratorModal}
+            onOpenChange={setShowAdministratorModal}
+            administrator={selectedAdministrator}
+            onSuccess={handleRefresh}
+          />
 
-        <ProductModal
-          isOpen={showProductModal}
-          onClose={handleCloseProductModal}
-          product={selectedProduct}
-        />
+          <ProductModal
+            open={showProductModal}
+            onOpenChange={setShowProductModal}
+            product={selectedProduct}
+            onSuccess={handleRefresh}
+          />
 
-        <BidTypeModal
-          isOpen={showBidTypeModal}
-          onClose={() => { setShowBidTypeModal(false); setSelectedBidType(null); handleRefresh(); }}
-          bidType={selectedBidType}
-        />
+          <BidTypeModal
+            open={showBidTypeModal}
+            onOpenChange={setShowBidTypeModal}
+            bidType={selectedBidType}
+            onSuccess={handleRefresh}
+          />
 
-        <EntryTypeModal
-          isOpen={showEntryTypeModal}
-          onClose={() => { setShowEntryTypeModal(false); setSelectedEntryType(null); handleRefresh(); }}
-          entryType={selectedEntryType}
-        />
+          <EntryTypeModal
+            open={showEntryTypeModal}
+            onOpenChange={setShowEntryTypeModal}
+            entryType={selectedEntryType}
+            onSuccess={handleRefresh}
+          />
 
-        <InstallmentTypeModal
-          isOpen={showInstallmentTypeModal}
-          onClose={() => { setShowInstallmentTypeModal(false); setSelectedInstallmentType(null); handleRefresh(); }}
-          installmentType={selectedInstallmentType}
-        />
+          <InstallmentTypeModal
+            open={showInstallmentTypeModal}
+            onOpenChange={setShowInstallmentTypeModal}
+            installmentType={selectedInstallmentType}
+            onSuccess={handleRefresh}
+          />
 
-        <LeverageModal
-          isOpen={showLeverageModal}
-          onClose={() => { setShowLeverageModal(false); setSelectedLeverage(null); handleRefresh(); }}
-          leverage={selectedLeverage}
-        />
+          <LeverageModal
+            isOpen={showLeverageModal}
+            onClose={handleRefresh}
+            leverage={selectedLeverage}
+            onSave={handleRefresh}
+          />
       </div>
-    </div>
+    </SimulatorLayout>
   );
-};
-
-export default Administrators;
+}

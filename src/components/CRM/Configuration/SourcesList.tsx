@@ -1,126 +1,116 @@
-
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Plus, Edit, Search } from 'lucide-react';
-import { useSources, useDeleteSource } from '@/hooks/useSources';
-import { SourceModal } from './SourceModal';
+import { Edit, Archive, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
-import { useCrmAuth } from '@/contexts/CrmAuthContext';
 
-export const SourcesList = () => {
-  const [showModal, setShowModal] = useState(false);
-  const [selectedSource, setSelectedSource] = useState<any>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const { companyId } = useCrmAuth();
-  const { data: sources = [], isLoading } = useSources(companyId);
-  const deleteSourceMutation = useDeleteSource();
+interface SourcesListProps {
+  searchTerm: string;
+  statusFilter: 'all' | 'active' | 'archived';
+  companyId: string;
+  onEdit: (source: any) => void;
+  refreshKey: number;
+}
 
-  const handleEdit = (source: any) => {
-    setSelectedSource(source);
-    setShowModal(true);
-  };
+export const SourcesList = ({ searchTerm, statusFilter, companyId, onEdit, refreshKey }: SourcesListProps) => {
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setSelectedSource(null);
-  };
+  const { data: sources = [], isLoading, refetch } = useQuery({
+    queryKey: ['sources', companyId, searchTerm, statusFilter, refreshKey],
+    queryFn: async () => {
+      let query = supabase
+        .from('sources')
+        .select('*')
+        .eq('company_id', companyId);
 
-  const handleArchive = async (sourceId: string) => {
+      if (statusFilter === 'active') {
+        query = query.eq('is_archived', false);
+      } else if (statusFilter === 'archived') {
+        query = query.eq('is_archived', true);
+      }
+
+      const { data, error } = await query
+        .ilike('name', `%${searchTerm}%`)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!companyId
+  });
+
+  const handleArchive = async (id: string, currentStatus: boolean) => {
+    setActionLoading(id);
     try {
-      await deleteSourceMutation.mutateAsync(sourceId);
-      toast.success('Origem arquivada com sucesso!');
+      const { error } = await supabase
+        .from('sources')
+        .update({ is_archived: !currentStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success(`Origem ${!currentStatus ? 'arquivada' : 'restaurada'} com sucesso!`);
+      refetch();
     } catch (error: any) {
-      toast.error(error.message || 'Erro ao arquivar origem');
+      toast.error('Erro ao alterar status: ' + error.message);
+    } finally {
+      setActionLoading(null);
     }
   };
 
-  const filteredSources = sources.filter(source => 
-    source.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   if (isLoading) {
-    return <div className="text-center py-4">Carregando origens...</div>;
+    return <div className="text-center py-8">Carregando origens...</div>;
+  }
+
+  if (sources.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        Nenhuma origem encontrada.
+      </div>
+    );
   }
 
   return (
-    <>
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <div>
-              <CardTitle>Origens de Leads</CardTitle>
-              <CardDescription>
-                Gerencie as origens de onde vêm os leads
-              </CardDescription>
-            </div>
-            <Button onClick={() => setShowModal(true)}>
-              <Plus className="w-4 h-4 mr-2" />
-              Nova Origem
-            </Button>
-          </div>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-            <Input
-              placeholder="Pesquisar por nome..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredSources.length === 0 ? (
-              <div className="col-span-full text-center py-8">
-                <p className="text-muted-foreground">
-                  {searchTerm ? 'Nenhuma origem encontrada com este termo.' : 'Nenhuma origem encontrada. Crie a primeira origem para começar.'}
-                </p>
+    <div className="space-y-4">
+      {sources.map((source) => (
+        <div key={source.id} className="bg-white border rounded-lg p-4 shadow-sm">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h3 className="font-semibold text-lg">{source.name}</h3>
+                <Badge variant={source.is_archived ? 'secondary' : 'default'}>
+                  {source.is_archived ? 'Arquivada' : 'Ativa'}
+                </Badge>
               </div>
-            ) : (
-              filteredSources.map((source) => (
-                <div
-                  key={source.id}
-                  className="p-4 border rounded-lg hover:shadow-md transition-shadow"
-                >
-                  <div className="flex justify-between items-start mb-2">
-                    <h3 className="font-medium">{source.name}</h3>
-                    <Badge variant={source.status === 'active' ? 'default' : 'secondary'}>
-                      {source.status === 'active' ? 'Ativo' : 'Arquivado'}
-                    </Badge>
-                  </div>
-                  <div className="flex gap-2 mt-3">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(source)}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    {source.status === 'active' && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleArchive(source.id)}
-                      >
-                        Arquivar
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
 
-      <SourceModal
-        isOpen={showModal}
-        onClose={handleCloseModal}
-        source={selectedSource}
-      />
-    </>
+            <div className="flex gap-2 ml-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEdit(source)}
+                disabled={!!actionLoading}
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleArchive(source.id, source.is_archived)}
+                disabled={actionLoading === source.id}
+              >
+                {source.is_archived ? (
+                  <RotateCcw className="w-4 h-4" />
+                ) : (
+                  <Archive className="w-4 h-4" />
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
   );
 };

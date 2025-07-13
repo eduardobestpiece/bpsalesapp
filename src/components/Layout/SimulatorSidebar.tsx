@@ -1,5 +1,5 @@
 
-import { Calculator, Settings, Users, LogOut, ChevronDown } from 'lucide-react';
+import { Users, BarChart3, Settings, Shield, ChevronDown, Menu } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useEffect, useState } from 'react';
@@ -17,8 +17,10 @@ import {
   SidebarMenuItem,
   SidebarHeader,
   SidebarFooter,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { LogOut } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,8 +32,9 @@ export const SimulatorSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { userRole, companyId, crmUser, signOut } = useCrmAuth();
-  const [pagePermissions, setPagePermissions] = useState<any>({});
   const { selectedCompanyId, setSelectedCompanyId } = useCompany();
+  const [pagePermissions, setPagePermissions] = useState<any>({});
+  const { collapsed } = useSidebar();
 
   // Buscar empresas (apenas para master)
   const { data: companies = [], isLoading: companiesLoading } = useQuery({
@@ -72,22 +75,21 @@ export const SimulatorSidebar = () => {
 
   const isActivePath = (path: string) => location.pathname === path;
 
-  const handleGoToCrm = () => {
-    navigate('/crm/indicadores');
-  };
-
   const handleAvatarClick = () => {
     window.location.href = '/crm/perfil';
   };
 
   const handleLogout = async () => {
     await signOut();
-    // Redireciona para a página de login do CRM após logout
     window.location.href = '/crm/login';
   };
 
-  const handleStayInSimulator = () => {
-    navigate('/simulador');
+  const handleGoToCrm = () => {
+    navigate('/crm/indicadores');
+  };
+
+  const handleGoToIndicators = () => {
+    navigate('/crm/indicadores');
   };
 
   const handleLogoClick = () => {
@@ -95,48 +97,53 @@ export const SimulatorSidebar = () => {
   };
 
   return (
-    <Sidebar className="border-r border-gray-200">
+    <Sidebar className={collapsed ? "w-14" : "w-60"} collapsible>
       <SidebarHeader className="p-4">
         <div className="flex flex-col items-start">
           <div className="cursor-pointer mb-2" onClick={handleLogoClick}>
-            <img src="/monteo_policromia_horizontal (1).png" alt="Logo Monteo" className="h-10 w-auto max-w-[140px]" />
+            {!collapsed && (
+              <img src="/monteo_policromia_horizontal (1).png" alt="Logo Monteo" className="h-10 w-auto max-w-[140px]" />
+            )}
           </div>
-          <span className="font-bold text-lg text-gray-800 tracking-wide mb-4">Simulador</span>
-          {/* Seletor de empresa para Master */}
-          {userRole === 'master' && (
-            <div className="w-full mb-4">
-              <label className="block text-xs font-medium text-gray-600 mb-1">Empresa</label>
-              <select
-                className="w-full p-2 border rounded text-sm"
-                value={selectedCompanyId || ''}
-                onChange={e => setSelectedCompanyId(e.target.value)}
-                disabled={companiesLoading}
-              >
-                {companies.map((c: any) => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
-              </select>
-            </div>
-          )}
-          {/* Dropdown de módulo */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="flex items-center justify-between w-full p-2 text-sm bg-gray-100 rounded-md hover:bg-gray-200 transition-colors">
-                <span>Módulo</span>
-                <ChevronDown className="h-4 w-4" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-40">
-              <DropdownMenuItem onClick={handleStayInSimulator}>
-                Simulador
-              </DropdownMenuItem>
-              {pagePermissions['indicadores'] !== false && (
-                <DropdownMenuItem onClick={handleGoToCrm}>
-                  CRM
-                </DropdownMenuItem>
+          {!collapsed && (
+            <>
+              <span className="font-bold text-lg text-gray-800 tracking-wide mb-4">Simulador</span>
+              
+              {/* Seletor de empresa para Master */}
+              {userRole === 'master' && (
+                <div className="w-full mb-4">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Empresa</label>
+                  <select
+                    className="w-full p-2 border rounded text-sm"
+                    value={selectedCompanyId || ''}
+                    onChange={e => setSelectedCompanyId(e.target.value)}
+                    disabled={companiesLoading}
+                  >
+                    {companies.map((c: any) => (
+                      <option key={c.id} value={c.id}>{c.name}</option>
+                    ))}
+                  </select>
+                </div>
               )}
-            </DropdownMenuContent>
-          </DropdownMenu>
+              
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center justify-between w-full p-2 text-sm bg-gray-100 rounded-md hover:bg-gray-200 transition-colors">
+                    <span>Módulo</span>
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-40">
+                  <DropdownMenuItem onClick={handleGoToCrm}>
+                    CRM
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    Simulador
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          )}
         </div>
       </SidebarHeader>
       
@@ -149,8 +156,8 @@ export const SimulatorSidebar = () => {
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActivePath('/simulador')}>
                     <Link to="/simulador">
-                      <Calculator className="h-4 w-4" />
-                      <span>Simulador</span>
+                      <BarChart3 className="h-4 w-4" />
+                      {!collapsed && <span>Simulador</span>}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -160,18 +167,17 @@ export const SimulatorSidebar = () => {
                   <SidebarMenuButton asChild isActive={isActivePath('/configuracoes')}>
                     <Link to="/configuracoes">
                       <Settings className="h-4 w-4" />
-                      <span>Configurações</span>
+                      {!collapsed && <span>Configurações</span>}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
-              {/* Master Config: visível apenas para master */}
-              {userRole === 'master' && (
+              {userRole === 'master' && pagePermissions['master_config'] !== false && (
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActivePath('/master-config')}>
-                    <Link to="/master-config">
-                      <Settings className="h-4 w-4" />
-                      <span>Master Config</span>
+                  <SidebarMenuButton asChild isActive={isActivePath('/crm/master')}>
+                    <Link to="/crm/master">
+                      <Shield className="h-4 w-4" />
+                      {!collapsed && <span>Master Config</span>}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -181,23 +187,25 @@ export const SimulatorSidebar = () => {
         </SidebarGroup>
       </SidebarContent>
       
-      <SidebarFooter className="p-4">
-        <div className="flex items-center gap-3">
-          <div className="cursor-pointer" onClick={handleAvatarClick}>
-            <Avatar>
-              <AvatarImage src={crmUser?.avatar_url || undefined} alt={crmUser?.first_name || 'Usuário'} />
-              <AvatarFallback>{(crmUser?.first_name?.[0] || 'U')}{(crmUser?.last_name?.[0] || '')}</AvatarFallback>
-            </Avatar>
+      {!collapsed && (
+        <SidebarFooter className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="cursor-pointer" onClick={handleAvatarClick}>
+              <Avatar>
+                <AvatarImage src={crmUser?.avatar_url || undefined} alt={crmUser?.first_name || 'Usuário'} />
+                <AvatarFallback>{(crmUser?.first_name?.[0] || 'U')}{(crmUser?.last_name?.[0] || '')}</AvatarFallback>
+              </Avatar>
+            </div>
+            <div className="flex flex-col flex-1 min-w-0">
+              <span className="font-medium text-sm truncate">{crmUser?.first_name || 'Usuário'} {crmUser?.last_name || ''}</span>
+              <span className="text-xs text-secondary/60 truncate">{crmUser?.email || 'sem-email'}</span>
+            </div>
+            <button className="ml-2 p-2 rounded hover:bg-red-50" onClick={handleLogout} title="Sair">
+              <LogOut className="h-5 w-5 text-red-500" />
+            </button>
           </div>
-          <div className="flex flex-col flex-1 min-w-0">
-            <span className="font-medium text-sm truncate">{crmUser?.first_name || 'Usuário'} {crmUser?.last_name || ''}</span>
-            <span className="text-xs text-secondary/60 truncate">{crmUser?.email || 'sem-email'}</span>
-          </div>
-          <button className="ml-2 p-2 rounded hover:bg-red-50" onClick={handleLogout} title="Sair">
-            <LogOut className="h-5 w-5 text-red-500" />
-          </button>
-        </div>
-      </SidebarFooter>
+        </SidebarFooter>
+      )}
     </Sidebar>
   );
 };

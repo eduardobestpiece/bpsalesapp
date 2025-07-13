@@ -70,37 +70,42 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
         console.error('[CrmAuth] Timeout de 15s ao buscar usuário CRM');
         reject(new Error('Timeout ao buscar usuário CRM'));
       }, 15000));
+      
       const fetchPromise = supabase
         .from('crm_users')
         .select('*')
         .eq('email', email)
         .eq('status', 'active')
         .single();
-      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
-      if (error) {
-        console.error('[CrmAuth] Erro ao buscar CRM user:', error);
+      
+      const result = await Promise.race([fetchPromise, timeoutPromise]) as { data: any; error: any };
+      
+      if (result.error) {
+        console.error('[CrmAuth] Erro ao buscar CRM user:', result.error);
         return null;
       }
-      if (!data) {
+      
+      if (!result.data) {
         console.warn('[CrmAuth] Nenhum usuário CRM encontrado para:', email);
         return null;
       }
+      
       // --- NOVO: checar se é líder de algum time ativo ---
-      let dynamicRole = data.role;
+      let dynamicRole = result.data.role;
       if (dynamicRole !== 'admin' && dynamicRole !== 'master' && dynamicRole !== 'submaster') {
         // Buscar times ativos onde o usuário é líder
         const { data: teams, error: teamError } = await supabase
           .from('teams')
           .select('id')
-          .eq('leader_id', data.id)
+          .eq('leader_id', result.data.id)
           .eq('status', 'active');
         if (!teamError && teams && teams.length > 0) {
           dynamicRole = 'leader';
         }
       }
       // ---
-      saveCrmUserCache(email, { ...data, role: dynamicRole }); // Salva no cache
-      return { ...data, role: dynamicRole } as CrmUser;
+      saveCrmUserCache(email, { ...result.data, role: dynamicRole }); // Salva no cache
+      return { ...result.data, role: dynamicRole } as CrmUser;
     } catch (err) {
       console.error('[CrmAuth] Erro inesperado ao buscar CRM user:', err);
       return null;

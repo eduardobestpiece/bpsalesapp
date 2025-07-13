@@ -1,15 +1,23 @@
-
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
 
 interface LeadModalProps {
   isOpen: boolean;
   onClose: () => void;
   companyId: string;
   lead?: any;
+  onSuccess?: () => void;
 }
 
-export const LeadModal = ({ isOpen, onClose, companyId, lead }: LeadModalProps) => {
+export const LeadModal = ({ isOpen, onClose, companyId, lead, onSuccess }: LeadModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[400px]">

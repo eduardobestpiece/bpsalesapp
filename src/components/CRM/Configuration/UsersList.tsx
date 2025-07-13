@@ -1,159 +1,131 @@
-
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Plus, Edit, User, Search } from 'lucide-react';
-import { useCrmUsers } from '@/hooks/useCrmData';
-import { UserModal } from './UserModal';
-import { useUpdateCrmUser } from '@/hooks/useCrmUsers';
-import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { Edit, Archive, RotateCcw, UserPlus } from 'lucide-react';
 import { toast } from 'sonner';
-import { useCompany } from '@/contexts/CompanyContext';
+import { UserModal } from './UserModal';
 
-export const UsersList = () => {
-  const [showModal, setShowModal] = useState(false);
+interface UsersListProps {
+  searchTerm: string;
+  statusFilter: 'all' | 'active' | 'archived';
+  companyId: string;
+  onEdit: (user: any) => void;
+  refreshKey: number;
+}
+
+export const UsersList = ({ searchTerm, statusFilter, companyId, onEdit, refreshKey }: UsersListProps) => {
   const [selectedUser, setSelectedUser] = useState<any>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const { data: users = [], isLoading } = useCrmUsers();
-  const updateUserMutation = useUpdateCrmUser();
-  const { userRole, crmUser } = useCrmAuth();
-  const { selectedCompanyId } = useCompany();
-  const isSubMaster = userRole === 'submaster';
+  const [showModal, setShowModal] = useState(false);
 
-  const handleEdit = (user: any) => {
-    // Buscar o usuário atualizado da lista pelo ID
-    const freshUser = users.find((u) => u.id === user.id) || user;
-    setSelectedUser(freshUser);
-    setShowModal(true);
-  };
+  const { data: users = [], isLoading, refetch } = useQuery({
+    queryKey: ['crm_users', companyId, searchTerm, statusFilter, refreshKey],
+    queryFn: async () => {
+      let query = supabase
+        .from('crm_users')
+        .select('*')
+        .eq('company_id', companyId);
 
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setSelectedUser(null);
-  };
+      if (statusFilter === 'active') {
+        query = query.eq('status', 'active');
+      } else if (statusFilter === 'archived') {
+        query = query.eq('status', 'archived');
+      }
 
-  const handleDeactivate = async (userId: string) => {
-    try {
-      await updateUserMutation.mutateAsync({ id: userId, status: 'archived' });
-      toast.success('Usuário desativado com sucesso!');
-    } catch (error: any) {
-      toast.error(error.message || 'Erro ao desativar usuário');
-    }
-  };
+      const { data, error } = await query
+        .ilike('first_name', `%${searchTerm}%`)
+        .order('created_at', { ascending: false });
 
-  const getRoleLabel = (role: string) => {
-    const labels = {
-      master: 'Master',
-      admin: 'Administrador',
-      leader: 'Líder',
-      user: 'Usuário'
-    };
-    return labels[role as keyof typeof labels] || role;
-  };
-
-  const getRoleBadgeVariant = (role: string) => {
-    switch (role) {
-      case 'master':
-        return 'default';
-      case 'admin':
-        return 'secondary';
-      case 'leader':
-        return 'outline';
-      default:
-        return 'outline';
-    }
-  };
-
-  // Filtrar usuários por empresa e ocultar master para todos exceto ele mesmo
-  const filteredUsers = users.filter(user => {
-    // Ocultar master para todos, exceto se o usuário logado for master
-    if (user.role === 'master' && user.id !== crmUser?.id) {
-      return false;
-    }
-    // Se master, mostrar apenas usuários da empresa selecionada
-    if (userRole === 'master') {
-      return user.company_id === selectedCompanyId;
-    }
-    // Se não for master, mostrar apenas usuários da empresa do usuário logado
-    return user.company_id === crmUser?.company_id;
-  }).filter(user => {
-    // Filtro de busca
-    const fullName = `${user.first_name} ${user.last_name}`.toLowerCase();
-    const searchLower = searchTerm.toLowerCase();
-    return fullName.includes(searchLower) ||
-           user.email?.toLowerCase().includes(searchLower) ||
-           user.phone?.toLowerCase().includes(searchLower);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!companyId
   });
 
+  const handleArchive = async (id: string, currentStatus: string) => {
+    try {
+      const newStatus = currentStatus === 'active' ? 'archived' : 'active';
+      const { error } = await supabase
+        .from('crm_users')
+        .update({ status: newStatus })
+        .eq('id', id);
+
+      if (error) throw error;
+
+      toast.success(`Usuário ${newStatus === 'active' ? 'reativado' : 'arquivado'} com sucesso!`);
+      refetch();
+    } catch (error: any) {
+      toast.error('Erro ao alterar status: ' + error.message);
+    }
+  };
+
   if (isLoading) {
-    return <div className="text-center py-4">Carregando usuários...</div>;
+    return <div className="text-center py-8">Carregando usuários...</div>;
+  }
+
+  if (users.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        Nenhum usuário encontrado.
+      </div>
+    );
   }
 
   return (
-    <>
-      <Card>
-        <CardHeader>
-          <CardTitle>Usuários</CardTitle>
-          <CardDescription>Gerencie os usuários da empresa.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex justify-between mb-4">
-            <Input
-              placeholder="Buscar usuário..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="max-w-xs"
-              disabled={isSubMaster}
-            />
-            <Button onClick={() => setShowModal(true)} disabled={isSubMaster}>
-              <Plus className="w-4 h-4 mr-2" /> Novo Usuário
-            </Button>
+    <div className="space-y-4">
+      {users.map((user) => (
+        <div key={user.id} className="bg-white border rounded-lg p-4 shadow-sm">
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <h3 className="font-semibold text-lg">{user.first_name} {user.last_name}</h3>
+                <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
+                  {user.status === 'active' ? 'Ativo' : 'Arquivado'}
+                </Badge>
+              </div>
+              <div className="text-sm text-gray-600">
+                <span className="font-medium">Email:</span> {user.email}
+              </div>
+            </div>
+
+            <div className="flex gap-2 ml-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSelectedUser(user);
+                  setShowModal(true);
+                }}
+              >
+                <Edit className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleArchive(user.id, user.status)}
+              >
+                {user.status === 'active' ? (
+                  <Archive className="w-4 h-4" />
+                ) : (
+                  <RotateCcw className="w-4 h-4" />
+                )}
+              </Button>
+            </div>
           </div>
-          <div className="space-y-2">
-            {isLoading ? (
-              <div>Carregando...</div>
-            ) : (
-              filteredUsers.map((user) => (
-                <div key={user.id} className="flex items-center justify-between border rounded p-3">
-                  <div className="flex items-center gap-3">
-                    <User className="w-5 h-5 text-primary" />
-                    <span className="font-medium">{user.first_name} {user.last_name}</span>
-                    <Badge variant="outline">{getRoleLabel(user.role)}</Badge>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(user)}
-                      disabled={isSubMaster}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    {(userRole === 'admin' || userRole === 'master') && user.status === 'active' && user.role !== 'master' && user.email !== 'master@master.com' && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDeactivate(user.id)}
-                        disabled={isSubMaster}
-                      >
-                        Desativar
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </CardContent>
-      </Card>
+        </div>
+      ))}
+      
       <UserModal
-        isOpen={showModal}
-        onClose={handleCloseModal}
+        open={showModal}
+        onOpenChange={setShowModal}
         user={selectedUser}
-        disabled={isSubMaster}
+        onSuccess={() => {
+          setShowModal(false);
+          setSelectedUser(null);
+          refetch();
+        }}
       />
-    </>
+    </div>
   );
 };
