@@ -255,10 +255,13 @@ export default function Configuracoes() {
                         <h2 className="text-2xl font-semibold text-gray-900">Tipos de Parcela</h2>
                         <p className="text-gray-600 mt-1">Gerencie os tipos de parcela</p>
                       </div>
-                      <Button onClick={() => setShowInstallmentTypeModal(true)} className="bg-gradient-primary hover:opacity-90">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Adicionar Tipo de Parcela
-                      </Button>
+                      <InstallmentTypesList
+                        key={refreshKey}
+                        searchTerm={installmentSearchTerm}
+                        statusFilter={installmentStatusFilter}
+                        selectedAdministrator={installmentAdminFilter || null}
+                        onEdit={handleEditInstallmentType}
+                      />
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-4">
