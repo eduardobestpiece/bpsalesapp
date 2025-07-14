@@ -125,9 +125,19 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
       }
     }
     // Se sobrou algum valor, tentar encaixar o menor produto
-    if (remaining > 0.01) {
+    if (credits.length === 0 && sortedProducts.length > 0) {
+      // Se nenhum produto coube, sugerir o menor produto disponível
       const menor = sortedProducts[sortedProducts.length - 1];
-      const installment = menor.installment_types?.find((it: any) => it.installment_count === simulationData.term) || null;
+      let installment = null;
+      if (Array.isArray(menor.installment_types)) {
+        for (const it of menor.installment_types) {
+          const real = it.installment_types || it;
+          if (real.installment_count === simulationData.term) {
+            installment = real;
+            break;
+          }
+        }
+      }
       if (installment) {
         let reduction = null;
         if (!isParcelaCheia && installment.id) {
@@ -141,13 +151,16 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
         });
         console.log('[DEBUG] Parcelas calculadas (menor):', parcelas);
         credits.push({
-          id: menor.id + '-resto',
+          id: menor.id + '-menor',
           name: menor.name,
           creditValue: menor.credit_value,
           installmentValue: isParcelaCheia ? parcelas.full : parcelas.special,
           selected: true
         });
       }
+    }
+    if (credits.length === 0) {
+      console.warn('[SIMULADOR] Nenhum produto compatível com o valor informado.');
     }
     console.log('[DEBUG] Créditos sugeridos:', credits);
     return credits;

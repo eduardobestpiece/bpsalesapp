@@ -314,13 +314,12 @@ Correção do bug no simulador onde a consulta para a tabela `installment_reduct
 ## Data: 2024-07-10
 
 ### Diagnóstico
-- O simulador não sugeria créditos porque nenhum produto possuía um installment_type compatível com o prazo selecionado (ex: 240 meses).
-- O log mostrou que `installment_types` estava sempre retornando `null` no filtro.
-- Hipótese: a estrutura dos dados retornados de `product.installment_types` está aninhada (ex: array de objetos com campo interno `installment_types`).
+- O simulador não sugeria créditos quando o valor de aporte era menor que o valor do menor produto cadastrado.
+- O laço de sugestão nunca era executado, resultando em lista vazia.
 
 ### Ação executada
-- Adicionado log detalhado do conteúdo de `product.installment_types`.
-- Ajustado o filtro para funcionar mesmo se vier como array de objetos aninhados (ex: `product.installment_types[0].installment_types.installment_count`).
+- Ajustada a lógica para sempre sugerir o menor produto disponível, mesmo que o valor de aporte seja menor que o valor do produto.
+- Adicionada mensagem amigável no console caso não haja produto compatível.
 
 ### Próximos passos
-- Solicitar ao usuário que atualize a página, realize uma simulação e envie o novo log do console para análise. 
+- Solicitar ao usuário que atualize a página, realize uma simulação e verifique se agora aparece pelo menos o menor produto na lista de créditos. 
