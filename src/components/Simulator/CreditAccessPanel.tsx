@@ -19,6 +19,7 @@ interface SimulationData {
   term: number;
   updateRate: number;
   searchType: 'contribution' | 'credit';
+  adminTaxPercent?: number; // Added for new fields
 }
 
 interface Credit {
@@ -89,9 +90,20 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
     }
   };
 
+  // Função para calcular a parcela especial (mock, ajustar conforme regra real do projeto)
+  const calcularParcelaEspecial = (product: any) => {
+    // Exemplo: aplicar redução se houver, senão retorna parcela cheia
+    if (data.installmentType !== 'full' && product.special_installment_value) {
+      return product.special_installment_value;
+    }
+    return product.credit_value / data.term;
+  };
+
+  // Ajustar a seleção de créditos conforme tipo de parcela
   const calculateBestCreditCombination = (products: any[], simulationData: SimulationData): Credit[] => {
     const targetValue = simulationData.value;
     const isContributionSearch = simulationData.searchType === 'contribution';
+    const isParcelaCheia = simulationData.installmentType === 'full';
     
     // Encontrar o produto mais próximo
     let bestMatch = products[0];
@@ -99,11 +111,9 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
     
     for (const product of products) {
       const compareValue = isContributionSearch 
-        ? product.credit_value / simulationData.term  // Valor da parcela
-        : product.credit_value; // Valor do crédito
-      
+        ? (isParcelaCheia ? product.credit_value / simulationData.term : calcularParcelaEspecial(product))
+        : product.credit_value;
       const difference = Math.abs(compareValue - targetValue);
-      
       if (difference < bestDifference) {
         bestDifference = difference;
         bestMatch = product;
@@ -170,7 +180,7 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
         id: bestMatch.id,
         name: bestMatch.name,
         creditValue: bestMatch.credit_value,
-        installmentValue: bestMatch.credit_value / simulationData.term,
+        installmentValue: isParcelaCheia ? bestMatch.credit_value / simulationData.term : calcularParcelaEspecial(bestMatch),
         selected: true
       }
     ];
@@ -260,6 +270,13 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
   const totalCredit = selectedCredits.reduce((sum, c) => sum + c.creditValue, 0);
   const totalInstallment = selectedCredits.reduce((sum, c) => sum + c.installmentValue, 0);
 
+  // Cálculo dos campos extras
+  const taxaAnual = data.adminTaxPercent && data.term ? ((data.adminTaxPercent / data.term) * 12) : null;
+  let textoAtualizacao = '-';
+  if (data.consortiumType === 'property') textoAtualizacao = 'INCC';
+  else if (data.consortiumType === 'vehicle') textoAtualizacao = 'IPCA';
+  else if (data.updateRate) textoAtualizacao = `Atualização anual: ${data.updateRate.toFixed(2)}%`;
+
   if (!data.administrator || data.value <= 0) {
     return (
       <div className="flex items-center justify-center h-32 text-muted-foreground">
@@ -271,18 +288,29 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
   return (
     <div className="space-y-6">
       {/* Resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="text-sm text-muted-foreground">Crédito Total Acessado</div>
             <div className="text-2xl font-bold text-primary">{formatCurrency(totalCredit)}</div>
           </CardContent>
         </Card>
-        
         <Card>
           <CardContent className="p-4">
             <div className="text-sm text-muted-foreground">Parcela Total</div>
             <div className="text-2xl font-bold text-primary">{formatCurrency(totalInstallment)}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-sm text-muted-foreground">Taxa de Administração Anual</div>
+            <div className="text-2xl font-bold text-primary">{taxaAnual !== null ? taxaAnual.toFixed(2) + '%' : '-'}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-sm text-muted-foreground">Atualização anual</div>
+            <div className="text-2xl font-bold text-primary">{textoAtualizacao}</div>
           </CardContent>
         </Card>
       </div>

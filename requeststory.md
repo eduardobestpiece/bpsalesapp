@@ -222,3 +222,25 @@ Checklist:
 ---
 
 **Status:** Em andamento 
+
+# Requisição em andamento - 2024-07-10 (ajuste crédito acessado e busca de créditos)
+
+## Ajustes solicitados
+- Exibir na aba “Crédito Acessado”:
+  - Crédito Total Acessado
+  - Parcela Total
+  - Taxa de Administração Anual (Cálculo: (taxa de administração / meses) * 12)
+  - Atualização anual (INCC para imóvel, IPCA para veículo, texto e valor para outros)
+- Ajustar a busca/listagem de créditos:
+  - Se o campo “Tipo de Parcela” for diferente de “cheia”, buscar créditos e parcelas com base no valor da “parcela especial”.
+
+## Ações planejadas
+1. Adicionar campos de resultado na aba “Crédito Acessado”.
+2. Ajustar busca/listagem de créditos conforme tipo de parcela.
+3. Testar o fluxo corrigido.
+4. Executar deploy.
+5. Solicitar validação do usuário.
+
+---
+
+**Status:** Em andamento 

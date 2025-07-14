@@ -497,3 +497,5 @@ Próximos passos:
 - 2024-07-10: Removido o campo 'Tipo de Parcela' e tudo abaixo dele do modal de produto.
 - 2024-07-10: Campo 'Tipo de Parcela' do simulador agora exibe dinamicamente as reduções de parcela cadastradas para a administradora selecionada (tabela installment_reductions). Se não houver redução, exibe apenas 'Parcela Cheia'.
 - 2024-07-10: Deploy automático realizado após as alterações.
+- 2024-07-10: Adicionados os campos 'Taxa de Administração Anual' (cálculo: (taxa de administração / meses) * 12) e 'Atualização anual' (INCC para imóvel, IPCA para veículo, texto e valor para outros) na aba Crédito Acessado do simulador.
+- 2024-07-10: Deploy automático realizado após as alterações.
