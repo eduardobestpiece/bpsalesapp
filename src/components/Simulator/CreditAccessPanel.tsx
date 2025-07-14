@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
-import { Trash2, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
+import { Trash2, RefreshCw, ChevronDown, ChevronUp, Plus } from 'lucide-react';
+import { Input } from '@/components/ui/input';
 import { calcularParcelasProduto } from '@/utils/calculations';
 import { useCompany } from '@/contexts/CompanyContext';
 import { regraParcelaEspecial } from '@/lib/regraParcelaEspecial';
@@ -64,6 +65,8 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
   const [parcelaDesejada, setParcelaDesejada] = useState<number>(0);
   const [cotas, setCotas] = useState<{produtoId: string, nome: string, valor: number, parcela: number, quantidade: number}[]>([]);
   const [tipoParcela, setTipoParcela] = useState<'full' | 'special'>('full');
+  const [selectedProduct, setSelectedProduct] = useState<string>('');
+  const [showAddProduct, setShowAddProduct] = useState(false);
 
   // Função para buscar redução associada ao produto/parcelas
   const buscarReducao = async (installmentTypeId: string, administratorId: string) => {
@@ -504,7 +507,7 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
     };
     if (data.installmentType !== 'full') {
       if (data.searchType === 'contribution') {
-        // Cálculo baseado em Parcela (Aporte)
+        // Cálculo baseado em Parcela (Aporte) com parcela especial
         const parcelaEspecial100k = regraParcelaEspecial({
           credit: 100000,
           installment: installmentParams,
@@ -512,15 +515,16 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
         });
         const fator = 100000 / parcelaEspecial100k;
         const valorAporte = data.value;
-        creditoAcessado = Math.ceil((valorAporte * fator) / 20000) * 20000;
+        // Ajuste 1: Mudança de arredondamento de 20.000 para 10.000
+        creditoAcessado = Math.ceil((valorAporte * fator) / 10000) * 10000;
         valorParcela = regraParcelaEspecial({
           credit: creditoAcessado,
           installment: installmentParams,
           reduction: reducaoParcela
         });
       } else if (data.searchType === 'credit') {
-        // Cálculo baseado em Crédito
-        creditoAcessado = data.value;
+        // Problema 2: Cálculo baseado em Crédito com parcela especial - arredondar para múltiplos de 10.000
+        creditoAcessado = Math.ceil(data.value / 10000) * 10000;
         valorParcela = regraParcelaEspecial({
           credit: creditoAcessado,
           installment: installmentParams,
@@ -536,18 +540,39 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
         reduction: null
       }).full;
     } else {
-      // Lógica padrão para parcela cheia
-      const parcelas = calcularParcelasProduto({
-        credit: produtoCandidato.credit_value,
+      // Lógica para parcela cheia
+      if (data.searchType === 'contribution') {
+        // Problema 1: Busca por Aporte com Parcela Cheia - calcular parcela baseada no crédito acessado
+        const parcelaCheia100k = calcularParcelasProduto({
+          credit: 100000,
+          installment: installmentParams,
+          reduction: null
+        }).full;
+        const fator = 100000 / parcelaCheia100k;
+        const valorAporte = data.value;
+        creditoAcessado = Math.ceil((valorAporte * fator) / 10000) * 10000;
+        valorParcela = calcularParcelasProduto({
+          credit: creditoAcessado,
+          installment: installmentParams,
+          reduction: null
+        }).full;
+      } else if (data.searchType === 'credit') {
+        // Problema 3: Busca por Crédito com Parcela Cheia - arredondar crédito para múltiplos de 10.000
+        creditoAcessado = Math.ceil(data.value / 10000) * 10000;
+        valorParcela = calcularParcelasProduto({
+          credit: creditoAcessado,
+          installment: installmentParams,
+          reduction: null
+        }).full;
+      }
+      
+      parcelaCheia = valorParcela;
+      parcelaReduzida = regraParcelaEspecial({
+        credit: creditoAcessado,
         installment: installmentParams,
-        reduction: null
+        reduction: reducaoParcela
       });
-      parcelaCheia = parcelas.full;
-      parcelaReduzida = parcelas.special;
-      percentualUsado = parcelaCheia / produtoCandidato.credit_value;
-      valorParcela = data.value;
-      creditoAcessado = percentualUsado > 0 ? valorParcela / percentualUsado : 0;
-      creditoAcessado = Math.ceil(creditoAcessado / 20000) * 20000;
+      percentualUsado = parcelaCheia / creditoAcessado;
     }
     taxaAdministracao = installmentCandidato.admin_tax_percent || 0;
     taxaAnual = (taxaAdministracao / data.term) * 12;
@@ -559,19 +584,57 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
   }
 
   // 5. Funções para adicionar/remover cotas
-  const adicionarCota = () => {
-    if (!produtoBase || creditoSugerido === 0) return;
+  const adicionarProduto = () => {
+    if (!selectedProduct) return;
+    
+    const produto = availableProducts.find(p => p.id === selectedProduct);
+    if (!produto) return;
+    
+    // Encontrar installment compatível
+    let installment = null;
+    if (Array.isArray(produto.installment_types)) {
+      for (const it of produto.installment_types) {
+        const real = it.installment_types || it;
+        if (real.installment_count === data.term) {
+          installment = real;
+          break;
+        }
+      }
+    }
+    
+    if (!installment) return;
+    
+    // Calcular parcela baseada no tipo selecionado
+    let parcela = 0;
+    if (data.installmentType === 'full') {
+      parcela = calcularParcelasProduto({
+        credit: produto.credit_value,
+        installment,
+        reduction: null
+      }).full;
+    } else {
+      parcela = regraParcelaEspecial({
+        credit: produto.credit_value,
+        installment,
+        reduction: reducaoParcela
+      });
+    }
+    
     setCotas(prev => [
       ...prev,
       {
-        produtoId: produtoBase.produtoId,
-        nome: produtoBase.nome,
-        valor: creditoSugerido,
-        parcela: parcelaCorrespondente,
+        produtoId: produto.id,
+        nome: produto.name,
+        valor: produto.credit_value,
+        parcela,
         quantidade: 1
       }
     ]);
+    
+    setSelectedProduct('');
+    setShowAddProduct(false);
   };
+  
   const removerCota = (index: number) => {
     setCotas(prev => prev.filter((_, i) => i !== index));
   };
@@ -609,24 +672,128 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
           </CardContent>
         </Card>
       </div>
-      <div>
-        <h3 className="text-lg font-semibold mb-2">Montagem de Cotas</h3>
-        {cotas.length === 0 && <div className="text-muted-foreground">Nenhuma cota adicionada.</div>}
-        {cotas.map((cota, idx) => (
-          <div key={idx} className="flex items-center gap-2 mb-2">
-            <div className="flex-1">{cota.nome} - {formatCurrency(cota.valor)} x {cota.quantidade} (Parcela: {formatCurrency(cota.parcela)})</div>
-            <Button variant="outline" size="sm" onClick={() => removerCota(idx)}><Trash2 className="h-4 w-4" /></Button>
+      {/* Seção de Montagem de Cotas */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Montagem de Cotas</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {/* Lista de cotas adicionadas */}
+            {cotas.length === 0 && (
+              <div className="text-muted-foreground text-center py-4">
+                Nenhuma cota adicionada. Clique em "Adicionar Produto" para começar.
+              </div>
+            )}
+            
+            {cotas.map((cota, idx) => (
+              <div key={idx} className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex-1">
+                  <div className="font-medium">{cota.nome}</div>
+                  <div className="text-sm text-muted-foreground">
+                    Crédito: {formatCurrency(cota.valor)} | Parcela: {formatCurrency(cota.parcela)}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">Qtd: {cota.quantidade}</Badge>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => removerCota(idx)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+            
+            {/* Botão para adicionar produto */}
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowAddProduct(true)}
+                className="flex-1"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Adicionar Produto
+              </Button>
+            </div>
+            
+            {/* Modal para adicionar produto */}
+            {showAddProduct && (
+              <div className="border rounded-lg p-4 bg-muted/50">
+                <h4 className="font-medium mb-3">Selecionar Produto</h4>
+                <div className="flex gap-2">
+                  <Select value={selectedProduct} onValueChange={setSelectedProduct}>
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Escolha um produto" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableProducts.map(product => (
+                        <SelectItem key={product.id} value={product.id}>
+                          {product.name} - {formatCurrency(product.credit_value)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button onClick={adicionarProduto} disabled={!selectedProduct}>
+                    Adicionar
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowAddProduct(false);
+                      setSelectedProduct('');
+                    }}
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            {/* Totais e indicadores */}
+            {cotas.length > 0 && (
+              <div className="border-t pt-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <div className="text-sm text-muted-foreground">Total do Crédito</div>
+                    <div className="text-lg font-bold">{formatCurrency(totalCotas)}</div>
+                  </div>
+                  <div>
+                    <div className="text-sm text-muted-foreground">Total da Parcela</div>
+                    <div className="text-lg font-bold">
+                      {formatCurrency(cotas.reduce((sum, c) => sum + c.parcela * c.quantidade, 0))}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Indicador de aproximação */}
+                {(data.searchType === 'credit' || data.searchType === 'contribution') && (
+                  <div className="mt-4 p-3 rounded-lg border">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Aproximação do valor desejado:</span>
+                      <Badge 
+                        variant={totalCotas >= data.value ? "default" : "destructive"}
+                        className={totalCotas >= data.value ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}
+                      >
+                        {totalCotas >= data.value ? "✓ Atingido" : "✗ Abaixo"}
+                      </Badge>
+                    </div>
+                    <div className="text-sm text-muted-foreground mt-1">
+                      {data.searchType === 'credit' ? 'Valor do crédito' : 'Valor do aporte'}: {formatCurrency(data.value)}
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Diferença: {formatCurrency(totalCotas - data.value)}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
-        ))}
-        <div className="mt-2">
-          <span>Total das cotas: <b>{formatCurrency(totalCotas)}</b></span>
-          {parcelaDesejada > 0 && (
-            <span className={`ml-4 font-bold ${totalCotas >= creditoSugerido ? 'text-green-600' : 'text-red-600'}`}>
-              {totalCotas >= creditoSugerido ? 'Dentro do planejamento' : 'Abaixo do valor simulado'}
-            </span>
-          )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
