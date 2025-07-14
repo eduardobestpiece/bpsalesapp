@@ -241,11 +241,15 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
     if (data.administrator && data.value > 0) {
       (async () => {
         try {
+          console.log('[DEBUG] Filtros para fetch de produtos:', {
+            administrator_id: data.administrator,
+            type: data.consortiumType
+          });
           const { data: products, error } = await supabase
             .from('products')
             .select('*, installment_types:product_installment_types(installment_types(*))')
-            .eq('administrator_id', data.administrator)
-            .eq('type', data.consortiumType)
+            // .eq('administrator_id', data.administrator)
+            // .eq('type', data.consortiumType)
             .eq('is_archived', false)
             .order('credit_value');
 
