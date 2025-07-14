@@ -313,16 +313,13 @@ Correção do bug no simulador onde a consulta para a tabela `installment_reduct
 
 ## Data: 2024-07-10
 
-### Diagnóstico adicional
-- O erro 400 persistiu porque outro ponto do código (SimulatorConfigModal.tsx) ainda executava a query para `installment_reductions` com `administrator_id=null`.
-- Identificado que a busca automática de redução de parcela no modal de configuração do simulador não validava se o administrator estava selecionado.
+### Diagnóstico
+- Produtos e tipos de parcela estão sendo carregados, mas a lista de créditos e campos calculados continuam zerados.
+- Não há mais erro 400 no Supabase e o console não mostra erro JS.
+- Hipótese: função de sugestão de créditos não está retornando resultados por algum motivo de lógica ou dados.
 
 ### Ação executada
-- Corrigido o código do `SimulatorConfigModal.tsx` para **NUNCA** executar a query se `selectedAdministratorId` for nulo ou vazio.
-- Agora, se não houver administradora selecionada, os campos de redução são limpos e nenhuma requisição é feita.
+- Adicionados logs detalhados na função `sugerirMultiplosCreditos` e no cálculo das parcelas no `CreditAccessPanel.tsx` para identificar onde o fluxo está retornando vazio.
 
 ### Próximos passos
-- Testar novamente o simulador para garantir que não há mais erro 400.
-- Validar se os campos de crédito, parcela, taxas, etc., são preenchidos normalmente.
-- Realizar deploy automático.
-- Solicitar validação ao usuário. 
+- Solicitar ao usuário que atualize a página, realize uma simulação e envie o novo log do console para análise. 

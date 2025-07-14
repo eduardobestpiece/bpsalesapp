@@ -78,6 +78,7 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
 
   // Função para sugerir múltiplos créditos para atingir o valor desejado
   const sugerirMultiplosCreditos = async (products: any[], simulationData: SimulationData): Promise<Credit[]> => {
+    console.log('[DEBUG] Iniciando sugestão de múltiplos créditos', { products, simulationData });
     const targetValue = simulationData.value;
     const isParcelaCheia = simulationData.installmentType === 'full';
     // Ordenar produtos do maior para o menor valor
@@ -87,16 +88,19 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
     for (const product of sortedProducts) {
       // Buscar installment correspondente ao prazo
       const installment = product.installment_types?.find((it: any) => it.installment_count === simulationData.term) || null;
+      console.log('[DEBUG] Produto analisado:', product, 'Installment encontrado:', installment);
       if (!installment) continue;
       let reduction = null;
       if (!isParcelaCheia && installment.id) {
         reduction = await buscarReducao(installment.id, simulationData.administrator);
+        console.log('[DEBUG] Redução encontrada:', reduction);
       }
       const parcelas = calcularParcelasProduto({
         credit: product.credit_value,
         installment,
         reduction: !isParcelaCheia ? reduction : null
       });
+      console.log('[DEBUG] Parcelas calculadas:', parcelas);
       while (remaining >= product.credit_value - 1) { // margem para arredondamento
         credits.push({
           id: product.id + '-' + credits.length,
@@ -116,12 +120,14 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
         let reduction = null;
         if (!isParcelaCheia && installment.id) {
           reduction = await buscarReducao(installment.id, simulationData.administrator);
+          console.log('[DEBUG] Redução encontrada (menor):', reduction);
         }
         const parcelas = calcularParcelasProduto({
           credit: menor.credit_value,
           installment,
           reduction: !isParcelaCheia ? reduction : null
         });
+        console.log('[DEBUG] Parcelas calculadas (menor):', parcelas);
         credits.push({
           id: menor.id + '-resto',
           name: menor.name,
@@ -131,6 +137,7 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
         });
       }
     }
+    console.log('[DEBUG] Créditos sugeridos:', credits);
     return credits;
   };
 
