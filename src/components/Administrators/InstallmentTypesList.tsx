@@ -63,6 +63,9 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
 
   // Modal de criação
   const [showCreateModal, setShowCreateModal] = useState(false);
+  // Modal de edição
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editData, setEditData] = useState<any>(null);
 
   const { data: installmentTypes, isLoading, refetch } = useQuery({
     queryKey: ['installment-types', searchTerm, statusFilter, selectedAdministrator],
@@ -222,6 +225,21 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
     return components.join(', ') || 'Nenhum';
   };
 
+  // Função para buscar reduction_ids ao editar
+  const handleEdit = async (installmentType: any) => {
+    // Buscar reduction_ids associados
+    const { data: rels, error } = await supabase
+      .from('installment_type_reductions')
+      .select('installment_reduction_id')
+      .eq('installment_type_id', installmentType.id);
+    let reduction_ids: string[] = [];
+    if (!error && rels) {
+      reduction_ids = rels.map((r: any) => r.installment_reduction_id);
+    }
+    setEditData({ ...installmentType, reduction_ids });
+    setEditModalOpen(true);
+  };
+
   if (isLoading) {
     return <div className="text-center py-8">Carregando tipos de parcela...</div>;
   }
@@ -331,6 +349,19 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
           }}
         />
       )}
+      {/* Modal de edição */}
+      {editModalOpen && (
+        <InstallmentTypeModal
+          open={editModalOpen}
+          onOpenChange={setEditModalOpen}
+          installmentType={editData}
+          onSuccess={() => {
+            setEditModalOpen(false);
+            setEditData(null);
+            refetch();
+          }}
+        />
+      )}
       <Table>
         <TableHeader>
           <TableRow>
@@ -359,7 +390,7 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => onEdit(installmentType)}
+                    onClick={() => handleEdit(installmentType)}
                   >
                     <Edit className="w-4 h-4" />
                   </Button>

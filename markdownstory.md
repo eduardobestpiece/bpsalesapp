@@ -482,3 +482,13 @@ Próximos passos:
 - Remover a coluna do banco assim que possível.
 - Testar o fluxo completo de criação/edição de produto.
 - Realizar deploy após validação.
+
+## [Data/Hora] Ajuste no Modal de Produto
+- Busca automática da redução de parcela para a maior selecionada (ou padrão, se marcada).
+- Aviso visual exibido quando não houver redução cadastrada para a parcela selecionada.
+- Deploy realizado para produção.
+
+## [Data/Hora] Correção completa dos fluxos de edição de parcela e produto
+- Edição de parcela: reduções aparecem e são marcadas corretamente.
+- Edição de produto: parcelas aparecem marcadas, dados carregam corretamente, cálculo da redução funciona.
+- Deploy realizado para produção.

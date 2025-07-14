@@ -158,3 +158,29 @@ Checklist:
 - [ ] Garantir fallback para maior prazo se não houver padrão
 - [ ] Testar com os dados fornecidos
 - [ ] Atualizar histórico e preparar para deploy 
+
+# Solicitação: Ajuste do cálculo da parcela especial no modal de produto
+
+**Problema relatado:**
+- Valor da parcela especial igual ao da cheia, mesmo havendo redução cadastrada.
+
+**Análise:**
+- A busca da redução estava atrelada apenas à parcela padrão.
+- Se nenhuma parcela era marcada como padrão, a redução não era buscada.
+
+**Ação aplicada:**
+- Busca automática da redução para a parcela de maior prazo, caso nenhuma esteja marcada como padrão.
+- Aviso visual caso não exista redução cadastrada para a parcela selecionada.
+
+**Status:**
+- Deploy realizado.
+- Aguardando validação do usuário no fluxo de criação/edição de produto. 
+
+# Solicitação: Correção dos fluxos de Redução de Parcela e Edição de Produto
+
+**Status:**
+- Todos os problemas relatados foram corrigidos.
+- Edição de parcela e produto funcionando corretamente.
+- Reduções e parcelas associadas aparecem corretamente ao editar.
+- Cálculo da parcela especial validado.
+- Deploy realizado para produção. 

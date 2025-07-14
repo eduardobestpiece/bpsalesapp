@@ -72,6 +72,10 @@ export const ProductsList: React.FC<ProductsListProps> = ({
   const [showDuplicateModal, setShowDuplicateModal] = useState(false);
   const [duplicateData, setDuplicateData] = useState<Product | null>(null);
 
+  // Modal de edição
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editData, setEditData] = useState<any>(null);
+
   const fetchAdministrators = async () => {
     try {
       const { data, error } = await supabase
@@ -183,6 +187,21 @@ export const ProductsList: React.FC<ProductsListProps> = ({
     setShowDuplicateModal(true);
   };
 
+  // Função para buscar installment_types ao editar
+  const handleEdit = async (product: Product) => {
+    // Buscar installment_types associados
+    const { data: rels, error } = await supabase
+      .from('product_installment_types')
+      .select('installment_type_id')
+      .eq('product_id', product.id);
+    let installment_types: string[] = [];
+    if (!error && rels) {
+      installment_types = rels.map((r: any) => r.installment_type_id);
+    }
+    setEditData({ ...product, installment_types });
+    setEditModalOpen(true);
+  };
+
   useEffect(() => {
     fetchAdministrators();
   }, []);
@@ -266,7 +285,7 @@ export const ProductsList: React.FC<ProductsListProps> = ({
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => onEdit(product)}
+                          onClick={() => handleEdit(product)}
                         >
                           <Edit className="w-4 h-4" />
                         </Button>
@@ -340,6 +359,20 @@ export const ProductsList: React.FC<ProductsListProps> = ({
           onSuccess={() => {
             setShowDuplicateModal(false);
             setDuplicateData(null);
+            fetchProducts();
+          }}
+        />
+      )}
+
+      {/* Modal de edição */}
+      {editModalOpen && (
+        <ProductModal
+          open={editModalOpen}
+          onOpenChange={setEditModalOpen}
+          product={editData}
+          onSuccess={() => {
+            setEditModalOpen(false);
+            setEditData(null);
             fetchProducts();
           }}
         />
