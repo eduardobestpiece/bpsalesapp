@@ -429,9 +429,10 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
 
   // 4. Calcular crédito sugerido com base no percentual do produto selecionado (usar o menor produto como referência)
   const produtoBase = percentuais.length > 0 ? percentuais[0] : null;
-  const percentualUsado = tipoParcela === 'full' ? produtoBase?.percentualFull : produtoBase?.percentualSpecial;
+  let percentualUsado = 0;
   let creditoSugerido = 0;
-  if (parcelaDesejada > 0 && percentualUsado) {
+  if (parcelaDesejada > 0 && produtoBase) {
+    percentualUsado = tipoParcela === 'full' ? produtoBase.percentualFull : produtoBase.percentualSpecial;
     creditoSugerido = parcelaDesejada / percentualUsado;
     // Arredondar para múltiplo de 20 mil acima
     creditoSugerido = Math.ceil(creditoSugerido / 20000) * 20000;
@@ -463,7 +464,6 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
   }
 
   // 2. Calcular percentual e valores
-  let percentualUsado = 0;
   let parcelaCheia = 0;
   let parcelaReduzida = 0;
   let taxaAdministracao = 0;
