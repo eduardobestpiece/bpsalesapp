@@ -464,6 +464,7 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
   }
 
   // 2. Calcular percentual e valores
+  let percentualUsado = 0;
   let parcelaCheia = 0;
   let parcelaReduzida = 0;
   let taxaAdministracao = 0;
@@ -471,11 +472,39 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
   let atualizacaoAnual = '-';
   let creditoAcessado = 0;
   let valorParcela = 0;
+  const [reducaoParcela, setReducaoParcela] = useState<any>(null);
+
+  useEffect(() => {
+    async function fetchReducao() {
+      if (produtoCandidato && installmentCandidato && data.installmentType === 'special') {
+        // Buscar redução para o installment selecionado
+        const { data: rels } = await supabase
+          .from('installment_type_reductions')
+          .select('installment_reduction_id')
+          .eq('installment_type_id', installmentCandidato.id);
+        if (rels && rels.length > 0) {
+          const { data: reducoes } = await supabase
+            .from('installment_reductions')
+            .select('*')
+            .eq('id', rels[0].installment_reduction_id)
+            .eq('is_archived', false)
+            .limit(1);
+          if (reducoes && reducoes.length > 0) {
+            setReducaoParcela(reducoes[0]);
+            return;
+          }
+        }
+      }
+      setReducaoParcela(null);
+    }
+    fetchReducao();
+  }, [produtoCandidato, installmentCandidato, data.installmentType]);
+
   if (produtoCandidato && installmentCandidato) {
     const parcelas = calcularParcelasProduto({
       credit: produtoCandidato.credit_value,
       installment: installmentCandidato,
-      reduction: null // ou buscar redução se necessário
+      reduction: data.installmentType === 'special' ? reducaoParcela : null
     });
     parcelaCheia = parcelas.full;
     parcelaReduzida = parcelas.special;
@@ -489,9 +518,8 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
     } else if (data.consortiumType === 'vehicle') {
       atualizacaoAnual = 'IPCA ' + (data.updateRate ? data.updateRate.toFixed(2) + '%' : '');
     }
-    // Crédito acessado: valor da parcela digitada / percentual, arredondado para múltiplo de 20 mil acima
     valorParcela = data.value;
-    creditoAcessado = valorParcela / percentualUsado;
+    creditoAcessado = percentualUsado > 0 ? valorParcela / percentualUsado : 0;
     creditoAcessado = Math.ceil(creditoAcessado / 20000) * 20000;
   }
 
