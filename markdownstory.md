@@ -520,3 +520,9 @@ Próximos passos:
 - Primeira linha de cards: "Crédito Acessado", "Valor da Parcela", "Taxa anual", "Atualização anual".
 - Segunda linha: "Total do Crédito", "Total da Parcela", "Acréscimo no Aporte", "Acréscimo no Crédito" (só aparece após selecionar o primeiro produto).
 - Os cards da segunda linha só ficam verdes se o total dos créditos for igual ou maior ao "Crédito Acessado".
+
+## 2024-07-10 - Ajuste visual e limpeza de rodapé
+
+- Cards de resumo da segunda linha (Total do Crédito, Total da Parcela, Acréscimo no Aporte, Acréscimo no Crédito) agora ficam vermelhos se o total de créditos for menor que o crédito acessado.
+- Removidos os campos "Total do Crédito", "Total da Parcela" e "Aproximação do valor desejado:" do rodapé da montagem de cotas.
+- Iniciada análise de lentidão ao trocar o tipo de parcela no simulador.

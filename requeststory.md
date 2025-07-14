@@ -363,7 +363,9 @@ Correção do bug no simulador onde a consulta para a tabela `installment_reduct
 - Unificar o layout dos cards de resumo em duas linhas:
   - Primeira linha: "Crédito Acessado", "Valor da Parcela", "Taxa anual", "Atualização anual".
   - Segunda linha: "Total do Crédito", "Total da Parcela", "Acréscimo no Aporte", "Acréscimo no Crédito" (só aparece após selecionar o primeiro produto).
-  - Os cards da segunda linha só ficam verdes se o total dos créditos for igual ou maior ao "Crédito Acessado".
+  - Os cards da segunda linha agora ficam vermelhos se o total de créditos for menor que o crédito acessado.
+  - Removidos os campos "Total do Crédito", "Total da Parcela" e "Aproximação do valor desejado:" do rodapé da montagem de cotas.
+  - Iniciada análise de lentidão ao trocar o tipo de parcela no simulador.
 - Cards de acréscimo devem aparecer em destaque positivo.
 - Ajustar o layout visual para destacar o aumento de aporte/crédito como benefício.
 - Solicitação registrada e ajustes em andamento. 

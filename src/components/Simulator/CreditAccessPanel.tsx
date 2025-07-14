@@ -46,12 +46,12 @@ interface CreditAccessPanelProps {
 }
 
 // Adicionar/ajustar o componente ResumoCard
-function ResumoCard({ titulo, valor, destaquePositivo }: { titulo: string, valor: string, destaquePositivo?: boolean }) {
+function ResumoCard({ titulo, valor, destaquePositivo, destaqueNegativo }: { titulo: string, valor: string, destaquePositivo?: boolean, destaqueNegativo?: boolean }) {
   return (
-    <Card className={destaquePositivo ? 'border-green-500' : ''}>
+    <Card className={destaquePositivo ? 'border-green-500' : destaqueNegativo ? 'border-red-500' : ''}>
       <CardContent className="p-4">
         <div className="text-sm text-muted-foreground">{titulo}</div>
-        <div className={`text-2xl font-bold ${destaquePositivo ? 'text-green-600' : 'text-primary'}`}>{valor}</div>
+        <div className={`text-2xl font-bold ${destaquePositivo ? 'text-green-600' : destaqueNegativo ? 'text-red-600' : 'text-primary'}`}>{valor}</div>
       </CardContent>
     </Card>
   );
@@ -678,10 +678,10 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
       {/* Segunda linha de cards de resumo, só aparece se houver pelo menos um produto selecionado */}
       {cotas.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <ResumoCard titulo="Total do Crédito" valor={formatCurrency(totalCotas)} destaquePositivo={totalCotas >= creditoAcessado} />
-          <ResumoCard titulo="Total da Parcela" valor={formatCurrency(totalParcela)} destaquePositivo={totalCotas >= creditoAcessado} />
-          <ResumoCard titulo="Acréscimo no Aporte" valor={formatCurrency(acrescimoAporte)} destaquePositivo={totalCotas >= creditoAcessado} />
-          <ResumoCard titulo="Acréscimo no Crédito" valor={formatCurrency(acrescimoCredito)} destaquePositivo={totalCotas >= creditoAcessado} />
+          <ResumoCard titulo="Total do Crédito" valor={formatCurrency(totalCotas)} destaquePositivo={totalCotas >= creditoAcessado} destaqueNegativo={totalCotas < creditoAcessado} />
+          <ResumoCard titulo="Total da Parcela" valor={formatCurrency(totalParcela)} destaquePositivo={totalCotas >= creditoAcessado} destaqueNegativo={totalCotas < creditoAcessado} />
+          <ResumoCard titulo="Acréscimo no Aporte" valor={formatCurrency(acrescimoAporte)} destaquePositivo={totalCotas >= creditoAcessado} destaqueNegativo={totalCotas < creditoAcessado} />
+          <ResumoCard titulo="Acréscimo no Crédito" valor={formatCurrency(acrescimoCredito)} destaquePositivo={totalCotas >= creditoAcessado} destaqueNegativo={totalCotas < creditoAcessado} />
         </div>
       )}
       {/* Seção de Montagem de Cotas */}
@@ -765,44 +765,6 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
               </div>
             )}
             
-            {/* Totais e indicadores */}
-            {cotas.length > 0 && (
-              <div className="border-t pt-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-sm text-muted-foreground">Total do Crédito</div>
-                    <div className="text-lg font-bold">{formatCurrency(totalCotas)}</div>
-                  </div>
-                  <div>
-                    <div className="text-sm text-muted-foreground">Total da Parcela</div>
-                    <div className="text-lg font-bold">
-                      {formatCurrency(cotas.reduce((sum, c) => sum + c.parcela * c.quantidade, 0))}
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Indicador de aproximação */}
-                {(data.searchType === 'credit' || data.searchType === 'contribution') && (
-                  <div className="mt-4 p-3 rounded-lg border">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Aproximação do valor desejado:</span>
-                      <Badge 
-                        variant={totalCotas >= data.value ? "default" : "destructive"}
-                        className={totalCotas >= data.value ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}
-                      >
-                        {totalCotas >= data.value ? "✓ Atingido" : "✗ Abaixo"}
-                      </Badge>
-                    </div>
-                    <div className="text-sm text-muted-foreground mt-1">
-                      {data.searchType === 'credit' ? 'Valor do crédito' : 'Valor do aporte'}: {formatCurrency(data.value)}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      Diferença: {formatCurrency(totalCotas - data.value)}
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
