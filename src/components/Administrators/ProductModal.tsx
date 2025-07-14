@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const formSchema = z.object({
   type: z.enum(['property', 'car', 'service']),
@@ -179,7 +180,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     let aplicaParcela = false, aplicaTaxaAdm = false, aplicaFundoReserva = false, aplicaSeguro = false;
     if (parcelaPadrao.reduction_percent) {
       percentualReducao = parcelaPadrao.reduction_percent / 100;
-      // Flags de aplicação (ajuste conforme estrutura real)
       aplicaParcela = parcelaPadrao.reduces_credit || false;
       aplicaTaxaAdm = parcelaPadrao.reduces_admin_tax || false;
       aplicaFundoReserva = parcelaPadrao.reduces_reserve_fund || false;
@@ -286,33 +286,27 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 <FormItem>
                   <FormLabel>Parcelas *</FormLabel>
                   <div className="flex flex-col gap-2">
-                    {installmentTypes.filter(it => field.value.includes(it.id)).length === 0 && (
-                      <Select multiple value={field.value} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione as parcelas" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {installmentTypes.map((it) => (
-                            <SelectItem key={it.id} value={it.id}>{it.name || it.installment_count}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
-                    {/* Exibir opções selecionadas com radio para padrão */}
-                    {installmentTypes.filter(it => field.value.includes(it.id)).map((it) => (
+                    {installmentTypes.map((it) => (
                       <div key={it.id} className="flex items-center gap-2">
+                        <Checkbox
+                          checked={field.value.includes(it.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              field.onChange([...field.value, it.id]);
+                            } else {
+                              field.onChange(field.value.filter((v: string) => v !== it.id));
+                              if (parcelaPadraoId === it.id) setParcelaPadraoId(null);
+                            }
+                          }}
+                        />
                         <input
                           type="radio"
                           name="parcelaPadrao"
                           checked={parcelaPadraoId === it.id}
+                          disabled={!field.value.includes(it.id)}
                           onChange={() => setParcelaPadraoId(it.id)}
                         />
                         <span>{it.name || `${it.installment_count} meses`}</span>
-                        <Button size="sm" variant="ghost" onClick={() => field.onChange(field.value.filter((v: string) => v !== it.id))}>
-                          <X className="w-4 h-4" />
-                        </Button>
                       </div>
                     ))}
                   </div>
