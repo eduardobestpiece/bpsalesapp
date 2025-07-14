@@ -369,3 +369,5 @@ Correção do bug no simulador onde a consulta para a tabela `installment_reduct
 - Cards de acréscimo devem aparecer em destaque positivo.
 - Ajustar o layout visual para destacar o aumento de aporte/crédito como benefício.
 - Solicitação registrada e ajustes em andamento. 
+
+Otimização de performance: busca de reduções de parcela agora em paralelo (Promise.all), eliminando lentidão na montagem de cotas e sugestão de créditos. 

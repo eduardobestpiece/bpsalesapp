@@ -99,16 +99,15 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
     return reducoes[0];
   };
 
-  // Função inteligente para sugerir créditos baseado na busca
+  // Refatorar sugerirCreditosInteligente para buscar reduções em paralelo
   const sugerirCreditosInteligente = async (products: any[], simulationData: SimulationData): Promise<Credit[]> => {
     console.log('[DEBUG] Iniciando sugestão inteligente de créditos', { products, simulationData });
     const targetValue = simulationData.value;
     const isParcelaCheia = simulationData.installmentType === 'full';
     const isSearchByCredit = simulationData.searchType === 'credit';
-    
-    // Preparar produtos com suas informações de parcela
-    const produtosComParcelas = [];
-    for (const product of products) {
+
+    // Preparar produtos com suas informações de parcela (busca de redução em paralelo)
+    const produtosComParcelas = await Promise.all(products.map(async (product) => {
       let installment = null;
       if (Array.isArray(product.installment_types)) {
         for (const it of product.installment_types) {
@@ -119,32 +118,34 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
           }
         }
       }
-      if (!installment) continue;
-      
+      if (!installment) return null;
+
       let reduction = null;
       if (!isParcelaCheia && installment.id) {
         reduction = await buscarReducao(installment.id, simulationData.administrator);
       }
-      
+
       const parcelas = calcularParcelasProduto({
         credit: product.credit_value,
         installment,
         reduction: !isParcelaCheia ? reduction : null
       });
-      
-      produtosComParcelas.push({
+
+      return {
         product,
         installment,
         parcelaFull: parcelas.full,
         parcelaSpecial: parcelas.special,
         parcelaUsada: isParcelaCheia ? parcelas.full : parcelas.special
-      });
-    }
-    
+      };
+    }));
+
+    // Filtrar nulos
+    const produtosValidos = produtosComParcelas.filter(Boolean);
+
     // 1. BUSCA POR CRÉDITO - Tentar valor exato primeiro
     if (isSearchByCredit) {
-      // Buscar produto com valor exato ou próximo
-      const produtoExato = produtosComParcelas.find(p => Math.abs(p.product.credit_value - targetValue) <= 1000);
+      const produtoExato = produtosValidos.find(p => Math.abs(p.product.credit_value - targetValue) <= 1000);
       if (produtoExato) {
         console.log('[DEBUG] Produto exato encontrado:', produtoExato.product.name);
         return [{
@@ -155,13 +156,10 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
           selected: true
         }];
       }
-      
-      // Se não encontrou exato, usar algoritmo de combinação
-      return encontrarMelhorCombinacaoCredito(produtosComParcelas, targetValue);
+      return encontrarMelhorCombinacaoCredito(produtosValidos, targetValue);
     }
-    
     // 2. BUSCA POR APORTE - Usar algoritmo de combinação por parcela
-    return encontrarMelhorCombinacaoAporte(produtosComParcelas, targetValue);
+    return encontrarMelhorCombinacaoAporte(produtosValidos, targetValue);
   };
 
   // Algoritmo para encontrar melhor combinação por valor de crédito

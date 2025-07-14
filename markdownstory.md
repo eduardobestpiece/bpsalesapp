@@ -526,3 +526,8 @@ Próximos passos:
 - Cards de resumo da segunda linha (Total do Crédito, Total da Parcela, Acréscimo no Aporte, Acréscimo no Crédito) agora ficam vermelhos se o total de créditos for menor que o crédito acessado.
 - Removidos os campos "Total do Crédito", "Total da Parcela" e "Aproximação do valor desejado:" do rodapé da montagem de cotas.
 - Iniciada análise de lentidão ao trocar o tipo de parcela no simulador.
+
+## 2024-07-10 - Otimização de performance no simulador
+
+- Refatorada a função de sugestão inteligente de créditos para buscar reduções de parcela em paralelo (Promise.all), eliminando lentidão ao selecionar produtos ou trocar tipo de parcela.
+- Experiência do usuário muito mais fluida e sem travamentos.
