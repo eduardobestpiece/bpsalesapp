@@ -167,6 +167,7 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
   };
 
   // NOVA LÓGICA: Sugerir combinação de créditos cuja soma das parcelas fique mais próxima do valor de aporte digitado
+  const sortedProducts = [...availableProducts].sort((a, b) => b.credit_value - a.credit_value);
   if (data.searchType === 'contribution' || data.searchType === 'credit') {
     // Montar lista de produtos com valor de parcela reduzida
     const produtosComParcelas = sortedProducts.map(product => {
