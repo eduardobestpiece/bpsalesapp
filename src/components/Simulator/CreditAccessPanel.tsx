@@ -148,6 +148,10 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
             .order('credit_value');
 
           if (error) throw error;
+          console.log('Produtos retornados:', products);
+          if (products && products.length > 0) {
+            products.forEach(p => console.log('Produto', p.id, 'installment_types:', p.installment_types));
+          }
           setAvailableProducts(products || []);
 
           if (products && products.length > 0) {
