@@ -240,9 +240,10 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
 
   // Atualizar para usar a função de múltiplos créditos
   useEffect(() => {
-    if (data.administrator && data.value > 0) {
+    if (data.administrator && data.value > 0 && selectedCompanyId) {
       (async () => {
         try {
+          console.log('[DEBUG] selectedCompanyId:', selectedCompanyId);
           console.log('[DEBUG] Filtros para fetch de produtos:', {
             administrator_id: data.administrator,
             type: data.consortiumType,
