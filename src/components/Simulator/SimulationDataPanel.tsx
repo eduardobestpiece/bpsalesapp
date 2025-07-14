@@ -432,6 +432,37 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
         </Tabs>
       </TooltipProvider>
 
+      {/* Bloco de resultados */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 bg-gray-50 rounded-xl p-4">
+        <div>
+          <div className="text-xs text-gray-500">Crédito Total Acessado</div>
+          <div className="font-bold text-lg">{data.value ? data.value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</div>
+        </div>
+        <div>
+          <div className="text-xs text-gray-500">Parcela Total</div>
+          <div className="font-bold text-lg">{/* Aqui pode ser ajustado para o cálculo real da parcela */}-</div>
+        </div>
+        <div>
+          <div className="text-xs text-gray-500">Taxa de Administração Anual</div>
+          <div className="font-bold text-lg">
+            {data.adminTaxPercent && data.term ? ((data.adminTaxPercent / data.term) * 12).toFixed(2) + '%' : '-'}
+          </div>
+        </div>
+        <div>
+          <div className="text-xs text-gray-500">Atualização anual</div>
+          <div className="font-bold text-lg">
+            {data.consortiumType === 'property' && 'INCC'}
+            {data.consortiumType === 'vehicle' && 'IPCA'}
+            {data.consortiumType !== 'property' && data.consortiumType !== 'vehicle' && (
+              <>
+                Atualização anual<br />
+                {data.updateRate ? data.updateRate.toFixed(2) + '%' : '-'}
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+
       <div className="flex justify-end">
         <Tooltip>
           <TooltipTrigger asChild>

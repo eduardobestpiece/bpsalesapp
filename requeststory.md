@@ -201,3 +201,24 @@ Checklist:
 ---
 
 **Status:** Em andamento 
+
+# Requisição em andamento - 2024-07-10 (ajuste cálculos simulador)
+
+## Ajustes solicitados
+- Na aba “Crédito Acessado” do simulador, exibir:
+  - Crédito Total Acessado
+  - Parcela Total
+  - **Taxa de Administração Anual** (Cálculo: (Taxa de administração / meses) * 12)
+  - **Atualização anual** (Se for Imóvel: INCC; Veículo: IPCA; outro: mostrar texto e valor)
+
+## Ações planejadas
+1. Localizar componente da aba “Crédito Acessado”.
+2. Adicionar/calcular “Taxa de Administração Anual”.
+3. Adicionar/calcular “Atualização anual”.
+4. Testar o fluxo corrigido.
+5. Executar deploy.
+6. Solicitar validação do usuário.
+
+---
+
+**Status:** Em andamento 
