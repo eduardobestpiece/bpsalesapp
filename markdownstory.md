@@ -504,3 +504,13 @@ Próximos passos:
 - 2024-07-10: Deploy automático realizado após as alterações.
 - 2024-07-10: O cálculo da parcela no simulador agora utiliza exatamente a mesma lógica do modal de produto, inclusive para parcela especial/reduzida, garantindo valores idênticos.
 - 2024-07-10: Deploy automático realizado após as alterações.
+
+## 2024-07-10 - Ajustes no Simulador (Montagem de Cotas)
+
+- Alterado texto e cálculo de "Aproximação do valor desejado" para:
+  - "Acréscimo no Aporte": soma dos aportes dos créditos selecionados menos o valor de aporte do cliente.
+  - "Acréscimo no Crédito": soma dos créditos selecionados menos o valor de crédito acessado.
+- Todos os cards de resumo (Crédito Acessado, Valor da Parcela, Taxa anual, Atualização anual, Total do Crédito, Total da Parcela, Acréscimo no Aporte, Acréscimo no Crédito) agora aparecem acima da lista de créditos selecionados, com layout unificado.
+- Cards de acréscimo aparecem em destaque positivo (verde).
+- Layout visual padronizado conforme cards superiores.
+- Ajuste visual e semântico para destacar o aumento de aporte/crédito como benefício.

@@ -45,6 +45,18 @@ interface CreditAccessPanelProps {
   data: SimulationData;
 }
 
+// Adicionar/ajustar o componente ResumoCard
+function ResumoCard({ titulo, valor, destaquePositivo }: { titulo: string, valor: string, destaquePositivo?: boolean }) {
+  return (
+    <Card className={destaquePositivo ? 'border-green-500' : ''}>
+      <CardContent className="p-4">
+        <div className="text-sm text-muted-foreground">{titulo}</div>
+        <div className={`text-2xl font-bold ${destaquePositivo ? 'text-green-600' : 'text-primary'}`}>{valor}</div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
   const { selectedCompanyId } = useCompany();
   const [credits, setCredits] = useState<Credit[]>([]);
@@ -641,36 +653,31 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
 
   // 6. Calcular total das cotas
   const totalCotas = cotas.reduce((sum, c) => sum + c.valor * c.quantidade, 0);
+  const totalParcela = cotas.reduce((sum, c) => sum + c.parcela * c.quantidade, 0);
+
+  // Calcular:
+  // - acrescimoAporte = soma dos aportes dos créditos selecionados - valor do aporte do cliente (ou Crédito Acessado)
+  // - acrescimoCredito = soma dos créditos selecionados - Crédito Acessado
+  // Exibir ambos como positivo, destacando como benefício
+  const acrescimoAporte = totalCotas - data.value;
+  const acrescimoCredito = totalCotas - creditoAcessado;
 
   // 7. Renderização
   return (
     <div className="space-y-6">
       {/* Painel de resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-sm text-muted-foreground">Crédito Acessado</div>
-            <div className="text-2xl font-bold text-primary">{creditoAcessado > 0 ? formatCurrency(creditoAcessado) : '-'}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-sm text-muted-foreground">Valor da Parcela</div>
-            <div className="text-2xl font-bold text-primary">{valorParcela > 0 ? formatCurrency(valorParcela) : '-'}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-sm text-muted-foreground">Taxa anual</div>
-            <div className="text-2xl font-bold text-primary">{taxaAnual ? taxaAnual.toFixed(2) + '%' : '-'}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-sm text-muted-foreground">Atualização anual</div>
-            <div className="text-2xl font-bold text-primary">{atualizacaoAnual}</div>
-          </CardContent>
-        </Card>
+      {/* Cards de resumo acima da montagem de cotas */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+        <ResumoCard titulo="Crédito Acessado" valor={formatCurrency(creditoAcessado)} />
+        <ResumoCard titulo="Valor da Parcela" valor={formatCurrency(valorParcela)} />
+        <ResumoCard titulo="Taxa anual" valor={taxaAnual + '%'} />
+        <ResumoCard titulo="Atualização anual" valor={atualizacaoAnual} />
+        <ResumoCard titulo="Total do Crédito" valor={formatCurrency(totalCotas)} />
+        <ResumoCard titulo="Total da Parcela" valor={formatCurrency(totalParcela)} />
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-6">
+        <ResumoCard titulo="Acréscimo no Aporte" valor={formatCurrency(acrescimoAporte)} destaquePositivo />
+        <ResumoCard titulo="Acréscimo no Crédito" valor={formatCurrency(acrescimoCredito)} destaquePositivo />
       </div>
       {/* Seção de Montagem de Cotas */}
       <Card>

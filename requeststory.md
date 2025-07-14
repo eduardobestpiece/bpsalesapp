@@ -353,3 +353,14 @@ Correção do bug no simulador onde a consulta para a tabela `installment_reduct
 - [ ] Testar novo fluxo
 - [ ] Realizar deploy
 - [ ] Solicitar validação 
+
+## Solicitação em andamento (10/07/2024)
+
+### Ajustes visuais e semânticos no Simulador (Montagem de Cotas)
+
+- Substituir "Valor do aporte" por "Acréscimo no Aporte" (soma dos aportes dos créditos selecionados menos o valor de aporte do cliente).
+- Substituir "Diferença" por "Acréscimo no Crédito" (soma dos créditos selecionados menos o valor de crédito acessado).
+- Unificar o layout dos cards de resumo (Crédito Acessado, Valor da Parcela, Taxa anual, Atualização anual, Total do Crédito, Total da Parcela, Acréscimo no Aporte, Acréscimo no Crédito) acima da lista de créditos selecionados.
+- Cards de acréscimo devem aparecer em destaque positivo.
+- Ajustar o layout visual para destacar o aumento de aporte/crédito como benefício.
+- Solicitação registrada e ajustes em andamento. 
