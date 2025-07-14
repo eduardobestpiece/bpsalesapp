@@ -258,7 +258,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     let aplicaParcela = false, aplicaTaxaAdm = false, aplicaFundoReserva = false, aplicaSeguro = false;
     if (reducaoParcela) {
       percentualReducao = reducaoParcela.reduction_percent / 100;
-      aplicaParcela = reducaoParcela.applications?.includes('parcela');
+      aplicaParcela = reducaoParcela.applications?.includes('installment');
       aplicaTaxaAdm = reducaoParcela.applications?.includes('admin_tax');
       aplicaFundoReserva = reducaoParcela.applications?.includes('reserve_fund');
       aplicaSeguro = reducaoParcela.applications?.includes('insurance');
