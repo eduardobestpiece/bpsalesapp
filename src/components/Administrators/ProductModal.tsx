@@ -100,13 +100,15 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       };
 
       // Verificar duplicidade
-      const { data: existing, error: dupError } = await supabase
+      let dupQuery = supabase
         .from('products')
         .select('id')
         .eq('administrator_id', data.administrator_id)
-        .eq('type', data.type)
-        .neq('id', product?.id || '')
-        .maybeSingle();
+        .eq('type', data.type);
+      if (product?.id) {
+        dupQuery = dupQuery.neq('id', product.id);
+      }
+      const { data: existing, error: dupError } = await dupQuery.maybeSingle();
       if (existing) {
         toast.error('Já existe um produto com este tipo para esta administradora.');
         return;
