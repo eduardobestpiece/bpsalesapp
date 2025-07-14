@@ -501,9 +501,17 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
   }, [produtoCandidato, installmentCandidato, data.installmentType]);
 
   if (produtoCandidato && installmentCandidato) {
+    // Garantir que todos os campos necessários estão presentes
+    const installmentParams = {
+      installment_count: installmentCandidato.installment_count,
+      admin_tax_percent: installmentCandidato.admin_tax_percent || 0,
+      reserve_fund_percent: installmentCandidato.reserve_fund_percent || 0,
+      insurance_percent: installmentCandidato.insurance_percent || 0,
+      optional_insurance: !!installmentCandidato.optional_insurance
+    };
     const parcelas = calcularParcelasProduto({
       credit: produtoCandidato.credit_value,
-      installment: installmentCandidato,
+      installment: installmentParams,
       reduction: data.installmentType === 'special' ? reducaoParcela : null
     });
     parcelaCheia = parcelas.full;
