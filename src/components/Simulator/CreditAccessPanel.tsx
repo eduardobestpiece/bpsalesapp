@@ -444,25 +444,26 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
       : produtoBase.percentualSpecial * creditoSugerido;
   }
 
-  // 1. Cálculo dos percentuais e seleção do produto/parcelamento conforme filtros
-  const produtoSelecionado = availableProducts.find(produto => {
-    // Filtros principais
-    if (produto.credit_value !== Number(data.value)) return false;
-    // Filtros adicionais podem ser aplicados aqui se necessário
+  // 1. Buscar produto e installment compatíveis com administradora, tipo de consórcio e prazo
+  const produtoCandidato = availableProducts.find(produto => {
+    // Filtros: administradora, tipo de consórcio
+    if (produto.administrator_id !== data.administrator) return false;
+    if (produto.type !== data.consortiumType) return false;
     return true;
   });
-  let installmentSelecionado = null;
-  if (produtoSelecionado && Array.isArray(produtoSelecionado.installment_types)) {
-    for (const it of produtoSelecionado.installment_types) {
+  let installmentCandidato = null;
+  if (produtoCandidato && Array.isArray(produtoCandidato.installment_types)) {
+    for (const it of produtoCandidato.installment_types) {
       const real = it.installment_types || it;
       if (real.installment_count === data.term) {
-        installmentSelecionado = real;
+        installmentCandidato = real;
         break;
       }
     }
   }
 
-  // 2. Cálculo dos percentuais e valores
+  // 2. Calcular percentual e valores
+  let percentualUsado = 0;
   let parcelaCheia = 0;
   let parcelaReduzida = 0;
   let taxaAdministracao = 0;
@@ -470,18 +471,18 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
   let atualizacaoAnual = '-';
   let creditoAcessado = 0;
   let valorParcela = 0;
-  if (produtoSelecionado && installmentSelecionado) {
+  if (produtoCandidato && installmentCandidato) {
     const parcelas = calcularParcelasProduto({
-      credit: produtoSelecionado.credit_value,
-      installment: installmentSelecionado,
+      credit: produtoCandidato.credit_value,
+      installment: installmentCandidato,
       reduction: null // ou buscar redução se necessário
     });
     parcelaCheia = parcelas.full;
     parcelaReduzida = parcelas.special;
     percentualUsado = data.installmentType === 'full'
-      ? parcelaCheia / produtoSelecionado.credit_value
-      : parcelaReduzida / produtoSelecionado.credit_value;
-    taxaAdministracao = installmentSelecionado.admin_tax_percent || 0;
+      ? parcelaCheia / produtoCandidato.credit_value
+      : parcelaReduzida / produtoCandidato.credit_value;
+    taxaAdministracao = installmentCandidato.admin_tax_percent || 0;
     taxaAnual = (taxaAdministracao / data.term) * 12;
     if (data.consortiumType === 'property') {
       atualizacaoAnual = 'INCC ' + (data.updateRate ? data.updateRate.toFixed(2) + '%' : '');
