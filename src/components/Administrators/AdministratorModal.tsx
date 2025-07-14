@@ -75,11 +75,11 @@ export const CreateAdministratorModal: React.FC<{
         is_default: data.is_default || false,
         company_id: selectedCompanyId,
       };
-      const { error } = await supabase
-        .from('administrators')
-        .insert(cleanedData);
-      if (error) throw error;
-      toast.success('Administradora criada com sucesso!');
+        const { error } = await supabase
+          .from('administrators')
+          .insert(cleanedData);
+        if (error) throw error;
+        toast.success('Administradora criada com sucesso!');
       onSuccess();
       form.reset();
     } catch (error) {
@@ -110,27 +110,27 @@ export const CreateAdministratorModal: React.FC<{
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
+              <FormField
+                control={form.control}
               name="update_type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Tipo de Atualização *</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione o tipo" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tipo de Atualização *</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Selecione o tipo" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
                       <SelectItem value="specific_month">Mês específico</SelectItem>
                       <SelectItem value="after_12_installments">Após 12 parcelas</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             {/* Campo mês só aparece se update_type for specific_month */}
             {form.watch('update_type') === 'specific_month' && (
               <FormField
@@ -140,11 +140,11 @@ export const CreateAdministratorModal: React.FC<{
                   <FormItem>
                     <FormLabel>Mês de Atualização</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
+                    <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Selecione o mês" />
                         </SelectTrigger>
-                      </FormControl>
+                    </FormControl>
                       <SelectContent>
                         {MONTHS.map((month) => (
                           <SelectItem key={month} value={month}>{month}</SelectItem>
@@ -171,11 +171,11 @@ export const CreateAdministratorModal: React.FC<{
                 )}
               />
             )}
-            <FormField
-              control={form.control}
-              name="max_embedded_percentage"
-              render={({ field }) => (
-                <FormItem>
+              <FormField
+                control={form.control}
+                name="max_embedded_percentage"
+                render={({ field }) => (
+                  <FormItem>
                   <FormLabel>Máximo embutido (%)</FormLabel>
                   <FormControl>
                     <Input type="number" min="0" max="100" step="0.01" placeholder="0.00" {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} value={field.value || ''} />
@@ -214,22 +214,22 @@ export const CreateAdministratorModal: React.FC<{
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Percentual da Entrada Especial</FormLabel>
-                      <FormControl>
-                        <Input 
-                          type="number" 
-                          min="0" 
-                          max="100" 
-                          step="0.01"
-                          placeholder="0.00"
-                          {...field}
-                          onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
-                          value={field.value || ''}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                    <FormControl>
+                      <Input 
+                        type="number" 
+                        min="0" 
+                        max="100" 
+                        step="0.01"
+                        placeholder="0.00"
+                        {...field}
+                        onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                        value={field.value || ''}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
                 <FormField
                   control={form.control}
                   name="special_entry_installments"
@@ -295,7 +295,7 @@ export const CreateAdministratorModal: React.FC<{
                     </FormItem>
                   )}
                 />
-              </div>
+            </div>
             )}
             {/* Botão de ação */}
             <Button type="submit">Cadastrar</Button>

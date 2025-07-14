@@ -82,3 +82,62 @@ Criar um modal avançado de configurações para o simulador, contendo os campos
   - O switch global vem desligado por padrão.
 - **Motivo:** Melhorar a clareza e flexibilidade para o usuário ao configurar o simulador.
 - **Status:** Em andamento 
+
+# Ajustes no Modal 'Mais Configurações' (Simulador)
+
+- **Solicitante:** Usuário
+- **Descrição:**
+  - Corrigir o campo 'Parcelas' para puxar corretamente as opções ligadas à administradora selecionada e garantir que a edição traga os dados corretos.
+  - Verificar no Supabase as tabelas do módulo simulação e seus dados para identificar possíveis problemas.
+  - Adicionar campo de porcentagem 'Atualização anual' (padrão 6%).
+  - No campo 'Redução de parcela', manter o percentual e adicionar campo de seleção para 'Aplicação' (igual ao modal de editar/criar Redução de Parcela).
+  - No campo 'Atualização anual do crédito', buscar do campo 'Tipo de Atualização' da administradora se for 'Sistema'.
+    - Se 'Após 12 parcelas', mostrar apenas esse campo.
+    - Se 'Mês específico', mostrar campos 'Mês de Atualização' e 'Carência (em dias)'.
+    - Se 'Manual', os campos são editáveis.
+- **Motivo:** Melhorar a experiência e garantir o correto funcionamento do simulador.
+- **Status:** Em andamento 
+
+## Ajustes modal "Mais Configurações" (Simulador)
+
+- **Campo "Parcelas"**
+  - O campo "Parcelas" não está puxando corretamente as parcelas ligadas à administradora selecionada.
+  - Ao editar um registro de configuração, as informações da parcela não estão sendo carregadas corretamente.
+  - Solicitação: Verificar as tabelas do módulo simulação no Supabase e os dados, identificar se o problema está no Supabase ou no projeto.
+
+- **Campo "Atualização anual"**
+  - Adicionar campo de porcentagem chamado "Atualização anual" (padrão: 6%).
+
+- **Campo "Redução de parcela"**
+  - Manter o percentual.
+  - Adicionar campo de seleção para "Aplicação" (igual ao modal de editar/criar Redução de Parcela).
+
+- **Campo "Atualização anual do crédito"**
+  - Buscar do campo "Tipo de Atualização" da administradora se for selecionado do sistema.
+  - Se for "Após 12 parcelas", mostrar apenas "Após 12 parcelas".
+  - Se for "Mês específico", mostrar campos "Mês de Atualização" e "Carência (em dias)".
+  - Se selecionado como manual, os campos são editáveis.
+
+---
+
+**Status:** Em análise e execução dos ajustes solicitados. 
+
+# Solicitação em andamento (10/07/2024)
+
+**Ajuste no Modal de Produto**
+
+- Remover campos “Nome” e “Opções de Prazo (meses)” do modal de produto.
+- Nome do produto será gerado automaticamente concatenando valor do crédito e tipo (ex: “R$ 500.000 (Imóvel)”).
+- Remover coluna de opções de prazo do Supabase.
+- Campo de parcelas será multiseleção.
+- Cálculo dos valores de parcela considerará a maior parcela selecionada.
+
+Checklist:
+- [ ] Remover campos do modal de produto
+- [ ] Gerar nome automaticamente
+- [ ] Remover coluna do Supabase (SQL)
+- [ ] Tornar parcelas multiseleção
+- [ ] Ajustar cálculos de valores de parcela
+- [ ] Testar alterações
+- [ ] Deploy
+- [ ] Solicitar validação 

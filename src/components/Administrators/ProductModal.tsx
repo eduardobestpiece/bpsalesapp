@@ -14,7 +14,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const formSchema = z.object({
-  name: z.string().min(1, 'Nome é obrigatório'),
   type: z.enum(['property', 'car', 'service']),
   administrator_id: z.string().optional(),
   credit_value: z.number().min(1, 'Valor do crédito é obrigatório'),
@@ -37,8 +36,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   onSuccess
 }) => {
   const [administrators, setAdministrators] = useState<any[]>([]);
-  const [termInput, setTermInput] = useState('');
-  const [termOptions, setTermOptions] = useState<number[]>(product?.term_options || []);
   const [installmentTypes, setInstallmentTypes] = useState<any[]>([]);
   const [parcelaCheia, setParcelaCheia] = useState(0);
   const [parcelaEspecial, setParcelaEspecial] = useState(0);
@@ -46,7 +43,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: product?.name || '',
       type: product?.type || 'property',
       administrator_id: product?.administrator_id || undefined,
       credit_value: product?.credit_value || 0,
@@ -83,31 +79,16 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     }
   };
 
-  const addTermOption = () => {
-    const term = parseInt(termInput);
-    if (term && term > 0 && !termOptions.includes(term)) {
-      const newTerms = [...termOptions, term].sort((a, b) => a - b);
-      setTermOptions(newTerms);
-      form.setValue('term_options', newTerms);
-      setTermInput('');
-    }
-  };
-
-  const removeTermOption = (term: number) => {
-    const newTerms = termOptions.filter(t => t !== term);
-    setTermOptions(newTerms);
-    form.setValue('term_options', newTerms);
-  };
-
   const onSubmit = async (data: FormData) => {
     try {
-      // Ensure all required fields are present and properly typed
+      // Gerar nome automaticamente
+      const tipoLabel = data.type === 'property' ? 'Imóvel' : data.type === 'car' ? 'Veículo' : 'Serviço';
+      const nomeAuto = `R$ ${Number(data.credit_value).toLocaleString('pt-BR', {minimumFractionDigits: 2})} (${tipoLabel})`;
       const cleanedData = {
-        name: data.name,
+        name: nomeAuto,
         type: data.type,
         administrator_id: data.administrator_id || null,
         credit_value: data.credit_value,
-        term_options: data.term_options,
         installment_types: data.installment_types,
       };
 
@@ -182,8 +163,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       setParcelaEspecial(0);
       return;
     }
-    // Usar a primeira parcela como padrão para cálculo
-    const parcelaPadrao = selectedInstallments[0];
+    // Usar a maior parcela selecionada para cálculo
+    const parcelaPadrao = selectedInstallments.reduce((max, curr) =>
+      (curr.installment_count > (max?.installment_count || 0) ? curr : max), selectedInstallments[0]);
     const nParcelas = parcelaPadrao.installment_count;
     const taxaAdm = parcelaPadrao.admin_tax_percent || 0;
     const fundoReserva = parcelaPadrao.reserve_fund_percent || 0;
@@ -191,9 +173,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     // Buscar redução de parcela associada
     let percentualReducao = 1;
     if (parcelaPadrao.id) {
-      // Buscar relação de redução
-      // (Simples: buscar a primeira redução associada, se houver)
-      // Em produção, pode ser necessário buscar via API/async
       percentualReducao = parcelaPadrao.reduction_percent ? parcelaPadrao.reduction_percent / 100 : 1;
     }
     // Cálculo Parcela Cheia
@@ -215,20 +194,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nome *</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Nome do produto" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -299,40 +264,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 </FormItem>
               )}
             />
-
-            <div className="space-y-2">
-              <FormLabel>Opções de Prazo (meses) *</FormLabel>
-              <div className="flex gap-2">
-                <Input
-                  type="number"
-                  placeholder="Prazo em meses"
-                  value={termInput}
-                  onChange={(e) => setTermInput(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTermOption())}
-                />
-                <Button type="button" onClick={addTermOption} variant="outline">
-                  Adicionar
-                </Button>
-              </div>
-              
-              {termOptions.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-2">
-                  {termOptions.map((term) => (
-                    <Badge key={term} variant="secondary" className="flex items-center gap-1">
-                      {term} meses
-                      <X 
-                        className="w-3 h-3 cursor-pointer" 
-                        onClick={() => removeTermOption(term)}
-                      />
-                    </Badge>
-                  ))}
-                </div>
-              )}
-              
-              {form.formState.errors.term_options && (
-                <p className="text-sm text-red-600">{form.formState.errors.term_options.message}</p>
-              )}
-            </div>
 
             <FormField
               control={form.control}

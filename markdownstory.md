@@ -446,3 +446,39 @@ Concluído e pronto para deploy.
 
 **Situação Atual:**  
 O modal de “Mais configurações” está funcional, mas ajustes finais estão sendo feitos para garantir que os campos “Parcelas”, “Tipo de Crédito” e outros campos dinâmicos reflitam corretamente os dados do Supabase, especialmente considerando os relacionamentos entre produtos, tipos de crédito e tipos de parcela. Novos campos e lógicas estão sendo implementados conforme as últimas solicitações do usuário.
+
+## [Registro] Ajustes no modal "Mais Configurações" do Simulador (concluído)
+
+- Corrigido o filtro do campo "Parcelas" para usar o relacionamento correto entre produto, tipo de crédito e installment_types via product_installment_types.
+- Garantido que ao editar, o valor salvo seja carregado corretamente.
+- Ajustado o campo "Atualização anual" para valor padrão 6% e funcionamento correto do modo manual/sistema.
+- Ajustado o campo "Redução de parcela" para manter percentual e seleção de aplicação igual ao modal de Redução de Parcela.
+- Ajustado o campo "Atualização anual do crédito" para buscar corretamente o tipo de atualização da administradora e exibir os campos conforme o tipo (após 12 parcelas ou mês específico), permitindo edição no modo manual.
+- Todas as alterações foram versionadas e o deploy foi realizado.
+
+**Checklist concluído.**
+
+## [Registro] Integração dos campos principais com painel de crédito acessado (Simulador)
+
+- Os campos "Modalidade", "Valor do aporte", "Número de parcelas" e "Tipo de Parcela" agora atualizam automaticamente o painel de crédito acessado.
+- O painel de resultados reflete imediatamente qualquer alteração feita nesses campos.
+- Deploy realizado com sucesso.
+
+## 10/07/2024 - Ajuste no Modal de Produto
+
+- Iniciada solicitação para remover os campos "Nome" e "Opções de Prazo (meses)" do modal de produto.
+- Nome do produto agora é gerado automaticamente concatenando valor do crédito e tipo (ex: "R$ 500.000 (Imóvel)").
+- Campo de parcelas ajustado para multiseleção.
+- Cálculo dos valores de parcela agora considera a maior parcela selecionada.
+- Bloco de opções de prazo removido do frontend.
+- Funções, estados e referências a 'term_options' eliminadas do código.
+- Tentativa de remover a coluna 'term_options' do Supabase (aguardando ambiente de escrita para executar o SQL):
+
+```sql
+ALTER TABLE public.products DROP COLUMN term_options;
+```
+
+Próximos passos:
+- Remover a coluna do banco assim que possível.
+- Testar o fluxo completo de criação/edição de produto.
+- Realizar deploy após validação.
