@@ -11,6 +11,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { Trash2, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import { calcularParcelasProduto } from '@/utils/calculations';
+import { useCompany } from '@/contexts/CompanyContext';
 
 interface SimulationData {
   administrator: string;
@@ -43,6 +44,7 @@ interface CreditAccessPanelProps {
 }
 
 export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
+  const { selectedCompanyId } = useCompany();
   const [credits, setCredits] = useState<Credit[]>([]);
   const [availableProducts, setAvailableProducts] = useState<any[]>([]);
   const [selectedCreditForChange, setSelectedCreditForChange] = useState<string | null>(null);
@@ -243,14 +245,16 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
         try {
           console.log('[DEBUG] Filtros para fetch de produtos:', {
             administrator_id: data.administrator,
-            type: data.consortiumType
+            type: data.consortiumType,
+            company_id: selectedCompanyId
           });
           const { data: products, error } = await supabase
             .from('products')
             .select('*, installment_types:product_installment_types(installment_types(*))')
+            .eq('is_archived', false)
+            .eq('company_id', selectedCompanyId)
             // .eq('administrator_id', data.administrator)
             // .eq('type', data.consortiumType)
-            .eq('is_archived', false)
             .order('credit_value');
 
           if (error) throw error;
