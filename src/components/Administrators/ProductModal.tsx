@@ -43,6 +43,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   // Adicionar estado para parcela padrão
   const [parcelaPadraoId, setParcelaPadraoId] = useState<string | null>(null);
   const [reducaoParcela, setReducaoParcela] = useState<any>(null);
+  // Adicionar estado para mensagem de redução
+  const [mensagemReducao, setMensagemReducao] = useState<string | null>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -159,19 +161,29 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   }, [form.watch('administrator_id')]);
 
   useEffect(() => {
-    // Sempre que a parcela padrão mudar, buscar a redução associada
+    // Sempre que a parcela padrão OU as parcelas selecionadas mudarem, buscar a redução associada
     async function fetchReducao() {
-      if (!parcelaPadraoId) {
+      // Usar parcela padrão, ou de maior prazo se não houver
+      let idBusca = parcelaPadraoId;
+      const selectedInstallments = installmentTypes.filter(it => form.watch('installment_types').includes(it.id));
+      if (!idBusca && selectedInstallments.length > 0) {
+        const maior = selectedInstallments.reduce((max, curr) =>
+          (curr.installment_count > (max?.installment_count || 0) ? curr : max), selectedInstallments[0]);
+        idBusca = maior.id;
+      }
+      if (!idBusca) {
         setReducaoParcela(null);
+        setMensagemReducao(null);
         return;
       }
       // Buscar relação installment_type_reductions
       const { data: rels, error: relError } = await supabase
         .from('installment_type_reductions')
         .select('installment_reduction_id')
-        .eq('installment_type_id', parcelaPadraoId);
+        .eq('installment_type_id', idBusca);
       if (relError || !rels || rels.length === 0) {
         setReducaoParcela(null);
+        setMensagemReducao('Não há redução cadastrada para a parcela selecionada.');
         return;
       }
       // Buscar dados da redução
@@ -183,12 +195,14 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         .limit(1);
       if (redError || !reducoes || reducoes.length === 0) {
         setReducaoParcela(null);
+        setMensagemReducao('Não há redução cadastrada para a parcela selecionada.');
         return;
       }
       setReducaoParcela(reducoes[0]);
+      setMensagemReducao(null);
     }
     fetchReducao();
-  }, [parcelaPadraoId]);
+  }, [parcelaPadraoId, form.watch('installment_types'), installmentTypes]);
 
   useEffect(() => {
     const credit = form.watch('credit_value');
@@ -356,6 +370,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               <div>
                 <FormLabel>Valor da parcela especial</FormLabel>
                 <div className="font-bold text-lg">{parcelaEspecial.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+                {mensagemReducao && (
+                  <div className="text-xs text-orange-600 mt-1">{mensagemReducao}</div>
+                )}
               </div>
             </div>
 
