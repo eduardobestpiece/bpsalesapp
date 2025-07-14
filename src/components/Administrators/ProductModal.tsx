@@ -123,7 +123,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       }
       onSuccess();
       form.reset();
-      setTermOptions([]);
     } catch (error) {
       console.error('Error:', error);
       toast.error('Erro ao salvar produto');
@@ -134,7 +133,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     if (open) {
       fetchAdministrators();
       fetchInstallmentTypes();
-      setTermOptions(product?.term_options || []);
     }
   }, [open, product]);
 
