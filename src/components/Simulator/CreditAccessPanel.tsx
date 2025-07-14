@@ -83,6 +83,11 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
+  const [selectedCotas, setSelectedCotas] = useState<number[]>([]);
+  const [showRedefinirModal, setShowRedefinirModal] = useState(false);
+  const [redefinirProdutoId, setRedefinirProdutoId] = useState('');
+  const [redefinirQuantidade, setRedefinirQuantidade] = useState(1);
+  const [addQuantidade, setAddQuantidade] = useState(1);
 
   // Carregar montagem salva ao abrir
   useEffect(() => {
@@ -504,7 +509,7 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
 
   // 5. Funções para adicionar/remover cotas
   const adicionarProduto = () => {
-    if (!selectedProduct) return;
+    if (!selectedProduct || addQuantidade < 1) return;
     
     const produto = availableProducts.find(p => p.id === selectedProduct);
     if (!produto) return;
@@ -541,21 +546,77 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
     
     setCotas(prev => [
       ...prev,
-      {
+      ...Array.from({ length: addQuantidade }).map(() => ({
         produtoId: produto.id,
         nome: produto.name,
         valor: produto.credit_value,
         parcela,
         quantidade: 1
-      }
+      }))
     ]);
     
     setSelectedProduct('');
     setShowAddProduct(false);
+    setAddQuantidade(1);
   };
   
   const removerCota = (index: number) => {
     setCotas(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Seleção em massa
+  const toggleCotaSelecionada = (idx: number) => {
+    setSelectedCotas(prev => prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]);
+  };
+  const selecionarTodas = () => {
+    if (selectedCotas.length === cotas.length) setSelectedCotas([]);
+    else setSelectedCotas(cotas.map((_, i) => i));
+  };
+  const excluirSelecionadas = () => {
+    setCotas(prev => prev.filter((_, i) => !selectedCotas.includes(i)));
+    setSelectedCotas([]);
+  };
+  const abrirRedefinir = () => {
+    setShowRedefinirModal(true);
+    setRedefinirProdutoId('');
+    setRedefinirQuantidade(1);
+  };
+  const redefinirSelecionadas = () => {
+    if (!redefinirProdutoId || redefinirQuantidade < 1) return;
+    const produto = availableProducts.find(p => p.id === redefinirProdutoId);
+    if (!produto) return;
+    let installment = null;
+    if (Array.isArray(produto.installment_types)) {
+      for (const it of produto.installment_types) {
+        const real = it.installment_types || it;
+        if (real.installment_count === data.term) {
+          installment = real;
+          break;
+        }
+      }
+    }
+    if (!installment) return;
+    let parcela = 0;
+    if (data.installmentType === 'full') {
+      parcela = calcularParcelasProduto({ credit: produto.credit_value, installment, reduction: null }).full;
+    } else {
+      parcela = regraParcelaEspecial({ credit: produto.credit_value, installment, reduction: reducaoParcela });
+    }
+    setCotas(prev => {
+      const novas = prev.filter((_, i) => !selectedCotas.includes(i));
+      return [
+        ...novas,
+        ...Array.from({ length: redefinirQuantidade }).map(() => ({
+          produtoId: produto.id,
+          nome: produto.name,
+          valor: produto.credit_value,
+          parcela,
+          quantidade: 1
+        }))
+      ];
+    });
+    setSelectedCotas([]);
+    setShowRedefinirModal(false);
   };
 
   // 6. Calcular total das cotas
@@ -598,16 +659,25 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
+            {/* Barra de seleção em massa */}
+            {selectedCotas.length > 0 && (
+              <div className="flex gap-2 mb-2 items-center">
+                <span className="text-sm font-medium">{selectedCotas.length} selecionada(s)</span>
+                <Button size="sm" variant="destructive" onClick={excluirSelecionadas}>Excluir</Button>
+                <Button size="sm" variant="outline" onClick={abrirRedefinir}>Redefinir</Button>
+                <Button size="sm" variant="ghost" onClick={() => setSelectedCotas([])}>Cancelar</Button>
+              </div>
+            )}
             {/* Lista de cotas adicionadas */}
             {cotas.length === 0 && (
               <div className="text-muted-foreground text-center py-4">
                 Nenhuma cota adicionada. Clique em "Adicionar Produto" para começar.
               </div>
             )}
-            
             {cotas.map((cota, idx) => (
-              <div key={idx} className="flex items-center justify-between p-3 border rounded-lg">
-                <div className="flex-1">
+              <div key={idx} className={`flex items-center justify-between p-3 border rounded-lg ${selectedCotas.includes(idx) ? 'bg-blue-50 border-blue-400' : ''}`}>
+                <Checkbox checked={selectedCotas.includes(idx)} onCheckedChange={() => toggleCotaSelecionada(idx)} />
+                <div className="flex-1 ml-2">
                   <div className="font-medium">{cota.nome}</div>
                   <div className="text-sm text-muted-foreground">
                     Crédito: {formatCurrency(cota.valor)} | Parcela: {formatCurrency(cota.parcela)}
@@ -626,7 +696,6 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
                 </div>
               </div>
             ))}
-            
             {/* Botão para adicionar produto */}
             <div className="flex gap-2">
               <Button
@@ -638,38 +707,51 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
                 Adicionar Produto
               </Button>
             </div>
-            
             {/* Modal para adicionar produto */}
             {showAddProduct && (
-              <div className="border rounded-lg p-4 bg-muted/50">
-                <h4 className="font-medium mb-3">Selecionar Produto</h4>
-                <div className="flex gap-2">
-                  <Select value={selectedProduct} onValueChange={setSelectedProduct}>
-                    <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Escolha um produto" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableProducts.map(product => (
-                        <SelectItem key={product.id} value={product.id}>
-                          {product.name} - {formatCurrency(product.credit_value)}
-                        </SelectItem>
+              <Dialog open={showAddProduct} onOpenChange={setShowAddProduct}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Adicionar Produto</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <select value={selectedProduct} onChange={e => setSelectedProduct(e.target.value)} className="w-full border rounded p-2">
+                      <option value="">Selecione o produto</option>
+                      {availableProducts.map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
                       ))}
-                    </SelectContent>
-                  </Select>
-                  <Button onClick={adicionarProduto} disabled={!selectedProduct}>
-                    Adicionar
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setShowAddProduct(false);
-                      setSelectedProduct('');
-                    }}
-                  >
-                    Cancelar
-                  </Button>
-                </div>
-              </div>
+                    </select>
+                    <Input type="number" min={1} value={addQuantidade} onChange={e => setAddQuantidade(Number(e.target.value))} className="w-full" placeholder="Quantidade" />
+                    <div className="flex gap-2">
+                      <Button onClick={adicionarProduto} className="flex-1 bg-green-600 hover:bg-green-700 text-white">Adicionar</Button>
+                      <Button variant="outline" onClick={() => setShowAddProduct(false)} className="flex-1">Cancelar</Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
+            {/* Modal para redefinir cotas selecionadas */}
+            {showRedefinirModal && (
+              <Dialog open={showRedefinirModal} onOpenChange={setShowRedefinirModal}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Redefinir Cotas Selecionadas</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <select value={redefinirProdutoId} onChange={e => setRedefinirProdutoId(e.target.value)} className="w-full border rounded p-2">
+                      <option value="">Selecione o novo produto</option>
+                      {availableProducts.map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                    <Input type="number" min={1} value={redefinirQuantidade} onChange={e => setRedefinirQuantidade(Number(e.target.value))} className="w-full" placeholder="Quantidade" />
+                    <div className="flex gap-2">
+                      <Button onClick={redefinirSelecionadas} className="flex-1 bg-green-600 hover:bg-green-700 text-white">Trocar</Button>
+                      <Button variant="outline" onClick={() => setShowRedefinirModal(false)} className="flex-1">Cancelar</Button>
+                    </div>
+                  </div>
+                </DialogContent>
+              </Dialog>
             )}
             
             {/* Botões de ação */}

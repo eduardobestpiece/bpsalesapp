@@ -373,3 +373,5 @@ Correção do bug no simulador onde a consulta para a tabela `installment_reduct
 Otimização de performance: busca de reduções de parcela agora em paralelo (Promise.all), eliminando lentidão na montagem de cotas e sugestão de créditos. 
 
 Adicionados botões Salvar, Redefinir e Gerar proposta, com persistência por usuário no Supabase e modal 'Em breve'. 
+
+Agora é possível escolher quantidade ao adicionar produto, selecionar cotas em massa, excluir ou redefinir em lote, e redefinir cotas por outro produto via modal. 

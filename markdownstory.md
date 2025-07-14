@@ -545,3 +545,10 @@ Próximos passos:
 - Ao redefinir, tudo é limpo e removido do Supabase.
 - Botão Gerar proposta abre modal "Em breve".
 - Sempre que o usuário acessar, sua última montagem salva é carregada automaticamente.
+
+## 2024-07-10 - Seleção de quantidade e ações em massa na montagem de cotas
+
+- Adicionado campo de quantidade ao adicionar produto (default 1).
+- Permite adicionar múltiplas cotas de uma vez.
+- Agora é possível selecionar cotas em massa, com barra de ações para excluir ou redefinir.
+- Redefinir abre modal para trocar todas as cotas selecionadas por outro produto e quantidade.
