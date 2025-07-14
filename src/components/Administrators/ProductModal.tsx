@@ -15,13 +15,9 @@ import { toast } from 'sonner';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
-  type: z.enum(['property', 'car']),
+  type: z.enum(['property', 'car', 'service']),
   administrator_id: z.string().optional(),
   credit_value: z.number().min(1, 'Valor do crédito é obrigatório'),
-  term_options: z.array(z.number()).min(1, 'Pelo menos uma opção de prazo é obrigatória'),
-  admin_tax_percent: z.number().min(0, 'Taxa de administração é obrigatória'),
-  reserve_fund_percent: z.number().min(0, 'Fundo de reserva é obrigatório'),
-  insurance_percent: z.number().min(0, 'Seguro é obrigatório'),
   installment_types: z.array(z.string()).min(1, 'Selecione pelo menos uma parcela'),
 });
 
@@ -44,6 +40,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   const [termInput, setTermInput] = useState('');
   const [termOptions, setTermOptions] = useState<number[]>(product?.term_options || []);
   const [installmentTypes, setInstallmentTypes] = useState<any[]>([]);
+  const [parcelaCheia, setParcelaCheia] = useState(0);
+  const [parcelaEspecial, setParcelaEspecial] = useState(0);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -52,10 +50,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       type: product?.type || 'property',
       administrator_id: product?.administrator_id || undefined,
       credit_value: product?.credit_value || 0,
-      term_options: product?.term_options || [],
-      admin_tax_percent: product?.admin_tax_percent || 0,
-      reserve_fund_percent: product?.reserve_fund_percent || 0,
-      insurance_percent: product?.insurance_percent || 0,
       installment_types: product?.installment_types || [],
     }
   });
@@ -79,7 +73,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     try {
       const { data, error } = await supabase
         .from('installment_types')
-        .select('id, name')
+        .select('id, name, administrator_id, installment_count, admin_tax_percent, reserve_fund_percent, insurance_percent, optional_insurance, reduction_percent')
         .order('name');
       
       if (error) throw error;
@@ -114,9 +108,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         administrator_id: data.administrator_id || null,
         credit_value: data.credit_value,
         term_options: data.term_options,
-        admin_tax_percent: data.admin_tax_percent,
-        reserve_fund_percent: data.reserve_fund_percent,
-        insurance_percent: data.insurance_percent,
         installment_types: data.installment_types,
       };
 
@@ -166,6 +157,53 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     }
   }, [open, product]);
 
+  useEffect(() => {
+    if (!form.watch('administrator_id')) {
+      setInstallmentTypes([]);
+      return;
+    }
+    const fetchInstallments = async () => {
+      const { data, error } = await supabase
+        .from('installment_types')
+        .select('*')
+        .eq('administrator_id', form.watch('administrator_id'))
+        .eq('is_archived', false)
+        .order('installment_count');
+      setInstallmentTypes(data || []);
+    };
+    fetchInstallments();
+  }, [form.watch('administrator_id')]);
+
+  useEffect(() => {
+    const credit = form.watch('credit_value');
+    const selectedInstallments = installmentTypes.filter(it => form.watch('installment_types').includes(it.id));
+    if (!credit || selectedInstallments.length === 0) {
+      setParcelaCheia(0);
+      setParcelaEspecial(0);
+      return;
+    }
+    // Usar a primeira parcela como padrão para cálculo
+    const parcelaPadrao = selectedInstallments[0];
+    const nParcelas = parcelaPadrao.installment_count;
+    const taxaAdm = parcelaPadrao.admin_tax_percent || 0;
+    const fundoReserva = parcelaPadrao.reserve_fund_percent || 0;
+    const seguro = parcelaPadrao.optional_insurance ? 0 : (parcelaPadrao.insurance_percent || 0);
+    // Buscar redução de parcela associada
+    let percentualReducao = 1;
+    if (parcelaPadrao.id) {
+      // Buscar relação de redução
+      // (Simples: buscar a primeira redução associada, se houver)
+      // Em produção, pode ser necessário buscar via API/async
+      percentualReducao = parcelaPadrao.reduction_percent ? parcelaPadrao.reduction_percent / 100 : 1;
+    }
+    // Cálculo Parcela Cheia
+    const valorCheia = (credit + ((credit * taxaAdm / 100) + (credit * fundoReserva / 100) + (credit * seguro / 100))) / nParcelas;
+    setParcelaCheia(valorCheia);
+    // Cálculo Parcela Especial
+    const valorEspecial = (credit + (((credit * taxaAdm / 100) / percentualReducao) + ((credit * fundoReserva / 100) / percentualReducao) + ((credit * seguro / 100) / percentualReducao))) / nParcelas;
+    setParcelaEspecial(valorEspecial);
+  }, [form.watch('credit_value'), form.watch('installment_types'), installmentTypes]);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
@@ -207,6 +245,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                       <SelectContent>
                         <SelectItem value="property">Imóvel</SelectItem>
                         <SelectItem value="car">Veículo</SelectItem>
+                        <SelectItem value="service">Serviço</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -295,48 +334,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               )}
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              <FormField
-                control={form.control}
-                name="admin_tax_percent"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Taxa de Administração (%) *</FormLabel>
-                    <FormControl>
-                      <Input type="number" min="0" step="0.01" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="reserve_fund_percent"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fundo de Reserva (%) *</FormLabel>
-                    <FormControl>
-                      <Input type="number" min="0" step="0.01" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="insurance_percent"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Seguro (%) *</FormLabel>
-                    <FormControl>
-                      <Input type="number" min="0" step="0.01" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
             <FormField
               control={form.control}
               name="installment_types"
@@ -350,8 +347,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {installmentTypes.map((item) => (
-                        <SelectItem key={item.id} value={item.id}>{item.name}</SelectItem>
+                      {installmentTypes.map((it) => (
+                        <SelectItem key={it.id} value={it.id}>{it.name || it.installment_count}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -360,12 +357,14 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               )}
             />
 
-            <div className="mt-4">
-              <FormLabel>Valor da Parcela (automático)</FormLabel>
-              <div className="font-bold">
-                {form.watch('credit_value') && form.watch('term_options') && form.watch('term_options').length > 0
-                  ? (Number(form.watch('credit_value')) / Math.max(...form.watch('term_options'))).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-                  : '-'}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <FormLabel>Valor da parcela cheia</FormLabel>
+                <div className="font-bold text-lg">{parcelaCheia.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+              </div>
+              <div>
+                <FormLabel>Valor da parcela especial</FormLabel>
+                <div className="font-bold text-lg">{parcelaEspecial.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
               </div>
             </div>
 
