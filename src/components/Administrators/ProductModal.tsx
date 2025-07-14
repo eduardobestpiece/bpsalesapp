@@ -431,18 +431,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               </div>
             </div>
 
-            {/* NOVO CAMPO: Tipo de Parcela */}
-            <div>
-              <FormLabel>Tipo de Parcela</FormLabel>
-              <div className="flex flex-col gap-2 mt-2">
-                <div className="font-medium">Parcela Cheia</div>
-                {/* Buscar e exibir as parcelas especiais */}
-                {installmentTypes.filter(it => form.watch('installment_types').includes(it.id)).map(it => (
-                  <ParcelasEspeciaisOpcoes key={it.id} installmentTypeId={it.id} />
-                ))}
-              </div>
-            </div>
-
             <div className="flex justify-end space-x-2 pt-4">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
@@ -457,37 +445,3 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     </Dialog>
   );
 };
-
-function ParcelasEspeciaisOpcoes({ installmentTypeId }: { installmentTypeId: string }) {
-  const [reducoes, setReducoes] = React.useState<any[]>([]);
-  React.useEffect(() => {
-    async function fetchReducoes() {
-      // Buscar as reduções associadas a este installment_type
-      const { data: rels } = await supabase
-        .from('installment_type_reductions')
-        .select('installment_reduction_id')
-        .eq('installment_type_id', installmentTypeId);
-      if (!rels || rels.length === 0) {
-        setReducoes([]);
-        return;
-      }
-      // Buscar dados das reduções
-      const ids = rels.map(r => r.installment_reduction_id);
-      const { data: reducoesData } = await supabase
-        .from('installment_reductions')
-        .select('id, name')
-        .in('id', ids)
-        .eq('is_archived', false);
-      setReducoes(reducoesData || []);
-    }
-    fetchReducoes();
-  }, [installmentTypeId]);
-  if (!reducoes || reducoes.length === 0) return null;
-  return (
-    <>
-      {reducoes.map(red => (
-        <div key={red.id} className="font-medium text-blue-700">Parcela Especial: {red.name}</div>
-      ))}
-    </>
-  );
-}

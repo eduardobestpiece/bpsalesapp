@@ -185,20 +185,18 @@ Checklist:
 - Cálculo da parcela especial validado.
 - Deploy realizado para produção. 
 
-# Requisição em andamento - 2024-07-10
+# Requisição em andamento - 2024-07-10 (atualização)
 
-## Problemas relatados
-- Sistema acusa duplicidade de produto mesmo quando o valor do crédito é diferente.
-- Campo "Tipo de Parcela" deve exibir sempre "Parcela Cheia" e as "Parcelas Especiais" das parcelas selecionadas.
+## Ajustes solicitados
+- **Remover** o campo “Tipo de Parcela” e tudo abaixo dele do modal de criação/edição de produto.
+- **No Simulador:** o campo “Tipo de Parcela” deve exibir as opções de “Redução de Parcela” registradas para a administradora selecionada (tabela installment_reductions).
 
 ## Ações planejadas
-1. Corrigir verificação de duplicidade para considerar também o valor do crédito.
-2. Ajustar campo "Tipo de Parcela" para exibir:
-   - Sempre "Parcela Cheia"
-   - E as "Parcelas Especiais" associadas às parcelas selecionadas
-3. Testar o fluxo corrigido
-4. Executar deploy
-5. Solicitar validação do usuário
+1. Remover campo “Tipo de Parcela” do modal de produto.
+2. Ajustar campo “Tipo de Parcela” do simulador para buscar reduções da administradora.
+3. Testar o fluxo corrigido.
+4. Executar deploy.
+5. Solicitar validação do usuário.
 
 ---
 

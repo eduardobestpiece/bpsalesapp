@@ -492,3 +492,7 @@ Próximos passos:
 - Edição de parcela: reduções aparecem e são marcadas corretamente.
 - Edição de produto: parcelas aparecem marcadas, dados carregam corretamente, cálculo da redução funciona.
 - Deploy realizado para produção.
+
+- 2024-07-10: Corrigida a verificação de duplicidade de produto para considerar também o valor do crédito (credit_value), evitando bloqueio indevido ao cadastrar produtos com valores diferentes.
+- 2024-07-10: Campo 'Tipo de Parcela' no modal de produto agora exibe sempre a opção 'Parcela Cheia' e, para cada parcela selecionada, as 'Parcelas Especiais' associadas (nome da redução).
+- 2024-07-10: Deploy automático realizado após as alterações.

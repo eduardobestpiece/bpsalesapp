@@ -71,6 +71,26 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   const [adminTaxPercent, setAdminTaxPercent] = useState<number | undefined>(undefined);
   const [reserveFundPercent, setReserveFundPercent] = useState<number | undefined>(undefined);
 
+  // Estado para reduções de parcela
+  const [reducoesParcela, setReducoesParcela] = useState<any[]>([]);
+
+  // Buscar reduções de parcela da administradora selecionada
+  useEffect(() => {
+    async function fetchReducoes() {
+      if (!simulationData.administrator) {
+        setReducoesParcela([]);
+        return;
+      }
+      const { data: reducoes } = await supabase
+        .from('installment_reductions')
+        .select('id, name')
+        .eq('administrator_id', simulationData.administrator)
+        .eq('is_archived', false);
+      setReducoesParcela(reducoes || []);
+    }
+    fetchReducoes();
+  }, [simulationData.administrator]);
+
   // Atualizar ao receber do painel de dados
   useEffect(() => {
     if (simulationData.adminTaxPercent !== undefined) setAdminTaxPercent(simulationData.adminTaxPercent);
@@ -134,8 +154,9 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="full">Parcela Cheia</SelectItem>
-              <SelectItem value="half">Meia Parcela</SelectItem>
-              <SelectItem value="reduced">Parcela Reduzida</SelectItem>
+              {reducoesParcela.map((red: any) => (
+                <SelectItem key={red.id} value={red.id}>{red.name}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
