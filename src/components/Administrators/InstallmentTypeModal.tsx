@@ -29,6 +29,7 @@ import MultiSelect from '@/components/ui/multiselect';
 import { CreateAdministratorModal } from '@/components/Administrators/AdministratorModal';
 
 const installmentTypeSchema = z.object({
+  type: z.enum(['full', 'half', 'reduced'], { required_error: 'Tipo da parcela é obrigatório' }),
   administrator_id: z.string().min(1, 'Administradora é obrigatória'),
   installment_count: z.number().min(1, 'Número de parcelas é obrigatório'),
   admin_tax_percent: z.number().min(0).max(100),
@@ -63,6 +64,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
   const form = useForm<any>({
     resolver: zodResolver(installmentTypeSchema),
     defaultValues: {
+      type: installmentType?.type || 'full',
       administrator_id: installmentType?.administrator_id || '',
       installment_count: installmentType?.installment_count || 1,
       admin_tax_percent: installmentType?.admin_tax_percent || 0,
@@ -81,6 +83,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
       // Resetar valores do formulário ao abrir para edição
       if (installmentType) {
         form.reset({
+          type: installmentType.type || 'full',
           administrator_id: installmentType.administrator_id || '',
           installment_count: installmentType.installment_count || 1,
           admin_tax_percent: installmentType.admin_tax_percent || 0,
@@ -92,6 +95,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
         });
       } else {
         form.reset({
+          type: 'full',
           administrator_id: '',
           installment_count: 1,
           admin_tax_percent: 0,
@@ -139,6 +143,10 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
         toast({ title: 'Empresa não selecionada!', variant: 'destructive' });
         return;
       }
+      if (!data.type) {
+        toast({ title: 'Tipo da parcela é obrigatório!', variant: 'destructive' });
+        return;
+      }
       if (!data.administrator_id) {
         toast({ title: 'Administradora é obrigatória!', variant: 'destructive' });
         return;
@@ -166,6 +174,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
       }
       const cleanData = {
         name: name, // Usar o nome gerado automaticamente
+        type: data.type,
         administrator_id: data.administrator_id,
         installment_count: data.installment_count,
         admin_tax_percent: data.admin_tax_percent,
@@ -224,6 +233,28 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tipo da Parcela</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione o tipo" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="full">Parcela Cheia</SelectItem>
+                      <SelectItem value="half">Meia Parcela</SelectItem>
+                      <SelectItem value="reduced">Parcela Reduzida</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="administrator_id"
