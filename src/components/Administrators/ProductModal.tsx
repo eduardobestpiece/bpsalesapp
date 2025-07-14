@@ -188,7 +188,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     // Cálculo Parcela Cheia (mantém igual)
     const valorCheia = (credit + ((credit * taxaAdm / 100) + (credit * fundoReserva / 100) + (credit * seguro / 100))) / nParcelas;
     setParcelaCheia(valorCheia);
-    // Cálculo Parcela Especial (lógica detalhada)
+    // Cálculo Parcela Especial (lógica detalhada do usuário)
     const principal = aplicaParcela ? credit - (credit * percentualReducao) : credit;
     const taxa = aplicaTaxaAdm ? (credit * taxaAdm / 100) - ((credit * taxaAdm / 100) * percentualReducao) : (credit * taxaAdm / 100);
     const fundo = aplicaFundoReserva ? (credit * fundoReserva / 100) - ((credit * fundoReserva / 100) * percentualReducao) : (credit * fundoReserva / 100);
