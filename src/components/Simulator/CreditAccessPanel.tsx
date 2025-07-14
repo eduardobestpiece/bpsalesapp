@@ -211,7 +211,8 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
           // Lógica inteligente para aporte (soma das parcelas) e crédito (soma dos créditos)
           if (data.searchType === 'contribution' || data.searchType === 'credit') {
             const sortedProducts = [...availableProducts].sort((a, b) => b.credit_value - a.credit_value);
-            const produtosComParcelas = sortedProducts.map(product => {
+            // Tornar o map assíncrono e usar Promise.all
+            const produtosComParcelas = (await Promise.all(sortedProducts.map(async product => {
               let installment = null;
               if (Array.isArray(product.installment_types)) {
                 for (const it of product.installment_types) {
@@ -237,7 +238,7 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
                 installment,
                 parcela: data.installmentType === 'full' ? parcelas.full : parcelas.special
               };
-            }).filter(Boolean);
+            }))).filter(Boolean);
             // Algoritmo de combinação com repetição (mochila simples)
             let melhorCombinacao = [];
             let melhorDiferenca = Infinity;

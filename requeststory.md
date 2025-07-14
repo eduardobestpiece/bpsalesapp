@@ -321,3 +321,14 @@ Correção do bug no simulador onde a consulta para a tabela `installment_reduct
 
 ### Próximos passos
 - Solicitar ao usuário que atualize a página, realize uma simulação e verifique se agora a plataforma sugere a melhor combinação de créditos possível. 
+
+## 2024-07-10 - Correção de erro de build Vercel
+
+- Problema: Uso de 'await' fora de função 'async' em `src/components/Simulator/CreditAccessPanel.tsx` (linha 228).
+- Ação: Tornar a função/callback que contém o 'await buscarReducao' uma função async.
+- Checklist:
+  - [x] Localizar e corrigir o uso de 'await' fora de função 'async'
+  - [ ] Verificar outros usos de 'await' no arquivo
+  - [ ] Testar build localmente (opcional)
+  - [ ] Realizar deploy
+  - [ ] Solicitar validação 
