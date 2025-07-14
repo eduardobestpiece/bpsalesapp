@@ -167,6 +167,7 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
   };
 
   // NOVA LÓGICA: Sugerir combinação de créditos cuja soma das parcelas fique mais próxima do valor de aporte digitado
+  console.log('[DEBUG] availableProducts:', availableProducts);
   const sortedProducts = [...availableProducts].sort((a, b) => b.credit_value - a.credit_value);
   if (data.searchType === 'contribution' || data.searchType === 'credit') {
     // Montar lista de produtos com valor de parcela reduzida
@@ -197,6 +198,7 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
         parcela: isParcelaCheia ? parcelas.full : parcelas.special
       };
     }).filter(Boolean);
+    console.log('[DEBUG] produtosComParcelas:', produtosComParcelas);
 
     // Algoritmo guloso: adicionar produtos até chegar o mais próximo possível do valor de aporte
     let melhorDiferenca = Infinity;
