@@ -531,3 +531,9 @@ Próximos passos:
 
 - Refatorada a função de sugestão inteligente de créditos para buscar reduções de parcela em paralelo (Promise.all), eliminando lentidão ao selecionar produtos ou trocar tipo de parcela.
 - Experiência do usuário muito mais fluida e sem travamentos.
+
+## 2024-07-10 - Remoção da sugestão automática de cotas
+
+- Removida toda a lógica de sugestão automática de combinação de cotas (funções de combinação e debugs).
+- Montagem de cotas agora é feita apenas manualmente pelo usuário.
+- Código mais limpo e sem processamento desnecessário.
