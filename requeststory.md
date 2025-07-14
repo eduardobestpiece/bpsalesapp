@@ -360,7 +360,10 @@ Correção do bug no simulador onde a consulta para a tabela `installment_reduct
 
 - Substituir "Valor do aporte" por "Acréscimo no Aporte" (soma dos aportes dos créditos selecionados menos o valor de aporte do cliente).
 - Substituir "Diferença" por "Acréscimo no Crédito" (soma dos créditos selecionados menos o valor de crédito acessado).
-- Unificar o layout dos cards de resumo (Crédito Acessado, Valor da Parcela, Taxa anual, Atualização anual, Total do Crédito, Total da Parcela, Acréscimo no Aporte, Acréscimo no Crédito) acima da lista de créditos selecionados.
+- Unificar o layout dos cards de resumo em duas linhas:
+  - Primeira linha: "Crédito Acessado", "Valor da Parcela", "Taxa anual", "Atualização anual".
+  - Segunda linha: "Total do Crédito", "Total da Parcela", "Acréscimo no Aporte", "Acréscimo no Crédito" (só aparece após selecionar o primeiro produto).
+  - Os cards da segunda linha só ficam verdes se o total dos créditos for igual ou maior ao "Crédito Acessado".
 - Cards de acréscimo devem aparecer em destaque positivo.
 - Ajustar o layout visual para destacar o aumento de aporte/crédito como benefício.
 - Solicitação registrada e ajustes em andamento. 

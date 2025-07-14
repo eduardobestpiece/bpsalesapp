@@ -667,18 +667,23 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
     <div className="space-y-6">
       {/* Painel de resumo */}
       {/* Cards de resumo acima da montagem de cotas */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
+      {/* Primeira linha de cards de resumo */}
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <ResumoCard titulo="Crédito Acessado" valor={formatCurrency(creditoAcessado)} />
         <ResumoCard titulo="Valor da Parcela" valor={formatCurrency(valorParcela)} />
         <ResumoCard titulo="Taxa anual" valor={taxaAnual + '%'} />
         <ResumoCard titulo="Atualização anual" valor={atualizacaoAnual} />
-        <ResumoCard titulo="Total do Crédito" valor={formatCurrency(totalCotas)} />
-        <ResumoCard titulo="Total da Parcela" valor={formatCurrency(totalParcela)} />
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4 mb-6">
-        <ResumoCard titulo="Acréscimo no Aporte" valor={formatCurrency(acrescimoAporte)} destaquePositivo />
-        <ResumoCard titulo="Acréscimo no Crédito" valor={formatCurrency(acrescimoCredito)} destaquePositivo />
-      </div>
+
+      {/* Segunda linha de cards de resumo, só aparece se houver pelo menos um produto selecionado */}
+      {cotas.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <ResumoCard titulo="Total do Crédito" valor={formatCurrency(totalCotas)} destaquePositivo={totalCotas >= creditoAcessado} />
+          <ResumoCard titulo="Total da Parcela" valor={formatCurrency(totalParcela)} destaquePositivo={totalCotas >= creditoAcessado} />
+          <ResumoCard titulo="Acréscimo no Aporte" valor={formatCurrency(acrescimoAporte)} destaquePositivo={totalCotas >= creditoAcessado} />
+          <ResumoCard titulo="Acréscimo no Crédito" valor={formatCurrency(acrescimoCredito)} destaquePositivo={totalCotas >= creditoAcessado} />
+        </div>
+      )}
       {/* Seção de Montagem de Cotas */}
       <Card>
         <CardHeader>

@@ -514,3 +514,9 @@ Próximos passos:
 - Cards de acréscimo aparecem em destaque positivo (verde).
 - Layout visual padronizado conforme cards superiores.
 - Ajuste visual e semântico para destacar o aumento de aporte/crédito como benefício.
+
+## 2024-07-10 - Ajuste visual dos cards de resumo (Montagem de Cotas)
+
+- Primeira linha de cards: "Crédito Acessado", "Valor da Parcela", "Taxa anual", "Atualização anual".
+- Segunda linha: "Total do Crédito", "Total da Parcela", "Acréscimo no Aporte", "Acréscimo no Crédito" (só aparece após selecionar o primeiro produto).
+- Os cards da segunda linha só ficam verdes se o total dos créditos for igual ou maior ao "Crédito Acessado".
