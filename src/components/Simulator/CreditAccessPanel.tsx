@@ -208,7 +208,91 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
           setAvailableProducts(products || []);
           console.log('[DEBUG] setAvailableProducts chamado:', products);
 
-          if (products && products.length > 0) {
+          if (data.searchType === 'contribution' || data.searchType === 'credit') {
+            const sortedProducts = [...availableProducts].sort((a, b) => b.credit_value - a.credit_value);
+            const produtosComParcelas = sortedProducts.map(product => {
+              let installment = null;
+              if (Array.isArray(product.installment_types)) {
+                for (const it of product.installment_types) {
+                  const real = it.installment_types || it;
+                  if (real.installment_count === data.term) {
+                    installment = real;
+                    break;
+                  }
+                }
+              }
+              if (!installment) return null;
+              const parcelas = calcularParcelasProduto({
+                credit: product.credit_value,
+                installment,
+                reduction: null
+              });
+              return {
+                product,
+                installment,
+                parcela: data.installmentType === 'full' ? parcelas.full : parcelas.special
+              };
+            }).filter(Boolean);
+            // Algoritmo de combinação com repetição (mochila simples)
+            let melhorCombinacao = [];
+            let melhorDiferenca = Infinity;
+            let melhorSoma = 0;
+            const maxIter = 20; // Limite para evitar laço infinito
+            if (produtosComParcelas.length > 0) {
+              // Testar combinações de 1 até maxIter produtos
+              for (let totalItens = 1; totalItens <= maxIter; totalItens++) {
+                // Gera todas as combinações possíveis com repetição
+                const stack = [[]];
+                while (stack.length) {
+                  const combo = stack.pop();
+                  if (combo.length === totalItens) {
+                    // Calcular soma
+                    let somaParcelas = 0;
+                    let somaCreditos = 0;
+                    combo.forEach(idx => {
+                      somaParcelas += produtosComParcelas[idx].parcela;
+                      somaCreditos += produtosComParcelas[idx].product.credit_value;
+                    });
+                    let diff;
+                    if (data.searchType === 'contribution') {
+                      diff = somaParcelas - data.value;
+                      if (diff >= 0 && diff < melhorDiferenca) {
+                        melhorDiferenca = diff;
+                        melhorCombinacao = combo.slice();
+                        melhorSoma = somaParcelas;
+                      }
+                    } else {
+                      diff = somaCreditos - data.value;
+                      if (diff >= 0 && diff < melhorDiferenca) {
+                        melhorDiferenca = diff;
+                        melhorCombinacao = combo.slice();
+                        melhorSoma = somaCreditos;
+                      }
+                    }
+                    continue;
+                  }
+                  for (let i = 0; i < produtosComParcelas.length; i++) {
+                    stack.push([...combo, i]);
+                  }
+                }
+                // Se já encontrou uma combinação, para
+                if (melhorCombinacao.length > 0) break;
+              }
+            }
+            // Montar créditos sugeridos
+            const credits = melhorCombinacao.map((idx, i) => {
+              const item = produtosComParcelas[idx];
+              return {
+                id: item.product.id + '-' + i,
+                name: item.product.name,
+                creditValue: item.product.credit_value,
+                installmentValue: item.parcela,
+                selected: true
+              };
+            });
+            console.log('[DEBUG] Créditos sugeridos (inteligente):', credits);
+            setCredits(credits);
+          } else {
             const calculatedCredits = await sugerirMultiplosCreditos(products, data);
             setCredits(calculatedCredits);
           }
