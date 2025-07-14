@@ -141,3 +141,20 @@ Checklist:
 - [ ] Testar alterações
 - [ ] Deploy
 - [ ] Solicitar validação 
+
+# Solicitação em andamento (10/07/2024)
+
+**Ajuste no Modal de Produto - Cálculo da Parcela Especial e Multiseleção**
+
+- Permitir multiseleção no campo "Parcelas" e permitir marcar uma como padrão.
+- O cálculo do campo "Valor da parcela cheia" permanece igual.
+- O cálculo do campo "Valor da parcela especial" deve seguir a lógica detalhada pelo usuário, considerando as flags de aplicação da redução para cada componente (principal, taxa de administração, fundo de reserva, seguro).
+- Se não houver parcela padrão selecionada, usar a de maior prazo.
+- Testar com os dados fornecidos (Magalu, 240 meses, 27% taxa adm, 1% fundo reserva, 1% seguro, redução 50% só na parcela, crédito 500.000).
+
+Checklist:
+- [ ] Ajustar campo de parcelas para multiseleção e seleção de padrão
+- [ ] Implementar cálculo correto da parcela especial conforme regras
+- [ ] Garantir fallback para maior prazo se não houver padrão
+- [ ] Testar com os dados fornecidos
+- [ ] Atualizar histórico e preparar para deploy 

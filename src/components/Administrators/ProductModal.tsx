@@ -39,6 +39,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   const [installmentTypes, setInstallmentTypes] = useState<any[]>([]);
   const [parcelaCheia, setParcelaCheia] = useState(0);
   const [parcelaEspecial, setParcelaEspecial] = useState(0);
+  // Adicionar estado para parcela padrão
+  const [parcelaPadraoId, setParcelaPadraoId] = useState<string | null>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -84,12 +86,13 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       // Gerar nome automaticamente
       const tipoLabel = data.type === 'property' ? 'Imóvel' : data.type === 'car' ? 'Veículo' : 'Serviço';
       const nomeAuto = `R$ ${Number(data.credit_value).toLocaleString('pt-BR', {minimumFractionDigits: 2})} (${tipoLabel})`;
+      // No onSubmit, garantir que installment_types é array de strings
       const cleanedData = {
         name: nomeAuto,
         type: data.type,
         administrator_id: data.administrator_id || null,
         credit_value: data.credit_value,
-        installment_types: data.installment_types,
+        installment_types: Array.isArray(data.installment_types) ? data.installment_types : [data.installment_types],
       };
 
       // Verificar duplicidade
@@ -161,25 +164,38 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       setParcelaEspecial(0);
       return;
     }
-    // Usar a maior parcela selecionada para cálculo
-    const parcelaPadrao = selectedInstallments.reduce((max, curr) =>
-      (curr.installment_count > (max?.installment_count || 0) ? curr : max), selectedInstallments[0]);
+    // Usar a parcela padrão, ou a de maior prazo se não houver
+    let parcelaPadrao = selectedInstallments.find(it => it.id === parcelaPadraoId);
+    if (!parcelaPadrao) {
+      parcelaPadrao = selectedInstallments.reduce((max, curr) =>
+        (curr.installment_count > (max?.installment_count || 0) ? curr : max), selectedInstallments[0]);
+    }
     const nParcelas = parcelaPadrao.installment_count;
     const taxaAdm = parcelaPadrao.admin_tax_percent || 0;
     const fundoReserva = parcelaPadrao.reserve_fund_percent || 0;
     const seguro = parcelaPadrao.optional_insurance ? 0 : (parcelaPadrao.insurance_percent || 0);
     // Buscar redução de parcela associada
-    let percentualReducao = 1;
-    if (parcelaPadrao.id) {
-      percentualReducao = parcelaPadrao.reduction_percent ? parcelaPadrao.reduction_percent / 100 : 1;
+    let percentualReducao = 0;
+    let aplicaParcela = false, aplicaTaxaAdm = false, aplicaFundoReserva = false, aplicaSeguro = false;
+    if (parcelaPadrao.reduction_percent) {
+      percentualReducao = parcelaPadrao.reduction_percent / 100;
+      // Flags de aplicação (ajuste conforme estrutura real)
+      aplicaParcela = parcelaPadrao.reduces_credit || false;
+      aplicaTaxaAdm = parcelaPadrao.reduces_admin_tax || false;
+      aplicaFundoReserva = parcelaPadrao.reduces_reserve_fund || false;
+      aplicaSeguro = parcelaPadrao.reduces_insurance || false;
     }
-    // Cálculo Parcela Cheia
+    // Cálculo Parcela Cheia (mantém igual)
     const valorCheia = (credit + ((credit * taxaAdm / 100) + (credit * fundoReserva / 100) + (credit * seguro / 100))) / nParcelas;
     setParcelaCheia(valorCheia);
-    // Cálculo Parcela Especial
-    const valorEspecial = (credit + (((credit * taxaAdm / 100) / percentualReducao) + ((credit * fundoReserva / 100) / percentualReducao) + ((credit * seguro / 100) / percentualReducao))) / nParcelas;
+    // Cálculo Parcela Especial (lógica detalhada)
+    const principal = aplicaParcela ? credit - (credit * percentualReducao) : credit;
+    const taxa = aplicaTaxaAdm ? (credit * taxaAdm / 100) - ((credit * taxaAdm / 100) * percentualReducao) : (credit * taxaAdm / 100);
+    const fundo = aplicaFundoReserva ? (credit * fundoReserva / 100) - ((credit * fundoReserva / 100) * percentualReducao) : (credit * fundoReserva / 100);
+    const seguroValor = aplicaSeguro ? (credit * seguro / 100) - ((credit * seguro / 100) * percentualReducao) : (credit * seguro / 100);
+    const valorEspecial = (principal + taxa + fundo + seguroValor) / nParcelas;
     setParcelaEspecial(valorEspecial);
-  }, [form.watch('credit_value'), form.watch('installment_types'), installmentTypes]);
+  }, [form.watch('credit_value'), form.watch('installment_types'), installmentTypes, parcelaPadraoId]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -269,18 +285,37 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Parcelas *</FormLabel>
-                  <Select multiple value={field.value} onValueChange={field.onChange}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione as parcelas" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {installmentTypes.map((it) => (
-                        <SelectItem key={it.id} value={it.id}>{it.name || it.installment_count}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <div className="flex flex-col gap-2">
+                    {installmentTypes.filter(it => field.value.includes(it.id)).length === 0 && (
+                      <Select multiple value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione as parcelas" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {installmentTypes.map((it) => (
+                            <SelectItem key={it.id} value={it.id}>{it.name || it.installment_count}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                    {/* Exibir opções selecionadas com radio para padrão */}
+                    {installmentTypes.filter(it => field.value.includes(it.id)).map((it) => (
+                      <div key={it.id} className="flex items-center gap-2">
+                        <input
+                          type="radio"
+                          name="parcelaPadrao"
+                          checked={parcelaPadraoId === it.id}
+                          onChange={() => setParcelaPadraoId(it.id)}
+                        />
+                        <span>{it.name || `${it.installment_count} meses`}</span>
+                        <Button size="sm" variant="ghost" onClick={() => field.onChange(field.value.filter((v: string) => v !== it.id))}>
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}

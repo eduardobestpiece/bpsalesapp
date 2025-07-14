@@ -929,7 +929,7 @@ export type Database = {
           is_archived?: boolean | null
           name: string
           reserve_fund_percent?: number | null
-          term_options: number[]
+          term_options?: number[]
           type: string
           updated_at?: string
         }
