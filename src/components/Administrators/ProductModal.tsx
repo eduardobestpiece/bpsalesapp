@@ -99,7 +99,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         // NÃO incluir installment_types aqui
       };
 
-      // Verificar duplicidade
+      // Verificar duplicidade considerando parcelas
       let dupQuery = supabase
         .from('products')
         .select('id')
@@ -108,9 +108,25 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       if (product?.id) {
         dupQuery = dupQuery.neq('id', product.id);
       }
-      const { data: existing, error: dupError } = await dupQuery.maybeSingle();
-      if (existing) {
-        toast.error('Já existe um produto com este tipo para esta administradora.');
+      const { data: existingProducts, error: dupError } = await dupQuery;
+      let isDuplicate = false;
+      if (existingProducts && existingProducts.length > 0) {
+        // Para cada produto existente, buscar as parcelas associadas
+        for (const prod of existingProducts) {
+          const { data: rels } = await supabase
+            .from('product_installment_types')
+            .select('installment_type_id')
+            .eq('product_id', prod.id);
+          const existingInstallments = rels ? rels.map((r: any) => r.installment_type_id).sort() : [];
+          const newInstallments = [...data.installment_types].sort();
+          if (JSON.stringify(existingInstallments) === JSON.stringify(newInstallments)) {
+            isDuplicate = true;
+            break;
+          }
+        }
+      }
+      if (isDuplicate) {
+        toast.error('Já existe um produto com este tipo, administradora e mesmas parcelas.');
         return;
       }
 
@@ -417,7 +433,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit" className="bg-amber-600 hover:bg-amber-700">
+              <Button type="submit">
                 {product ? 'Atualizar' : 'Criar'}
               </Button>
             </div>
