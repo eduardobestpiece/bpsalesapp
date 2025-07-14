@@ -502,3 +502,5 @@ Próximos passos:
 - 2024-07-10: Adicionados os campos 'Taxa de Administração Anual' e 'Atualização anual' no bloco de resultados da aba Crédito Acessado do simulador.
 - 2024-07-10: Ajustada a busca/listagem de créditos para considerar o valor da parcela especial quando o tipo de parcela não for 'cheia'.
 - 2024-07-10: Deploy automático realizado após as alterações.
+- 2024-07-10: O cálculo da parcela no simulador agora utiliza exatamente a mesma lógica do modal de produto, inclusive para parcela especial/reduzida, garantindo valores idênticos.
+- 2024-07-10: Deploy automático realizado após as alterações.

@@ -76,17 +76,18 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
     return reducoes[0];
   };
 
-  // Ajustar a seleção de créditos conforme tipo de parcela
-  const calculateBestCreditCombination = async (products: any[], simulationData: SimulationData): Promise<Credit[]> => {
+  // Função para sugerir múltiplos créditos para atingir o valor desejado
+  const sugerirMultiplosCreditos = async (products: any[], simulationData: SimulationData): Promise<Credit[]> => {
     const targetValue = simulationData.value;
-    const isContributionSearch = simulationData.searchType === 'contribution';
     const isParcelaCheia = simulationData.installmentType === 'full';
-    let bestMatch = products[0];
-    let bestDifference = Infinity;
-    let bestParcelas = { full: 0, special: 0 };
-    for (const product of products) {
+    // Ordenar produtos do maior para o menor valor
+    const sortedProducts = [...products].sort((a, b) => b.credit_value - a.credit_value);
+    let remaining = targetValue;
+    const credits: Credit[] = [];
+    for (const product of sortedProducts) {
       // Buscar installment correspondente ao prazo
-      const installment = product.installment_types?.find((it: any) => it.installment_count === simulationData.term) || {};
+      const installment = product.installment_types?.find((it: any) => it.installment_count === simulationData.term) || null;
+      if (!installment) continue;
       let reduction = null;
       if (!isParcelaCheia && installment.id) {
         reduction = await buscarReducao(installment.id);
@@ -96,39 +97,44 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
         installment,
         reduction: !isParcelaCheia ? reduction : null
       });
-      const compareValue = isContributionSearch 
-        ? (isParcelaCheia ? parcelas.full : parcelas.special)
-        : product.credit_value;
-      const difference = Math.abs(compareValue - targetValue);
-      if (difference < bestDifference) {
-        bestDifference = difference;
-        bestMatch = product;
-        bestParcelas = parcelas;
+      while (remaining >= product.credit_value - 1) { // margem para arredondamento
+        credits.push({
+          id: product.id + '-' + credits.length,
+          name: product.name,
+          creditValue: product.credit_value,
+          installmentValue: isParcelaCheia ? parcelas.full : parcelas.special,
+          selected: true
+        });
+        remaining -= product.credit_value;
       }
     }
-    // Para o produto selecionado, buscar installment e redução e calcular corretamente
-    const installment = bestMatch.installment_types?.find((it: any) => it.installment_count === simulationData.term) || {};
-    let reduction = null;
-    if (!isParcelaCheia && installment.id) {
-      reduction = await buscarReducao(installment.id);
-    }
-    const parcelas = calcularParcelasProduto({
-      credit: bestMatch.credit_value,
-      installment,
-      reduction: !isParcelaCheia ? reduction : null
-    });
-    return [
-      {
-        id: bestMatch.id,
-        name: bestMatch.name,
-        creditValue: bestMatch.credit_value,
-        installmentValue: isParcelaCheia ? parcelas.full : parcelas.special,
-        selected: true
+    // Se sobrou algum valor, tentar encaixar o menor produto
+    if (remaining > 0.01) {
+      const menor = sortedProducts[sortedProducts.length - 1];
+      const installment = menor.installment_types?.find((it: any) => it.installment_count === simulationData.term) || null;
+      if (installment) {
+        let reduction = null;
+        if (!isParcelaCheia && installment.id) {
+          reduction = await buscarReducao(installment.id);
+        }
+        const parcelas = calcularParcelasProduto({
+          credit: menor.credit_value,
+          installment,
+          reduction: !isParcelaCheia ? reduction : null
+        });
+        credits.push({
+          id: menor.id + '-resto',
+          name: menor.name,
+          creditValue: menor.credit_value,
+          installmentValue: isParcelaCheia ? parcelas.full : parcelas.special,
+          selected: true
+        });
       }
-    ];
+    }
+    return credits;
   };
 
-  // Atualizar para usar a função assíncrona
+  // Atualizar para usar a função de múltiplos créditos
   useEffect(() => {
     if (data.administrator && data.value > 0) {
       (async () => {
@@ -145,7 +151,7 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
           setAvailableProducts(products || []);
 
           if (products && products.length > 0) {
-            const calculatedCredits = await calculateBestCreditCombination(products, data);
+            const calculatedCredits = await sugerirMultiplosCreditos(products, data);
             setCredits(calculatedCredits);
           }
         } catch (error) {
@@ -245,12 +251,34 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
   const totalCredit = selectedCredits.reduce((sum, c) => sum + c.creditValue, 0);
   const totalInstallment = selectedCredits.reduce((sum, c) => sum + c.installmentValue, 0);
 
-  // Cálculo dos campos extras
-  const taxaAnual = data.adminTaxPercent && data.term ? ((data.adminTaxPercent / data.term) * 12) : null;
+  // Ajustar cálculo de taxas anual e atualização anual
+  let taxaTotalPercent = 0;
+  if (credits.length > 0) {
+    // Considerar o primeiro crédito como referência (todos devem ser iguais)
+    const first = credits[0];
+    const product = availableProducts.find(p => p.id === first.id.split('-')[0]);
+    if (product) {
+      const installment = product.installment_types?.find((it: any) => it.installment_count === data.term) || null;
+      if (installment) {
+        taxaTotalPercent = (installment.admin_tax_percent || 0) + (installment.reserve_fund_percent || 0);
+      }
+    }
+  }
+  const taxasAnual = taxaTotalPercent && data.term ? ((taxaTotalPercent / data.term) * 12) : null;
   let textoAtualizacao = '-';
-  if (data.consortiumType === 'property') textoAtualizacao = 'INCC';
-  else if (data.consortiumType === 'vehicle') textoAtualizacao = 'IPCA';
-  else if (data.updateRate) textoAtualizacao = `Atualização anual: ${data.updateRate.toFixed(2)}%`;
+  let valorAtualizacao = '-';
+  if (credits.length > 0) {
+    if (data.consortiumType === 'property') {
+      textoAtualizacao = 'INCC';
+      valorAtualizacao = '6%';
+    } else if (data.consortiumType === 'vehicle') {
+      textoAtualizacao = 'IPCA';
+      valorAtualizacao = '6%';
+    } else if (data.updateRate) {
+      textoAtualizacao = 'Atualização anual';
+      valorAtualizacao = data.updateRate.toFixed(2) + '%';
+    }
+  }
 
   if (!data.administrator || data.value <= 0) {
     return (
@@ -263,7 +291,7 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
   return (
     <div className="space-y-6">
       {/* Resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="text-sm text-muted-foreground">Crédito Total Acessado</div>
@@ -278,13 +306,19 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
         </Card>
         <Card>
           <CardContent className="p-4">
-            <div className="text-sm text-muted-foreground">Taxa de Administração Anual</div>
-            <div className="text-2xl font-bold text-primary">{taxaAnual !== null ? taxaAnual.toFixed(2) + '%' : '-'}</div>
+            <div className="text-sm text-muted-foreground">Taxas anual</div>
+            <div className="text-2xl font-bold text-primary">{taxasAnual !== null ? taxasAnual.toFixed(2) + '%' : '-'}</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="text-sm text-muted-foreground">Atualização anual</div>
+            <div className="text-2xl font-bold text-primary">{valorAtualizacao}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-sm text-muted-foreground">Índice</div>
             <div className="text-2xl font-bold text-primary">{textoAtualizacao}</div>
           </CardContent>
         </Card>

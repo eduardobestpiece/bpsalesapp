@@ -263,3 +263,27 @@ Checklist:
 ---
 
 **Status:** Em andamento 
+
+# Requisição em andamento - 2024-07-10 (correção múltiplos créditos e cálculos simulador)
+
+## Ajuste solicitado
+- Corrigir a sugestão de múltiplos créditos para atingir o valor desejado, considerando o valor da parcela reduzida ou cheia conforme seleção.
+- Corrigir o cálculo da “Parcela Total” para somar corretamente as parcelas de todos os créditos sugeridos.
+- Ajustar o campo “Taxas anual” para somar taxa de administração + fundo de reserva e calcular conforme a fórmula: (taxa_total / parcelas) * 12.
+- Ajustar o campo “Atualização anual” para mostrar o valor (ex: 6%) e o índice (ex: INCC) em campos separados.
+- Garantir que a lista de créditos e a tabela de detalhamento usem o valor correto da parcela (reduzida ou cheia).
+- Exemplo: Para 2 milhões, 240 meses, reduzida, sugerir 4 créditos de 500 mil, cada um com parcela reduzida de R$ 1.950, totalizando R$ 6.500.
+
+## Ações planejadas
+1. Corrigir sugestão de múltiplos créditos.
+2. Corrigir cálculo da parcela total.
+3. Ajustar campo “Taxas anual”.
+4. Ajustar campo “Atualização anual”.
+5. Corrigir lista de créditos e detalhamento.
+6. Testar o fluxo corrigido.
+7. Executar deploy.
+8. Solicitar validação do usuário.
+
+---
+
+**Status:** Em andamento 
