@@ -119,7 +119,16 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
       cotas,
       tipoParcela,
       parcelaDesejada,
-      // Adicione outros filtros se necessário
+      // Filtros principais
+      searchType: data.searchType,
+      value: data.value,
+      term: data.term,
+      installmentType: data.installmentType,
+      consortiumType: data.consortiumType,
+      bidType: data.bidType,
+      updateRate: data.updateRate,
+      // Filtros do modal de configurações (se existirem)
+      ...(data.configFilters || {})
     };
     // Verifica se já existe
     const { data: configs } = await supabase
@@ -696,15 +705,15 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
                 </div>
               </div>
             ))}
-            {/* Botão para adicionar produto */}
+            {/* Botão principal de adicionar produto */}
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 onClick={() => setShowAddProduct(true)}
-                className="flex-1"
+                className="flex-1 bg-[#A05A2C] text-white hover:bg-[#7a3f1a] border-none"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                Adicionar Produto
+                + Selecionar Crédito
               </Button>
             </div>
             {/* Modal para adicionar produto */}
@@ -712,20 +721,24 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
               <Dialog open={showAddProduct} onOpenChange={setShowAddProduct}>
                 <DialogContent>
                   <DialogHeader>
-                    <DialogTitle>Adicionar Produto</DialogTitle>
+                    <DialogTitle>Selecionar crédito</DialogTitle>
                   </DialogHeader>
-                  <div className="space-y-4">
-                    <select value={selectedProduct} onChange={e => setSelectedProduct(e.target.value)} className="w-full border rounded p-2">
-                      <option value="">Selecione o produto</option>
-                      {availableProducts.map(p => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
-                      ))}
-                    </select>
-                    <Input type="number" min={1} value={addQuantidade} onChange={e => setAddQuantidade(Number(e.target.value))} className="w-full" placeholder="Quantidade" />
-                    <div className="flex gap-2">
-                      <Button onClick={adicionarProduto} className="flex-1 bg-green-600 hover:bg-green-700 text-white">Adicionar</Button>
-                      <Button variant="outline" onClick={() => setShowAddProduct(false)} className="flex-1">Cancelar</Button>
+                  <div className="flex gap-2 items-end mb-4">
+                    <div className="flex-1">
+                      <select value={selectedProduct} onChange={e => setSelectedProduct(e.target.value)} className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-[#A05A2C] focus:border-[#A05A2C] transition-all">
+                        <option value="">Selecione o crédito</option>
+                        {availableProducts.map(p => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                      </select>
                     </div>
+                    <div className="w-32">
+                      <Input type="number" min={1} value={addQuantidade} onChange={e => setAddQuantidade(Number(e.target.value))} className="rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-[#A05A2C] focus:border-[#A05A2C] transition-all" placeholder="Qtd" />
+                    </div>
+                  </div>
+                  <div className="flex gap-2 justify-end">
+                    <Button variant="outline" onClick={() => setShowAddProduct(false)} className="flex-1">Cancelar</Button>
+                    <Button onClick={adicionarProduto} className="flex-1 bg-[#A05A2C] text-white hover:bg-[#7a3f1a] border-none">Adicionar</Button>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -754,17 +767,11 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
               </Dialog>
             )}
             
-            {/* Botões de ação */}
+            {/* Botões de ação embaixo da montagem de cotas */}
             <div className="flex flex-col md:flex-row gap-2 mt-6">
-              <Button onClick={salvarMontagem} disabled={saving} className="flex-1 bg-green-600 hover:bg-green-700 text-white">
-                {saving ? 'Salvando...' : 'Salvar'}
-              </Button>
-              <Button onClick={redefinirMontagem} variant="outline" className="flex-1">
-                Redefinir
-              </Button>
-              <Button onClick={() => setShowComingSoon(true)} variant="outline" className="flex-1">
-                Gerar proposta
-              </Button>
+              <Button onClick={() => setShowComingSoon(true)} className="flex-1 bg-green-600 hover:bg-green-700 text-white">Gerar proposta</Button>
+              <Button onClick={redefinirMontagem} variant="outline" className="flex-1">Redefinir</Button>
+              <Button onClick={salvarMontagem} disabled={saving} className="flex-1 bg-[#A05A2C] text-white hover:bg-[#7a3f1a] border-none">{saving ? 'Salvando...' : 'Salvar'}</Button>
             </div>
           </div>
         </CardContent>

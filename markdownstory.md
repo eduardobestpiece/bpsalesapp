@@ -552,3 +552,11 @@ Próximos passos:
 - Permite adicionar múltiplas cotas de uma vez.
 - Agora é possível selecionar cotas em massa, com barra de ações para excluir ou redefinir.
 - Redefinir abre modal para trocar todas as cotas selecionadas por outro produto e quantidade.
+
+## 2024-07-10 - Ajustes visuais e salvamento completo de filtros
+
+- Ordem dos botões em Montagem de Cotas ajustada: Gerar proposta (verde), Redefinir (cinza), Salvar (marrom ocre).
+- Botão de salvar agora persiste todos os filtros principais e de configurações junto com as cotas.
+- Botão de adicionar produto e botão Salvar usam cor marrom ocre da plataforma.
+- Modal "Selecionar crédito" com layout horizontal, inputs arredondados e bonitos, botões Cancelar (esquerda) e Adicionar (direita).
+- Textos e placeholders ajustados conforme solicitado.

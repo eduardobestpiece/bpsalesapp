@@ -375,3 +375,5 @@ Otimização de performance: busca de reduções de parcela agora em paralelo (P
 Adicionados botões Salvar, Redefinir e Gerar proposta, com persistência por usuário no Supabase e modal 'Em breve'. 
 
 Agora é possível escolher quantidade ao adicionar produto, selecionar cotas em massa, excluir ou redefinir em lote, e redefinir cotas por outro produto via modal. 
+
+Ajustes visuais e funcionais nos botões, modal e salvamento de filtros na montagem de cotas conforme solicitado. 
