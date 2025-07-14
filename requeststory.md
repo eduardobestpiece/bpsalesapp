@@ -184,3 +184,22 @@ Checklist:
 - Reduções e parcelas associadas aparecem corretamente ao editar.
 - Cálculo da parcela especial validado.
 - Deploy realizado para produção. 
+
+# Requisição em andamento - 2024-07-10
+
+## Problemas relatados
+- Sistema acusa duplicidade de produto mesmo quando o valor do crédito é diferente.
+- Campo "Tipo de Parcela" deve exibir sempre "Parcela Cheia" e as "Parcelas Especiais" das parcelas selecionadas.
+
+## Ações planejadas
+1. Corrigir verificação de duplicidade para considerar também o valor do crédito.
+2. Ajustar campo "Tipo de Parcela" para exibir:
+   - Sempre "Parcela Cheia"
+   - E as "Parcelas Especiais" associadas às parcelas selecionadas
+3. Testar o fluxo corrigido
+4. Executar deploy
+5. Solicitar validação do usuário
+
+---
+
+**Status:** Em andamento 
