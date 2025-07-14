@@ -255,6 +255,7 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
             products.forEach(p => console.log('Produto', p.id, 'installment_types:', p.installment_types));
           }
           setAvailableProducts(products || []);
+          console.log('[DEBUG] setAvailableProducts chamado:', products);
 
           if (products && products.length > 0) {
             const calculatedCredits = await sugerirMultiplosCreditos(products, data);
@@ -266,6 +267,16 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
       })();
     }
   }, [data]);
+
+  // Atualizar para usar a função de múltiplos créditos
+  useEffect(() => {
+    if (availableProducts.length > 0 && data.value > 0) {
+      (async () => {
+        const calculatedCredits = await sugerirMultiplosCreditos(availableProducts, data);
+        setCredits(calculatedCredits);
+      })();
+    }
+  }, [availableProducts, data]);
 
   useEffect(() => {
     if (showDetails && credits.length > 0) {
