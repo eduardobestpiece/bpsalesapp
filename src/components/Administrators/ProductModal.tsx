@@ -270,7 +270,13 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     const principal = aplicaParcela ? credit - (credit * percentualReducao) : credit;
     const taxa = aplicaTaxaAdm ? (credit * taxaAdm / 100) - ((credit * taxaAdm / 100) * percentualReducao) : (credit * taxaAdm / 100);
     const fundo = aplicaFundoReserva ? (credit * fundoReserva / 100) - ((credit * fundoReserva / 100) * percentualReducao) : (credit * fundoReserva / 100);
-    const seguroValor = aplicaSeguro ? (credit * seguro / 100) - ((credit * seguro / 100) * percentualReducao) : (credit * seguro / 100);
+    // Seguro só entra se não for opcional
+    let seguroValor = 0;
+    if (!parcelaPadrao.optional_insurance) {
+      seguroValor = aplicaSeguro
+        ? (credit * seguro / 100) - ((credit * seguro / 100) * percentualReducao)
+        : (credit * seguro / 100);
+    }
     const valorEspecial = (principal + taxa + fundo + seguroValor) / nParcelas;
     setParcelaEspecial(valorEspecial);
   }, [form.watch('credit_value'), form.watch('installment_types'), installmentTypes, parcelaPadraoId, reducaoParcela]);
