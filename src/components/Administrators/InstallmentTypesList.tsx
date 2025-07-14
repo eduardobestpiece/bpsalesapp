@@ -244,16 +244,43 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
     return <div className="text-center py-8">Carregando tipos de parcela...</div>;
   }
 
+  // Botão de adicionar sempre visível
+  const addButton = (
+    <div className="flex justify-end mb-4">
+      <Button
+        variant="outline"
+        size="sm"
+        className="bg-gradient-primary text-white"
+        onClick={() => setShowCreateModal(true)}
+      >
+        + Adicionar Tipo de Parcela
+      </Button>
+    </div>
+  );
+
   if (!installmentTypes?.length) {
     return (
       <div className="text-center py-8 text-gray-500">
+        {addButton}
         Nenhum tipo de parcela encontrado.
+        {showCreateModal && (
+          <InstallmentTypeModal
+            open={showCreateModal}
+            onOpenChange={setShowCreateModal}
+            installmentType={null}
+            onSuccess={() => {
+              setShowCreateModal(false);
+              refetch();
+            }}
+          />
+        )}
       </div>
     );
   }
 
   return (
     <div className="space-y-4">
+      {addButton}
       {/* Botão de cópia de tipos de parcelas */}
       {canCopy && (
         <div className="flex justify-end">
@@ -268,14 +295,7 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
           <h2 className="text-2xl font-semibold text-gray-900">Tipos de Parcela</h2>
           <p className="text-gray-600 mt-1">Gerencie os tipos de parcela</p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="bg-gradient-primary text-white"
-          onClick={() => setShowCreateModal(true)}
-        >
-          + Adicionar Tipo de Parcela
-        </Button>
+        {/* Botão de criação de tipos de parcelas */}
       </div>
       <div className="flex flex-col sm:flex-row gap-4 mt-4 mb-2">
         <div className="relative flex-1">
