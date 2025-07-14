@@ -166,6 +166,73 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
     return credits;
   };
 
+  // NOVA LÓGICA: Sugerir combinação de créditos cuja soma das parcelas fique mais próxima do valor de aporte digitado
+  if (data.searchType === 'contribution' || data.searchType === 'credit') {
+    // Montar lista de produtos com valor de parcela reduzida
+    const produtosComParcelas = sortedProducts.map(product => {
+      let installment = null;
+      if (Array.isArray(product.installment_types)) {
+        for (const it of product.installment_types) {
+          const real = it.installment_types || it;
+          if (real.installment_count === data.term) {
+            installment = real;
+            break;
+          }
+        }
+      }
+      if (!installment) return null;
+      let reduction = null;
+      if (!isParcelaCheia && installment.id) {
+        // Aqui não precisa await, pois é só para cálculo rápido
+      }
+      const parcelas = calcularParcelasProduto({
+        credit: product.credit_value,
+        installment,
+        reduction: null // Redução já está aplicada no cálculo do produto
+      });
+      return {
+        product,
+        installment,
+        parcela: isParcelaCheia ? parcelas.full : parcelas.special
+      };
+    }).filter(Boolean);
+
+    // Algoritmo guloso: adicionar produtos até chegar o mais próximo possível do valor de aporte
+    let melhorDiferenca = Infinity;
+    let melhorCombinacao = [];
+    // Testar todas as combinações possíveis (até 2 produtos, pois normalmente são poucos)
+    for (let i = 0; i < produtosComParcelas.length; i++) {
+      const p1 = produtosComParcelas[i];
+      // Testa só p1
+      let soma = p1.parcela;
+      let diff = Math.abs(data.value - soma);
+      if (diff < melhorDiferenca) {
+        melhorDiferenca = diff;
+        melhorCombinacao = [p1];
+      }
+      // Testa p1 + p2
+      for (let j = i + 1; j < produtosComParcelas.length; j++) {
+        const p2 = produtosComParcelas[j];
+        soma = p1.parcela + p2.parcela;
+        diff = Math.abs(data.value - soma);
+        if (diff < melhorDiferenca) {
+          melhorDiferenca = diff;
+          melhorCombinacao = [p1, p2];
+        }
+      }
+    }
+    // Montar créditos sugeridos
+    const credits: Credit[] = melhorCombinacao.map((item, idx) => ({
+      id: item.product.id + '-' + idx,
+      name: item.product.name,
+      creditValue: item.product.credit_value,
+      installmentValue: item.parcela,
+      selected: true
+    }));
+    console.log('[DEBUG] Créditos sugeridos (inteligente):', credits);
+    return credits;
+  }
+
   // Atualizar para usar a função de múltiplos créditos
   useEffect(() => {
     if (data.administrator && data.value > 0) {

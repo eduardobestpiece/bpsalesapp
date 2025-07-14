@@ -314,12 +314,10 @@ Correção do bug no simulador onde a consulta para a tabela `installment_reduct
 ## Data: 2024-07-10
 
 ### Diagnóstico
-- O simulador não sugeria créditos quando o valor de aporte era menor que o valor do menor produto cadastrado.
-- O laço de sugestão nunca era executado, resultando em lista vazia.
+- O simulador exibia apenas o menor produto, mesmo que a soma das parcelas de outros produtos ficasse mais próxima do valor de aporte digitado.
 
 ### Ação executada
-- Ajustada a lógica para sempre sugerir o menor produto disponível, mesmo que o valor de aporte seja menor que o valor do produto.
-- Adicionada mensagem amigável no console caso não haja produto compatível.
+- Implementada lógica inteligente para sugerir a combinação de créditos (até 2 produtos) cuja soma das parcelas reduzidas fique mais próxima do valor de aporte digitado, permitindo múltiplos produtos.
 
 ### Próximos passos
-- Solicitar ao usuário que atualize a página, realize uma simulação e verifique se agora aparece pelo menos o menor produto na lista de créditos. 
+- Solicitar ao usuário que atualize a página, realize uma simulação e verifique se agora a plataforma sugere a melhor combinação de créditos possível. 
