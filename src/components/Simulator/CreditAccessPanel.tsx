@@ -464,7 +464,6 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
   }
 
   // 2. Calcular percentual e valores
-  let percentualUsado = 0;
   let parcelaCheia = 0;
   let parcelaReduzida = 0;
   let taxaAdministracao = 0;
