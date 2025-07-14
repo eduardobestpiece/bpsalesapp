@@ -444,6 +444,57 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
       : produtoBase.percentualSpecial * creditoSugerido;
   }
 
+  // 1. Cálculo dos percentuais e seleção do produto/parcelamento conforme filtros
+  const produtoSelecionado = availableProducts.find(produto => {
+    // Filtros principais
+    if (produto.credit_value !== Number(data.value)) return false;
+    // Filtros adicionais podem ser aplicados aqui se necessário
+    return true;
+  });
+  let installmentSelecionado = null;
+  if (produtoSelecionado && Array.isArray(produtoSelecionado.installment_types)) {
+    for (const it of produtoSelecionado.installment_types) {
+      const real = it.installment_types || it;
+      if (real.installment_count === data.term) {
+        installmentSelecionado = real;
+        break;
+      }
+    }
+  }
+
+  // 2. Cálculo dos percentuais e valores
+  let percentualUsado = 0;
+  let parcelaCheia = 0;
+  let parcelaReduzida = 0;
+  let taxaAdministracao = 0;
+  let taxaAnual = 0;
+  let atualizacaoAnual = '-';
+  let creditoAcessado = 0;
+  let valorParcela = 0;
+  if (produtoSelecionado && installmentSelecionado) {
+    const parcelas = calcularParcelasProduto({
+      credit: produtoSelecionado.credit_value,
+      installment: installmentSelecionado,
+      reduction: null // ou buscar redução se necessário
+    });
+    parcelaCheia = parcelas.full;
+    parcelaReduzida = parcelas.special;
+    percentualUsado = data.installmentType === 'full'
+      ? parcelaCheia / produtoSelecionado.credit_value
+      : parcelaReduzida / produtoSelecionado.credit_value;
+    taxaAdministracao = installmentSelecionado.admin_tax_percent || 0;
+    taxaAnual = (taxaAdministracao / data.term) * 12;
+    if (data.consortiumType === 'property') {
+      atualizacaoAnual = 'INCC ' + (data.updateRate ? data.updateRate.toFixed(2) + '%' : '');
+    } else if (data.consortiumType === 'vehicle') {
+      atualizacaoAnual = 'IPCA ' + (data.updateRate ? data.updateRate.toFixed(2) + '%' : '');
+    }
+    // Crédito acessado: valor da parcela digitada / percentual, arredondado para múltiplo de 20 mil acima
+    valorParcela = data.value;
+    creditoAcessado = valorParcela / percentualUsado;
+    creditoAcessado = Math.ceil(creditoAcessado / 20000) * 20000;
+  }
+
   // 5. Funções para adicionar/remover cotas
   const adicionarCota = () => {
     if (!produtoBase || creditoSugerido === 0) return;
@@ -468,36 +519,32 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
   // 7. Renderização
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row gap-4 items-end">
-        <div>
-          <Label>Tipo de Parcela</Label>
-          <Select value={tipoParcela} onValueChange={v => setTipoParcela(v as 'full' | 'special')}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="full">Parcela Cheia</SelectItem>
-              <SelectItem value="special">Parcela Reduzida</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label>Valor da Parcela Desejada</Label>
-          <input
-            type="number"
-            className="input border rounded px-2 py-1"
-            value={parcelaDesejada}
-            onChange={e => setParcelaDesejada(Number(e.target.value))}
-            min={0}
-          />
-        </div>
-        <div>
-          <Label>Crédito Sugerido</Label>
-          <div className="font-bold">{creditoSugerido > 0 ? formatCurrency(creditoSugerido) : '-'}</div>
-        </div>
-        <div>
-          <Label>Parcela Correspondente</Label>
-          <div className="font-bold">{parcelaCorrespondente > 0 ? formatCurrency(parcelaCorrespondente) : '-'}</div>
-        </div>
-        <Button onClick={adicionarCota} disabled={creditoSugerido === 0}>Adicionar Cota</Button>
+      {/* Painel de resumo */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-sm text-muted-foreground">Crédito Acessado</div>
+            <div className="text-2xl font-bold text-primary">{creditoAcessado > 0 ? formatCurrency(creditoAcessado) : '-'}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-sm text-muted-foreground">Valor da Parcela</div>
+            <div className="text-2xl font-bold text-primary">{valorParcela > 0 ? formatCurrency(valorParcela) : '-'}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-sm text-muted-foreground">Taxa anual</div>
+            <div className="text-2xl font-bold text-primary">{taxaAnual ? taxaAnual.toFixed(2) + '%' : '-'}</div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="text-sm text-muted-foreground">Atualização anual</div>
+            <div className="text-2xl font-bold text-primary">{atualizacaoAnual}</div>
+          </CardContent>
+        </Card>
       </div>
       <div>
         <h3 className="text-lg font-semibold mb-2">Montagem de Cotas</h3>
