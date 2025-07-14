@@ -508,7 +508,6 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
       insurance_percent: installmentCandidato.insurance_percent || 0,
       optional_insurance: !!installmentCandidato.optional_insurance
     };
-    // Lógica para parcela especial (reduzida)
     if (data.installmentType === 'special') {
       // 1. Calcular valor da parcela especial para 100 mil
       const parcelaEspecial100k = regraParcelaEspecial({
@@ -519,9 +518,9 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
       // 2. Fator: 100000 / parcelaEspecial100k
       const fator = 100000 / parcelaEspecial100k;
       // 3. Crédito acessado: valor de aporte * fator, arredondado para múltiplo de 20 mil
-      valorParcela = data.value;
-      creditoAcessado = Math.ceil((valorParcela * fator) / 20000) * 20000;
-      // 4. Valor da parcela: recalcular para o crédito acessado
+      const valorDigitado = data.value;
+      creditoAcessado = Math.ceil((valorDigitado * fator) / 20000) * 20000;
+      // 4. Valor da parcela reduzida para o crédito acessado
       const parcelaEspecialFinal = regraParcelaEspecial({
         credit: creditoAcessado,
         installment: installmentParams,
@@ -534,6 +533,8 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
         installment: installmentParams,
         reduction: null
       }).full;
+      // Exibir no painel de resumo o valor real da parcela reduzida
+      valorParcela = parcelaReduzida;
     } else {
       // Lógica padrão para parcela cheia
       const parcelas = calcularParcelasProduto({
