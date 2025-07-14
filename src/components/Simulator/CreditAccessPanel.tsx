@@ -208,6 +208,7 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
           setAvailableProducts(products || []);
           console.log('[DEBUG] setAvailableProducts chamado:', products);
 
+          // Lógica inteligente para aporte (soma das parcelas) e crédito (soma dos créditos)
           if (data.searchType === 'contribution' || data.searchType === 'credit') {
             const sortedProducts = [...availableProducts].sort((a, b) => b.credit_value - a.credit_value);
             const produtosComParcelas = sortedProducts.map(product => {
@@ -222,10 +223,14 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
                 }
               }
               if (!installment) return null;
+              let reduction = null;
+              if (data.installmentType !== 'full' && installment.id) {
+                reduction = await buscarReducao(installment.id, data.administrator);
+              }
               const parcelas = calcularParcelasProduto({
                 credit: product.credit_value,
                 installment,
-                reduction: null
+                reduction: data.installmentType !== 'full' ? reduction : null
               });
               return {
                 product,
@@ -237,45 +242,43 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
             let melhorCombinacao = [];
             let melhorDiferenca = Infinity;
             let melhorSoma = 0;
-            const maxIter = 20; // Limite para evitar laço infinito
+            const maxItens = 6; // Limite para evitar laço infinito
             if (produtosComParcelas.length > 0) {
-              // Testar combinações de 1 até maxIter produtos
-              for (let totalItens = 1; totalItens <= maxIter; totalItens++) {
-                // Gera todas as combinações possíveis com repetição
-                const stack = [[]];
-                while (stack.length) {
-                  const combo = stack.pop();
-                  if (combo.length === totalItens) {
-                    // Calcular soma
-                    let somaParcelas = 0;
-                    let somaCreditos = 0;
-                    combo.forEach(idx => {
-                      somaParcelas += produtosComParcelas[idx].parcela;
-                      somaCreditos += produtosComParcelas[idx].product.credit_value;
-                    });
-                    let diff;
-                    if (data.searchType === 'contribution') {
-                      diff = somaParcelas - data.value;
-                      if (diff >= 0 && diff < melhorDiferenca) {
-                        melhorDiferenca = diff;
-                        melhorCombinacao = combo.slice();
-                        melhorSoma = somaParcelas;
-                      }
-                    } else {
-                      diff = somaCreditos - data.value;
-                      if (diff >= 0 && diff < melhorDiferenca) {
-                        melhorDiferenca = diff;
-                        melhorCombinacao = combo.slice();
-                        melhorSoma = somaCreditos;
-                      }
+              // Testar combinações de 1 até maxItens produtos
+              function gerarCombinacoes(n: number, k: number, prefix: number[] = []): number[][] {
+                if (k === 0) return [prefix];
+                let result: number[][] = [];
+                for (let i = 0; i < n; i++) {
+                  result = result.concat(gerarCombinacoes(n, k - 1, [...prefix, i]));
+                }
+                return result;
+              }
+              for (let totalItens = 1; totalItens <= maxItens; totalItens++) {
+                const combinacoes = gerarCombinacoes(produtosComParcelas.length, totalItens);
+                for (const combo of combinacoes) {
+                  let somaParcelas = 0;
+                  let somaCreditos = 0;
+                  combo.forEach(idx => {
+                    somaParcelas += produtosComParcelas[idx].parcela;
+                    somaCreditos += produtosComParcelas[idx].product.credit_value;
+                  });
+                  let diff;
+                  if (data.searchType === 'contribution') {
+                    diff = somaParcelas - data.value;
+                    if (diff >= 0 && diff < melhorDiferenca) {
+                      melhorDiferenca = diff;
+                      melhorCombinacao = combo.slice();
+                      melhorSoma = somaParcelas;
                     }
-                    continue;
-                  }
-                  for (let i = 0; i < produtosComParcelas.length; i++) {
-                    stack.push([...combo, i]);
+                  } else {
+                    diff = somaCreditos - data.value;
+                    if (diff >= 0 && diff < melhorDiferenca) {
+                      melhorDiferenca = diff;
+                      melhorCombinacao = combo.slice();
+                      melhorSoma = somaCreditos;
+                    }
                   }
                 }
-                // Se já encontrou uma combinação, para
                 if (melhorCombinacao.length > 0) break;
               }
             }
@@ -292,10 +295,10 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
             });
             console.log('[DEBUG] Créditos sugeridos (inteligente):', credits);
             setCredits(credits);
-          } else {
-            const calculatedCredits = await sugerirMultiplosCreditos(products, data);
-            setCredits(calculatedCredits);
+            return;
           }
+          const calculatedCredits = await sugerirMultiplosCreditos(products, data);
+          setCredits(calculatedCredits);
         } catch (error) {
           console.error('Error calculating credits:', error);
         }
