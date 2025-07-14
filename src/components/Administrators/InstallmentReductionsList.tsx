@@ -63,8 +63,13 @@ export const InstallmentReductionsList: React.FC<InstallmentReductionsListProps>
   }, []);
 
   useEffect(() => {
+    if (!selectedCompanyId) {
+      setReductions([]);
+      setLoading(false);
+      return;
+    }
     fetchReductions();
-  }, [searchTerm, statusFilter, selectedAdministrator]);
+  }, [searchTerm, statusFilter, selectedAdministrator, selectedCompanyId]);
 
   const fetchAdministrators = async () => {
     const { data, error } = await supabase
@@ -161,8 +166,16 @@ export const InstallmentReductionsList: React.FC<InstallmentReductionsListProps>
     return 0;
   };
 
+  if (!selectedCompanyId) {
+    return <div className="text-center py-8 text-red-500">Selecione uma empresa para visualizar as reduções de parcela.</div>;
+  }
+
   if (loading) {
     return <div className="text-center py-8">Carregando...</div>;
+  }
+
+  if (!loading && reductions.length === 0) {
+    return <div className="text-center py-8 text-gray-500">Nenhuma redução de parcela encontrada para a empresa/administradora selecionada.</div>;
   }
 
   return (

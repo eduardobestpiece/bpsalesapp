@@ -58,6 +58,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
   const { selectedCompanyId } = useCompany();
   const [administrators, setAdministrators] = React.useState<any[]>([]);
   const [reductions, setReductions] = React.useState<any[]>([]);
+  const [reductionsLoading, setReductionsLoading] = React.useState(false);
   const [showCreateAdminModal, setShowCreateAdminModal] = React.useState(false);
 
   const form = useForm<any>({
@@ -115,12 +116,19 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
   };
 
   const fetchReductions = async (administratorId: string) => {
+    if (!administratorId) {
+      setReductions([]);
+      setReductionsLoading(false);
+      return;
+    }
+    setReductionsLoading(true);
     const { data, error } = await supabase
       .from('installment_reductions')
       .select('id, name')
       .eq('administrator_id', administratorId)
       .eq('is_archived', false);
     if (!error) setReductions(data || []);
+    setReductionsLoading(false);
   };
 
   React.useEffect(() => {
@@ -334,12 +342,18 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
                 <FormItem>
                   <FormLabel>Redução de parcela</FormLabel>
                   <FormControl>
-                    <MultiSelect
-                      options={reductions.map((r: any) => ({ value: r.id, label: r.name }))}
-                      value={field.value}
-                      onChange={field.onChange}
-                      placeholder="Selecione uma ou mais reduções"
-                    />
+                    {reductionsLoading ? (
+                      <div className="text-center py-2">Carregando reduções...</div>
+                    ) : reductions.length === 0 ? (
+                      <div className="text-center py-2 text-gray-500">Nenhuma redução cadastrada para esta administradora.</div>
+                    ) : (
+                      <MultiSelect
+                        options={reductions.map((r: any) => ({ value: r.id, label: r.name }))}
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Selecione uma ou mais reduções"
+                      />
+                    )}
                   </FormControl>
                   <FormMessage />
                 </FormItem>
