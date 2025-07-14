@@ -75,7 +75,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     try {
       const { data, error } = await supabase
         .from('installment_types')
-        .select('id, name, administrator_id, installment_count, admin_tax_percent, reserve_fund_percent, insurance_percent, optional_insurance, reduction_percent')
+        .select('id, name, administrator_id, installment_count, admin_tax_percent, reserve_fund_percent, insurance_percent, optional_insurance, reduction_percentage')
         .order('name');
       
       if (error) throw error;
@@ -96,7 +96,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         type: data.type,
         administrator_id: data.administrator_id || null,
         credit_value: data.credit_value,
-        installment_types: Array.isArray(data.installment_types) ? data.installment_types : [data.installment_types],
+        // NÃO incluir installment_types aqui
       };
 
       // Verificar duplicidade
@@ -114,6 +114,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         return;
       }
 
+      let productId = product?.id;
       if (product?.id) {
         // Update
         const { error } = await supabase
@@ -121,15 +122,36 @@ export const ProductModal: React.FC<ProductModalProps> = ({
           .update(cleanedData)
           .eq('id', product.id);
         if (error) throw error;
-        toast.success('Produto atualizado com sucesso!');
       } else {
         // Create
-        const { error } = await supabase
+        const { data: created, error } = await supabase
           .from('products')
-          .insert(cleanedData);
+          .insert(cleanedData)
+          .select('id')
+          .maybeSingle();
         if (error) throw error;
-        toast.success('Produto criado com sucesso!');
+        productId = created?.id;
       }
+
+      // Atualizar relação product_installment_types
+      if (productId) {
+        // Remover antigas
+        await supabase
+          .from('product_installment_types')
+          .delete()
+          .eq('product_id', productId);
+        // Inserir novas
+        if (Array.isArray(data.installment_types) && data.installment_types.length > 0) {
+          const relations = data.installment_types.map((installmentTypeId: string) => ({
+            product_id: productId,
+            installment_type_id: installmentTypeId
+          }));
+          await supabase
+            .from('product_installment_types')
+            .insert(relations);
+        }
+      }
+      toast.success(product?.id ? 'Produto atualizado com sucesso!' : 'Produto criado com sucesso!');
       onSuccess();
       form.reset();
     } catch (error) {
