@@ -656,7 +656,6 @@ export type Database = {
           reduces_reserve_fund: boolean | null
           reduction_percentage: number | null
           reserve_fund_percent: number | null
-          type: string
           updated_at: string
         }
         Insert: {
@@ -677,7 +676,6 @@ export type Database = {
           reduces_reserve_fund?: boolean | null
           reduction_percentage?: number | null
           reserve_fund_percent?: number | null
-          type: string
           updated_at?: string
         }
         Update: {
@@ -698,7 +696,6 @@ export type Database = {
           reduces_reserve_fund?: boolean | null
           reduction_percentage?: number | null
           reserve_fund_percent?: number | null
-          type?: string
           updated_at?: string
         }
         Relationships: [
@@ -913,7 +910,6 @@ export type Database = {
           is_archived: boolean | null
           name: string
           reserve_fund_percent: number | null
-          term_options: number[]
           type: string
           updated_at: string
         }
@@ -929,7 +925,6 @@ export type Database = {
           is_archived?: boolean | null
           name: string
           reserve_fund_percent?: number | null
-          term_options?: number[]
           type: string
           updated_at?: string
         }
@@ -945,7 +940,6 @@ export type Database = {
           is_archived?: boolean | null
           name?: string
           reserve_fund_percent?: number | null
-          term_options?: number[]
           type?: string
           updated_at?: string
         }

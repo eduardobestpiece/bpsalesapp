@@ -5,14 +5,17 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from '@/components/ui/s
 import { SimulatorSidebar } from './SimulatorSidebar';
 import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
 import { CompanyProvider } from '@/contexts/CompanyContext';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
 
 interface SimulatorLayoutProps {
   children: ReactNode;
 }
 
 export const SimulatorLayout = ({ children }: SimulatorLayoutProps) => {
+  const { companyId } = useCrmAuth();
+  
   return (
-    <CompanyProvider>
+    <CompanyProvider defaultCompanyId={companyId || ''}>
       <SidebarProvider>
         <div className="min-h-screen flex w-full">
           <SimulatorSidebar />
