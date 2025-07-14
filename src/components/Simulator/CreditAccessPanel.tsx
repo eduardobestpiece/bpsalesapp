@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Trash2, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import { calcularParcelasProduto } from '@/utils/calculations';
 import { useCompany } from '@/contexts/CompanyContext';
+import { regraParcelaEspecial } from '@/lib/regraParcelaEspecial';
 
 interface SimulationData {
   administrator: string;
@@ -500,7 +501,6 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
   }, [produtoCandidato, installmentCandidato, data.installmentType]);
 
   if (produtoCandidato && installmentCandidato) {
-    // Garantir que todos os campos necessários estão presentes
     const installmentParams = {
       installment_count: installmentCandidato.installment_count,
       admin_tax_percent: installmentCandidato.admin_tax_percent || 0,
@@ -508,16 +508,46 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
       insurance_percent: installmentCandidato.insurance_percent || 0,
       optional_insurance: !!installmentCandidato.optional_insurance
     };
-    const parcelas = calcularParcelasProduto({
-      credit: produtoCandidato.credit_value,
-      installment: installmentParams,
-      reduction: data.installmentType === 'special' ? reducaoParcela : null
-    });
-    parcelaCheia = parcelas.full;
-    parcelaReduzida = parcelas.special;
-    percentualUsado = data.installmentType === 'full'
-      ? parcelaCheia / produtoCandidato.credit_value
-      : parcelaReduzida / produtoCandidato.credit_value;
+    // Lógica para parcela especial (reduzida)
+    if (data.installmentType === 'special') {
+      // 1. Calcular valor da parcela especial para 100 mil
+      const parcelaEspecial100k = regraParcelaEspecial({
+        credit: 100000,
+        installment: installmentParams,
+        reduction: reducaoParcela
+      });
+      // 2. Fator: 100000 / parcelaEspecial100k
+      const fator = 100000 / parcelaEspecial100k;
+      // 3. Crédito acessado: valor de aporte * fator, arredondado para múltiplo de 20 mil
+      valorParcela = data.value;
+      creditoAcessado = Math.ceil((valorParcela * fator) / 20000) * 20000;
+      // 4. Valor da parcela: recalcular para o crédito acessado
+      const parcelaEspecialFinal = regraParcelaEspecial({
+        credit: creditoAcessado,
+        installment: installmentParams,
+        reduction: reducaoParcela
+      });
+      parcelaReduzida = parcelaEspecialFinal;
+      percentualUsado = parcelaReduzida / creditoAcessado;
+      parcelaCheia = calcularParcelasProduto({
+        credit: creditoAcessado,
+        installment: installmentParams,
+        reduction: null
+      }).full;
+    } else {
+      // Lógica padrão para parcela cheia
+      const parcelas = calcularParcelasProduto({
+        credit: produtoCandidato.credit_value,
+        installment: installmentParams,
+        reduction: null
+      });
+      parcelaCheia = parcelas.full;
+      parcelaReduzida = parcelas.special;
+      percentualUsado = parcelaCheia / produtoCandidato.credit_value;
+      valorParcela = data.value;
+      creditoAcessado = percentualUsado > 0 ? valorParcela / percentualUsado : 0;
+      creditoAcessado = Math.ceil(creditoAcessado / 20000) * 20000;
+    }
     taxaAdministracao = installmentCandidato.admin_tax_percent || 0;
     taxaAnual = (taxaAdministracao / data.term) * 12;
     if (data.consortiumType === 'property') {
@@ -525,9 +555,6 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
     } else if (data.consortiumType === 'vehicle') {
       atualizacaoAnual = 'IPCA ' + (data.updateRate ? data.updateRate.toFixed(2) + '%' : '');
     }
-    valorParcela = data.value;
-    creditoAcessado = percentualUsado > 0 ? valorParcela / percentualUsado : 0;
-    creditoAcessado = Math.ceil(creditoAcessado / 20000) * 20000;
   }
 
   // 5. Funções para adicionar/remover cotas
