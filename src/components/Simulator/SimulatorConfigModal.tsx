@@ -286,6 +286,12 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   // Buscar valores automáticos para Redução de Parcela (Sistema)
   useEffect(() => {
     if (!manualFieldsState.reducaoParcela && selectedInstallmentTypeId) {
+      // Só executa se selectedAdministratorId for válido
+      if (!selectedAdministratorId) {
+        setReductionPercent('');
+        setReductionApplications([]);
+        return;
+      }
       const fetchReduction = async () => {
         const { data } = await supabase
           .from('installment_reductions')

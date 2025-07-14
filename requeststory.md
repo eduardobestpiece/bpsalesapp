@@ -308,3 +308,21 @@ Correção do bug no simulador onde a consulta para a tabela `installment_reduct
 - Validar se os campos de crédito, parcela, taxas, etc., são preenchidos normalmente.
 - Realizar deploy automático.
 - Solicitar validação ao usuário. 
+
+# Continuação da requisição em andamento
+
+## Data: 2024-07-10
+
+### Diagnóstico adicional
+- O erro 400 persistiu porque outro ponto do código (SimulatorConfigModal.tsx) ainda executava a query para `installment_reductions` com `administrator_id=null`.
+- Identificado que a busca automática de redução de parcela no modal de configuração do simulador não validava se o administrator estava selecionado.
+
+### Ação executada
+- Corrigido o código do `SimulatorConfigModal.tsx` para **NUNCA** executar a query se `selectedAdministratorId` for nulo ou vazio.
+- Agora, se não houver administradora selecionada, os campos de redução são limpos e nenhuma requisição é feita.
+
+### Próximos passos
+- Testar novamente o simulador para garantir que não há mais erro 400.
+- Validar se os campos de crédito, parcela, taxas, etc., são preenchidos normalmente.
+- Realizar deploy automático.
+- Solicitar validação ao usuário. 
