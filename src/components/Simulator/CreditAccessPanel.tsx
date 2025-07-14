@@ -509,32 +509,38 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
       optional_insurance: !!installmentCandidato.optional_insurance
     };
     if (data.installmentType === 'special') {
-      // 1. Calcular valor da parcela especial para 100 mil
-      const parcelaEspecial100k = regraParcelaEspecial({
-        credit: 100000,
-        installment: installmentParams,
-        reduction: reducaoParcela
-      });
-      // 2. Fator: 100000 / parcelaEspecial100k
-      const fator = 100000 / parcelaEspecial100k;
-      // 3. Crédito acessado: valor de aporte * fator, arredondado para múltiplo de 20 mil
-      const valorDigitado = data.value;
-      creditoAcessado = Math.ceil((valorDigitado * fator) / 20000) * 20000;
-      // 4. Valor da parcela reduzida para o crédito acessado
-      const parcelaEspecialFinal = regraParcelaEspecial({
-        credit: creditoAcessado,
-        installment: installmentParams,
-        reduction: reducaoParcela
-      });
-      parcelaReduzida = parcelaEspecialFinal;
+      if (data.searchType === 'contribution') {
+        // Cálculo baseado em Parcela (Aporte)
+        const parcelaEspecial100k = regraParcelaEspecial({
+          credit: 100000,
+          installment: installmentParams,
+          reduction: reducaoParcela
+        });
+        const fator = 100000 / parcelaEspecial100k;
+        const valorAporte = data.value;
+        creditoAcessado = Math.ceil((valorAporte * fator) / 20000) * 20000;
+        valorParcela = regraParcelaEspecial({
+          credit: creditoAcessado,
+          installment: installmentParams,
+          reduction: reducaoParcela
+        });
+      } else if (data.searchType === 'credit') {
+        // Cálculo baseado em Crédito
+        creditoAcessado = data.value;
+        valorParcela = regraParcelaEspecial({
+          credit: creditoAcessado,
+          installment: installmentParams,
+          reduction: reducaoParcela
+        });
+      }
+      // Para ambos, calcular os percentuais e valores auxiliares
+      parcelaReduzida = valorParcela;
       percentualUsado = parcelaReduzida / creditoAcessado;
       parcelaCheia = calcularParcelasProduto({
         credit: creditoAcessado,
         installment: installmentParams,
         reduction: null
       }).full;
-      // Exibir no painel de resumo o valor real da parcela reduzida
-      valorParcela = parcelaReduzida;
     } else {
       // Lógica padrão para parcela cheia
       const parcelas = calcularParcelasProduto({
