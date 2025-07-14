@@ -287,3 +287,24 @@ Checklist:
 ---
 
 **Status:** Em andamento 
+
+## Data: 2024-07-10
+
+### Descrição
+Correção do bug no simulador onde a consulta para a tabela `installment_reductions` do Supabase estava enviando `administrator_id=null`, causando erro 400 e impedindo o cálculo/sugestão de créditos e parcelas.
+
+### Diagnóstico
+- Produtos e tipos de parcela estavam sendo carregados normalmente.
+- O erro 400 ocorria porque o filtro `administrator_id` era enviado como `null` ou string vazia.
+- Isso impedia o fluxo de cálculo e exibição dos resultados.
+
+### Ação executada
+- Corrigido o código do componente `NewSimulatorLayout.tsx` para **NUNCA** enviar o filtro `administrator_id` se o valor for nulo ou vazio.
+- Agora, se não houver administradora selecionada, a consulta de reduções de parcela é ignorada e o array de reduções é limpo.
+
+### Próximos passos
+- Testar o fluxo do simulador sem administradora selecionada (não deve dar erro e deve funcionar com parcela cheia).
+- Testar o fluxo com administradora selecionada (deve buscar as reduções corretamente).
+- Validar se os campos de crédito, parcela, taxas, etc., são preenchidos normalmente.
+- Realizar deploy automático.
+- Solicitar validação ao usuário. 

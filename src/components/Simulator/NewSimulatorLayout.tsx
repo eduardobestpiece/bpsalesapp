@@ -77,7 +77,8 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   // Buscar reduções de parcela da administradora selecionada
   useEffect(() => {
     async function fetchReducoes() {
-      if (!simulationData.administrator) {
+      // Corrigido: só busca se administrator for válido
+      if (!simulationData.administrator || simulationData.administrator === '' || simulationData.administrator === null) {
         setReducoesParcela([]);
         return;
       }
