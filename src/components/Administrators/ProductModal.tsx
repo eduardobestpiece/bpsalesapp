@@ -42,6 +42,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   const [parcelaEspecial, setParcelaEspecial] = useState(0);
   // Adicionar estado para parcela padrão
   const [parcelaPadraoId, setParcelaPadraoId] = useState<string | null>(null);
+  const [reducaoParcela, setReducaoParcela] = useState<any>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -158,6 +159,38 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   }, [form.watch('administrator_id')]);
 
   useEffect(() => {
+    // Sempre que a parcela padrão mudar, buscar a redução associada
+    async function fetchReducao() {
+      if (!parcelaPadraoId) {
+        setReducaoParcela(null);
+        return;
+      }
+      // Buscar relação installment_type_reductions
+      const { data: rels, error: relError } = await supabase
+        .from('installment_type_reductions')
+        .select('installment_reduction_id')
+        .eq('installment_type_id', parcelaPadraoId);
+      if (relError || !rels || rels.length === 0) {
+        setReducaoParcela(null);
+        return;
+      }
+      // Buscar dados da redução
+      const { data: reducoes, error: redError } = await supabase
+        .from('installment_reductions')
+        .select('*')
+        .eq('id', rels[0].installment_reduction_id)
+        .eq('is_archived', false)
+        .limit(1);
+      if (redError || !reducoes || reducoes.length === 0) {
+        setReducaoParcela(null);
+        return;
+      }
+      setReducaoParcela(reducoes[0]);
+    }
+    fetchReducao();
+  }, [parcelaPadraoId]);
+
+  useEffect(() => {
     const credit = form.watch('credit_value');
     const selectedInstallments = installmentTypes.filter(it => form.watch('installment_types').includes(it.id));
     if (!credit || selectedInstallments.length === 0) {
@@ -175,15 +208,15 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     const taxaAdm = parcelaPadrao.admin_tax_percent || 0;
     const fundoReserva = parcelaPadrao.reserve_fund_percent || 0;
     const seguro = parcelaPadrao.optional_insurance ? 0 : (parcelaPadrao.insurance_percent || 0);
-    // Buscar redução de parcela associada
+    // Buscar redução de parcela associada (agora via estado reducaoParcela)
     let percentualReducao = 0;
     let aplicaParcela = false, aplicaTaxaAdm = false, aplicaFundoReserva = false, aplicaSeguro = false;
-    if (parcelaPadrao.reduction_percent) {
-      percentualReducao = parcelaPadrao.reduction_percent / 100;
-      aplicaParcela = parcelaPadrao.reduces_credit || false;
-      aplicaTaxaAdm = parcelaPadrao.reduces_admin_tax || false;
-      aplicaFundoReserva = parcelaPadrao.reduces_reserve_fund || false;
-      aplicaSeguro = parcelaPadrao.reduces_insurance || false;
+    if (reducaoParcela) {
+      percentualReducao = reducaoParcela.reduction_percent / 100;
+      aplicaParcela = reducaoParcela.applications?.includes('parcela');
+      aplicaTaxaAdm = reducaoParcela.applications?.includes('admin_tax');
+      aplicaFundoReserva = reducaoParcela.applications?.includes('reserve_fund');
+      aplicaSeguro = reducaoParcela.applications?.includes('insurance');
     }
     // Cálculo Parcela Cheia (mantém igual)
     const valorCheia = (credit + ((credit * taxaAdm / 100) + (credit * fundoReserva / 100) + (credit * seguro / 100))) / nParcelas;
@@ -195,7 +228,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     const seguroValor = aplicaSeguro ? (credit * seguro / 100) - ((credit * seguro / 100) * percentualReducao) : (credit * seguro / 100);
     const valorEspecial = (principal + taxa + fundo + seguroValor) / nParcelas;
     setParcelaEspecial(valorEspecial);
-  }, [form.watch('credit_value'), form.watch('installment_types'), installmentTypes, parcelaPadraoId]);
+  }, [form.watch('credit_value'), form.watch('installment_types'), installmentTypes, parcelaPadraoId, reducaoParcela]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
