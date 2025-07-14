@@ -137,3 +137,57 @@ export const calculatePatrimonialEvolution = (data: SimulatorData) => {
   
   return evolution;
 };
+
+/**
+ * Calcula o valor da parcela cheia e especial conforme regras do produto.
+ * @param credit Valor do crédito
+ * @param installment Objeto da parcela selecionada (deve conter: installment_count, admin_tax_percent, reserve_fund_percent, insurance_percent, optional_insurance)
+ * @param reduction Objeto da redução (opcional, para especial)
+ * @returns { full: number, special: number }
+ */
+export function calcularParcelasProduto({
+  credit,
+  installment,
+  reduction
+}: {
+  credit: number,
+  installment: {
+    installment_count: number,
+    admin_tax_percent: number,
+    reserve_fund_percent: number,
+    insurance_percent: number,
+    optional_insurance: boolean
+  },
+  reduction?: {
+    reduction_percent: number,
+    applications: string[]
+  } | null
+}) {
+  const nParcelas = installment.installment_count;
+  const taxaAdm = installment.admin_tax_percent || 0;
+  const fundoReserva = installment.reserve_fund_percent || 0;
+  const seguro = installment.optional_insurance ? 0 : (installment.insurance_percent || 0);
+  // Cálculo Parcela Cheia
+  const valorCheia = (credit + ((credit * taxaAdm / 100) + (credit * fundoReserva / 100) + (credit * seguro / 100))) / nParcelas;
+  // Cálculo Parcela Especial
+  let percentualReducao = 0;
+  let aplicaParcela = false, aplicaTaxaAdm = false, aplicaFundoReserva = false, aplicaSeguro = false;
+  if (reduction) {
+    percentualReducao = reduction.reduction_percent / 100;
+    aplicaParcela = reduction.applications?.includes('installment');
+    aplicaTaxaAdm = reduction.applications?.includes('admin_tax');
+    aplicaFundoReserva = reduction.applications?.includes('reserve_fund');
+    aplicaSeguro = reduction.applications?.includes('insurance');
+  }
+  const principal = aplicaParcela ? credit - (credit * percentualReducao) : credit;
+  const taxa = aplicaTaxaAdm ? (credit * taxaAdm / 100) - ((credit * taxaAdm / 100) * percentualReducao) : (credit * taxaAdm / 100);
+  const fundo = aplicaFundoReserva ? (credit * fundoReserva / 100) - ((credit * fundoReserva / 100) * percentualReducao) : (credit * fundoReserva / 100);
+  let seguroValor = 0;
+  if (!installment.optional_insurance) {
+    seguroValor = aplicaSeguro
+      ? (credit * seguro / 100) - ((credit * seguro / 100) * percentualReducao)
+      : (credit * seguro / 100);
+  }
+  const valorEspecial = (principal + taxa + fundo + seguroValor) / nParcelas;
+  return { full: valorCheia, special: valorEspecial };
+}

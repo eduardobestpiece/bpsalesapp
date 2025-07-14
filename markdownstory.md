@@ -499,3 +499,6 @@ Próximos passos:
 - 2024-07-10: Deploy automático realizado após as alterações.
 - 2024-07-10: Adicionados os campos 'Taxa de Administração Anual' (cálculo: (taxa de administração / meses) * 12) e 'Atualização anual' (INCC para imóvel, IPCA para veículo, texto e valor para outros) na aba Crédito Acessado do simulador.
 - 2024-07-10: Deploy automático realizado após as alterações.
+- 2024-07-10: Adicionados os campos 'Taxa de Administração Anual' e 'Atualização anual' no bloco de resultados da aba Crédito Acessado do simulador.
+- 2024-07-10: Ajustada a busca/listagem de créditos para considerar o valor da parcela especial quando o tipo de parcela não for 'cheia'.
+- 2024-07-10: Deploy automático realizado após as alterações.

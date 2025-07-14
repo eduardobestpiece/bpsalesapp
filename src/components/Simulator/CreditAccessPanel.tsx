@@ -10,6 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { Checkbox } from '@/components/ui/checkbox';
 import { supabase } from '@/integrations/supabase/client';
 import { Trash2, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
+import { calcularParcelasProduto } from '@/utils/calculations';
 
 interface SimulationData {
   administrator: string;
@@ -56,9 +57,101 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
     debtBalance: true,
   });
 
+  // Função para buscar redução associada ao produto/parcelas
+  const buscarReducao = async (installmentTypeId: string) => {
+    // Buscar relação installment_type_reductions
+    const { data: rels } = await supabase
+      .from('installment_type_reductions')
+      .select('installment_reduction_id')
+      .eq('installment_type_id', installmentTypeId);
+    if (!rels || rels.length === 0) return null;
+    // Buscar dados da redução
+    const { data: reducoes } = await supabase
+      .from('installment_reductions')
+      .select('*')
+      .eq('id', rels[0].installment_reduction_id)
+      .eq('is_archived', false)
+      .limit(1);
+    if (!reducoes || reducoes.length === 0) return null;
+    return reducoes[0];
+  };
+
+  // Ajustar a seleção de créditos conforme tipo de parcela
+  const calculateBestCreditCombination = async (products: any[], simulationData: SimulationData): Promise<Credit[]> => {
+    const targetValue = simulationData.value;
+    const isContributionSearch = simulationData.searchType === 'contribution';
+    const isParcelaCheia = simulationData.installmentType === 'full';
+    let bestMatch = products[0];
+    let bestDifference = Infinity;
+    let bestParcelas = { full: 0, special: 0 };
+    for (const product of products) {
+      // Buscar installment correspondente ao prazo
+      const installment = product.installment_types?.find((it: any) => it.installment_count === simulationData.term) || {};
+      let reduction = null;
+      if (!isParcelaCheia && installment.id) {
+        reduction = await buscarReducao(installment.id);
+      }
+      const parcelas = calcularParcelasProduto({
+        credit: product.credit_value,
+        installment,
+        reduction: !isParcelaCheia ? reduction : null
+      });
+      const compareValue = isContributionSearch 
+        ? (isParcelaCheia ? parcelas.full : parcelas.special)
+        : product.credit_value;
+      const difference = Math.abs(compareValue - targetValue);
+      if (difference < bestDifference) {
+        bestDifference = difference;
+        bestMatch = product;
+        bestParcelas = parcelas;
+      }
+    }
+    // Para o produto selecionado, buscar installment e redução e calcular corretamente
+    const installment = bestMatch.installment_types?.find((it: any) => it.installment_count === simulationData.term) || {};
+    let reduction = null;
+    if (!isParcelaCheia && installment.id) {
+      reduction = await buscarReducao(installment.id);
+    }
+    const parcelas = calcularParcelasProduto({
+      credit: bestMatch.credit_value,
+      installment,
+      reduction: !isParcelaCheia ? reduction : null
+    });
+    return [
+      {
+        id: bestMatch.id,
+        name: bestMatch.name,
+        creditValue: bestMatch.credit_value,
+        installmentValue: isParcelaCheia ? parcelas.full : parcelas.special,
+        selected: true
+      }
+    ];
+  };
+
+  // Atualizar para usar a função assíncrona
   useEffect(() => {
     if (data.administrator && data.value > 0) {
-      calculateCredits();
+      (async () => {
+        try {
+          const { data: products, error } = await supabase
+            .from('products')
+            .select('*, installment_types:product_installment_types(installment_types(*))')
+            .eq('administrator_id', data.administrator)
+            .eq('type', data.consortiumType)
+            .eq('is_archived', false)
+            .order('credit_value');
+
+          if (error) throw error;
+          setAvailableProducts(products || []);
+
+          if (products && products.length > 0) {
+            const calculatedCredits = await calculateBestCreditCombination(products, data);
+            setCredits(calculatedCredits);
+          }
+        } catch (error) {
+          console.error('Error calculating credits:', error);
+        }
+      })();
     }
   }, [data]);
 
@@ -67,124 +160,6 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
       calculateMonthlyDetails();
     }
   }, [showDetails, credits, structureType, viewableInstallments]);
-
-  const calculateCredits = async () => {
-    try {
-      const { data: products, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('administrator_id', data.administrator)
-        .eq('type', data.consortiumType)
-        .eq('is_archived', false)
-        .order('credit_value');
-
-      if (error) throw error;
-      setAvailableProducts(products || []);
-
-      if (products && products.length > 0) {
-        const calculatedCredits = calculateBestCreditCombination(products, data);
-        setCredits(calculatedCredits);
-      }
-    } catch (error) {
-      console.error('Error calculating credits:', error);
-    }
-  };
-
-  // Função para calcular a parcela especial (mock, ajustar conforme regra real do projeto)
-  const calcularParcelaEspecial = (product: any) => {
-    // Exemplo: aplicar redução se houver, senão retorna parcela cheia
-    if (data.installmentType !== 'full' && product.special_installment_value) {
-      return product.special_installment_value;
-    }
-    return product.credit_value / data.term;
-  };
-
-  // Ajustar a seleção de créditos conforme tipo de parcela
-  const calculateBestCreditCombination = (products: any[], simulationData: SimulationData): Credit[] => {
-    const targetValue = simulationData.value;
-    const isContributionSearch = simulationData.searchType === 'contribution';
-    const isParcelaCheia = simulationData.installmentType === 'full';
-    
-    // Encontrar o produto mais próximo
-    let bestMatch = products[0];
-    let bestDifference = Infinity;
-    
-    for (const product of products) {
-      const compareValue = isContributionSearch 
-        ? (isParcelaCheia ? product.credit_value / simulationData.term : calcularParcelaEspecial(product))
-        : product.credit_value;
-      const difference = Math.abs(compareValue - targetValue);
-      if (difference < bestDifference) {
-        bestDifference = difference;
-        bestMatch = product;
-      }
-    }
-
-    const maxProduct = products[products.length - 1];
-    const maxValue = isContributionSearch 
-      ? maxProduct.credit_value / simulationData.term 
-      : maxProduct.credit_value;
-
-    // Se o valor desejado é maior que o maior produto disponível
-    if (targetValue > maxValue) {
-      const additionalValue = targetValue - maxValue;
-      
-      // Encontrar segundo produto
-      let secondProduct = products[0];
-      for (const product of products) {
-        const productValue = isContributionSearch 
-          ? product.credit_value / simulationData.term 
-          : product.credit_value;
-        
-        if (productValue >= additionalValue) {
-          secondProduct = product;
-          break;
-        }
-      }
-      
-      const secondValue = isContributionSearch 
-        ? secondProduct.credit_value / simulationData.term 
-        : secondProduct.credit_value;
-      
-      const percentage = (additionalValue / secondValue) * 100;
-      
-      // Aplicar regras de arredondamento
-      let finalSecondProduct = secondProduct;
-      if (percentage >= 1 && percentage <= 40) {
-        const smallerProducts = products.filter(p => p.credit_value < secondProduct.credit_value);
-        if (smallerProducts.length > 0) {
-          finalSecondProduct = smallerProducts[smallerProducts.length - 1];
-        }
-      }
-      
-      return [
-        {
-          id: maxProduct.id,
-          name: maxProduct.name,
-          creditValue: maxProduct.credit_value,
-          installmentValue: maxProduct.credit_value / simulationData.term,
-          selected: true
-        },
-        {
-          id: finalSecondProduct.id + '_secondary',
-          name: finalSecondProduct.name,
-          creditValue: finalSecondProduct.credit_value,
-          installmentValue: finalSecondProduct.credit_value / simulationData.term,
-          selected: true
-        }
-      ];
-    }
-    
-    return [
-      {
-        id: bestMatch.id,
-        name: bestMatch.name,
-        creditValue: bestMatch.credit_value,
-        installmentValue: isParcelaCheia ? bestMatch.credit_value / simulationData.term : calcularParcelaEspecial(bestMatch),
-        selected: true
-      }
-    ];
-  };
 
   const calculateMonthlyDetails = () => {
     const selectedCredits = credits.filter(c => c.selected);

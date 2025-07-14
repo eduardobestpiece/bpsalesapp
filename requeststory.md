@@ -244,3 +244,22 @@ Checklist:
 ---
 
 **Status:** Em andamento 
+
+# Requisição em andamento - 2024-07-10 (cálculo correto da parcela no simulador)
+
+## Ajuste solicitado
+- Corrigir o cálculo do valor da parcela exibido na aba “Crédito Acessado” do simulador:
+  - Se o usuário selecionar “Parcela Cheia”, usar exatamente a mesma lógica do campo “Valor da parcela cheia” do modal de produto.
+  - Se selecionar “Parcela Especial/Reduzida”, usar exatamente a mesma lógica do campo “Valor da parcela especial” do modal de produto.
+- Centralizar a lógica de cálculo para evitar divergências.
+
+## Ações planejadas
+1. Centralizar lógica de cálculo de parcelas.
+2. Ajustar simulador para usar a lógica correta.
+3. Testar o fluxo corrigido.
+4. Executar deploy.
+5. Solicitar validação do usuário.
+
+---
+
+**Status:** Em andamento 
