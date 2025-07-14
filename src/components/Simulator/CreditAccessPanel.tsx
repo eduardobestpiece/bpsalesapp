@@ -78,61 +78,19 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
     return reducoes[0];
   };
 
-  // Função para sugerir múltiplos créditos para atingir o valor desejado
-  const sugerirMultiplosCreditos = async (products: any[], simulationData: SimulationData): Promise<Credit[]> => {
-    console.log('[DEBUG] Iniciando sugestão de múltiplos créditos', { products, simulationData });
+  // Função inteligente para sugerir créditos baseado na busca
+  const sugerirCreditosInteligente = async (products: any[], simulationData: SimulationData): Promise<Credit[]> => {
+    console.log('[DEBUG] Iniciando sugestão inteligente de créditos', { products, simulationData });
     const targetValue = simulationData.value;
     const isParcelaCheia = simulationData.installmentType === 'full';
-    // Ordenar produtos do maior para o menor valor
-    const sortedProducts = [...products].sort((a, b) => b.credit_value - a.credit_value);
-    let remaining = targetValue;
-    const credits: Credit[] = [];
-    for (const product of sortedProducts) {
-      // Log detalhado do conteúdo de installment_types
-      console.log('[DEBUG] installment_types do produto:', product.id, product.installment_types);
-      // Buscar installment correspondente ao prazo
+    const isSearchByCredit = simulationData.searchType === 'credit';
+    
+    // Preparar produtos com suas informações de parcela
+    const produtosComParcelas = [];
+    for (const product of products) {
       let installment = null;
       if (Array.isArray(product.installment_types)) {
-        // Caso venha como array de objetos aninhados (ex: {installment_types: {...}})
         for (const it of product.installment_types) {
-          const real = it.installment_types || it; // pega o objeto interno se existir
-          if (real.installment_count === simulationData.term) {
-            installment = real;
-            break;
-          }
-        }
-      }
-      console.log('[DEBUG] Produto analisado:', product, 'Installment encontrado:', installment);
-      if (!installment) continue;
-      let reduction = null;
-      if (!isParcelaCheia && installment.id) {
-        reduction = await buscarReducao(installment.id, simulationData.administrator);
-        console.log('[DEBUG] Redução encontrada:', reduction);
-      }
-      const parcelas = calcularParcelasProduto({
-        credit: product.credit_value,
-        installment,
-        reduction: !isParcelaCheia ? reduction : null
-      });
-      console.log('[DEBUG] Parcelas calculadas:', parcelas);
-      while (remaining >= product.credit_value - 1) { // margem para arredondamento
-        credits.push({
-          id: product.id + '-' + credits.length,
-          name: product.name,
-          creditValue: product.credit_value,
-          installmentValue: isParcelaCheia ? parcelas.full : parcelas.special,
-          selected: true
-        });
-        remaining -= product.credit_value;
-      }
-    }
-    // Se sobrou algum valor, tentar encaixar o menor produto
-    if (credits.length === 0 && sortedProducts.length > 0) {
-      // Se nenhum produto coube, sugerir o menor produto disponível
-      const menor = sortedProducts[sortedProducts.length - 1];
-      let installment = null;
-      if (Array.isArray(menor.installment_types)) {
-        for (const it of menor.installment_types) {
           const real = it.installment_types || it;
           if (real.installment_count === simulationData.term) {
             installment = real;
@@ -140,32 +98,158 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
           }
         }
       }
-      if (installment) {
-        let reduction = null;
-        if (!isParcelaCheia && installment.id) {
-          reduction = await buscarReducao(installment.id, simulationData.administrator);
-          console.log('[DEBUG] Redução encontrada (menor):', reduction);
-        }
-        const parcelas = calcularParcelasProduto({
-          credit: menor.credit_value,
-          installment,
-          reduction: !isParcelaCheia ? reduction : null
-        });
-        console.log('[DEBUG] Parcelas calculadas (menor):', parcelas);
-        credits.push({
-          id: menor.id + '-menor',
-          name: menor.name,
-          creditValue: menor.credit_value,
-          installmentValue: isParcelaCheia ? parcelas.full : parcelas.special,
+      if (!installment) continue;
+      
+      let reduction = null;
+      if (!isParcelaCheia && installment.id) {
+        reduction = await buscarReducao(installment.id, simulationData.administrator);
+      }
+      
+      const parcelas = calcularParcelasProduto({
+        credit: product.credit_value,
+        installment,
+        reduction: !isParcelaCheia ? reduction : null
+      });
+      
+      produtosComParcelas.push({
+        product,
+        installment,
+        parcelaFull: parcelas.full,
+        parcelaSpecial: parcelas.special,
+        parcelaUsada: isParcelaCheia ? parcelas.full : parcelas.special
+      });
+    }
+    
+    // 1. BUSCA POR CRÉDITO - Tentar valor exato primeiro
+    if (isSearchByCredit) {
+      // Buscar produto com valor exato ou próximo
+      const produtoExato = produtosComParcelas.find(p => Math.abs(p.product.credit_value - targetValue) <= 1000);
+      if (produtoExato) {
+        console.log('[DEBUG] Produto exato encontrado:', produtoExato.product.name);
+        return [{
+          id: produtoExato.product.id + '-exato',
+          name: produtoExato.product.name,
+          creditValue: produtoExato.product.credit_value,
+          installmentValue: produtoExato.parcelaUsada,
           selected: true
-        });
+        }];
+      }
+      
+      // Se não encontrou exato, usar algoritmo de combinação
+      return encontrarMelhorCombinacaoCredito(produtosComParcelas, targetValue);
+    }
+    
+    // 2. BUSCA POR APORTE - Usar algoritmo de combinação por parcela
+    return encontrarMelhorCombinacaoAporte(produtosComParcelas, targetValue);
+  };
+
+  // Algoritmo para encontrar melhor combinação por valor de crédito
+  const encontrarMelhorCombinacaoCredito = (produtos: any[], targetValue: number): Credit[] => {
+    console.log('[DEBUG] Buscando combinação por crédito, target:', targetValue);
+    const sortedProducts = [...produtos].sort((a, b) => b.product.credit_value - a.product.credit_value);
+    
+    // Usar algoritmo guloso: pegar o maior produto que cabe, repetir até atingir o valor
+    const credits: Credit[] = [];
+    let remaining = targetValue;
+    let tentativas = 0;
+    const maxTentativas = 10; // Evitar loop infinito
+    
+    while (remaining > 0 && tentativas < maxTentativas) {
+      tentativas++;
+      let adicionouProduto = false;
+      
+      for (const item of sortedProducts) {
+        const creditValue = item.product.credit_value;
+        
+        // Se o produto cabe exatamente ou é menor que o restante
+        if (creditValue <= remaining + 50000) { // Margem de 50k para flexibilidade
+          credits.push({
+            id: item.product.id + '-' + credits.length,
+            name: item.product.name,
+            creditValue: creditValue,
+            installmentValue: item.parcelaUsada,
+            selected: true
+          });
+          remaining -= creditValue;
+          adicionouProduto = true;
+          console.log('[DEBUG] Adicionado produto:', item.product.name, 'Restante:', remaining);
+          break;
+        }
+      }
+      
+      // Se não conseguiu adicionar nenhum produto, sair do loop
+      if (!adicionouProduto) break;
+    }
+    
+    console.log('[DEBUG] Combinação final por crédito:', credits);
+    return credits;
+  };
+
+  // Algoritmo para encontrar melhor combinação por valor de aporte (parcela)
+  const encontrarMelhorCombinacaoAporte = (produtos: any[], targetValue: number): Credit[] => {
+    console.log('[DEBUG] Buscando combinação por aporte, target:', targetValue);
+    
+    let melhorCombinacao: Credit[] = [];
+    let melhorDiferenca = Infinity;
+    const maxCombinacoes = 8; // Limite para performance
+    
+    // Testar combinações de 1 até maxCombinacoes produtos
+    for (let numProdutos = 1; numProdutos <= Math.min(maxCombinacoes, produtos.length); numProdutos++) {
+      const combinacoes = gerarCombinacoes(produtos, numProdutos);
+      
+      for (const combo of combinacoes) {
+        const somaParcelas = combo.reduce((sum, item) => sum + item.parcelaUsada, 0);
+        const diferenca = Math.abs(somaParcelas - targetValue);
+        
+        // Priorizar combinações que atendem ou superam ligeiramente o valor
+        const superaValor = somaParcelas >= targetValue;
+        const diferencaAceitavel = diferenca <= targetValue * 0.3; // Até 30% de diferença
+        
+        if (diferencaAceitavel && (superaValor || diferenca < melhorDiferenca)) {
+          melhorDiferenca = diferenca;
+          melhorCombinacao = combo.map((item, i) => ({
+            id: item.product.id + '-' + i,
+            name: item.product.name,
+            creditValue: item.product.credit_value,
+            installmentValue: item.parcelaUsada,
+            selected: true
+          }));
+          
+          // Se encontrou uma combinação exata ou muito próxima, parar
+          if (diferenca <= 100) break;
+        }
+      }
+      
+      // Se encontrou uma boa combinação, não precisa testar com mais produtos
+      if (melhorDiferenca <= targetValue * 0.1) break;
+    }
+    
+    console.log('[DEBUG] Melhor combinação por aporte:', melhorCombinacao);
+    return melhorCombinacao;
+  };
+
+  // Função auxiliar para gerar combinações
+  const gerarCombinacoes = (produtos: any[], tamanho: number): any[][] => {
+    if (tamanho === 1) return produtos.map(p => [p]);
+    
+    const combinacoes: any[][] = [];
+    
+    // Permitir repetição de produtos
+    function gerarComRepeticao(atual: any[], restante: number) {
+      if (restante === 0) {
+        combinacoes.push([...atual]);
+        return;
+      }
+      
+      for (const produto of produtos) {
+        atual.push(produto);
+        gerarComRepeticao(atual, restante - 1);
+        atual.pop();
       }
     }
-    if (credits.length === 0) {
-      console.warn('[SIMULADOR] Nenhum produto compatível com o valor informado.');
-    }
-    console.log('[DEBUG] Créditos sugeridos:', credits);
-    return credits;
+    
+    gerarComRepeticao([], tamanho);
+    return combinacoes.slice(0, 100); // Limitar para performance
   };
 
   // Atualizar para usar a função de múltiplos créditos
@@ -208,97 +292,8 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
           setAvailableProducts(products || []);
           console.log('[DEBUG] setAvailableProducts chamado:', products);
 
-          // Lógica inteligente para aporte (soma das parcelas) e crédito (soma dos créditos)
-          if (data.searchType === 'contribution' || data.searchType === 'credit') {
-            const sortedProducts = [...availableProducts].sort((a, b) => b.credit_value - a.credit_value);
-            // Tornar o map assíncrono e usar Promise.all
-            const produtosComParcelas = (await Promise.all(sortedProducts.map(async product => {
-              let installment = null;
-              if (Array.isArray(product.installment_types)) {
-                for (const it of product.installment_types) {
-                  const real = it.installment_types || it;
-                  if (real.installment_count === data.term) {
-                    installment = real;
-                    break;
-                  }
-                }
-              }
-              if (!installment) return null;
-              let reduction = null;
-              if (data.installmentType !== 'full' && installment.id) {
-                reduction = await buscarReducao(installment.id, data.administrator);
-              }
-              const parcelas = calcularParcelasProduto({
-                credit: product.credit_value,
-                installment,
-                reduction: data.installmentType !== 'full' ? reduction : null
-              });
-              return {
-                product,
-                installment,
-                parcela: data.installmentType === 'full' ? parcelas.full : parcelas.special
-              };
-            }))).filter(Boolean);
-            // Algoritmo de combinação com repetição (mochila simples)
-            let melhorCombinacao = [];
-            let melhorDiferenca = Infinity;
-            let melhorSoma = 0;
-            const maxItens = 6; // Limite para evitar laço infinito
-            if (produtosComParcelas.length > 0) {
-              // Testar combinações de 1 até maxItens produtos
-              function gerarCombinacoes(n: number, k: number, prefix: number[] = []): number[][] {
-                if (k === 0) return [prefix];
-                let result: number[][] = [];
-                for (let i = 0; i < n; i++) {
-                  result = result.concat(gerarCombinacoes(n, k - 1, [...prefix, i]));
-                }
-                return result;
-              }
-              for (let totalItens = 1; totalItens <= maxItens; totalItens++) {
-                const combinacoes = gerarCombinacoes(produtosComParcelas.length, totalItens);
-                for (const combo of combinacoes) {
-                  let somaParcelas = 0;
-                  let somaCreditos = 0;
-                  combo.forEach(idx => {
-                    somaParcelas += produtosComParcelas[idx].parcela;
-                    somaCreditos += produtosComParcelas[idx].product.credit_value;
-                  });
-                  let diff;
-                  if (data.searchType === 'contribution') {
-                    diff = somaParcelas - data.value;
-                    if (diff >= 0 && diff < melhorDiferenca) {
-                      melhorDiferenca = diff;
-                      melhorCombinacao = combo.slice();
-                      melhorSoma = somaParcelas;
-                    }
-                  } else {
-                    diff = somaCreditos - data.value;
-                    if (diff >= 0 && diff < melhorDiferenca) {
-                      melhorDiferenca = diff;
-                      melhorCombinacao = combo.slice();
-                      melhorSoma = somaCreditos;
-                    }
-                  }
-                }
-                if (melhorCombinacao.length > 0) break;
-              }
-            }
-            // Montar créditos sugeridos
-            const credits = melhorCombinacao.map((idx, i) => {
-              const item = produtosComParcelas[idx];
-              return {
-                id: item.product.id + '-' + i,
-                name: item.product.name,
-                creditValue: item.product.credit_value,
-                installmentValue: item.parcela,
-                selected: true
-              };
-            });
-            console.log('[DEBUG] Créditos sugeridos (inteligente):', credits);
-            setCredits(credits);
-            return;
-          }
-          const calculatedCredits = await sugerirMultiplosCreditos(products, data);
+          // Usar a nova função inteligente para todos os casos
+          const calculatedCredits = await sugerirCreditosInteligente(products || [], data);
           setCredits(calculatedCredits);
         } catch (error) {
           console.error('Error calculating credits:', error);
@@ -306,16 +301,6 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
       })();
     }
   }, [data]);
-
-  // Atualizar para usar a função de múltiplos créditos
-  useEffect(() => {
-    if (availableProducts.length > 0 && data.value > 0) {
-      (async () => {
-        const calculatedCredits = await sugerirMultiplosCreditos(availableProducts, data);
-        setCredits(calculatedCredits);
-      })();
-    }
-  }, [availableProducts, data]);
 
   useEffect(() => {
     if (showDetails && credits.length > 0) {
