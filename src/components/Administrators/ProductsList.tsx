@@ -119,7 +119,7 @@ export const ProductsList: React.FC<ProductsListProps> = ({
 
       setProducts(data || []);
     } catch (error) {
-      console.error('Erro ao buscar produtos:', error);
+      console.error('Erro ao buscar produtos:', error, 'selectedAdministrator:', selectedAdministrator);
     } finally {
       setLoading(false);
     }

@@ -144,18 +144,25 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   }, [open, product]);
 
   useEffect(() => {
-    if (!form.watch('administrator_id')) {
+    const adminId = form.watch('administrator_id');
+    if (!adminId) {
       setInstallmentTypes([]);
       return;
     }
     const fetchInstallments = async () => {
-      const { data, error } = await supabase
-        .from('installment_types')
-        .select('*')
-        .eq('administrator_id', form.watch('administrator_id'))
-        .eq('is_archived', false)
-        .order('installment_count');
-      setInstallmentTypes(data || []);
+      try {
+        const { data, error } = await supabase
+          .from('installment_types')
+          .select('*')
+          .eq('administrator_id', adminId)
+          .eq('is_archived', false)
+          .order('installment_count');
+        if (error) throw error;
+        setInstallmentTypes(data || []);
+      } catch (err) {
+        console.error('Erro ao buscar installment_types:', err, 'administrator_id:', adminId);
+        setInstallmentTypes([]);
+      }
     };
     fetchInstallments();
   }, [form.watch('administrator_id')]);
