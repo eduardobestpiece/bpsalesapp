@@ -537,3 +537,11 @@ Próximos passos:
 - Removida toda a lógica de sugestão automática de combinação de cotas (funções de combinação e debugs).
 - Montagem de cotas agora é feita apenas manualmente pelo usuário.
 - Código mais limpo e sem processamento desnecessário.
+
+## 2024-07-10 - Persistência e ações na montagem de cotas
+
+- Adicionados botões Salvar, Redefinir e Gerar proposta ao final da montagem de cotas.
+- Ao salvar, a montagem de cotas e filtros é persistida no Supabase para o usuário logado.
+- Ao redefinir, tudo é limpo e removido do Supabase.
+- Botão Gerar proposta abre modal "Em breve".
+- Sempre que o usuário acessar, sua última montagem salva é carregada automaticamente.

@@ -14,6 +14,7 @@ import { Input } from '@/components/ui/input';
 import { calcularParcelasProduto } from '@/utils/calculations';
 import { useCompany } from '@/contexts/CompanyContext';
 import { regraParcelaEspecial } from '@/lib/regraParcelaEspecial';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
 
 interface SimulationData {
   administrator: string;
@@ -59,6 +60,7 @@ function ResumoCard({ titulo, valor, destaquePositivo, destaqueNegativo }: { tit
 
 export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
   const { selectedCompanyId } = useCompany();
+  const { crmUser, companyId } = useCrmAuth();
   const [credits, setCredits] = useState<Credit[]>([]);
   const [availableProducts, setAvailableProducts] = useState<any[]>([]);
   const [selectedCreditForChange, setSelectedCreditForChange] = useState<string | null>(null);
@@ -79,6 +81,83 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
   const [tipoParcela, setTipoParcela] = useState<'full' | 'special'>('full');
   const [selectedProduct, setSelectedProduct] = useState<string>('');
   const [showAddProduct, setShowAddProduct] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [showComingSoon, setShowComingSoon] = useState(false);
+
+  // Carregar montagem salva ao abrir
+  useEffect(() => {
+    async function loadSaved() {
+      if (!crmUser?.id || !companyId) return;
+      const { data: configs } = await supabase
+        .from('simulator_configurations')
+        .select('*')
+        .eq('user_id', crmUser.id)
+        .eq('company_id', companyId)
+        .limit(1);
+      if (configs && configs.length > 0) {
+        const conf = configs[0].configuration || {};
+        setCotas(conf.cotas || []);
+        setTipoParcela(conf.tipoParcela || 'full');
+        setParcelaDesejada(conf.parcelaDesejada || 0);
+        // Adicione outros filtros se necessário
+      }
+    }
+    loadSaved();
+    // eslint-disable-next-line
+  }, [crmUser?.id, companyId]);
+
+  // Função para salvar montagem
+  const salvarMontagem = async () => {
+    if (!crmUser?.id || !companyId) return;
+    setSaving(true);
+    const conf = {
+      cotas,
+      tipoParcela,
+      parcelaDesejada,
+      // Adicione outros filtros se necessário
+    };
+    // Verifica se já existe
+    const { data: configs } = await supabase
+      .from('simulator_configurations')
+      .select('id')
+      .eq('user_id', crmUser.id)
+      .eq('company_id', companyId)
+      .limit(1);
+    if (configs && configs.length > 0) {
+      // Update
+      await supabase
+        .from('simulator_configurations')
+        .update({ configuration: conf, updated_at: new Date().toISOString() })
+        .eq('id', configs[0].id);
+    } else {
+      // Insert
+      await supabase
+        .from('simulator_configurations')
+        .insert({
+          user_id: crmUser.id,
+          company_id: companyId,
+          configuration: conf,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+    }
+    setSaving(false);
+  };
+
+  // Função para redefinir montagem
+  const redefinirMontagem = async () => {
+    setCotas([]);
+    setTipoParcela('full');
+    setParcelaDesejada(0);
+    // Apagar do Supabase
+    if (crmUser?.id && companyId) {
+      await supabase
+        .from('simulator_configurations')
+        .delete()
+        .eq('user_id', crmUser.id)
+        .eq('company_id', companyId);
+    }
+  };
 
   // Função para buscar redução associada ao produto/parcelas
   const buscarReducao = async (installmentTypeId: string, administratorId: string) => {
@@ -593,9 +672,30 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
               </div>
             )}
             
+            {/* Botões de ação */}
+            <div className="flex flex-col md:flex-row gap-2 mt-6">
+              <Button onClick={salvarMontagem} disabled={saving} className="flex-1 bg-green-600 hover:bg-green-700 text-white">
+                {saving ? 'Salvando...' : 'Salvar'}
+              </Button>
+              <Button onClick={redefinirMontagem} variant="outline" className="flex-1">
+                Redefinir
+              </Button>
+              <Button onClick={() => setShowComingSoon(true)} variant="outline" className="flex-1">
+                Gerar proposta
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
+      {/* Modal "Em breve" */}
+      <Dialog open={showComingSoon} onOpenChange={setShowComingSoon}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Em breve</DialogTitle>
+          </DialogHeader>
+          <div className="py-6 text-center text-lg">Funcionalidade de geração de proposta estará disponível em breve!</div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
