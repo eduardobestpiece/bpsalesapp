@@ -58,7 +58,7 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
   });
 
   // Função para buscar redução associada ao produto/parcelas
-  const buscarReducao = async (installmentTypeId: string) => {
+  const buscarReducao = async (installmentTypeId: string, administratorId: string) => {
     // Buscar relação installment_type_reductions
     const { data: rels } = await supabase
       .from('installment_type_reductions')
@@ -90,7 +90,7 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
       if (!installment) continue;
       let reduction = null;
       if (!isParcelaCheia && installment.id) {
-        reduction = await buscarReducao(installment.id);
+        reduction = await buscarReducao(installment.id, simulationData.administrator);
       }
       const parcelas = calcularParcelasProduto({
         credit: product.credit_value,
@@ -115,7 +115,7 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
       if (installment) {
         let reduction = null;
         if (!isParcelaCheia && installment.id) {
-          reduction = await buscarReducao(installment.id);
+          reduction = await buscarReducao(installment.id, simulationData.administrator);
         }
         const parcelas = calcularParcelasProduto({
           credit: menor.credit_value,
