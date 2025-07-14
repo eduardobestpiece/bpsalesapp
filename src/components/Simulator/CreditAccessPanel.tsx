@@ -86,8 +86,20 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
     let remaining = targetValue;
     const credits: Credit[] = [];
     for (const product of sortedProducts) {
+      // Log detalhado do conteúdo de installment_types
+      console.log('[DEBUG] installment_types do produto:', product.id, product.installment_types);
       // Buscar installment correspondente ao prazo
-      const installment = product.installment_types?.find((it: any) => it.installment_count === simulationData.term) || null;
+      let installment = null;
+      if (Array.isArray(product.installment_types)) {
+        // Caso venha como array de objetos aninhados (ex: {installment_types: {...}})
+        for (const it of product.installment_types) {
+          const real = it.installment_types || it; // pega o objeto interno se existir
+          if (real.installment_count === simulationData.term) {
+            installment = real;
+            break;
+          }
+        }
+      }
       console.log('[DEBUG] Produto analisado:', product, 'Installment encontrado:', installment);
       if (!installment) continue;
       let reduction = null;

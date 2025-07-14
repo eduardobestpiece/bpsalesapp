@@ -314,12 +314,13 @@ Correção do bug no simulador onde a consulta para a tabela `installment_reduct
 ## Data: 2024-07-10
 
 ### Diagnóstico
-- Produtos e tipos de parcela estão sendo carregados, mas a lista de créditos e campos calculados continuam zerados.
-- Não há mais erro 400 no Supabase e o console não mostra erro JS.
-- Hipótese: função de sugestão de créditos não está retornando resultados por algum motivo de lógica ou dados.
+- O simulador não sugeria créditos porque nenhum produto possuía um installment_type compatível com o prazo selecionado (ex: 240 meses).
+- O log mostrou que `installment_types` estava sempre retornando `null` no filtro.
+- Hipótese: a estrutura dos dados retornados de `product.installment_types` está aninhada (ex: array de objetos com campo interno `installment_types`).
 
 ### Ação executada
-- Adicionados logs detalhados na função `sugerirMultiplosCreditos` e no cálculo das parcelas no `CreditAccessPanel.tsx` para identificar onde o fluxo está retornando vazio.
+- Adicionado log detalhado do conteúdo de `product.installment_types`.
+- Ajustado o filtro para funcionar mesmo se vier como array de objetos aninhados (ex: `product.installment_types[0].installment_types.installment_count`).
 
 ### Próximos passos
 - Solicitar ao usuário que atualize a página, realize uma simulação e envie o novo log do console para análise. 
