@@ -476,23 +476,17 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
 
   useEffect(() => {
     async function fetchReducao() {
-      if (produtoCandidato && installmentCandidato && data.installmentType === 'special') {
-        // Buscar redução para o installment selecionado
-        const { data: rels } = await supabase
-          .from('installment_type_reductions')
-          .select('installment_reduction_id')
-          .eq('installment_type_id', installmentCandidato.id);
-        if (rels && rels.length > 0) {
-          const { data: reducoes } = await supabase
-            .from('installment_reductions')
-            .select('*')
-            .eq('id', rels[0].installment_reduction_id)
-            .eq('is_archived', false)
-            .limit(1);
-          if (reducoes && reducoes.length > 0) {
-            setReducaoParcela(reducoes[0]);
-            return;
-          }
+      if (produtoCandidato && installmentCandidato && data.installmentType !== 'full') {
+        // Buscar redução diretamente pelo ID selecionado
+        const { data: reducoes } = await supabase
+          .from('installment_reductions')
+          .select('*')
+          .eq('id', data.installmentType)
+          .eq('is_archived', false)
+          .limit(1);
+        if (reducoes && reducoes.length > 0) {
+          setReducaoParcela(reducoes[0]);
+          return;
         }
       }
       setReducaoParcela(null);
@@ -508,7 +502,7 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
       insurance_percent: installmentCandidato.insurance_percent || 0,
       optional_insurance: !!installmentCandidato.optional_insurance
     };
-    if (data.installmentType === 'special') {
+    if (data.installmentType !== 'full') {
       if (data.searchType === 'contribution') {
         // Cálculo baseado em Parcela (Aporte)
         const parcelaEspecial100k = regraParcelaEspecial({
