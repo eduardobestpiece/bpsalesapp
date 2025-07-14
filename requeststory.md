@@ -332,3 +332,24 @@ Correção do bug no simulador onde a consulta para a tabela `installment_reduct
   - [ ] Testar build localmente (opcional)
   - [ ] Realizar deploy
   - [ ] Solicitar validação 
+
+## 2024-07-10 - Mudança de dinâmica do simulador de crédito
+
+- Não sugerir mais créditos automaticamente.
+- O cálculo será feito com base no percentual que a parcela cheia ou reduzida representa do crédito.
+- O usuário digita o valor da parcela desejada, e a plataforma calcula o crédito correspondente usando o percentual.
+- O valor sugerido de crédito será arredondado para o múltiplo de 20 mil acima.
+- O usuário poderá adicionar/remover cotas manualmente para montar a simulação.
+- Se o valor total das cotas for menor que o simulado, aparece aviso vermelho; se igual ou maior, aviso verde.
+- Remover a sugestão automática de créditos.
+
+### Checklist
+- [ ] Adaptar cálculo de crédito sugerido por percentual
+- [ ] Arredondar crédito para múltiplos de 20 mil
+- [ ] Exibir valor da parcela correspondente
+- [ ] Permitir adicionar/remover cotas manualmente
+- [ ] Exibir aviso visual (vermelho/verde)
+- [ ] Remover sugestão automática de créditos
+- [ ] Testar novo fluxo
+- [ ] Realizar deploy
+- [ ] Solicitar validação 

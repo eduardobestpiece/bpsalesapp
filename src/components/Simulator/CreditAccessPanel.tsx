@@ -59,6 +59,11 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
     debtBalance: true,
   });
 
+  // 1. Adicionar estado para valor da parcela digitada e lista de cotas manuais
+  const [parcelaDesejada, setParcelaDesejada] = useState<number>(0);
+  const [cotas, setCotas] = useState<{produtoId: string, nome: string, valor: number, parcela: number, quantidade: number}[]>([]);
+  const [tipoParcela, setTipoParcela] = useState<'full' | 'special'>('full');
+
   // Função para buscar redução associada ao produto/parcelas
   const buscarReducao = async (installmentTypeId: string, administratorId: string) => {
     // Buscar relação installment_type_reductions
@@ -388,269 +393,129 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
     setSelectedCreditForChange(null);
   };
 
-  const selectedCredits = credits.filter(c => c.selected);
-  const totalCredit = selectedCredits.reduce((sum, c) => sum + c.creditValue, 0);
-  const totalInstallment = selectedCredits.reduce((sum, c) => sum + c.installmentValue, 0);
-
-  // Ajustar cálculo de taxas anual e atualização anual
-  let taxaTotalPercent = 0;
-  if (credits.length > 0) {
-    // Considerar o primeiro crédito como referência (todos devem ser iguais)
-    const first = credits[0];
-    const product = availableProducts.find(p => p.id === first.id.split('-')[0]);
-    if (product) {
-      const installment = product.installment_types?.find((it: any) => it.installment_count === data.term) || null;
-      if (installment) {
-        taxaTotalPercent = (installment.admin_tax_percent || 0) + (installment.reserve_fund_percent || 0);
+  // 3. Calcular percentuais de cada produto
+  const percentuais = availableProducts.map(produto => {
+    let installment = null;
+    if (Array.isArray(produto.installment_types)) {
+      for (const it of produto.installment_types) {
+        const real = it.installment_types || it;
+        if (real.installment_count === data.term) {
+          installment = real;
+          break;
+        }
       }
     }
-  }
-  const taxasAnual = taxaTotalPercent && data.term ? ((taxaTotalPercent / data.term) * 12) : null;
-  let textoAtualizacao = '-';
-  let valorAtualizacao = '-';
-  if (credits.length > 0) {
-    if (data.consortiumType === 'property') {
-      textoAtualizacao = 'INCC';
-      valorAtualizacao = '6%';
-    } else if (data.consortiumType === 'vehicle') {
-      textoAtualizacao = 'IPCA';
-      valorAtualizacao = '6%';
-    } else if (data.updateRate) {
-      textoAtualizacao = 'Atualização anual';
-      valorAtualizacao = data.updateRate.toFixed(2) + '%';
+    if (!installment) return null;
+    let reduction = null;
+    if (tipoParcela === 'special' && installment.id) {
+      // Não precisa await pois só para exibir percentual
+      // (usar valor já carregado ou 0 se não houver)
     }
+    const parcelas = calcularParcelasProduto({
+      credit: produto.credit_value,
+      installment,
+      reduction: tipoParcela === 'special' ? reduction : null
+    });
+    return {
+      produtoId: produto.id,
+      nome: produto.name,
+      valor: produto.credit_value,
+      percentualFull: parcelas.full / produto.credit_value,
+      percentualSpecial: parcelas.special / produto.credit_value,
+      parcelaFull: parcelas.full,
+      parcelaSpecial: parcelas.special
+    };
+  }).filter(Boolean);
+
+  // 4. Calcular crédito sugerido com base no percentual do produto selecionado (usar o menor produto como referência)
+  const produtoBase = percentuais.length > 0 ? percentuais[0] : null;
+  const percentualUsado = tipoParcela === 'full' ? produtoBase?.percentualFull : produtoBase?.percentualSpecial;
+  let creditoSugerido = 0;
+  if (parcelaDesejada > 0 && percentualUsado) {
+    creditoSugerido = parcelaDesejada / percentualUsado;
+    // Arredondar para múltiplo de 20 mil acima
+    creditoSugerido = Math.ceil(creditoSugerido / 20000) * 20000;
+  }
+  // Calcular parcela correspondente ao crédito sugerido
+  let parcelaCorrespondente = 0;
+  if (produtoBase && creditoSugerido > 0) {
+    parcelaCorrespondente = tipoParcela === 'full'
+      ? produtoBase.percentualFull * creditoSugerido
+      : produtoBase.percentualSpecial * creditoSugerido;
   }
 
-  if (!data.administrator || data.value <= 0) {
-    return (
-      <div className="flex items-center justify-center h-32 text-muted-foreground">
-        <p>Preencha os dados da simulação para ver os resultados</p>
-      </div>
-    );
-  }
+  // 5. Funções para adicionar/remover cotas
+  const adicionarCota = () => {
+    if (!produtoBase || creditoSugerido === 0) return;
+    setCotas(prev => [
+      ...prev,
+      {
+        produtoId: produtoBase.produtoId,
+        nome: produtoBase.nome,
+        valor: creditoSugerido,
+        parcela: parcelaCorrespondente,
+        quantidade: 1
+      }
+    ]);
+  };
+  const removerCota = (index: number) => {
+    setCotas(prev => prev.filter((_, i) => i !== index));
+  };
 
+  // 6. Calcular total das cotas
+  const totalCotas = cotas.reduce((sum, c) => sum + c.valor * c.quantidade, 0);
+
+  // 7. Renderização
   return (
     <div className="space-y-6">
-      {/* Resumo */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-sm text-muted-foreground">Crédito Total Acessado</div>
-            <div className="text-2xl font-bold text-primary">{formatCurrency(totalCredit)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-sm text-muted-foreground">Parcela Total</div>
-            <div className="text-2xl font-bold text-primary">{formatCurrency(totalInstallment)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-sm text-muted-foreground">Taxas anual</div>
-            <div className="text-2xl font-bold text-primary">{taxasAnual !== null ? taxasAnual.toFixed(2) + '%' : '-'}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-sm text-muted-foreground">Atualização anual</div>
-            <div className="text-2xl font-bold text-primary">{valorAtualizacao}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="text-sm text-muted-foreground">Índice</div>
-            <div className="text-2xl font-bold text-primary">{textoAtualizacao}</div>
-          </CardContent>
-        </Card>
+      <div className="flex flex-col md:flex-row gap-4 items-end">
+        <div>
+          <Label>Tipo de Parcela</Label>
+          <Select value={tipoParcela} onValueChange={v => setTipoParcela(v as 'full' | 'special')}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="full">Parcela Cheia</SelectItem>
+              <SelectItem value="special">Parcela Reduzida</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label>Valor da Parcela Desejada</Label>
+          <input
+            type="number"
+            className="input border rounded px-2 py-1"
+            value={parcelaDesejada}
+            onChange={e => setParcelaDesejada(Number(e.target.value))}
+            min={0}
+          />
+        </div>
+        <div>
+          <Label>Crédito Sugerido</Label>
+          <div className="font-bold">{creditoSugerido > 0 ? formatCurrency(creditoSugerido) : '-'}</div>
+        </div>
+        <div>
+          <Label>Parcela Correspondente</Label>
+          <div className="font-bold">{parcelaCorrespondente > 0 ? formatCurrency(parcelaCorrespondente) : '-'}</div>
+        </div>
+        <Button onClick={adicionarCota} disabled={creditoSugerido === 0}>Adicionar Cota</Button>
       </div>
-
-      {/* Lista de Créditos */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold">Lista de Créditos</h3>
-        
-        {credits.map((credit) => (
-          <Card key={credit.id} className={`transition-all ${credit.selected ? 'ring-2 ring-primary' : 'opacity-60'}`}>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center space-x-3 mb-2">
-                    <h4 className="font-medium">{credit.name}</h4>
-                    {credit.selected && <Badge variant="secondary">Selecionado</Badge>}
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-muted-foreground">Valor do Crédito:</span>
-                      <div className="font-medium">{formatCurrency(credit.creditValue)}</div>
-                    </div>
-                    <div>
-                      <span className="text-muted-foreground">Valor da Parcela:</span>
-                      <div className="font-medium">{formatCurrency(credit.installmentValue)}</div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex space-x-2">
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm" onClick={() => setSelectedCreditForChange(credit.id)}>
-                        <RefreshCw className="h-4 w-4 mr-1" />
-                        Troca
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Trocar Opção de Crédito</DialogTitle>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <Select onValueChange={(value) => changeCreditOption(credit.id, value)}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Selecione uma nova opção" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {availableProducts.map((product) => (
-                              <SelectItem key={product.id} value={product.id}>
-                                {product.name} - {formatCurrency(product.credit_value)}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                  
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => toggleCreditSelection(credit.id)}
-                    disabled={credit.selected && selectedCredits.length <= 1}
-                  >
-                    <Trash2 className="h-4 w-4 mr-1" />
-                    Desmarcar
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+      <div>
+        <h3 className="text-lg font-semibold mb-2">Montagem de Cotas</h3>
+        {cotas.length === 0 && <div className="text-muted-foreground">Nenhuma cota adicionada.</div>}
+        {cotas.map((cota, idx) => (
+          <div key={idx} className="flex items-center gap-2 mb-2">
+            <div className="flex-1">{cota.nome} - {formatCurrency(cota.valor)} x {cota.quantidade} (Parcela: {formatCurrency(cota.parcela)})</div>
+            <Button variant="outline" size="sm" onClick={() => removerCota(idx)}><Trash2 className="h-4 w-4" /></Button>
+          </div>
         ))}
-      </div>
-
-      {/* Botão Detalhar */}
-      <div className="flex justify-center">
-        <Collapsible open={showDetails} onOpenChange={setShowDetails}>
-          <CollapsibleTrigger asChild>
-            <Button variant="ghost" size="sm" className="text-muted-foreground">
-              {showDetails ? (
-                <>
-                  <ChevronUp className="h-4 w-4 mr-1" />
-                  Ocultar detalhes
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="h-4 w-4 mr-1" />
-                  Detalhar
-                </>
-              )}
-            </Button>
-          </CollapsibleTrigger>
-          
-          <CollapsibleContent className="space-y-4 mt-4">
-            {/* Controles do detalhamento */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 bg-gray-50 rounded-lg">
-              <div className="space-y-2">
-                <Label>Estrutura</Label>
-                <Select value={structureType} onValueChange={(value: 'normal' | 'administrator') => setStructureType(value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="normal">Normal</SelectItem>
-                    <SelectItem value="administrator">Administradora</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Parcelas para visualizar</Label>
-                <Select value={viewableInstallments.toString()} onValueChange={(value) => setViewableInstallments(parseInt(value))}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: Math.floor(data.term / 12) }, (_, i) => (i + 1) * 12).map(months => (
-                      <SelectItem key={months} value={months.toString()}>
-                        {months} meses
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Colunas visíveis</Label>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="col-month" 
-                      checked={visibleColumns.month}
-                      onCheckedChange={(checked) => setVisibleColumns(prev => ({ ...prev, month: !!checked }))}
-                    />
-                    <Label htmlFor="col-month" className="text-sm">Número do mês</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="col-credit" 
-                      checked={visibleColumns.creditValue}
-                      onCheckedChange={(checked) => setVisibleColumns(prev => ({ ...prev, creditValue: !!checked }))}
-                    />
-                    <Label htmlFor="col-credit" className="text-sm">Valor do crédito</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="col-installment" 
-                      checked={visibleColumns.installmentValue}
-                      onCheckedChange={(checked) => setVisibleColumns(prev => ({ ...prev, installmentValue: !!checked }))}
-                    />
-                    <Label htmlFor="col-installment" className="text-sm">Valor da parcela</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="col-debt" 
-                      checked={visibleColumns.debtBalance}
-                      onCheckedChange={(checked) => setVisibleColumns(prev => ({ ...prev, debtBalance: !!checked }))}
-                    />
-                    <Label htmlFor="col-debt" className="text-sm">Saldo devedor</Label>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {/* Tabela de detalhamento */}
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse border border-gray-200">
-                <thead>
-                  <tr className="bg-gray-50">
-                    {visibleColumns.month && <th className="border border-gray-200 p-3 text-left">Mês</th>}
-                    {visibleColumns.creditValue && <th className="border border-gray-200 p-3 text-left">Valor do Crédito</th>}
-                    {visibleColumns.installmentValue && <th className="border border-gray-200 p-3 text-left">Valor da Parcela</th>}
-                    {visibleColumns.debtBalance && <th className="border border-gray-200 p-3 text-left">Saldo Devedor</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {monthlyDetails.map((detail) => (
-                    <tr key={detail.month} className="hover:bg-gray-50">
-                      {visibleColumns.month && <td className="border border-gray-200 p-3">{detail.month}</td>}
-                      {visibleColumns.creditValue && <td className="border border-gray-200 p-3">{formatCurrency(detail.creditValue)}</td>}
-                      {visibleColumns.installmentValue && <td className="border border-gray-200 p-3">{formatCurrency(detail.installmentValue)}</td>}
-                      {visibleColumns.debtBalance && <td className="border border-gray-200 p-3">{formatCurrency(detail.debtBalance)}</td>}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+        <div className="mt-2">
+          <span>Total das cotas: <b>{formatCurrency(totalCotas)}</b></span>
+          {parcelaDesejada > 0 && (
+            <span className={`ml-4 font-bold ${totalCotas >= creditoSugerido ? 'text-green-600' : 'text-red-600'}`}>
+              {totalCotas >= creditoSugerido ? 'Dentro do planejamento' : 'Abaixo do valor simulado'}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );
