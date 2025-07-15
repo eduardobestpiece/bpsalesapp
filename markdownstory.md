@@ -565,3 +565,14 @@ Próximos passos:
 - 2024-07-10: Iniciado redesign da aba de alavancagem patrimonial: layout agrupado conforme wireframe, slider/input de contemplação, botões de seleção lado a lado e base de cálculo ajustada para 'Crédito Acessado'.
 - 2024-07-10: Corrigido: campo de valor do imóvel em 'Características do Imóvel' agora é livre; cálculos de alavancagem patrimonial usam exclusivamente o valor de Crédito Acessado.
 - 2024-07-10: Correção urgente solicitada na aba de alavancagem patrimonial: garantir uso do valor de Crédito Acessado em todos os cálculos e exibições, campo de valor do imóvel livre e iniciando vazio, remoção da seção 'Mês de Contemplação', remoção da borda preta dos botões de seleção e exibição dinâmica do texto de contemplação conforme tipo de alavancagem.
+
+## 2024-07-11 – Documentação das regras de cálculo do simulador
+
+- As regras e fórmulas utilizadas para calcular os campos "Crédito Acessado" e "Valor da Parcela" na aba "Crédito Acessado" do simulador foram documentadas detalhadamente no arquivo `supabasetypes.md`.
+- A documentação inclui explicações, exemplos práticos e as fórmulas/funções principais do sistema.
+- Isso garante rastreabilidade e referência para desenvolvedores e analistas.
+
+## 2024-07-11 – Regras de cálculo movidas para documento separado
+
+- As regras e fórmulas de cálculo do simulador para 'Crédito Acessado' e 'Valor da Parcela' foram removidas do arquivo `supabasetypes.md` e agora estão documentadas em `docs_regras_calculo_simulador.md`.
+- O objetivo é facilitar a consulta e manter a documentação organizada.
