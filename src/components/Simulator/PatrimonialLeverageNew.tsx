@@ -127,12 +127,23 @@ export const PatrimonialLeverageNew = ({
 
   // Crédito recomendado (quando embutido ativado)
   const creditoRecomendado = useMemo(() => {
-    if (embutido !== 'com' || !creditoPorImovelComEmbutido) return null;
-    // Debug: mostrar cálculo intermediário no console
-    console.log('valorImovel:', valorImovel, 'percentualEmbutido:', percentualEmbutido, 'creditoPorImovelComEmbutido:', creditoPorImovelComEmbutido);
-    let arredondado = Math.ceil(creditoPorImovelComEmbutido / 100000) * 100000;
-    return arredondado;
-  }, [embutido, creditoPorImovelComEmbutido, valorImovel, percentualEmbutido]);
+    if (embutido !== 'com' || !creditoPorImovelComEmbutido || !valorImovel) return null;
+    
+    // Calcular crédito por imóvel com embutido usando a fórmula correta
+    const embutidoTotal = percentualEmbutido + (percentualEmbutido * percentualEmbutido);
+    const creditoPorImovel = valorImovel + (valorImovel * embutidoTotal);
+    
+    // Calcular número de imóveis baseado no crédito acessado
+    const numImoveis = Math.ceil(valorBase / creditoPorImovel);
+    
+    // Calcular crédito recomendado
+    const creditoBase = numImoveis * creditoPorImovel;
+    
+    // Arredondar para múltiplo de 10.000 para cima
+    const creditoArredondado = Math.ceil(creditoBase / 10000) * 10000;
+    
+    return creditoArredondado;
+  }, [embutido, valorImovel, percentualEmbutido, valorBase]);
 
   // Despesas
   const despesas = useMemo(() => {
@@ -144,13 +155,17 @@ export const PatrimonialLeverageNew = ({
     if (!percentualOcupacao) return 0;
     return Math.round(30 * percentualOcupacao);
   }, [percentualOcupacao]);
-  // Patrimônio na contemplação (para modalidade Aporte)
+  // Patrimônio na contemplação 
   const patrimonioContemplacao = useMemo(() => {
     if (simulationData.searchType === 'contribution') {
+      // Para modalidade Aporte: numeroImoveis * valorImovel
+      return numeroImoveis * valorImovel;
+    } else {
+      // Para modalidade Crédito: usar o valor base (creditoAcessado ou valor digitado)
+      // E calcular quantos imóveis consegue comprar: numeroImoveis * valorImovel
       return numeroImoveis * valorImovel;
     }
-    return valorBase;
-  }, [simulationData.searchType, numeroImoveis, valorImovel, valorBase]);
+  }, [simulationData.searchType, numeroImoveis, valorImovel]);
 
   // Atualizar valorização anual automaticamente baseado na taxa de atualização
   useEffect(() => {
