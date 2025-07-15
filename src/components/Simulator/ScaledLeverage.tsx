@@ -35,9 +35,11 @@ interface ScaledLeverageProps {
   };
   contemplationMonth: number;
   valorImovel: number;
+  numeroImoveis?: number;
+  patrimonioContemplacao?: number;
 }
 
-export const ScaledLeverage = ({ administrator, product, propertyData, installmentType, simulationData, contemplationMonth, valorImovel }: ScaledLeverageProps) => {
+export const ScaledLeverage = ({ administrator, product, propertyData, installmentType, simulationData, contemplationMonth, valorImovel, numeroImoveis = 0, patrimonioContemplacao }: ScaledLeverageProps) => {
   // Usar contemplationMonth como frequência de contemplação
   const [contemplationFrequency, setContemplationFrequency] = useState(contemplationMonth || 60);
   
@@ -100,8 +102,18 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
     });
   }
 
+  // Calcular patrimônio na contemplação
+  const patrimonioNaContemplacao = patrimonioContemplacao !== undefined ? patrimonioContemplacao : totalCreditValue;
+
   return (
     <div className="space-y-6">
+      {/* Número de imóveis */}
+      <Card className="mb-2">
+        <CardContent className="p-4 flex items-center gap-4">
+          <Label className="text-sm font-medium">Número de imóveis:</Label>
+          <span className="text-lg font-bold">{numeroImoveis}</span>
+        </CardContent>
+      </Card>
       {/* Informações do Crédito Calculado */}
       {simulationData.searchType === 'credit' && (
         <Card className="bg-blue-50 border-blue-200">
@@ -136,10 +148,10 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
             <div className="space-y-2">
               <Label className="text-sm text-muted-foreground">Patrimônio Total Contemplado</Label>
               <div className="text-xl font-semibold text-primary">
-                {formatCurrency(totalCreditValue)}
+                {formatCurrency(patrimonioNaContemplacao)}
               </div>
               <Badge variant="outline" className="text-xs">
-                {totalContemplations} propriedades
+                {numeroImoveis} propriedades
               </Badge>
             </div>
             

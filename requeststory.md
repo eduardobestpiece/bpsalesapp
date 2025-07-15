@@ -436,3 +436,29 @@ Ajustes visuais e funcionais nos botões, modal e salvamento de filtros na monta
 - [ ] Solicitar validação
 
 **Status:** Iniciando implementação dos ajustes no frontend para a aba de alavancagem patrimonial. 
+
+# Requisição em andamento - 2024-07-11
+
+## Ajuste na aba "Alavancagem Patrimonial"
+
+- No campo "Características do Imóvel":
+  - Exibir apenas o seletor de alavanca.
+  - Se a alavanca selecionada for "Imóvel tem valor fixo" = Falso, mostrar o campo de digitar o valor do imóvel à direita.
+  - Se "Imóvel tem valor fixo" = Verdadeiro, não mostrar o campo de digitar valor (usar o valor fixo da alavanca).
+- Acima das características do imóvel, adicionar um seletor: "Com embutido" / "Sem embutido".
+- Adicionar informação abaixo das características: "Número de imóveis".
+- O campo "Número de Imóveis" irá calcular = Crédito acessado (mesmo cálculo e regra do "Crédito Acessado" na aba "Crédito Acessado" da página do simulador) / Valor do Imóvel (manual ou da alavanca, conforme o caso).
+- Se a modalidade for "Aporte", o cálculo do campo "Patrimônio na Contemplação" será: Número de Imóveis × Valor do Imóvel (manual ou da alavanca, conforme o caso).
+
+### Checklist
+- [ ] Registrar requisição em `requeststory.md`
+- [ ] Localizar e analisar componente de alavancagem patrimonial
+- [ ] Ajustar exibição do campo de valor do imóvel conforme flag
+- [ ] Adicionar seletor "Com embutido"/"Sem embutido"
+- [ ] Adicionar campo "Número de imóveis" com cálculo correto
+- [ ] Ajustar cálculo do campo "Patrimônio na Contemplação"
+- [ ] Testar todos os fluxos
+- [ ] Realizar deploy automático
+- [ ] Solicitar validação
+
+**Status:** Iniciando análise e implementação dos ajustes na aba Alavancagem Patrimonial. 

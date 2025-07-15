@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { LeverageTypes } from './LeverageTypes';
 import { SingleLeverage } from './SingleLeverage';
@@ -93,9 +93,29 @@ export const PatrimonialLeverageNew = ({
   });
   // Valor base para cálculos: crédito acessado se disponível, senão valor digitado
   const valorBase = creditoAcessado && creditoAcessado > 0 ? creditoAcessado : simulationData.value;
-  // Novo estado local para o campo de valor do imóvel (livre, inicia vazio)
-  const [valorImovel, setValorImovel] = useState<number | ''>('');
+  // Estado local para o campo de valor do imóvel (livre, inicia vazio)
+  const [valorImovelManual, setValorImovelManual] = useState<number | ''>('');
   const [contemplationMonth, setContemplationMonth] = useState(6);
+  // Novo: estado para embutido
+  const [embutido, setEmbutido] = useState<'com' | 'sem'>('com');
+
+  // Determinar se a alavanca tem valor fixo
+  const hasValorFixo = !!leverageData?.fixed_property_value;
+  // Valor do imóvel considerado
+  const valorImovel = hasValorFixo ? leverageData?.fixed_property_value || 0 : Number(valorImovelManual) || 0;
+  // Número de imóveis (arredondado para cima)
+  const numeroImoveis = useMemo(() => {
+    if (!valorImovel || valorImovel === 0) return 0;
+    return Math.ceil(valorBase / valorImovel);
+  }, [valorBase, valorImovel]);
+
+  // Patrimônio na contemplação (para modalidade Aporte)
+  const patrimonioContemplacao = useMemo(() => {
+    if (simulationData.searchType === 'contribution') {
+      return numeroImoveis * valorImovel;
+    }
+    return valorBase;
+  }, [simulationData.searchType, numeroImoveis, valorImovel, valorBase]);
 
   // Atualizar valorização anual automaticamente baseado na taxa de atualização
   useEffect(() => {
@@ -136,6 +156,24 @@ export const PatrimonialLeverageNew = ({
 
   return (
     <div className="space-y-6">
+      {/* Seletor Com embutido/Sem embutido */}
+      <Card className="p-4 mb-2">
+        <div className="flex gap-4 items-center">
+          <Label className="font-medium">Modalidade:</Label>
+          <Button
+            variant={embutido === 'com' ? 'default' : 'outline'}
+            onClick={() => setEmbutido('com')}
+          >
+            Com embutido
+          </Button>
+          <Button
+            variant={embutido === 'sem' ? 'default' : 'outline'}
+            onClick={() => setEmbutido('sem')}
+          >
+            Sem embutido
+          </Button>
+        </div>
+      </Card>
       {/* Novo layout agrupado */}
       <Card className="p-6">
         <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
@@ -143,24 +181,31 @@ export const PatrimonialLeverageNew = ({
           <div className="flex-1 min-w-[280px]">
             <div className="mb-2 text-lg font-bold">Características do Imóvel</div>
             <div className="flex gap-2 mb-2">
-              <Input
-                type="number"
-                value={valorImovel}
-                onChange={e => setValorImovel(e.target.value === '' ? '' : Number(e.target.value))}
-                className="font-bold text-lg bg-gray-100 border-2 rounded-xl px-4 py-2 w-48"
-                style={{ minWidth: 180 }}
-                placeholder="Valor do imóvel"
-              />
               <LeverageSelector
                 selectedLeverage={selectedLeverage}
                 onLeverageChange={setSelectedLeverage}
                 onLeverageData={setLeverageData}
               />
+              {!hasValorFixo && (
+                <Input
+                  type="number"
+                  value={valorImovelManual}
+                  onChange={e => setValorImovelManual(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="font-bold text-lg bg-gray-100 border-2 rounded-xl px-4 py-2 w-48"
+                  style={{ minWidth: 180 }}
+                  placeholder="Valor do imóvel"
+                />
+              )}
             </div>
             <div className="text-xs text-muted-foreground mt-2">
               <div>Subtipo: {leverageData?.subtype || '-'}</div>
               <div>Ocupação: {leverageData?.occupancy_rate ? `${leverageData.occupancy_rate}%` : '-'}</div>
               <div>Despesas: {leverageData?.total_expenses ? `R$ ${leverageData.total_expenses}` : '-'}</div>
+            </div>
+            {/* Número de imóveis */}
+            <div className="mt-4">
+              <Label className="text-sm font-medium">Número de imóveis:</Label>
+              <span className="ml-2 text-lg font-bold">{numeroImoveis}</span>
             </div>
           </div>
           {/* Direita: Exemplo de contemplação e botões */}
@@ -220,6 +265,8 @@ export const PatrimonialLeverageNew = ({
             simulationData={{ ...simulationData, value: valorBase }}
             contemplationMonth={contemplationMonth}
             valorImovel={valorImovel}
+            numeroImoveis={numeroImoveis}
+            patrimonioContemplacao={patrimonioContemplacao}
           />
         ) : (
           <ScaledLeverage 
@@ -230,6 +277,8 @@ export const PatrimonialLeverageNew = ({
             simulationData={{ ...simulationData, value: valorBase }}
             contemplationMonth={contemplationMonth}
             valorImovel={valorImovel}
+            numeroImoveis={numeroImoveis}
+            patrimonioContemplacao={patrimonioContemplacao}
           />
         )
       ) : (

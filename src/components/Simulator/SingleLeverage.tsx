@@ -35,9 +35,11 @@ interface SingleLeverageProps {
   };
   contemplationMonth: number;
   valorImovel: number;
+  numeroImoveis?: number;
+  patrimonioContemplacao?: number;
 }
 
-export const SingleLeverage = ({ administrator, product, propertyData, installmentType, simulationData, contemplationMonth, valorImovel }: SingleLeverageProps) => {
+export const SingleLeverage = ({ administrator, product, propertyData, installmentType, simulationData, contemplationMonth, valorImovel, numeroImoveis = 0, patrimonioContemplacao }: SingleLeverageProps) => {
   
   // Remover state de contemplationMonth, usar prop
   
@@ -45,6 +47,9 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
   // Agora, simulationData.value já é o Crédito Acessado
   const creditValue = simulationData.value;
   
+  // Calcular patrimônio na contemplação
+  const patrimonioNaContemplacao = patrimonioContemplacao !== undefined ? patrimonioContemplacao : creditValue;
+
   const property = {
     id: 'single-property',
     type: propertyData.type,
@@ -100,6 +105,13 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
 
   return (
     <div className="space-y-6">
+      {/* Número de imóveis */}
+      <Card className="mb-2">
+        <CardContent className="p-4 flex items-center gap-4">
+          <Label className="text-sm font-medium">Número de imóveis:</Label>
+          <span className="text-lg font-bold">{numeroImoveis}</span>
+        </CardContent>
+      </Card>
       {/* Informações do Crédito Calculado */}
       {simulationData.searchType === 'credit' && (
         <Card className="bg-blue-50 border-blue-200">
@@ -134,7 +146,7 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
             <div className="space-y-2">
               <Label className="text-sm text-muted-foreground">Patrimônio na Contemplação</Label>
               <div className="text-xl font-semibold text-primary">
-                {formatCurrency(propertyValueAtContemplation)}
+                {formatCurrency(patrimonioNaContemplacao)}
               </div>
             </div>
             
