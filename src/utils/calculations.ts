@@ -140,10 +140,6 @@ export const calculatePatrimonialEvolution = (data: SimulatorData) => {
 
 /**
  * Calcula o valor da parcela cheia e especial conforme regras do produto.
- * @param credit Valor do crédito
- * @param installment Objeto da parcela selecionada (deve conter: installment_count, admin_tax_percent, reserve_fund_percent, insurance_percent, optional_insurance)
- * @param reduction Objeto da redução (opcional, para especial)
- * @returns { full: number, special: number }
  */
 export function calcularParcelasProduto({
   credit,
@@ -167,11 +163,14 @@ export function calcularParcelasProduto({
   const taxaAdm = installment.admin_tax_percent || 0;
   const fundoReserva = installment.reserve_fund_percent || 0;
   const seguro = installment.optional_insurance ? 0 : (installment.insurance_percent || 0);
+  
   // Cálculo Parcela Cheia
   const valorCheia = (credit + ((credit * taxaAdm / 100) + (credit * fundoReserva / 100) + (credit * seguro / 100))) / nParcelas;
+  
   // Cálculo Parcela Especial
   let percentualReducao = 0;
   let aplicaParcela = false, aplicaTaxaAdm = false, aplicaFundoReserva = false, aplicaSeguro = false;
+  
   if (reduction) {
     percentualReducao = reduction.reduction_percent / 100;
     aplicaParcela = reduction.applications?.includes('installment');
@@ -179,15 +178,93 @@ export function calcularParcelasProduto({
     aplicaFundoReserva = reduction.applications?.includes('reserve_fund');
     aplicaSeguro = reduction.applications?.includes('insurance');
   }
+  
   const principal = aplicaParcela ? credit - (credit * percentualReducao) : credit;
   const taxa = aplicaTaxaAdm ? (credit * taxaAdm / 100) - ((credit * taxaAdm / 100) * percentualReducao) : (credit * taxaAdm / 100);
   const fundo = aplicaFundoReserva ? (credit * fundoReserva / 100) - ((credit * fundoReserva / 100) * percentualReducao) : (credit * fundoReserva / 100);
+  
   let seguroValor = 0;
   if (!installment.optional_insurance) {
     seguroValor = aplicaSeguro
       ? (credit * seguro / 100) - ((credit * seguro / 100) * percentualReducao)
       : (credit * seguro / 100);
   }
+  
   const valorEspecial = (principal + taxa + fundo + seguroValor) / nParcelas;
+  
   return { full: valorCheia, special: valorEspecial };
+}
+
+/**
+ * Calcula os valores da alavancagem patrimonial baseado nos parâmetros reais
+ */
+export function calculateLeverageValues({
+  creditValue,
+  propertyValue,
+  propertyCount,
+  contemplationMonth,
+  termMonths,
+  dailyRate,
+  occupancyRate,
+  fixedCosts,
+  appreciationRate
+}: {
+  creditValue: number;
+  propertyValue: number;
+  propertyCount: number;
+  contemplationMonth: number;
+  termMonths: number;
+  dailyRate?: number;
+  occupancyRate?: number;
+  fixedCosts: number;
+  appreciationRate: number;
+}) {
+  // 1. Ganhos mensais por imóvel
+  const ganhosPorImovel = dailyRate && occupancyRate 
+    ? (dailyRate * 30 * (occupancyRate / 100)) - fixedCosts
+    : 0;
+  
+  // 2. Ganhos mensais totais
+  const ganhosMensais = ganhosPorImovel * propertyCount;
+  
+  // 3. Parcela mensal do consórcio
+  const parcelaMensalConsorcio = creditValue / termMonths;
+  
+  // 4. Parcela pós-contemplação (sem alteração, é a mesma parcela)
+  const parcelaPosPosContemplacao = parcelaMensalConsorcio;
+  
+  // 5. Fluxo de caixa antes do fim do consórcio
+  const fluxoCaixaAntes = ganhosMensais - parcelaMensalConsorcio;
+  
+  // 6. Fluxo de caixa após fim do consórcio (sem parcela do consórcio)
+  const fluxoCaixaApos = ganhosMensais;
+  
+  // 7. Valor pago do próprio bolso (parcelas até contemplação)
+  const pagoProprioBolso = parcelaMensalConsorcio * contemplationMonth;
+  
+  // 8. Valor pago pelo inquilino (ganhos dos imóveis após contemplação)
+  const mesesAposContemplacao = termMonths - contemplationMonth;
+  const pagoInquilino = ganhosMensais * mesesAposContemplacao;
+  
+  // 9. Capital em caixa (fluxo de caixa acumulado durante período do consórcio)
+  const capitalEmCaixa = fluxoCaixaAntes * mesesAposContemplacao;
+  
+  // 10. Patrimônio na contemplação
+  const patrimonioNaContemplacao = propertyValue * propertyCount;
+  
+  // 11. Patrimônio ao final (com valorização)
+  const anosAposContemplacao = (termMonths - contemplationMonth) / 12;
+  const patrimonioAoFinal = patrimonioNaContemplacao * Math.pow(1 + (appreciationRate / 100), anosAposContemplacao);
+  
+  return {
+    ganhosMensais,
+    parcelaPosPosContemplacao,
+    fluxoCaixaAntes,
+    fluxoCaixaApos,
+    pagoProprioBolso,
+    pagoInquilino,
+    capitalEmCaixa,
+    patrimonioNaContemplacao,
+    patrimonioAoFinal
+  };
 }

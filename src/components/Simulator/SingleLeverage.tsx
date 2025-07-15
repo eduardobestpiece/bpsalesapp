@@ -41,13 +41,7 @@ interface SingleLeverageProps {
 
 export const SingleLeverage = ({ administrator, product, propertyData, installmentType, simulationData, contemplationMonth, valorImovel, numeroImoveis = 0, patrimonioContemplacao }: SingleLeverageProps) => {
   
-  // Remover state de contemplationMonth, usar prop
-  
-  // Calcular crédito baseado no valor desejado e tipo de contemplação
-  // Agora, simulationData.value já é o Crédito Acessado
   const creditValue = simulationData.value;
-  
-  // Calcular patrimônio na contemplação
   const patrimonioNaContemplacao = patrimonioContemplacao !== undefined ? patrimonioContemplacao : creditValue;
 
   const property = {
@@ -79,7 +73,7 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
     }).format(value);
   };
 
-  // Cálculos baseados nas regras especificadas pelo usuário - CORRIGIDOS
+  // Cálculos baseados nas regras especificadas pelo usuário
   const taxaAtualizacaoAnual = simulationData.updateRate / 100;
   const taxaValorizacao = propertyData.appreciationRate / 100;
   
@@ -89,32 +83,37 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
   // Patrimônio ao final
   const patrimonioAoFinal = patrimonioNaContemplacaoCalculado * Math.pow(1 + taxaValorizacao, (product.termMonths - contemplationMonth) / 12);
   
-  // Ganhos mensais corrigidos
-  const ganhosMensaisBase = propertyData.type === 'short-stay' 
-    ? (valorImovel * 0.03 / 100) * 30 * ((propertyData.occupancyRate || 70) / 100)
-    : (propertyData.monthlyRent || 2500);
-  
-  // VALORES CORRETOS CONFORME ESPECIFICADO PELO USUÁRIO
-  const parcelaPosPosContemplacao = 10705.80;
-  const ganhosMensais = 25292.46;
-  const fluxoCaixaAntes = 3767.11;
-  const fluxoCaixaApos = 34685.17;
-  const pagoProprioBolso = 336293.79;
-  const pagoInquilino = 1671044.21;
-  const capitalEmCaixa = 1163706.21;
-  
-  // Valor da parcela
-  const parcelaMensal = creditValue / product.termMonths;
-  
-  // Crédito atualizado até a contemplação
-  const creditoAtualizado = creditValue * Math.pow(1 + taxaAtualizacaoAnual, contemplationMonth / 12);
-  
-  // Valor pago até a contemplação
-  const valorPagoAteContemplacao = parcelaMensal * contemplationMonth;
-  
-  // Saldo devedor após contemplação
-  const saldoDevedor = creditoAtualizado - valorPagoAteContemplacao;
+  // CÁLCULOS CORRETOS BASEADOS NAS FÓRMULAS FORNECIDAS
 
+  // 1. Ganhos mensais
+  const ganhosMensaisBase = propertyData.type === 'short-stay' 
+    ? (propertyData.dailyRate || 0) * 30 * ((propertyData.occupancyRate || 70) / 100) - propertyData.fixedCosts
+    : (propertyData.monthlyRent || 0) - propertyData.fixedCosts;
+  
+  const ganhosMensais = ganhosMensaisBase * numeroImoveis;
+
+  // 2. Parcela mensal do consórcio
+  const parcelaMensalConsorcio = creditValue / product.termMonths;
+  
+  // 3. Parcela pós-contemplação (após término do consórcio)
+  const parcelaPosPosContemplacao = parcelaMensalConsorcio;
+  
+  // 4. Fluxo de caixa antes do fim do consórcio (240 meses)
+  const fluxoCaixaAntes = ganhosMensais - parcelaMensalConsorcio;
+  
+  // 5. Fluxo de caixa após fim do consórcio (sem parcela)
+  const fluxoCaixaApos = ganhosMensais;
+  
+  // 6. Valor pago do próprio bolso (parcelas pagas até contemplação)
+  const pagoProprioBolso = parcelaMensalConsorcio * contemplationMonth;
+  
+  // 7. Valor pago pelo inquilino (ganhos dos imóveis durante todo o período)
+  const mesesAposContemplacao = product.termMonths - contemplationMonth;
+  const pagoInquilino = ganhosMensais * mesesAposContemplacao;
+  
+  // 8. Capital em caixa (fluxo de caixa acumulado após contemplação)
+  const capitalEmCaixa = fluxoCaixaAntes * mesesAposContemplacao;
+  
   // Dados para o gráfico com atualização anual
   const chartData = [];
   for (let month = 1; month <= product.termMonths; month++) {
@@ -140,16 +139,10 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
     });
   }
   
-  // Adicionar informação do número de imóveis ao final
   const numeroImoveisAoFinal = numeroImoveis;
 
   return (
     <div className="space-y-6">
-      {/* Informações do Crédito Calculado */}
-      {/* Removido: Card de Crédito Recomendado e Valor Líquido Estimado para modalidade Crédito */}
-
-      {/* Removido Card de Mês de Contemplação */}
-
       {/* Dados da Alavancagem */}
       <Card>
         <CardHeader>
@@ -219,7 +212,7 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
                 {formatCurrency(capitalEmCaixa)}
               </div>
               <Badge variant="outline" className="text-xs bg-white/50">
-                {((capitalEmCaixa / creditoAtualizado) * 100).toFixed(1)}%
+                {((capitalEmCaixa / creditValue) * 100).toFixed(1)}%
               </Badge>
             </div>
           </div>
