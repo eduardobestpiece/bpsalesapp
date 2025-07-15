@@ -15,12 +15,12 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   // Estado principal dos dados da simulação
   const [simulationData, setSimulationData] = useState({
     administrator: '',
-    consortiumType: 'property',
+    consortiumType: 'property' as 'property' | 'vehicle',
     installmentType: 'full',
     value: 0,
     term: 120,
     updateRate: 6,
-    searchType: 'contribution',
+    searchType: 'contribution' as 'contribution' | 'credit',
     bidType: '',
   });
 
@@ -94,9 +94,9 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
   // Atualizar ao receber do painel de dados
   useEffect(() => {
-    if (simulationData.adminTaxPercent !== undefined) setAdminTaxPercent(simulationData.adminTaxPercent);
-    if (simulationData.reserveFundPercent !== undefined) setReserveFundPercent(simulationData.reserveFundPercent);
-  }, [simulationData.adminTaxPercent, simulationData.reserveFundPercent]);
+    if ((simulationData as any).adminTaxPercent !== undefined) setAdminTaxPercent((simulationData as any).adminTaxPercent);
+    if ((simulationData as any).reserveFundPercent !== undefined) setReserveFundPercent((simulationData as any).reserveFundPercent);
+  }, [(simulationData as any).adminTaxPercent, (simulationData as any).reserveFundPercent]);
 
   // Atualizar selectedTerm ao mudar no simulador
   const handleTermChange = (value: number) => {

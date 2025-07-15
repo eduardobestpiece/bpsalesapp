@@ -19,7 +19,7 @@ export const CrmHeader = () => {
       .from('role_page_permissions')
       .select('*')
       .eq('company_id', companyId)
-      .eq('role', userRole)
+      .eq('role', userRole as 'master' | 'admin' | 'leader' | 'user')
       .then(({ data }) => {
         const perms: any = {};
         data?.forEach((row: any) => {

@@ -16,8 +16,8 @@ export const TeamsList = () => {
   const [selectedTeam, setSelectedTeam] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { companyId } = useCrmAuth();
-  const { data: users = [], isLoading: usersLoading } = useCrmUsers(companyId);
-  const { data: teams = [], isLoading: teamsLoading } = useTeams(companyId);
+  const { data: users = [], isLoading: usersLoading } = useCrmUsers();
+  const { data: teams = [], isLoading: teamsLoading } = useTeams();
   const deleteTeamMutation = useDeleteTeam();
 
   const handleEdit = (team: any) => {

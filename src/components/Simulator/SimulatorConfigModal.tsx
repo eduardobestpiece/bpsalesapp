@@ -269,7 +269,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   useEffect(() => {
     if (!manualFieldsState.parcelas) {
       const validInstallments = installmentTypes.filter(
-        it => it.administrator_id === selectedAdministratorId && it.type === selectedCreditType
+        it => it.administrator_id === selectedAdministratorId
       );
       if (!validInstallments.find(it => it.id === selectedInstallmentTypeId)) {
         setSelectedInstallmentTypeId(validInstallments[0]?.id || null);
@@ -362,7 +362,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
           .eq('company_id', selectedCompanyId)
           .single();
         if (data && data.configuration) {
-          const config = data.configuration;
+          const config = data.configuration as any;
           setSelectedAdministratorId(config.administratorId || null);
           setSelectedBidTypeId(config.bidTypeId || null);
           setSelectedInstallmentTypeId(config.installmentTypeId || null);
@@ -412,20 +412,20 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
     }
   }, [manualFieldsState.fundoReserva, reserveFundPercent]);
 
-  // Sincronizar valor inicial ao abrir o modal
+  // Sincronizar parcelas e tipo de parcela do simulador principal
   useEffect(() => {
     if (term && !manualFieldsState.parcelas) {
       setSelectedInstallmentTypeId(term.toString());
+      setTerm(term); // Sincronizar com o simulador principal
     }
   }, [term, manualFieldsState.parcelas]);
 
-  // Sincronizar tipo de parcela do simulador principal
   useEffect(() => {
     if (installmentType && !manualFieldsState.parcelas) {
-      // Buscar installment type pelo nome
       const foundType = installmentTypes.find(it => it.name === installmentType);
       if (foundType) {
         setSelectedInstallmentTypeId(foundType.id);
+        setInstallmentType(foundType.name); // Sincronizar com o simulador principal
       }
     }
   }, [installmentType, installmentTypes, manualFieldsState.parcelas]);
@@ -553,9 +553,9 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
           <div className="flex items-center gap-2">
             <DialogTitle>Mais configurações</DialogTitle>
             {globalSwitchState === null && (
-              <Tooltip content="Alguns campos estão em Manual, outros em Sistema">
+              <div title="Alguns campos estão em Manual, outros em Sistema">
                 <Info size={16} className="text-muted-foreground" />
-              </Tooltip>
+              </div>
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -822,7 +822,6 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
                 value={reductionApplications[0] || ''}
                 onValueChange={(value) => setReductionApplications([value])}
                 disabled={!manualFieldsState.reducaoParcela}
-                multiple
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Aplicação" />

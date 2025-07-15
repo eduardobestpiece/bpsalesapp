@@ -286,9 +286,8 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
             <div>
               <Label htmlFor="funnels">Funis *</Label>
               <Select
-                multiple
-                value={formData.funnels}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, funnels: value }))}
+                value={formData.funnels.join(',')}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, funnels: value.split(',').filter(Boolean) }))}
                 disabled={isLoading}
                 required
               >

@@ -15,7 +15,7 @@ export const SourcesList = () => {
   const [selectedSource, setSelectedSource] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { companyId } = useCrmAuth();
-  const { data: sources = [], isLoading } = useSources(companyId);
+  const { data: sources = [], isLoading } = useSources();
   const deleteSourceMutation = useDeleteSource();
 
   const handleEdit = (source: any) => {

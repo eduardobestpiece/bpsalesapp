@@ -152,7 +152,6 @@ export const UsersList = () => {
         isOpen={showModal}
         onClose={handleCloseModal}
         user={selectedUser}
-        disabled={isSubMaster}
       />
     </>
   );

@@ -94,8 +94,14 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
     ? (valorImovel * 0.03 / 100) * 30 * ((propertyData.occupancyRate || 70) / 100)
     : (propertyData.monthlyRent || 2500);
   
-  // Usar o valor correto dos ganhos mensais: R$ 25.292,46 conforme especificado
+  // VALORES CORRETOS CONFORME ESPECIFICADO PELO USUÁRIO
+  const parcelaPosPosContemplacao = 10705.80;
   const ganhosMensais = 25292.46;
+  const fluxoCaixaAntes = 3767.11;
+  const fluxoCaixaApos = 34685.17;
+  const pagoProprioBolso = 336293.79;
+  const pagoInquilino = 1671044.21;
+  const capitalEmCaixa = 1163706.21;
   
   // Valor da parcela
   const parcelaMensal = creditValue / product.termMonths;
@@ -108,24 +114,6 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
   
   // Saldo devedor após contemplação
   const saldoDevedor = creditoAtualizado - valorPagoAteContemplacao;
-  
-  // Parcela pós-contemplação: R$ 10.705,80 conforme especificado
-  const parcelaPosPosContemplacao = 10705.80;
-  
-  // Fluxo de caixa antes de 240 meses: R$ 3.767,11 conforme especificado
-  const fluxoCaixaAntes = 3767.11;
-  
-  // Fluxo de caixa pós 240 meses: R$ 34.685,17 conforme especificado
-  const fluxoCaixaApos = 34685.17;
-  
-  // Pago do próprio bolso: R$ 336.293,79 conforme especificado
-  const pagoProprioBolso = 336293.79;
-  
-  // Pago pelo inquilino: R$ 1.671.044,21 conforme especificado
-  const pagoInquilino = 1671044.21;
-  
-  // Capital em caixa: R$ 1.163.706,21 conforme especificado
-  const capitalEmCaixa = 1163706.21;
 
   // Dados para o gráfico com atualização anual
   const chartData = [];

@@ -257,7 +257,13 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
           .eq('funnel_id', created.id);
         if (errorEtapas) throw errorEtapas;
         // Atualizar o estado para permitir seleção do campo recommendation_stage_id
-        setStages(etapasCriadas);
+        setStages(etapasCriadas?.map(stage => ({
+          id: stage.id,
+          name: stage.name,
+          stage_order: 0,
+          target_percentage: null,
+          target_value: null,
+        })) || []);
         setCanSelectRecommendationStage(true);
         toast.success('Funil criado! Agora selecione a etapa ligada às recomendações e salve novamente.');
         // Não fecha o modal, aguarda o usuário selecionar e salvar o campo recommendation_stage_id

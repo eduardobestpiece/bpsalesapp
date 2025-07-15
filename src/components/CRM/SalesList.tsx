@@ -113,7 +113,6 @@ export const SalesList = ({ companyId }: SalesListProps) => {
         onClose={handleCloseModal}
         companyId={companyId}
         sale={selectedSale}
-        disabled={isSubMaster}
       />
     </>
   );

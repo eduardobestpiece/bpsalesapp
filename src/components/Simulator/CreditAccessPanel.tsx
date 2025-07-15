@@ -101,7 +101,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado }: CreditAccessPanel
         .eq('company_id', companyId)
         .limit(1);
       if (configs && configs.length > 0) {
-        const conf = configs[0].configuration || {};
+        const conf = configs[0].configuration as any || {};
         setCotas(conf.cotas || []);
         setTipoParcela(conf.tipoParcela || 'full');
         setParcelaDesejada(conf.parcelaDesejada || 0);
@@ -126,10 +126,10 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado }: CreditAccessPanel
       term: data.term,
       installmentType: data.installmentType,
       consortiumType: data.consortiumType,
-      bidType: data.bidType,
+      bidType: (data as any).bidType,
       updateRate: data.updateRate,
       // Filtros do modal de configurações (se existirem)
-      ...(data.configFilters || {})
+      ...((data as any).configFilters || {})
     };
     // Verifica se já existe
     const { data: configs } = await supabase

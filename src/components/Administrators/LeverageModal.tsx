@@ -106,7 +106,7 @@ export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageMod
       };
       if (!leverage) {
         // Definir company_id conforme perfil
-        data.company_id = userRole === 'master' ? selectedCompanyId : companyId;
+        (data as any).company_id = userRole === 'master' ? selectedCompanyId : companyId;
       }
       let error;
       if (leverage) {
