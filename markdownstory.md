@@ -576,3 +576,14 @@ Próximos passos:
 
 - As regras e fórmulas de cálculo do simulador para 'Crédito Acessado' e 'Valor da Parcela' foram removidas do arquivo `supabasetypes.md` e agora estão documentadas em `docs_regras_calculo_simulador.md`.
 - O objetivo é facilitar a consulta e manter a documentação organizada.
+
+## [DATA] – Criação do documento SimuladorDatabase.md
+
+- Criado o arquivo `src/lib/SimuladorDatabase.md`.
+- O documento está dividido em duas partes:
+  1. Estrutura do banco Supabase do módulo do simulador (tabelas, colunas e exemplos de dados reais).
+  2. Todas as lógicas de cálculo do simulador (fórmulas, funções, regras e exemplos práticos).
+- O conteúdo foi extraído diretamente do banco e do código-fonte, garantindo fidelidade e rastreabilidade.
+- O documento serve como referência completa para desenvolvedores, analistas e auditores do sistema.
+
+---
