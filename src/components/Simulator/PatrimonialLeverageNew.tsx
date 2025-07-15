@@ -103,7 +103,7 @@ export const PatrimonialLeverageNew = ({
   const hasValorFixo = !!leverageData?.fixed_property_value;
   // Só mostrar campo valor imóvel se alavanca selecionada e não for valor fixo
   const showValorImovel = leverageData && !hasValorFixo;
-  // Valor do imóvel considerado
+  // Valor do imóvel considerado (NUNCA inclui embutido)
   const valorImovel = hasValorFixo ? leverageData?.fixed_property_value || 0 : Number(valorImovelManual) || 0;
   // Percentual de embutido da administradora (0-1)
   const percentualEmbutido = (administrator?.maxEmbeddedPercentage || 0) / 100;
@@ -112,19 +112,25 @@ export const PatrimonialLeverageNew = ({
   // Percentual de ocupação da alavanca (0-1)
   const percentualOcupacao = (leverageData?.occupancy_rate || 0) / 100;
 
-  // Valor base para cálculo de imóvel (considerando embutido)
-  const valorImovelBase = embutido === 'com' ? valorImovel * (1 - percentualEmbutido) : valorImovel;
   // Número de imóveis (arredondado para cima)
   const numeroImoveis = useMemo(() => {
-    if (!valorImovelBase || valorImovelBase === 0) return 0;
-    // Sempre usar o valor de crédito acessado (valorBase) para o cálculo, independente da modalidade ou tipo de parcela
-    return Math.ceil(valorBase / valorImovelBase);
-  }, [valorBase, valorImovelBase]);
+    if (!valorImovel || valorImovel === 0) return 0;
+    return Math.ceil(valorBase / valorImovel);
+  }, [valorBase, valorImovel]);
+
+  // Crédito recomendado (só quando embutido ativado)
+  const creditoRecomendado = useMemo(() => {
+    if (embutido !== 'com' || !valorImovel || numeroImoveis === 0) return null;
+    const bruto = numeroImoveis * valorImovel / (1 - percentualEmbutido);
+    // Arredondar para cima para múltiplo de 10.000
+    return Math.ceil(bruto / 10000) * 10000;
+  }, [embutido, valorImovel, numeroImoveis, percentualEmbutido]);
+
   // Despesas
   const despesas = useMemo(() => {
-    if (!valorImovelBase || percentualDespesas === 0) return 0;
-    return valorImovelBase * percentualDespesas;
-  }, [valorImovelBase, percentualDespesas]);
+    if (!valorImovel || percentualDespesas === 0) return 0;
+    return valorImovel * percentualDespesas;
+  }, [valorImovel, percentualDespesas]);
   // Ocupação (em dias)
   const ocupacaoDias = useMemo(() => {
     if (!percentualOcupacao) return 0;
@@ -133,10 +139,10 @@ export const PatrimonialLeverageNew = ({
   // Patrimônio na contemplação (para modalidade Aporte)
   const patrimonioContemplacao = useMemo(() => {
     if (simulationData.searchType === 'contribution') {
-      return numeroImoveis * valorImovelBase;
+      return numeroImoveis * valorImovel;
     }
     return valorBase;
-  }, [simulationData.searchType, numeroImoveis, valorImovelBase, valorBase]);
+  }, [simulationData.searchType, numeroImoveis, valorImovel, valorBase]);
 
   // Atualizar valorização anual automaticamente baseado na taxa de atualização
   useEffect(() => {
@@ -268,6 +274,12 @@ export const PatrimonialLeverageNew = ({
                 Alavancagem Escalonada
               </Button>
             </div>
+            {embutido === 'com' && creditoRecomendado && (
+              <div className="bg-blue-50 border-blue-200 rounded-lg p-3 mb-2">
+                <span className="text-blue-800 font-semibold">Crédito Recomendado: </span>
+                <span className="text-blue-900 font-bold text-lg">{creditoRecomendado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+              </div>
+            )}
           </div>
         </div>
       </Card>
@@ -281,7 +293,7 @@ export const PatrimonialLeverageNew = ({
             installmentType={simulationData.installmentType as 'full' | 'half' | 'reduced'}
             simulationData={{ ...simulationData, value: valorBase }}
             contemplationMonth={contemplationMonth}
-            valorImovel={valorImovelBase}
+            valorImovel={valorImovel}
             numeroImoveis={numeroImoveis}
             patrimonioContemplacao={patrimonioContemplacao}
           />
@@ -293,7 +305,7 @@ export const PatrimonialLeverageNew = ({
             installmentType={simulationData.installmentType as 'full' | 'half' | 'reduced'}
             simulationData={{ ...simulationData, value: valorBase }}
             contemplationMonth={contemplationMonth}
-            valorImovel={valorImovelBase}
+            valorImovel={valorImovel}
             numeroImoveis={numeroImoveis}
             patrimonioContemplacao={patrimonioContemplacao}
           />
