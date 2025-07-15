@@ -517,6 +517,13 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado }: CreditAccessPanel
     }
   }
 
+  // Atualizar o valor de crédito acessado no parent sempre que mudar
+  useEffect(() => {
+    if (onCreditoAcessado && creditoAcessado > 0) {
+      onCreditoAcessado(creditoAcessado);
+    }
+  }, [creditoAcessado, onCreditoAcessado]);
+
   // 5. Funções para adicionar/remover cotas
   const adicionarProduto = () => {
     if (!selectedProduct || addQuantidade < 1) return;
