@@ -105,13 +105,6 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
 
   return (
     <div className="space-y-6">
-      {/* Número de imóveis */}
-      <Card className="mb-2">
-        <CardContent className="p-4 flex items-center gap-4">
-          <Label className="text-sm font-medium">Número de imóveis:</Label>
-          <span className="text-lg font-bold">{numeroImoveis}</span>
-        </CardContent>
-      </Card>
       {/* Informações do Crédito Calculado */}
       {simulationData.searchType === 'credit' && (
         <Card className="bg-blue-50 border-blue-200">

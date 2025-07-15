@@ -117,6 +117,7 @@ export const PatrimonialLeverageNew = ({
   // Número de imóveis (arredondado para cima)
   const numeroImoveis = useMemo(() => {
     if (!valorImovelBase || valorImovelBase === 0) return 0;
+    // Sempre usar o valor de crédito acessado (valorBase) para o cálculo, independente da modalidade ou tipo de parcela
     return Math.ceil(valorBase / valorImovelBase);
   }, [valorBase, valorImovelBase]);
   // Despesas
