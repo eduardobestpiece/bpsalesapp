@@ -60,38 +60,72 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
   const totalContemplations = Math.floor(product.termMonths / contemplationMonth);
   const contemplationMonths = Array.from({ length: totalContemplations }, (_, i) => (i + 1) * contemplationMonth);
 
-  // Calcular valores agregados para múltiplas propriedades baseado no valor de simulação
+  // Aplicar os mesmos cálculos da alavancagem única para cada contemplação
+  const taxaAtualizacaoAnual = simulationData.updateRate / 100;
+  const taxaValorizacao = propertyData.appreciationRate / 100;
+  
+  // Calcular valores agregados para múltiplas propriedades
   const totalCreditValue = baseCreditValue * totalContemplations;
-  const propertyValueAtEnd = totalCreditValue * Math.pow(1 + propertyData.appreciationRate / 100, product.termMonths / 12);
+  const propertyValueAtEnd = totalCreditValue * Math.pow(1 + taxaValorizacao, product.termMonths / 12);
   
-  // Simulação baseada nos dados de simulação
-  const totalPaidByOwner = simulationData.searchType === 'contribution' 
-    ? simulationData.value * product.termMonths * totalContemplations // Para aporte
-    : baseCreditValue * 0.4 * totalContemplations; // Para crédito, estimativa de 40% pago pelo proprietário
-    
-  const totalPaidByTenant = totalCreditValue - totalPaidByOwner;
-  const savedCapital = totalCreditValue - totalPaidByOwner;
-  
-  // Fluxo de caixa estimado baseado no número de propriedades
-  const monthlyIncomePerProperty = propertyData.type === 'short-stay' 
-    ? (propertyData.dailyRate || 150) * 30 * ((propertyData.occupancyRate || 80) / 100) * 0.85
+  // Ganhos mensais por propriedade
+  const ganhosMensaisPorPropriedade = propertyData.type === 'short-stay' 
+    ? (propertyData.dailyRate || 150) * 30 * ((propertyData.occupancyRate || 80) / 100)
     : (propertyData.monthlyRent || 2500);
   
-  const netIncomePerProperty = monthlyIncomePerProperty - propertyData.fixedCosts;
-  const cashFlowBeforeEnd = netIncomePerProperty * totalContemplations * 0.7; // 70% após parcelas
-  const cashFlowAfterEnd = netIncomePerProperty * totalContemplations;
+  // Cálculos mais precisos baseados nas contemplações escalonadas
+  let totalPaidByOwner = 0;
+  let totalPaidByTenant = 0;
+  let totalCashFlowBefore = 0;
+  let totalCashFlowAfter = 0;
+  
+  // Calcular para cada contemplação
+  for (let i = 0; i < totalContemplations; i++) {
+    const contemplationMonthForThis = (i + 1) * contemplationMonth;
+    
+    // Valor da parcela e crédito atualizado para esta contemplação
+    const parcelaMensal = baseCreditValue / product.termMonths;
+    const creditoAtualizado = baseCreditValue * Math.pow(1 + taxaAtualizacaoAnual, contemplationMonthForThis / 12);
+    const valorPagoAteContemplacao = parcelaMensal * contemplationMonthForThis * Math.pow(1 + taxaAtualizacaoAnual, contemplationMonthForThis / 24);
+    const saldoDevedor = creditoAtualizado - valorPagoAteContemplacao;
+    const receitaTotal = ganhosMensaisPorPropriedade * (product.termMonths - contemplationMonthForThis);
+    const valorLiquidoAposContemplacao = Math.max(0, saldoDevedor - receitaTotal);
+    const pagoProprioBolsoEsta = valorPagoAteContemplacao + valorLiquidoAposContemplacao;
+    const pagoInquilinoEsta = creditoAtualizado - pagoProprioBolsoEsta;
+    
+    totalPaidByOwner += pagoProprioBolsoEsta;
+    totalPaidByTenant += pagoInquilinoEsta;
+    
+    // Fluxo de caixa para esta contemplação
+    const parcelaPosPosContemplacao = saldoDevedor / (product.termMonths - contemplationMonthForThis);
+    const fluxoCaixaAntes = ganhosMensaisPorPropriedade - (propertyData.fixedCosts + parcelaPosPosContemplacao);
+    const fluxoCaixaApos = ganhosMensaisPorPropriedade * Math.pow(1 + taxaValorizacao, (product.termMonths + 1) / 12) - propertyData.fixedCosts;
+    
+    totalCashFlowBefore += fluxoCaixaAntes;
+    totalCashFlowAfter += fluxoCaixaApos;
+  }
+  
+  const savedCapital = totalPaidByTenant;
 
-  // Dados para o gráfico
+  // Dados para o gráfico com atualização anual
   const chartData = [];
   for (let month = 1; month <= product.termMonths; month++) {
     // Quantas propriedades já foram contempladas até este mês
     const contemplatedProperties = contemplationMonths.filter(cm => cm <= month).length;
     
+    // Patrimônio total com valorização
     const currentPatrimony = contemplatedProperties * baseCreditValue * 
-      Math.pow(1 + propertyData.appreciationRate / 100, month / 12);
+      Math.pow(1 + taxaValorizacao, month / 12);
     
-    const currentIncome = contemplatedProperties * netIncomePerProperty;
-    const currentCashFlow = currentIncome * 0.7; // Estimativa após parcelas
+    // Rendimentos com atualização anual
+    const yearsFromStart = Math.floor(month / 12);
+    const currentIncome = contemplatedProperties * ganhosMensaisPorPropriedade * 
+      Math.pow(1 + taxaValorizacao, yearsFromStart);
+    
+    // Fluxo de caixa com atualização anual
+    const avgCashFlowPerProperty = (totalCashFlowBefore + totalCashFlowAfter) / (2 * totalContemplations);
+    const currentCashFlow = contemplatedProperties * avgCashFlowPerProperty * 
+      Math.pow(1 + taxaValorizacao, yearsFromStart);
     
     chartData.push({
       month,
@@ -101,6 +135,9 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
       isContemplation: contemplationMonths.includes(month)
     });
   }
+  
+  // Número de imóveis ao final do período
+  const numeroImoveisAoFinal = totalContemplations;
 
   // Calcular patrimônio na contemplação
   const patrimonioNaContemplacao = patrimonioContemplacao !== undefined ? patrimonioContemplacao : totalCreditValue;
@@ -145,75 +182,70 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">Patrimônio Total Contemplado</Label>
-              <div className="text-xl font-semibold text-primary">
+            <div className="space-y-2 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-200">
+              <Label className="text-sm text-blue-700 font-medium">Patrimônio Total Contemplado</Label>
+              <div className="text-2xl font-bold text-blue-900">
                 {formatCurrency(patrimonioNaContemplacao)}
               </div>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs bg-white/50">
                 {numeroImoveis} propriedades
               </Badge>
             </div>
             
-            <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">Patrimônio ao Final</Label>
-              <div className="text-xl font-semibold text-success">
+            <div className="space-y-2 p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border border-green-200">
+              <Label className="text-sm text-green-700 font-medium">Patrimônio ao Final</Label>
+              <div className="text-2xl font-bold text-green-900">
                 {formatCurrency(propertyValueAtEnd)}
               </div>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs bg-white/50">
                 +{((propertyValueAtEnd / totalCreditValue - 1) * 100).toFixed(1)}%
               </Badge>
             </div>
             
-            <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">Pago do Próprio Bolso</Label>
-              <div className="text-xl font-semibold text-destructive">
+            <div className="space-y-2 p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg border border-purple-200">
+              <Label className="text-sm text-purple-700 font-medium">Ganhos Mensais Totais</Label>
+              <div className="text-2xl font-bold text-purple-900">
+                {formatCurrency(ganhosMensaisPorPropriedade * totalContemplations)}
+              </div>
+            </div>
+            
+            <div className="space-y-2 p-4 bg-gradient-to-r from-red-50 to-red-100 rounded-lg border border-red-200">
+              <Label className="text-sm text-red-700 font-medium">Pago do Próprio Bolso</Label>
+              <div className="text-2xl font-bold text-red-900">
                 {formatCurrency(totalPaidByOwner)}
               </div>
             </div>
             
-            <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">Pago pelos Inquilinos</Label>
-              <div className="text-xl font-semibold text-success">
+            <div className="space-y-2 p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-lg border border-emerald-200">
+              <Label className="text-sm text-emerald-700 font-medium">Pago pelos Inquilinos</Label>
+              <div className="text-2xl font-bold text-emerald-900">
                 {formatCurrency(totalPaidByTenant)}
               </div>
             </div>
             
-            <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">Capital Guardado</Label>
-              <div className="text-xl font-semibold text-primary">
+            <div className="space-y-2 p-4 bg-gradient-to-r from-indigo-50 to-indigo-100 rounded-lg border border-indigo-200">
+              <Label className="text-sm text-indigo-700 font-medium">Capital em Caixa</Label>
+              <div className="text-2xl font-bold text-indigo-900">
                 {formatCurrency(savedCapital)}
               </div>
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-xs bg-white/50">
                 {((savedCapital / totalCreditValue) * 100).toFixed(1)}%
               </Badge>
             </div>
             
-            <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">Fluxo de Caixa Antes</Label>
-              <div className="text-xl font-semibold text-success">
-                {formatCurrency(cashFlowBeforeEnd)}
+            <div className="space-y-2 p-4 bg-gradient-to-r from-teal-50 to-teal-100 rounded-lg border border-teal-200">
+              <Label className="text-sm text-teal-700 font-medium">Fluxo de Caixa Antes {product.termMonths} meses</Label>
+              <div className="text-2xl font-bold text-teal-900">
+                {formatCurrency(totalCashFlowBefore)}
               </div>
             </div>
             
-            <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">Fluxo de Caixa Após</Label>
-              <div className="text-xl font-semibold text-success">
-                {formatCurrency(cashFlowAfterEnd)}
+            <div className="space-y-2 p-4 bg-gradient-to-r from-cyan-50 to-cyan-100 rounded-lg border border-cyan-200">
+              <Label className="text-sm text-cyan-700 font-medium">Fluxo de Caixa Pós {product.termMonths} meses</Label>
+              <div className="text-2xl font-bold text-cyan-900">
+                {formatCurrency(totalCashFlowAfter)}
               </div>
             </div>
-            
-            {installmentType !== 'full' && (
-              <div className="space-y-2">
-                <Label className="text-sm text-muted-foreground">Parcelas Pós-Contemplação</Label>
-                <div className="text-xl font-semibold text-warning">
-                  {formatCurrency(totalPaidByTenant / (product.termMonths / 2))}
-                </div>
-                <Badge variant="outline" className="text-xs">
-                  Média mensal
-                </Badge>
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
@@ -222,6 +254,9 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Evolução Patrimonial Escalonada</CardTitle>
+          <div className="text-sm text-muted-foreground">
+            Imóveis ao final do período: <span className="font-semibold">{numeroImoveisAoFinal}</span>
+          </div>
         </CardHeader>
         <CardContent>
           <PatrimonyChart data={chartData} />

@@ -79,29 +79,83 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
     }).format(value);
   };
 
-  // Calcular valores específicos para alavancagem única
-  const propertyValueAtContemplation = creditValue;
-  const propertyValueAtEnd = propertyValueAtContemplation * Math.pow(1 + propertyData.appreciationRate / 100, product.termMonths / 12);
-  const paidByOwner = summaryIndicators.totalPaidByConsortium;
-  const paidByTenant = summaryIndicators.finalCreditValue - paidByOwner;
-  const savedCapital = propertyValueAtContemplation - paidByOwner;
-  const cashFlowBeforeEnd = leverageCalculations.length > 0 ? leverageCalculations[0]?.cashFlow || 0 : 0;
-  const cashFlowAfterEnd = propertyValueAtEnd * 0.005; // 0.5% ao mês como estimativa
+  // Cálculos baseados nas regras especificadas pelo usuário
+  const taxaAtualizacaoAnual = simulationData.updateRate / 100; // Taxa de atualização anual
+  const taxaValorizacao = propertyData.appreciationRate / 100; // Taxa de valorização do imóvel
+  
+  // Patrimônio na contemplação: valor atualizado considerando tempo de contemplação
+  const patrimonioNaContemplacaoCalculado = patrimonioNaContemplacao * Math.pow(1 + taxaValorizacao, contemplationMonth / 12);
+  
+  // Patrimônio ao final: valor valorizado até o final do prazo
+  const patrimonioAoFinal = patrimonioNaContemplacaoCalculado * Math.pow(1 + taxaValorizacao, (product.termMonths - contemplationMonth) / 12);
+  
+  // Ganhos mensais: valor arrecadado mensalmente após contemplação
+  const ganhosMensais = propertyData.type === 'short-stay' 
+    ? (propertyData.dailyRate || 150) * 30 * ((propertyData.occupancyRate || 80) / 100)
+    : (propertyData.monthlyRent || 2500);
+  
+  // Valor da parcela cheia/reduzida com atualizações
+  const parcelaMensal = creditValue / product.termMonths; // Valor base da parcela
+  const parcelaAtualizada = parcelaMensal * Math.pow(1 + taxaAtualizacaoAnual, contemplationMonth / 12);
+  
+  // Crédito atualizado até a contemplação
+  const creditoAtualizado = creditValue * Math.pow(1 + taxaAtualizacaoAnual, contemplationMonth / 12);
+  
+  // Valor pago até a contemplação
+  const valorPagoAteContemplacao = parcelaMensal * contemplationMonth * Math.pow(1 + taxaAtualizacaoAnual, contemplationMonth / 24);
+  
+  // Saldo devedor após contemplação
+  const saldoDevedor = creditoAtualizado - valorPagoAteContemplacao;
+  
+  // Parcela pós-contemplação
+  const parcelaPosPosContemplacao = saldoDevedor / (product.termMonths - contemplationMonth);
+  
+  // Fluxo de caixa antes do fim do prazo
+  const fluxoCaixaAntes = ganhosMensais - (propertyData.fixedCosts + parcelaPosPosContemplacao);
+  
+  // Fluxo de caixa após o fim do prazo (somente ganhos - despesas)
+  const fluxoCaixaApos = ganhosMensais * Math.pow(1 + taxaValorizacao, (product.termMonths + 1) / 12) - propertyData.fixedCosts;
+  
+  // Receita total gerada pelo imóvel após contemplação
+  const receitaTotal = ganhosMensais * (product.termMonths - contemplationMonth);
+  
+  // Pago do próprio bolso: valor pago até contemplação + valor líquido após contemplação
+  const valorLiquidoAposContemplacao = Math.max(0, saldoDevedor - receitaTotal);
+  const pagoProprioBolso = valorPagoAteContemplacao + valorLiquidoAposContemplacao;
+  
+  // Pago pelo inquilino: crédito total - pago do próprio bolso
+  const pagoInquilino = creditoAtualizado - pagoProprioBolso;
+  
+  // Capital em caixa (mesmo valor do pago pelo inquilino)
+  const capitalEmCaixa = pagoInquilino;
 
-  // Dados para o gráfico
+  // Dados para o gráfico com atualização anual
   const chartData = [];
   for (let month = 1; month <= product.termMonths; month++) {
-    const appreciatedValue = propertyValueAtContemplation * Math.pow(1 + propertyData.appreciationRate / 100, month / 12);
-    const leverageData = leverageCalculations.find(l => l.month === month);
+    // Patrimônio com valorização
+    const appreciatedValue = month >= contemplationMonth ? 
+      patrimonioNaContemplacaoCalculado * Math.pow(1 + taxaValorizacao, (month - contemplationMonth) / 12) : 0;
+    
+    // Rendimentos com atualização anual
+    const yearsFromContemplation = Math.floor((month - contemplationMonth) / 12);
+    const currentIncome = month >= contemplationMonth ? 
+      ganhosMensais * Math.pow(1 + taxaValorizacao, yearsFromContemplation) : 0;
+    
+    // Fluxo de caixa com atualização anual
+    const currentCashFlow = month >= contemplationMonth ? 
+      (month <= product.termMonths ? fluxoCaixaAntes : fluxoCaixaApos) * Math.pow(1 + taxaValorizacao, yearsFromContemplation) : 0;
     
     chartData.push({
       month,
-      patrimony: month >= contemplationMonth ? appreciatedValue : 0,
-      income: leverageData?.netRevenue || 0,
-      cashFlow: leverageData?.cashFlow || 0,
+      patrimony: appreciatedValue,
+      income: currentIncome,
+      cashFlow: currentCashFlow,
       isContemplation: month === contemplationMonth
     });
   }
+  
+  // Adicionar informação do número de imóveis ao final
+  const numeroImoveisAoFinal = numeroImoveis;
 
   return (
     <div className="space-y-6">
@@ -117,66 +171,71 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">Patrimônio na Contemplação</Label>
-              <div className="text-xl font-semibold text-primary">
-                {formatCurrency(patrimonioNaContemplacao)}
+            <div className="space-y-2 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-200">
+              <Label className="text-sm text-blue-700 font-medium">Patrimônio na Contemplação</Label>
+              <div className="text-2xl font-bold text-blue-900">
+                {formatCurrency(patrimonioNaContemplacaoCalculado)}
               </div>
             </div>
             
-            <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">Patrimônio ao Final</Label>
-              <div className="text-xl font-semibold text-success">
-                {formatCurrency(propertyValueAtEnd)}
+            <div className="space-y-2 p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border border-green-200">
+              <Label className="text-sm text-green-700 font-medium">Patrimônio ao Final</Label>
+              <div className="text-2xl font-bold text-green-900">
+                {formatCurrency(patrimonioAoFinal)}
               </div>
             </div>
             
-            <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">Pago do Próprio Bolso</Label>
-              <div className="text-xl font-semibold text-destructive">
-                {formatCurrency(paidByOwner)}
+            <div className="space-y-2 p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg border border-purple-200">
+              <Label className="text-sm text-purple-700 font-medium">Ganhos Mensais</Label>
+              <div className="text-2xl font-bold text-purple-900">
+                {formatCurrency(ganhosMensais)}
               </div>
             </div>
             
-            <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">Pago pelo Inquilino</Label>
-              <div className="text-xl font-semibold text-success">
-                {formatCurrency(paidByTenant)}
+            <div className="space-y-2 p-4 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg border border-orange-200">
+              <Label className="text-sm text-orange-700 font-medium">Parcela Pós-Contemplação</Label>
+              <div className="text-2xl font-bold text-orange-900">
+                {formatCurrency(parcelaPosPosContemplacao)}
               </div>
             </div>
             
-            <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">Capital Guardado</Label>
-              <div className="text-xl font-semibold text-primary">
-                {formatCurrency(savedCapital)}
+            <div className="space-y-2 p-4 bg-gradient-to-r from-teal-50 to-teal-100 rounded-lg border border-teal-200">
+              <Label className="text-sm text-teal-700 font-medium">Fluxo de Caixa Antes {product.termMonths} meses</Label>
+              <div className="text-2xl font-bold text-teal-900">
+                {formatCurrency(fluxoCaixaAntes)}
               </div>
-              <Badge variant="outline" className="text-xs">
-                {((savedCapital / propertyValueAtContemplation) * 100).toFixed(1)}%
+            </div>
+            
+            <div className="space-y-2 p-4 bg-gradient-to-r from-cyan-50 to-cyan-100 rounded-lg border border-cyan-200">
+              <Label className="text-sm text-cyan-700 font-medium">Fluxo de Caixa Pós {product.termMonths} meses</Label>
+              <div className="text-2xl font-bold text-cyan-900">
+                {formatCurrency(fluxoCaixaApos)}
+              </div>
+            </div>
+            
+            <div className="space-y-2 p-4 bg-gradient-to-r from-red-50 to-red-100 rounded-lg border border-red-200">
+              <Label className="text-sm text-red-700 font-medium">Pago do Próprio Bolso</Label>
+              <div className="text-2xl font-bold text-red-900">
+                {formatCurrency(pagoProprioBolso)}
+              </div>
+            </div>
+            
+            <div className="space-y-2 p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-lg border border-emerald-200">
+              <Label className="text-sm text-emerald-700 font-medium">Pago pelo Inquilino</Label>
+              <div className="text-2xl font-bold text-emerald-900">
+                {formatCurrency(pagoInquilino)}
+              </div>
+            </div>
+            
+            <div className="space-y-2 p-4 bg-gradient-to-r from-indigo-50 to-indigo-100 rounded-lg border border-indigo-200">
+              <Label className="text-sm text-indigo-700 font-medium">Capital em Caixa</Label>
+              <div className="text-2xl font-bold text-indigo-900">
+                {formatCurrency(capitalEmCaixa)}
+              </div>
+              <Badge variant="outline" className="text-xs bg-white/50">
+                {((capitalEmCaixa / creditoAtualizado) * 100).toFixed(1)}%
               </Badge>
             </div>
-            
-            <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">Fluxo de Caixa Antes</Label>
-              <div className="text-xl font-semibold text-success">
-                {formatCurrency(cashFlowBeforeEnd)}
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <Label className="text-sm text-muted-foreground">Fluxo de Caixa Após</Label>
-              <div className="text-xl font-semibold text-success">
-                {formatCurrency(cashFlowAfterEnd)}
-              </div>
-            </div>
-            
-            {installmentType !== 'full' && (
-              <div className="space-y-2">
-                <Label className="text-sm text-muted-foreground">Parcela Pós-Contemplação</Label>
-                <div className="text-xl font-semibold text-warning">
-                  {formatCurrency((summaryIndicators.finalCreditValue - paidByOwner) / (product.termMonths - contemplationMonth))}
-                </div>
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>
@@ -185,6 +244,9 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
       <Card>
         <CardHeader>
           <CardTitle className="text-lg">Evolução Patrimonial</CardTitle>
+          <div className="text-sm text-muted-foreground">
+            Imóveis ao final do período: <span className="font-semibold">{numeroImoveisAoFinal}</span>
+          </div>
         </CardHeader>
         <CardContent>
           <PatrimonyChart data={chartData} />

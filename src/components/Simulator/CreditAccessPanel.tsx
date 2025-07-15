@@ -768,8 +768,8 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado }: CreditAccessPanel
                     </select>
                     <Input type="number" min={1} value={redefinirQuantidade} onChange={e => setRedefinirQuantidade(Number(e.target.value))} className="w-full" placeholder="Quantidade" />
                     <div className="flex gap-2">
-                      <Button onClick={redefinirSelecionadas} className="flex-1 bg-green-600 hover:bg-green-700 text-white">Trocar</Button>
                       <Button variant="outline" onClick={() => setShowRedefinirModal(false)} className="flex-1">Cancelar</Button>
+                      <Button onClick={redefinirSelecionadas} className="flex-1 bg-[#A05A2C] text-white hover:bg-[#7a3f1a] border-none">Trocar</Button>
                   </div>
                   </div>
                 </DialogContent>

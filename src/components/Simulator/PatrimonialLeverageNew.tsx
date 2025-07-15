@@ -196,11 +196,11 @@ export const PatrimonialLeverageNew = ({
     }
   }, [leverageData, simulationData.updateRate]);
 
-  // Resetar valor do imóvel manual e embutido ao mudar filtros principais
-  useEffect(() => {
-    setValorImovelManual('');
-    setEmbutido('com');
-  }, [simulationData.searchType, simulationData.value, simulationData.installmentType, simulationData.term]);
+  // Não resetar os valores ao mudar filtros - manter persistência
+  // useEffect(() => {
+  //   setValorImovelManual('');
+  //   setEmbutido('com');
+  // }, [simulationData.searchType, simulationData.value, simulationData.installmentType, simulationData.term]);
 
   const handleLeverageChange = (leverageId: string) => {
     setSelectedLeverage(leverageId);
