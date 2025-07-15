@@ -463,18 +463,40 @@ Ajustes visuais e funcionais nos botões, modal e salvamento de filtros na monta
 
 **Status:** Iniciando análise e implementação dos ajustes na aba Alavancagem Patrimonial. 
 
-# Solicitação em andamento - 2024-07-12 (ajuste fórmula Ganhos Mensais)
+# Solicitação Atual
 
-**Ajuste solicitado:**
-- Corrigir a fórmula de 'Ganhos Mensais' para short-stay no documento de regras do simulador.
-- Fórmula antiga: ganhosMensais = (dailyRate × 30 × (occupancyRate / 100) - fixedCosts) × numeroImoveis
-- Fórmula nova: ganhosMensais = (dailyRate × (30 × occupancyRate) - fixedCosts) × numeroImoveis
+**Data:** [preencher com data atual]
+**Solicitante:** Usuário
 
-**Checklist:**
-- [x] Localizar e revisar o documento de regras de cálculo
-- [x] Atualizar a fórmula conforme solicitado
-- [ ] Executar deploy automático
-- [ ] Solicitar validação do usuário
+## Descrição da Solicitação
 
-**Status:**
-Alteração aplicada no documento de regras. Pronto para deploy. 
+Alteração da documentação da fórmula de "Ganhos Mensais" na seção de regras de cálculo do simulador Monteo, conforme detalhamento:
+
+**Fórmula anterior:**
+Para short-stay:
+ganhosMensais = (dailyRate × 30 × (occupancyRate / 100) - fixedCosts) × numeroImoveis
+Para aluguel tradicional:
+ganhosMensais = (monthlyRent - fixedCosts) × numeroImoveis
+
+**Nova fórmula:**
+Para short-stay:
+ganhosMensais = ((patrimonioNaContemplacaoCalculado = patrimonioNaContemplacao * (1 + taxaValorizacao)^(contemplationMonth / 12)) × (30 × occupancyRate) - fixedCosts) × numeroImoveis
+Para aluguel tradicional:
+ganhosMensais = (monthlyRent - fixedCosts) × numeroImoveis
+
+**Variáveis:**
+dailyRate = valor da diária
+occupancyRate = taxa de ocupação (%)
+fixedCosts = custos fixos mensais
+numeroImoveis = número de imóveis
+patrimonioNaContemplacao = valor do crédito acessado ou patrimônio informado
+taxaValorizacao = taxa de valorização anual do imóvel (ex: 8% → 0,08)
+contemplationMonth = mês de contemplação
+
+## Checklist
+
+- [x] Solicitação registrada
+- [x] Planejamento realizado
+- [x] Alteração aplicada em src/lib/docs_regras_calculo_simulador.md
+- [ ] Deploy realizado
+- [ ] Usuário irá conferir se está tudo correto 

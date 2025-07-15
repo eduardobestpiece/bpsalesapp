@@ -79,11 +79,14 @@ function regraParcelaEspecial({ credit, installment, reduction }) {
 3. Ganhos Mensais
 Fórmula:
 Para short-stay:
-ganhosMensais = (dailyRate × (30 × occupancyRate) - fixedCosts) × numeroImoveis
+ganhosMensais = ((patrimonioNaContemplacaoCalculado = patrimonioNaContemplacao * (1 + taxaValorizacao)^(contemplationMonth / 12)) × (30 × occupancyRate) - fixedCosts) × numeroImoveis
 Para aluguel tradicional:
 ganhosMensais = (monthlyRent - fixedCosts) × numeroImoveis
 Onde:
 dailyRate = valor da diária
 occupancyRate = taxa de ocupação (%)
 fixedCosts = custos fixos mensais
-numeroImoveis = número de imóveis 
+numeroImoveis = número de imóveis
+patrimonioNaContemplacao = valor do crédito acessado ou patrimônio informado
+taxaValorizacao = taxa de valorização anual do imóvel (ex: 8% → 0,08)
+contemplationMonth = mês de contemplação 
