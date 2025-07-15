@@ -128,9 +128,14 @@ export const PatrimonialLeverageNew = ({
   // Crédito recomendado (quando embutido ativado)
   const creditoRecomendado = useMemo(() => {
     if (embutido !== 'com' || !creditoPorImovelComEmbutido || numeroImoveis === 0) return null;
-    const bruto = numeroImoveis * creditoPorImovelComEmbutido;
-    return Math.ceil(bruto / 100000) * 100000;
-  }, [embutido, creditoPorImovelComEmbutido, numeroImoveis]);
+    let bruto = numeroImoveis * creditoPorImovelComEmbutido;
+    let arredondado = Math.ceil(bruto / 100000) * 100000;
+    // Garante que nunca seja menor que o crédito acessado
+    while (arredondado < valorBase) {
+      arredondado += 100000;
+    }
+    return arredondado;
+  }, [embutido, creditoPorImovelComEmbutido, numeroImoveis, valorBase]);
 
   // Despesas
   const despesas = useMemo(() => {
