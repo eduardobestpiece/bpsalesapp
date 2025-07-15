@@ -93,8 +93,8 @@ export const PatrimonialLeverageNew = ({
   });
   // Valor base para cálculos: crédito acessado se disponível, senão valor digitado
   const valorBase = creditoAcessado && creditoAcessado > 0 ? creditoAcessado : simulationData.value;
-  // Novo estado local para o campo de valor do imóvel (livre)
-  const [valorImovel, setValorImovel] = useState<number>(valorBase);
+  // Novo estado local para o campo de valor do imóvel (livre, inicia vazio)
+  const [valorImovel, setValorImovel] = useState<number | ''>('');
   const [contemplationMonth, setContemplationMonth] = useState(6);
 
   // Atualizar valorização anual automaticamente baseado na taxa de atualização
@@ -146,10 +146,10 @@ export const PatrimonialLeverageNew = ({
               <Input
                 type="number"
                 value={valorImovel}
-                onChange={e => setValorImovel(Number(e.target.value))}
-                className="font-bold text-lg bg-gray-100 border-2 border-black rounded-xl px-4 py-2 w-48"
+                onChange={e => setValorImovel(e.target.value === '' ? '' : Number(e.target.value))}
+                className="font-bold text-lg bg-gray-100 border-2 rounded-xl px-4 py-2 w-48"
                 style={{ minWidth: 180 }}
-                prefix="R$"
+                placeholder="Valor do imóvel"
               />
               <LeverageSelector
                 selectedLeverage={selectedLeverage}
@@ -167,7 +167,6 @@ export const PatrimonialLeverageNew = ({
           <div className="flex-1 min-w-[320px] flex flex-col gap-4">
             <div className="mb-2 text-lg font-bold">Exemplo de contemplação</div>
             <div className="flex items-center gap-4 mb-2">
-              {/* Slider e input mês na mesma linha */}
               <Slider
                 value={[contemplationMonth]}
                 onValueChange={v => setContemplationMonth(v[0])}
@@ -182,20 +181,26 @@ export const PatrimonialLeverageNew = ({
                 onChange={e => setContemplationMonth(Math.min(Math.max(6, Number(e.target.value)), product.termMonths))}
                 min={6}
                 max={product.termMonths}
-                className="w-20 text-center border-2 border-black rounded-xl"
+                className="w-20 text-center border-2 rounded-xl"
               />
+            </div>
+            {/* Texto dinâmico de contemplação */}
+            <div className="text-sm text-muted-foreground mb-2">
+              {leverageType === 'single'
+                ? `Contemplação em ${contemplationMonth} meses`
+                : `Contemplação a cada ${contemplationMonth} meses`}
             </div>
             <div className="flex gap-2 mt-2">
               <Button
                 variant={leverageType === 'single' ? 'default' : 'outline'}
-                className="flex-1 text-lg py-4 rounded-xl border-2 border-black"
+                className={`flex-1 text-lg py-4 rounded-xl ${leverageType === 'single' ? '' : ''}`}
                 onClick={() => setLeverageType('single')}
               >
                 Alavancagem Simples
               </Button>
               <Button
                 variant={leverageType === 'scaled' ? 'default' : 'outline'}
-                className="flex-1 text-lg py-4 rounded-xl border-2 border-black"
+                className={`flex-1 text-lg py-4 rounded-xl ${leverageType === 'scaled' ? '' : ''}`}
                 onClick={() => setLeverageType('scaled')}
               >
                 Alavancagem Escalonada

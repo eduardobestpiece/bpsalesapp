@@ -122,42 +122,7 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
         </Card>
       )}
 
-      {/* Controle de Contemplação */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Mês de Contemplação</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-4">
-            <Label>Contemplação no mês: {contemplationMonth}</Label>
-            <Slider
-              value={[contemplationMonth]}
-              onValueChange={(value) => setContemplationMonth(value[0])}
-              min={6}
-              max={product.termMonths}
-              step={1}
-              className="w-full"
-            />
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>6 meses</span>
-              <span>{product.termMonths} meses</span>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <Label htmlFor="contemplation-input">Ou digite o mês:</Label>
-            <Input
-              id="contemplation-input"
-              type="number"
-              value={contemplationMonth}
-              onChange={(e) => setContemplationMonth(Math.min(Math.max(6, Number(e.target.value)), product.termMonths))}
-              min={6}
-              max={product.termMonths}
-              className="w-24"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      {/* Removido Card de Mês de Contemplação */}
 
       {/* Dados da Alavancagem */}
       <Card>

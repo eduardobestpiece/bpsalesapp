@@ -124,50 +124,7 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
         </Card>
       )}
 
-      {/* Controle de Frequência de Contemplação */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">Frequência de Contemplação</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-4">
-            <Label>A cada {contemplationFrequency} meses ({(contemplationFrequency / 12).toFixed(1)} anos)</Label>
-            <Slider
-              value={[contemplationFrequency]}
-              onValueChange={(value) => setContemplationFrequency(value[0])}
-              min={12}
-              max={120}
-              step={12}
-              className="w-full"
-            />
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>1 ano</span>
-              <span>10 anos</span>
-            </div>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            <Label htmlFor="frequency-input">Ou digite a frequência (meses):</Label>
-            <Input
-              id="frequency-input"
-              type="number"
-              value={contemplationFrequency}
-              onChange={(e) => setContemplationFrequency(Math.min(Math.max(12, Number(e.target.value)), 120))}
-              min={12}
-              max={120}
-              step={12}
-              className="w-24"
-            />
-          </div>
-          
-          <div className="bg-muted p-4 rounded-lg">
-            <Label className="text-sm">Total de Contemplações Esperadas: {totalContemplations}</Label>
-            <div className="text-xs text-muted-foreground mt-1">
-              Contemplações nos meses: {contemplationMonths.join(', ')}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Removido Card de Frequência de Contemplação */}
 
       {/* Dados da Alavancagem Escalonada */}
       <Card>

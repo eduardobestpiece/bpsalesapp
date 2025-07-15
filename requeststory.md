@@ -406,3 +406,11 @@ Ajustes visuais e funcionais nos botões, modal e salvamento de filtros na monta
 
 - 2024-07-10: Solicitado redesign da aba de alavancagem patrimonial para agrupar 'Características do Imóvel', 'Exemplo de contemplação' (slider e input), e botões de seleção de tipo de alavancagem lado a lado, conforme wireframe. Ajustar base de cálculo para usar 'Crédito Acessado' em vez de valor do aporte/crédito. 
 - 2024-07-10: Ajuste solicitado: campo de valor do imóvel em 'Características do Imóvel' deve ser livre (não vinculado ao aporte/crédito); garantir que o cálculo de patrimônio na contemplação e demais cálculos de alavancagem patrimonial usem sempre o valor de Crédito Acessado. 
+- 2024-07-10: Correção urgente solicitada na aba de alavancagem patrimonial:
+    - Valor de crédito acessado (R$ 1.540.000) deve ser usado em todos os cálculos e exibições, inclusive no campo de valor do imóvel (que deve iniciar vazio).
+    - Campo de número das Características do Imóvel deve iniciar vazio e ser livre.
+    - Remover a seção "Mês de Contemplação" (já existe em "Exemplo de contemplação").
+    - Remover borda preta dos botões "Alavancagem Simples" e "Alavancagem Escalonada" ao serem selecionados.
+    - Exibir texto dinâmico abaixo do slider conforme tipo de alavancagem:
+        - Simples: "Contemplação em X meses"
+        - Escalonada: "Contemplação a cada X meses" 

@@ -668,7 +668,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado }: CreditAccessPanel
           <CardTitle>Montagem de Cotas</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
+      <div className="space-y-4">
             {/* Barra de seleção em massa */}
             {selectedCotas.length > 0 && (
               <div className="flex gap-2 mb-2 items-center">
@@ -676,13 +676,13 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado }: CreditAccessPanel
                 <Button size="sm" variant="destructive" onClick={excluirSelecionadas}>Excluir</Button>
                 <Button size="sm" variant="outline" onClick={abrirRedefinir}>Redefinir</Button>
                 <Button size="sm" variant="ghost" onClick={() => setSelectedCotas([])}>Cancelar</Button>
-              </div>
+                  </div>
             )}
             {/* Lista de cotas adicionadas */}
             {cotas.length === 0 && (
               <div className="text-muted-foreground text-center py-4">
                 Nenhuma cota adicionada. Clique em "Adicionar Produto" para começar.
-              </div>
+                    </div>
             )}
             {cotas.map((cota, idx) => (
               <div key={idx} className={`flex items-center justify-between p-3 border rounded-lg ${selectedCotas.includes(idx) ? 'bg-blue-50 border-blue-400' : ''}`}>
@@ -695,9 +695,9 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado }: CreditAccessPanel
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge variant="secondary">Qtd: {cota.quantidade}</Badge>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => removerCota(idx)}
                     className="text-red-600 hover:text-red-700"
                   >
@@ -716,8 +716,8 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado }: CreditAccessPanel
                 {/* Apenas um símbolo de +, maior */}
                 <span className="text-2xl font-bold mr-2">+</span>
                 Selecionar Crédito
-              </Button>
-            </div>
+            </Button>
+              </div>
             {/* Modal para adicionar produto */}
             {showAddProduct && (
               <Dialog open={showAddProduct} onOpenChange={setShowAddProduct}>
@@ -736,7 +736,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado }: CreditAccessPanel
                     </div>
                     <div className="w-32">
                       <Input type="number" min={1} value={addQuantidade} onChange={e => setAddQuantidade(Number(e.target.value))} className="rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-[#A05A2C] focus:border-[#A05A2C] transition-all" placeholder="Qtd" />
-                    </div>
+              </div>
                   </div>
                   <div className="flex gap-2 justify-end">
                     <Button variant="outline" onClick={() => setShowAddProduct(false)} className="flex-1">Cancelar</Button>
@@ -763,7 +763,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado }: CreditAccessPanel
                     <div className="flex gap-2">
                       <Button onClick={redefinirSelecionadas} className="flex-1 bg-green-600 hover:bg-green-700 text-white">Trocar</Button>
                       <Button variant="outline" onClick={() => setShowRedefinirModal(false)} className="flex-1">Cancelar</Button>
-                    </div>
+                  </div>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -778,7 +778,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado }: CreditAccessPanel
               <Button onClick={redefinirMontagem} variant="outline" className="flex-1">Redefinir</Button>
               <Button onClick={salvarMontagem} disabled={saving} className="flex-1 bg-[#A05A2C] text-white hover:bg-[#7a3f1a] border-none">{saving ? 'Salvando...' : 'Salvar'}</Button>
             </div>
-          </div>
+      </div>
         </CardContent>
       </Card>
       {/* Modal "Em breve" */}
