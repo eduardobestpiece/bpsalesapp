@@ -41,21 +41,8 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
   // Remover state de contemplationMonth, usar prop
   
   // Calcular crédito baseado no valor desejado e tipo de contemplação
-  const calculateCreditBasedOnDesiredValue = () => {
-    const desiredValue = simulationData.value;
-    
-    // Se busca por crédito, precisa encontrar um crédito maior que atenda o valor líquido desejado
-    if (simulationData.searchType === 'credit') {
-      // Considerando que o tipo de contemplação pode reduzir o valor líquido
-      // Por exemplo, se é lance livre com 20%, o valor líquido seria 80% do crédito total
-      const reductionFactor = 0.8; // Exemplo: 20% de redução por lance
-      return Math.ceil(desiredValue / reductionFactor);
-    }
-    
-    return desiredValue;
-  };
-  
-  const creditValue = calculateCreditBasedOnDesiredValue();
+  // Agora, simulationData.value já é o Crédito Acessado
+  const creditValue = simulationData.value;
   
   const property = {
     id: 'single-property',

@@ -50,18 +50,8 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
   };
 
   // Calcular crédito baseado no valor desejado
-  const calculateCreditBasedOnDesiredValue = () => {
-    const desiredValue = simulationData.value;
-    
-    if (simulationData.searchType === 'credit') {
-      const reductionFactor = 0.8; // Exemplo: 20% de redução por lance
-      return Math.ceil(desiredValue / reductionFactor);
-    }
-    
-    return desiredValue;
-  };
-
-  const baseCreditValue = calculateCreditBasedOnDesiredValue();
+  // Agora, simulationData.value já é o Crédito Acessado
+  const baseCreditValue = simulationData.value;
 
   // Calcular quantas contemplações ocorrerão
   const totalContemplations = Math.floor(product.termMonths / contemplationMonth);
