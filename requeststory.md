@@ -387,3 +387,19 @@ Ajustes visuais e funcionais nos botões, modal e salvamento de filtros na monta
 **Status:**
 - Ajuste visual e de lógica aplicado no componente `CreditAccessPanel.tsx`.
 - Pronto para deploy e validação visual/funcional. 
+
+# Solicitação em andamento
+
+**Ajuste solicitado em 2024-07-10:**
+- O botão de salvar em "Montagem de Cotas" deve salvar corretamente os filtros: Modalidade, Valor do aporte, Número de parcelas, Tipo de Parcela e Mais configurações.
+- No modal "Mais configurações":
+  - Adicionar campos "Modalidade" e "Valor do aporte" abaixo de "Tipo de Crédito".
+  - O campo "Modalidade" do modal deve ser sincronizado com o campo principal da página.
+  - O campo "Valor do aporte" do modal deve ser sincronizado com o campo principal da página.
+  - O campo "Parcelas" do modal deve ser sincronizado com o campo "Número de parcelas" da página.
+  - Abaixo de "Parcelas", adicionar o campo "Tipo de Parcela" (sincronizado com o campo principal).
+  - Os campos do modal têm efeito sobreposto aos cálculos (se manual, prevalece sobre o automático).
+
+**Status:**
+- Iniciada a refatoração para compartilhamento de estado e sincronização bidirecional dos campos entre página e modal.
+- Próximo passo: implementar e testar a sincronização e persistência dos filtros. 

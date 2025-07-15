@@ -183,6 +183,15 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
         setSelectedTerm={setSelectedTerm}
         adminTaxPercent={adminTaxPercent}
         reserveFundPercent={reserveFundPercent}
+        // Novos props para sincronização de filtros principais
+        searchType={simulationData.searchType}
+        setSearchType={v => handleFieldChange('searchType', v)}
+        value={simulationData.value}
+        setValue={v => handleFieldChange('value', v)}
+        term={simulationData.term}
+        setTerm={v => handleTermChange(v)}
+        installmentType={simulationData.installmentType}
+        setInstallmentType={v => handleFieldChange('installmentType', v)}
       />
     </div>
   );

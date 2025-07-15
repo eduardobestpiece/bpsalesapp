@@ -119,7 +119,7 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
       cotas,
       tipoParcela,
       parcelaDesejada,
-      // Filtros principais
+      // Filtros principais (garantir que todos estejam presentes)
       searchType: data.searchType,
       value: data.value,
       term: data.term,

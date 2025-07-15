@@ -23,6 +23,15 @@ interface SimulatorConfigModalProps {
   setSelectedTerm?: (term: number) => void;
   adminTaxPercent?: number;
   reserveFundPercent?: number;
+  // Novos props para sincronização de filtros principais
+  searchType: string;
+  setSearchType: (v: string) => void;
+  value: number;
+  setValue: (v: number) => void;
+  term: number;
+  setTerm: (v: number) => void;
+  installmentType: string;
+  setInstallmentType: (v: string) => void;
 }
 
 type Administrator = Database['public']['Tables']['administrators']['Row'];
@@ -76,6 +85,14 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   setSelectedTerm,
   adminTaxPercent,
   reserveFundPercent,
+  searchType,
+  setSearchType,
+  value,
+  setValue,
+  term,
+  setTerm,
+  installmentType,
+  setInstallmentType,
 }) => {
   const { selectedCompanyId } = useCompany();
   
@@ -565,6 +582,33 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
             </Select>
           </div>
 
+          {/* Modalidade */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">Modalidade</label>
+            <Select
+              value={searchType}
+              onValueChange={setSearchType}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione a modalidade..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="contribution">Aporte</SelectItem>
+                <SelectItem value="credit">Crédito</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          {/* Valor do aporte */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">Valor do aporte</label>
+            <Input
+              type="number"
+              placeholder="0,00"
+              value={value}
+              onChange={e => setValue(Number(e.target.value))}
+            />
+          </div>
+
           {/* Parcelas */}
           <div className="space-y-2">
             <div className="flex items-center gap-2">
@@ -616,6 +660,23 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
                 </SelectContent>
               </Select>
             )}
+          </div>
+
+          {/* Tipo de Parcela */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium">Tipo de Parcela</label>
+            <Select
+              value={installmentType}
+              onValueChange={setInstallmentType}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione o tipo de parcela..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="full">Parcela Cheia</SelectItem>
+                {/* Adicione outras opções se necessário */}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Taxa de administração */}
