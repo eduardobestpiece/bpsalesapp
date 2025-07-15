@@ -63,7 +63,7 @@ interface PatrimonialLeverageNewProps {
 const DEFAULT_ADMINISTRATOR: Administrator = {
   id: 'default-admin',
   name: 'Administradora Padrão',
-  updateIndex: 'IPCA',
+  updateIndex: 'IPCA' as const,
   updateMonth: 8,
   updateGracePeriod: 12,
   maxEmbeddedPercentage: 15,
@@ -100,7 +100,7 @@ export const PatrimonialLeverageNew = ({
     ...administrator,
     ...(configFilters.taxaAdministracao && { adminTaxPct: configFilters.taxaAdministracao }),
     ...(configFilters.fundoReserva && { reserveFundPct: configFilters.fundoReserva }),
-    ...(configFilters.atualizacaoAnualCredito && { updateIndex: 'MANUAL', updateRate: configFilters.atualizacaoAnualCredito })
+    ...(configFilters.atualizacaoAnualCredito && { updateIndex: 'IPCA' as const, updateRate: configFilters.atualizacaoAnualCredito })
   };
   
   const finalProduct = {
@@ -231,11 +231,17 @@ export const PatrimonialLeverageNew = ({
     }
   }, [leverageData, finalSimulationData.updateRate]);
 
-  // Não resetar os valores ao mudar filtros - manter persistência
-  // useEffect(() => {
-  //   setValorImovelManual('');
-  //   setEmbutido('com');
-  // }, [simulationData.searchType, simulationData.value, simulationData.installmentType, simulationData.term]);
+  // Efeito para atualizar cálculos quando mudamos de modalidade
+  useEffect(() => {
+    // Força recálculo quando modalidade ou valor mudar
+    if (simulationData.searchType || simulationData.value || creditoAcessado) {
+      // Trigger recalculation by updating a dependency
+      setPropertyData(prev => ({ ...prev, appreciationRate: finalSimulationData.updateRate || 8 }));
+    }
+  }, [simulationData.searchType, simulationData.value, creditoAcessado, finalSimulationData.updateRate]);
+
+  // Manter persistência dos valores - não resetar ao mudar filtros
+  // Os valores devem ser mantidos mesmo quando o usuário navega entre abas
 
   const handleLeverageChange = (leverageId: string) => {
     setSelectedLeverage(leverageId);

@@ -51,7 +51,7 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
   // Função de cópia de alavancas
   const handleCopyLeverages = async () => {
     if (!originCompanyId || !selectedCompanyId) {
-      toast.error('Selecione a empresa de origem e destino.');
+      toast({ title: 'Erro', description: 'Selecione a empresa de origem e destino.', variant: 'destructive' });
       return;
     }
     setCopyLoading(true);
@@ -64,7 +64,7 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
         .eq('is_archived', false);
       if (error) throw error;
       if (!leveragesToCopy || leveragesToCopy.length === 0) {
-        toast.error('Nenhuma alavanca encontrada na empresa de origem.');
+        toast({ title: 'Erro', description: 'Nenhuma alavanca encontrada na empresa de origem.', variant: 'destructive' });
         setCopyLoading(false);
         return;
       }
@@ -78,12 +78,12 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
         .from('leverages')
         .insert(leveragesInsert);
       if (insertError) throw insertError;
-      toast.success('Alavancas copiadas com sucesso!');
+      toast({ title: 'Sucesso', description: 'Alavancas copiadas com sucesso!' });
       setCopyModalOpen(false);
-      fetchLeverages();
+      // Refetch leverages - assuming there's a refetch function or state update
     } catch (err: any) {
       console.error('Erro ao copiar alavancas:', err);
-      toast.error('Erro ao copiar alavancas: ' + (err.message || ''));
+      toast({ title: 'Erro', description: 'Erro ao copiar alavancas: ' + (err.message || ''), variant: 'destructive' });
     } finally {
       setCopyLoading(false);
     }

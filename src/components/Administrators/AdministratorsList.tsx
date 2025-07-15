@@ -11,7 +11,7 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { useQuery } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Radio } from '@/components/ui/radio-group';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface Administrator {
   id: string;
@@ -171,7 +171,19 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
   const handleSetDefault = async (id: string) => {
     try {
       // Desmarcar todas e marcar só a selecionada
-      const { error } = await supabase.rpc('set_default_administrator', { admin_id: id, company_id: selectedCompanyId });
+      // Update all administrators to not be default, then set the selected one as default
+      const { error: updateError } = await supabase
+        .from('administrators')
+        .update({ is_default: false })
+        .eq('company_id', selectedCompanyId);
+      
+      if (updateError) throw updateError;
+      
+      const { error } = await supabase
+        .from('administrators')
+        .update({ is_default: true })
+        .eq('id', id)
+        .eq('company_id', selectedCompanyId);
       if (error) throw error;
       setDefaultAdminId(id);
       fetchAdministrators();

@@ -112,7 +112,10 @@ export const InstallmentReductionModal: React.FC<InstallmentReductionModalProps>
         const { error } = await supabase
           .from('installment_reductions')
           .insert({
-            ...data,
+            name: data.name || 'Redução padrão',
+            reduction_percent: data.reduction_percent || 0,
+            applications: data.applications || [],
+            administrator_id: data.administrator_id,
             company_id: selectedCompanyId,
           });
         if (error) throw error;

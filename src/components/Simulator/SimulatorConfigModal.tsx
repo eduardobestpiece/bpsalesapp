@@ -414,10 +414,21 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
 
   // Sincronizar valor inicial ao abrir o modal
   useEffect(() => {
-    if (selectedTerm && !manualFieldsState.parcelas) {
-      setSelectedInstallmentTypeId(selectedTerm.toString());
+    if (term && !manualFieldsState.parcelas) {
+      setSelectedInstallmentTypeId(term.toString());
     }
-  }, [selectedTerm, manualFieldsState.parcelas]);
+  }, [term, manualFieldsState.parcelas]);
+
+  // Sincronizar tipo de parcela do simulador principal
+  useEffect(() => {
+    if (installmentType && !manualFieldsState.parcelas) {
+      // Buscar installment type pelo nome
+      const foundType = installmentTypes.find(it => it.name === installmentType);
+      if (foundType) {
+        setSelectedInstallmentTypeId(foundType.id);
+      }
+    }
+  }, [installmentType, installmentTypes, manualFieldsState.parcelas]);
 
   // Função para calcular o estado do switch global
   const getGlobalSwitchState = () => {
@@ -447,6 +458,21 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
 
   // Aplicar localmente
   const handleApply = () => {
+    // Sincronizar valores com o simulador principal
+    if (manualFieldsState.parcelas && selectedInstallmentTypeId) {
+      const selectedType = installmentTypes.find(it => it.id === selectedInstallmentTypeId);
+      if (selectedType?.installment_count) {
+        setTerm(selectedType.installment_count);
+      }
+    }
+    
+    if (manualFieldsState.parcelas && selectedInstallmentTypeId) {
+      const selectedType = installmentTypes.find(it => it.id === selectedInstallmentTypeId);
+      if (selectedType?.name) {
+        setInstallmentType(selectedType.name);
+      }
+    }
+    
     toast({ title: 'Configuração aplicada localmente!' });
     onApply();
   };

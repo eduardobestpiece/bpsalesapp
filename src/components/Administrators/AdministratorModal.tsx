@@ -72,6 +72,7 @@ export const CreateAdministratorModal: React.FC<{
         special_entry_percentage: data.special_entry_percentage ?? null,
         special_entry_fixed_value: data.special_entry_fixed_value ?? null,
         special_entry_installments: data.special_entry_installments ?? null,
+        credit_update_type: data.update_type || 'specific_month',
         is_default: data.is_default || false,
         company_id: selectedCompanyId,
       };
