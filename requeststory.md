@@ -462,3 +462,19 @@ Ajustes visuais e funcionais nos botões, modal e salvamento de filtros na monta
 - [ ] Solicitar validação
 
 **Status:** Iniciando análise e implementação dos ajustes na aba Alavancagem Patrimonial. 
+
+# Solicitação em andamento - 2024-07-12 (ajuste fórmula Ganhos Mensais)
+
+**Ajuste solicitado:**
+- Corrigir a fórmula de 'Ganhos Mensais' para short-stay no documento de regras do simulador.
+- Fórmula antiga: ganhosMensais = (dailyRate × 30 × (occupancyRate / 100) - fixedCosts) × numeroImoveis
+- Fórmula nova: ganhosMensais = (dailyRate × (30 × occupancyRate) - fixedCosts) × numeroImoveis
+
+**Checklist:**
+- [x] Localizar e revisar o documento de regras de cálculo
+- [x] Atualizar a fórmula conforme solicitado
+- [ ] Executar deploy automático
+- [ ] Solicitar validação do usuário
+
+**Status:**
+Alteração aplicada no documento de regras. Pronto para deploy. 

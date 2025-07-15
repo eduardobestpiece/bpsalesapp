@@ -75,3 +75,15 @@ function regraParcelaEspecial({ credit, installment, reduction }) {
 ---
 
 **Essas regras são utilizadas em todos os lugares do sistema onde aparecem os campos 'Crédito Acessado' e 'Valor da Parcela'.** 
+
+3. Ganhos Mensais
+Fórmula:
+Para short-stay:
+ganhosMensais = (dailyRate × (30 × occupancyRate) - fixedCosts) × numeroImoveis
+Para aluguel tradicional:
+ganhosMensais = (monthlyRent - fixedCosts) × numeroImoveis
+Onde:
+dailyRate = valor da diária
+occupancyRate = taxa de ocupação (%)
+fixedCosts = custos fixos mensais
+numeroImoveis = número de imóveis 
