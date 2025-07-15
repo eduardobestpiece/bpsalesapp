@@ -179,6 +179,12 @@ export const PatrimonialLeverageNew = ({
     }
   }, [leverageData, simulationData.updateRate]);
 
+  // Resetar valor do imóvel manual e embutido ao mudar filtros principais
+  useEffect(() => {
+    setValorImovelManual('');
+    setEmbutido('com');
+  }, [simulationData.searchType, simulationData.value, simulationData.installmentType, simulationData.term]);
+
   const handleLeverageChange = (leverageId: string) => {
     setSelectedLeverage(leverageId);
   };
@@ -237,7 +243,9 @@ export const PatrimonialLeverageNew = ({
             {/* Informações do imóvel */}
             {leverageData && (
               <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground mt-2">
-                <div><b>Subtipo:</b> {leverageData?.subtype || '-'}</div>
+                <div>
+                  <b>Valor da diária:</b> {leverageData?.daily_percentage && valorImovel ? (leverageData.daily_percentage / 100 * valorImovel).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}
+                </div>
                 <div><b>Ocupação:</b> {ocupacaoDias} dias</div>
                 <div><b>Despesas:</b> {despesas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
                 <div><b>Número de imóveis:</b> {numeroImoveis}</div>
