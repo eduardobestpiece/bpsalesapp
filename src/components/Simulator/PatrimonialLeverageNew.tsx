@@ -96,26 +96,46 @@ export const PatrimonialLeverageNew = ({
   // Estado local para o campo de valor do imóvel (livre, inicia vazio)
   const [valorImovelManual, setValorImovelManual] = useState<number | ''>('');
   const [contemplationMonth, setContemplationMonth] = useState(6);
-  // Novo: estado para embutido
+  // Estado para embutido
   const [embutido, setEmbutido] = useState<'com' | 'sem'>('com');
 
   // Determinar se a alavanca tem valor fixo
   const hasValorFixo = !!leverageData?.fixed_property_value;
+  // Só mostrar campo valor imóvel se alavanca selecionada e não for valor fixo
+  const showValorImovel = leverageData && !hasValorFixo;
   // Valor do imóvel considerado
   const valorImovel = hasValorFixo ? leverageData?.fixed_property_value || 0 : Number(valorImovelManual) || 0;
+  // Percentual de embutido da administradora (0-1)
+  const percentualEmbutido = (administrator?.maxEmbeddedPercentage || 0) / 100;
+  // Percentual de despesas da alavanca (0-1)
+  const percentualDespesas = (leverageData?.total_expenses || 0) / 100;
+  // Percentual de ocupação da alavanca (0-1)
+  const percentualOcupacao = (leverageData?.occupancy_rate || 0) / 100;
+
+  // Valor base para cálculo de imóvel (considerando embutido)
+  const valorImovelBase = embutido === 'com' ? valorImovel * (1 - percentualEmbutido) : valorImovel;
   // Número de imóveis (arredondado para cima)
   const numeroImoveis = useMemo(() => {
-    if (!valorImovel || valorImovel === 0) return 0;
-    return Math.ceil(valorBase / valorImovel);
-  }, [valorBase, valorImovel]);
-
+    if (!valorImovelBase || valorImovelBase === 0) return 0;
+    return Math.ceil(valorBase / valorImovelBase);
+  }, [valorBase, valorImovelBase]);
+  // Despesas
+  const despesas = useMemo(() => {
+    if (!valorImovelBase || percentualDespesas === 0) return 0;
+    return valorImovelBase * percentualDespesas;
+  }, [valorImovelBase, percentualDespesas]);
+  // Ocupação (em dias)
+  const ocupacaoDias = useMemo(() => {
+    if (!percentualOcupacao) return 0;
+    return Math.round(30 * percentualOcupacao);
+  }, [percentualOcupacao]);
   // Patrimônio na contemplação (para modalidade Aporte)
   const patrimonioContemplacao = useMemo(() => {
     if (simulationData.searchType === 'contribution') {
-      return numeroImoveis * valorImovel;
+      return numeroImoveis * valorImovelBase;
     }
     return valorBase;
-  }, [simulationData.searchType, numeroImoveis, valorImovel, valorBase]);
+  }, [simulationData.searchType, numeroImoveis, valorImovelBase, valorBase]);
 
   // Atualizar valorização anual automaticamente baseado na taxa de atualização
   useEffect(() => {
@@ -156,24 +176,6 @@ export const PatrimonialLeverageNew = ({
 
   return (
     <div className="space-y-6">
-      {/* Seletor Com embutido/Sem embutido */}
-      <Card className="p-4 mb-2">
-        <div className="flex gap-4 items-center">
-          <Label className="font-medium">Modalidade:</Label>
-          <Button
-            variant={embutido === 'com' ? 'default' : 'outline'}
-            onClick={() => setEmbutido('com')}
-          >
-            Com embutido
-          </Button>
-          <Button
-            variant={embutido === 'sem' ? 'default' : 'outline'}
-            onClick={() => setEmbutido('sem')}
-          >
-            Sem embutido
-          </Button>
-        </div>
-      </Card>
       {/* Novo layout agrupado */}
       <Card className="p-6">
         <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
@@ -186,7 +188,7 @@ export const PatrimonialLeverageNew = ({
                 onLeverageChange={setSelectedLeverage}
                 onLeverageData={setLeverageData}
               />
-              {!hasValorFixo && (
+              {showValorImovel && (
                 <Input
                   type="number"
                   value={valorImovelManual}
@@ -197,16 +199,30 @@ export const PatrimonialLeverageNew = ({
                 />
               )}
             </div>
-            <div className="text-xs text-muted-foreground mt-2">
-              <div>Subtipo: {leverageData?.subtype || '-'}</div>
-              <div>Ocupação: {leverageData?.occupancy_rate ? `${leverageData.occupancy_rate}%` : '-'}</div>
-              <div>Despesas: {leverageData?.total_expenses ? `R$ ${leverageData.total_expenses}` : '-'}</div>
+            {/* Botões Com/Sem embutido */}
+            <div className="flex gap-2 mb-2">
+              <Button
+                variant={embutido === 'com' ? 'default' : 'outline'}
+                onClick={() => setEmbutido('com')}
+              >
+                Com embutido
+              </Button>
+              <Button
+                variant={embutido === 'sem' ? 'default' : 'outline'}
+                onClick={() => setEmbutido('sem')}
+              >
+                Sem embutido
+              </Button>
             </div>
-            {/* Número de imóveis */}
-            <div className="mt-4">
-              <Label className="text-sm font-medium">Número de imóveis:</Label>
-              <span className="ml-2 text-lg font-bold">{numeroImoveis}</span>
-            </div>
+            {/* Informações do imóvel */}
+            {leverageData && (
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground mt-2">
+                <div><b>Subtipo:</b> {leverageData?.subtype || '-'}</div>
+                <div><b>Ocupação:</b> {ocupacaoDias} dias</div>
+                <div><b>Despesas:</b> {despesas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+                <div><b>Número de imóveis:</b> {numeroImoveis}</div>
+              </div>
+            )}
           </div>
           {/* Direita: Exemplo de contemplação e botões */}
           <div className="flex-1 min-w-[320px] flex flex-col gap-4">
@@ -264,7 +280,7 @@ export const PatrimonialLeverageNew = ({
             installmentType={simulationData.installmentType as 'full' | 'half' | 'reduced'}
             simulationData={{ ...simulationData, value: valorBase }}
             contemplationMonth={contemplationMonth}
-            valorImovel={valorImovel}
+            valorImovel={valorImovelBase}
             numeroImoveis={numeroImoveis}
             patrimonioContemplacao={patrimonioContemplacao}
           />
@@ -276,7 +292,7 @@ export const PatrimonialLeverageNew = ({
             installmentType={simulationData.installmentType as 'full' | 'half' | 'reduced'}
             simulationData={{ ...simulationData, value: valorBase }}
             contemplationMonth={contemplationMonth}
-            valorImovel={valorImovel}
+            valorImovel={valorImovelBase}
             numeroImoveis={numeroImoveis}
             patrimonioContemplacao={patrimonioContemplacao}
           />
