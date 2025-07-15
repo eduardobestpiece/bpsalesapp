@@ -112,21 +112,25 @@ export const PatrimonialLeverageNew = ({
   // Percentual de ocupação da alavanca (0-1)
   const percentualOcupacao = (leverageData?.occupancy_rate || 0) / 100;
 
-  // Número de imóveis (arredondado para cima)
-  const numeroImoveis = useMemo(() => {
-    if (!valorImovel || valorImovel === 0) return 0;
-    return Math.ceil(valorBase / valorImovel);
-  }, [valorBase, valorImovel]);
-
-  // Crédito recomendado (só quando embutido ativado)
-  const creditoRecomendado = useMemo(() => {
-    if (embutido !== 'com' || !valorImovel) return null;
-    // Fórmula correta: (Valor do Imóvel + (Valor do imóvel * (Percentual embutido + (Percentual embutido * Percentual embutido))))
+  // Crédito por imóvel com embutido
+  const creditoPorImovelComEmbutido = useMemo(() => {
+    if (embutido !== 'com' || !valorImovel) return valorImovel;
     const embutidoTotal = percentualEmbutido + (percentualEmbutido * percentualEmbutido);
-    const bruto = valorImovel + (valorImovel * embutidoTotal);
-    // Arredondar para cima para múltiplo de 100.000
-    return Math.ceil(bruto / 100000) * 100000;
+    return valorImovel + (valorImovel * embutidoTotal);
   }, [embutido, valorImovel, percentualEmbutido]);
+
+  // Número de imóveis (considerando embutido se ativado)
+  const numeroImoveis = useMemo(() => {
+    if (!creditoPorImovelComEmbutido || creditoPorImovelComEmbutido === 0) return 0;
+    return Math.ceil(valorBase / creditoPorImovelComEmbutido);
+  }, [valorBase, creditoPorImovelComEmbutido]);
+
+  // Crédito recomendado (quando embutido ativado)
+  const creditoRecomendado = useMemo(() => {
+    if (embutido !== 'com' || !creditoPorImovelComEmbutido || numeroImoveis === 0) return null;
+    const bruto = numeroImoveis * creditoPorImovelComEmbutido;
+    return Math.ceil(bruto / 100000) * 100000;
+  }, [embutido, creditoPorImovelComEmbutido, numeroImoveis]);
 
   // Despesas
   const despesas = useMemo(() => {
