@@ -710,10 +710,11 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
               <Button
                 variant="outline"
                 onClick={() => setShowAddProduct(true)}
-                className="flex-1 bg-[#A05A2C] text-white hover:bg-[#7a3f1a] border-none"
+                className="flex-1 bg-black text-white hover:bg-neutral-800 border-none"
               >
-                <Plus className="h-4 w-4 mr-2" />
-                + Selecionar Crédito
+                {/* Apenas um símbolo de +, maior */}
+                <span className="text-2xl font-bold mr-2">+</span>
+                Selecionar Crédito
               </Button>
             </div>
             {/* Modal para adicionar produto */}
@@ -769,7 +770,10 @@ export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
             
             {/* Botões de ação embaixo da montagem de cotas */}
             <div className="flex flex-col md:flex-row gap-2 mt-6">
-              <Button onClick={() => setShowComingSoon(true)} className="flex-1 bg-green-600 hover:bg-green-700 text-white">Gerar proposta</Button>
+              {/* Botão Gerar proposta só aparece se houver cotas e não estiver salvando */}
+              {cotas.length > 0 && !saving && (
+                <Button onClick={() => setShowComingSoon(true)} className="flex-1 bg-green-600 hover:bg-green-700 text-white">Gerar proposta</Button>
+              )}
               <Button onClick={redefinirMontagem} variant="outline" className="flex-1">Redefinir</Button>
               <Button onClick={salvarMontagem} disabled={saving} className="flex-1 bg-[#A05A2C] text-white hover:bg-[#7a3f1a] border-none">{saving ? 'Salvando...' : 'Salvar'}</Button>
             </div>

@@ -377,3 +377,13 @@ Adicionados botões Salvar, Redefinir e Gerar proposta, com persistência por us
 Agora é possível escolher quantidade ao adicionar produto, selecionar cotas em massa, excluir ou redefinir em lote, e redefinir cotas por outro produto via modal. 
 
 Ajustes visuais e funcionais nos botões, modal e salvamento de filtros na montagem de cotas conforme solicitado. 
+
+# Solicitação em andamento
+
+**Ajuste solicitado em 2024-07-10:**
+- O botão "+ Selecionar Crédito" em "Montagem de Cotas" deve ser preto, com apenas um símbolo de soma (maior).
+- O botão "Gerar proposta" deve ficar oculto, só aparecendo quando o usuário selecionar créditos e salvar.
+
+**Status:**
+- Ajuste visual e de lógica aplicado no componente `CreditAccessPanel.tsx`.
+- Pronto para deploy e validação visual/funcional. 

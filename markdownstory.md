@@ -560,3 +560,4 @@ Próximos passos:
 - Botão de adicionar produto e botão Salvar usam cor marrom ocre da plataforma.
 - Modal "Selecionar crédito" com layout horizontal, inputs arredondados e bonitos, botões Cancelar (esquerda) e Adicionar (direita).
 - Textos e placeholders ajustados conforme solicitado.
+- 2024-07-10: Ajustado botão '+ Selecionar Crédito' para preto e apenas um símbolo de soma. Botão 'Gerar proposta' agora só aparece após seleção e salvamento de créditos na montagem de cotas do simulador.
