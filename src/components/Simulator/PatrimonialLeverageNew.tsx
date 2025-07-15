@@ -44,6 +44,17 @@ interface PatrimonialLeverageNewProps {
     updateRate: number;
     searchType: 'contribution' | 'credit';
     bidType?: string;
+    // Configurações do modal "Mais Configurações"
+    configFilters?: {
+      parcelas?: number;
+      taxaAdministracao?: number;
+      fundoReserva?: number;
+      reducaoParcela?: number;
+      atualizacaoAnual?: number;
+      atualizacaoAnualCredito?: number;
+      ativacaoSeguro?: boolean;
+      tipoParcela?: string;
+    };
   };
   creditoAcessado?: number | null;
 }
@@ -81,6 +92,30 @@ export const PatrimonialLeverageNew = ({
   simulationData,
   creditoAcessado
 }: PatrimonialLeverageNewProps) => {
+  // Aplicar configurações do modal sobre os dados padrão
+  const configFilters = simulationData.configFilters || {};
+  
+  // Sobrescrever dados padrão com configurações do modal
+  const finalAdministrator = {
+    ...administrator,
+    ...(configFilters.taxaAdministracao && { adminTaxPct: configFilters.taxaAdministracao }),
+    ...(configFilters.fundoReserva && { reserveFundPct: configFilters.fundoReserva }),
+    ...(configFilters.atualizacaoAnualCredito && { updateIndex: 'MANUAL', updateRate: configFilters.atualizacaoAnualCredito })
+  };
+  
+  const finalProduct = {
+    ...product,
+    ...(configFilters.parcelas && { termMonths: configFilters.parcelas }),
+    ...(configFilters.taxaAdministracao && { adminTaxPct: configFilters.taxaAdministracao }),
+    ...(configFilters.fundoReserva && { reserveFundPct: configFilters.fundoReserva }),
+    ...(configFilters.reducaoParcela && { reducedPercentage: 100 - configFilters.reducaoParcela })
+  };
+  
+  const finalSimulationData = {
+    ...simulationData,
+    ...(configFilters.atualizacaoAnual && { updateRate: configFilters.atualizacaoAnual }),
+    ...(configFilters.tipoParcela && { installmentType: configFilters.tipoParcela })
+  };
   const [leverageType, setLeverageType] = useState<'single' | 'scaled'>('single');
   const [selectedLeverage, setSelectedLeverage] = useState<string>('');
   const [leverageData, setLeverageData] = useState<LeverageData | null>(null);
@@ -106,7 +141,7 @@ export const PatrimonialLeverageNew = ({
   // Valor do imóvel considerado (NUNCA inclui embutido)
   const valorImovel = hasValorFixo ? leverageData?.fixed_property_value || 0 : Number(valorImovelManual) || 0;
   // Percentual de embutido da administradora (0-1)
-  const percentualEmbutido = (administrator?.maxEmbeddedPercentage || 0) / 100;
+  const percentualEmbutido = (finalAdministrator?.maxEmbeddedPercentage || 0) / 100;
   // Percentual de despesas da alavanca (0-1)
   const percentualDespesas = (leverageData?.total_expenses || 0) / 100;
   // Percentual de ocupação da alavanca (0-1)
@@ -171,9 +206,9 @@ export const PatrimonialLeverageNew = ({
   useEffect(() => {
     setPropertyData(prev => ({
       ...prev,
-      appreciationRate: simulationData.updateRate || 8
+      appreciationRate: finalSimulationData.updateRate || 8
     }));
-  }, [simulationData.updateRate]);
+  }, [finalSimulationData.updateRate]);
 
   // Converter dados da alavanca para propertyData
   useEffect(() => {
@@ -181,7 +216,7 @@ export const PatrimonialLeverageNew = ({
       const newPropertyData: PropertyData = {
         type: leverageData.subtype === 'airbnb' ? 'short-stay' : 
               leverageData.subtype === 'commercial' ? 'commercial' : 'residential',
-        appreciationRate: simulationData.updateRate || 8,
+        appreciationRate: finalSimulationData.updateRate || 8,
         fixedCosts: leverageData.total_expenses || 800,
       };
 
@@ -194,7 +229,7 @@ export const PatrimonialLeverageNew = ({
 
       setPropertyData(newPropertyData);
     }
-  }, [leverageData, simulationData.updateRate]);
+  }, [leverageData, finalSimulationData.updateRate]);
 
   // Não resetar os valores ao mudar filtros - manter persistência
   // useEffect(() => {
@@ -277,16 +312,16 @@ export const PatrimonialLeverageNew = ({
                 value={[contemplationMonth]}
                 onValueChange={v => setContemplationMonth(v[0])}
                 min={6}
-                max={product.termMonths}
+                max={finalProduct.termMonths}
                 step={1}
                 className="flex-1"
               />
               <Input
                 type="number"
                 value={contemplationMonth}
-                onChange={e => setContemplationMonth(Math.min(Math.max(6, Number(e.target.value)), product.termMonths))}
+                onChange={e => setContemplationMonth(Math.min(Math.max(6, Number(e.target.value)), finalProduct.termMonths))}
                 min={6}
-                max={product.termMonths}
+                max={finalProduct.termMonths}
                 className="w-20 text-center border-2 rounded-xl"
               />
             </div>
@@ -319,11 +354,11 @@ export const PatrimonialLeverageNew = ({
       {leverageData ? (
         leverageType === 'single' ? (
           <SingleLeverage 
-            administrator={administrator}
-            product={product}
+            administrator={finalAdministrator}
+            product={finalProduct}
             propertyData={propertyData}
-            installmentType={simulationData.installmentType as 'full' | 'half' | 'reduced'}
-            simulationData={{ ...simulationData, value: valorBase }}
+            installmentType={finalSimulationData.installmentType as 'full' | 'half' | 'reduced'}
+            simulationData={{ ...finalSimulationData, value: valorBase }}
             contemplationMonth={contemplationMonth}
             valorImovel={valorImovel}
             numeroImoveis={numeroImoveis}
@@ -331,11 +366,11 @@ export const PatrimonialLeverageNew = ({
           />
         ) : (
           <ScaledLeverage 
-            administrator={administrator}
-            product={product}
+            administrator={finalAdministrator}
+            product={finalProduct}
             propertyData={propertyData}
-            installmentType={simulationData.installmentType as 'full' | 'half' | 'reduced'}
-            simulationData={{ ...simulationData, value: valorBase }}
+            installmentType={finalSimulationData.installmentType as 'full' | 'half' | 'reduced'}
+            simulationData={{ ...finalSimulationData, value: valorBase }}
             contemplationMonth={contemplationMonth}
             valorImovel={valorImovel}
             numeroImoveis={numeroImoveis}
