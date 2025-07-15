@@ -121,9 +121,11 @@ export const PatrimonialLeverageNew = ({
   // Crédito recomendado (só quando embutido ativado)
   const creditoRecomendado = useMemo(() => {
     if (embutido !== 'com' || !valorImovel || numeroImoveis === 0) return null;
-    const bruto = numeroImoveis * valorImovel / (1 - percentualEmbutido);
-    // Arredondar para cima para múltiplo de 10.000
-    return Math.ceil(bruto / 10000) * 10000;
+    // Nova fórmula: (Valor do Imóvel + (Valor do imóvel * (Percentual embutido + (Percentual embutido * Percentual embutido))))
+    const embutidoTotal = percentualEmbutido + (percentualEmbutido * percentualEmbutido);
+    const bruto = numeroImoveis * (valorImovel + (valorImovel * embutidoTotal));
+    // Arredondar para cima para múltiplo de 100.000
+    return Math.ceil(bruto / 100000) * 100000;
   }, [embutido, valorImovel, numeroImoveis, percentualEmbutido]);
 
   // Despesas
@@ -183,6 +185,13 @@ export const PatrimonialLeverageNew = ({
 
   return (
     <div className="space-y-6">
+      {/* Exibir Crédito Recomendado no topo, apenas se embutido estiver ativado */}
+      {embutido === 'com' && creditoRecomendado && (
+        <div className="bg-blue-50 border-blue-200 rounded-lg p-3 mb-2">
+          <span className="text-blue-800 font-semibold">Crédito Recomendado: </span>
+          <span className="text-blue-900 font-bold text-lg">{creditoRecomendado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+        </div>
+      )}
       {/* Novo layout agrupado */}
       <Card className="p-6">
         <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
@@ -274,12 +283,6 @@ export const PatrimonialLeverageNew = ({
                 Alavancagem Escalonada
               </Button>
             </div>
-            {embutido === 'com' && creditoRecomendado && (
-              <div className="bg-blue-50 border-blue-200 rounded-lg p-3 mb-2">
-                <span className="text-blue-800 font-semibold">Crédito Recomendado: </span>
-                <span className="text-blue-900 font-bold text-lg">{creditoRecomendado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
-              </div>
-            )}
           </div>
         </div>
       </Card>

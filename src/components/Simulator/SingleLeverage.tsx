@@ -106,26 +106,7 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
   return (
     <div className="space-y-6">
       {/* Informações do Crédito Calculado */}
-      {simulationData.searchType === 'credit' && (
-        <Card className="bg-blue-50 border-blue-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <Label className="text-sm font-medium text-blue-800">Crédito Recomendado</Label>
-                <div className="text-lg font-semibold text-blue-900">
-                  {formatCurrency(creditValue)}
-                </div>
-              </div>
-              <div className="text-right">
-                <Label className="text-sm text-blue-600">Valor Líquido Estimado</Label>
-                <div className="text-lg font-semibold text-blue-900">
-                  {formatCurrency(simulationData.value)}
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Removido: Card de Crédito Recomendado e Valor Líquido Estimado para modalidade Crédito */}
 
       {/* Removido Card de Mês de Contemplação */}
 
