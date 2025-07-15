@@ -562,3 +562,4 @@ Próximos passos:
 - Textos e placeholders ajustados conforme solicitado.
 - 2024-07-10: Ajustado botão '+ Selecionar Crédito' para preto e apenas um símbolo de soma. Botão 'Gerar proposta' agora só aparece após seleção e salvamento de créditos na montagem de cotas do simulador.
 - 2024-07-10: Iniciada refatoração para sincronização e salvamento dos filtros principais (Modalidade, Valor do aporte, Parcelas, Tipo de Parcela) entre página e modal 'Mais configurações' do simulador. Campos do modal terão efeito sobreposto se definidos como manual.
+- 2024-07-10: Iniciado redesign da aba de alavancagem patrimonial: layout agrupado conforme wireframe, slider/input de contemplação, botões de seleção lado a lado e base de cálculo ajustada para 'Crédito Acessado'.

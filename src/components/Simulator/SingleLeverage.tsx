@@ -33,10 +33,12 @@ interface SingleLeverageProps {
     searchType: 'contribution' | 'credit';
     bidType?: string;
   };
+  contemplationMonth: number;
 }
 
-export const SingleLeverage = ({ administrator, product, propertyData, installmentType, simulationData }: SingleLeverageProps) => {
-  const [contemplationMonth, setContemplationMonth] = useState(24);
+export const SingleLeverage = ({ administrator, product, propertyData, installmentType, simulationData, contemplationMonth }: SingleLeverageProps) => {
+  
+  // Remover state de contemplationMonth, usar prop
   
   // Calcular crédito baseado no valor desejado e tipo de contemplação
   const calculateCreditBasedOnDesiredValue = () => {

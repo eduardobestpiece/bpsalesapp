@@ -403,3 +403,5 @@ Ajustes visuais e funcionais nos botões, modal e salvamento de filtros na monta
 **Status:**
 - Iniciada a refatoração para compartilhamento de estado e sincronização bidirecional dos campos entre página e modal.
 - Próximo passo: implementar e testar a sincronização e persistência dos filtros. 
+
+- 2024-07-10: Solicitado redesign da aba de alavancagem patrimonial para agrupar 'Características do Imóvel', 'Exemplo de contemplação' (slider e input), e botões de seleção de tipo de alavancagem lado a lado, conforme wireframe. Ajustar base de cálculo para usar 'Crédito Acessado' em vez de valor do aporte/crédito. 

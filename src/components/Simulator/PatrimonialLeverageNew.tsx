@@ -7,6 +7,9 @@ import { ScaledLeverage } from './ScaledLeverage';
 import { LeverageSelector } from './LeverageSelector';
 import { Administrator, Product } from '@/types/entities';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Slider } from '@/components/ui/slider';
+import { Button } from '@/components/ui/button';
 
 interface LeverageData {
   id: string;
@@ -42,6 +45,7 @@ interface PatrimonialLeverageNewProps {
     searchType: 'contribution' | 'credit';
     bidType?: string;
   };
+  creditoAcessado?: number | null;
 }
 
 // Dados padrão baseados na documentação
@@ -74,7 +78,8 @@ const DEFAULT_PRODUCT: Product = {
 export const PatrimonialLeverageNew = ({ 
   administrator = DEFAULT_ADMINISTRATOR, 
   product = DEFAULT_PRODUCT, 
-  simulationData 
+  simulationData,
+  creditoAcessado
 }: PatrimonialLeverageNewProps) => {
   const [leverageType, setLeverageType] = useState<'single' | 'scaled'>('single');
   const [selectedLeverage, setSelectedLeverage] = useState<string>('');
@@ -86,6 +91,9 @@ export const PatrimonialLeverageNew = ({
     fixedCosts: 800,
     appreciationRate: simulationData.updateRate || 8
   });
+  // Valor base para cálculos: crédito acessado se disponível, senão valor digitado
+  const valorBase = creditoAcessado && creditoAcessado > 0 ? creditoAcessado : simulationData.value;
+  const [contemplationMonth, setContemplationMonth] = useState(6);
 
   // Atualizar valorização anual automaticamente baseado na taxa de atualização
   useEffect(() => {
@@ -126,52 +134,74 @@ export const PatrimonialLeverageNew = ({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="text-center space-y-2">
-        <h2 className="text-2xl font-bold">Alavancagem Patrimonial</h2>
-        <p className="text-muted-foreground">
-          Simule diferentes estratégias de alavancagem patrimonial com consórcio
-        </p>
-      </div>
-
-      {/* Características do Imóvel e Tipos de Alavanca na mesma linha */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Características do Imóvel */}
-        <Card className="p-4">
-          <div className="space-y-3">
-            <Label className="text-base font-semibold">Características do Imóvel</Label>
-            <LeverageSelector
-              selectedLeverage={selectedLeverage}
-              onLeverageChange={handleLeverageChange}
-              onLeverageData={handleLeverageData}
-            />
-            
-            {leverageData && (
-              <div className="mt-4 p-3 bg-muted rounded-lg">
-                <div className="text-sm font-medium mb-2">{leverageData.name}</div>
-                <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                  <div>Tipo: {leverageData.type}</div>
-                  {leverageData.subtype && <div>Subtipo: {leverageData.subtype}</div>}
-                  {leverageData.occupancy_rate && <div>Taxa Ocupação: {leverageData.occupancy_rate}%</div>}
-                  {leverageData.total_expenses && <div>Custos: R$ {leverageData.total_expenses}</div>}
-                </div>
-              </div>
-            )}
+      {/* Novo layout agrupado */}
+      <Card className="p-6">
+        <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+          {/* Esquerda: Características do Imóvel */}
+          <div className="flex-1 min-w-[280px]">
+            <div className="mb-2 text-lg font-bold">Características do Imóvel</div>
+            <div className="flex gap-2 mb-2">
+              <Input
+                type="number"
+                value={valorBase}
+                readOnly
+                className="font-bold text-lg bg-gray-100 border-2 border-black rounded-xl px-4 py-2 w-48"
+                style={{ minWidth: 180 }}
+                prefix="R$"
+              />
+              <LeverageSelector
+                selectedLeverage={selectedLeverage}
+                onLeverageChange={setSelectedLeverage}
+                onLeverageData={setLeverageData}
+              />
+            </div>
+            <div className="text-xs text-muted-foreground mt-2">
+              <div>Subtipo: {leverageData?.subtype || '-'}</div>
+              <div>Ocupação: {leverageData?.occupancy_rate ? `${leverageData.occupancy_rate}%` : '-'}</div>
+              <div>Despesas: {leverageData?.total_expenses ? `R$ ${leverageData.total_expenses}` : '-'}</div>
+            </div>
           </div>
-        </Card>
-
-        {/* Tipo de Alavanca */}
-        <Card className="p-4">
-          <div className="space-y-3">
-            <Label className="text-base font-semibold">Tipo de Alavancagem</Label>
-            <LeverageTypes 
-              selectedType={leverageType}
-              onTypeChange={setLeverageType}
-            />
+          {/* Direita: Exemplo de contemplação e botões */}
+          <div className="flex-1 min-w-[320px] flex flex-col gap-4">
+            <div className="mb-2 text-lg font-bold">Exemplo de contemplação</div>
+            <div className="flex items-center gap-4 mb-2">
+              {/* Slider e input mês na mesma linha */}
+              <Slider
+                value={[contemplationMonth]}
+                onValueChange={v => setContemplationMonth(v[0])}
+                min={6}
+                max={product.termMonths}
+                step={1}
+                className="flex-1"
+              />
+              <Input
+                type="number"
+                value={contemplationMonth}
+                onChange={e => setContemplationMonth(Math.min(Math.max(6, Number(e.target.value)), product.termMonths))}
+                min={6}
+                max={product.termMonths}
+                className="w-20 text-center border-2 border-black rounded-xl"
+              />
+            </div>
+            <div className="flex gap-2 mt-2">
+              <Button
+                variant={leverageType === 'single' ? 'default' : 'outline'}
+                className="flex-1 text-lg py-4 rounded-xl border-2 border-black"
+                onClick={() => setLeverageType('single')}
+              >
+                Alavancagem Simples
+              </Button>
+              <Button
+                variant={leverageType === 'scaled' ? 'default' : 'outline'}
+                className="flex-1 text-lg py-4 rounded-xl border-2 border-black"
+                onClick={() => setLeverageType('scaled')}
+              >
+                Alavancagem Escalonada
+              </Button>
+            </div>
           </div>
-        </Card>
-      </div>
-
+        </div>
+      </Card>
       {/* Conteúdo baseado no tipo de alavancagem */}
       {leverageData ? (
         leverageType === 'single' ? (
@@ -180,7 +210,8 @@ export const PatrimonialLeverageNew = ({
             product={product}
             propertyData={propertyData}
             installmentType={simulationData.installmentType as 'full' | 'half' | 'reduced'}
-            simulationData={simulationData}
+            simulationData={{ ...simulationData, value: valorBase }}
+            contemplationMonth={contemplationMonth}
           />
         ) : (
           <ScaledLeverage 
@@ -188,7 +219,8 @@ export const PatrimonialLeverageNew = ({
             product={product}
             propertyData={propertyData}
             installmentType={simulationData.installmentType as 'full' | 'half' | 'reduced'}
-            simulationData={simulationData}
+            simulationData={{ ...simulationData, value: valorBase }}
+            contemplationMonth={contemplationMonth}
           />
         )
       ) : (

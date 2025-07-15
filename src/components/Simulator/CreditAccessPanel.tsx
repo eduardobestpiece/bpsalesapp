@@ -44,6 +44,7 @@ interface MonthlyDetail {
 
 interface CreditAccessPanelProps {
   data: SimulationData;
+  onCreditoAcessado?: (valor: number) => void;
 }
 
 // Adicionar/ajustar o componente ResumoCard
@@ -58,7 +59,7 @@ function ResumoCard({ titulo, valor, destaquePositivo, destaqueNegativo }: { tit
   );
 }
 
-export const CreditAccessPanel = ({ data }: CreditAccessPanelProps) => {
+export const CreditAccessPanel = ({ data, onCreditoAcessado }: CreditAccessPanelProps) => {
   const { selectedCompanyId } = useCompany();
   const { crmUser, companyId } = useCrmAuth();
   const [credits, setCredits] = useState<Credit[]>([]);

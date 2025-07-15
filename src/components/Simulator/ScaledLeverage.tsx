@@ -33,10 +33,12 @@ interface ScaledLeverageProps {
     searchType: 'contribution' | 'credit';
     bidType?: string;
   };
+  contemplationMonth: number;
 }
 
-export const ScaledLeverage = ({ administrator, product, propertyData, installmentType, simulationData }: ScaledLeverageProps) => {
-  const [contemplationFrequency, setContemplationFrequency] = useState(60); // A cada 5 anos
+export const ScaledLeverage = ({ administrator, product, propertyData, installmentType, simulationData, contemplationMonth }: ScaledLeverageProps) => {
+  // Usar contemplationMonth como frequência de contemplação
+  const [contemplationFrequency, setContemplationFrequency] = useState(contemplationMonth || 60);
   
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -62,8 +64,8 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
   const baseCreditValue = calculateCreditBasedOnDesiredValue();
 
   // Calcular quantas contemplações ocorrerão
-  const totalContemplations = Math.floor(product.termMonths / contemplationFrequency);
-  const contemplationMonths = Array.from({ length: totalContemplations }, (_, i) => (i + 1) * contemplationFrequency);
+  const totalContemplations = Math.floor(product.termMonths / contemplationMonth);
+  const contemplationMonths = Array.from({ length: totalContemplations }, (_, i) => (i + 1) * contemplationMonth);
 
   // Calcular valores agregados para múltiplas propriedades baseado no valor de simulação
   const totalCreditValue = baseCreditValue * totalContemplations;

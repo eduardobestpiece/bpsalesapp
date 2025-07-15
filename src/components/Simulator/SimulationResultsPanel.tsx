@@ -23,6 +23,9 @@ interface SimulationResultsPanelProps {
 }
 
 export const SimulationResultsPanel = ({ data }: SimulationResultsPanelProps) => {
+  // Novo estado para guardar o valor de crédito acessado
+  const [creditoAcessado, setCreditoAcessado] = useState<number | null>(null);
+
   return (
     <Tabs defaultValue="credit-access" className="w-full h-full">
       <TabsList className="grid w-full grid-cols-4 mb-6">
@@ -33,11 +36,11 @@ export const SimulationResultsPanel = ({ data }: SimulationResultsPanelProps) =>
       </TabsList>
       
       <TabsContent value="credit-access" className="h-full">
-        <CreditAccessPanel data={data} />
+        <CreditAccessPanel data={data} onCreditoAcessado={setCreditoAcessado} />
       </TabsContent>
       
       <TabsContent value="patrimonial" className="h-full">
-        <PatrimonialLeverageNew simulationData={data} />
+        <PatrimonialLeverageNew simulationData={data} creditoAcessado={creditoAcessado} />
       </TabsContent>
       
       <TabsContent value="capital-gain" className="flex items-center justify-center h-32">
