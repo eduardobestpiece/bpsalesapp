@@ -414,3 +414,25 @@ Ajustes visuais e funcionais nos botões, modal e salvamento de filtros na monta
     - Exibir texto dinâmico abaixo do slider conforme tipo de alavancagem:
         - Simples: "Contemplação em X meses"
         - Escalonada: "Contemplação a cada X meses" 
+
+# Requisição em andamento - 2024-07-11
+
+## Ajustes solicitados na aba de alavancagem patrimonial (alavancas)
+
+- Na aba alavancas, em Configurações do simulador, a lista deve estar sempre filtrada pelas alavancas ativas (`is_archived = false`).
+- Sempre que uma alavanca for criada, ela será atrelada imediatamente à empresa do usuário (se for administrador, usuário ou líder) ou à empresa que o master selecionou no menu lateral esquerdo.
+- O master terá a ação de excluir as alavancas (somente o master pode excluir).
+- No modal de edição ou adição de alavanca, quando o campo "Imóvel tem valor fixo" estiver desmarcado, o campo "Valor das Despesas Totais (R$)" será exibido como "Valor das Despesas Totais (%)" (percentual).
+
+### Checklist
+- [x] Verificar/adicionar campo `ativo` na tabela de alavancas (Supabase)
+- [x] Garantir vínculo com empresa na tabela de alavancas (Supabase)
+- [ ] Ajustar filtro de listagem para mostrar apenas alavancas ativas
+- [ ] Ajustar lógica de criação para vincular à empresa correta
+- [ ] Permitir exclusão apenas para master
+- [ ] Ajustar modal para alternar entre valor fixo e percentual
+- [ ] Testar todos os fluxos
+- [ ] Realizar deploy automático
+- [ ] Solicitar validação
+
+**Status:** Iniciando implementação dos ajustes no frontend para a aba de alavancagem patrimonial. 

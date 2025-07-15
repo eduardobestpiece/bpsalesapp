@@ -236,7 +236,7 @@ const Administrators = () => {
           </TabsContent>
 
           <TabsContent value="leverages">
-            <LeveragesList key={refreshKey} onEdit={setSelectedLeverage} />
+            <LeveragesList key={refreshKey} statusFilter="active" onEdit={setSelectedLeverage} />
           </TabsContent>
         </Tabs>
 

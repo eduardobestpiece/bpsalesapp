@@ -284,22 +284,23 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
                 >
                   <Edit className="w-4 h-4" />
                 </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleArchiveToggle(leverage)}
-                  className={leverage.is_archived ? 
-                    "hover:bg-green-50 hover:border-green-200" : 
-                    "hover:bg-red-50 hover:border-red-200"
-                  }
-                  disabled={isSubMaster}
-                >
-                  {leverage.is_archived ? (
-                    <RotateCcw className="w-4 h-4" />
-                  ) : (
-                    <Archive className="w-4 h-4" />
-                  )}
-                </Button>
+                {isMaster && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleArchiveToggle(leverage)}
+                    className={leverage.is_archived ? 
+                      "hover:bg-green-50 hover:border-green-200" : 
+                      "hover:bg-red-50 hover:border-red-200"
+                    }
+                  >
+                    {leverage.is_archived ? (
+                      <RotateCcw className="w-4 h-4" />
+                    ) : (
+                      <Archive className="w-4 h-4" />
+                    )}
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>

@@ -8,6 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
 
 interface LeverageModalProps {
   isOpen: boolean;
@@ -18,6 +20,8 @@ interface LeverageModalProps {
 
 export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageModalProps) => {
   const { toast } = useToast();
+  const { userRole, companyId } = useCrmAuth();
+  const { selectedCompanyId } = useCompany();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
@@ -100,7 +104,10 @@ export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageMod
         occupancy_rate: formData.subtype === 'short_stay' ? formData.occupancy_rate : null,
         updated_at: new Date().toISOString(),
       };
-
+      if (!leverage) {
+        // Definir company_id conforme perfil
+        data.company_id = userRole === 'master' ? selectedCompanyId : companyId;
+      }
       let error;
       if (leverage) {
         ({ error } = await supabase
@@ -297,14 +304,22 @@ export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageMod
                   )}
 
                   <div className="space-y-2">
-                    <Label htmlFor="total_expenses">Valor das Despesas Totais (R$)</Label>
-                    <Input
-                      id="total_expenses"
-                      type="number"
-                      value={formData.total_expenses || ''}
-                      onChange={(e) => handleChange('total_expenses', Number(e.target.value))}
-                      placeholder="Ex: 800"
-                    />
+                    <Label htmlFor="total_expenses">
+                      {formData.has_fixed_property_value ? 'Valor das Despesas Totais (R$)' : 'Valor das Despesas Totais (%)'}
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="total_expenses"
+                        type="number"
+                        min={formData.has_fixed_property_value ? undefined : 0}
+                        max={formData.has_fixed_property_value ? undefined : 100}
+                        step="0.01"
+                        value={formData.total_expenses || ''}
+                        onChange={(e) => handleChange('total_expenses', Number(e.target.value))}
+                        placeholder={formData.has_fixed_property_value ? 'Ex: 800' : 'Ex: 10'}
+                      />
+                      {!formData.has_fixed_property_value && <span className="text-gray-500">%</span>}
+                    </div>
                   </div>
                 </div>
               )}

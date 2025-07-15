@@ -39,7 +39,7 @@ export default function Configuracoes() {
   const [installmentSearchTerm, setInstallmentSearchTerm] = useState('');
   const [installmentStatusFilter, setInstallmentStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
   const [leverageSearchTerm, setLeverageSearchTerm] = useState('');
-  const [leverageStatusFilter, setLeverageStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
+  const [leverageStatusFilter, setLeverageStatusFilter] = useState<'all' | 'active' | 'archived'>('active');
 
   // Administrator filter for related tables
   const [productAdminFilter, setProductAdminFilter] = useState<string>('');
