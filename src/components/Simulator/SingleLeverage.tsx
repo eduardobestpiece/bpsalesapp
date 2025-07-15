@@ -34,9 +34,10 @@ interface SingleLeverageProps {
     bidType?: string;
   };
   contemplationMonth: number;
+  valorImovel: number;
 }
 
-export const SingleLeverage = ({ administrator, product, propertyData, installmentType, simulationData, contemplationMonth }: SingleLeverageProps) => {
+export const SingleLeverage = ({ administrator, product, propertyData, installmentType, simulationData, contemplationMonth, valorImovel }: SingleLeverageProps) => {
   
   // Remover state de contemplationMonth, usar prop
   

@@ -34,9 +34,10 @@ interface ScaledLeverageProps {
     bidType?: string;
   };
   contemplationMonth: number;
+  valorImovel: number;
 }
 
-export const ScaledLeverage = ({ administrator, product, propertyData, installmentType, simulationData, contemplationMonth }: ScaledLeverageProps) => {
+export const ScaledLeverage = ({ administrator, product, propertyData, installmentType, simulationData, contemplationMonth, valorImovel }: ScaledLeverageProps) => {
   // Usar contemplationMonth como frequência de contemplação
   const [contemplationFrequency, setContemplationFrequency] = useState(contemplationMonth || 60);
   

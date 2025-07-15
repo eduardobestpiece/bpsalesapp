@@ -405,3 +405,4 @@ Ajustes visuais e funcionais nos botões, modal e salvamento de filtros na monta
 - Próximo passo: implementar e testar a sincronização e persistência dos filtros. 
 
 - 2024-07-10: Solicitado redesign da aba de alavancagem patrimonial para agrupar 'Características do Imóvel', 'Exemplo de contemplação' (slider e input), e botões de seleção de tipo de alavancagem lado a lado, conforme wireframe. Ajustar base de cálculo para usar 'Crédito Acessado' em vez de valor do aporte/crédito. 
+- 2024-07-10: Ajuste solicitado: campo de valor do imóvel em 'Características do Imóvel' deve ser livre (não vinculado ao aporte/crédito); garantir que o cálculo de patrimônio na contemplação e demais cálculos de alavancagem patrimonial usem sempre o valor de Crédito Acessado. 

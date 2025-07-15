@@ -93,6 +93,8 @@ export const PatrimonialLeverageNew = ({
   });
   // Valor base para cálculos: crédito acessado se disponível, senão valor digitado
   const valorBase = creditoAcessado && creditoAcessado > 0 ? creditoAcessado : simulationData.value;
+  // Novo estado local para o campo de valor do imóvel (livre)
+  const [valorImovel, setValorImovel] = useState<number>(valorBase);
   const [contemplationMonth, setContemplationMonth] = useState(6);
 
   // Atualizar valorização anual automaticamente baseado na taxa de atualização
@@ -143,8 +145,8 @@ export const PatrimonialLeverageNew = ({
             <div className="flex gap-2 mb-2">
               <Input
                 type="number"
-                value={valorBase}
-                readOnly
+                value={valorImovel}
+                onChange={e => setValorImovel(Number(e.target.value))}
                 className="font-bold text-lg bg-gray-100 border-2 border-black rounded-xl px-4 py-2 w-48"
                 style={{ minWidth: 180 }}
                 prefix="R$"
@@ -212,6 +214,7 @@ export const PatrimonialLeverageNew = ({
             installmentType={simulationData.installmentType as 'full' | 'half' | 'reduced'}
             simulationData={{ ...simulationData, value: valorBase }}
             contemplationMonth={contemplationMonth}
+            valorImovel={valorImovel}
           />
         ) : (
           <ScaledLeverage 
@@ -221,6 +224,7 @@ export const PatrimonialLeverageNew = ({
             installmentType={simulationData.installmentType as 'full' | 'half' | 'reduced'}
             simulationData={{ ...simulationData, value: valorBase }}
             contemplationMonth={contemplationMonth}
+            valorImovel={valorImovel}
           />
         )
       ) : (
