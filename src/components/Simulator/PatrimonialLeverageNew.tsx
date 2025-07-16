@@ -202,19 +202,22 @@ export const PatrimonialLeverageNew = ({
     console.log('embutido:', embutido);
     console.log('percentualEmbutido:', percentualEmbutido);
     
-    if (simulationData.searchType === 'contribution') {
-      // Para modalidade Aporte: numeroImoveis * valorImovel
-      const result = numeroImoveis * valorImovel;
-      console.log('Resultado patrimônio (Aporte):', result);
-      return result;
-    } else {
-      // Para modalidade Crédito: usar o valor base (creditoAcessado ou valor digitado)
-      // E calcular quantos imóveis consegue comprar: numeroImoveis * valorImovel
-      const result = numeroImoveis * valorImovel;
-      console.log('Resultado patrimônio (Crédito):', result);
-      return result;
-    }
-  }, [simulationData.searchType, numeroImoveis, valorImovel, valorBase, creditoPorImovelComEmbutido, embutido, percentualEmbutido]);
+    // Patrimônio base (número de imóveis × valor do imóvel)
+    const patrimonioBase = numeroImoveis * valorImovel;
+    
+    // Aplicar valorização até o mês de contemplação (60 meses = 5 anos)
+    // Taxa de valorização anual: 8% (finalSimulationData.updateRate)
+    const taxaValorizacaoAnual = (finalSimulationData.updateRate || 8) / 100;
+    const anosAteContemplacao = contemplationMonth / 12;
+    const patrimonioComValorizacao = patrimonioBase * Math.pow(1 + taxaValorizacaoAnual, anosAteContemplacao);
+    
+    console.log('Patrimônio base:', patrimonioBase);
+    console.log('Taxa valorização anual:', taxaValorizacaoAnual);
+    console.log('Anos até contemplação:', anosAteContemplacao);
+    console.log('Patrimônio com valorização:', patrimonioComValorizacao);
+    
+    return patrimonioComValorizacao;
+  }, [simulationData.searchType, numeroImoveis, valorImovel, valorBase, creditoPorImovelComEmbutido, embutido, percentualEmbutido, finalSimulationData.updateRate, contemplationMonth]);
 
   // Atualizar valorização anual automaticamente baseado na taxa de atualização
   useEffect(() => {
