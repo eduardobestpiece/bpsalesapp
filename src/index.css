@@ -74,41 +74,42 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 0 0% 7.06%;
-    --foreground: 0 0% 100%;
+    /* Cores especificadas pelo usuário convertidas para HSL */
+    --background: 0 0% 7.45%; /* #131313 */
+    --foreground: 0 0% 100%; /* #FFFFFF */
 
-    --card: 0 0% 7.06%;
+    --card: 0 0% 12.16%; /* #1F1F1F */
     --card-foreground: 0 0% 100%;
 
-    --popover: 0 0% 7.06%;
+    --popover: 0 0% 12.16%; /* #1F1F1F */
     --popover-foreground: 0 0% 100%;
 
-    --primary: 18 32% 51%;
+    --primary: 18 32% 51%; /* Mantém cor primária marrom */
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 0 0% 11.76%;
+    --secondary: 0 0% 11.76%; /* #1E1E1E */
     --secondary-foreground: 0 0% 100%;
 
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 65%;
+    --muted: 0 0% 8.63%; /* #161616 */
+    --muted-foreground: 0 0% 70%; /* Texto secundário mais claro para melhor contraste */
 
-    --accent: 0 0% 11.76%;
+    --accent: 18 32% 51%; /* #A86F57 convertido para HSL */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
-    --ring: 18 32% 51%;
+    --border: 0 0% 20%; /* Bordas mais visíveis no dark mode */
+    --input: 0 0% 12.16%; /* #1F1F1F para inputs */
+    --ring: 18 32% 51%; /* Cor de foco mantém o marrom */
 
-    --sidebar-background: 0 0% 7.06%;
+    --sidebar-background: 0 0% 7.45%; /* #131313 */
     --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 18 32% 51%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 11.76%;
+    --sidebar-accent: 0 0% 11.76%; /* #1E1E1E */
     --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 15%;
+    --sidebar-border: 0 0% 20%;
     --sidebar-ring: 18 32% 51%;
   }
 }

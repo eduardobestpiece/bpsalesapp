@@ -23,7 +23,7 @@ export const SimulatorLayout = ({ children }: SimulatorLayoutProps) => {
             <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
               <SidebarTrigger className="-ml-1" />
               <ThemeSwitch />
-              <div className="flex items-center space-x-2 text-sm text-secondary/70 bg-blue-50/70 px-3 py-1.5 rounded-full">
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full">
                 <span className="font-medium">Faça a sua simulação</span>
               </div>
             </header>

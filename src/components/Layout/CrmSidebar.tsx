@@ -96,19 +96,19 @@ export const CrmSidebar = () => {
   };
 
   return (
-    <Sidebar className="border-r border-gray-200">
+    <Sidebar className="border-r border-border">
       <SidebarHeader className="p-4">
         <div className="flex flex-col items-start">
           <div className="cursor-pointer mb-2" onClick={handleLogoClick}>
             <img src="/monteo_policromia_horizontal (1).png" alt="Logo Monteo" className="h-10 w-auto max-w-[140px]" />
           </div>
-          <span className="font-bold text-lg text-gray-800 tracking-wide mb-4">CRM</span>
+          <span className="font-bold text-lg text-foreground tracking-wide mb-4">CRM</span>
           {/* Seletor de empresa para Master */}
           {userRole === 'master' && (
             <div className="w-full mb-4">
-              <label className="block text-xs font-medium text-gray-600 mb-1">Empresa</label>
+              <label className="block text-xs font-medium text-muted-foreground mb-1">Empresa</label>
               <select
-                className="w-full p-2 border rounded text-sm"
+                className="w-full p-2 border border-input bg-background text-foreground rounded text-sm focus:ring-2 focus:ring-ring focus:ring-offset-2"
                 value={selectedCompanyId || ''}
                 onChange={e => setSelectedCompanyId(e.target.value)}
                 disabled={companiesLoading}
@@ -122,7 +122,7 @@ export const CrmSidebar = () => {
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center justify-between w-full p-2 text-sm bg-gray-100 rounded-md hover:bg-gray-200 transition-colors">
+              <button className="flex items-center justify-between w-full p-2 text-sm bg-muted rounded-md hover:bg-muted/80 transition-colors text-foreground">
                 <span>Módulo</span>
                 <ChevronDown className="h-4 w-4" />
               </button>
@@ -201,10 +201,10 @@ export const CrmSidebar = () => {
           </div>
           <div className="flex flex-col flex-1 min-w-0">
             <span className="font-medium text-sm truncate">{crmUser?.first_name || 'Usuário'} {crmUser?.last_name || ''}</span>
-            <span className="text-xs text-secondary/60 truncate">{crmUser?.email || 'sem-email'}</span>
+            <span className="text-xs text-muted-foreground truncate">{crmUser?.email || 'sem-email'}</span>
           </div>
-          <button className="ml-2 p-2 rounded hover:bg-red-50" onClick={handleLogout} title="Sair">
-            <LogOut className="h-5 w-5 text-red-500" />
+          <button className="ml-2 p-2 rounded hover:bg-destructive/10 transition-colors" onClick={handleLogout} title="Sair">
+            <LogOut className="h-5 w-5 text-destructive" />
           </button>
         </div>
       </SidebarFooter>

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Moon, Sun } from 'lucide-react';
 
 export function ThemeSwitch() {
-  // Sempre começa como claro
   const [dark, setDark] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('theme') === 'dark';
@@ -23,11 +22,15 @@ export function ThemeSwitch() {
   return (
     <button
       aria-label={dark ? 'Ativar modo claro' : 'Ativar modo escuro'}
-      className={`flex items-center justify-center w-10 h-10 rounded-full border border-input bg-background shadow transition-colors focus:outline-none focus:ring-2 focus:ring-primary-400 ${dark ? 'bg-gray-900 text-yellow-400' : 'bg-white text-gray-700'}`}
+      className="flex items-center justify-center w-10 h-10 rounded-lg border border-border bg-card hover:bg-accent/10 shadow-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
       onClick={() => setDark((v) => !v)}
       type="button"
     >
-      {dark ? <Moon className="h-6 w-6" /> : <Sun className="h-6 w-6" />}
+      {dark ? (
+        <Moon className="h-5 w-5 text-foreground" />
+      ) : (
+        <Sun className="h-5 w-5 text-foreground" />
+      )}
     </button>
   );
 } 
