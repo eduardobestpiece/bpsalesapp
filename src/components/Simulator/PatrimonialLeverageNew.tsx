@@ -206,8 +206,8 @@ export const PatrimonialLeverageNew = ({
     const patrimonioBase = numeroImoveis * valorImovel;
     
     // Aplicar valorização até o mês de contemplação (60 meses = 5 anos)
-    // Taxa de valorização anual: 8% (finalSimulationData.updateRate)
-    const taxaValorizacaoAnual = (finalSimulationData.updateRate || 8) / 100;
+    // Taxa de valorização anual: 6% conforme especificação
+    const taxaValorizacaoAnual = (finalSimulationData.updateRate || 6) / 100;
     const anosAteContemplacao = contemplationMonth / 12;
     const patrimonioComValorizacao = patrimonioBase * Math.pow(1 + taxaValorizacaoAnual, anosAteContemplacao);
     

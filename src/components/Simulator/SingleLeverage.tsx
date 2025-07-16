@@ -81,8 +81,8 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
   const taxaAtualizacaoAnual = simulationData.updateRate / 100;
   const taxaValorizacao = propertyData.appreciationRate / 100;
   
-  // Patrimônio na contemplação com valorização
-  const patrimonioNaContemplacaoCalculado = patrimonioNaContemplacao * Math.pow(1 + taxaValorizacao, contemplationMonth / 12);
+  // Patrimônio na contemplação (já vem valorizado do componente pai)
+  const patrimonioNaContemplacaoCalculado = patrimonioContemplacao !== undefined ? patrimonioContemplacao : patrimonioNaContemplacao;
   
   // Patrimônio ao final
   const patrimonioAoFinal = patrimonioNaContemplacaoCalculado * Math.pow(1 + taxaValorizacao, (product.termMonths - contemplationMonth) / 12);
