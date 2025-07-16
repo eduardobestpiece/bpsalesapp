@@ -68,17 +68,27 @@ Fazer uma análise minuciosa em toda a plataforma e finalizar a implementação 
 - ✅ Logo escuro adicionado para modo dark
 - ✅ Deploy automático realizado (commit: 8fdbe7f)
 
-**Nova solicitação:** Correção de páginas e componentes que ainda não estão com dark mode adequado
+**Nova solicitação:** Finalização completa do dark mode em toda a plataforma
 
-**Componentes identificados para correção:**
-- [ ] Painel "Dados da Alavancagem Única" (cards coloridos)
-- [ ] Simulador - seção principal e modais
-- [ ] Modal "Redefinir Cotas Selecionadas"
-- [ ] Modal "Selecionar crédito"
-- [ ] Seção "Montagem de Cotas"
-- [ ] Página "Itens arquivados" (Master Config)
-- [ ] Página "Configurações" - aba Funis
-- [ ] Modal "Novo Time"
-- [ ] Página "Comercial" - abas Leads e Vendas
+**Componentes já corrigidos:**
+- [x] Painel "Dados da Alavancagem Única" (cards coloridos) - ✅ CONCLUÍDO
+- [x] Simulador - seção principal e modais - ✅ CONCLUÍDO
+- [x] Modal "Redefinir Cotas Selecionadas" - ✅ CONCLUÍDO
+- [x] Modal "Selecionar crédito" - ✅ CONCLUÍDO
+- [x] Seção "Montagem de Cotas" - ✅ CONCLUÍDO
+- [x] Página "Itens arquivados" (Master Config) - ✅ CONCLUÍDO
+- [x] Página "Configurações" - aba Funis - ✅ CONCLUÍDO
+- [x] Modal "Novo Time" - ✅ CONCLUÍDO
+- [x] Página "Comercial" - abas Leads e Vendas - ✅ CONCLUÍDO
 
-**Objetivo:** Aplicar as cores especificadas (#131313, #1E1E1E, #161616, #1F1F1F, #FFFFFF, #A86F57) com contraste adequado em todos os componentes.
+**Componentes adicionais identificados para correção:**
+- [ ] Página de Login - fundo branco e card branco
+- [ ] Página Home - fundo branco e cards brancos
+- [ ] Áreas de conteúdo principal (fundos brancos) em todas as páginas
+- [ ] Modal "Novo Time" - área de usuários com fundo branco
+- [ ] Páginas CRM - áreas de conteúdo com fundo branco
+- [ ] Adicionar botão de dark mode na página de Login
+- [ ] Adicionar botão de dark mode na página Home
+- [ ] Tornar dark mode como padrão da aplicação
+
+**Objetivo:** Aplicar as cores especificadas (#131313, #1E1E1E, #161616, #1F1F1F, #FFFFFF, #A86F57) com contraste adequado em TODOS os componentes e tornar dark mode como padrão.

@@ -17,17 +17,17 @@ export const SimulatorLayout = ({ children }: SimulatorLayoutProps) => {
   return (
     <CompanyProvider defaultCompanyId={companyId || ''}>
       <SidebarProvider>
-        <div className="min-h-screen flex w-full">
+        <div className="min-h-screen flex w-full bg-background dark:bg-[#131313]">
           <SimulatorSidebar />
           <SidebarInset className="flex-1">
-            <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-              <SidebarTrigger className="-ml-1" />
+            <header className="flex h-16 shrink-0 items-center gap-2 border-b border-border dark:border-[#A86F57]/20 px-4 bg-background dark:bg-[#1E1E1E]">
+              <SidebarTrigger className="-ml-1 text-foreground dark:text-white" />
               <ThemeSwitch />
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full">
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground dark:text-gray-300 bg-muted/50 dark:bg-[#A86F57]/10 px-3 py-1.5 rounded-full">
                 <span className="font-medium">Faça a sua simulação</span>
               </div>
             </header>
-            <main className="flex-1 p-6">
+            <main className="flex-1 p-6 bg-background dark:bg-[#131313]">
               {children}
             </main>
           </SidebarInset>

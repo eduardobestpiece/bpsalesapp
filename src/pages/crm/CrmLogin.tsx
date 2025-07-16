@@ -10,6 +10,8 @@ import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
 import ForgotPasswordModal from '@/components/Auth/ForgotPasswordModal';
+import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
+import { Logo } from '@/components/ui/Logo';
 
 const CrmLogin = () => {
   const [email, setEmail] = useState('');
@@ -52,16 +54,21 @@ const CrmLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-[#131313] dark:to-[#1E1E1E] flex items-center justify-center p-4">
+      {/* Botão de alternância de tema */}
+      <div className="absolute top-4 right-4">
+        <ThemeSwitch />
+      </div>
+      
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <img src="/monteo_policromia_vertical.png" alt="Logo Monteo" className="h-24 mx-auto mb-2" />
+          <Logo className="h-24 mx-auto mb-2" />
         </div>
 
-        <Card className="shadow-lg border-0">
+        <Card className="shadow-lg border-0 bg-background dark:bg-[#1F1F1F] border-border dark:border-[#A86F57]/20">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Entrar no Sistema</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-2xl text-foreground dark:text-white">Entrar no Sistema</CardTitle>
+            <CardDescription className="text-muted-foreground dark:text-gray-300">
               Acesse sua conta para gerenciar leads e vendas
             </CardDescription>
           </CardHeader>
@@ -75,7 +82,7 @@ const CrmLogin = () => {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="text-foreground dark:text-white">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -84,11 +91,12 @@ const CrmLogin = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={isLoading}
+                  className="bg-background dark:bg-[#131313] border-border dark:border-[#A86F57]/30 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-gray-400"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Senha</Label>
+                <Label htmlFor="password" className="text-foreground dark:text-white">Senha</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -98,12 +106,13 @@ const CrmLogin = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={isLoading}
+                    className="bg-background dark:bg-[#131313] border-border dark:border-[#A86F57]/30 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-gray-400"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 text-muted-foreground dark:text-gray-400 hover:text-foreground dark:hover:text-white"
                     onClick={() => setShowPassword(!showPassword)}
                     disabled={isLoading}
                   >
@@ -120,7 +129,7 @@ const CrmLogin = () => {
             <CardFooter className="flex flex-col space-y-4">
               <Button
                 type="submit"
-                className="w-full bg-gradient-primary hover:opacity-90"
+                className="w-full bg-[#A86F57] hover:bg-[#A86F57]/80 text-white"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -133,11 +142,11 @@ const CrmLogin = () => {
                 )}
               </Button>
 
-              <div className="flex flex-col items-center space-y-2 text-sm text-secondary/60">
+              <div className="flex flex-col items-center space-y-2 text-sm">
                 <button
                   type="button"
                   onClick={() => setShowForgotModal(true)}
-                  className="text-primary hover:underline"
+                  className="text-[#A86F57] hover:underline dark:text-[#A86F57]"
                   disabled={isLoading}
                 >
                   Esqueci a senha
