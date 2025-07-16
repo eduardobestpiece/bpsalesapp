@@ -78,11 +78,11 @@ export const SalesList = ({ companyId }: SalesListProps) => {
               <div>Carregando...</div>
             ) : (
               filteredSales.map((sale) => (
-                <div key={sale.id} className="flex items-center justify-between border rounded p-3">
+                <div key={sale.id} className="flex items-center justify-between border border-border dark:border-[#A86F57]/20 bg-card dark:bg-[#1F1F1F] rounded p-3">
                   <div className="flex items-center gap-3">
-                    <User className="w-5 h-5 text-primary" />
-                    <span className="font-medium">{sale.lead?.name}</span>
-                    <Badge variant="outline">{sale.sale_value}</Badge>
+                    <User className="w-5 h-5 text-primary dark:text-[#A86F57]" />
+                    <span className="font-medium text-foreground dark:text-white">{sale.lead?.name}</span>
+                    <Badge variant="outline" className="border-border dark:border-[#A86F57]/30 text-foreground dark:text-white">{sale.sale_value}</Badge>
                   </div>
                   <div className="flex gap-2">
                     <Button
@@ -90,6 +90,7 @@ export const SalesList = ({ companyId }: SalesListProps) => {
                       size="sm"
                       onClick={() => handleEdit(sale)}
                       disabled={isSubMaster}
+                      className="border-border dark:border-[#A86F57]/30 text-foreground dark:text-white hover:bg-muted dark:hover:bg-[#161616]"
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
@@ -98,6 +99,7 @@ export const SalesList = ({ companyId }: SalesListProps) => {
                       size="sm"
                       onClick={() => {}}
                       disabled={isSubMaster}
+                      className="border-border dark:border-[#A86F57]/30 text-foreground dark:text-white hover:bg-muted dark:hover:bg-[#161616]"
                     >
                       <Archive className="w-4 h-4" />
                     </Button>

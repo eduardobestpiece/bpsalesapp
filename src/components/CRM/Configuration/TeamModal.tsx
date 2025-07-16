@@ -163,9 +163,9 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] bg-background dark:bg-[#1E1E1E] border-border dark:border-[#A86F57]/20">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-foreground dark:text-white">
             {team ? 'Editar Time' : 'Novo Time'}
           </DialogTitle>
         </DialogHeader>

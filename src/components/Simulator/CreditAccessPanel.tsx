@@ -687,26 +687,26 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado }: CreditAccessPanel
             )}
             {/* Lista de cotas adicionadas */}
             {cotas.length === 0 && (
-              <div className="text-muted-foreground text-center py-4">
+              <div className="text-muted-foreground dark:text-gray-300 text-center py-4">
                 Nenhuma cota adicionada. Clique em "Adicionar Produto" para começar.
                     </div>
             )}
             {cotas.map((cota, idx) => (
-              <div key={idx} className={`flex items-center justify-between p-3 border border-border rounded-lg ${selectedCotas.includes(idx) ? 'bg-accent/20 border-accent' : ''}`}>
-                <Checkbox checked={selectedCotas.includes(idx)} onCheckedChange={() => toggleCotaSelecionada(idx)} />
+              <div key={idx} className={`flex items-center justify-between p-3 border border-border dark:border-[#A86F57]/20 rounded-lg bg-card dark:bg-[#1F1F1F] ${selectedCotas.includes(idx) ? 'bg-accent/20 dark:bg-[#A86F57]/10 border-accent dark:border-[#A86F57]' : ''}`}>
+                <Checkbox checked={selectedCotas.includes(idx)} onCheckedChange={() => toggleCotaSelecionada(idx)} className="dark:border-[#A86F57]/30" />
                 <div className="flex-1 ml-2">
-                  <div className="font-medium">{cota.nome}</div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="font-medium text-foreground dark:text-white">{cota.nome}</div>
+                  <div className="text-sm text-muted-foreground dark:text-gray-300">
                     Crédito: {formatCurrency(cota.valor)} | Parcela: {formatCurrency(cota.parcela)}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Badge variant="secondary">Qtd: {cota.quantidade}</Badge>
+                  <Badge variant="secondary" className="bg-muted dark:bg-[#161616] text-foreground dark:text-white">Qtd: {cota.quantidade}</Badge>
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => removerCota(idx)}
-                    className="text-red-600 hover:text-red-700"
+                    className="text-red-600 hover:text-red-700 border-border dark:border-[#A86F57]/30 hover:bg-muted dark:hover:bg-[#161616]"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -728,13 +728,13 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado }: CreditAccessPanel
             {/* Modal para adicionar produto */}
             {showAddProduct && (
               <Dialog open={showAddProduct} onOpenChange={setShowAddProduct}>
-                <DialogContent>
+                <DialogContent className="bg-background dark:bg-[#1E1E1E] border-border dark:border-[#A86F57]/20">
                   <DialogHeader>
-                    <DialogTitle>Selecionar crédito</DialogTitle>
+                    <DialogTitle className="text-foreground dark:text-white">Selecionar crédito</DialogTitle>
                   </DialogHeader>
                   <div className="flex gap-2 items-end mb-4">
                     <div className="flex-1">
-                      <select value={selectedProduct} onChange={e => setSelectedProduct(e.target.value)} className="w-full rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-[#A05A2C] focus:border-[#A05A2C] transition-all">
+                      <select value={selectedProduct} onChange={e => setSelectedProduct(e.target.value)} className="w-full rounded-lg border border-border dark:border-[#A86F57]/30 p-2 bg-background dark:bg-[#131313] text-foreground dark:text-white focus:ring-2 focus:ring-[#A86F57] focus:border-[#A86F57] transition-all">
                         <option value="">Selecione o crédito</option>
                         {availableProducts.map(p => (
                           <option key={p.id} value={p.id}>{p.name}</option>
@@ -742,7 +742,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado }: CreditAccessPanel
                       </select>
                     </div>
                     <div className="w-32">
-                      <Input type="number" min={1} value={addQuantidade} onChange={e => setAddQuantidade(Number(e.target.value))} className="rounded-lg border border-gray-300 p-2 focus:ring-2 focus:ring-[#A05A2C] focus:border-[#A05A2C] transition-all" placeholder="Qtd" />
+                      <Input type="number" min={1} value={addQuantidade} onChange={e => setAddQuantidade(Number(e.target.value))} className="rounded-lg border-border dark:border-[#A86F57]/30 bg-background dark:bg-[#131313] text-foreground dark:text-white focus:ring-2 focus:ring-[#A86F57] focus:border-[#A86F57] transition-all" placeholder="Qtd" />
               </div>
                   </div>
                   <div className="flex gap-2 justify-end">
@@ -755,21 +755,21 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado }: CreditAccessPanel
             {/* Modal para redefinir cotas selecionadas */}
             {showRedefinirModal && (
               <Dialog open={showRedefinirModal} onOpenChange={setShowRedefinirModal}>
-                <DialogContent>
+                <DialogContent className="bg-background dark:bg-[#1E1E1E] border-border dark:border-[#A86F57]/20">
                   <DialogHeader>
-                    <DialogTitle>Redefinir Cotas Selecionadas</DialogTitle>
+                    <DialogTitle className="text-foreground dark:text-white">Redefinir Cotas Selecionadas</DialogTitle>
                   </DialogHeader>
                   <div className="space-y-4">
-                    <select value={redefinirProdutoId} onChange={e => setRedefinirProdutoId(e.target.value)} className="w-full border rounded p-2">
+                    <select value={redefinirProdutoId} onChange={e => setRedefinirProdutoId(e.target.value)} className="w-full border border-border dark:border-[#A86F57]/30 rounded p-2 bg-background dark:bg-[#131313] text-foreground dark:text-white">
                       <option value="">Selecione o novo produto</option>
                       {availableProducts.map(p => (
                         <option key={p.id} value={p.id}>{p.name}</option>
                       ))}
                     </select>
-                    <Input type="number" min={1} value={redefinirQuantidade} onChange={e => setRedefinirQuantidade(Number(e.target.value))} className="w-full" placeholder="Quantidade" />
+                    <Input type="number" min={1} value={redefinirQuantidade} onChange={e => setRedefinirQuantidade(Number(e.target.value))} className="w-full bg-background dark:bg-[#131313] border-border dark:border-[#A86F57]/30 text-foreground dark:text-white" placeholder="Quantidade" />
                     <div className="flex gap-2">
-                      <Button variant="outline" onClick={() => setShowRedefinirModal(false)} className="flex-1">Cancelar</Button>
-                      <Button onClick={redefinirSelecionadas} className="flex-1 bg-[#A05A2C] text-white hover:bg-[#7a3f1a] border-none">Trocar</Button>
+                      <Button variant="outline" onClick={() => setShowRedefinirModal(false)} className="flex-1 border-border dark:border-[#A86F57]/30 text-foreground dark:text-white hover:bg-muted dark:hover:bg-[#161616]">Cancelar</Button>
+                      <Button onClick={redefinirSelecionadas} className="flex-1 bg-[#A86F57] text-white hover:bg-[#A86F57]/80 border-none">Trocar</Button>
                   </div>
                   </div>
                 </DialogContent>

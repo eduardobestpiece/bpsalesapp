@@ -150,68 +150,68 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="space-y-2 p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg border border-blue-200">
-              <Label className="text-sm text-blue-700 font-medium">Patrimônio na Contemplação</Label>
-              <div className="text-2xl font-bold text-blue-900">
+            <div className="space-y-2 p-4 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-blue-200 dark:border-[#A86F57]/20">
+              <Label className="text-sm text-blue-700 dark:text-blue-300 font-medium">Patrimônio na Contemplação</Label>
+              <div className="text-2xl font-bold text-blue-900 dark:text-white">
                 {formatCurrency(patrimonioNaContemplacaoCalculado)}
               </div>
             </div>
             
-            <div className="space-y-2 p-4 bg-gradient-to-r from-green-50 to-green-100 rounded-lg border border-green-200">
-              <Label className="text-sm text-green-700 font-medium">Patrimônio ao Final</Label>
-              <div className="text-2xl font-bold text-green-900">
+            <div className="space-y-2 p-4 bg-gradient-to-r from-green-50 to-green-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-green-200 dark:border-[#A86F57]/20">
+              <Label className="text-sm text-green-700 dark:text-green-300 font-medium">Patrimônio ao Final</Label>
+              <div className="text-2xl font-bold text-green-900 dark:text-white">
                 {formatCurrency(patrimonioAoFinal)}
               </div>
             </div>
             
-            <div className="space-y-2 p-4 bg-gradient-to-r from-purple-50 to-purple-100 rounded-lg border border-purple-200">
-              <Label className="text-sm text-purple-700 font-medium">Ganhos Mensais</Label>
-              <div className="text-2xl font-bold text-purple-900">
+            <div className="space-y-2 p-4 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-purple-200 dark:border-[#A86F57]/20">
+              <Label className="text-sm text-purple-700 dark:text-purple-300 font-medium">Ganhos Mensais</Label>
+              <div className="text-2xl font-bold text-purple-900 dark:text-white">
                 {formatCurrency(ganhosMensais)}
               </div>
             </div>
             
-            <div className="space-y-2 p-4 bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg border border-orange-200">
-              <Label className="text-sm text-orange-700 font-medium">Parcela Pós-Contemplação</Label>
-              <div className="text-2xl font-bold text-orange-900">
+            <div className="space-y-2 p-4 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-orange-200 dark:border-[#A86F57]/20">
+              <Label className="text-sm text-orange-700 dark:text-orange-300 font-medium">Parcela Pós-Contemplação</Label>
+              <div className="text-2xl font-bold text-orange-900 dark:text-white">
                 {formatCurrency(parcelaPosPosContemplacao)}
               </div>
             </div>
             
-            <div className="space-y-2 p-4 bg-gradient-to-r from-teal-50 to-teal-100 rounded-lg border border-teal-200">
-              <Label className="text-sm text-teal-700 font-medium">Fluxo de Caixa Antes {product.termMonths} meses</Label>
-              <div className="text-2xl font-bold text-teal-900">
+            <div className="space-y-2 p-4 bg-gradient-to-r from-teal-50 to-teal-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-teal-200 dark:border-[#A86F57]/20">
+              <Label className="text-sm text-teal-700 dark:text-teal-300 font-medium">Fluxo de Caixa Antes {product.termMonths} meses</Label>
+              <div className="text-2xl font-bold text-teal-900 dark:text-white">
                 {formatCurrency(fluxoCaixaAntes)}
               </div>
             </div>
             
-            <div className="space-y-2 p-4 bg-gradient-to-r from-cyan-50 to-cyan-100 rounded-lg border border-cyan-200">
-              <Label className="text-sm text-cyan-700 font-medium">Fluxo de Caixa Pós {product.termMonths} meses</Label>
-              <div className="text-2xl font-bold text-cyan-900">
+            <div className="space-y-2 p-4 bg-gradient-to-r from-cyan-50 to-cyan-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-cyan-200 dark:border-[#A86F57]/20">
+              <Label className="text-sm text-cyan-700 dark:text-cyan-300 font-medium">Fluxo de Caixa Pós {product.termMonths} meses</Label>
+              <div className="text-2xl font-bold text-cyan-900 dark:text-white">
                 {formatCurrency(fluxoCaixaApos)}
               </div>
             </div>
             
-            <div className="space-y-2 p-4 bg-gradient-to-r from-red-50 to-red-100 rounded-lg border border-red-200">
-              <Label className="text-sm text-red-700 font-medium">Pago do Próprio Bolso</Label>
-              <div className="text-2xl font-bold text-red-900">
+            <div className="space-y-2 p-4 bg-gradient-to-r from-red-50 to-red-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-red-200 dark:border-[#A86F57]/20">
+              <Label className="text-sm text-red-700 dark:text-red-300 font-medium">Pago do Próprio Bolso</Label>
+              <div className="text-2xl font-bold text-red-900 dark:text-white">
                 {formatCurrency(pagoProprioBolso)}
               </div>
             </div>
             
-            <div className="space-y-2 p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 rounded-lg border border-emerald-200">
-              <Label className="text-sm text-emerald-700 font-medium">Pago pelo Inquilino</Label>
-              <div className="text-2xl font-bold text-emerald-900">
+            <div className="space-y-2 p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-emerald-200 dark:border-[#A86F57]/20">
+              <Label className="text-sm text-emerald-700 dark:text-emerald-300 font-medium">Pago pelo Inquilino</Label>
+              <div className="text-2xl font-bold text-emerald-900 dark:text-white">
                 {formatCurrency(pagoInquilino)}
               </div>
             </div>
             
-            <div className="space-y-2 p-4 bg-gradient-to-r from-indigo-50 to-indigo-100 rounded-lg border border-indigo-200">
-              <Label className="text-sm text-indigo-700 font-medium">Capital em Caixa</Label>
-              <div className="text-2xl font-bold text-indigo-900">
+            <div className="space-y-2 p-4 bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-indigo-200 dark:border-[#A86F57]/20">
+              <Label className="text-sm text-indigo-700 dark:text-indigo-300 font-medium">Capital em Caixa</Label>
+              <div className="text-2xl font-bold text-indigo-900 dark:text-white">
                 {formatCurrency(capitalEmCaixa)}
               </div>
-              <Badge variant="outline" className="text-xs bg-white/50">
+              <Badge variant="outline" className="text-xs bg-white/50 dark:bg-[#131313]/50 dark:text-white dark:border-[#A86F57]/30">
                 {((capitalEmCaixa / creditValue) * 100).toFixed(1)}%
               </Badge>
             </div>

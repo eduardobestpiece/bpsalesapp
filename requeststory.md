@@ -64,6 +64,21 @@ Fazer uma análise minuciosa em toda a plataforma e finalizar a implementação 
 - ✅ ThemeSwitch aprimorado com design elegante
 - ✅ Todos os componentes de layout corrigidos
 - ✅ Variáveis CSS semânticas implementadas
-- ✅ Deploy automático realizado
+- ✅ Componente Logo criado com alternância automática entre temas
+- ✅ Logo escuro adicionado para modo dark
+- ✅ Deploy automático realizado (commit: 8fdbe7f)
 
-**Aguardando:** Validação do usuário para confirmar se o dark mode está funcionando corretamente e com boa aparência.
+**Nova solicitação:** Correção de páginas e componentes que ainda não estão com dark mode adequado
+
+**Componentes identificados para correção:**
+- [ ] Painel "Dados da Alavancagem Única" (cards coloridos)
+- [ ] Simulador - seção principal e modais
+- [ ] Modal "Redefinir Cotas Selecionadas"
+- [ ] Modal "Selecionar crédito"
+- [ ] Seção "Montagem de Cotas"
+- [ ] Página "Itens arquivados" (Master Config)
+- [ ] Página "Configurações" - aba Funis
+- [ ] Modal "Novo Time"
+- [ ] Página "Comercial" - abas Leads e Vendas
+
+**Objetivo:** Aplicar as cores especificadas (#131313, #1E1E1E, #161616, #1F1F1F, #FFFFFF, #A86F57) com contraste adequado em todos os componentes.

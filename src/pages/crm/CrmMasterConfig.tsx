@@ -425,8 +425,8 @@ const CrmMasterConfig = () => {
                           {/* Filtros */}
                           <div className="flex gap-4 mb-4">
                             <div>
-                              <Label htmlFor="filter-type">Tipo</Label>
-                              <select id="filter-type" className="block w-full border rounded px-2 py-1" value={archivedType} onChange={e => setArchivedType(e.target.value)}>
+                              <Label htmlFor="filter-type" className="text-foreground dark:text-white">Tipo</Label>
+                              <select id="filter-type" className="block w-full border border-border dark:border-[#A86F57]/30 rounded px-2 py-1 bg-background dark:bg-[#131313] text-foreground dark:text-white" value={archivedType} onChange={e => setArchivedType(e.target.value)}>
                                 <option value="">Todos</option>
                                 <option value="indicator">Indicador</option>
                                 <option value="lead">Lead</option>
@@ -435,35 +435,35 @@ const CrmMasterConfig = () => {
                               </select>
                             </div>
                             <div>
-                              <Label htmlFor="filter-date">Data</Label>
-                              <Input id="filter-date" type="date" className="block w-full" value={archivedDate} onChange={e => setArchivedDate(e.target.value)} />
+                              <Label htmlFor="filter-date" className="text-foreground dark:text-white">Data</Label>
+                              <Input id="filter-date" type="date" className="block w-full bg-background dark:bg-[#131313] border-border dark:border-[#A86F57]/30 text-foreground dark:text-white" value={archivedDate} onChange={e => setArchivedDate(e.target.value)} />
                             </div>
                           </div>
                           {/* Lista de itens arquivados */}
                           <div className="overflow-x-auto">
                             <table className="min-w-full border-separate border-spacing-y-1">
                               <thead>
-                                <tr className="bg-muted">
-                                  <th className="px-2 py-1 text-left font-semibold">Data arquivamento</th>
-                                  <th className="px-2 py-1 text-left font-semibold">Tipo</th>
-                                  <th className="px-2 py-1 text-left font-semibold">Descrição</th>
-                                  <th className="px-2 py-1 text-center font-semibold">Ações</th>
+                                <tr className="bg-muted dark:bg-[#1F1F1F]">
+                                  <th className="px-2 py-1 text-left font-semibold text-foreground dark:text-white">Data arquivamento</th>
+                                  <th className="px-2 py-1 text-left font-semibold text-foreground dark:text-white">Tipo</th>
+                                  <th className="px-2 py-1 text-left font-semibold text-foreground dark:text-white">Descrição</th>
+                                  <th className="px-2 py-1 text-center font-semibold text-foreground dark:text-white">Ações</th>
                                 </tr>
                               </thead>
                               <tbody>
                                 {isLoadingArchived ? (
-                                  <tr><td colSpan={4} className="text-center py-4">Carregando...</td></tr>
+                                  <tr><td colSpan={4} className="text-center py-4 text-foreground dark:text-white">Carregando...</td></tr>
                                 ) : filteredArchived.length === 0 ? (
-                                  <tr><td colSpan={4} className="text-center py-4">Nenhum item arquivado encontrado.</td></tr>
+                                  <tr><td colSpan={4} className="text-center py-4 text-foreground dark:text-white">Nenhum item arquivado encontrado.</td></tr>
                                 ) : filteredArchived.map(item => (
-                                  <tr key={item.type + '-' + item.id}>
-                                    <td className="px-2 py-1">{item.archived_at ? new Date(item.archived_at).toLocaleDateString('pt-BR') : '-'}</td>
-                                    <td className="px-2 py-1">{item.type === 'indicator' ? 'Indicador' : item.type === 'lead' ? 'Lead' : item.type === 'sale' ? 'Venda' : item.type === 'administrator' ? 'Administradora' : ''}</td>
-                                    <td className="px-2 py-1">{item.description}</td>
+                                  <tr key={item.type + '-' + item.id} className="bg-card dark:bg-[#161616]">
+                                    <td className="px-2 py-1 text-foreground dark:text-white">{item.archived_at ? new Date(item.archived_at).toLocaleDateString('pt-BR') : '-'}</td>
+                                    <td className="px-2 py-1 text-foreground dark:text-white">{item.type === 'indicator' ? 'Indicador' : item.type === 'lead' ? 'Lead' : item.type === 'sale' ? 'Venda' : item.type === 'administrator' ? 'Administradora' : ''}</td>
+                                    <td className="px-2 py-1 text-foreground dark:text-white">{item.description}</td>
                                     <td className="px-2 py-1 text-center">
                                       <div className="flex gap-2 justify-center">
-                                        <Button variant="outline" size="sm" onClick={() => handleRecover(item)}>Recuperar</Button>
-                                        <Button variant="destructive" size="sm" onClick={() => handleDelete(item)}>Excluir</Button>
+                                        <Button variant="outline" size="sm" onClick={() => handleRecover(item)} className="border-border dark:border-[#A86F57]/30 text-foreground dark:text-white hover:bg-muted dark:hover:bg-[#1F1F1F]">Recuperar</Button>
+                                        <Button variant="destructive" size="sm" onClick={() => handleDelete(item)} className="bg-red-600 dark:bg-red-700 hover:bg-red-700 dark:hover:bg-red-800">Excluir</Button>
                                       </div>
                                     </td>
                                   </tr>

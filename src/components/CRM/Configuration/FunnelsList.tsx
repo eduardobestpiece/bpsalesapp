@@ -93,20 +93,20 @@ export const FunnelsList = () => {
               filteredFunnels.map((funnel) => (
                 <div
                   key={funnel.id}
-                  className="flex items-center justify-between p-4 border rounded-lg"
+                  className="flex items-center justify-between p-4 border border-border dark:border-[#A86F57]/20 rounded-lg bg-card dark:bg-[#1F1F1F]"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-medium">{funnel.name}</h3>
-                      <Badge variant={funnel.status === 'active' ? 'default' : 'secondary'}>
+                      <h3 className="font-medium text-foreground dark:text-white">{funnel.name}</h3>
+                      <Badge variant={funnel.status === 'active' ? 'default' : 'secondary'} className="dark:bg-[#A86F57] dark:text-white">
                         {funnel.status === 'active' ? 'Ativo' : 'Arquivado'}
                       </Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground dark:text-gray-300">
                       Verificação: {getVerificationTypeLabel(funnel.verification_type)}
                       {funnel.verification_day && ` - Dia ${funnel.verification_day}`}
                     </p>
-                    <p className="text-sm text-muted-foreground">
+                    <p className="text-sm text-muted-foreground dark:text-gray-300">
                       {funnel.stages?.length || 0} etapas configuradas
                     </p>
                   </div>
@@ -115,6 +115,7 @@ export const FunnelsList = () => {
                       variant="outline"
                       size="sm"
                       onClick={() => handleEdit(funnel)}
+                      className="border-border dark:border-[#A86F57]/30 text-foreground dark:text-white hover:bg-muted dark:hover:bg-[#161616]"
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
@@ -123,6 +124,7 @@ export const FunnelsList = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleArchive(funnel.id)}
+                        className="border-border dark:border-[#A86F57]/30 text-foreground dark:text-white hover:bg-muted dark:hover:bg-[#161616]"
                       >
                         <Archive className="w-4 h-4" />
                       </Button>
