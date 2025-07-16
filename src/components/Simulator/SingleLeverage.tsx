@@ -94,29 +94,22 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
   const patrimonioAoFinal = patrimonioNaContemplacaoCalculado * Math.pow(1 + taxaValorizacao, (product.termMonths - contemplationMonth) / 12);
   
   // CÁLCULO LIMPO DOS GANHOS MENSAIS - RECRIADO DO ZERO
-  
   // Cálculo direto baseado nas especificações fornecidas:
-  // 1. Valor da diária: R$ 2.007.338 × 0,06% = R$ 1.204,40
+  // 1. Valor da diária: patrimônio na contemplação * 0,06%
   const valorDiaria = patrimonioNaContemplacaoCalculado * 0.0006; // 0,06%
-  
   // 2. Ocupação: 30 × 70% = 21 dias
   const diasOcupacao = 30 * 0.7; // 70%
-  
-  // 3. Valor mensal: 21 × R$ 1.204,40 = R$ 25.292,46
+  // 3. Valor mensal: 21 × valor da diária
   const valorMensal = valorDiaria * diasOcupacao;
-  
-  // 4. Taxa do Airbnb: R$ 25.292,46 × 15% = R$ 3.793,87
+  // 4. Taxa do Airbnb: valor mensal × 15%
   const taxaAirbnb = valorMensal * 0.15; // 15%
-  
-  // 5. Custos do imóvel: R$ 2.007.338 × 0,35% = R$ 7.025,68
+  // 5. Custos do imóvel: patrimônio na contemplação × 0,35%
   const custosImovel = patrimonioNaContemplacaoCalculado * 0.0035; // 0,35%
-  
-  // 6. Custos totais: R$ 3.793,87 + R$ 7.025,68 = R$ 10.819,55
+  // 6. Custos totais: taxa do Airbnb + custos do imóvel
   const custosTotais = taxaAirbnb + custosImovel;
-  
-  // 7. Ganhos Mensais: R$ 25.292,46 - R$ 10.819,55 = R$ 14.472,91
+  // 7. Ganhos Mensais: valor mensal - custos totais
   const ganhosMensaisBase = valorMensal - custosTotais;
-  const ganhosMensais = ganhosMensaisBase * numeroImoveis;
+  const ganhosMensais = ganhosMensaisBase * (numeroImoveis || 1);
   
   // Debug: Log dos valores calculados
   console.log('=== NOVO CÁLCULO GANHOS MENSAIS ===');

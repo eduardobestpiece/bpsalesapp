@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Trash2, RefreshCw, ChevronDown, ChevronUp, Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { calcularParcelasProduto } from '@/utils/calculations';
+import { formatPercentage } from '@/utils/calculationHelpers';
 import { useCompany } from '@/contexts/CompanyContext';
 import { regraParcelaEspecial } from '@/lib/regraParcelaEspecial';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
@@ -656,7 +657,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado }: CreditAccessPanel
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <ResumoCard titulo="Crédito Acessado" valor={formatCurrency(creditoAcessado)} />
         <ResumoCard titulo="Valor da Parcela" valor={formatCurrency(valorParcela)} />
-        <ResumoCard titulo="Taxa anual" valor={taxaAnual.toFixed(2) + '%'} />
+        <ResumoCard titulo="Taxa anual" valor={formatPercentage(taxaAnual)} />
         <ResumoCard titulo="Atualização anual" valor={atualizacaoAnual} />
       </div>
 

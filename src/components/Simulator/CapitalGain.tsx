@@ -1,15 +1,33 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { useSimulatorSync } from '@/hooks/useSimulatorSync';
 
 export const CapitalGain = () => {
+  const { 
+    product, 
+    updateSimulationValue,
+    simulationData
+  } = useSimulatorSync();
+  
   const [purchasePercentage, setPurchasePercentage] = useState(20);
-  const [creditValue, setCreditValue] = useState(1000000);
+  const [creditValue, setCreditValue] = useState(product.nominalCreditValue || 1000000);
   const [paidInstallments, setPaidInstallments] = useState(120000);
+  
+  // Sincronizar o valor do crédito com o produto do contexto
+  useEffect(() => {
+    setCreditValue(product.nominalCreditValue);
+  }, [product.nominalCreditValue]);
+  
+  // Atualizar o contexto quando o valor do crédito mudar neste componente
+  const handleCreditValueChange = (value: number) => {
+    setCreditValue(value);
+    updateSimulationValue(value);
+  };
   
   const monteoPayment = (creditValue * purchasePercentage) / 100;
   const profit = monteoPayment - paidInstallments;
@@ -42,7 +60,7 @@ export const CapitalGain = () => {
               id="credit"
               type="number"
               value={creditValue}
-              onChange={(e) => setCreditValue(Number(e.target.value))}
+              onChange={(e) => handleCreditValueChange(Number(e.target.value))}
               placeholder="Ex: 1000000"
             />
           </div>

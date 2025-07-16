@@ -1,61 +1,66 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { EntityConfiguration } from './EntityConfiguration';
 import { AdvancedResultsPanel } from './AdvancedResultsPanel';
 import { DetailDrawer } from './DetailDrawer';
-import { Administrator, Product, Property } from '@/types/entities';
-
-// Dados padrão baseados na documentação
-const DEFAULT_ADMINISTRATOR: Administrator = {
-  id: 'default-admin',
-  name: 'Administradora Padrão',
-  updateIndex: 'IPCA',
-  updateMonth: 8,
-  updateGracePeriod: 12,
-  maxEmbeddedPercentage: 15,
-  availableBidTypes: [
-    { id: 'SORTEIO', name: 'Contemplação por Sorteio', params: {} },
-    { id: 'LIVRE', name: 'Lance Livre', params: { minBidPct: 5, maxBidPct: 50, allowsEmbedded: true } }
-  ]
-};
-
-const DEFAULT_PRODUCT: Product = {
-  id: 'default-product',
-  administratorId: 'default-admin',
-  name: 'Plano Imobiliário 240x',
-  nominalCreditValue: 300000,
-  termMonths: 240,
-  adminTaxPct: 25,
-  reserveFundPct: 3,
-  insurancePct: 2,
-  reducedPercentage: 75,
-  advanceInstallments: 0
-};
-
-const DEFAULT_PROPERTY: Property = {
-  id: 'default-property',
-  type: 'short-stay',
-  initialValue: 300000,
-  dailyRate: 150,
-  fixedMonthlyCosts: 800,
-  occupancyRatePct: 80,
-  annualAppreciationPct: 8,
-  contemplationMonth: 24
-};
+import { useSimulatorSync } from '@/hooks/useSimulatorSync';
 
 export const PatrimonialLeverage = () => {
-  const [administrator, setAdministrator] = useState<Administrator>(DEFAULT_ADMINISTRATOR);
-  const [product, setProduct] = useState<Product>(DEFAULT_PRODUCT);
-  const [property, setProperty] = useState<Property>(DEFAULT_PROPERTY);
-  const [contemplationMonth, setContemplationMonth] = useState(24);
-  const [installmentType, setInstallmentType] = useState<'full' | 'half' | 'reduced'>('full');
+  const {
+    administrator,
+    setAdministrator,
+    product,
+    setProduct,
+    property,
+    setProperty,
+    contemplationMonth,
+    setContemplationMonth,
+    installmentType,
+    setInstallmentType,
+    simulationData,
+    updateSimulationMode,
+    updateSimulationValue,
+    updateInstallments,
+    updateInstallmentType
+  } = useSimulatorSync();
+  
   const [showResults, setShowResults] = useState(false);
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
 
+  // Atualiza os cálculos em tempo real quando os dados mudam
+  useEffect(() => {
+    if (showResults) {
+      // Recalcula os resultados quando os dados mudam
+      setShowResults(false);
+      setTimeout(() => setShowResults(true), 0);
+    }
+  }, [administrator, product, property, contemplationMonth, installmentType]);
+
   const handleCalculate = () => {
+    // Sincroniza os dados antes de calcular
+    updateSimulationValue(product.nominalCreditValue);
+    updateInstallments(product.termMonths);
+    updateInstallmentType(installmentType);
+    
     setShowResults(true);
   };
+
+  // Cálculo dos ganhos mensais (short-stay)
+  // 1. Valor da diária: patrimonioNaContemplacao * 0,06%
+  const valorDiaria = patrimonioNaContemplacao * 0.0006;
+  // 2. Ocupação: 30 * 70%
+  const diasOcupacao = 30 * 0.7;
+  // 3. Valor mensal: dias ocupados * valor da diária
+  const valorMensal = valorDiaria * diasOcupacao;
+  // 4. Taxa do Airbnb: valor mensal * 15%
+  const taxaAirbnb = valorMensal * 0.15;
+  // 5. Custos do imóvel: patrimonioNaContemplacao * 0.0035
+  const custosImovel = patrimonioNaContemplacao * 0.0035;
+  // 6. Custos totais: taxa do Airbnb + custos do imóvel
+  const custosTotais = taxaAirbnb + custosImovel;
+  // 7. Ganhos mensais: valor mensal - custos totais
+  const ganhosMensais = valorMensal - custosTotais;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

@@ -219,39 +219,48 @@ export function calculateLeverageValues({
   fixedCosts: number;
   appreciationRate: number;
 }) {
-  // 1. Ganhos mensais por imóvel
-  const ganhosPorImovel = dailyRate && occupancyRate 
-    ? (dailyRate * 30 * (occupancyRate / 100)) - fixedCosts
-    : 0;
+  // 1. Valor da diária: propertyValue * 0.0006
+  const valorDiaria = propertyValue * 0.0006;
+  // 2. Ocupação: 30 * 0.7
+  const diasOcupacao = 30 * 0.7;
+  // 3. Valor mensal: dias ocupados * valor da diária
+  const valorMensal = valorDiaria * diasOcupacao;
+  // 4. Taxa do Airbnb: valor mensal * 0.15
+  const taxaAirbnb = valorMensal * 0.15;
+  // 5. Custos do imóvel: propertyValue * 0.0035
+  const custosImovel = propertyValue * 0.0035;
+  // 6. Custos totais: taxa do Airbnb + custos do imóvel
+  const custosTotais = taxaAirbnb + custosImovel;
+  // 7. Ganhos mensais: valor mensal - custos totais
+  const ganhosMensais = valorMensal - custosTotais;
+  // 8. Ganhos mensais totais (para múltiplos imóveis)
+  const ganhosMensaisTotais = ganhosMensais * (propertyCount || 1);
   
-  // 2. Ganhos mensais totais
-  const ganhosMensais = ganhosPorImovel * propertyCount;
-  
-  // 3. Parcela mensal do consórcio
+  // 9. Parcela mensal do consórcio
   const parcelaMensalConsorcio = creditValue / termMonths;
   
-  // 4. Parcela pós-contemplação (sem alteração, é a mesma parcela)
+  // 10. Parcela pós-contemplação (sem alteração, é a mesma parcela)
   const parcelaPosPosContemplacao = parcelaMensalConsorcio;
   
-  // 5. Fluxo de caixa antes do fim do consórcio
+  // 11. Fluxo de caixa antes do fim do consórcio
   const fluxoCaixaAntes = ganhosMensais - parcelaMensalConsorcio;
   
-  // 6. Fluxo de caixa após fim do consórcio (sem parcela do consórcio)
+  // 12. Fluxo de caixa após fim do consórcio (sem parcela do consórcio)
   const fluxoCaixaApos = ganhosMensais;
   
-  // 7. Valor pago do próprio bolso (parcelas até contemplação)
+  // 13. Valor pago do próprio bolso (parcelas até contemplação)
   const pagoProprioBolso = parcelaMensalConsorcio * contemplationMonth;
   
-  // 8. Valor pago pelo inquilino (ganhos dos imóveis após contemplação)
+  // 14. Valor pago pelo inquilino (ganhos dos imóveis após contemplação)
   const mesesAposContemplacao = termMonths - contemplationMonth;
   const pagoInquilino = ganhosMensais * mesesAposContemplacao;
   
-  // 9. Capital em caixa removido conforme requisito 6.5
+  // 15. Capital em caixa removido conforme requisito 6.5
   
-  // 10. Patrimônio na contemplação
+  // 16. Patrimônio na contemplação
   const patrimonioNaContemplacao = propertyValue * propertyCount;
   
-  // 11. Patrimônio ao final (com valorização)
+  // 17. Patrimônio ao final (com valorização)
   const anosAposContemplacao = (termMonths - contemplationMonth) / 12;
   const patrimonioAoFinal = patrimonioNaContemplacao * Math.pow(1 + (appreciationRate / 100), anosAposContemplacao);
   

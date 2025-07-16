@@ -10,7 +10,11 @@ export const formatCurrency = (value: number): string => {
 };
 
 export const formatPercentage = (value: number): string => {
-  return `${value.toFixed(2)}%`;
+  // Limita a exibição a exatamente duas casas decimais
+  const valueStr = value.toFixed(2);
+  // Substitui ponto por vírgula para formato brasileiro
+  const formattedValue = valueStr.replace('.', ',');
+  return `${formattedValue}%`;
 };
 
 export const calculateMonthlyRate = (annualRate: number): number => {

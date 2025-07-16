@@ -266,7 +266,9 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
                     <div>Administração: {leverage.management_percentage}%</div>
                   )}
                   {leverage.total_expenses && (
-                    <div>Despesas: R$ {leverage.total_expenses}</div>
+                    <div>Despesas: {leverage.hasFixedValue ? 
+                      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(leverage.total_expenses) : 
+                      `${leverage.total_expenses}%`}</div>
                   )}
                   {leverage.fixed_property_value && (
                     <div>Valor Fixo: R$ {leverage.fixed_property_value}</div>

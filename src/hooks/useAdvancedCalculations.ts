@@ -1,6 +1,12 @@
 
 import { useMemo } from 'react';
 import { Administrator, Product, Property, InstallmentCalculation, PostContemplationCalculation, CapitalGainCalculation, LeverageCalculation } from '@/types/entities';
+import { 
+  calculateCompletePostContemplation,
+  calculateCreditUpdates,
+  calculateRemainingDebt,
+  calculatePostContemplationInstallment
+} from '@/utils/postContemplationCalculations';
 
 interface AdvancedCalculationParams {
   administrator: Administrator;
@@ -67,9 +73,28 @@ export const useAdvancedCalculations = (params: AdvancedCalculationParams) => {
     if (contemplationMonth >= product.termMonths) return [];
 
     const calculations: PostContemplationCalculation[] = [];
-    const contemplationData = installmentCalculations[contemplationMonth - 1];
     
-    // Soma das parcelas pagas até a contemplação
+    // Usa as funções de cálculo da parcela pós-contemplação importadas no topo do arquivo
+    
+    // Determina a taxa de atualização com base no índice
+    const updateRate = administrator.updateIndex === 'INCC' ? 8 : 6; // INCC = 8%, IPCA/IGPM = 6%
+    
+    // Calcula o saldo devedor e a parcela pós-contemplação
+    const remainingDebt = calculateRemainingDebt(
+      product.nominalCreditValue,
+      product.termMonths,
+      contemplationMonth,
+      administrator.updateMonth,
+      updateRate,
+      product.adminTaxPct,
+      product.reserveFundPct,
+      product.insurancePct
+    );
+    
+    const remainingMonths = product.termMonths - contemplationMonth;
+    const postContemplationInstallment = remainingDebt / remainingMonths;
+    
+    // Calcula o total pago até a contemplação
     let totalPaid = 0;
     for (let i = 0; i < contemplationMonth; i++) {
       const installment = installmentCalculations[i];
@@ -84,25 +109,27 @@ export const useAdvancedCalculations = (params: AdvancedCalculationParams) => {
           totalPaid += installment.fullInstallment;
       }
     }
-
-    const remainingBalance = contemplationData.creditValue - totalPaid;
-    const remainingMonths = product.termMonths - contemplationMonth;
     
+    // Gera os cálculos para cada mês após a contemplação
     for (let month = contemplationMonth + 1; month <= product.termMonths; month++) {
-      const monthlyInstallment = remainingBalance / remainingMonths;
-      const paidSoFar = totalPaid + ((month - contemplationMonth) * monthlyInstallment);
+      // Calcula o saldo devedor para o mês atual
+      const monthsAfterContemplation = month - contemplationMonth;
+      const currentRemainingBalance = remainingDebt - (monthsAfterContemplation * postContemplationInstallment);
+      
+      // Calcula o total pago até o mês atual
+      const paidSoFar = totalPaid + (monthsAfterContemplation * postContemplationInstallment);
       
       calculations.push({
         month,
-        remainingBalance: remainingBalance - ((month - contemplationMonth) * monthlyInstallment),
-        postContemplationInstallment: monthlyInstallment,
+        remainingBalance: Math.max(0, currentRemainingBalance),
+        postContemplationInstallment,
         paidAmount: paidSoFar,
         remainingMonths: product.termMonths - month
       });
     }
 
     return calculations;
-  }, [installmentCalculations, contemplationMonth, product.termMonths, installmentType]);
+  }, [administrator, product, contemplationMonth, installmentCalculations, installmentType]);
 
   // Cálculo de ganho de capital
   const capitalGainCalculations = useMemo((): CapitalGainCalculation[] => {

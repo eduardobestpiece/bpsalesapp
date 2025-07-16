@@ -8,6 +8,9 @@ import { Badge } from '@/components/ui/badge';
 import { PatrimonyChart } from './PatrimonyChart';
 import { useAdvancedCalculations } from '@/hooks/useAdvancedCalculations';
 import { Administrator, Product } from '@/types/entities';
+import { calculatePostContemplationInstallment } from '@/utils/postContemplationCalculations';
+import { calculateCashFlowBefore240, calculateCashFlowAfter240, calculateUpdatedPropertyValue } from '@/utils/cashFlowCalculations';
+import { calculateCompleteMonthlyGains } from '@/utils/monthlyGainsCalculations';
 
 interface PropertyData {
   type: 'short-stay' | 'commercial' | 'residential';
@@ -69,9 +72,14 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
   const propertyValueAtEnd = totalCreditValue * Math.pow(1 + taxaValorizacao, product.termMonths / 12);
   
   // Ganhos mensais por propriedade
-  const ganhosMensaisPorPropriedade = propertyData.type === 'short-stay' 
-    ? (propertyData.dailyRate || 150) * 30 * ((propertyData.occupancyRate || 80) / 100)
-    : (propertyData.monthlyRent || 2500);
+  // Cálculo correto dos ganhos mensais por propriedade (short-stay)
+  const valorDiaria = valorImovel * 0.0006;
+  const diasOcupacao = 30 * 0.7;
+  const valorMensal = valorDiaria * diasOcupacao;
+  const taxaAirbnb = valorMensal * 0.15;
+  const custosImovel = valorImovel * 0.0035;
+  const custosTotais = taxaAirbnb + custosImovel;
+  const ganhosMensaisPorPropriedade = valorMensal - custosTotais;
   
   // Cálculos mais precisos baseados nas contemplações escalonadas
   let totalPaidByOwner = 0;
@@ -83,11 +91,21 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
   for (let i = 0; i < totalContemplations; i++) {
     const contemplationMonthForThis = (i + 1) * contemplationMonth;
     
-    // Usar os mesmos valores corrigidos da alavancagem única
-    const parcelaMensal = baseCreditValue / product.termMonths;
-    const creditoAtualizado = baseCreditValue * Math.pow(1 + taxaAtualizacaoAnual, contemplationMonthForThis / 12);
-    const valorPagoAteContemplacao = parcelaMensal * contemplationMonthForThis;
-    const saldoDevedor = creditoAtualizado - valorPagoAteContemplacao;
+    // Usar as novas funções de cálculo da parcela pós-contemplação
+    // Determina a taxa de atualização com base no índice
+    const updateRate = administrator.updateIndex === 'INCC' ? 8 : 6; // INCC = 8%, IPCA/IGPM = 6%
+    
+    // Calcula a parcela pós-contemplação usando a nova função
+    const parcelaPosPosContemplacao = calculatePostContemplationInstallment(
+      baseCreditValue,
+      product.termMonths,
+      contemplationMonthForThis,
+      administrator.updateMonth,
+      updateRate,
+      product.adminTaxPct,
+      product.reserveFundPct,
+      product.insurancePct
+    );
     
     // Usar valores corrigidos baseados na especificação do usuário
     const pagoProprioBolsoEsta = 336293.79 / totalContemplations;
@@ -96,15 +114,49 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
     totalPaidByOwner += pagoProprioBolsoEsta;
     totalPaidByTenant += pagoInquilinoEsta;
     
-    // Fluxo de caixa corrigido
-    const fluxoCaixaAntes = 3767.11 / totalContemplations;
-    const fluxoCaixaApos = 34685.17 / totalContemplations;
+    // Calcular ganhos mensais para esta contemplação
+    const dailyPercentage = propertyData.type === 'short-stay' ? 
+      (propertyData.dailyRate || 150) / valorImovel * 100 : 0;
+    const occupancyRate = propertyData.type === 'short-stay' ? 
+      (propertyData.occupancyRate || 80) : 100;
+    const adminPercentage = 15; // Percentual padrão da administradora (Airbnb)
+    const expensesPercentage = (propertyData.fixedCosts / valorImovel) * 100;
+    
+    // Calcular ganhos mensais
+    const { monthlyGains } = calculateCompleteMonthlyGains(
+      valorImovel,
+      dailyPercentage,
+      occupancyRate,
+      adminPercentage,
+      expensesPercentage
+    );
+    
+    // Calcular fluxo de caixa antes de 240 meses
+    const fluxoCaixaAntes = calculateCashFlowBefore240(
+      monthlyGains,
+      parcelaPosPosContemplacao
+    );
+    
+    // Calcular valor atualizado do imóvel após 240 meses
+    const updatedPropertyValue = calculateUpdatedPropertyValue(
+      valorImovel,
+      propertyData.appreciationRate
+    );
+    
+    // Calcular fluxo de caixa após 240 meses
+    const fluxoCaixaApos = calculateCashFlowAfter240(
+      updatedPropertyValue,
+      dailyPercentage,
+      occupancyRate,
+      adminPercentage,
+      expensesPercentage
+    );
     
     totalCashFlowBefore += fluxoCaixaAntes;
     totalCashFlowAfter += fluxoCaixaApos;
   }
   
-  const savedCapital = totalPaidByTenant;
+  // Removido cálculo do Capital em Caixa conforme requisito 6.5
 
   // Dados para o gráfico com atualização anual
   const chartData = [];
@@ -122,15 +174,44 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
       Math.pow(1 + taxaValorizacao, yearsFromStart);
     
     // Fluxo de caixa com atualização anual
-    const avgCashFlowPerProperty = (totalCashFlowBefore + totalCashFlowAfter) / (2 * totalContemplations);
-    const currentCashFlow = contemplatedProperties * avgCashFlowPerProperty * 
-      Math.pow(1 + taxaValorizacao, yearsFromStart);
+    // Para cada propriedade contemplada, calcular o fluxo de caixa correto
+    let totalCashFlow = 0;
+    
+    // Para cada contemplação ativa neste mês
+    contemplationMonths.forEach((cm, index) => {
+      if (cm <= month) {
+        // Determinar se estamos antes ou depois dos 240 meses para esta contemplação
+        const monthsFromContemplation = month - cm;
+        const isAfter240 = monthsFromContemplation >= 240;
+        
+        // Calcular o fluxo de caixa para esta contemplação específica
+        if (isAfter240) {
+          // Usar o valor atualizado do imóvel para esta contemplação
+          const contemplationAge = monthsFromContemplation / 12; // em anos
+          const updatedPropertyValueForThis = valorImovel * Math.pow(1 + taxaValorizacao, contemplationAge);
+          
+          // Calcular fluxo de caixa após 240 meses para esta contemplação
+          const cashFlowAfter240ForThis = calculateCashFlowAfter240(
+            updatedPropertyValueForThis,
+            dailyPercentage,
+            occupancyRate,
+            adminPercentage,
+            expensesPercentage
+          );
+          
+          totalCashFlow += cashFlowAfter240ForThis;
+        } else {
+          // Usar o fluxo de caixa antes de 240 meses para esta contemplação
+          totalCashFlow += totalCashFlowBefore / totalContemplations * Math.pow(1 + taxaValorizacao, yearsFromStart);
+        }
+      }
+    });
     
     chartData.push({
       month,
       patrimony: currentPatrimony,
       income: currentIncome,
-      cashFlow: currentCashFlow,
+      cashFlow: totalCashFlow,
       isContemplation: contemplationMonths.includes(month)
     });
   }
@@ -213,6 +294,9 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
               <div className="text-2xl font-bold text-red-900 dark:text-white">
                 {formatCurrency(totalPaidByOwner)}
               </div>
+              <Badge variant="outline" className="text-xs bg-white/50 dark:bg-[#131313]/50 dark:text-white dark:border-[#A86F57]/30">
+                {((totalPaidByOwner / totalCreditValue) * 100).toFixed(1)}%
+              </Badge>
             </div>
             
             <div className="space-y-2 p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-emerald-200 dark:border-[#A86F57]/20">
@@ -220,17 +304,12 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
               <div className="text-2xl font-bold text-emerald-900 dark:text-white">
                 {formatCurrency(totalPaidByTenant)}
               </div>
-            </div>
-            
-            <div className="space-y-2 p-4 bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-indigo-200 dark:border-[#A86F57]/20">
-              <Label className="text-sm text-indigo-700 dark:text-indigo-300 font-medium">Capital em Caixa</Label>
-              <div className="text-2xl font-bold text-indigo-900 dark:text-white">
-                {formatCurrency(savedCapital)}
-              </div>
               <Badge variant="outline" className="text-xs bg-white/50 dark:bg-[#131313]/50 dark:text-white dark:border-[#A86F57]/30">
-                {((savedCapital / totalCreditValue) * 100).toFixed(1)}%
+                {((totalPaidByTenant / totalCreditValue) * 100).toFixed(1)}%
               </Badge>
             </div>
+            
+
             
             <div className="space-y-2 p-4 bg-gradient-to-r from-teal-50 to-teal-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-teal-200 dark:border-[#A86F57]/20">
               <Label className="text-sm text-teal-700 dark:text-teal-300 font-medium">Fluxo de Caixa Antes {product.termMonths} meses</Label>

@@ -1,5 +1,4 @@
 
-import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Administrator, Product, Property, BidType } from '@/types/entities';
 import { Building, Settings, Calculator, Home } from 'lucide-react';
+import { useSimulatorSync } from '@/hooks/useSimulatorSync';
 
 interface EntityConfigurationProps {
   onAdministratorChange: (admin: Administrator) => void;
@@ -20,58 +20,40 @@ export const EntityConfiguration = ({
   onProductChange,
   onPropertyChange
 }: EntityConfigurationProps) => {
-  const [administrator, setAdministrator] = useState<Administrator>({
-    id: 'default-admin',
-    name: 'Administradora Padrão',
-    updateIndex: 'IPCA',
-    updateMonth: 8, // Agosto
-    updateGracePeriod: 12,
-    maxEmbeddedPercentage: 15,
-    availableBidTypes: [
-      { id: 'SORTEIO', name: 'Contemplação por Sorteio', params: {} },
-      { id: 'LIVRE', name: 'Lance Livre', params: { minBidPct: 5, maxBidPct: 50, allowsEmbedded: true } }
-    ]
-  });
-
-  const [product, setProduct] = useState<Product>({
-    id: 'default-product',
-    administratorId: 'default-admin',
-    name: 'Plano Imobiliário 240x',
-    nominalCreditValue: 300000,
-    termMonths: 240,
-    adminTaxPct: 25,
-    reserveFundPct: 3,
-    insurancePct: 2,
-    reducedPercentage: 75,
-    advanceInstallments: 0
-  });
-
-  const [property, setProperty] = useState<Property>({
-    id: 'default-property',
-    type: 'short-stay',
-    initialValue: 300000,
-    dailyRate: 150,
-    fixedMonthlyCosts: 800,
-    occupancyRatePct: 80,
-    annualAppreciationPct: 8,
-    contemplationMonth: 24
-  });
+  const { 
+    administrator, 
+    product, 
+    property,
+    updateSimulationValue,
+    updateInstallments
+  } = useSimulatorSync();
 
   const handleAdministratorUpdate = (field: keyof Administrator, value: any) => {
     const updated = { ...administrator, [field]: value };
-    setAdministrator(updated);
     onAdministratorChange(updated);
   };
 
   const handleProductUpdate = (field: keyof Product, value: any) => {
     const updated = { ...product, [field]: value };
-    setProduct(updated);
+    
+    // Sincronizar campos específicos com o contexto global
+    if (field === 'nominalCreditValue') {
+      updateSimulationValue(value);
+    } else if (field === 'termMonths') {
+      updateInstallments(value);
+    }
+    
     onProductChange(updated);
   };
 
   const handlePropertyUpdate = (field: keyof Property, value: any) => {
     const updated = { ...property, [field]: value };
-    setProperty(updated);
+    
+    // Sincronizar o valor do imóvel com o valor do crédito quando apropriado
+    if (field === 'initialValue') {
+      updateSimulationValue(value);
+    }
+    
     onPropertyChange(updated);
   };
 

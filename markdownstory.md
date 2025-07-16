@@ -661,3 +661,10 @@ Próximos passos:
 - Implementado: Rota unificada para Master Config (/simulador/master)
 - Realizado: Testes e validação final de contraste WCAG AA em todos os componentes
 - Deploy automático realizado com sucesso.
+
+## [12/07/2024] Nova requisição - Correção dos Cálculos de Ganhos Mensais da Alavancagem Patrimonial
+
+- Aberta requisição para corrigir o cálculo dos ganhos mensais na alavancagem patrimonial (exemplo Airbnb/Short Stay), pois o valor apresentado está incorreto.
+- O cálculo correto deve seguir exatamente a ordem e as fórmulas fornecidas pelo usuário, considerando: valor da diária, ocupação, valor mensal, taxa da administradora, custos do imóvel e custos totais.
+- Detalhes completos e parâmetros do exemplo registrados em `requeststory.md`.
+- Status: aguardando análise e início do plano de correção.
