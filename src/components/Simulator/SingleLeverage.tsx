@@ -8,6 +8,10 @@ import { Badge } from '@/components/ui/badge';
 import { PatrimonyChart } from './PatrimonyChart';
 import { useAdvancedCalculations } from '@/hooks/useAdvancedCalculations';
 import { Administrator, Product } from '@/types/entities';
+import { calculateDailyValue, calculateOccupancyDays, calculateMonthlyValue, calculateAirbnbFee, calculatePropertyCosts, calculateTotalCosts, calculateMonthlyGains, calculateCompleteMonthlyGains } from '@/utils/monthlyGainsCalculations';
+import { calculatePostContemplationInstallment } from '@/utils/postContemplationCalculations';
+import { calculateCashFlowBefore240, calculateCashFlowAfter240, calculateUpdatedPropertyValue } from '@/utils/cashFlowCalculations';
+import { calculatePaidFromOwnPocket, calculatePaidByTenant } from '@/utils/paidValuesCalculations';
 
 interface PropertyData {
   type: 'short-stay' | 'commercial' | 'residential';
@@ -85,10 +89,23 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
   
   // CÁLCULOS CORRETOS BASEADOS NAS FÓRMULAS FORNECIDAS
 
-  // 1. Ganhos mensais
-  const ganhosMensaisBase = propertyData.type === 'short-stay' 
-    ? (propertyData.dailyRate || 0) * 30 * ((propertyData.occupancyRate || 70) / 100) - propertyData.fixedCosts
-    : (propertyData.monthlyRent || 0) - propertyData.fixedCosts;
+  // 1. Ganhos mensais usando as novas funções de cálculo
+  let ganhosMensaisBase = 0;
+  
+  if (propertyData.type === 'short-stay') {
+    // Cálculo para short-stay (Airbnb) - usar patrimônio na contemplação
+    const dailyValue = calculateDailyValue(patrimonioNaContemplacaoCalculado, 0.06); // 0,06% conforme especificado
+    const occupancyDays = calculateOccupancyDays(propertyData.occupancyRate || 70);
+    const monthlyValue = calculateMonthlyValue(dailyValue, occupancyDays);
+    const adminPercentage = 15; // Percentual padrão da administradora (Airbnb)
+    const airbnbFee = calculateAirbnbFee(monthlyValue, adminPercentage);
+    const propertyCosts = calculatePropertyCosts(patrimonioNaContemplacaoCalculado, 0.35); // 0,35% conforme especificado
+    const totalCosts = calculateTotalCosts(airbnbFee, propertyCosts);
+    ganhosMensaisBase = calculateMonthlyGains(monthlyValue, totalCosts);
+  } else {
+    // Cálculo para imóveis comerciais ou residenciais
+    ganhosMensaisBase = (propertyData.monthlyRent || 0) - propertyData.fixedCosts;
+  }
   
   const ganhosMensais = ganhosMensaisBase * numeroImoveis;
 
@@ -96,23 +113,62 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
   const parcelaMensalConsorcio = creditValue / product.termMonths;
   
   // 3. Parcela pós-contemplação (após término do consórcio)
-  const parcelaPosPosContemplacao = parcelaMensalConsorcio;
+  // Determina a taxa de atualização com base no índice
+  const updateRate = administrator.updateIndex === 'INCC' ? 8 : 6; // INCC = 8%, IPCA/IGPM = 6%
+  
+  // Calcula a parcela pós-contemplação
+  const parcelaPosPosContemplacao = calculatePostContemplationInstallment(
+    creditValue,
+    product.termMonths,
+    contemplationMonth,
+    administrator.updateMonth,
+    updateRate,
+    product.adminTaxPct,
+    product.reserveFundPct,
+    product.insurancePct
+  );
   
   // 4. Fluxo de caixa antes do fim do consórcio (240 meses)
-  const fluxoCaixaAntes = ganhosMensais - parcelaMensalConsorcio;
+  const fluxoCaixaAntes = calculateCashFlowBefore240(ganhosMensais, parcelaPosPosContemplacao);
   
-  // 5. Fluxo de caixa após fim do consórcio (sem parcela)
-  const fluxoCaixaApos = ganhosMensais;
+  // 5. Fluxo de caixa após fim do consórcio (240 meses)
+  // Calcular valor atualizado do imóvel após 240 meses
+  const updatedPropertyValue = calculateUpdatedPropertyValue(valorImovel, propertyData.appreciationRate);
   
-  // 6. Valor pago do próprio bolso (parcelas pagas até contemplação)
-  const pagoProprioBolso = parcelaMensalConsorcio * contemplationMonth;
+  // Calcular fluxo de caixa após 240 meses usando o valor atualizado do imóvel
+  const dailyPercentage = propertyData.type === 'short-stay' ? 
+    (propertyData.dailyRate || 150) / valorImovel * 100 : 0;
+  const occupancyRate = propertyData.type === 'short-stay' ? 
+    (propertyData.occupancyRate || 80) : 100;
+  const adminPercentage = 15; // Percentual padrão da administradora (Airbnb)
+  const expensesPercentage = (propertyData.fixedCosts / valorImovel) * 100;
   
-  // 7. Valor pago pelo inquilino (ganhos dos imóveis durante todo o período)
+  const fluxoCaixaApos = calculateCashFlowAfter240(
+    updatedPropertyValue,
+    dailyPercentage,
+    occupancyRate,
+    adminPercentage,
+    expensesPercentage
+  ) * numeroImoveis;
+  
+  // 6. Valor pago do próprio bolso (parcelas pagas até contemplação) - Fórmula corrigida
+  const { value: pagoProprioBolso, percentage: pagoProprioBolsoPercentage } = calculatePaidFromOwnPocket(
+    creditValue,
+    product.termMonths,
+    contemplationMonth,
+    administrator.updateMonth,
+    updateRate
+  );
+  
+  // 7. Valor pago pelo inquilino (crédito inicial - pago do próprio bolso) - Fórmula corrigida
+  const { value: pagoInquilino, percentage: pagoInquilinoPercentage } = calculatePaidByTenant(
+    creditValue,
+    pagoProprioBolso
+  );
+  
   const mesesAposContemplacao = product.termMonths - contemplationMonth;
-  const pagoInquilino = ganhosMensais * mesesAposContemplacao;
   
-  // 8. Capital em caixa (fluxo de caixa acumulado após contemplação)
-  const capitalEmCaixa = fluxoCaixaAntes * mesesAposContemplacao;
+  // Removido cálculo do Capital em Caixa conforme requisito 6.5
   
   // Dados para o gráfico com atualização anual
   const chartData = [];
@@ -197,6 +253,9 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
               <div className="text-2xl font-bold text-red-900 dark:text-white">
                 {formatCurrency(pagoProprioBolso)}
               </div>
+              <Badge variant="outline" className="text-xs bg-white/50 dark:bg-[#131313]/50 dark:text-white dark:border-[#A86F57]/40">
+                {pagoProprioBolsoPercentage.toFixed(1)}%
+              </Badge>
             </div>
             
             <div className="space-y-2 p-4 bg-gradient-to-r from-emerald-50 to-emerald-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-emerald-200 dark:border-[#A86F57]/40">
@@ -204,17 +263,12 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
               <div className="text-2xl font-bold text-emerald-900 dark:text-white">
                 {formatCurrency(pagoInquilino)}
               </div>
-            </div>
-            
-            <div className="space-y-2 p-4 bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-indigo-200 dark:border-[#A86F57]/40">
-              <Label className="text-sm text-indigo-700 dark:text-[#A86F57] font-medium">Capital em Caixa</Label>
-              <div className="text-2xl font-bold text-indigo-900 dark:text-white">
-                {formatCurrency(capitalEmCaixa)}
-              </div>
               <Badge variant="outline" className="text-xs bg-white/50 dark:bg-[#131313]/50 dark:text-white dark:border-[#A86F57]/40">
-                {((capitalEmCaixa / creditValue) * 100).toFixed(1)}%
+                {pagoInquilinoPercentage.toFixed(1)}%
               </Badge>
             </div>
+            
+
           </div>
         </CardContent>
       </Card>
