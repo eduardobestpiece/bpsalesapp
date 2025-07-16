@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
+import { calculateDailyValue, calculateOccupancyDays, calculateMonthlyValue, calculateAirbnbFee, calculatePropertyCosts, calculateTotalCosts, calculateMonthlyGains } from '@/utils/monthlyGainsCalculations';
 
 interface LeverageData {
   id: string;
@@ -192,15 +193,28 @@ export const PatrimonialLeverageNew = ({
   }, [percentualOcupacao]);
   // Patrimônio na contemplação 
   const patrimonioContemplacao = useMemo(() => {
+    console.log('=== DEBUG PATRIMÔNIO CONTEMPLAÇÃO ===');
+    console.log('simulationData.searchType:', simulationData.searchType);
+    console.log('numeroImoveis:', numeroImoveis);
+    console.log('valorImovel:', valorImovel);
+    console.log('valorBase:', valorBase);
+    console.log('creditoPorImovelComEmbutido:', creditoPorImovelComEmbutido);
+    console.log('embutido:', embutido);
+    console.log('percentualEmbutido:', percentualEmbutido);
+    
     if (simulationData.searchType === 'contribution') {
       // Para modalidade Aporte: numeroImoveis * valorImovel
-      return numeroImoveis * valorImovel;
+      const result = numeroImoveis * valorImovel;
+      console.log('Resultado patrimônio (Aporte):', result);
+      return result;
     } else {
       // Para modalidade Crédito: usar o valor base (creditoAcessado ou valor digitado)
       // E calcular quantos imóveis consegue comprar: numeroImoveis * valorImovel
-      return numeroImoveis * valorImovel;
+      const result = numeroImoveis * valorImovel;
+      console.log('Resultado patrimônio (Crédito):', result);
+      return result;
     }
-  }, [simulationData.searchType, numeroImoveis, valorImovel]);
+  }, [simulationData.searchType, numeroImoveis, valorImovel, valorBase, creditoPorImovelComEmbutido, embutido, percentualEmbutido]);
 
   // Atualizar valorização anual automaticamente baseado na taxa de atualização
   useEffect(() => {
@@ -311,13 +325,58 @@ export const PatrimonialLeverageNew = ({
             {leverageData && (
               <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground mt-2">
                 <div>
-                  <b>Valor da diária:</b> {leverageData?.daily_percentage && valorImovel ? (leverageData.daily_percentage / 100 * valorImovel).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}
+                  <b>Valor da diária:</b> {leverageData?.daily_percentage && valorImovel ? (calculateDailyValue(valorImovel, leverageData.daily_percentage)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}
                 </div>
-                <div><b>Ocupação:</b> {ocupacaoDias} dias</div>
-                <div><b>Despesas:</b> {hasValorFixo 
-                  ? despesas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                <div><b>Ocupação:</b> {leverageData?.occupancy_rate ? calculateOccupancyDays(leverageData.occupancy_rate) : 0} dias</div>
+                <div><b>Valor mensal:</b> {leverageData?.daily_percentage && leverageData?.occupancy_rate && valorImovel ? 
+                  (calculateMonthlyValue(
+                    calculateDailyValue(valorImovel, leverageData.daily_percentage),
+                    calculateOccupancyDays(leverageData.occupancy_rate)
+                  )).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}
+                </div>
+                <div><b>Taxa do Airbnb:</b> {leverageData?.daily_percentage && leverageData?.occupancy_rate && valorImovel ? 
+                  (calculateAirbnbFee(
+                    calculateMonthlyValue(
+                      calculateDailyValue(valorImovel, leverageData.daily_percentage),
+                      calculateOccupancyDays(leverageData.occupancy_rate)
+                    ),
+                    15 // Percentual padrão da administradora (Airbnb)
+                  )).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}
+                </div>
+                <div><b>Despesas:</b> {hasValorFixo && valorImovel && leverageData?.total_expenses
+                  ? calculatePropertyCosts(valorImovel, leverageData.total_expenses).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
                   : `${(percentualDespesas * 100).toFixed(2)}%`
                 }</div>
+                <div><b>Custos totais:</b> {leverageData?.daily_percentage && leverageData?.occupancy_rate && valorImovel && leverageData?.total_expenses ? 
+                  (calculateTotalCosts(
+                    calculateAirbnbFee(
+                      calculateMonthlyValue(
+                        calculateDailyValue(valorImovel, leverageData.daily_percentage),
+                        calculateOccupancyDays(leverageData.occupancy_rate)
+                      ),
+                      15 // Percentual padrão da administradora (Airbnb)
+                    ),
+                    calculatePropertyCosts(valorImovel, leverageData.total_expenses)
+                  )).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}
+                </div>
+                <div><b>Ganhos mensais:</b> {leverageData?.daily_percentage && leverageData?.occupancy_rate && valorImovel && leverageData?.total_expenses ? 
+                  (calculateMonthlyGains(
+                    calculateMonthlyValue(
+                      calculateDailyValue(valorImovel, leverageData.daily_percentage),
+                      calculateOccupancyDays(leverageData.occupancy_rate)
+                    ),
+                    calculateTotalCosts(
+                      calculateAirbnbFee(
+                        calculateMonthlyValue(
+                          calculateDailyValue(valorImovel, leverageData.daily_percentage),
+                          calculateOccupancyDays(leverageData.occupancy_rate)
+                        ),
+                        15 // Percentual padrão da administradora (Airbnb)
+                      ),
+                      calculatePropertyCosts(valorImovel, leverageData.total_expenses)
+                    )
+                  )).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}
+                </div>
                 <div><b>Número de imóveis:</b> {numeroImoveis}</div>
               </div>
             )}
