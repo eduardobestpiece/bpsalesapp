@@ -314,7 +314,10 @@ export const PatrimonialLeverageNew = ({
                   <b>Valor da diária:</b> {leverageData?.daily_percentage && valorImovel ? (leverageData.daily_percentage / 100 * valorImovel).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}
                 </div>
                 <div><b>Ocupação:</b> {ocupacaoDias} dias</div>
-                <div><b>Despesas:</b> {despesas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+                <div><b>Despesas:</b> {hasValorFixo 
+                  ? despesas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                  : `${(percentualDespesas * 100).toFixed(2)}%`
+                }</div>
                 <div><b>Número de imóveis:</b> {numeroImoveis}</div>
               </div>
             )}

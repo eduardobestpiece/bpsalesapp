@@ -141,7 +141,10 @@ export const LeverageConfiguration = ({
                   }
                 </div>
                 <div><b>Ocupação:</b> {ocupacaoDias} dias</div>
-                <div><b>Despesas:</b> {despesas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+                <div><b>Despesas:</b> {hasValorFixo 
+                  ? despesas.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+                  : `${(percentualDespesas * 100).toFixed(2)}%`
+                }</div>
                 <div><b>Número de imóveis:</b> {numeroImoveis}</div>
               </div>
             )}

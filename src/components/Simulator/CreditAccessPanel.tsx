@@ -656,7 +656,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado }: CreditAccessPanel
       <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <ResumoCard titulo="Crédito Acessado" valor={formatCurrency(creditoAcessado)} />
         <ResumoCard titulo="Valor da Parcela" valor={formatCurrency(valorParcela)} />
-        <ResumoCard titulo="Taxa anual" valor={taxaAnual + '%'} />
+        <ResumoCard titulo="Taxa anual" valor={taxaAnual.toFixed(2) + '%'} />
         <ResumoCard titulo="Atualização anual" valor={atualizacaoAnual} />
       </div>
 
