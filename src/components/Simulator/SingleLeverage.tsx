@@ -84,6 +84,12 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
   // Patrimônio na contemplação (já vem valorizado do componente pai)
   const patrimonioNaContemplacaoCalculado = patrimonioContemplacao !== undefined ? patrimonioContemplacao : patrimonioNaContemplacao;
   
+  console.log('=== DEBUG SINGLE LEVERAGE ===');
+  console.log('patrimonioContemplacao (parâmetro):', patrimonioContemplacao);
+  console.log('patrimonioNaContemplacao (local):', patrimonioNaContemplacao);
+  console.log('patrimonioNaContemplacaoCalculado (final):', patrimonioNaContemplacaoCalculado);
+  console.log('numeroImoveis:', numeroImoveis);
+  
   // Patrimônio ao final
   const patrimonioAoFinal = patrimonioNaContemplacaoCalculado * Math.pow(1 + taxaValorizacao, (product.termMonths - contemplationMonth) / 12);
   
