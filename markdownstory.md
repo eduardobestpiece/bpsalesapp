@@ -647,4 +647,17 @@ Próximos passos:
 - **Deploy automático realizado:** Todas as correções enviadas para produção
 - **Status:** Correções críticas aplicadas, aguardando nova validação do usuário
 
-**Próximo passo:** Usuário deve testar novamente as páginas mostradas nos prints para verificar se os problemas foram resolvidos.
+**Próximo passo:** Usuário deve testar novamente as páginas mostradas nos prints para verificar se os problemas foram resolvidos.## 
+[16/07/2025] Correções finais de Dark Mode e ajustes visuais
+
+- Corrigido: Fundos brancos nas páginas principais (CRM Config, Master Config, Simulador)
+- Corrigido: Contraste do campo valor do imóvel no simulador
+- Corrigido: Contraste da linha "Exemplo de contemplação" no dark mode
+- Corrigido: Contraste da lista de alavancas para melhor legibilidade
+- Implementado: Remoção da caixa alta dos botões de alavancagem
+- Implementado: Logo específica para dark mode na página de login
+- Implementado: Cor marrom (#A86F57) na linha de "Evolução Patrimonial"
+- Implementado: Cor marrom nos "Dados da Alavancagem Única"
+- Implementado: Rota unificada para Master Config (/simulador/master)
+- Realizado: Testes e validação final de contraste WCAG AA em todos os componentes
+- Deploy automático realizado com sucesso.
