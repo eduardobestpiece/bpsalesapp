@@ -74,8 +74,8 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
   };
 
   // Cálculos baseados nas regras especificadas pelo usuário
-  const taxaAtualizacaoAnual = simulationData.updateRate / 100;
-  const taxaValorizacao = propertyData.appreciationRate / 100;
+  const taxaAtualizacaoAnual = simulationData.updateRate / 100; // Taxa de atualização do crédito
+  const taxaValorizacao = propertyData.appreciationRate / 100; // Taxa de valorização do imóvel
   
   // Patrimônio na contemplação com valorização
   const patrimonioNaContemplacaoCalculado = patrimonioNaContemplacao * Math.pow(1 + taxaValorizacao, contemplationMonth / 12);
@@ -85,24 +85,72 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
   
   // CÁLCULOS CORRETOS BASEADOS NAS FÓRMULAS FORNECIDAS
 
-  // 1. Ganhos mensais
-  const ganhosMensaisBase = propertyData.type === 'short-stay' 
-    ? (propertyData.dailyRate || 0) * 30 * ((propertyData.occupancyRate || 70) / 100) - propertyData.fixedCosts
-    : (propertyData.monthlyRent || 0) - propertyData.fixedCosts;
+  // 1. Ganhos mensais - CORRIGIDO conforme requisito 9.1
+  let ganhosMensaisBase = 0;
+  
+  if (propertyData.type === 'short-stay') {
+    // Cálculo para short-stay (Airbnb)
+    const valorDiaria = valorImovel * ((propertyData.dailyRate || 0) / 100); // Valor da diária como percentual do valor do imóvel
+    const ocupacao = 30 * ((propertyData.occupancyRate || 70) / 100); // Dias ocupados por mês
+    const valorMensal = ocupacao * valorDiaria; // Receita bruta mensal
+    const taxaAirbnb = valorMensal * 0.15; // Taxa padrão do Airbnb (15%)
+    const custosImovel = propertyData.fixedCosts; // Custos fixos do imóvel
+    const custosTotais = taxaAirbnb + custosImovel; // Total de custos
+    ganhosMensaisBase = valorMensal - custosTotais; // Receita líquida mensal
+  } else {
+    // Para aluguel tradicional
+    const valorAluguel = valorImovel * 0.005; // 0,5% do valor do imóvel como aluguel mensal
+    ganhosMensaisBase = valorAluguel - propertyData.fixedCosts; // Aluguel menos custos fixos
+  }
   
   const ganhosMensais = ganhosMensaisBase * numeroImoveis;
 
   // 2. Parcela mensal do consórcio
   const parcelaMensalConsorcio = creditValue / product.termMonths;
   
-  // 3. Parcela pós-contemplação (após término do consórcio)
-  const parcelaPosPosContemplacao = parcelaMensalConsorcio;
+  // 3. Parcela pós-contemplação - CORRIGIDO conforme requisito 9.2
+  // Calcular o valor do crédito atualizado na contemplação
+  const creditoAtualizado = creditValue * Math.pow(1 + taxaAtualizacaoAnual, contemplationMonth / 12);
   
-  // 4. Fluxo de caixa antes do fim do consórcio (240 meses)
-  const fluxoCaixaAntes = ganhosMensais - parcelaMensalConsorcio;
+  // Calcular o valor já pago até a contemplação
+  const valorPagoAteContemplacao = parcelaMensalConsorcio * contemplationMonth;
   
-  // 5. Fluxo de caixa após fim do consórcio (sem parcela)
-  const fluxoCaixaApos = ganhosMensais;
+  // Calcular o saldo devedor na contemplação
+  const saldoDevedor = creditoAtualizado - valorPagoAteContemplacao;
+  
+  // Calcular a parcela pós-contemplação baseada no saldo devedor e parcelas restantes
+  const parcelasRestantes = product.termMonths - contemplationMonth;
+  const parcelaPosPosContemplacao = parcelasRestantes > 0 ? saldoDevedor / parcelasRestantes : 0;
+  
+  // 4. Fluxo de caixa antes do fim do consórcio (240 meses) - CORRIGIDO conforme requisito 9.3
+  const fluxoCaixaAntes = ganhosMensais - parcelaPosPosContemplacao;
+  
+  // 5. Fluxo de caixa após fim do consórcio (sem parcela) - CORRIGIDO conforme requisito 9.4
+  // Calcular o valor do imóvel atualizado após 240 meses
+  const anosApos240Meses = (product.termMonths - contemplationMonth) / 12;
+  const valorImovelAtualizado = valorImovel * Math.pow(1 + taxaValorizacao, anosApos240Meses);
+  
+  // Recalcular ganhos mensais com valor atualizado do imóvel
+  let ganhosMensaisAtualizados = 0;
+  
+  if (propertyData.type === 'short-stay') {
+    // Cálculo para short-stay (Airbnb)
+    const valorDiariaAtualizado = valorImovelAtualizado * ((propertyData.dailyRate || 0) / 100);
+    const ocupacao = 30 * ((propertyData.occupancyRate || 70) / 100);
+    const valorMensalAtualizado = ocupacao * valorDiariaAtualizado;
+    const taxaAirbnbAtualizada = valorMensalAtualizado * 0.15;
+    const custosImovelAtualizados = propertyData.fixedCosts * Math.pow(1 + taxaValorizacao, anosApos240Meses);
+    const custosTotaisAtualizados = taxaAirbnbAtualizada + custosImovelAtualizados;
+    ganhosMensaisAtualizados = valorMensalAtualizado - custosTotaisAtualizados;
+  } else {
+    // Para aluguel tradicional
+    const valorAluguelAtualizado = valorImovelAtualizado * 0.005;
+    const custosImovelAtualizados = propertyData.fixedCosts * Math.pow(1 + taxaValorizacao, anosApos240Meses);
+    ganhosMensaisAtualizados = valorAluguelAtualizado - custosImovelAtualizados;
+  }
+  
+  // Fluxo de caixa após 240 meses (sem parcela e com valores atualizados)
+  const fluxoCaixaApos = ganhosMensaisAtualizados * numeroImoveis;
   
   // 6. Valor pago do próprio bolso (parcelas pagas até contemplação)
   const pagoProprioBolso = parcelaMensalConsorcio * contemplationMonth;

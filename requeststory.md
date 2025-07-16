@@ -35,3 +35,23 @@ Resolver problemas específicos de dark mode em várias páginas e componentes, 
 - [x] Informações "Dados da Alavancagem Única" devem ser no marrom da plataforma (com possível degradê)
 
 **Status:** Concluído e validado
+# Requisiçã
+o Atual
+
+**Funcionalidade:** Melhorias na Exibição de Valores
+
+**Resumo:**
+Implementar melhorias na exibição de valores no simulador, incluindo a correção da exibição do item "Despesas" e a limitação da taxa anual a duas casas decimais.
+
+## Tarefas:
+
+### Correção da exibição do item "Despesas":
+- [x] Implementar lógica para exibir como valor em reais quando "Imóvel tem valor fixo" é verdadeiro
+- [x] Implementar lógica para exibir como percentual quando "Imóvel tem valor fixo" é falso
+- [x] Aplicar em LeverageConfiguration.tsx e PatrimonialLeverageNew.tsx
+
+### Limitação da taxa anual:
+- [x] Implementar formatação para garantir sempre até duas casas decimais
+- [x] Aplicar em CreditAccessPanel.tsx
+
+**Status:** Concluído e validado

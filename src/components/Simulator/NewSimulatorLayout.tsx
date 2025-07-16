@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { SimulatorConfigModal } from './SimulatorConfigModal';
+import { useSimulatorSync } from '@/hooks/useSimulatorSync';
 
 export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   // Estado principal dos dados da simulação
@@ -24,9 +25,50 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
     bidType: '',
   });
 
-  // Sincronizar campos do topo com simulationData
+  // Usar hook de sincronização para manter dados consistentes entre abas
+  const { data: syncedData, updateField } = useSimulatorSync({
+    searchType: simulationData.searchType,
+    value: simulationData.value,
+    term: simulationData.term,
+    installmentType: simulationData.installmentType,
+  }, (newData) => {
+    // Atualizar simulationData quando os dados sincronizados mudarem
+    setSimulationData(prev => ({
+      ...prev,
+      searchType: newData.searchType,
+      value: newData.value,
+      term: newData.term,
+      installmentType: newData.installmentType,
+    }));
+  });
+
+  // Efeito para sincronizar simulationData com os dados sincronizados
+  useEffect(() => {
+    // Verificar se os dados são diferentes antes de atualizar
+    if (
+      syncedData.searchType !== simulationData.searchType ||
+      syncedData.value !== simulationData.value ||
+      syncedData.term !== simulationData.term ||
+      syncedData.installmentType !== simulationData.installmentType
+    ) {
+      setSimulationData(prev => ({
+        ...prev,
+        searchType: syncedData.searchType,
+        value: syncedData.value,
+        term: syncedData.term,
+        installmentType: syncedData.installmentType,
+      }));
+    }
+  }, [syncedData]);
+
+  // Sincronizar campos do topo com simulationData e dados sincronizados
   const handleFieldChange = (field: string, value: any) => {
     setSimulationData((prev) => ({ ...prev, [field]: value }));
+    
+    // Atualizar dados sincronizados se o campo for um dos que precisam ser sincronizados
+    if (field === 'searchType' || field === 'value' || field === 'term' || field === 'installmentType') {
+      updateField(field as any, value);
+    }
   };
 
   // Buscar administradora padrão e opções de parcelas

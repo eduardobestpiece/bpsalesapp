@@ -220,9 +220,22 @@ export function calculateLeverageValues({
   appreciationRate: number;
 }) {
   // 1. Ganhos mensais por imóvel
-  const ganhosPorImovel = dailyRate && occupancyRate 
-    ? (dailyRate * 30 * (occupancyRate / 100)) - fixedCosts
-    : 0;
+  let ganhosPorImovel = 0;
+  
+  if (dailyRate && occupancyRate) {
+    // Cálculo para short-stay (Airbnb) - CORRIGIDO conforme requisito 9.1
+    const valorDiaria = propertyValue * (dailyRate / 100); // Valor da diária como percentual do valor do imóvel
+    const ocupacao = 30 * (occupancyRate / 100); // Dias ocupados por mês
+    const valorMensal = ocupacao * valorDiaria; // Receita bruta mensal
+    const taxaAirbnb = valorMensal * 0.15; // Taxa padrão do Airbnb (15%)
+    const custosImovel = fixedCosts; // Custos fixos do imóvel
+    const custosTotais = taxaAirbnb + custosImovel; // Total de custos
+    ganhosPorImovel = valorMensal - custosTotais; // Receita líquida mensal
+  } else {
+    // Para aluguel tradicional
+    const valorAluguel = propertyValue * 0.005; // 0,5% do valor do imóvel como aluguel mensal
+    ganhosPorImovel = valorAluguel - fixedCosts; // Aluguel menos custos fixos
+  }
   
   // 2. Ganhos mensais totais
   const ganhosMensais = ganhosPorImovel * propertyCount;
@@ -230,14 +243,49 @@ export function calculateLeverageValues({
   // 3. Parcela mensal do consórcio
   const parcelaMensalConsorcio = creditValue / termMonths;
   
-  // 4. Parcela pós-contemplação (sem alteração, é a mesma parcela)
-  const parcelaPosPosContemplacao = parcelaMensalConsorcio;
+  // 4. Parcela pós-contemplação - CORRIGIDO conforme requisito 9.2
+  // Calcular o valor do crédito atualizado na contemplação
+  const creditoAtualizado = creditValue * Math.pow(1 + (appreciationRate / 100), contemplationMonth / 12);
   
-  // 5. Fluxo de caixa antes do fim do consórcio
-  const fluxoCaixaAntes = ganhosMensais - parcelaMensalConsorcio;
+  // Calcular o valor já pago até a contemplação
+  const valorPagoAteContemplacao = parcelaMensalConsorcio * contemplationMonth;
   
-  // 6. Fluxo de caixa após fim do consórcio (sem parcela do consórcio)
-  const fluxoCaixaApos = ganhosMensais;
+  // Calcular o saldo devedor na contemplação
+  const saldoDevedor = creditoAtualizado - valorPagoAteContemplacao;
+  
+  // Calcular a parcela pós-contemplação baseada no saldo devedor e parcelas restantes
+  const parcelasRestantes = termMonths - contemplationMonth;
+  const parcelaPosPosContemplacao = parcelasRestantes > 0 ? saldoDevedor / parcelasRestantes : 0;
+  
+  // 5. Fluxo de caixa antes do fim do consórcio - CORRIGIDO conforme requisito 9.3
+  const fluxoCaixaAntes = ganhosMensais - parcelaPosPosContemplacao;
+  
+  // 6. Fluxo de caixa após fim do consórcio (sem parcela do consórcio) - CORRIGIDO conforme requisito 9.4
+  // Calcular o valor do imóvel atualizado após 240 meses
+  const anosApos240Meses = (termMonths - contemplationMonth) / 12;
+  const valorImovelAtualizado = propertyValue * Math.pow(1 + (appreciationRate / 100), anosApos240Meses);
+  
+  // Recalcular ganhos mensais com valor atualizado do imóvel
+  let ganhosMensaisAtualizados = 0;
+  
+  if (dailyRate && occupancyRate) {
+    // Cálculo para short-stay (Airbnb)
+    const valorDiariaAtualizado = valorImovelAtualizado * (dailyRate / 100);
+    const ocupacao = 30 * (occupancyRate / 100);
+    const valorMensalAtualizado = ocupacao * valorDiariaAtualizado;
+    const taxaAirbnbAtualizada = valorMensalAtualizado * 0.15;
+    const custosImovelAtualizados = fixedCosts * Math.pow(1 + (appreciationRate / 100), anosApos240Meses);
+    const custosTotaisAtualizados = taxaAirbnbAtualizada + custosImovelAtualizados;
+    ganhosMensaisAtualizados = valorMensalAtualizado - custosTotaisAtualizados;
+  } else {
+    // Para aluguel tradicional
+    const valorAluguelAtualizado = valorImovelAtualizado * 0.005;
+    const custosImovelAtualizados = fixedCosts * Math.pow(1 + (appreciationRate / 100), anosApos240Meses);
+    ganhosMensaisAtualizados = valorAluguelAtualizado - custosImovelAtualizados;
+  }
+  
+  // Fluxo de caixa após 240 meses (sem parcela e com valores atualizados)
+  const fluxoCaixaApos = ganhosMensaisAtualizados * propertyCount;
   
   // 7. Valor pago do próprio bolso (parcelas até contemplação)
   const pagoProprioBolso = parcelaMensalConsorcio * contemplationMonth;

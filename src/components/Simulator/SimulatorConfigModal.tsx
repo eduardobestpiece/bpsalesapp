@@ -11,6 +11,7 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { toast } from '../ui/use-toast';
 import { Tooltip } from '../ui/tooltip';
 import { Info } from 'lucide-react';
+import { useSimulatorSync } from '@/hooks/useSimulatorSync';
 
 interface SimulatorConfigModalProps {
   open: boolean;
@@ -456,22 +457,38 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
     setManualFieldsState((prev) => ({ ...prev, [field]: checked }));
   };
 
+  // Usar hook de sincronização para manter dados consistentes entre abas
+  const { updateField } = useSimulatorSync({
+    searchType: searchType as 'contribution' | 'credit',
+    value,
+    term,
+    installmentType,
+  });
+
   // Aplicar localmente
   const handleApply = () => {
     // Sincronizar valores com o simulador principal
     if (manualFieldsState.parcelas && selectedInstallmentTypeId) {
       const selectedType = installmentTypes.find(it => it.id === selectedInstallmentTypeId);
       if (selectedType?.installment_count) {
-        setTerm(selectedType.installment_count);
+        const newTerm = selectedType.installment_count;
+        setTerm(newTerm);
+        updateField('term', newTerm);
       }
     }
     
     if (manualFieldsState.parcelas && selectedInstallmentTypeId) {
       const selectedType = installmentTypes.find(it => it.id === selectedInstallmentTypeId);
       if (selectedType?.name) {
-        setInstallmentType(selectedType.name);
+        const newInstallmentType = selectedType.name;
+        setInstallmentType(newInstallmentType);
+        updateField('installmentType', newInstallmentType);
       }
     }
+    
+    // Atualizar campos sincronizados
+    updateField('searchType', searchType as 'contribution' | 'credit');
+    updateField('value', value);
     
     toast({ title: 'Configuração aplicada localmente!' });
     onApply();

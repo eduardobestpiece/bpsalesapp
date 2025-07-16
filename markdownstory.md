@@ -661,3 +661,14 @@ Próximos passos:
 - Implementado: Rota unificada para Master Config (/simulador/master)
 - Realizado: Testes e validação final de contraste WCAG AA em todos os componentes
 - Deploy automático realizado com sucesso.
+
+## [15/07/2025] Melhorias na Exibição de Valores
+
+- Implementadas melhorias na exibição de valores no simulador:
+  - Corrigida a exibição do item "Despesas": agora exibe como valor em reais quando "Imóvel tem valor fixo" é verdadeiro, e como percentual quando é falso.
+  - Limitada a taxa anual a duas casas decimais para melhor visualização.
+- Alterações aplicadas nos arquivos:
+  - `LeverageConfiguration.tsx`
+  - `PatrimonialLeverageNew.tsx`
+  - `CreditAccessPanel.tsx`
+- Deploy automático realizado para o GitHub.
