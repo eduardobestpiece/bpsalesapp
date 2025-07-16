@@ -102,6 +102,19 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
     const propertyCosts = calculatePropertyCosts(patrimonioNaContemplacaoCalculado, 0.35); // 0,35% conforme especificado
     const totalCosts = calculateTotalCosts(airbnbFee, propertyCosts);
     ganhosMensaisBase = calculateMonthlyGains(monthlyValue, totalCosts);
+    
+    // Debug: Log dos valores calculados
+    console.log('=== DEBUG GANHOS MENSAIS ===');
+    console.log('Patrimônio na contemplação:', patrimonioNaContemplacaoCalculado);
+    console.log('Valor da diária:', dailyValue);
+    console.log('Dias de ocupação:', occupancyDays);
+    console.log('Valor mensal:', monthlyValue);
+    console.log('Taxa Airbnb:', airbnbFee);
+    console.log('Custos do imóvel:', propertyCosts);
+    console.log('Custos totais:', totalCosts);
+    console.log('Ganhos mensais base:', ganhosMensaisBase);
+    console.log('Número de imóveis:', numeroImoveis);
+    console.log('Ganhos mensais total:', ganhosMensaisBase * numeroImoveis);
   } else {
     // Cálculo para imóveis comerciais ou residenciais
     ganhosMensaisBase = (propertyData.monthlyRent || 0) - propertyData.fixedCosts;
