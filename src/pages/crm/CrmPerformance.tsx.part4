@@ -1,0 +1,142 @@
+  function getAggregatedFunnelData() {
+    if (!selectedFunnel || !filters) return { 
+      periodStages: [], weeklyStages: [], numWeeks: 1, vendasPeriodo: 0, vendasSemanal: 0, 
+      ticketMedioPeriodo: 0, ticketMedioSemanal: 0, recomendacoesPeriodo: 0, recomendacoesSemanal: 0, 
+      etapaRecomendacoesPeriodo: 0, etapaRecomendacoesSemanal: 0, somaPrimeiraEtapaPeriodo: 0, 
+      somaUltimaEtapaPeriodo: 0, somaPrimeiraEtapaSemanal: 0, somaUltimaEtapaSemanal: 0, numIndicadores: 1,
+      delayNoShowPeriodo: 0, delayNoShowSemanal: 0
+    };
+    
+    let filteredIndicators = indicators.filter(i => i.funnel_id === selectedFunnel.id);
+    
+    // Apply same filtering logic
+    if (filters.userId) {
+      if (Array.isArray(filters.userId)) {
+        if (filters.userId.includes('all')) {
+          console.log('[CrmPerformance] Including all users');
+          // Não filtra por usuário se "all" estiver selecionado
+        } else {
+          console.log('[CrmPerformance] Filtering by multiple userIds:', filters.userId);
+          filteredIndicators = filteredIndicators.filter(indicator => 
+            filters.userId.includes(indicator.user_id)
+          );
+        }
+      } else if (filters.userId !== 'all') {
+        console.log('[CrmPerformance] Filtering by specific userId:', filters.userId);
+        filteredIndicators = filteredIndicators.filter(i => i.user_id === filters.userId);
+      }
+    } else if (filters.teamId) {
+      if (Array.isArray(filters.teamId)) {
+        if (filters.teamId.includes('all')) {
+          console.log('[CrmPerformance] Including all teams');
+          // Não filtra por equipe se "all" estiver selecionado
+        } else {
+          console.log('[CrmPerformance] Filtering by multiple teamIds:', filters.teamId);
+          const teamMembers = crmUsers.filter(u => filters.teamId.includes(u.team_id)).map(u => u.id);
+          console.log('[CrmPerformance] Team members:', teamMembers);
+          filteredIndicators = filteredIndicators.filter(indicator => teamMembers.includes(indicator.user_id));
+        }
+      } else if (filters.teamId !== 'all') {
+        console.log('[CrmPerformance] Filtering by team:', filters.teamId);
+        const teamMembers = crmUsers.filter(u => u.team_id === filters.teamId).map(u => u.id);
+        console.log('[CrmPerformance] Team members:', teamMembers);
+        filteredIndicators = filteredIndicators.filter(i => teamMembers.includes(i.user_id));
+      }
+    } else if (crmUser?.role === 'leader') {
+      const leaderTeams = teams.filter(t => t.leader_id === crmUser.id).map(t => t.id);
+      const teamMembers = crmUsers.filter(u => leaderTeams.includes(u.team_id)).map(u => u.id);
+      filteredIndicators = filteredIndicators.filter(i => 
+        teamMembers.includes(i.user_id) || i.user_id === crmUser.id
+      );
+    } else if (crmUser?.role === 'user') {
+      filteredIndicators = filteredIndicators.filter(i => i.user_id === crmUser.id);
+    }
+    
+    if (filters.period === 'custom') {
+      if (filters.start) filteredIndicators = filteredIndicators.filter(i => i.period_start && i.period_start >= filters.start);
+      if (filters.end) filteredIndicators = filteredIndicators.filter(i => i.period_end && i.period_end <= filters.end);
+      if (filters.month) filteredIndicators = filteredIndicators.filter(i => String(i.month_reference) === String(filters.month));
+      if (filters.year) filteredIndicators = filteredIndicators.filter(i => String(i.year_reference) === String(filters.year));
+    }
+    
+    let numWeeks = 1;
+    if (filteredIndicators.length > 0) {
+      const minDate = filteredIndicators.reduce((min, i) => i.period_start && i.period_start < min ? i.period_start : min, filteredIndicators[0].period_start);
+      const maxDate = filteredIndicators.reduce((max, i) => i.period_end && i.period_end > max ? i.period_end : max, filteredIndicators[0].period_end);
+      if (minDate && maxDate) {
+        numWeeks = Math.max(1, differenceInCalendarWeeks(parseISO(maxDate), parseISO(minDate)) + 1);
+      }
+    }
+    const numIndicadores = filteredIndicators.length || 1;
+    
+    const orderedStages = selectedFunnel.stages?.sort((a, b) => a.stage_order - b.stage_order) || [];
+    const periodStages = aggregateFunnelIndicators(filteredIndicators, orderedStages, 'month', true);
+    const weeklyStages = aggregateFunnelIndicators(filteredIndicators, orderedStages, 'week', true);
+    
+    const somaPrimeiraEtapaPeriodo = periodStages[0]?.value || 0;
+    const somaUltimaEtapaPeriodo = periodStages[periodStages.length - 1]?.value || 0;
+    const somaPrimeiraEtapaSemanal = weeklyStages[0]?.value || 0;
+    const somaUltimaEtapaSemanal = weeklyStages[weeklyStages.length - 1]?.value || 0;
+    
+    const vendasPeriodo = filteredIndicators.reduce((sum, i) => sum + (i.sales_value || 0), 0);
+    const vendasSemanal = numWeeks > 0 ? vendasPeriodo / numWeeks : 0;
+    const ticketMedioPeriodo = somaUltimaEtapaPeriodo > 0 ? vendasPeriodo / somaUltimaEtapaPeriodo : 0;
+    const ticketMedioSemanal = somaUltimaEtapaSemanal > 0 ? vendasSemanal / somaUltimaEtapaSemanal : 0;
+    
+    const recomendacoesPeriodo = filteredIndicators.reduce((sum, i) => sum + (i.recommendations_count || 0), 0);
+    const etapaRecomendacoes = orderedStages.find(s => s.name.toLowerCase().includes('reuni') || s.name.toLowerCase().includes('recomend'));
+    const etapaRecomendacoesPeriodo = etapaRecomendacoes ? periodStages.find(s => s.name === etapaRecomendacoes.name)?.value || 0 : 0;
+    const etapaRecomendacoesSemanal = etapaRecomendacoes ? weeklyStages.find(s => s.name === etapaRecomendacoes.name)?.value || 0 : 0;
+    const mediaRecomendacoesPeriodo = etapaRecomendacoesPeriodo > 0 ? recomendacoesPeriodo / etapaRecomendacoesPeriodo : 0;
+    const mediaRecomendacoesSemanal = etapaRecomendacoesSemanal > 0 ? (recomendacoesPeriodo / numWeeks) / etapaRecomendacoesSemanal : 0;
+    
+    // Cálculo de Delay / No Show usando as novas fases específicas
+    let delayNoShowPeriodo = 0;
+    let delayNoShowSemanal = 0;
+    
+    // Encontrar as etapas de reunião agendada e reunião realizada
+    const etapaReuniaoAgendada = selectedFunnel.meeting_scheduled_stage_id ? 
+      orderedStages.find(s => s.id === selectedFunnel.meeting_scheduled_stage_id) : null;
+    const etapaReuniaoRealizada = selectedFunnel.meeting_completed_stage_id ? 
+      orderedStages.find(s => s.id === selectedFunnel.meeting_completed_stage_id) : null;
+    
+    if (etapaReuniaoAgendada && etapaReuniaoRealizada) {
+      // Encontrar os valores das etapas nos dados agregados
+      const valorReuniaoAgendadaPeriodo = periodStages.find(s => s.name === etapaReuniaoAgendada.name)?.value || 0;
+      const valorReuniaoRealizadaPeriodo = periodStages.find(s => s.name === etapaReuniaoRealizada.name)?.value || 0;
+      const valorReuniaoAgendadaSemanal = weeklyStages.find(s => s.name === etapaReuniaoAgendada.name)?.value || 0;
+      const valorReuniaoRealizadaSemanal = weeklyStages.find(s => s.name === etapaReuniaoRealizada.name)?.value || 0;
+      
+      // Calcular Delay / No Show como 1 - (reuniões realizadas / reuniões agendadas)
+      if (valorReuniaoAgendadaPeriodo > 0) {
+        delayNoShowPeriodo = (1 - (valorReuniaoRealizadaPeriodo / valorReuniaoAgendadaPeriodo)) * 100;
+      }
+      
+      if (valorReuniaoAgendadaSemanal > 0) {
+        delayNoShowSemanal = (1 - (valorReuniaoRealizadaSemanal / valorReuniaoAgendadaSemanal)) * 100;
+      }
+    }
+    
+    return {
+      periodStages,
+      weeklyStages,
+      numWeeks,
+      vendasPeriodo,
+      vendasSemanal,
+      ticketMedioPeriodo,
+      ticketMedioSemanal,
+      recomendacoesPeriodo,
+      recomendacoesSemanal: recomendacoesPeriodo / numWeeks,
+      etapaRecomendacoesPeriodo,
+      etapaRecomendacoesSemanal,
+      mediaRecomendacoesPeriodo,
+      mediaRecomendacoesSemanal,
+      somaPrimeiraEtapaPeriodo,
+      somaUltimaEtapaPeriodo,
+      somaPrimeiraEtapaSemanal,
+      somaUltimaEtapaSemanal,
+      numIndicadores,
+      delayNoShowPeriodo,
+      delayNoShowSemanal
+    };
+  }

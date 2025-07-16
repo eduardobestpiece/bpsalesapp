@@ -1,0 +1,77 @@
+  const funnelComparisonData = getFunnelComparisonData();
+
+  const getPerformanceStats = () => {
+    return {
+      totalLeads: 150,
+      totalSales: 23,
+      conversionRate: 15.3,
+      averageTicket: 2500,
+      totalRevenue: 57500,
+      previousPeriodComparison: {
+        leadsChange: 12.5,
+        salesChange: -5.2,
+        revenueChange: 8.7
+      }
+    };
+  };
+
+  const funnelData = getFunnelChartData();
+  const statsData = getPerformanceStats();
+
+  const {
+    periodStages = [],
+    weeklyStages = [],
+    numWeeks = 1,
+    vendasPeriodo = 0,
+    vendasSemanal = 0,
+    ticketMedioPeriodo = 0,
+    ticketMedioSemanal = 0,
+    recomendacoesPeriodo = 0,
+    recomendacoesSemanal = 0,
+    etapaRecomendacoesPeriodo = 0,
+    etapaRecomendacoesSemanal = 0,
+    mediaRecomendacoesPeriodo = 0,
+    mediaRecomendacoesSemanal = 0,
+    somaPrimeiraEtapaPeriodo = 0,
+    somaUltimaEtapaPeriodo = 0,
+    somaPrimeiraEtapaSemanal = 0,
+    somaUltimaEtapaSemanal = 0,
+    numIndicadores = 1,
+    delayNoShowPeriodo = 0,
+    delayNoShowSemanal = 0
+  } = getAggregatedFunnelData() || {};
+
+  function getPeriodoLabel() {
+    if (!filters) return 'Todo Período';
+    
+    const parts = [];
+    
+    if (filters.period === 'custom' && filters.start && filters.end) {
+      parts.push(`De ${new Date(filters.start).toLocaleDateString('pt-BR')} até ${new Date(filters.end).toLocaleDateString('pt-BR')}`);
+    }
+    
+    if (filters.month) {
+      if (Array.isArray(filters.month) && filters.month.length > 0) {
+        const meses = filters.month.map(m => {
+          const monthIndex = parseInt(m) - 1;
+          const mes = new Date(2000, monthIndex, 1).toLocaleString('pt-BR', { month: 'long' });
+          return mes.charAt(0).toUpperCase() + mes.slice(1);
+        });
+        parts.push(`Mês: ${meses.join(', ')}`);
+      } else if (!Array.isArray(filters.month)) {
+        const monthIndex = parseInt(filters.month) - 1;
+        const mes = new Date(2000, monthIndex, 1).toLocaleString('pt-BR', { month: 'long' });
+        parts.push(`Mês: ${mes.charAt(0).toUpperCase() + mes.slice(1)}`);
+      }
+    }
+    
+    if (filters.year) {
+      if (Array.isArray(filters.year) && filters.year.length > 0) {
+        parts.push(`Ano: ${filters.year.join(', ')}`);
+      } else if (!Array.isArray(filters.year)) {
+        parts.push(`Ano: ${filters.year}`);
+      }
+    }
+    
+    return parts.length > 0 ? parts.join(' | ') : 'Todo Período';
+  }

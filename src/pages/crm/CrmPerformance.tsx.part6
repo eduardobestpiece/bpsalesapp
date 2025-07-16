@@ -1,0 +1,77 @@
+  const funnelTabContent = (
+    <div>
+      <PerformanceFilters onFiltersChange={setFilters} funnelOnly />
+      <div className="mt-10">
+        {selectedFunnel && periodStages.length > 0 && weeklyStages.length > 0 ? (
+          <FunnelComparisonChart
+          stages={periodStages}
+          weeklyStages={weeklyStages}
+          numWeeks={numWeeks}
+          vendasPeriodo={vendasPeriodo}
+          vendasSemanal={vendasSemanal}
+          ticketMedioPeriodo={ticketMedioPeriodo}
+          ticketMedioSemanal={ticketMedioSemanal}
+          recomendacoesPeriodo={recomendacoesPeriodo}
+          recomendacoesSemanal={recomendacoesSemanal}
+          etapaRecomendacoesPeriodo={etapaRecomendacoesPeriodo}
+          etapaRecomendacoesSemanal={etapaRecomendacoesSemanal}
+          mediaRecomendacoesPeriodo={mediaRecomendacoesPeriodo}
+          mediaRecomendacoesSemanal={mediaRecomendacoesSemanal}
+          somaPrimeiraEtapaPeriodo={somaPrimeiraEtapaPeriodo}
+          somaUltimaEtapaPeriodo={somaUltimaEtapaPeriodo}
+          somaPrimeiraEtapaSemanal={somaPrimeiraEtapaSemanal}
+          somaUltimaEtapaSemanal={somaUltimaEtapaSemanal}
+          numIndicadores={numIndicadores}
+          comparativo={funnelComparisonData.comparativo}
+          compareStages={funnelComparisonData.compareStages}
+          periodoLabel={getPeriodoLabel()}
+          funnelName={selectedFunnel?.name || ''}
+          delayNoShowPeriodo={delayNoShowPeriodo}
+          delayNoShowSemanal={delayNoShowSemanal}
+        />
+      ) : (
+        <div className="text-center text-muted-foreground py-8">Nenhum dado para exibir o funil.</div>
+      )}
+    </div>
+  );
+
+  const content = (
+    <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'funnel')}>
+      <TabsList className="mb-6">
+        <TabsTrigger value="funnel">Funil</TabsTrigger>
+      </TabsList>
+      <TabsContent value="funnel">{funnelTabContent}</TabsContent>
+    </Tabs>
+  );
+
+  if (embedded) {
+    return (
+      <>
+        {content}
+      </>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <CrmHeader />
+      <main className="container mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-card/90 backdrop-blur-sm rounded-3xl shadow-xl border border-border p-1">
+            <div className="bg-card rounded-[calc(1.5rem-4px)] p-8 shadow-sm min-h-[600px]">
+              <div className="text-center space-y-2 mb-8">
+                <h2 className="text-2xl font-bold">Performance</h2>
+                <p className="text-muted-foreground">
+                  Acompanhe o desempenho dos funis e resultados
+                </p>
+              </div>
+              {content}
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default CrmPerformance;

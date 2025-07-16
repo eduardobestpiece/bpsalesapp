@@ -1,16 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { CrmHeader } from '@/components/Layout/CrmHeader';
 import { PerformanceFilters } from '@/components/CRM/Performance/PerformanceFilters';
-import { useIndicators } from '@/hooks/useIndicators';
-import { useFunnels } from '@/hooks/useFunnels';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { FunnelComparisonChart } from '@/components/CRM/Performance/FunnelChart';
-import { aggregateFunnelIndicators } from '@/utils/calculationHelpers';
-import { differenceInCalendarWeeks, parseISO } from 'date-fns';
-import { useCrmUsers } from '@/hooks/useCrmUsers';
-import { useTeams } from '@/hooks/useTeams';
 
 interface PerformanceFilters {
   funnelId: string | string[];
@@ -26,63 +19,23 @@ interface PerformanceFilters {
 
 const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
   const { crmUser } = useCrmAuth();
-  const { selectedCompanyId, setSelectedCompanyId } = useCompany();
+  const { selectedCompanyId } = useCompany();
   const [filters, setFilters] = useState<PerformanceFilters | null>(null);
   const [activeTab, setActiveTab] = useState<'funnel'>('funnel');
-
-  useEffect(() => {
-    if (crmUser && crmUser.role !== 'master' && crmUser.company_id && selectedCompanyId !== crmUser.company_id) {
-      setSelectedCompanyId(crmUser.company_id);
-    }
-  }, [crmUser, selectedCompanyId, setSelectedCompanyId]);
-
-  // Fixed logic for determining userId for indicators
-  let userIdForIndicators: string | undefined = undefined;
-  if (crmUser?.role === 'user') {
-    // Users can only see their own data
-    userIdForIndicators = crmUser.id;
-  }
-  
-  const { data: indicators = [] } = useIndicators(
-    selectedCompanyId,
-    userIdForIndicators
-  );
-  
-  const { data: funnels = [] } = useFunnels(selectedCompanyId);
-  const { data: crmUsers = [] } = useCrmUsers();
-  const { data: teams = [] } = useTeams();
-
-  // Selecionar o primeiro funil quando funnelId é um array
-  const selectedFunnel = filters ? 
-    (Array.isArray(filters.funnelId) && filters.funnelId.length > 0 ? 
-      funnels.find(f => f.id === filters.funnelId[0]) : 
-      funnels.find(f => f.id === filters.funnelId)) : 
-    null;
-
-  useEffect(() => {
-    if (!filters && funnels.length > 0) {
-      setFilters({
-        funnelId: funnels[0].id,
-        period: 'custom',
-      });
-    }
-  }, [filters, funnels]);
 
   const funnelTabContent = (
     <div>
       <PerformanceFilters onFiltersChange={setFilters} funnelOnly />
       <div className="mt-10">
-        {selectedFunnel ? (
-          <div className="text-center">Dados do funil carregados</div>
-        ) : (
-          <div className="text-center text-muted-foreground py-8">Nenhum dado para exibir o funil.</div>
-        )}
+        <div className="text-center text-muted-foreground py-8">
+          Dados do funil carregados
+        </div>
       </div>
     </div>
   );
 
   const content = (
-    <Tabs value={activeTab} onValueChange={setActiveTab}>
+    <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'funnel')}>
       <TabsList className="mb-6">
         <TabsTrigger value="funnel">Funil</TabsTrigger>
       </TabsList>
@@ -91,11 +44,7 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
   );
 
   if (embedded) {
-    return (
-      <>
-        {content}
-      </>
-    );
+    return <>{content}</>;
   }
 
   return (

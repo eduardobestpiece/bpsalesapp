@@ -1,0 +1,78 @@
+import { useState, useEffect } from 'react';
+import { CrmHeader } from '@/components/Layout/CrmHeader';
+import { PerformanceFilters } from '@/components/CRM/Performance/PerformanceFilters';
+import { PerformanceStats } from '@/components/CRM/Performance/PerformanceStats';
+import { useIndicators } from '@/hooks/useIndicators';
+import { useFunnels } from '@/hooks/useFunnels';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { FunnelComparisonChart } from '@/components/CRM/Performance/FunnelChart';
+import { aggregateFunnelIndicators } from '@/utils/calculationHelpers';
+import { differenceInCalendarWeeks, parseISO } from 'date-fns';
+import { useCrmUsers } from '@/hooks/useCrmUsers';
+import { useTeams } from '@/hooks/useTeams';
+
+interface PerformanceFilters {
+  funnelId: string | string[];
+  teamId?: string | string[];
+  userId?: string | string[];
+  period: 'day' | 'week' | 'month' | 'custom';
+  start?: string;
+  end?: string;
+  month?: string | string[];
+  year?: string | string[];
+  compareId?: string;
+}
+
+const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
+  const { crmUser } = useCrmAuth();
+  const { selectedCompanyId, setSelectedCompanyId } = useCompany();
+  const [filters, setFilters] = useState<PerformanceFilters | null>(null);
+  const [activeTab, setActiveTab] = useState<'funnel'>('funnel');
+
+  useEffect(() => {
+    if (crmUser && crmUser.role !== 'master' && crmUser.company_id && selectedCompanyId !== crmUser.company_id) {
+      setSelectedCompanyId(crmUser.company_id);
+    }
+  }, [crmUser, selectedCompanyId, setSelectedCompanyId]);
+
+  // Fixed logic for determining userId for indicators
+  let userIdForIndicators: string | undefined = undefined;
+  if (crmUser?.role === 'user') {
+    // Users can only see their own data
+    userIdForIndicators = crmUser.id;
+  }
+  // For admin, master, and leader: fetch all accessible indicators without pre-filtering
+
+  console.log('[CrmPerformance] useIndicators call:', {
+    companyId: selectedCompanyId, 
+    userId: userIdForIndicators, 
+    crmUserRole: crmUser?.role,
+    crmUserId: crmUser?.id
+  });
+  
+  const { data: indicators = [] } = useIndicators(
+    selectedCompanyId,
+    userIdForIndicators
+  );
+  
+  const { data: funnels = [] } = useFunnels(selectedCompanyId);
+  const { data: crmUsers = [] } = useCrmUsers();
+  const { data: teams = [] } = useTeams();
+
+  // Selecionar o primeiro funil quando funnelId é um array
+  const selectedFunnel = filters ? 
+    (Array.isArray(filters.funnelId) && filters.funnelId.length > 0 ? 
+      funnels.find(f => f.id === filters.funnelId[0]) : 
+      funnels.find(f => f.id === filters.funnelId)) : 
+    null;
+
+  useEffect(() => {
+    if (!filters && funnels.length > 0) {
+      setFilters({
+        funnelId: funnels[0].id,
+        period: 'custom',
+      });
+    }
+  }, [filters, funnels]);
