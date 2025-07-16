@@ -101,7 +101,7 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
   if (propertyData.type === 'short-stay') {
     // Cálculo para short-stay (Airbnb) - usar patrimônio na contemplação
     const dailyValue = calculateDailyValue(patrimonioNaContemplacaoCalculado, 0.06); // 0,06% conforme especificado
-    const occupancyDays = calculateOccupancyDays(propertyData.occupancyRate || 70);
+    const occupancyDays = calculateOccupancyDays(70); // 70% conforme especificado
     const monthlyValue = calculateMonthlyValue(dailyValue, occupancyDays);
     const adminPercentage = 15; // Percentual padrão da administradora (Airbnb)
     const airbnbFee = calculateAirbnbFee(monthlyValue, adminPercentage);
