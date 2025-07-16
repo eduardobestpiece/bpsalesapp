@@ -260,7 +260,7 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
 
   if (!installmentTypes?.length) {
     return (
-      <div className="text-center py-8 text-gray-500">
+      <div className="text-center py-8 text-muted-foreground">
         {addButton}
         Nenhum tipo de parcela encontrado.
         {showCreateModal && (
@@ -292,14 +292,14 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
       {/* Botão de criação de tipos de parcelas */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
-          <h2 className="text-2xl font-semibold text-gray-900">Tipos de Parcela</h2>
-          <p className="text-gray-600 mt-1">Gerencie os tipos de parcela</p>
+          <h2 className="text-2xl font-semibold text-foreground">Tipos de Parcela</h2>
+          <p className="text-muted-foreground mt-1">Gerencie os tipos de parcela</p>
         </div>
         {/* Botão de criação de tipos de parcelas */}
       </div>
       <div className="flex flex-col sm:flex-row gap-4 mt-4 mb-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
           <Input
             placeholder="Buscar tipos de parcela..."
             value={searchTerm}
@@ -326,7 +326,7 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Empresa de origem</label>
+              <label className="block text-sm font-medium text-foreground mb-1">Empresa de origem</label>
               <Select value={originCompanyId} onValueChange={setOriginCompanyId} disabled={companiesLoading}>
                 <SelectTrigger>
                   <SelectValue placeholder={companiesLoading ? 'Carregando...' : 'Selecione a empresa'} />

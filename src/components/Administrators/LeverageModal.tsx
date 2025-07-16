@@ -197,7 +197,7 @@ export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageMod
               </div>
 
               {formData.subtype && (
-                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                <div className="space-y-4 p-4 bg-muted/50 dark:bg-[#161616] rounded-lg">
                   <div className="flex items-center space-x-2">
                     <Switch
                       id="has_fixed_value"
@@ -232,7 +232,7 @@ export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageMod
                           onChange={(e) => handleChange('daily_percentage', Number(e.target.value))}
                           placeholder="Ex: 0.5"
                         />
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-muted-foreground">
                           Percentual sobre o valor do imóvel para definir o valor da diária
                         </p>
                       </div>
@@ -247,7 +247,7 @@ export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageMod
                           onChange={(e) => handleChange('management_percentage', Number(e.target.value))}
                           placeholder="Ex: 20"
                         />
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-muted-foreground">
                           Percentual calculado sobre o valor das diárias
                         </p>
                       </div>
@@ -262,7 +262,7 @@ export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageMod
                           onChange={(e) => handleChange('occupancy_rate', Number(e.target.value))}
                           placeholder="Ex: 70"
                         />
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-muted-foreground">
                           Taxa calculada em 30 dias × percentual
                         </p>
                       </div>
@@ -281,7 +281,7 @@ export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageMod
                           onChange={(e) => handleChange('rental_percentage', Number(e.target.value))}
                           placeholder="Ex: 1.5"
                         />
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-muted-foreground">
                           Percentual sobre o valor do imóvel para definir o aluguel
                         </p>
                       </div>
@@ -296,7 +296,7 @@ export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageMod
                           onChange={(e) => handleChange('real_estate_percentage', Number(e.target.value))}
                           placeholder="Ex: 8"
                         />
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-muted-foreground">
                           Percentual calculado sobre o valor do aluguel
                         </p>
                       </div>
@@ -318,7 +318,7 @@ export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageMod
                         onChange={(e) => handleChange('total_expenses', Number(e.target.value))}
                         placeholder={formData.has_fixed_property_value ? 'Ex: 800' : 'Ex: 10'}
                       />
-                      {!formData.has_fixed_property_value && <span className="text-gray-500">%</span>}
+                      {!formData.has_fixed_property_value && <span className="text-muted-foreground">%</span>}
                     </div>
                   </div>
                 </div>
@@ -327,8 +327,8 @@ export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageMod
           )}
 
           {formData.type === 'vehicle' && (
-            <div className="p-4 bg-gray-50 rounded-lg text-center">
-              <p className="text-gray-600">Em breve</p>
+            <div className="p-4 bg-muted/50 dark:bg-[#161616] rounded-lg text-center">
+              <p className="text-muted-foreground">Em breve</p>
             </div>
           )}
 

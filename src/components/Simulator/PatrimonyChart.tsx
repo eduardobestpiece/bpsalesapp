@@ -60,12 +60,12 @@ const CustomDot = (props: any) => {
           cy={cy} 
           r={12} 
           fill="#fff" 
-          stroke="var(--accent)" 
+          stroke="#A86F57" 
           strokeWidth={3}
         />
         <foreignObject x={cx - 10} y={cy - 10} width={20} height={20}>
           <div className="flex items-center justify-center w-full h-full">
-            <House className="w-5 h-5 text-accent" />
+            <House className="w-5 h-5" style={{ color: "#A86F57" }} />
           </div>
         </foreignObject>
       </g>
@@ -106,7 +106,7 @@ export const PatrimonyChart = ({ data }: PatrimonyChartProps) => {
             bottom: 20,
           }}
         >
-          <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+          <CartesianGrid strokeDasharray="3 3" className="opacity-30" stroke="rgba(200, 200, 200, 0.3)" />
           <XAxis 
             dataKey="month" 
             tickFormatter={formatXAxis}
@@ -117,10 +117,10 @@ export const PatrimonyChart = ({ data }: PatrimonyChartProps) => {
           <Line 
             type="monotone" 
             dataKey="patrimony" 
-            stroke="var(--accent)" 
+            stroke="#A86F57" 
             strokeWidth={3}
             dot={<CustomDot />}
-            activeDot={{ r: 8, fill: "var(--accent)" }}
+            activeDot={{ r: 8, fill: "#A86F57" }}
           />
         </LineChart>
       </ResponsiveContainer>

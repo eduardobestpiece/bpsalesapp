@@ -31,7 +31,7 @@
   - Aplicar logo específica na página de login para dark mode
   - _Requirements: 3.1_
 
-- [ ] 7. Aplicar cor cinza mais claro na linha de "Evolução Patrimonial"
+- [x] 7. Aplicar cor cinza mais claro na linha de "Evolução Patrimonial"
   - Localizar componentes de gráficos (ResultsPanel, SingleLeverage, ScaledLeverage)
   - Aplicar cor marrom #A86F57 nas linhas dos gráficos usando variável CSS --accent
   - Faça o deploy ao final de tudo

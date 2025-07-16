@@ -69,9 +69,6 @@ export const SalesList = ({ companyId }: SalesListProps) => {
               className="max-w-xs"
               disabled={isSubMaster}
             />
-            <Button onClick={() => setShowModal(true)} disabled={isSubMaster}>
-              <Plus className="w-4 h-4 mr-2" /> Nova Venda
-            </Button>
           </div>
           <div className="space-y-2">
             {isLoading ? (

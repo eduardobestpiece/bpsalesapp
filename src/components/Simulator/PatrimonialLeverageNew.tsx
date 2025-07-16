@@ -255,9 +255,9 @@ export const PatrimonialLeverageNew = ({
     <div className="space-y-6">
       {/* Exibir Crédito Recomendado no topo, apenas se embutido estiver ativado */}
       {embutido === 'com' && creditoRecomendado && (
-        <div className="bg-blue-50 border-blue-200 rounded-lg p-3 mb-2">
-          <span className="text-blue-800 font-semibold">Crédito Recomendado: </span>
-          <span className="text-blue-900 font-bold text-lg">{creditoRecomendado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+        <div className="bg-muted/50 dark:bg-[#161616] border border-border dark:border-[#A86F57]/20 rounded-lg p-3 mb-2">
+          <span className="text-foreground font-semibold">Crédito Recomendado: </span>
+          <span className="text-primary dark:text-[#A86F57] font-bold text-lg">{creditoRecomendado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
         </div>
       )}
       {/* Novo layout agrupado */}
@@ -273,14 +273,23 @@ export const PatrimonialLeverageNew = ({
                 onLeverageData={setLeverageData}
               />
               {showValorImovel && (
-                <Input
-                  type="number"
-                  value={valorImovelManual}
-                  onChange={e => setValorImovelManual(e.target.value === '' ? '' : Number(e.target.value))}
-                  className="font-bold text-lg bg-input text-foreground border-2 rounded-xl px-4 py-2 w-48"
-                  style={{ minWidth: 180 }}
-                  placeholder="Valor do imóvel"
-                />
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">R$</span>
+                  <Input
+                    type="text"
+                    value={valorImovelManual === '' ? '' : valorImovelManual.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    onChange={e => {
+                      // Remove todos os caracteres não numéricos
+                      const numericValue = e.target.value.replace(/[^\d]/g, '');
+                      // Converte para número com casas decimais
+                      const value = numericValue === '' ? '' : Number(numericValue) / 100;
+                      setValorImovelManual(value);
+                    }}
+                    className="font-bold text-lg bg-input text-foreground border-2 border-input hover:border-primary focus:border-primary rounded-xl px-4 py-2 w-48 pl-8"
+                    style={{ minWidth: 180 }}
+                    placeholder="Valor do imóvel"
+                  />
+                </div>
               )}
             </div>
             {/* Botões Com/Sem embutido */}
@@ -321,6 +330,11 @@ export const PatrimonialLeverageNew = ({
                 max={finalProduct.termMonths}
                 step={1}
                 className="flex-1"
+                style={{
+                  '--slider-track': 'var(--muted)',
+                  '--slider-range': '#A86F57',
+                  '--slider-thumb': '#A86F57',
+                } as React.CSSProperties}
               />
               <Input
                 type="number"

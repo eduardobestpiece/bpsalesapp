@@ -120,7 +120,7 @@ export default function Configuracoes() {
 
   return (
     <SimulatorLayout>
-      <div className="container mx-auto px-4 py-8 bg-background text-foreground">
+      <div className="container mx-auto px-4 py-8 bg-gradient-to-br from-primary-50/20 via-background to-muted/10 dark:from-[#131313] dark:via-[#1E1E1E] dark:to-[#161616] text-foreground">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">Configurações</h1>
