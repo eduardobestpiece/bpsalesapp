@@ -80,7 +80,7 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
   // Função auxiliar para card de métrica com fontes menores
   function MetricCard({ label, value, cardClass }: { label: string; value: string | number; cardClass?: string }) {
     return (
-      <div className={`rounded-2xl border border-gray-200 bg-white px-4 py-3 flex flex-col items-center shadow-sm mb-2 ${cardClass || ''}`}>
+      <div className={`rounded-2xl border border-border bg-card px-4 py-3 flex flex-col items-center shadow-sm mb-2 ${cardClass || ''}`}>
         <span className="text-xs text-muted-foreground mb-1 font-medium">{label}</span>
         <span className="text-lg font-bold tracking-tight">{value}</span>
       </div>
@@ -121,7 +121,7 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
                       {/* Comparativo fora da faixa à esquerda */}
                       <div className="flex items-center justify-center w-14 mr-2">
                         {typeof stage.compareValue === 'undefined' ? (
-                          <span className="text-xs text-gray-400">0%</span>
+                          <span className="text-xs text-muted-foreground">0%</span>
                         ) : diff !== 0 ? (
                           <span className={`flex items-center font-bold text-xs ${isUp ? 'text-green-600' : 'text-red-600'}`}> 
                             {isUp && <ArrowUp className="w-4 h-4 mr-1" />} 
@@ -129,7 +129,7 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
                             {diff > 0 ? `+${diff}` : diff}
                           </span>
                         ) : (
-                          <span className="text-xs text-gray-400">0%</span>
+                          <span className="text-xs text-muted-foreground">0%</span>
                         )}
                       </div>
                       {/* Faixa do funil */}

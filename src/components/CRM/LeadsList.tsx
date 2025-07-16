@@ -65,7 +65,7 @@ export const LeadsList = ({ companyId }: LeadsListProps) => {
               <div>Carregando...</div>
             ) : (
               filteredLeads.map((lead) => (
-                <div key={lead.id} className="flex items-center justify-between border rounded p-3">
+                <div key={lead.id} className="flex items-center justify-between border border-border bg-card rounded p-3">
                   <div className="flex items-center gap-3">
                     <User className="w-5 h-5 text-primary" />
                     <span className="font-medium">{lead.name}</span>

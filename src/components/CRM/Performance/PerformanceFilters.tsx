@@ -229,18 +229,18 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
             <form className="space-y-4">
               <div className="flex flex-col gap-2">
                 <label htmlFor="startDate">Data início</label>
-                <input type="date" id="startDate" name="startDate" value={customPeriod.start} onChange={e => setCustomPeriod(p => ({ ...p, start: e.target.value }))} className="border rounded px-2 py-1" />
+                <input type="date" id="startDate" name="startDate" value={customPeriod.start} onChange={e => setCustomPeriod(p => ({ ...p, start: e.target.value }))} className="border border-input bg-background text-foreground rounded px-2 py-1 focus:ring-2 focus:ring-ring focus:ring-offset-2" />
                 <label htmlFor="endDate">Data fim</label>
-                <input type="date" id="endDate" name="endDate" value={customPeriod.end} onChange={e => setCustomPeriod(p => ({ ...p, end: e.target.value }))} className="border rounded px-2 py-1" />
+                <input type="date" id="endDate" name="endDate" value={customPeriod.end} onChange={e => setCustomPeriod(p => ({ ...p, end: e.target.value }))} className="border border-input bg-background text-foreground rounded px-2 py-1 focus:ring-2 focus:ring-ring focus:ring-offset-2" />
                 <label htmlFor="monthSelect">Mês</label>
-                <select id="monthSelect" name="monthSelect" value={customPeriod.month} onChange={e => setCustomPeriod(p => ({ ...p, month: e.target.value }))} className="border rounded px-2 py-1">
+                <select id="monthSelect" name="monthSelect" value={customPeriod.month} onChange={e => setCustomPeriod(p => ({ ...p, month: e.target.value }))} className="border border-input bg-background text-foreground rounded px-2 py-1 focus:ring-2 focus:ring-ring focus:ring-offset-2">
                   <option value="">Todos</option>
                   {[...Array(12)].map((_, i) => (
                     <option key={i+1} value={i+1}>{new Date(2000, i, 1).toLocaleString('pt-BR', { month: 'long' })}</option>
                   ))}
                 </select>
                 <label htmlFor="yearSelect">Ano</label>
-                <select id="yearSelect" name="yearSelect" value={customPeriod.year} onChange={e => setCustomPeriod(p => ({ ...p, year: e.target.value }))} className="border rounded px-2 py-1">
+                <select id="yearSelect" name="yearSelect" value={customPeriod.year} onChange={e => setCustomPeriod(p => ({ ...p, year: e.target.value }))} className="border border-input bg-background text-foreground rounded px-2 py-1 focus:ring-2 focus:ring-ring focus:ring-offset-2">
                   <option value="">Todos</option>
                   {Array.from({length: 5}, (_, i) => new Date().getFullYear() - i).map(y => (
                     <option key={y} value={y}>{y}</option>

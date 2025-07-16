@@ -25,13 +25,13 @@ export const PerformanceChart = ({ title, data }: PerformanceChartProps) => {
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white p-3 border rounded-lg shadow-lg">
+        <div className="bg-card p-3 border border-border rounded-lg shadow-lg">
           <p className="font-medium">{label}</p>
           <p className="text-sm">
             <span className="text-blue-600">Atual: {data.value}</span>
           </p>
           <p className="text-sm">
-            <span className="text-gray-600">Meta: {data.target}</span>
+            <span className="text-muted-foreground">Meta: {data.target}</span>
           </p>
           <p className="text-sm">
             <span className={`font-medium ${data.percentage >= 100 ? 'text-green-600' : 'text-red-600'}`}>

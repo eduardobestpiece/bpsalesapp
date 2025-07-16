@@ -265,11 +265,11 @@ const CrmIndicadores = () => {
   const isGestor = crmUser?.role === 'admin' || crmUser?.role === 'master' || crmUser?.role === 'leader';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
+    <div className="min-h-screen bg-background">
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-full mx-auto">
-          <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-100/50 p-1">
-            <div className="bg-white rounded-[calc(1.5rem-4px)] p-8 shadow-sm min-h-[600px]">
+          <div className="bg-card/90 backdrop-blur-sm rounded-3xl shadow-xl border border-border p-1">
+            <div className="bg-card rounded-[calc(1.5rem-4px)] p-8 shadow-sm min-h-[600px]">
               <Tabs defaultValue={defaultTab}>
                 <TabsList className="mb-6">
                   {allowedTabs.includes('performance') && (
@@ -315,7 +315,7 @@ const CrmIndicadores = () => {
                                   <select 
                                     value={selectedFunnelId} 
                                     onChange={e => setSelectedFunnelId(e.target.value)} 
-                                    className="border rounded-lg px-3 py-2 text-sm"
+                                    className="border border-input bg-background text-foreground rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-ring focus:ring-offset-2"
                                   >
                                     <option value="">Todos os funis</option>
                                     {allowedFunnels.map(f => (
@@ -337,7 +337,7 @@ const CrmIndicadores = () => {
                         </div>
                       </CardHeader>
                       <CardContent>
-                        <div className="overflow-x-auto rounded-2xl shadow border bg-white">
+                        <div className="overflow-x-auto rounded-2xl shadow border border-border bg-card">
                           <table className="min-w-full border-separate border-spacing-y-1">
                             <thead className="sticky top-0 z-10 bg-muted text-xs">
                               <tr>
@@ -394,7 +394,7 @@ const CrmIndicadores = () => {
                                   const user = crmUsers.find(u => u && u.id === indicator.user_id);
 
                                   return (
-                                    <tr key={indicator.id} className={idx % 2 === 0 ? 'bg-white' : 'bg-muted/40'}>
+                                    <tr key={indicator.id} className={idx % 2 === 0 ? 'bg-card' : 'bg-muted/40'}>
                                       <td className="px-2 py-2 text-center">
                                         {prazoStatus && (
                                           <span className={`inline-block w-3 h-3 rounded-full ${
@@ -463,15 +463,15 @@ const CrmIndicadores = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">Data início</label>
-                  <input type="date" value={filters.periodStart} onChange={e => setFilters(f => ({ ...f, periodStart: e.target.value }))} className="w-full border rounded-lg px-3 py-2" />
+                  <input type="date" value={filters.periodStart} onChange={e => setFilters(f => ({ ...f, periodStart: e.target.value }))} className="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 focus:ring-2 focus:ring-ring focus:ring-offset-2" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Data fim</label>
-                  <input type="date" value={filters.periodEnd} onChange={e => setFilters(f => ({ ...f, periodEnd: e.target.value }))} className="w-full border rounded-lg px-3 py-2" />
+                  <input type="date" value={filters.periodEnd} onChange={e => setFilters(f => ({ ...f, periodEnd: e.target.value }))} className="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 focus:ring-2 focus:ring-ring focus:ring-offset-2" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Mês</label>
-                  <select value={filters.month} onChange={e => setFilters(f => ({ ...f, month: e.target.value }))} className="w-full border rounded-lg px-3 py-2">
+                  <select value={filters.month} onChange={e => setFilters(f => ({ ...f, month: e.target.value }))} className="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 focus:ring-2 focus:ring-ring focus:ring-offset-2">
                     <option value="">Todos</option>
                     {[...Array(12)].map((_, i) => (
                       <option key={i+1} value={i+1}>{new Date(2000, i, 1).toLocaleString('pt-BR', { month: 'long' })}</option>
@@ -480,7 +480,7 @@ const CrmIndicadores = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1">Ano</label>
-                  <select value={filters.year} onChange={e => setFilters(f => ({ ...f, year: e.target.value }))} className="w-full border rounded-lg px-3 py-2">
+                  <select value={filters.year} onChange={e => setFilters(f => ({ ...f, year: e.target.value }))} className="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 focus:ring-2 focus:ring-ring focus:ring-offset-2">
                     <option value="">Todos</option>
                     {Array.from({length: 5}, (_, i) => new Date().getFullYear() - i).map(y => (
                       <option key={y} value={y}>{y}</option>
@@ -491,7 +491,7 @@ const CrmIndicadores = () => {
                   <>
                     <div>
                       <label className="block text-sm font-medium mb-1">Equipe</label>
-                      <select value={filters.teamId} onChange={e => setFilters(f => ({ ...f, teamId: e.target.value }))} className="w-full border rounded-lg px-3 py-2">
+                      <select value={filters.teamId} onChange={e => setFilters(f => ({ ...f, teamId: e.target.value }))} className="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 focus:ring-2 focus:ring-ring focus:ring-offset-2">
                         <option value="">Todas</option>
                         {teams.map(team => (
                           <option key={team.id} value={team.id}>{team.name}</option>
@@ -500,7 +500,7 @@ const CrmIndicadores = () => {
                     </div>
                     <div>
                       <label className="block text-sm font-medium mb-1">Usuário</label>
-                      <select value={filters.userId} onChange={e => setFilters(f => ({ ...f, userId: e.target.value }))} className="w-full border rounded-lg px-3 py-2">
+                      <select value={filters.userId} onChange={e => setFilters(f => ({ ...f, userId: e.target.value }))} className="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 focus:ring-2 focus:ring-ring focus:ring-offset-2">
                         <option value="">Todos</option>
                         {crmUsers.map(user => (
                           <option key={user.id} value={user.id}>{user.first_name} {user.last_name}</option>

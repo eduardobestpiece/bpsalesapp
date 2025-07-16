@@ -587,3 +587,43 @@ Próximos passos:
 - O documento serve como referência completa para desenvolvedores, analistas e auditores do sistema.
 
 ---
+
+## [15/07/2025] Implementação Completa do Dark Mode
+
+- **Análise minuciosa da plataforma:** Verificada toda a estrutura de componentes, layouts e UI elements
+- **Sistema de cores atualizado:** Implementadas as cores especificadas pelo usuário:
+  - #131313 (fundo principal escuro)
+  - #1E1E1E (fundo secundário) 
+  - #161616 (fundo alternativo)
+  - #1F1F1F (fundo de cards/componentes)
+  - #FFFFFF (texto principal)
+  - #A86F57 (cor de destaque/accent - tom marrom)
+- **Contraste aprimorado:** Garantida acessibilidade WCAG AA com contraste mínimo 4.5:1
+- **ThemeSwitch melhorado:** Design mais elegante e responsivo usando variáveis CSS semânticas
+- **Componentes de layout corrigidos:**
+  - CrmHeader: Substituídas classes hardcoded por variáveis CSS
+  - CrmSidebar: Corrigidas cores de texto, bordas e estados hover
+  - Header: Ajustado para usar variáveis semânticas
+  - SimulatorLayout: Padronizado com sistema de cores
+  - SimulatorSidebar: Corrigidas todas as referências de cor
+- **Variáveis CSS otimizadas:** Todas as cores convertidas para HSL e organizadas semanticamente
+- **Componentes UI base verificados:** Button, Card, Input, Dialog, Table, Select, Sidebar já estavam corretos
+- **Deploy automático realizado:** Todas as alterações enviadas para produção
+- **Status:** Implementação completa finalizada, aguardando validação do usuário
+
+**Checklist concluído:**
+- [x] Analisar implementação atual do dark mode
+- [x] Verificar estrutura de cores no Tailwind e CSS  
+- [x] Verificar se existe ThemeProvider e toggle de tema
+- [x] Localizar e analisar todos os componentes da plataforma
+- [x] Criar/ajustar sistema de cores para dark mode
+- [x] Implementar ThemeProvider se necessário
+- [x] Criar/melhorar toggle de dark mode
+- [x] Ajustar contraste de todos os textos e fundos
+- [x] Testar acessibilidade e legibilidade
+- [x] Aplicar as cores especificadas
+- [x] Testar em todos os componentes e páginas
+- [x] Deploy automático
+- [ ] Solicitar validação
+
+**Próximo passo:** Usuário deve testar a plataforma e validar se o dark mode está funcionando corretamente e com boa aparência.
