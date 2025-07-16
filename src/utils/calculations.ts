@@ -246,8 +246,7 @@ export function calculateLeverageValues({
   const mesesAposContemplacao = termMonths - contemplationMonth;
   const pagoInquilino = ganhosMensais * mesesAposContemplacao;
   
-  // 9. Capital em caixa (fluxo de caixa acumulado durante período do consórcio)
-  const capitalEmCaixa = fluxoCaixaAntes * mesesAposContemplacao;
+  // 9. Capital em caixa removido conforme requisito 6.5
   
   // 10. Patrimônio na contemplação
   const patrimonioNaContemplacao = propertyValue * propertyCount;
@@ -263,7 +262,7 @@ export function calculateLeverageValues({
     fluxoCaixaApos,
     pagoProprioBolso,
     pagoInquilino,
-    capitalEmCaixa,
+    // capitalEmCaixa removido conforme requisito 6.5
     patrimonioNaContemplacao,
     patrimonioAoFinal
   };
