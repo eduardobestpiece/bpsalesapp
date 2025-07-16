@@ -148,23 +148,21 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
   
   // 5. Fluxo de caixa após fim do consórcio (240 meses)
   // Calcular valor atualizado do imóvel após 240 meses
-  const updatedPropertyValue = calculateUpdatedPropertyValue(valorImovel, propertyData.appreciationRate);
-  
-  // Calcular fluxo de caixa após 240 meses usando o valor atualizado do imóvel
-  const dailyPercentage = propertyData.type === 'short-stay' ? 
-    (propertyData.dailyRate || 150) / valorImovel * 100 : 0;
-  const occupancyRate = propertyData.type === 'short-stay' ? 
-    (propertyData.occupancyRate || 80) : 100;
-  const adminPercentage = 15; // Percentual padrão da administradora (Airbnb)
-  const expensesPercentage = (propertyData.fixedCosts / valorImovel) * 100;
-  
-  const fluxoCaixaApos = calculateCashFlowAfter240(
-    updatedPropertyValue,
-    dailyPercentage,
-    occupancyRate,
-    adminPercentage,
-    expensesPercentage
-  ) * numeroImoveis;
+  // Calcular fluxo de caixa após 240 meses usando o patrimônio ao final
+  // 1. Valor da diária: patrimonioAoFinal * 0,06%
+  const valorDiariaFinal = patrimonioAoFinal * 0.0006;
+  // 2. Ocupação: 30 × 70% = 21 dias
+  const diasOcupacaoFinal = 30 * 0.7;
+  // 3. Valor mensal: 21 × valor da diária
+  const valorMensalFinal = valorDiariaFinal * diasOcupacaoFinal;
+  // 4. Taxa do Airbnb: valor mensal × 15%
+  const taxaAirbnbFinal = valorMensalFinal * 0.15;
+  // 5. Custos do imóvel: patrimonioAoFinal × 0,35%
+  const custosImovelFinal = patrimonioAoFinal * 0.0035;
+  // 6. Custos totais: taxa do Airbnb + custos do imóvel
+  const custosTotaisFinal = taxaAirbnbFinal + custosImovelFinal;
+  // 7. Fluxo de caixa pós 240 meses: valor mensal - custos totais
+  const fluxoCaixaApos = valorMensalFinal - custosTotaisFinal;
   
   // 6. Valor pago do próprio bolso (parcelas pagas até contemplação) - Fórmula corrigida
   const { value: pagoProprioBolso, percentage: pagoProprioBolsoPercentage } = calculatePaidFromOwnPocket(
