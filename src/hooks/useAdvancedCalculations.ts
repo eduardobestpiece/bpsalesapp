@@ -85,26 +85,16 @@ export const useAdvancedCalculations = (params: AdvancedCalculationParams) => {
       }
     }
 
-    // CORRIGIDO conforme requisito 9.2
-    // Calcular o valor do crédito atualizado na contemplação
-    const creditoAtualizado = contemplationData.creditValue;
-    
-    // Calcular o saldo devedor na contemplação (crédito atualizado menos o que já foi pago)
-    const saldoDevedor = creditoAtualizado - totalPaid;
-    
-    // Calcular a parcela pós-contemplação baseada no saldo devedor e parcelas restantes
+    const remainingBalance = contemplationData.creditValue - totalPaid;
     const remainingMonths = product.termMonths - contemplationMonth;
-    const monthlyInstallment = remainingMonths > 0 ? saldoDevedor / remainingMonths : 0;
     
     for (let month = contemplationMonth + 1; month <= product.termMonths; month++) {
+      const monthlyInstallment = remainingBalance / remainingMonths;
       const paidSoFar = totalPaid + ((month - contemplationMonth) * monthlyInstallment);
-      
-      // Calcular o saldo devedor restante para este mês
-      const currentRemainingBalance = saldoDevedor - ((month - contemplationMonth) * monthlyInstallment);
       
       calculations.push({
         month,
-        remainingBalance: currentRemainingBalance,
+        remainingBalance: remainingBalance - ((month - contemplationMonth) * monthlyInstallment),
         postContemplationInstallment: monthlyInstallment,
         paidAmount: paidSoFar,
         remainingMonths: product.termMonths - month
@@ -153,19 +143,11 @@ export const useAdvancedCalculations = (params: AdvancedCalculationParams) => {
       let netRevenue = 0;
 
       if (property.type === 'short-stay') {
-        // Cálculo para short-stay (Airbnb) - CORRIGIDO conforme requisito 9.1
-        const valorDiaria = property.initialValue * ((property.dailyRate || 0) / 100); // Valor da diária como percentual do valor do imóvel
-        const ocupacao = 30 * ((property.occupancyRatePct || 80) / 100); // Dias ocupados por mês
-        grossRevenue = valorDiaria * ocupacao; // Receita bruta mensal
-        const taxaAirbnb = grossRevenue * 0.15; // Taxa padrão do Airbnb (15%)
-        const custosImovel = property.fixedMonthlyCosts; // Custos fixos do imóvel
-        const custosTotais = taxaAirbnb + custosImovel; // Total de custos
-        netRevenue = grossRevenue - custosTotais; // Receita líquida mensal
+        grossRevenue = (property.dailyRate || 0) * 30 * ((property.occupancyRatePct || 80) / 100);
+        netRevenue = grossRevenue * 0.85 - property.fixedMonthlyCosts; // 15% taxa admin
       } else {
-        // Para aluguel tradicional
-        const valorAluguel = property.initialValue * 0.005; // 0,5% do valor do imóvel como aluguel mensal
-        grossRevenue = valorAluguel;
-        netRevenue = grossRevenue - property.fixedMonthlyCosts; // Aluguel menos custos fixos
+        grossRevenue = property.monthlyRent || 0;
+        netRevenue = grossRevenue - property.fixedMonthlyCosts;
       }
 
       const postContemplation = postContemplationCalculations.find(p => p.month === month);

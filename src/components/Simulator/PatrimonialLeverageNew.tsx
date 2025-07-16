@@ -10,17 +10,6 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import { Button } from '@/components/ui/button';
-import { useSimulatorSync } from '@/hooks/useSimulatorSync';
-
-// Chaves para armazenamento no localStorage
-const STORAGE_KEYS = {
-  LEVERAGE_TYPE: 'monteo_leverage_type',
-  SELECTED_LEVERAGE: 'monteo_selected_leverage',
-  PROPERTY_DATA: 'monteo_property_data',
-  VALOR_IMOVEL_MANUAL: 'monteo_valor_imovel_manual',
-  CONTEMPLATION_MONTH: 'monteo_contemplation_month',
-  EMBUTIDO: 'monteo_embutido',
-};
 
 interface LeverageData {
   id: string;
@@ -127,82 +116,23 @@ export const PatrimonialLeverageNew = ({
     ...(configFilters.atualizacaoAnual && { updateRate: configFilters.atualizacaoAnual }),
     ...(configFilters.tipoParcela && { installmentType: configFilters.tipoParcela })
   };
-  // Inicializar estados com valores do localStorage se disponíveis
-  const [leverageType, setLeverageType] = useState<'single' | 'scaled'>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.LEVERAGE_TYPE);
-      return saved === 'scaled' ? 'scaled' : 'single';
-    } catch (e) {
-      return 'single';
-    }
-  });
-  
-  const [selectedLeverage, setSelectedLeverage] = useState<string>(() => {
-    try {
-      return localStorage.getItem(STORAGE_KEYS.SELECTED_LEVERAGE) || '';
-    } catch (e) {
-      return '';
-    }
-  });
-  
+  const [leverageType, setLeverageType] = useState<'single' | 'scaled'>('single');
+  const [selectedLeverage, setSelectedLeverage] = useState<string>('');
   const [leverageData, setLeverageData] = useState<LeverageData | null>(null);
-  
-  const [propertyData, setPropertyData] = useState<PropertyData>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.PROPERTY_DATA);
-      if (saved) {
-        const parsed = JSON.parse(saved) as PropertyData;
-        return {
-          ...parsed,
-          // Garantir que a taxa de valorização seja atualizada com o valor atual
-          appreciationRate: simulationData.updateRate || parsed.appreciationRate || 8
-        };
-      }
-    } catch (e) {
-      console.error('Erro ao carregar dados do imóvel do localStorage:', e);
-    }
-    
-    // Valor padrão se não houver dados salvos ou ocorrer erro
-    return {
-      type: 'short-stay' as const,
-      dailyRate: 150,
-      occupancyRate: 80,
-      fixedCosts: 800,
-      appreciationRate: simulationData.updateRate || 8
-    };
+  const [propertyData, setPropertyData] = useState<PropertyData>({
+    type: 'short-stay' as const,
+    dailyRate: 150,
+    occupancyRate: 80,
+    fixedCosts: 800,
+    appreciationRate: simulationData.updateRate || 8
   });
-  
   // Valor base para cálculos: crédito acessado se disponível, senão valor digitado
   const valorBase = creditoAcessado && creditoAcessado > 0 ? creditoAcessado : simulationData.value;
-  
   // Estado local para o campo de valor do imóvel (livre, inicia vazio)
-  const [valorImovelManual, setValorImovelManual] = useState<number | ''>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.VALOR_IMOVEL_MANUAL);
-      return saved ? Number(saved) : '';
-    } catch (e) {
-      return '';
-    }
-  });
-  
-  const [contemplationMonth, setContemplationMonth] = useState(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.CONTEMPLATION_MONTH);
-      return saved ? Number(saved) : 6;
-    } catch (e) {
-      return 6;
-    }
-  });
-  
+  const [valorImovelManual, setValorImovelManual] = useState<number | ''>('');
+  const [contemplationMonth, setContemplationMonth] = useState(6);
   // Estado para embutido
-  const [embutido, setEmbutido] = useState<'com' | 'sem'>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEYS.EMBUTIDO);
-      return saved === 'sem' ? 'sem' : 'com';
-    } catch (e) {
-      return 'com';
-    }
-  });
+  const [embutido, setEmbutido] = useState<'com' | 'sem'>('com');
 
   // Determinar se a alavanca tem valor fixo
   const hasValorFixo = !!leverageData?.fixed_property_value;
@@ -301,15 +231,7 @@ export const PatrimonialLeverageNew = ({
     }
   }, [leverageData, finalSimulationData.updateRate]);
 
-  // Usar hook de sincronização para manter dados consistentes entre abas
-  const { data: syncedData } = useSimulatorSync({
-    searchType: simulationData.searchType,
-    value: simulationData.value,
-    term: simulationData.term,
-    installmentType: simulationData.installmentType,
-  });
-
-  // Efeito para atualizar cálculos quando mudamos de modalidade ou quando os dados sincronizados mudam
+  // Efeito para atualizar cálculos quando mudamos de modalidade
   useEffect(() => {
     // Força recálculo quando modalidade ou valor mudar
     if (simulationData.searchType || simulationData.value || creditoAcessado) {
@@ -317,85 +239,9 @@ export const PatrimonialLeverageNew = ({
       setPropertyData(prev => ({ ...prev, appreciationRate: finalSimulationData.updateRate || 8 }));
     }
   }, [simulationData.searchType, simulationData.value, creditoAcessado, finalSimulationData.updateRate]);
-  
-  // Efeito para sincronizar simulationData com os dados sincronizados
-  useEffect(() => {
-    // Verificar se os dados sincronizados são diferentes dos dados atuais
-    if (
-      syncedData.searchType !== simulationData.searchType ||
-      syncedData.value !== simulationData.value ||
-      syncedData.term !== simulationData.term ||
-      syncedData.installmentType !== simulationData.installmentType
-    ) {
-      // Forçar recálculo com os novos valores sincronizados
-      const updatedSimulationData = {
-        ...simulationData,
-        searchType: syncedData.searchType,
-        value: syncedData.value,
-        term: syncedData.term,
-        installmentType: syncedData.installmentType,
-      };
-      
-      // Trigger recalculation by updating a dependency
-      setPropertyData(prev => ({ ...prev, appreciationRate: updatedSimulationData.updateRate || 8 }));
-    }
-  }, [syncedData]);
 
   // Manter persistência dos valores - não resetar ao mudar filtros
   // Os valores devem ser mantidos mesmo quando o usuário navega entre abas
-  
-  // Salvar valores no localStorage sempre que mudarem
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.LEVERAGE_TYPE, leverageType);
-    } catch (e) {
-      console.error('Erro ao salvar tipo de alavancagem:', e);
-    }
-  }, [leverageType]);
-  
-  useEffect(() => {
-    try {
-      if (selectedLeverage) {
-        localStorage.setItem(STORAGE_KEYS.SELECTED_LEVERAGE, selectedLeverage);
-      }
-    } catch (e) {
-      console.error('Erro ao salvar alavanca selecionada:', e);
-    }
-  }, [selectedLeverage]);
-  
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.PROPERTY_DATA, JSON.stringify(propertyData));
-    } catch (e) {
-      console.error('Erro ao salvar dados do imóvel:', e);
-    }
-  }, [propertyData]);
-  
-  useEffect(() => {
-    try {
-      if (valorImovelManual !== '') {
-        localStorage.setItem(STORAGE_KEYS.VALOR_IMOVEL_MANUAL, valorImovelManual.toString());
-      }
-    } catch (e) {
-      console.error('Erro ao salvar valor do imóvel:', e);
-    }
-  }, [valorImovelManual]);
-  
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.CONTEMPLATION_MONTH, contemplationMonth.toString());
-    } catch (e) {
-      console.error('Erro ao salvar mês de contemplação:', e);
-    }
-  }, [contemplationMonth]);
-  
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEYS.EMBUTIDO, embutido);
-    } catch (e) {
-      console.error('Erro ao salvar configuração de embutido:', e);
-    }
-  }, [embutido]);
 
   const handleLeverageChange = (leverageId: string) => {
     setSelectedLeverage(leverageId);

@@ -4,23 +4,6 @@
 
 **URL**: https://lovable.dev/projects/152d99a3-6e37-403c-b1e1-bc7a04060978
 
-## Como aplicar migrações do Supabase
-
-Para aplicar a migração que adiciona as colunas `meeting_scheduled_stage_id` e `meeting_completed_stage_id` na tabela de funis, siga os passos abaixo:
-
-1. Configure as variáveis de ambiente:
-```sh
-export SUPABASE_URL=https://jbhocghbieqxjwsdstgm.supabase.co
-export SUPABASE_KEY=sua_chave_de_servico_do_supabase
-```
-
-2. Execute o script de migração:
-```sh
-node apply-migration.js
-```
-
-O script verificará se as colunas já existem e, caso contrário, aplicará a migração.
-
 ## How can I edit this code?
 
 There are several ways of editing your application.

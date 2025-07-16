@@ -93,13 +93,10 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     console.log('[IndicatorModal] Períodos já preenchidos:', periodosPreenchidos);
     console.log('[IndicatorModal] Todos os períodos disponíveis:', todosPeriodos);
     
-    // Filtrar períodos já preenchidos para não exibi-los como opção
-    periodOptions = todosPeriodos
-      .filter(opt => !periodosPreenchidos.includes(opt.value))
-      .map(opt => ({
-        ...opt,
-        preenchido: false
-      }));
+    periodOptions = todosPeriodos.map(opt => ({
+      ...opt,
+      preenchido: periodosPreenchidos.includes(opt.value)
+    }));
   }
 
   useEffect(() => {
@@ -433,7 +430,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
             {isEditing && (
               <div className="col-span-2 flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">
-                  Período: {indicator.period_start && indicator.period_end ? `De ${formatDate(indicator.period_start)} até ${formatDate(indicator.period_end)}` : '-'}
+                  Período: {periodStart && periodEnd ? `De ${formatDate(periodStart)} até ${formatDate(periodEnd)}` : '-'}
                 </span>
               </div>
             )}

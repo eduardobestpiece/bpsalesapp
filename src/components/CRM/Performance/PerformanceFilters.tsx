@@ -1,9 +1,9 @@
+
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
 import { useFunnels } from '@/hooks/useFunnels';
 import { useTeams } from '@/hooks/useTeams';
 import { useCrmUsers } from '@/hooks/useCrmUsers';
@@ -11,37 +11,29 @@ import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
 import { Calendar } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { MultiSelect } from '@/components/ui/multiselect';
 
 interface PerformanceFiltersProps {
   onFiltersChange: (filters: {
-    funnelId: string | string[];
-    teamId?: string | string[];
-    userId?: string | string[];
+    funnelId: string;
+    teamId?: string;
+    userId?: string;
     period: 'day' | 'week' | 'month' | 'custom';
     start?: string;
     end?: string;
-    month?: string | string[];
-    year?: string | string[];
+    month?: string;
+    year?: string;
     compareId?: string;
   } | null) => void;
-  funnelOnly?: boolean;
 }
 
-export const PerformanceFilters = ({ onFiltersChange, funnelOnly }: PerformanceFiltersProps) => {
-  const { crmUser } = useCrmAuth();
+export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps) => {
+  const { crmUser, hasPermission } = useCrmAuth();
   const { selectedCompanyId } = useCompany();
-  const [selectedFunnels, setSelectedFunnels] = useState<string[]>([]);
-  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  const [selectedFunnel, setSelectedFunnel] = useState('');
+  const [selectedTeam, setSelectedTeam] = useState('');
+  const [selectedUser, setSelectedUser] = useState('');
   const [showPeriodModal, setShowPeriodModal] = useState(false);
-  const [customPeriod, setCustomPeriod] = useState({ 
-    start: '', 
-    end: '', 
-    months: [] as string[], 
-    years: [] as string[] 
-  });
-  const [selectedPeriodLabel, setSelectedPeriodLabel] = useState('');
+  const [customPeriod, setCustomPeriod] = useState({ start: '', end: '', month: '', year: '' });
 
   const { data: funnels = [] } = useFunnels(selectedCompanyId);
   const { data: teams = [] } = useTeams();
@@ -49,20 +41,28 @@ export const PerformanceFilters = ({ onFiltersChange, funnelOnly }: PerformanceF
 
   // Seleção automática do primeiro funil permitido
   useEffect(() => {
-    if (funnels.length > 0 && selectedFunnels.length === 0) {
-      setSelectedFunnels([funnels[0].id]);
+    if (funnels.length > 0 && !selectedFunnel) {
+      setSelectedFunnel(funnels[0].id);
     }
-  }, [funnels, selectedFunnels.length]);
+  }, [funnels]);
 
-  // Resetar funil selecionado ao trocar de empresa
+  // Resetar funil selecionado e allowedFunnels ao trocar de empresa
   useEffect(() => {
-    setSelectedFunnels([]);
+    setSelectedFunnel('');
   }, [selectedCompanyId]);
 
-  // Aplicar filtro automaticamente ao selecionar o primeiro funil
+  // 1. Selecionar automaticamente o primeiro funil disponível ao abrir a página e aplicar o filtro
   useEffect(() => {
-    if (funnels.length > 0 && selectedFunnels.length > 0) {
-      handleApplyFilters();
+    if (funnels.length > 0 && !selectedFunnel) {
+      setSelectedFunnel(funnels[0].id);
+      // Aplicar filtro automaticamente ao selecionar o primeiro funil
+      onFiltersChange({
+        funnelId: funnels[0].id,
+        teamId: undefined,
+        userId: undefined,
+        period: 'custom',
+        ...customPeriod
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [funnels]);
@@ -77,10 +77,10 @@ export const PerformanceFilters = ({ onFiltersChange, funnelOnly }: PerformanceF
 
   // Seleção automática da equipe para líder
   useEffect(() => {
-    if (isLeader && leaderTeams.length === 1 && selectedTeams.length === 0) {
-      setSelectedTeams([leaderTeams[0].id]);
+    if (isLeader && leaderTeams.length === 1 && selectedTeam !== leaderTeams[0].id) {
+      setSelectedTeam(leaderTeams[0].id);
     }
-  }, [isLeader, leaderTeams, selectedTeams.length]);
+  }, [isLeader, leaderTeams, selectedTeam]);
 
   // Usuários disponíveis para o filtro
   const availableUsers = () => {
@@ -110,7 +110,7 @@ export const PerformanceFilters = ({ onFiltersChange, funnelOnly }: PerformanceF
   const getUserOptions = () => {
     if (isAdmin) {
       // Admin/master/submaster: todos os usuários da empresa
-      return users.filter(user => user.company_id === selectedCompanyId);
+      return users;
     }
     if (isLeader) {
       // Líder: membros das equipes que lidera + ele mesmo
@@ -123,103 +123,20 @@ export const PerformanceFilters = ({ onFiltersChange, funnelOnly }: PerformanceF
     return users.filter(u => u.id === crmUser?.id);
   };
 
-  // Função para formatar o período selecionado
-  const formatSelectedPeriod = () => {
-    const parts = [];
-    
-    if (customPeriod.start && customPeriod.end) {
-      const startDate = new Date(customPeriod.start);
-      const endDate = new Date(customPeriod.end);
-      parts.push(`${startDate.toLocaleDateString('pt-BR')} até ${endDate.toLocaleDateString('pt-BR')}`);
-    }
-    
-    if (customPeriod.months.length > 0) {
-      const monthNames = customPeriod.months.map(m => {
-        const monthIndex = parseInt(m) - 1;
-        return new Date(2000, monthIndex, 1).toLocaleString('pt-BR', { month: 'long' });
-      });
-      parts.push(`Mês: ${monthNames.join(', ')}`);
-    }
-    
-    if (customPeriod.years.length > 0) {
-      parts.push(`Ano: ${customPeriod.years.join(', ')}`);
-    }
-    
-    return parts.length > 0 ? parts.join(' | ') : 'Período não selecionado';
-  };
-
-  // Atualizar o label do período quando o customPeriod mudar
-  useEffect(() => {
-    setSelectedPeriodLabel(formatSelectedPeriod());
-  }, [customPeriod]);
-
-  // Função para aplicar os filtros
+  // Atualizar handleApplyFilters para tratar 'all' como seleção vazia
   const handleApplyFilters = () => {
-    if (selectedFunnels.length === 0) {
+    if (!selectedFunnel) {
       onFiltersChange(null);
       return;
     }
-    
     onFiltersChange({
-      funnelId: selectedFunnels.length === 1 ? selectedFunnels[0] : selectedFunnels,
-      teamId: selectedTeams.length > 0 ? selectedTeams : undefined,
-      userId: selectedUsers.length > 0 ? selectedUsers : undefined,
+      funnelId: selectedFunnel,
+      teamId: selectedTeam && selectedTeam !== 'all' ? selectedTeam : undefined,
+      userId: selectedUser || undefined,
       period: 'custom',
-      start: customPeriod.start || undefined,
-      end: customPeriod.end || undefined,
-      month: customPeriod.months.length > 0 ? customPeriod.months : undefined,
-      year: customPeriod.years.length > 0 ? customPeriod.years : undefined
+      ...customPeriod
     });
   };
-
-  // Função para confirmar o período selecionado
-  const handleConfirmPeriod = () => {
-    setShowPeriodModal(false);
-    handleApplyFilters();
-  };
-
-  // Função para limpar o período
-  const handleClearPeriod = () => {
-    setCustomPeriod({ 
-      start: '', 
-      end: '', 
-      months: [], 
-      years: [] 
-    });
-  };
-
-  // Converter funnels para o formato esperado pelo MultiSelect
-  const funnelOptions = funnels.map(funnel => ({
-    value: funnel.id,
-    label: funnel.name
-  }));
-
-  // Converter teams para o formato esperado pelo MultiSelect
-  const teamOptions = availableTeams().map(team => ({
-    value: team.id,
-    label: team.name
-  }));
-
-  // Converter users para o formato esperado pelo MultiSelect
-  const userOptions = getUserOptions().map(user => ({
-    value: user.id,
-    label: `${user.first_name} ${user.last_name}`
-  }));
-
-  // Opções de meses para o MultiSelect
-  const monthOptions = [...Array(12)].map((_, i) => ({
-    value: (i + 1).toString(),
-    label: new Date(2000, i, 1).toLocaleString('pt-BR', { month: 'long' })
-  }));
-
-  // Opções de anos para o MultiSelect
-  const yearOptions = Array.from({length: 5}, (_, i) => {
-    const year = new Date().getFullYear() - i;
-    return {
-      value: year.toString(),
-      label: year.toString()
-    };
-  });
 
   return (
     <Card>
@@ -230,138 +147,111 @@ export const PerformanceFilters = ({ onFiltersChange, funnelOnly }: PerformanceF
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <Label htmlFor="funnel">Funil *</Label>
-            <MultiSelect
-              options={[
-                { value: 'all', label: 'Todos' },
-                ...funnelOptions
-              ]}
-              value={selectedFunnels}
-              onChange={setSelectedFunnels}
-              placeholder="Selecione o(s) funil(is)"
-            />
+            <Select value={selectedFunnel} onValueChange={setSelectedFunnel}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione o funil" />
+              </SelectTrigger>
+              <SelectContent>
+                {funnels.map(funnel => (
+                  <SelectItem key={funnel.id} value={funnel.id}>
+                    {funnel.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Filtro de Equipe: só para admin, master, submaster e líder */}
-          {!funnelOnly && (isAdmin || isLeader) && (
+          { (isAdmin || isLeader) && (
             <div>
               <Label htmlFor="team">Equipe</Label>
-              <MultiSelect
-                options={[
-                  { value: 'all', label: 'Todas' },
-                  ...teamOptions
-                ]}
-                value={selectedTeams}
-                onChange={setSelectedTeams}
-                placeholder="Selecione a(s) equipe(s)"
-              />
+              <Select value={selectedTeam} onValueChange={setSelectedTeam}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione a equipe" />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableTeams().map(team => (
+                    <SelectItem key={team.id} value={team.id}>
+                      {team.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
 
           {/* Filtro de Usuário: só para admin, master, submaster e líder */}
-          {!funnelOnly && (isAdmin || isLeader) && (
+          { (isAdmin || isLeader) && (
             <div>
               <Label htmlFor="user">Usuário</Label>
-              <MultiSelect
-                options={[
-                  { value: 'all', label: 'Todos' },
-                  ...userOptions
-                ]}
-                value={selectedUsers}
-                onChange={setSelectedUsers}
-                placeholder="Selecione o(s) usuário(s)"
-              />
+              <Select value={selectedUser} onValueChange={setSelectedUser}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o usuário" />
+                </SelectTrigger>
+                <SelectContent>
+                  {getUserOptions().map(user => (
+                    <SelectItem key={user.id} value={user.id}>
+                      {user.first_name} {user.last_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
 
-          {/* Botão de período com exibição do período selecionado */}
+          {/* Substituir select de período por ícone de calendário */}
           <div className="flex flex-col gap-1">
             <Label>Período</Label>
-            <div className="flex items-center gap-2">
-              <Button 
-                id="period" 
-                name="period" 
-                variant="outline" 
-                type="button" 
-                onClick={() => setShowPeriodModal(true)} 
-                className="flex items-center gap-2"
-              >
-                <Calendar className="w-4 h-4" />
-                <span>Selecionar período</span>
-              </Button>
-            </div>
-            {selectedPeriodLabel && (
-              <div className="text-xs text-muted-foreground mt-1 break-words">
-                {selectedPeriodLabel}
-              </div>
-            )}
+            <Button id="period" name="period" variant="outline" type="button" onClick={() => setShowPeriodModal(true)} className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              <span>Selecionar período</span>
+            </Button>
           </div>
         </div>
+
+        {/* Opção de comparação */}
 
         <div className="flex justify-end">
           <Button 
             onClick={handleApplyFilters}
-            disabled={selectedFunnels.length === 0}
+            disabled={!selectedFunnel || selectedFunnel === ''}
           >
             Aplicar Filtros
           </Button>
         </div>
 
-        {/* Modal customizado de período com multiseleção */}
+        {/* Modal customizado de período */}
         <Dialog open={showPeriodModal} onOpenChange={setShowPeriodModal}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Selecionar Período</DialogTitle>
             </DialogHeader>
             <form className="space-y-4">
-              <div className="flex flex-col gap-4">
-                <div>
-                  <Label htmlFor="startDate">Data início</Label>
-                  <Input 
-                    type="date" 
-                    id="startDate" 
-                    name="startDate" 
-                    value={customPeriod.start} 
-                    onChange={e => setCustomPeriod(p => ({ ...p, start: e.target.value }))} 
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="endDate">Data fim</Label>
-                  <Input 
-                    type="date" 
-                    id="endDate" 
-                    name="endDate" 
-                    value={customPeriod.end} 
-                    onChange={e => setCustomPeriod(p => ({ ...p, end: e.target.value }))} 
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="monthSelect">Mês</Label>
-                  <MultiSelect
-                    options={monthOptions}
-                    value={customPeriod.months}
-                    onChange={(values) => setCustomPeriod(p => ({ ...p, months: values }))}
-                    placeholder="Selecione o(s) mês(es)"
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="yearSelect">Ano</Label>
-                  <MultiSelect
-                    options={yearOptions}
-                    value={customPeriod.years}
-                    onChange={(values) => setCustomPeriod(p => ({ ...p, years: values }))}
-                    placeholder="Selecione o(s) ano(s)"
-                  />
-                </div>
+              <div className="flex flex-col gap-2">
+                <label htmlFor="startDate">Data início</label>
+                <input type="date" id="startDate" name="startDate" value={customPeriod.start} onChange={e => setCustomPeriod(p => ({ ...p, start: e.target.value }))} className="border border-input bg-background text-foreground rounded px-2 py-1 focus:ring-2 focus:ring-ring focus:ring-offset-2" />
+                <label htmlFor="endDate">Data fim</label>
+                <input type="date" id="endDate" name="endDate" value={customPeriod.end} onChange={e => setCustomPeriod(p => ({ ...p, end: e.target.value }))} className="border border-input bg-background text-foreground rounded px-2 py-1 focus:ring-2 focus:ring-ring focus:ring-offset-2" />
+                <label htmlFor="monthSelect">Mês</label>
+                <select id="monthSelect" name="monthSelect" value={customPeriod.month} onChange={e => setCustomPeriod(p => ({ ...p, month: e.target.value }))} className="border border-input bg-background text-foreground rounded px-2 py-1 focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                  <option value="">Todos</option>
+                  {[...Array(12)].map((_, i) => (
+                    <option key={i+1} value={i+1}>{new Date(2000, i, 1).toLocaleString('pt-BR', { month: 'long' })}</option>
+                  ))}
+                </select>
+                <label htmlFor="yearSelect">Ano</label>
+                <select id="yearSelect" name="yearSelect" value={customPeriod.year} onChange={e => setCustomPeriod(p => ({ ...p, year: e.target.value }))} className="border border-input bg-background text-foreground rounded px-2 py-1 focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                  <option value="">Todos</option>
+                  {Array.from({length: 5}, (_, i) => new Date().getFullYear() - i).map(y => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
               </div>
-              
               <div className="flex gap-2 justify-end pt-2">
-                <Button type="button" variant="outline" onClick={handleClearPeriod}>
+                <Button type="button" variant="outline" onClick={() => setCustomPeriod({ start: '', end: '', month: '', year: '' })}>
                   Limpar
                 </Button>
-                <Button type="button" onClick={handleConfirmPeriod}>
+                <Button type="button" onClick={() => setShowPeriodModal(false)}>
                   Confirmar
                 </Button>
               </div>

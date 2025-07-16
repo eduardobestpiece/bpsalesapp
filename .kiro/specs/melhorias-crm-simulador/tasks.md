@@ -40,100 +40,92 @@
   
   - [x] 1.9 Corrigir cor da linha de progresso no gráfico da Evolução Patrimonial
     - Aplicar cor marrom da plataforma (#A86F57)
-    - Fazer deploy das correções
     - _Requirements: 1.9_
 
-- [x] 2. Ajustes de Layout
-  - [x] 2.1 Aumentar espaçamento na aba do Funil da Performance
+- [ ] 2. Ajustes de Layout
+  - [ ] 2.1 Aumentar espaçamento na aba do Funil da Performance
     - Adicionar margem entre "Filtros de Performance" e os elementos seguintes
     - _Requirements: 2.1_
   
-  - [x] 2.2 Padronizar campo "Tipo" na aba Itens Arquivados
+  - [ ] 2.2 Padronizar campo "Tipo" na aba Itens Arquivados
     - Aplicar o mesmo design dos campos de dropdown da plataforma
     - _Requirements: 2.3_
   
-  - [x] 2.3 Padronizar campos do modal "Selecionar Período"
+  - [ ] 2.3 Padronizar campos do modal "Selecionar Período"
     - Aplicar o design padrão dos campos da plataforma
-    - Fazer deploy dos ajustes de layout
     - _Requirements: 2.4_
 
-- [x] 3. Novas Funcionalidades no Modal de Funis
-  - [x] 3.1 Adicionar campos para fases específicas
+- [ ] 3. Novas Funcionalidades no Modal de Funis
+  - [-] 3.1 Adicionar campos para fases específicas
     - Implementar campo para selecionar fase atrelada à reunião realizada
     - Implementar campo para selecionar fase atrelada à reunião agendada
     - _Requirements: 3.1, 3.2_
   
-  - [x] 3.2 Atualizar banco de dados
+  - [ ] 3.2 Atualizar banco de dados
     - Criar migração para adicionar colunas na tabela de funis
     - Implementar lógica para salvar e recuperar essas informações
-    - Fazer deploy das novas funcionalidades no modal de funis
     - _Requirements: 3.3_
 
-- [x] 4. Melhorias nos Filtros de Performance
-  - [x] 4.1 Implementar multiseleção para filtros
+- [ ] 4. Melhorias nos Filtros de Performance
+  - [ ] 4.1 Implementar multiseleção para filtros
     - Converter campos "Funil", "Equipe" e "Usuário" para permitir multiseleção
     - Adicionar opção "Todos" em cada filtro
     - _Requirements: 4.1, 4.2_
   
-  - [x] 4.2 Exibir período selecionado
+  - [ ] 4.2 Exibir período selecionado
     - Implementar lógica para mostrar o período ao lado do botão de aplicar filtro
     - _Requirements: 4.3_
   
-  - [x] 4.3 Implementar multiseleção para Mês e Ano
+  - [ ] 4.3 Implementar multiseleção para Mês e Ano
     - Converter campos do modal "Selecionar Período" para permitir multiseleção
-    - Fazer deploy das melhorias nos filtros de performance
     - _Requirements: 4.4_
 
-- [x] 5. Adicionar Novas Métricas
-  - [x] 5.1 Implementar métricas para Dados do Período
+- [ ] 5. Adicionar Novas Métricas
+  - [ ] 5.1 Implementar métricas para Dados do Período
     - Adicionar "Número de recomendações (período)"
     - Adicionar "Delay / No Show (período)"
     - Implementar cálculos corretos
     - _Requirements: 5.1, 5.2_
   
-  - [x] 5.2 Implementar métricas para Dados Semanais
+  - [ ] 5.2 Implementar métricas para Dados Semanais
     - Adicionar "Número de recomendações (semana)"
     - Adicionar "Delay / No Show (semana)"
     - Implementar cálculos corretos
-    - Fazer deploy das novas métricas
     - _Requirements: 5.3, 5.4_
 
-- [x] 6. Correções nos Modais de Indicadores
-  - [x] 6.1 Corrigir exibição de período no modal de Editar Indicador
+- [ ] 6. Correções nos Modais de Indicadores
+  - [ ] 6.1 Corrigir exibição de período no modal de Editar Indicador
     - Garantir que o período exibido seja o mesmo das colunas period_start e period_end
     - _Requirements: 6.1_
   
-  - [x] 6.2 Filtrar períodos já registrados no modal de Registrar Indicador
+  - [ ] 6.2 Filtrar períodos já registrados no modal de Registrar Indicador
     - Implementar lógica para não exibir períodos já registrados
-    - Fazer deploy para o github das correções nos modais de indicadores
     - _Requirements: 6.2_
 
-- [x] 7. Melhorias na Exibição de Valores
-  - [x] 7.1 Corrigir exibição do item "Despesas"
+- [ ] 7. Melhorias na Exibição de Valores
+  - [ ] 7.1 Corrigir exibição do item "Despesas"
     - Implementar lógica para exibir como valor em reais ou percentual conforme o valor de "Imóvel tem valor fixo"
     - _Requirements: 7.1_
   
-  - [x] 7.2 Limitar taxa anual a duas casas decimais
+  - [ ] 7.2 Limitar taxa anual a duas casas decimais
     - Implementar formatação para garantir sempre até duas casas decimais
-    - Fazer deploy das melhorias na exibição de valores
     - _Requirements: 7.2_
 
-- [x] 8. Implementar Persistência de Dados
-  - [x] 8.1 Manter valores entre navegações
+- [ ] 8. Implementar Persistência de Dados
+  - [ ] 8.1 Manter valores entre navegações
     - Implementar armazenamento local para campos "Características do Imóvel" e "Exemplo de contemplação"
     - _Requirements: 8.1_
   
-  - [x] 8.2 Sincronizar campos entre abas
+  - [ ] 8.2 Sincronizar campos entre abas
     - Implementar atualização em tempo real para alterações em campos como "Modalidade", "Valor do aporte", etc.
-    - Fazer deploy da implementação de persistência de dados
     - _Requirements: 8.2_
 
-- [-] 9. Corrigir Cálculos de Alavancagem Patrimonial
-  - [x] 9.1 Corrigir cálculo de Ganhos Mensais
+- [ ] 9. Corrigir Cálculos de Alavancagem Patrimonial
+  - [ ] 9.1 Corrigir cálculo de Ganhos Mensais
     - Implementar fórmula correta considerando valor da diária, ocupação, taxa e custos
     - _Requirements: 9.1_
   
-  - [x] 9.2 Corrigir cálculo de Parcela Pós-Contemplação
+  - [ ] 9.2 Corrigir cálculo de Parcela Pós-Contemplação
     - Implementar fórmula correta considerando atualizações do crédito e saldo devedor
     - _Requirements: 9.2_
   
@@ -150,7 +142,6 @@
   - [ ] 9.5 Corrigir gráfico de Evolução Patrimonial
     - Implementar cálculos corretos para patrimônio, rendimentos e fluxo de caixa
     - Considerar atualizações anuais pelo INCC
-    - Fazer deploy das correções nos cálculos de alavancagem patrimonial
     - _Requirements: 9.7_
 
 - [ ] 10. Implementar Alavancagem Escalonada Correta
@@ -166,7 +157,6 @@
   
   - [ ] 10.3 Corrigir contagem de imóveis
     - Implementar lógica para calcular corretamente o número total de imóveis
-    - Fazer deploy da implementação de alavancagem escalonada correta
     - _Requirements: 10.3_
 
 - [ ] 11. Melhorar Modal de Mais Configurações
@@ -181,7 +171,6 @@
   - [ ] 11.3 Implementar lógica para seguro
     - Não considerar seguro desativado na base de cálculo
     - Somar seguro ativado à taxa de administração e fundo de reserva
-    - Fazer deploy das melhorias no modal de mais configurações
     - _Requirements: 11.3, 11.4_
 
 - [ ] 12. Criar Sistema de Personalização Visual
@@ -207,7 +196,6 @@
   - [ ] 12.5 Implementar sistema para aplicar configurações
     - Criar mecanismo para gerar CSS dinâmico com base nas configurações
     - Aplicar configurações em tempo real
-    - Fazer deploy do sistema de personalização visual
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7_
 
 - [ ] 13. Definir Modo Escuro como Padrão
@@ -217,7 +205,6 @@
   
   - [ ] 13.2 Testar em todas as páginas
     - Verificar se o modo escuro é aplicado corretamente em toda a plataforma
-    - Fazer deploy da configuração do modo escuro como padrão
     - _Requirements: 13.1_
 
 - [ ] 14. Testes e Validação Final
@@ -244,5 +231,4 @@
   - [ ] 14.5 Testar sistema de personalização
     - Verificar aplicação de cores, fontes e imagens personalizadas
     - Confirmar persistência das configurações
-    - Fazer deploy final com todos os testes e validações concluídos
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.7_

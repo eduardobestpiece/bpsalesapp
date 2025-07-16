@@ -36,9 +36,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
     sales_value_mode: 'manual' as 'manual' | 'sistema',
     recommendations_mode: 'manual' as 'manual' | 'sistema',
     recommendation_stage_id: '',
-    indicator_deadline_hours: 0, // Novo campo: padrão 0
-    meeting_scheduled_stage_id: '', // Fase atrelada à reunião agendada
-    meeting_completed_stage_id: '' // Fase atrelada à reunião realizada
+    indicator_deadline_hours: 0 // Novo campo: padrão 0
   });
   
   const [stages, setStages] = useState<FunnelStage[]>([
@@ -71,9 +69,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
         sales_value_mode: funnel.sales_value_mode || 'manual',
         recommendations_mode: funnel.recommendations_mode || 'manual',
         recommendation_stage_id: funnel.recommendation_stage_id ? String(funnel.recommendation_stage_id).trim() : '',
-        indicator_deadline_hours: funnel.indicator_deadline_hours ?? 0,
-        meeting_scheduled_stage_id: funnel.meeting_scheduled_stage_id ? String(funnel.meeting_scheduled_stage_id).trim() : '',
-        meeting_completed_stage_id: funnel.meeting_completed_stage_id ? String(funnel.meeting_completed_stage_id).trim() : ''
+        indicator_deadline_hours: funnel.indicator_deadline_hours ?? 0
       });
       if (funnel.stages && funnel.stages.length > 0) {
         setStages(funnel.stages.sort((a: any, b: any) => a.stage_order - b.stage_order));
@@ -87,9 +83,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
         sales_value_mode: 'manual',
         recommendations_mode: 'manual',
         recommendation_stage_id: '',
-        indicator_deadline_hours: 0,
-        meeting_scheduled_stage_id: '',
-        meeting_completed_stage_id: ''
+        indicator_deadline_hours: 0
       });
       setStages([
         { name: '', stage_order: 1, target_percentage: 0, target_value: 0 }
@@ -243,13 +237,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
 
       if (funnel) {
         // Editar funil existente
-        await updateFunnelMutation.mutateAsync({ 
-          id: funnel.id, 
-          ...funnelData, 
-          recommendation_stage_id: formData.recommendation_stage_id ? String(formData.recommendation_stage_id).trim() : null,
-          meeting_scheduled_stage_id: formData.meeting_scheduled_stage_id ? String(formData.meeting_scheduled_stage_id).trim() : null,
-          meeting_completed_stage_id: formData.meeting_completed_stage_id ? String(formData.meeting_completed_stage_id).trim() : null
-        });
+        await updateFunnelMutation.mutateAsync({ id: funnel.id, ...funnelData, recommendation_stage_id: formData.recommendation_stage_id ? String(formData.recommendation_stage_id).trim() : null });
         // Atualizar etapas existentes e inserir novas
         await updateFunnelStages(funnel.id, stages);
         // Remover etapas excluídas
@@ -436,83 +424,20 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="mb-6 space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="recommendation_stage_id">Etapa de Recomendações</Label>
-                    <Select
-                      value={formData.recommendation_stage_id || ''}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, recommendation_stage_id: value }))}
-                      disabled={isLoading || !canSelectRecommendationStage}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma etapa" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {stages.filter(stage => !!stage.id).map((stage) => (
-                          <SelectItem key={stage.id} value={stage.id || ''}>
-                            {stage.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Etapa usada para contabilizar recomendações
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="meeting_scheduled_stage_id">Etapa de Reunião Agendada</Label>
-                    <Select
-                      value={formData.meeting_scheduled_stage_id || ''}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, meeting_scheduled_stage_id: value }))}
-                      disabled={isLoading || !canSelectRecommendationStage}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma etapa" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {stages.filter(stage => !!stage.id).map((stage) => (
-                          <SelectItem key={stage.id} value={stage.id || ''}>
-                            {stage.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Etapa que representa reuniões agendadas
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <Label htmlFor="meeting_completed_stage_id">Etapa de Reunião Realizada</Label>
-                    <Select
-                      value={formData.meeting_completed_stage_id || ''}
-                      onValueChange={(value) => setFormData(prev => ({ ...prev, meeting_completed_stage_id: value }))}
-                      disabled={isLoading || !canSelectRecommendationStage}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione uma etapa" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {stages.filter(stage => !!stage.id).map((stage) => (
-                          <SelectItem key={stage.id} value={stage.id || ''}>
-                            {stage.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Etapa que representa reuniões realizadas
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="space-y-4">
-                <h4 className="font-medium">Configuração das Etapas do Funil</h4>
+              <RadioGroup
+                value={formData.recommendation_stage_id || ''}
+                onValueChange={(value) => setFormData(prev => ({ ...prev, recommendation_stage_id: value }))}
+                className="space-y-4"
+              >
                 {stages.map((stage, index) => (
                   <div key={index} className="p-4 border rounded-lg flex items-start gap-4">
+                    <RadioGroupItem
+                      value={stage.id || ''}
+                      id={`recommendation-radio-${index}`}
+                      className="mt-2"
+                      disabled={isLoading || !stage.id}
+                      aria-label={`Selecionar etapa ${stage.name}`}
+                    />
                     <div className="flex-1">
                       <div className="flex justify-between items-center mb-3">
                         <h4 className="font-medium">Etapa {stage.stage_order}</h4>
@@ -569,7 +494,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                     </div>
                   </div>
                 ))}
-              </div>
+              </RadioGroup>
             </CardContent>
           </Card>
 

@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Building, Trash2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -440,29 +439,19 @@ const CrmMasterConfig = () => {
                         <CardContent>
                           {/* Filtros */}
                           <div className="flex gap-4 mb-4">
-                            <div className="w-full max-w-[200px]">
+                            <div>
                               <Label htmlFor="filter-type" className="text-foreground dark:text-white">Tipo</Label>
-                              <Select value={archivedType} onValueChange={setArchivedType}>
-                                <SelectTrigger className="w-full">
-                                  <SelectValue placeholder="Todos" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="">Todos</SelectItem>
-                                  <SelectItem value="indicator">Indicador</SelectItem>
-                                  <SelectItem value="lead">Lead</SelectItem>
-                                  <SelectItem value="sale">Venda</SelectItem>
-                                  <SelectItem value="administrator">Administradora</SelectItem>
-                                </SelectContent>
-                              </Select>
+                              <select id="filter-type" className="block w-full border border-border dark:border-[#A86F57]/30 rounded px-2 py-1 bg-background dark:bg-[#131313] text-foreground dark:text-white" value={archivedType} onChange={e => setArchivedType(e.target.value)}>
+                                <option value="">Todos</option>
+                                <option value="indicator">Indicador</option>
+                                <option value="lead">Lead</option>
+                                <option value="sale">Venda</option>
+                                <option value="administrator">Administradora</option>
+                              </select>
                             </div>
-                            <div className="w-full max-w-[200px]">
+                            <div>
                               <Label htmlFor="filter-date" className="text-foreground dark:text-white">Data</Label>
-                              <Input 
-                                id="filter-date" 
-                                type="date" 
-                                value={archivedDate} 
-                                onChange={e => setArchivedDate(e.target.value)} 
-                              />
+                              <Input id="filter-date" type="date" className="block w-full bg-background dark:bg-[#131313] border-border dark:border-[#A86F57]/30 text-foreground dark:text-white" value={archivedDate} onChange={e => setArchivedDate(e.target.value)} />
                             </div>
                           </div>
                           {/* Lista de itens arquivados */}
