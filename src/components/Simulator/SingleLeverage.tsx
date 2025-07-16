@@ -93,40 +93,43 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
   // Patrimônio ao final
   const patrimonioAoFinal = patrimonioNaContemplacaoCalculado * Math.pow(1 + taxaValorizacao, (product.termMonths - contemplationMonth) / 12);
   
-  // CÁLCULOS CORRETOS BASEADOS NAS FÓRMULAS FORNECIDAS
-
-  // 1. Ganhos mensais usando as novas funções de cálculo
-  let ganhosMensaisBase = 0;
+  // CÁLCULO LIMPO DOS GANHOS MENSAIS - RECRIADO DO ZERO
   
-  if (propertyData.type === 'short-stay') {
-    // Cálculo para short-stay (Airbnb) - usar patrimônio na contemplação
-    const dailyValue = calculateDailyValue(patrimonioNaContemplacaoCalculado, 0.06); // 0,06% conforme especificado
-    const occupancyDays = calculateOccupancyDays(70); // 70% conforme especificado
-    const monthlyValue = calculateMonthlyValue(dailyValue, occupancyDays);
-    const adminPercentage = 15; // Percentual padrão da administradora (Airbnb)
-    const airbnbFee = calculateAirbnbFee(monthlyValue, adminPercentage);
-    const propertyCosts = calculatePropertyCosts(patrimonioNaContemplacaoCalculado, 0.35); // 0,35% conforme especificado
-    const totalCosts = calculateTotalCosts(airbnbFee, propertyCosts);
-    ganhosMensaisBase = calculateMonthlyGains(monthlyValue, totalCosts);
-    
-    // Debug: Log dos valores calculados
-    console.log('=== DEBUG GANHOS MENSAIS ===');
-    console.log('Patrimônio na contemplação:', patrimonioNaContemplacaoCalculado);
-    console.log('Valor da diária:', dailyValue);
-    console.log('Dias de ocupação:', occupancyDays);
-    console.log('Valor mensal:', monthlyValue);
-    console.log('Taxa Airbnb:', airbnbFee);
-    console.log('Custos do imóvel:', propertyCosts);
-    console.log('Custos totais:', totalCosts);
-    console.log('Ganhos mensais base:', ganhosMensaisBase);
-    console.log('Número de imóveis:', numeroImoveis);
-    console.log('Ganhos mensais total:', ganhosMensaisBase * numeroImoveis);
-  } else {
-    // Cálculo para imóveis comerciais ou residenciais
-    ganhosMensaisBase = (propertyData.monthlyRent || 0) - propertyData.fixedCosts;
-  }
+  // Cálculo direto baseado nas especificações fornecidas:
+  // 1. Valor da diária: R$ 2.007.338 × 0,06% = R$ 1.204,40
+  const valorDiaria = patrimonioNaContemplacaoCalculado * 0.0006; // 0,06%
   
+  // 2. Ocupação: 30 × 70% = 21 dias
+  const diasOcupacao = 30 * 0.7; // 70%
+  
+  // 3. Valor mensal: 21 × R$ 1.204,40 = R$ 25.292,46
+  const valorMensal = valorDiaria * diasOcupacao;
+  
+  // 4. Taxa do Airbnb: R$ 25.292,46 × 15% = R$ 3.793,87
+  const taxaAirbnb = valorMensal * 0.15; // 15%
+  
+  // 5. Custos do imóvel: R$ 2.007.338 × 0,35% = R$ 7.025,68
+  const custosImovel = patrimonioNaContemplacaoCalculado * 0.0035; // 0,35%
+  
+  // 6. Custos totais: R$ 3.793,87 + R$ 7.025,68 = R$ 10.819,55
+  const custosTotais = taxaAirbnb + custosImovel;
+  
+  // 7. Ganhos Mensais: R$ 25.292,46 - R$ 10.819,55 = R$ 14.472,91
+  const ganhosMensaisBase = valorMensal - custosTotais;
   const ganhosMensais = ganhosMensaisBase * numeroImoveis;
+  
+  // Debug: Log dos valores calculados
+  console.log('=== NOVO CÁLCULO GANHOS MENSAIS ===');
+  console.log('Patrimônio na contemplação:', patrimonioNaContemplacaoCalculado);
+  console.log('1. Valor da diária (0,06%):', valorDiaria);
+  console.log('2. Dias de ocupação (70%):', diasOcupacao);
+  console.log('3. Valor mensal:', valorMensal);
+  console.log('4. Taxa Airbnb (15%):', taxaAirbnb);
+  console.log('5. Custos do imóvel (0,35%):', custosImovel);
+  console.log('6. Custos totais:', custosTotais);
+  console.log('7. Ganhos mensais base:', ganhosMensaisBase);
+  console.log('8. Número de imóveis:', numeroImoveis);
+  console.log('9. Ganhos mensais total:', ganhosMensais);
 
   // 2. Parcela mensal do consórcio
   const parcelaMensalConsorcio = creditValue / product.termMonths;
