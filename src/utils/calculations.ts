@@ -234,7 +234,7 @@ export function calculateLeverageValues({
   // 7. Ganhos mensais: valor mensal - custos totais
   const ganhosMensais = valorMensal - custosTotais;
   // 8. Ganhos mensais totais (para múltiplos imóveis)
-  const ganhosMensaisTotais = ganhosMensais * (propertyCount || 1);
+  // Removido: const ganhosMensaisTotais = ganhosMensais * (propertyCount || 1);
   
   // 9. Parcela mensal do consórcio
   const parcelaMensalConsorcio = creditValue / termMonths;

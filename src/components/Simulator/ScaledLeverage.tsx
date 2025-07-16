@@ -285,7 +285,7 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
             <div className="space-y-2 p-4 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-purple-200 dark:border-[#A86F57]/20">
               <Label className="text-sm text-purple-700 dark:text-purple-300 font-medium">Ganhos Mensais Totais</Label>
               <div className="text-2xl font-bold text-purple-900 dark:text-white">
-                {formatCurrency(ganhosMensaisPorPropriedade * totalContemplations)}
+                {formatCurrency(ganhosMensaisPorPropriedade)}
               </div>
             </div>
             

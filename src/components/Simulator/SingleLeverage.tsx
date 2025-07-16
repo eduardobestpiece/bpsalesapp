@@ -109,7 +109,7 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
   const custosTotais = taxaAirbnb + custosImovel;
   // 7. Ganhos Mensais: valor mensal - custos totais
   const ganhosMensaisBase = valorMensal - custosTotais;
-  const ganhosMensais = ganhosMensaisBase * (numeroImoveis || 1);
+  const ganhosMensais = ganhosMensaisBase;
   
   // Debug: Log dos valores calculados
   console.log('=== NOVO CÁLCULO GANHOS MENSAIS ===');
