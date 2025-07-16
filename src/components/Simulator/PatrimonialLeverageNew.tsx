@@ -277,7 +277,7 @@ export const PatrimonialLeverageNew = ({
                   type="number"
                   value={valorImovelManual}
                   onChange={e => setValorImovelManual(e.target.value === '' ? '' : Number(e.target.value))}
-                  className="font-bold text-lg bg-gray-100 border-2 rounded-xl px-4 py-2 w-48"
+                  className="font-bold text-lg bg-input text-foreground border-2 rounded-xl px-4 py-2 w-48"
                   style={{ minWidth: 180 }}
                   placeholder="Valor do imóvel"
                 />
@@ -332,7 +332,7 @@ export const PatrimonialLeverageNew = ({
               />
             </div>
             {/* Texto dinâmico de contemplação */}
-            <div className="text-sm text-muted-foreground mb-2">
+            <div className="text-sm text-foreground mb-2">
               {leverageType === 'single'
                 ? `Contemplação em ${contemplationMonth} meses`
                 : `Contemplação a cada ${contemplationMonth} meses`}
@@ -342,6 +342,7 @@ export const PatrimonialLeverageNew = ({
                 variant={leverageType === 'single' ? 'default' : 'outline'}
                 className={`flex-1 text-lg py-4 rounded-xl ${leverageType === 'single' ? '' : ''}`}
                 onClick={() => setLeverageType('single')}
+                style={{ textTransform: 'none' }}
               >
                 Alavancagem Simples
               </Button>
@@ -349,6 +350,7 @@ export const PatrimonialLeverageNew = ({
                 variant={leverageType === 'scaled' ? 'default' : 'outline'}
                 className={`flex-1 text-lg py-4 rounded-xl ${leverageType === 'scaled' ? '' : ''}`}
                 onClick={() => setLeverageType('scaled')}
+                style={{ textTransform: 'none' }}
               >
                 Alavancagem Escalonada
               </Button>

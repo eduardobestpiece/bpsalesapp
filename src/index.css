@@ -38,8 +38,8 @@ All colors MUST be HSL.
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
 
-    /* Accent colors - Preto #121212 */
-    --accent: 0 0% 7.06%;
+    /* Accent colors - Marrom #A86F57 (para consistência entre temas) */
+    --accent: 18 32% 51%;
     --accent-foreground: 0 0% 100%;
     --warning: 45 93% 47%;
     --warning-foreground: 0 0% 7.45%;
@@ -61,7 +61,7 @@ All colors MUST be HSL.
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(18, 32%, 51%) 0%, hsl(18, 32%, 41%) 100%);
     --gradient-success: linear-gradient(135deg, hsl(142, 76%, 36%) 0%, hsl(142, 76%, 26%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(0, 0%, 7.06%) 0%, hsl(0, 0%, 11.76%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(18, 32%, 51%) 0%, hsl(18, 32%, 41%) 100%);
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 0 0% 11.76%;

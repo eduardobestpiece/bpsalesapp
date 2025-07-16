@@ -60,12 +60,12 @@ const CustomDot = (props: any) => {
           cy={cy} 
           r={12} 
           fill="#fff" 
-          stroke="#6366f1" 
+          stroke="var(--accent)" 
           strokeWidth={3}
         />
         <foreignObject x={cx - 10} y={cy - 10} width={20} height={20}>
           <div className="flex items-center justify-center w-full h-full">
-            <House className="w-5 h-5 text-primary" />
+            <House className="w-5 h-5 text-accent" />
           </div>
         </foreignObject>
       </g>
@@ -117,10 +117,10 @@ export const PatrimonyChart = ({ data }: PatrimonyChartProps) => {
           <Line 
             type="monotone" 
             dataKey="patrimony" 
-            stroke="#6366f1" 
+            stroke="var(--accent)" 
             strokeWidth={3}
             dot={<CustomDot />}
-            activeDot={{ r: 8, fill: "#6366f1" }}
+            activeDot={{ r: 8, fill: "var(--accent)" }}
           />
         </LineChart>
       </ResponsiveContainer>

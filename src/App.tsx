@@ -7,6 +7,7 @@ import { ModuleProvider } from "@/contexts/ModuleContext";
 import { CrmAuthProvider, useCrmAuth } from "@/contexts/CrmAuthContext";
 import { ProtectedRoute } from "@/components/CRM/ProtectedRoute";
 import { CrmLayout } from "@/components/Layout/CrmLayout";
+import { SimulatorLayout } from "@/components/Layout/SimulatorLayout";
 import Index from "./pages/Index";
 import Simulador from "./pages/Simulador";
 import Configuracoes from "./pages/Configuracoes";
@@ -85,6 +86,15 @@ function AppContent() {
           } />
           <Route path="/configuracoes" element={
             user ? <Configuracoes /> : <Navigate to="/crm/login" replace />
+          } />
+          <Route path="/simulador/master" element={
+            user ? (
+              <ProtectedRoute requiredRole="master">
+                <SimulatorLayout>
+                  <CrmMasterConfig />
+                </SimulatorLayout>
+              </ProtectedRoute>
+            ) : <Navigate to="/crm/login" replace />
           } />
           
           {/* CRM Routes */}

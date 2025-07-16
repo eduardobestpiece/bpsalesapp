@@ -10,6 +10,8 @@ import { Plus, Building, Trash2 } from 'lucide-react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { useModule } from '@/contexts/ModuleContext';
+import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 
 interface Company {
@@ -20,6 +22,19 @@ interface Company {
 }
 
 const CrmMasterConfig = () => {
+  // Detect which module we're in based on the URL path
+  const location = useLocation();
+  const { setModule } = useModule();
+  const isSimulatorModule = location.pathname.startsWith('/simulador');
+  
+  // Set the correct module context based on the current path
+  useEffect(() => {
+    if (isSimulatorModule) {
+      setModule('simulator');
+    } else {
+      setModule('crm');
+    }
+  }, [isSimulatorModule, setModule]);
   const { userRole, companyId } = useCrmAuth();
   const queryClient = useQueryClient();
   const [newCompanyName, setNewCompanyName] = useState('');
@@ -320,11 +335,11 @@ const CrmMasterConfig = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-background to-muted/10 dark:from-[#131313] dark:via-[#1E1E1E] dark:to-[#161616]">
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-full mx-auto">
-          <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-100/50 p-1">
-            <div className="bg-white rounded-[calc(1.5rem-4px)] p-8 shadow-sm min-h-[600px]">
+          <div className="bg-background/90 backdrop-blur-sm rounded-3xl shadow-xl border border-border/50 p-1">
+            <div className="bg-card rounded-[calc(1.5rem-4px)] p-8 shadow-sm min-h-[600px]">
               
               <div className="text-center space-y-2 mb-8">
                 <h2 className="text-2xl font-bold">Configurações Master</h2>
@@ -609,17 +624,17 @@ function AccessPermissionsTable() {
     <div>
       <table className="min-w-full border-separate border-spacing-y-1">
         <thead>
-          <tr className="bg-muted">
-            <th className="px-2 py-1 text-left font-semibold">Página / Aba</th>
+          <tr className="bg-muted dark:bg-[#1F1F1F]">
+            <th className="px-2 py-1 text-left font-semibold text-foreground dark:text-white">Página / Aba</th>
             {roles.map(role => (
-              <th key={role.key} className="px-2 py-1 text-center font-semibold">{role.label}</th>
+              <th key={role.key} className="px-2 py-1 text-center font-semibold text-foreground dark:text-white">{role.label}</th>
             ))}
           </tr>
         </thead>
         <tbody>
           {pages.map(item => (
-            <tr key={item.key}>
-              <td className={`px-2 py-1 font-medium${item.indent ? ' pl-8' : ''}`}>{item.label}</td>
+            <tr key={item.key} className="bg-card dark:bg-[#161616]">
+              <td className={`px-2 py-1 font-medium text-foreground dark:text-white${item.indent ? ' pl-8' : ''}`}>{item.label}</td>
               {roles.map(role => (
                 <td key={role.key} className="px-2 py-1 text-center">
                   <input

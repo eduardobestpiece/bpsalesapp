@@ -120,14 +120,14 @@ export default function Configuracoes() {
 
   return (
     <SimulatorLayout>
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 bg-background text-foreground">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">Configurações</h1>
             <p className="text-muted-foreground">Gerencie administradoras, produtos e configurações do sistema</p>
           </div>
 
-          <Card className="shadow-xl border-0">
+          <Card className="shadow-xl border-0 bg-card">
             <CardContent className="p-0">
               <Tabs defaultValue="administrators" className="w-full">
                 <div className="border-b border-border bg-muted/50 px-6 py-4">

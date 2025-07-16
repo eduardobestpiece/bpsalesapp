@@ -178,7 +178,7 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
   if (loading) {
     return (
       <div className="flex justify-center items-center h-32">
-        <div className="text-gray-500">Carregando alavancas...</div>
+        <div className="text-muted-foreground">Carregando alavancas...</div>
       </div>
     );
   }
@@ -186,8 +186,8 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
   if (leverages.length === 0) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-500 mb-2">Nenhuma alavanca encontrada</p>
-        <p className="text-sm text-gray-400">
+        <p className="text-muted-foreground mb-2">Nenhuma alavanca encontrada</p>
+        <p className="text-sm text-muted-foreground/80">
           {searchTerm ? 'Tente ajustar sua pesquisa' : 'Comece criando uma nova alavanca'}
         </p>
       </div>
@@ -252,7 +252,7 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
                   )}
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-600">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-muted-foreground">
                   {leverage.daily_percentage && (
                     <div>Diária: {leverage.daily_percentage}%</div>
                   )}
@@ -279,7 +279,7 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
                   variant="outline"
                   size="sm"
                   onClick={() => onEdit(leverage)}
-                  className="hover:bg-blue-50 hover:border-blue-200"
+                  className="hover:bg-primary/10 hover:border-primary/20"
                   disabled={isSubMaster}
                 >
                   <Edit className="w-4 h-4" />
@@ -290,8 +290,8 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
                     size="sm"
                     onClick={() => handleArchiveToggle(leverage)}
                     className={leverage.is_archived ? 
-                      "hover:bg-green-50 hover:border-green-200" : 
-                      "hover:bg-red-50 hover:border-red-200"
+                      "hover:bg-success/10 hover:border-success/20" : 
+                      "hover:bg-destructive/10 hover:border-destructive/20"
                     }
                   >
                     {leverage.is_archived ? (

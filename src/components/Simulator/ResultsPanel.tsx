@@ -186,9 +186,9 @@ export const ResultsPanel = ({ data, showResults }: ResultsPanelProps) => {
                   <Line 
                     type="monotone" 
                     dataKey="properties" 
-                    stroke="#d97706" 
+                    stroke="var(--accent)" 
                     strokeWidth={3}
-                    dot={{ fill: '#d97706', strokeWidth: 2, r: 6 }}
+                    dot={{ fill: 'var(--accent)', strokeWidth: 2, r: 6 }}
                     name="properties"
                   />
                 </LineChart>
@@ -224,7 +224,7 @@ export const ResultsPanel = ({ data, showResults }: ResultsPanelProps) => {
                   />
                   <Bar 
                     dataKey="passiveIncome" 
-                    fill="#d97706"
+                    fill="var(--accent)"
                     radius={[2, 2, 0, 0]}
                   />
                 </BarChart>
