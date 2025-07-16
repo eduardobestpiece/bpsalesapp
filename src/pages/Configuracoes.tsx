@@ -123,14 +123,14 @@ export default function Configuracoes() {
       <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Configurações</h1>
-            <p className="text-gray-600">Gerencie administradoras, produtos e configurações do sistema</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Configurações</h1>
+            <p className="text-muted-foreground">Gerencie administradoras, produtos e configurações do sistema</p>
           </div>
 
           <Card className="shadow-xl border-0">
             <CardContent className="p-0">
               <Tabs defaultValue="administrators" className="w-full">
-                <div className="border-b bg-gray-50/50 px-6 py-4">
+                <div className="border-b border-border bg-muted/50 px-6 py-4">
                   <TabsList className="grid grid-cols-6 w-full max-w-5xl mx-auto">
                     <TabsTrigger value="administrators">Administradoras</TabsTrigger>
                     <TabsTrigger value="reductions">Redução de Parcela</TabsTrigger>
@@ -146,8 +146,8 @@ export default function Configuracoes() {
                   <div className="space-y-6">
                     <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                       <div>
-                        <h2 className="text-2xl font-semibold text-gray-900">Administradoras</h2>
-                        <p className="text-gray-600 mt-1">Gerencie as administradoras de consórcio</p>
+                        <h2 className="text-2xl font-semibold text-foreground">Administradoras</h2>
+                        <p className="text-muted-foreground mt-1">Gerencie as administradoras de consórcio</p>
                       </div>
                       <Button onClick={() => setShowCreateAdministratorModal(true)} className="bg-gradient-primary hover:opacity-90">
                         <Plus className="w-4 h-4 mr-2" />
@@ -157,7 +157,7 @@ export default function Configuracoes() {
 
                     <div className="flex flex-col sm:flex-row gap-4">
                       <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                         <Input
                           placeholder="Buscar administradoras..."
                           value={adminSearchTerm}
@@ -212,8 +212,8 @@ export default function Configuracoes() {
                   <div className="space-y-6">
                     <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                       <div>
-                        <h2 className="text-2xl font-semibold text-gray-900">Produtos</h2>
-                        <p className="text-gray-600 mt-1">Gerencie os produtos de consórcio</p>
+                        <h2 className="text-2xl font-semibold text-foreground">Produtos</h2>
+                        <p className="text-muted-foreground mt-1">Gerencie os produtos de consórcio</p>
                       </div>
                       <Button onClick={handleCreateProduct} className="bg-gradient-primary hover:opacity-90">
                         <Plus className="w-4 h-4 mr-2" />
@@ -223,7 +223,7 @@ export default function Configuracoes() {
 
                     <div className="flex flex-col sm:flex-row gap-4">
                       <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                         <Input
                           placeholder="Buscar produtos..."
                           value={productSearchTerm}
@@ -271,8 +271,8 @@ export default function Configuracoes() {
                   <div className="space-y-6">
                     <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                       <div>
-                        <h2 className="text-2xl font-semibold text-gray-900">Alavancas</h2>
-                        <p className="text-gray-600 mt-1">Gerencie as alavancas imobiliárias e veiculares</p>
+                        <h2 className="text-2xl font-semibold text-foreground">Alavancas</h2>
+                        <p className="text-muted-foreground mt-1">Gerencie as alavancas imobiliárias e veiculares</p>
                       </div>
                       <Button onClick={() => setShowLeverageModal(true)} className="bg-gradient-primary hover:opacity-90">
                         <Plus className="w-4 h-4 mr-2" />
@@ -282,7 +282,7 @@ export default function Configuracoes() {
 
                     <div className="flex flex-col sm:flex-row gap-4">
                       <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                         <Input
                           placeholder="Buscar por nome ou tipo..."
                           value={leverageSearchTerm}
@@ -316,8 +316,8 @@ export default function Configuracoes() {
                   <div className="space-y-6">
                     <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
                       <div>
-                        <h2 className="text-2xl font-semibold text-gray-900">Redução de Parcela</h2>
-                        <p className="text-gray-600 mt-1">Gerencie as regras de redução de parcela</p>
+                        <h2 className="text-2xl font-semibold text-foreground">Redução de Parcela</h2>
+                        <p className="text-muted-foreground mt-1">Gerencie as regras de redução de parcela</p>
                       </div>
                       <Button onClick={handleCreateReduction} className="bg-gradient-primary hover:opacity-90">
                         <Plus className="w-4 h-4 mr-2" />
@@ -326,7 +326,7 @@ export default function Configuracoes() {
                     </div>
                     <div className="flex flex-col sm:flex-row gap-4">
                       <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
                         <Input
                           placeholder="Buscar reduções..."
                           value={reductionSearchTerm}

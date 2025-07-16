@@ -626,4 +626,25 @@ Próximos passos:
 - [x] Deploy automático
 - [ ] Solicitar validação
 
-**Próximo passo:** Usuário deve testar a plataforma e validar se o dark mode está funcionando corretamente e com boa aparência.
+**Próximo passo:** Usuário deve testar a plataforma e validar se o dark mode está funcionando corretamente e com boa aparência.##
+ [15/07/2025] Correções Críticas do Dark Mode - Baseadas nos Prints do Usuário
+
+- **Análise detalhada dos prints:** Identificados problemas específicos em páginas CRM e Performance
+- **Problemas corrigidos:**
+  - ✅ Fundos brancos hardcoded substituídos por variáveis CSS (bg-white → bg-card/bg-background)
+  - ✅ Bordas com cores hardcoded corrigidas (border-gray → border-border)
+  - ✅ Inputs e selects com cores adequadas para dark mode
+  - ✅ Cards e containers usando variáveis CSS semânticas
+  - ✅ Tabelas e elementos de listagem com fundos corretos
+  - ✅ Textos com cores hardcoded ajustados (text-gray → text-muted-foreground)
+- **Componentes corrigidos:**
+  - CrmIndicadores.tsx: Fundo principal, containers, tabelas, modais de filtro
+  - CrmPerformance.tsx: Containers principais e estrutura
+  - PerformanceFilters.tsx: Inputs e selects do modal de período
+  - FunnelChart.tsx: Cards de métricas e textos
+  - PerformanceChart.tsx: Tooltips e elementos visuais
+  - LeadsList.tsx: Cards de leads
+- **Deploy automático realizado:** Todas as correções enviadas para produção
+- **Status:** Correções críticas aplicadas, aguardando nova validação do usuário
+
+**Próximo passo:** Usuário deve testar novamente as páginas mostradas nos prints para verificar se os problemas foram resolvidos.

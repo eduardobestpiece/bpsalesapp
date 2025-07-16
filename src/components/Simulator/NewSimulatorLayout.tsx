@@ -110,7 +110,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   return (
     <div className="flex flex-col gap-6 h-full">
       {/* Bloco de campos dinâmicos acima do resultado */}
-      <div className="bg-white rounded-2xl shadow p-6 flex flex-col md:flex-row md:items-end gap-4">
+      <div className="bg-card rounded-2xl shadow border border-border p-6 flex flex-col md:flex-row md:items-end gap-4">
         <div className="flex flex-col gap-2 w-full md:w-1/4">
           <label className="font-medium">Modalidade</label>
           <Select value={simulationData.searchType} onValueChange={v => handleFieldChange('searchType', v === 'contribution' ? 'contribution' : 'credit')}>

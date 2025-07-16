@@ -25,6 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Logo } from '@/components/ui/Logo';
 
 export const SimulatorSidebar = () => {
   const location = useLocation();
@@ -98,9 +99,7 @@ export const SimulatorSidebar = () => {
     <Sidebar className="border-r border-border">
       <SidebarHeader className="p-4">
         <div className="flex flex-col items-start">
-          <div className="cursor-pointer mb-2" onClick={handleLogoClick}>
-            <img src="/monteo_policromia_horizontal (1).png" alt="Logo Monteo" className="h-10 w-auto max-w-[140px]" />
-          </div>
+          <Logo onClick={handleLogoClick} className="h-10 w-auto max-w-[140px] mb-2" />
           <span className="font-bold text-lg text-foreground tracking-wide mb-4">Simulador</span>
           {/* Seletor de empresa para Master */}
           {userRole === 'master' && (
