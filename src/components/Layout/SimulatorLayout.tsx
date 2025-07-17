@@ -64,11 +64,11 @@ const SimulatorHeader = () => {
   
   return (
     <header 
-      className="flex h-16 shrink-0 items-center gap-4 border-b border-border dark:border-[#A86F57]/20 px-4 bg-background dark:bg-[#1E1E1E] sticky top-0 z-40 w-full"
+      className="flex h-16 shrink-0 items-center gap-4 border-b border-border dark:border-[#A86F57]/20 px-4 bg-background dark:bg-[#1E1E1E] sticky top-0 z-40"
       style={{
         left: isCollapsed ? '3rem' : '16rem',
-        width: `calc(100% - ${isCollapsed ? '3rem' : '16rem'})`,
-        transition: 'left 0.2s ease-linear, width 0.2s ease-linear'
+        right: '0',
+        transition: 'left 0.2s ease-linear'
       }}
     >
       <SidebarTrigger className="-ml-1 text-foreground dark:text-white" />
@@ -77,9 +77,9 @@ const SimulatorHeader = () => {
         <span className="font-medium">Faça a sua simulação</span>
       </div>
       
-      {/* Campos de configuração - Expandidos para ocupar 70% do espaço */}
+      {/* Campos de configuração - Ajustados para caber no espaço disponível */}
       {isSimulatorPage && (
-        <div className="hidden lg:flex items-center gap-4 ml-auto flex-1" style={{ maxWidth: '70%' }}>
+        <div className="hidden lg:flex items-center gap-2 ml-auto flex-1" style={{ maxWidth: '60%' }}>
         <div className="flex flex-col gap-1 flex-1">
           <label className="text-xs font-medium text-muted-foreground">Modalidade</label>
           <Select 

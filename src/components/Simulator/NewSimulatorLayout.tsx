@@ -205,9 +205,9 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
   return (
     <div className="flex flex-col gap-6 h-full relative w-full overflow-x-hidden">
-      {/* Menu Lateral Fixo à Direita - Reduzido para não sobrepor dados */}
+      {/* Menu Lateral Fixo à Direita - Ajustado para não causar corte */}
       <div 
-        className="fixed right-2 z-50 transition-all duration-300 ease-in-out"
+        className="fixed right-4 z-50 transition-all duration-300 ease-in-out"
         style={{ top: `${menuPosition}%`, transform: 'translateY(-50%)' }}
       >
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-1">
