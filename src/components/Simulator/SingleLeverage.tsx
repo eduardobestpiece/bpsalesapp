@@ -212,6 +212,12 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
   
   const numeroImoveisAoFinal = numeroImoveis;
 
+  // Cálculo do Crédito Recomendado conforme fórmula correta
+  const percentualEmbutido = (administrator.maxEmbeddedPercentage || 0) / 100;
+  const embutidoTotal = percentualEmbutido + (percentualEmbutido * percentualEmbutido);
+  const creditoPorImovel = valorImovel + (valorImovel * embutidoTotal);
+  const creditoRecomendado = creditoPorImovel * numeroImoveis;
+
   return (
     <div className="space-y-6">
       {/* Dados da Alavancagem */}
@@ -283,6 +289,12 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
               </Badge>
             </div>
             
+            <div className="space-y-2 p-4 bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-yellow-200 dark:border-[#A86F57]/40">
+              <Label className="text-sm text-yellow-700 dark:text-[#A86F57] font-medium">Crédito Recomendado</Label>
+              <div className="text-2xl font-bold text-yellow-900 dark:text-white">
+                {formatCurrency(creditoRecomendado)}
+              </div>
+            </div>
 
           </div>
         </CardContent>
