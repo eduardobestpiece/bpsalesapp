@@ -136,8 +136,9 @@ export const DetailTable = ({ product, administrator, contemplationMonth }: Deta
       )}
 
       <CardContent>
-        <div className="overflow-x-auto" style={{ maxWidth: '100%', overflowX: 'auto' }}>
-          <Table className="min-w-max">
+        <div className="w-full overflow-x-auto border rounded-lg" style={{ maxHeight: '400px' }}>
+          <div className="min-w-max">
+            <Table>
             <TableHeader>
               <TableRow>
                 {visibleColumns.mes && <TableHead>Mês</TableHead>}
@@ -173,7 +174,8 @@ export const DetailTable = ({ product, administrator, contemplationMonth }: Deta
               ))}
             </TableBody>
           </Table>
-        </div>
+            </div>
+          </div>
       </CardContent>
     </Card>
   );

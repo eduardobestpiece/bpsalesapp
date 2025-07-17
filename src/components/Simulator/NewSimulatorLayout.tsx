@@ -204,7 +204,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
 
   return (
-    <div className="flex flex-col gap-6 h-full relative max-w-full overflow-x-hidden">
+    <div className="flex flex-col gap-6 h-full relative w-full overflow-x-hidden">
       {/* Menu Lateral Fixo à Direita - Reduzido para não sobrepor dados */}
       <div 
         className="fixed right-2 z-50 transition-all duration-300 ease-in-out"

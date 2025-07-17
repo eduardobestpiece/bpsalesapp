@@ -117,6 +117,17 @@ Bloco 1
 - **Deploy**: Commit e push realizados automaticamente.
 - **Status**: ✅ Concluído
 
+## [15/01/2025] Correção de Layout e Responsividade - Campos do Cabeçalho e Tabela
+
+- **Problema 1**: Campos do cabeçalho estavam comprimidos, causando quebra de linha.
+- **Solução 1**: Aumentado espaço dos campos para 70% da largura disponível.
+- **Problema 2**: Em telas pequenas, campos não sumiam adequadamente.
+- **Solução 2**: Alterado breakpoint de `md:hidden` para `lg:hidden`, campos agora somem em telas médias.
+- **Problema 3**: Seção "Detalhamento do Consórcio" esticava toda a página horizontalmente.
+- **Solução 3**: Adicionado `overflow-x-auto` isolado na tabela e `max-w-full overflow-x-hidden` no container principal.
+- **Deploy**: Commit e push realizados automaticamente.
+- **Status**: ✅ Concluído
+
 ## 11/07/2024 - Ajustes Avançados CRM/Simulador (Bloco 1 Ajustes Finais de Layout e Filtro Concluído)
 
 - Todas as etapas do Bloco 1 (ajustes finais de layout e filtro) concluídas:
