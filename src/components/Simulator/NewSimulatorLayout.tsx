@@ -12,6 +12,7 @@ import { useSimulatorSync } from '@/hooks/useSimulatorSync';
 import { DetailTable } from './DetailTable';
 import { CreditAccessPanel } from './CreditAccessPanel';
 import { PatrimonialLeverageNew } from './PatrimonialLeverageNew';
+import { useSimulatorContext } from '@/components/Layout/SimulatorLayout';
 
 export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   const { 
@@ -22,6 +23,9 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
     updateInstallments,
     updateInstallmentType
   } = useSimulatorSync();
+  
+  // Usar o contexto do simulador
+  const simulatorContext = useSimulatorContext();
   
   // Estado principal dos dados da simulação - mantido para compatibilidade
   const [localSimulationData, setLocalSimulationData] = useState({
@@ -204,66 +208,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
     }
   };
 
-  // Componente dos campos de configuração (reutilizável)
-  const ConfigurationFields = ({ className = "" }: { className?: string }) => (
-    <div className={`bg-card rounded-2xl shadow border border-border p-6 flex flex-col md:flex-row md:items-end gap-4 ${className}`}>
-      <div className="flex flex-col gap-2 w-full md:w-1/4">
-        <label className="font-medium">Modalidade</label>
-        <Select value={localSimulationData.searchType} onValueChange={v => handleFieldChange('searchType', v === 'contribution' ? 'contribution' : 'credit')}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="contribution">Aporte</SelectItem>
-            <SelectItem value="credit">Crédito</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="flex flex-col gap-2 w-full md:w-1/4">
-        <label className="font-medium">
-          {localSimulationData.searchType === 'contribution' && 'Valor do aporte'}
-          {localSimulationData.searchType === 'credit' && 'Valor do crédito'}
-        </label>
-        <Input
-          type="number"
-          value={localSimulationData.value || ''}
-          onChange={e => handleFieldChange('value', e.target.value ? Number(e.target.value) : 0)}
-          placeholder="0,00"
-        />
-      </div>
-      <div className="flex flex-col gap-2 w-full md:w-1/4">
-        <label className="font-medium">Número de parcelas</label>
-        <Select
-          value={termValue.toString()}
-          onValueChange={v => handleTermChange(Number(v))}
-        >
-          <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-          <SelectContent>
-            {installmentTypes.map((it: any) => (
-              <SelectItem key={it.id} value={it.installment_count.toString()}>
-                {it.installment_count}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="flex flex-col gap-2 w-full md:w-1/4">
-        <label className="font-medium">Tipo de Parcela</label>
-        <Select value={localSimulationData.installmentType} onValueChange={v => handleFieldChange('installmentType', v)}>
-          <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="full">Parcela Cheia</SelectItem>
-            {reducoesParcela.map((red: any) => (
-              <SelectItem key={red.id} value={red.id}>{red.name}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-      <div className="flex items-end">
-        <Button variant="outline" onClick={() => setShowConfigModal(true)}>
-          <Settings className="w-5 h-5" />
-        </Button>
-      </div>
-    </div>
-  );
+
 
   return (
     <div className="flex flex-col gap-6 h-full relative">
@@ -329,10 +274,10 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
         </div>
       </div>
 
-      {/* Bloco de campos dinâmicos acima do resultado */}
+      {/* Seção de crédito - sem campos duplicados */}
       {visibleSections.credit && (
         <div ref={creditSectionRef}>
-          <ConfigurationFields />
+          {/* Campos agora estão no cabeçalho */}
         </div>
       )}
 

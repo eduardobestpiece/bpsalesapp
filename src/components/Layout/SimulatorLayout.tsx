@@ -1,11 +1,40 @@
 
-import { ReactNode } from 'react';
+import { ReactNode, createContext, useContext, useState } from 'react';
 import { TrendingUp } from 'lucide-react';
 import { SidebarProvider, SidebarInset, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { SimulatorSidebar } from './SimulatorSidebar';
 import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
 import { CompanyProvider } from '@/contexts/CompanyContext';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Settings } from 'lucide-react';
+
+// Contexto para compartilhar dados do simulador
+interface SimulatorContextType {
+  simulationData: {
+    searchType: 'contribution' | 'credit';
+    value: number;
+    term: number;
+    installmentType: string;
+  };
+  setSimulationData: (data: any) => void;
+  installmentTypes: any[];
+  reducoesParcela: any[];
+  showConfigModal: boolean;
+  setShowConfigModal: (show: boolean) => void;
+}
+
+const SimulatorContext = createContext<SimulatorContextType | null>(null);
+
+export const useSimulatorContext = () => {
+  const context = useContext(SimulatorContext);
+  if (!context) {
+    throw new Error('useSimulatorContext must be used within a SimulatorProvider');
+  }
+  return context;
+};
 
 interface SimulatorLayoutProps {
   children: ReactNode;
@@ -15,10 +44,19 @@ interface SimulatorLayoutProps {
 const SimulatorHeader = () => {
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
+  const simulatorContext = useSimulatorContext();
+  
+  const handleFieldChange = (field: string, value: any) => {
+    simulatorContext.setSimulationData((prev: any) => ({ ...prev, [field]: value }));
+  };
+
+  const handleTermChange = (value: number) => {
+    handleFieldChange('term', value);
+  };
   
   return (
     <header 
-      className="flex h-16 shrink-0 items-center gap-2 border-b border-border dark:border-[#A86F57]/20 px-4 bg-background dark:bg-[#1E1E1E] sticky top-0 z-40"
+      className="flex h-16 shrink-0 items-center gap-4 border-b border-border dark:border-[#A86F57]/20 px-4 bg-background dark:bg-[#1E1E1E] sticky top-0 z-40"
       style={{
         left: isCollapsed ? '3rem' : '16rem',
         right: '0',
@@ -30,6 +68,84 @@ const SimulatorHeader = () => {
       <div className="flex items-center space-x-2 text-sm text-muted-foreground dark:text-gray-300 bg-muted/50 dark:bg-[#A86F57]/10 px-3 py-1.5 rounded-full">
         <span className="font-medium">Faça a sua simulação</span>
       </div>
+      
+      {/* Campos de configuração */}
+      <div className="flex items-center gap-3 ml-auto">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-muted-foreground">Modalidade</label>
+          <Select 
+            value={simulatorContext.simulationData.searchType} 
+            onValueChange={v => handleFieldChange('searchType', v === 'contribution' ? 'contribution' : 'credit')}
+          >
+            <SelectTrigger className="w-24 h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="contribution">Aporte</SelectItem>
+              <SelectItem value="credit">Crédito</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-muted-foreground">
+            {simulatorContext.simulationData.searchType === 'contribution' ? 'Valor do aporte' : 'Valor do crédito'}
+          </label>
+          <Input
+            type="number"
+            value={simulatorContext.simulationData.value || ''}
+            onChange={e => handleFieldChange('value', e.target.value ? Number(e.target.value) : 0)}
+            placeholder="0,00"
+            className="w-24 h-8 text-xs"
+          />
+        </div>
+        
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-muted-foreground">Número de parcelas</label>
+          <Select
+            value={simulatorContext.simulationData.term.toString()}
+            onValueChange={v => handleTermChange(Number(v))}
+          >
+            <SelectTrigger className="w-24 h-8 text-xs">
+              <SelectValue placeholder="Selecione" />
+            </SelectTrigger>
+            <SelectContent>
+              {simulatorContext.installmentTypes.map((it: any) => (
+                <SelectItem key={it.id} value={it.installment_count.toString()}>
+                  {it.installment_count}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-muted-foreground">Tipo de Parcela</label>
+          <Select 
+            value={simulatorContext.simulationData.installmentType} 
+            onValueChange={v => handleFieldChange('installmentType', v)}
+          >
+            <SelectTrigger className="w-24 h-8 text-xs">
+              <SelectValue placeholder="Selecione" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="full">Parcela Cheia</SelectItem>
+              {simulatorContext.reducoesParcela.map((red: any) => (
+                <SelectItem key={red.id} value={red.id}>{red.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => simulatorContext.setShowConfigModal(true)}
+          className="h-8 w-8 p-0"
+        >
+          <Settings className="w-4 h-4" />
+        </Button>
+      </div>
     </header>
   );
 };
@@ -37,19 +153,36 @@ const SimulatorHeader = () => {
 export const SimulatorLayout = ({ children }: SimulatorLayoutProps) => {
   const { companyId } = useCrmAuth();
   
+  // Estado inicial do contexto do simulador
+  const [simulatorContextValue] = useState<SimulatorContextType>({
+    simulationData: {
+      searchType: 'contribution',
+      value: 0,
+      term: 120,
+      installmentType: 'full'
+    },
+    setSimulationData: () => {},
+    installmentTypes: [],
+    reducoesParcela: [],
+    showConfigModal: false,
+    setShowConfigModal: () => {}
+  });
+  
   return (
     <CompanyProvider defaultCompanyId={companyId || ''}>
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full bg-background dark:bg-[#131313]">
-          <SimulatorSidebar />
-          <SidebarInset className="flex-1">
-            <SimulatorHeader />
-            <main className="flex-1 p-6 bg-background dark:bg-[#131313]">
-              {children}
-            </main>
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
+      <SimulatorContext.Provider value={simulatorContextValue}>
+        <SidebarProvider>
+          <div className="min-h-screen flex w-full bg-background dark:bg-[#131313]">
+            <SimulatorSidebar />
+            <SidebarInset className="flex-1">
+              <SimulatorHeader />
+              <main className="flex-1 p-6 bg-background dark:bg-[#131313]">
+                {children}
+              </main>
+            </SidebarInset>
+          </div>
+        </SidebarProvider>
+      </SimulatorContext.Provider>
     </CompanyProvider>
   );
 };
