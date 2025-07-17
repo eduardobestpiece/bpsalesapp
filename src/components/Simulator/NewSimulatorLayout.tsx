@@ -1,16 +1,16 @@
 
-import { useState, useEffect } from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SimulationDataPanel } from './SimulationDataPanel';
 import { SimulationResultsPanel } from './SimulationResultsPanel';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Settings } from 'lucide-react';
+import { Settings, Home, DollarSign, TrendingUp, Clock, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { SimulatorConfigModal } from './SimulatorConfigModal';
 import { useSimulatorSync } from '@/hooks/useSimulatorSync';
+import { DetailTable } from './DetailTable';
 
 export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   const { 
@@ -33,6 +33,18 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
     searchType: 'contribution' as 'contribution' | 'credit',
     bidType: '',
   });
+
+  // Estados para o menu lateral
+  const [visibleSections, setVisibleSections] = useState({
+    credit: true,
+    leverage: true,
+    detail: true
+  });
+
+  // Refs para navegação
+  const creditSectionRef = useRef<HTMLDivElement>(null);
+  const leverageSectionRef = useRef<HTMLDivElement>(null);
+  const detailSectionRef = useRef<HTMLDivElement>(null);
 
   // Sincronizar campos do topo com simulationData e com o contexto global
   const handleFieldChange = (field: string, value: any) => {
@@ -128,70 +140,184 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   // Se houver valor manual vindo do modal, ele se sobrepõe
   const termValue = manualTerm !== undefined && manualTerm !== null ? manualTerm : localSimulationData.term;
 
+  // Funções do menu lateral
+  const handleNavigate = (section: string) => {
+    const refs = {
+      settings: creditSectionRef,
+      home: leverageSectionRef,
+      search: detailSectionRef
+    };
+
+    const ref = refs[section as keyof typeof refs];
+    if (ref?.current) {
+      ref.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
+  const handleToggleSection = (section: string) => {
+    if (section === 'all') {
+      setVisibleSections({
+        credit: true,
+        leverage: true,
+        detail: true
+      });
+    } else {
+      const sectionMap = {
+        settings: 'credit',
+        home: 'leverage',
+        search: 'detail'
+      };
+
+      const targetSection = sectionMap[section as keyof typeof sectionMap];
+      if (targetSection) {
+        setVisibleSections(prev => ({
+          ...prev,
+          [targetSection]: !prev[targetSection as keyof typeof prev]
+        }));
+      }
+    }
+  };
+
   return (
-    <div className="flex flex-col gap-6 h-full">
-      {/* Bloco de campos dinâmicos acima do resultado */}
-      <div className="bg-card rounded-2xl shadow border border-border p-6 flex flex-col md:flex-row md:items-end gap-4">
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="font-medium">Modalidade</label>
-          <Select value={localSimulationData.searchType} onValueChange={v => handleFieldChange('searchType', v === 'contribution' ? 'contribution' : 'credit')}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="contribution">Aporte</SelectItem>
-              <SelectItem value="credit">Crédito</SelectItem>
-            </SelectContent>
-          </Select>
+    <div className="flex flex-col gap-6 h-full relative">
+      {/* Menu Lateral Fixo à Direita */}
+      <div className="fixed right-4 top-1/2 transform -translate-y-1/2 z-50">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-2">
+          <div className="flex flex-col space-y-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-12 h-12 p-0 text-gray-600 hover:text-blue-600 transition-all duration-200 hover:scale-110"
+              onClick={() => handleNavigate('settings')}
+              title="Configurações"
+            >
+              <Settings size={20} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-12 h-12 p-0 text-gray-600 hover:text-green-600 transition-all duration-200 hover:scale-110"
+              onClick={() => handleNavigate('home')}
+              title="Alavancagem"
+            >
+              <Home size={20} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-12 h-12 p-0 text-gray-600 hover:text-yellow-600 transition-all duration-200 hover:scale-110"
+              title="Financeiro"
+            >
+              <DollarSign size={20} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-12 h-12 p-0 text-gray-600 hover:text-purple-600 transition-all duration-200 hover:scale-110"
+              title="Performance"
+            >
+              <TrendingUp size={20} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-12 h-12 p-0 text-gray-600 hover:text-orange-600 transition-all duration-200 hover:scale-110"
+              title="Histórico"
+            >
+              <Clock size={20} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-12 h-12 p-0 text-gray-600 hover:text-red-600 transition-all duration-200 hover:scale-110"
+              onClick={() => handleNavigate('search')}
+              title="Detalhamento"
+            >
+              <Search size={20} />
+            </Button>
+          </div>
         </div>
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="font-medium">
-            {localSimulationData.searchType === 'contribution' && 'Valor do aporte'}
-            {localSimulationData.searchType === 'credit' && 'Valor do crédito'}
-          </label>
-          <Input
-            type="number"
-            value={localSimulationData.value || ''}
-            onChange={e => handleFieldChange('value', e.target.value ? Number(e.target.value) : 0)}
-            placeholder="0,00"
+      </div>
+
+      {/* Bloco de campos dinâmicos acima do resultado */}
+      {visibleSections.credit && (
+        <div ref={creditSectionRef} className="bg-card rounded-2xl shadow border border-border p-6 flex flex-col md:flex-row md:items-end gap-4">
+          <div className="flex flex-col gap-2 w-full md:w-1/4">
+            <label className="font-medium">Modalidade</label>
+            <Select value={localSimulationData.searchType} onValueChange={v => handleFieldChange('searchType', v === 'contribution' ? 'contribution' : 'credit')}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="contribution">Aporte</SelectItem>
+                <SelectItem value="credit">Crédito</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-2 w-full md:w-1/4">
+            <label className="font-medium">
+              {localSimulationData.searchType === 'contribution' && 'Valor do aporte'}
+              {localSimulationData.searchType === 'credit' && 'Valor do crédito'}
+            </label>
+            <Input
+              type="number"
+              value={localSimulationData.value || ''}
+              onChange={e => handleFieldChange('value', e.target.value ? Number(e.target.value) : 0)}
+              placeholder="0,00"
+            />
+          </div>
+          <div className="flex flex-col gap-2 w-full md:w-1/4">
+            <label className="font-medium">Número de parcelas</label>
+            <Select
+              value={termValue.toString()}
+              onValueChange={v => handleTermChange(Number(v))}
+            >
+              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+              <SelectContent>
+                {installmentTypes.map((it: any) => (
+                  <SelectItem key={it.id} value={it.installment_count.toString()}>
+                    {it.installment_count}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex flex-col gap-2 w-full md:w-1/4">
+            <label className="font-medium">Tipo de Parcela</label>
+            <Select value={localSimulationData.installmentType} onValueChange={v => handleFieldChange('installmentType', v)}>
+              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="full">Parcela Cheia</SelectItem>
+                {reducoesParcela.map((red: any) => (
+                  <SelectItem key={red.id} value={red.id}>{red.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-end">
+            <Button variant="outline" onClick={() => setShowConfigModal(true)}>
+              <Settings className="w-5 h-5" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Painel de resultados sincronizado com simulationData */}
+      {visibleSections.leverage && (
+        <div ref={leverageSectionRef} className="w-full">
+          <SimulationResultsPanel data={localSimulationData} />
+        </div>
+      )}
+
+      {/* Seção de Detalhamento */}
+      {visibleSections.detail && (
+        <div ref={detailSectionRef} className="w-full">
+          <DetailTable 
+            product={{ nominalCreditValue: localSimulationData.value, termMonths: termValue }}
+            administrator={{ administrationRate: 0.27 }}
+            contemplationMonth={12}
           />
         </div>
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="font-medium">Número de parcelas</label>
-          <Select
-            value={termValue.toString()}
-            onValueChange={v => handleTermChange(Number(v))}
-          >
-            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-            <SelectContent>
-              {installmentTypes.map((it: any) => (
-                <SelectItem key={it.id} value={it.installment_count.toString()}>
-                  {it.installment_count}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex flex-col gap-2 w-full md:w-1/4">
-          <label className="font-medium">Tipo de Parcela</label>
-          <Select value={localSimulationData.installmentType} onValueChange={v => handleFieldChange('installmentType', v)}>
-            <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="full">Parcela Cheia</SelectItem>
-              {reducoesParcela.map((red: any) => (
-                <SelectItem key={red.id} value={red.id}>{red.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex items-end">
-          <Button variant="outline" onClick={() => setShowConfigModal(true)}>
-            <Settings className="w-5 h-5" />
-          </Button>
-        </div>
-      </div>
-      {/* Painel de resultados sincronizado com simulationData */}
-      <div className="w-full">
-        <SimulationResultsPanel data={localSimulationData} />
-      </div>
+      )}
+
       {/* Modal de configurações */}
       <SimulatorConfigModal
         open={showConfigModal}
