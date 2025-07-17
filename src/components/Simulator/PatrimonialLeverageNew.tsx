@@ -269,18 +269,20 @@ export const PatrimonialLeverageNew = ({
       )}
       {/* Novo layout agrupado */}
       <Card className="p-6">
-        <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+        <div className="flex flex-col lg:flex-row gap-6 items-start lg:items-center justify-between">
           {/* Esquerda: Características do Imóvel */}
-          <div className="flex-1 min-w-[280px]">
+          <div className="flex-1 w-full lg:min-w-[280px]">
             <div className="mb-2 text-lg font-bold">Características do Imóvel</div>
-            <div className="flex gap-2 mb-2">
-              <LeverageSelector
-                selectedLeverage={selectedLeverage}
-                onLeverageChange={setSelectedLeverage}
-                onLeverageData={setLeverageData}
-              />
+            <div className="flex flex-col sm:flex-row gap-2 mb-2">
+              <div className="flex-1">
+                <LeverageSelector
+                  selectedLeverage={selectedLeverage}
+                  onLeverageChange={setSelectedLeverage}
+                  onLeverageData={setLeverageData}
+                />
+              </div>
               {showValorImovel && (
-                <div className="relative">
+                <div className="relative flex-1 sm:flex-none">
                   <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground">R$</span>
                   <Input
                     type="text"
@@ -292,8 +294,7 @@ export const PatrimonialLeverageNew = ({
                       const value = numericValue === '' ? '' : Number(numericValue) / 100;
                       setValorImovelManual(value);
                     }}
-                    className="font-bold text-lg bg-input text-foreground border-2 border-input hover:border-primary focus:border-primary rounded-xl px-4 py-2 w-48 pl-8"
-                    style={{ minWidth: 180 }}
+                    className="font-bold text-lg bg-input text-foreground border-2 border-input hover:border-primary focus:border-primary rounded-xl px-4 py-2 w-full sm:w-48 pl-8"
                     placeholder="Valor do imóvel"
                   />
                 </div>
@@ -406,10 +407,10 @@ export const PatrimonialLeverageNew = ({
                 ? `Contemplação em ${contemplationMonth} meses`
                 : `Contemplação a cada ${contemplationMonth} meses`}
             </div>
-            <div className="flex gap-2 mt-2">
+            <div className="flex flex-col sm:flex-row gap-2 mt-2">
               <Button
                 variant={leverageType === 'single' ? 'default' : 'outline'}
-                className={`flex-1 text-lg py-4 rounded-xl ${leverageType === 'single' ? '' : ''}`}
+                className={`flex-1 text-sm sm:text-lg py-3 sm:py-4 rounded-xl ${leverageType === 'single' ? '' : ''}`}
                 onClick={() => setLeverageType('single')}
                 style={{ textTransform: 'none' }}
               >
@@ -417,7 +418,7 @@ export const PatrimonialLeverageNew = ({
               </Button>
               <Button
                 variant={leverageType === 'scaled' ? 'default' : 'outline'}
-                className={`flex-1 text-lg py-4 rounded-xl ${leverageType === 'scaled' ? '' : ''}`}
+                className={`flex-1 text-sm sm:text-lg py-3 sm:py-4 rounded-xl ${leverageType === 'scaled' ? '' : ''}`}
                 onClick={() => setLeverageType('scaled')}
                 style={{ textTransform: 'none' }}
               >
