@@ -66,13 +66,20 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
     }
   };
 
-  // Função para acompanhar a rolagem - agora baseada na posição dos campos originais
+  // Função para acompanhar a rolagem - baseada na posição real dos campos originais
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
       
-      // Verificar se passou dos campos originais (aproximadamente 200px)
-      setIsFieldsFixed(scrollTop > 200);
+      // Verificar se passou dos campos originais usando a referência real
+      if (creditSectionRef.current) {
+        const fieldsRect = creditSectionRef.current.getBoundingClientRect();
+        const fieldsTop = fieldsRect.top + scrollTop;
+        const fieldsHeight = fieldsRect.height;
+        
+        // Mostrar cabeçalho fixo quando os campos originais saírem da tela
+        setIsFieldsFixed(scrollTop > fieldsTop + fieldsHeight);
+      }
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -200,12 +207,12 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
   // Componente dos campos de configuração (reutilizável)
   const ConfigurationFields = ({ className = "" }: { className?: string }) => (
-    <div className={`bg-card rounded-2xl shadow border border-border p-3 md:p-4 w-full ${className}`}>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 items-end">
-        <div className="flex flex-col gap-2">
-          <label className="font-medium text-sm text-foreground">Modalidade</label>
+    <div className={`bg-card rounded-2xl shadow border border-border p-2 md:p-3 w-full max-w-full overflow-x-hidden ${className}`}>
+      <div className="flex flex-col lg:flex-row gap-2 md:gap-3 w-full">
+        <div className="flex flex-col gap-1 flex-1 min-w-0">
+          <label className="font-medium text-xs text-foreground">Modalidade</label>
           <Select value={localSimulationData.searchType} onValueChange={v => handleFieldChange('searchType', v === 'contribution' ? 'contribution' : 'credit')}>
-            <SelectTrigger className="text-sm h-9">
+            <SelectTrigger className="text-xs h-8 w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -214,8 +221,8 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex flex-col gap-2">
-          <label className="font-medium text-sm text-foreground">
+        <div className="flex flex-col gap-1 flex-1 min-w-0">
+          <label className="font-medium text-xs text-foreground">
             {localSimulationData.searchType === 'contribution' ? 'Valor do aporte' : 'Valor do crédito'}
           </label>
           <Input
@@ -223,16 +230,16 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             value={localSimulationData.value || ''}
             onChange={e => handleFieldChange('value', e.target.value ? Number(e.target.value) : 0)}
             placeholder="0,00"
-            className="text-sm h-9"
+            className="text-xs h-8 w-full"
           />
         </div>
-        <div className="flex flex-col gap-2">
-          <label className="font-medium text-sm text-foreground">Número de parcelas</label>
+        <div className="flex flex-col gap-1 flex-1 min-w-0">
+          <label className="font-medium text-xs text-foreground">Número de parcelas</label>
           <Select
             value={termValue.toString()}
             onValueChange={v => handleTermChange(Number(v))}
           >
-            <SelectTrigger className="text-sm h-9">
+            <SelectTrigger className="text-xs h-8 w-full">
               <SelectValue placeholder="Selecione" />
             </SelectTrigger>
             <SelectContent>
@@ -244,10 +251,10 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex flex-col gap-2">
-          <label className="font-medium text-sm text-foreground">Tipo de Parcela</label>
+        <div className="flex flex-col gap-1 flex-1 min-w-0">
+          <label className="font-medium text-xs text-foreground">Tipo de Parcela</label>
           <Select value={localSimulationData.installmentType} onValueChange={v => handleFieldChange('installmentType', v)}>
-            <SelectTrigger className="text-sm h-9">
+            <SelectTrigger className="text-xs h-8 w-full">
               <SelectValue placeholder="Selecione" />
             </SelectTrigger>
             <SelectContent>
@@ -258,15 +265,14 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex items-end sm:col-span-2 lg:col-span-1">
+        <div className="flex items-end">
           <Button 
             variant="outline" 
             size="sm" 
             onClick={() => setShowConfigModal(true)}
-            className="h-9 w-full sm:w-auto"
+            className="h-8 w-8 p-0"
           >
-            <Settings className="w-4 h-4 mr-2" />
-            <span className="sm:hidden">Configurações</span>
+            <Settings className="w-3 h-3" />
           </Button>
         </div>
       </div>
@@ -274,61 +280,61 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   );
 
   return (
-    <div className="flex flex-col gap-6 h-full relative w-full">
-      {/* Menu Lateral Fixo à Direita - Ajustado para padrões da plataforma */}
-      <div className="fixed right-4 top-1/2 transform -translate-y-1/2 z-50">
-        <div className="bg-primary-600 dark:bg-[#A86F57] rounded-2xl shadow-xl border border-primary-200 dark:border-[#A86F57]/30 p-3">
-          <div className="flex flex-col space-y-3">
+    <div className="flex flex-col gap-6 h-full relative w-full max-w-full overflow-x-hidden">
+      {/* Menu Lateral Fixo à Direita - Pequeno, cinza e colado na borda */}
+      <div className="fixed right-1 top-1/2 transform -translate-y-1/2 z-50">
+        <div className="bg-gray-600 dark:bg-gray-700 rounded-lg shadow-lg border border-gray-500 dark:border-gray-600 p-1">
+          <div className="flex flex-col space-y-1">
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-white hover:text-primary-100 dark:hover:text-white hover:bg-primary-700 dark:hover:bg-[#8B5A47] transition-all duration-200 hover:scale-105 rounded-xl"
+              className="w-8 h-8 p-0 text-gray-200 hover:text-white hover:bg-gray-500 dark:hover:bg-gray-600 transition-all duration-200 rounded-md"
               onClick={() => handleNavigate('settings')}
               title="Configurações"
             >
-              <Settings size={20} />
+              <Settings size={14} />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-white hover:text-primary-100 dark:hover:text-white hover:bg-primary-700 dark:hover:bg-[#8B5A47] transition-all duration-200 hover:scale-105 rounded-xl"
+              className="w-8 h-8 p-0 text-gray-200 hover:text-white hover:bg-gray-500 dark:hover:bg-gray-600 transition-all duration-200 rounded-md"
               onClick={() => handleNavigate('home')}
               title="Alavancagem"
             >
-              <Home size={20} />
+              <Home size={14} />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-white hover:text-primary-100 dark:hover:text-white hover:bg-primary-700 dark:hover:bg-[#8B5A47] transition-all duration-200 hover:scale-105 rounded-xl"
+              className="w-8 h-8 p-0 text-gray-200 hover:text-white hover:bg-gray-500 dark:hover:bg-gray-600 transition-all duration-200 rounded-md"
               title="Financeiro"
             >
-              <DollarSign size={20} />
+              <DollarSign size={14} />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-white hover:text-primary-100 dark:hover:text-white hover:bg-primary-700 dark:hover:bg-[#8B5A47] transition-all duration-200 hover:scale-105 rounded-xl"
+              className="w-8 h-8 p-0 text-gray-200 hover:text-white hover:bg-gray-500 dark:hover:bg-gray-600 transition-all duration-200 rounded-md"
               title="Performance"
             >
-              <TrendingUp size={20} />
+              <TrendingUp size={14} />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-white hover:text-primary-100 dark:hover:text-white hover:bg-primary-700 dark:hover:bg-[#8B5A47] transition-all duration-200 hover:scale-105 rounded-xl"
+              className="w-8 h-8 p-0 text-gray-200 hover:text-white hover:bg-gray-500 dark:hover:bg-gray-600 transition-all duration-200 rounded-md"
               title="Histórico"
             >
-              <Clock size={20} />
+              <Clock size={14} />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-white hover:text-primary-100 dark:hover:text-white hover:bg-primary-700 dark:hover:bg-[#8B5A47] transition-all duration-200 hover:scale-105 rounded-xl"
+              className="w-8 h-8 p-0 text-gray-200 hover:text-white hover:bg-gray-500 dark:hover:bg-gray-600 transition-all duration-200 rounded-md"
               onClick={() => handleNavigate('search')}
               title="Detalhamento"
             >
-              <Search size={20} />
+              <Search size={14} />
             </Button>
           </div>
         </div>

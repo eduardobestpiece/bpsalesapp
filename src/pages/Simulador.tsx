@@ -6,9 +6,9 @@ import { SimulatorProvider } from '@/contexts/SimulatorContext';
 const Simulador = () => {
   return (
     <SimulatorLayout>
-      <div className="w-full max-w-none mx-auto overflow-x-hidden">
-        <div className="bg-background/90 backdrop-blur-sm rounded-3xl shadow-xl border border-border/50 p-1 mx-2 md:mx-4">
-          <div className="bg-card rounded-[calc(1.5rem-4px)] p-4 md:p-6 lg:p-8 shadow-sm min-h-[600px] overflow-x-hidden">
+      <div className="w-full overflow-x-hidden">
+        <div className="bg-background/90 backdrop-blur-sm rounded-3xl shadow-xl border border-border/50 p-1 mx-1 md:mx-2 max-w-full">
+          <div className="bg-card rounded-[calc(1.5rem-4px)] p-2 md:p-4 lg:p-6 shadow-sm min-h-[600px] overflow-x-hidden max-w-full">
             <SimulatorProvider>
               <NewSimulatorLayout />
             </SimulatorProvider>
