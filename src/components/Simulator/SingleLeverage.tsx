@@ -165,19 +165,21 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
   const fluxoCaixaApos = valorMensalFinal - custosTotaisFinal;
   
   // 6. Valor pago do próprio bolso (parcelas pagas até contemplação) - Fórmula corrigida
-  const { value: pagoProprioBolso, percentage: pagoProprioBolsoPercentage } = calculatePaidFromOwnPocket(
-    creditValue,
+  // Calcular o valor total do crédito acessado (ex: 3 imóveis x 500.000)
+  const totalCreditoAcessado = numeroImoveis * valorImovel;
+  // Calcular o valor pago do próprio bolso (até a contemplação) considerando todos os imóveis
+  const { value: pagoProprioBolsoUnit } = calculatePaidFromOwnPocket(
+    valorImovel,
     product.termMonths,
     contemplationMonth,
     administrator.updateMonth,
     updateRate
   );
-  
-  // 7. Valor pago pelo inquilino (crédito inicial - pago do próprio bolso) - Fórmula corrigida
-  const { value: pagoInquilino, percentage: pagoInquilinoPercentage } = calculatePaidByTenant(
-    creditValue,
-    pagoProprioBolso
-  );
+  const pagoProprioBolso = pagoProprioBolsoUnit * numeroImoveis;
+  const pagoProprioBolsoPercentage = (pagoProprioBolso / totalCreditoAcessado) * 100;
+  // Calcular o valor pago pelo inquilino (crédito inicial - pago do próprio bolso)
+  const pagoInquilino = totalCreditoAcessado - pagoProprioBolso;
+  const pagoInquilinoPercentage = (pagoInquilino / totalCreditoAcessado) * 100;
   
   const mesesAposContemplacao = product.termMonths - contemplationMonth;
   
