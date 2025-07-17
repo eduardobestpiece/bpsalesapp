@@ -668,3 +668,29 @@ Próximos passos:
 - O cálculo correto deve seguir exatamente a ordem e as fórmulas fornecidas pelo usuário, considerando: valor da diária, ocupação, valor mensal, taxa da administradora, custos do imóvel e custos totais.
 - Detalhes completos e parâmetros do exemplo registrados em `requeststory.md`.
 - Status: aguardando análise e início do plano de correção.
+
+## [12/07/2024] Correção dos Cálculos - CONCLUÍDA ✅
+
+- **Ganhos Mensais:** Corrigido para seguir fórmula: valor da diária, ocupação, valor mensal, taxa da administradora, custos do imóvel e custos totais
+- **Fluxo de Caixa Pós 240 meses:** Ajustado para usar patrimônio ao final no lugar do patrimônio na contemplação
+- **Pago do Próprio Bolso e Pago pelo Inquilino:** Corrigido para considerar valor total do crédito acessado e calcular percentuais corretos
+- **Crédito Recomendado:** Ajustado para seguir fórmula correta de embutido
+- **Remoção de multiplicação redundante:** Eliminada multiplicação pelo número de imóveis nos ganhos mensais
+- Deploy automático realizado após cada correção
+- Status: ✅ CONCLUÍDO
+
+## [12/07/2024] Nova Estrutura Unificada do Simulador - CONCLUÍDA ✅
+
+- **Eliminação das abas:** Substituído sistema de abas por interface unificada
+- **Menu lateral implementado:** Ícones com funcionalidades de navegação e ocultação
+  - Engrenagem: Configurações (crédito acessado)
+  - Casinha: Alavancagem patrimonial  
+  - Sifrão: Financeiro (ganho de capital)
+  - Seta de gráfico: Performance (futuro)
+  - Relógio: Histórico (futuro)
+  - Lupinha: Detalhamento (tabela mês a mês)
+- **Seções unificadas:** Todas as informações em uma única página
+- **Tabela de detalhamento:** Implementada com configuração de colunas e meses visíveis
+- **Componentes criados:** SimulatorMenu.tsx, DetailTable.tsx, UnifiedSimulator.tsx
+- Deploy automático realizado
+- Status: ✅ CONCLUÍDO
