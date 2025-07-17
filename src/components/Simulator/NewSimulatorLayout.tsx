@@ -50,9 +50,6 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   // Estado para posição do menu lateral - agora sem limitações
   const [menuPosition, setMenuPosition] = useState(50); // 50% = centro
 
-  // Estado para campos fixos no topo
-  const [isFieldsFixed, setIsFieldsFixed] = useState(false);
-
   // Sincronizar campos do topo com simulationData e com o contexto global
   const handleFieldChange = (field: string, value: any) => {
     setLocalSimulationData((prev) => ({ ...prev, [field]: value }));
@@ -82,9 +79,6 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
       // Menu pode percorrer toda a página (0% a 100%)
       const newPosition = Math.max(5, Math.min(95, scrollPercentage));
       setMenuPosition(newPosition);
-
-      // Verificar se os campos devem ficar fixos (após 100px de rolagem)
-      setIsFieldsFixed(scrollTop > 100);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -335,18 +329,9 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
         </div>
       </div>
 
-      {/* Campos de configuração fixos no topo quando rolar */}
-      {isFieldsFixed && (
-        <div className="fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
-          <div className="container mx-auto px-4 py-3">
-            <ConfigurationFields className="!p-4 !rounded-lg" />
-          </div>
-        </div>
-      )}
-
       {/* Bloco de campos dinâmicos acima do resultado */}
       {visibleSections.credit && (
-        <div ref={creditSectionRef} className={`${isFieldsFixed ? 'pt-20' : ''}`}>
+        <div ref={creditSectionRef}>
           <ConfigurationFields />
         </div>
       )}
