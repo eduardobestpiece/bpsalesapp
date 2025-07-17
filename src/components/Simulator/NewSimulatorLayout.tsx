@@ -2,7 +2,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SimulationDataPanel } from './SimulationDataPanel';
-import { SimulationResultsPanel } from './SimulationResultsPanel';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { SimulatorConfigModal } from './SimulatorConfigModal';
 import { useSimulatorSync } from '@/hooks/useSimulatorSync';
 import { DetailTable } from './DetailTable';
+import { CreditAccessPanel } from './CreditAccessPanel';
+import { PatrimonialLeverageNew } from './PatrimonialLeverageNew';
 
 export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   const { 
@@ -140,6 +141,9 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   // Se houver valor manual vindo do modal, ele se sobrepõe
   const termValue = manualTerm !== undefined && manualTerm !== null ? manualTerm : localSimulationData.term;
 
+  // Estado para crédito acessado
+  const [creditoAcessado, setCreditoAcessado] = useState<number | null>(null);
+
   // Funções do menu lateral
   const handleNavigate = (section: string) => {
     const refs = {
@@ -180,14 +184,14 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
   return (
     <div className="flex flex-col gap-6 h-full relative">
-      {/* Menu Lateral Fixo à Direita - Acompanha rolagem */}
+      {/* Menu Lateral Fixo à Direita - Acompanha rolagem com cores corretas */}
       <div className="fixed right-4 top-1/2 transform -translate-y-1/2 z-50">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-2">
+        <div className="bg-gray-800 dark:bg-gray-900 rounded-lg shadow-lg border border-gray-700 dark:border-gray-600 p-2">
           <div className="flex flex-col space-y-2">
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-gray-600 hover:text-blue-600 transition-all duration-200 hover:scale-110"
+              className="w-12 h-12 p-0 text-gray-300 hover:text-blue-400 transition-all duration-200 hover:scale-110"
               onClick={() => handleNavigate('settings')}
               title="Configurações"
             >
@@ -196,7 +200,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-gray-600 hover:text-green-600 transition-all duration-200 hover:scale-110"
+              className="w-12 h-12 p-0 text-gray-300 hover:text-green-400 transition-all duration-200 hover:scale-110"
               onClick={() => handleNavigate('home')}
               title="Alavancagem"
             >
@@ -205,7 +209,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-gray-600 hover:text-yellow-600 transition-all duration-200 hover:scale-110"
+              className="w-12 h-12 p-0 text-gray-300 hover:text-yellow-400 transition-all duration-200 hover:scale-110"
               title="Financeiro"
             >
               <DollarSign size={20} />
@@ -213,7 +217,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-gray-600 hover:text-purple-600 transition-all duration-200 hover:scale-110"
+              className="w-12 h-12 p-0 text-gray-300 hover:text-purple-400 transition-all duration-200 hover:scale-110"
               title="Performance"
             >
               <TrendingUp size={20} />
@@ -221,7 +225,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-gray-600 hover:text-orange-600 transition-all duration-200 hover:scale-110"
+              className="w-12 h-12 p-0 text-gray-300 hover:text-orange-400 transition-all duration-200 hover:scale-110"
               title="Histórico"
             >
               <Clock size={20} />
@@ -229,7 +233,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-gray-600 hover:text-red-600 transition-all duration-200 hover:scale-110"
+              className="w-12 h-12 p-0 text-gray-300 hover:text-red-400 transition-all duration-200 hover:scale-110"
               onClick={() => handleNavigate('search')}
               title="Detalhamento"
             >
@@ -300,10 +304,17 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
         </div>
       )}
 
+      {/* Seção de Crédito Acessado */}
+      {visibleSections.credit && (
+        <div className="w-full">
+          <CreditAccessPanel data={localSimulationData} onCreditoAcessado={setCreditoAcessado} />
+        </div>
+      )}
+
       {/* Seção de Alavancagem Patrimonial - Entre crédito acessado e detalhamento */}
       {visibleSections.leverage && (
         <div ref={leverageSectionRef} className="w-full">
-          <SimulationResultsPanel data={localSimulationData} />
+          <PatrimonialLeverageNew simulationData={localSimulationData} creditoAcessado={creditoAcessado} />
         </div>
       )}
 
