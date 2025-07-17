@@ -77,9 +77,9 @@ const SimulatorHeader = () => {
         <span className="font-medium">Faça a sua simulação</span>
       </div>
       
-      {/* Campos de configuração - Ajustados para caber no espaço disponível */}
+      {/* Campos de configuração - Reduzidos para garantir que caibam */}
       {isSimulatorPage && (
-        <div className="hidden lg:flex items-center gap-2 ml-auto flex-1" style={{ maxWidth: '60%' }}>
+        <div className="hidden lg:flex items-center gap-1 ml-auto flex-1" style={{ maxWidth: '50%' }}>
         <div className="flex flex-col gap-1 flex-1">
           <label className="text-xs font-medium text-muted-foreground">Modalidade</label>
           <Select 
@@ -249,11 +249,11 @@ export const SimulatorLayout = ({ children }: SimulatorLayoutProps) => {
     <CompanyProvider defaultCompanyId={companyId || ''}>
       <SimulatorContext.Provider value={simulatorContextValue}>
         <SidebarProvider>
-          <div className="min-h-screen flex w-full bg-background dark:bg-[#131313] overflow-x-hidden">
+          <div className="min-h-screen flex w-full bg-background dark:bg-[#131313]">
             <SimulatorSidebar />
-            <SidebarInset className="flex-1">
+            <SidebarInset className="flex-1 overflow-x-hidden">
               <SimulatorHeader />
-              <main className="flex-1 p-6 bg-background dark:bg-[#131313]">
+              <main className="flex-1 p-6 bg-background dark:bg-[#131313] max-w-full">
                 {children}
               </main>
             </SidebarInset>
