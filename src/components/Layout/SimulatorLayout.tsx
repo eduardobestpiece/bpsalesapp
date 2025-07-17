@@ -167,7 +167,8 @@ const SimulatorHeader = () => {
         >
           <Settings className="w-4 h-4" />
         </Button>
-      </div>
+        </div>
+      )}
       
       {/* Botão de configurações para mobile */}
       {isSimulatorPage && (
