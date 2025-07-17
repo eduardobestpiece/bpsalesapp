@@ -47,10 +47,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   const leverageSectionRef = useRef<HTMLDivElement>(null);
   const detailSectionRef = useRef<HTMLDivElement>(null);
 
-  // Estado para posição do menu lateral - agora sem limitações
-  const [menuPosition, setMenuPosition] = useState(50); // 50% = centro
-
-  // Estado para campos fixos no topo
+  // Estado para campos fixos no topo - agora baseado na posição dos campos originais
   const [isFieldsFixed, setIsFieldsFixed] = useState(false);
 
   // Sincronizar campos do topo com simulationData e com o contexto global
@@ -69,22 +66,13 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
     }
   };
 
-  // Função para acompanhar a rolagem - agora sem limitações
+  // Função para acompanhar a rolagem - agora baseada na posição dos campos originais
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
-      const windowHeight = window.innerHeight;
-      const documentHeight = document.documentElement.scrollHeight;
       
-      // Calcular a posição baseada na rolagem - sem limitações
-      const scrollPercentage = (scrollTop / (documentHeight - windowHeight)) * 100;
-      
-      // Menu pode percorrer toda a página (0% a 100%)
-      const newPosition = Math.max(5, Math.min(95, scrollPercentage));
-      setMenuPosition(newPosition);
-
-      // Verificar se os campos devem ficar fixos (após 100px de rolagem)
-      setIsFieldsFixed(scrollTop > 100);
+      // Verificar se passou dos campos originais (aproximadamente 200px)
+      setIsFieldsFixed(scrollTop > 200);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -212,19 +200,19 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
   // Componente dos campos de configuração (reutilizável)
   const ConfigurationFields = ({ className = "" }: { className?: string }) => (
-    <div className={`bg-card rounded-2xl shadow border border-border p-6 flex flex-col md:flex-row md:items-end gap-4 ${className}`}>
-      <div className="flex flex-col gap-2 w-full md:w-1/4">
-        <label className="font-medium">Modalidade</label>
+    <div className={`bg-card rounded-2xl shadow border border-border p-4 md:p-6 flex flex-col lg:flex-row lg:items-end gap-3 md:gap-4 ${className}`}>
+      <div className="flex flex-col gap-2 w-full lg:w-1/4">
+        <label className="font-medium text-sm">Modalidade</label>
         <Select value={localSimulationData.searchType} onValueChange={v => handleFieldChange('searchType', v === 'contribution' ? 'contribution' : 'credit')}>
-          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="contribution">Aporte</SelectItem>
             <SelectItem value="credit">Crédito</SelectItem>
           </SelectContent>
         </Select>
       </div>
-      <div className="flex flex-col gap-2 w-full md:w-1/4">
-        <label className="font-medium">
+      <div className="flex flex-col gap-2 w-full lg:w-1/4">
+        <label className="font-medium text-sm">
           {localSimulationData.searchType === 'contribution' && 'Valor do aporte'}
           {localSimulationData.searchType === 'credit' && 'Valor do crédito'}
         </label>
@@ -233,15 +221,16 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
           value={localSimulationData.value || ''}
           onChange={e => handleFieldChange('value', e.target.value ? Number(e.target.value) : 0)}
           placeholder="0,00"
+          className="text-sm"
         />
       </div>
-      <div className="flex flex-col gap-2 w-full md:w-1/4">
-        <label className="font-medium">Número de parcelas</label>
+      <div className="flex flex-col gap-2 w-full lg:w-1/4">
+        <label className="font-medium text-sm">Número de parcelas</label>
         <Select
           value={termValue.toString()}
           onValueChange={v => handleTermChange(Number(v))}
         >
-          <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectTrigger className="text-sm"><SelectValue placeholder="Selecione" /></SelectTrigger>
           <SelectContent>
             {installmentTypes.map((it: any) => (
               <SelectItem key={it.id} value={it.installment_count.toString()}>
@@ -251,10 +240,10 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
           </SelectContent>
         </Select>
       </div>
-      <div className="flex flex-col gap-2 w-full md:w-1/4">
-        <label className="font-medium">Tipo de Parcela</label>
+      <div className="flex flex-col gap-2 w-full lg:w-1/4">
+        <label className="font-medium text-sm">Tipo de Parcela</label>
         <Select value={localSimulationData.installmentType} onValueChange={v => handleFieldChange('installmentType', v)}>
-          <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectTrigger className="text-sm"><SelectValue placeholder="Selecione" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="full">Parcela Cheia</SelectItem>
             {reducoesParcela.map((red: any) => (
@@ -264,72 +253,69 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
         </Select>
       </div>
       <div className="flex items-end">
-        <Button variant="outline" onClick={() => setShowConfigModal(true)}>
-          <Settings className="w-5 h-5" />
+        <Button variant="outline" size="sm" onClick={() => setShowConfigModal(true)}>
+          <Settings className="w-4 h-4" />
         </Button>
       </div>
     </div>
   );
 
   return (
-    <div className="flex flex-col gap-6 h-full relative">
-      {/* Menu Lateral Fixo à Direita - Agora percorre toda a página */}
-      <div 
-        className="fixed right-4 z-50 transition-all duration-300 ease-in-out"
-        style={{ top: `${menuPosition}%`, transform: 'translateY(-50%)' }}
-      >
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-2">
+    <div className="flex flex-col gap-6 h-full relative max-w-full overflow-x-hidden">
+      {/* Menu Lateral Fixo à Direita - Mais próximo da borda e sempre centralizado */}
+      <div className="fixed right-2 top-1/2 transform -translate-y-1/2 z-50">
+        <div className="bg-gray-700 dark:bg-gray-800 rounded-lg shadow-lg border border-gray-600 dark:border-gray-700 p-2">
           <div className="flex flex-col space-y-2">
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 hover:scale-110"
+              className="w-10 h-10 p-0 text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-200 hover:scale-110"
               onClick={() => handleNavigate('settings')}
               title="Configurações"
             >
-              <Settings size={20} />
+              <Settings size={18} />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-all duration-200 hover:scale-110"
+              className="w-10 h-10 p-0 text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-200 hover:scale-110"
               onClick={() => handleNavigate('home')}
               title="Alavancagem"
             >
-              <Home size={20} />
+              <Home size={18} />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-gray-600 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 transition-all duration-200 hover:scale-110"
+              className="w-10 h-10 p-0 text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-200 hover:scale-110"
               title="Financeiro"
             >
-              <DollarSign size={20} />
+              <DollarSign size={18} />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-200 hover:scale-110"
+              className="w-10 h-10 p-0 text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-200 hover:scale-110"
               title="Performance"
             >
-              <TrendingUp size={20} />
+              <TrendingUp size={18} />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 transition-all duration-200 hover:scale-110"
+              className="w-10 h-10 p-0 text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-200 hover:scale-110"
               title="Histórico"
             >
-              <Clock size={20} />
+              <Clock size={18} />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-all duration-200 hover:scale-110"
+              className="w-10 h-10 p-0 text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-200 hover:scale-110"
               onClick={() => handleNavigate('search')}
               title="Detalhamento"
             >
-              <Search size={20} />
+              <Search size={18} />
             </Button>
           </div>
         </div>
@@ -338,36 +324,36 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
       {/* Campos de configuração fixos no topo quando rolar */}
       {isFieldsFixed && (
         <div className="fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
-          <div className="container mx-auto px-4 py-3">
-            <ConfigurationFields className="!p-4 !rounded-lg" />
+          <div className="container mx-auto px-4 py-3 max-w-full">
+            <ConfigurationFields className="!p-3 !rounded-lg" />
           </div>
         </div>
       )}
 
       {/* Bloco de campos dinâmicos acima do resultado */}
       {visibleSections.credit && (
-        <div ref={creditSectionRef} className={`${isFieldsFixed ? 'pt-20' : ''}`}>
+        <div ref={creditSectionRef} className={`${isFieldsFixed ? 'pt-24' : ''} max-w-full`}>
           <ConfigurationFields />
         </div>
       )}
 
       {/* Seção de Crédito Acessado */}
       {visibleSections.credit && (
-        <div className="w-full">
+        <div className="w-full max-w-full">
           <CreditAccessPanel data={localSimulationData} onCreditoAcessado={setCreditoAcessado} />
         </div>
       )}
 
       {/* Seção de Alavancagem Patrimonial - Entre crédito acessado e detalhamento */}
       {visibleSections.leverage && (
-        <div ref={leverageSectionRef} className="w-full">
+        <div ref={leverageSectionRef} className="w-full max-w-full">
           <PatrimonialLeverageNew simulationData={localSimulationData} creditoAcessado={creditoAcessado} />
         </div>
       )}
 
       {/* Seção de Detalhamento */}
       {visibleSections.detail && (
-        <div ref={detailSectionRef} className="w-full">
+        <div ref={detailSectionRef} className="w-full max-w-full">
           <DetailTable 
             product={{ nominalCreditValue: localSimulationData.value, termMonths: termValue }}
             administrator={{ administrationRate: 0.27 }}
