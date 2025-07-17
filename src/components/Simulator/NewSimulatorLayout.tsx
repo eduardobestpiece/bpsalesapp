@@ -47,6 +47,9 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   const leverageSectionRef = useRef<HTMLDivElement>(null);
   const detailSectionRef = useRef<HTMLDivElement>(null);
 
+  // Estado para posição do menu lateral
+  const [menuPosition, setMenuPosition] = useState(50); // 50% = centro
+
   // Sincronizar campos do topo com simulationData e com o contexto global
   const handleFieldChange = (field: string, value: any) => {
     setLocalSimulationData((prev) => ({ ...prev, [field]: value }));
@@ -62,6 +65,25 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
       updateInstallmentType(value === 'full' ? 'full' : value === 'half' ? 'half' : 'reduced');
     }
   };
+
+  // Função para acompanhar a rolagem
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      
+      // Calcular a posição baseada na rolagem
+      const scrollPercentage = (scrollTop / (documentHeight - windowHeight)) * 100;
+      
+      // Manter o menu sempre visível, mas acompanhar a rolagem
+      const newPosition = Math.max(10, Math.min(90, 50 + (scrollPercentage - 50) * 0.3));
+      setMenuPosition(newPosition);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Buscar administradora padrão e opções de parcelas
   useEffect(() => {
@@ -184,14 +206,17 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
   return (
     <div className="flex flex-col gap-6 h-full relative">
-      {/* Menu Lateral Fixo à Direita - Acompanha rolagem com cores corretas */}
-      <div className="fixed right-4 top-1/2 transform -translate-y-1/2 z-50">
-        <div className="bg-gray-800 dark:bg-gray-900 rounded-lg shadow-lg border border-gray-700 dark:border-gray-600 p-2">
+      {/* Menu Lateral Fixo à Direita - Acompanha rolagem com cores adaptativas */}
+      <div 
+        className="fixed right-4 z-50 transition-all duration-300 ease-in-out"
+        style={{ top: `${menuPosition}%`, transform: 'translateY(-50%)' }}
+      >
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-2">
           <div className="flex flex-col space-y-2">
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-gray-300 hover:text-blue-400 transition-all duration-200 hover:scale-110"
+              className="w-12 h-12 p-0 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 hover:scale-110"
               onClick={() => handleNavigate('settings')}
               title="Configurações"
             >
@@ -200,7 +225,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-gray-300 hover:text-green-400 transition-all duration-200 hover:scale-110"
+              className="w-12 h-12 p-0 text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-all duration-200 hover:scale-110"
               onClick={() => handleNavigate('home')}
               title="Alavancagem"
             >
@@ -209,7 +234,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-gray-300 hover:text-yellow-400 transition-all duration-200 hover:scale-110"
+              className="w-12 h-12 p-0 text-gray-600 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 transition-all duration-200 hover:scale-110"
               title="Financeiro"
             >
               <DollarSign size={20} />
@@ -217,7 +242,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-gray-300 hover:text-purple-400 transition-all duration-200 hover:scale-110"
+              className="w-12 h-12 p-0 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-200 hover:scale-110"
               title="Performance"
             >
               <TrendingUp size={20} />
@@ -225,7 +250,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-gray-300 hover:text-orange-400 transition-all duration-200 hover:scale-110"
+              className="w-12 h-12 p-0 text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 transition-all duration-200 hover:scale-110"
               title="Histórico"
             >
               <Clock size={20} />
@@ -233,7 +258,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-gray-300 hover:text-red-400 transition-all duration-200 hover:scale-110"
+              className="w-12 h-12 p-0 text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-all duration-200 hover:scale-110"
               onClick={() => handleNavigate('search')}
               title="Detalhamento"
             >
