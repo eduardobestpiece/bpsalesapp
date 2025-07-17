@@ -25,6 +25,7 @@ export type Database = {
           is_default: boolean | null
           max_embedded_percentage: number | null
           name: string
+          post_contemplation_adjustment: number | null
           special_entry_fixed_value: number | null
           special_entry_installments: number | null
           special_entry_percentage: number | null
@@ -43,6 +44,7 @@ export type Database = {
           is_default?: boolean | null
           max_embedded_percentage?: number | null
           name: string
+          post_contemplation_adjustment?: number | null
           special_entry_fixed_value?: number | null
           special_entry_installments?: number | null
           special_entry_percentage?: number | null
@@ -61,6 +63,7 @@ export type Database = {
           is_default?: boolean | null
           max_embedded_percentage?: number | null
           name?: string
+          post_contemplation_adjustment?: number | null
           special_entry_fixed_value?: number | null
           special_entry_installments?: number | null
           special_entry_percentage?: number | null
@@ -381,6 +384,8 @@ export type Database = {
           created_at: string | null
           id: string
           indicator_deadline_hours: number
+          meeting_completed_stage_id: string | null
+          meeting_scheduled_stage_id: string | null
           name: string
           recommendation_stage_id: string | null
           recommendations_mode: Database["public"]["Enums"]["funnel_mode"]
@@ -395,6 +400,8 @@ export type Database = {
           created_at?: string | null
           id?: string
           indicator_deadline_hours?: number
+          meeting_completed_stage_id?: string | null
+          meeting_scheduled_stage_id?: string | null
           name: string
           recommendation_stage_id?: string | null
           recommendations_mode?: Database["public"]["Enums"]["funnel_mode"]
@@ -409,6 +416,8 @@ export type Database = {
           created_at?: string | null
           id?: string
           indicator_deadline_hours?: number
+          meeting_completed_stage_id?: string | null
+          meeting_scheduled_stage_id?: string | null
           name?: string
           recommendation_stage_id?: string | null
           recommendations_mode?: Database["public"]["Enums"]["funnel_mode"]
@@ -424,6 +433,20 @@ export type Database = {
             columns: ["company_id"]
             isOneToOne: false
             referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funnels_meeting_completed_stage_id_fkey"
+            columns: ["meeting_completed_stage_id"]
+            isOneToOne: false
+            referencedRelation: "funnel_stages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funnels_meeting_scheduled_stage_id_fkey"
+            columns: ["meeting_scheduled_stage_id"]
+            isOneToOne: false
+            referencedRelation: "funnel_stages"
             referencedColumns: ["id"]
           },
           {

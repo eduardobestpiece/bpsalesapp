@@ -5,13 +5,14 @@ import { SimulationDataPanel } from './SimulationDataPanel';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Settings, Home, DollarSign, TrendingUp, Clock, Search } from 'lucide-react';
+import { Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { SimulatorConfigModal } from './SimulatorConfigModal';
 import { useSimulatorSync } from '@/hooks/useSimulatorSync';
 import { DetailTable } from './DetailTable';
 import { CreditAccessPanel } from './CreditAccessPanel';
 import { PatrimonialLeverageNew } from './PatrimonialLeverageNew';
+import { SimulatorMenu } from './SimulatorMenu';
 
 export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   const { 
@@ -281,69 +282,19 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
   return (
     <div className="flex flex-col gap-6 h-full relative w-full max-w-full overflow-x-hidden">
-      {/* Menu Lateral Fixo à Direita - Pequeno, cinza e colado na borda */}
-      <div className="fixed right-1 top-1/2 transform -translate-y-1/2 z-50">
-        <div className="bg-gray-600 dark:bg-gray-700 rounded-lg shadow-lg border border-gray-500 dark:border-gray-600 p-1">
-          <div className="flex flex-col space-y-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-8 h-8 p-0 text-gray-200 hover:text-white hover:bg-gray-500 dark:hover:bg-gray-600 transition-all duration-200 rounded-md"
-              onClick={() => handleNavigate('settings')}
-              title="Configurações"
-            >
-              <Settings size={14} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-8 h-8 p-0 text-gray-200 hover:text-white hover:bg-gray-500 dark:hover:bg-gray-600 transition-all duration-200 rounded-md"
-              onClick={() => handleNavigate('home')}
-              title="Alavancagem"
-            >
-              <Home size={14} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-8 h-8 p-0 text-gray-200 hover:text-white hover:bg-gray-500 dark:hover:bg-gray-600 transition-all duration-200 rounded-md"
-              title="Financeiro"
-            >
-              <DollarSign size={14} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-8 h-8 p-0 text-gray-200 hover:text-white hover:bg-gray-500 dark:hover:bg-gray-600 transition-all duration-200 rounded-md"
-              title="Performance"
-            >
-              <TrendingUp size={14} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-8 h-8 p-0 text-gray-200 hover:text-white hover:bg-gray-500 dark:hover:bg-gray-600 transition-all duration-200 rounded-md"
-              title="Histórico"
-            >
-              <Clock size={14} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-8 h-8 p-0 text-gray-200 hover:text-white hover:bg-gray-500 dark:hover:bg-gray-600 transition-all duration-200 rounded-md"
-              onClick={() => handleNavigate('search')}
-              title="Detalhamento"
-            >
-              <Search size={14} />
-            </Button>
-          </div>
-        </div>
-      </div>
+      {/* Menu lateral fixo usando o componente SimulatorMenu */}
+      <SimulatorMenu 
+        onNavigate={handleNavigate} 
+        onToggleSection={handleToggleSection}
+      />
 
       {/* Campos de configuração fixos no topo quando rolar */}
       {isFieldsFixed && (
         <div className="fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border shadow-sm">
           <div className="w-full px-2 md:px-4 lg:px-6 py-2 md:py-3 overflow-x-hidden">
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground dark:text-gray-300 mb-2">
+              <span className="font-medium">Faça a sua simulação</span>
+            </div>
             <ConfigurationFields className="!p-2 md:!p-3 !rounded-lg !shadow-sm" />
           </div>
         </div>
