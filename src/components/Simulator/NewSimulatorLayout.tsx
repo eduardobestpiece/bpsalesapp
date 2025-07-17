@@ -106,17 +106,13 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
         }
       }
       if (adminId) {
-        const { data: installments } = await supabase
-          .from('installment_types')
-          .select('*')
-          .eq('administrator_id', adminId)
-          .eq('is_archived', false)
-          .order('installment_count');
-        setInstallmentTypes(installments || []);
+        // Usar as funções do contexto para carregar dados
+        await simulatorContext.loadInstallmentTypes(adminId);
+        await simulatorContext.loadReducoesParcela(adminId);
       }
     };
     fetchInstallmentTypes();
-  }, [localSimulationData.administrator]);
+  }, [localSimulationData.administrator, simulatorContext]);
 
   const [parcelaSelecionada, setParcelaSelecionada] = useState<string>('');
   const [tiposParcela, setTiposParcela] = useState<any[]>([]);
@@ -134,23 +130,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   // Estado para reduções de parcela
   const [reducoesParcela, setReducoesParcela] = useState<any[]>([]);
 
-  // Buscar reduções de parcela da administradora selecionada
-  useEffect(() => {
-    async function fetchReducoes() {
-      // Corrigido: só busca se administrator for válido
-      if (!localSimulationData.administrator || localSimulationData.administrator === '' || localSimulationData.administrator === null) {
-        setReducoesParcela([]);
-        return;
-      }
-      const { data: reducoes } = await supabase
-        .from('installment_reductions')
-        .select('id, name')
-        .eq('administrator_id', localSimulationData.administrator)
-        .eq('is_archived', false);
-      setReducoesParcela(reducoes || []);
-    }
-    fetchReducoes();
-  }, [localSimulationData.administrator]);
+
 
   // Atualizar ao receber do painel de dados
   useEffect(() => {
@@ -319,10 +299,10 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
       {/* Modal de configurações */}
       <SimulatorConfigModal
-        open={showConfigModal}
-        onClose={() => setShowConfigModal(false)}
-        onApply={() => setShowConfigModal(false)}
-        onSaveAndApply={() => setShowConfigModal(false)}
+        open={simulatorContext.showConfigModal}
+        onClose={() => simulatorContext.setShowConfigModal(false)}
+        onApply={() => simulatorContext.setShowConfigModal(false)}
+        onSaveAndApply={() => simulatorContext.setShowConfigModal(false)}
         onReset={() => {}}
         setManualTerm={() => {}}
         selectedTerm={selectedTerm}

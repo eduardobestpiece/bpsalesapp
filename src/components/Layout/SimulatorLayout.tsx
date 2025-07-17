@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 // Contexto para compartilhar dados do simulador
 interface SimulatorContextType {
@@ -24,6 +25,9 @@ interface SimulatorContextType {
   reducoesParcela: any[];
   showConfigModal: boolean;
   setShowConfigModal: (show: boolean) => void;
+  // Funções para carregar dados
+  loadInstallmentTypes: (administratorId: string) => Promise<void>;
+  loadReducoesParcela: (administratorId: string) => Promise<void>;
 }
 
 const SimulatorContext = createContext<SimulatorContextType | null>(null);
@@ -186,6 +190,35 @@ export const SimulatorLayout = ({ children }: SimulatorLayoutProps) => {
       setSimulatorContextValue(prev => ({
         ...prev,
         showConfigModal: show
+      }));
+    },
+    loadInstallmentTypes: async (administratorId: string) => {
+      if (!administratorId) return;
+      
+      const { data: installments } = await supabase
+        .from('installment_types')
+        .select('*')
+        .eq('administrator_id', administratorId)
+        .eq('is_archived', false)
+        .order('installment_count');
+      
+      setSimulatorContextValue(prev => ({
+        ...prev,
+        installmentTypes: installments || []
+      }));
+    },
+    loadReducoesParcela: async (administratorId: string) => {
+      if (!administratorId) return;
+      
+      const { data: reducoes } = await supabase
+        .from('installment_reductions')
+        .select('id, name')
+        .eq('administrator_id', administratorId)
+        .eq('is_archived', false);
+      
+      setSimulatorContextValue(prev => ({
+        ...prev,
+        reducoesParcela: reducoes || []
       }));
     }
   });
