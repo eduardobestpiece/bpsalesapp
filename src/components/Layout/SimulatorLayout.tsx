@@ -64,11 +64,11 @@ const SimulatorHeader = () => {
   
   return (
     <header 
-      className="flex h-16 shrink-0 items-center gap-4 border-b border-border dark:border-[#A86F57]/20 px-4 bg-background dark:bg-[#1E1E1E] sticky top-0 z-40"
+      className="flex h-16 shrink-0 items-center gap-4 border-b border-border dark:border-[#A86F57]/20 px-4 bg-background dark:bg-[#1E1E1E] sticky top-0 z-40 w-full"
       style={{
         left: isCollapsed ? '3rem' : '16rem',
-        right: '0',
-        transition: 'left 0.2s ease-linear'
+        width: `calc(100% - ${isCollapsed ? '3rem' : '16rem'})`,
+        transition: 'left 0.2s ease-linear, width 0.2s ease-linear'
       }}
     >
       <SidebarTrigger className="-ml-1 text-foreground dark:text-white" />
@@ -249,7 +249,7 @@ export const SimulatorLayout = ({ children }: SimulatorLayoutProps) => {
     <CompanyProvider defaultCompanyId={companyId || ''}>
       <SimulatorContext.Provider value={simulatorContextValue}>
         <SidebarProvider>
-          <div className="min-h-screen flex w-full bg-background dark:bg-[#131313]">
+          <div className="min-h-screen flex w-full bg-background dark:bg-[#131313] overflow-x-hidden">
             <SimulatorSidebar />
             <SidebarInset className="flex-1">
               <SimulatorHeader />
