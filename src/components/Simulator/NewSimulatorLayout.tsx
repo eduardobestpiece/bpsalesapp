@@ -267,63 +267,63 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
   return (
     <div className="flex flex-col gap-6 h-full relative">
-      {/* Menu Lateral Fixo à Direita - Agora percorre toda a página */}
+      {/* Menu Lateral Fixo à Direita - Reduzido para não sobrepor dados */}
       <div 
-        className="fixed right-4 z-50 transition-all duration-300 ease-in-out"
+        className="fixed right-2 z-50 transition-all duration-300 ease-in-out"
         style={{ top: `${menuPosition}%`, transform: 'translateY(-50%)' }}
       >
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-2">
-          <div className="flex flex-col space-y-2">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-1">
+          <div className="flex flex-col space-y-1">
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 hover:scale-110"
+              className="w-8 h-8 p-0 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 hover:scale-110"
               onClick={() => handleNavigate('settings')}
               title="Configurações"
             >
-              <Settings size={20} />
+              <Settings size={16} />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-all duration-200 hover:scale-110"
+              className="w-8 h-8 p-0 text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-all duration-200 hover:scale-110"
               onClick={() => handleNavigate('home')}
               title="Alavancagem"
             >
-              <Home size={20} />
+              <Home size={16} />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-gray-600 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 transition-all duration-200 hover:scale-110"
+              className="w-8 h-8 p-0 text-gray-600 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 transition-all duration-200 hover:scale-110"
               title="Financeiro"
             >
-              <DollarSign size={20} />
+              <DollarSign size={16} />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-200 hover:scale-110"
+              className="w-8 h-8 p-0 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-200 hover:scale-110"
               title="Performance"
             >
-              <TrendingUp size={20} />
+              <TrendingUp size={16} />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 transition-all duration-200 hover:scale-110"
+              className="w-8 h-8 p-0 text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 transition-all duration-200 hover:scale-110"
               title="Histórico"
             >
-              <Clock size={20} />
+              <Clock size={16} />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="w-12 h-12 p-0 text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-all duration-200 hover:scale-110"
+              className="w-8 h-8 p-0 text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-all duration-200 hover:scale-110"
               onClick={() => handleNavigate('search')}
               title="Detalhamento"
             >
-              <Search size={20} />
+              <Search size={16} />
             </Button>
           </div>
         </div>
