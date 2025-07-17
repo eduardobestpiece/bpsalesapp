@@ -136,8 +136,8 @@ export const DetailTable = ({ product, administrator, contemplationMonth }: Deta
       )}
 
       <CardContent>
-        <div className="overflow-x-auto">
-          <Table>
+        <div className="overflow-x-auto max-w-full" style={{ maxWidth: '100vw' }}>
+          <Table className="min-w-full">
             <TableHeader>
               <TableRow>
                 {visibleColumns.mes && <TableHead>Mês</TableHead>}

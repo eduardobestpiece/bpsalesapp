@@ -131,7 +131,7 @@ export const PatrimonialLeverageNew = ({
   const valorBase = creditoAcessado && creditoAcessado > 0 ? creditoAcessado : simulationData.value;
   // Estado local para o campo de valor do imóvel (livre, inicia vazio)
   const [valorImovelManual, setValorImovelManual] = useState<number | ''>('');
-  const [contemplationMonth, setContemplationMonth] = useState(6);
+  const [contemplationMonth, setContemplationMonth] = useState(simulationData.contemplationMonth || 6);
   // Estado para embutido
   const [embutido, setEmbutido] = useState<'com' | 'sem'>('com');
 
@@ -374,38 +374,9 @@ export const PatrimonialLeverageNew = ({
               </div>
             )}
           </div>
-          {/* Direita: Exemplo de contemplação e botões */}
+          {/* Direita: Botões de alavancagem */}
           <div className="flex-1 min-w-[320px] flex flex-col gap-4">
-            <div className="mb-2 text-lg font-bold">Exemplo de contemplação</div>
-            <div className="flex items-center gap-4 mb-2">
-              <Slider
-                value={[contemplationMonth]}
-                onValueChange={v => setContemplationMonth(v[0])}
-                min={6}
-                max={finalProduct.termMonths}
-                step={1}
-                className="flex-1"
-                style={{
-                  '--slider-track': 'var(--muted)',
-                  '--slider-range': '#A86F57',
-                  '--slider-thumb': '#A86F57',
-                } as React.CSSProperties}
-              />
-              <Input
-                type="number"
-                value={contemplationMonth}
-                onChange={e => setContemplationMonth(Math.min(Math.max(6, Number(e.target.value)), finalProduct.termMonths))}
-                min={6}
-                max={finalProduct.termMonths}
-                className="w-20 text-center border-2 rounded-xl"
-              />
-            </div>
-            {/* Texto dinâmico de contemplação */}
-            <div className="text-sm text-foreground mb-2">
-              {leverageType === 'single'
-                ? `Contemplação em ${contemplationMonth} meses`
-                : `Contemplação a cada ${contemplationMonth} meses`}
-            </div>
+            <div className="mb-2 text-lg font-bold">Tipo de Alavancagem</div>
             <div className="flex gap-2 mt-2">
               <Button
                 variant={leverageType === 'single' ? 'default' : 'outline'}

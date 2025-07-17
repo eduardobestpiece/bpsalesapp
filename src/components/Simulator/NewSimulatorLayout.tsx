@@ -36,6 +36,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
     term: simulatorContext.simulationData.term,
     updateRate: 6,
     searchType: simulatorContext.simulationData.searchType,
+    contemplationMonth: simulatorContext.simulationData.contemplationMonth,
     bidType: '',
   });
 
@@ -152,6 +153,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
       value: simulatorContext.simulationData.value,
       term: simulatorContext.simulationData.term,
       installmentType: simulatorContext.simulationData.installmentType,
+      contemplationMonth: simulatorContext.simulationData.contemplationMonth,
     }));
   }, [simulatorContext.simulationData]);
 

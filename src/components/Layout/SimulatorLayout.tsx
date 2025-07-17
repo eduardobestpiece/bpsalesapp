@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { useLocation } from 'react-router-dom';
 
 // Contexto para compartilhar dados do simulador
 interface SimulatorContextType {
@@ -19,6 +20,7 @@ interface SimulatorContextType {
     value: number;
     term: number;
     installmentType: string;
+    contemplationMonth: number;
   };
   setSimulationData: (data: any) => void;
   installmentTypes: any[];
@@ -49,6 +51,8 @@ const SimulatorHeader = () => {
   const { state } = useSidebar();
   const isCollapsed = state === 'collapsed';
   const simulatorContext = useSimulatorContext();
+  const location = useLocation();
+  const isSimulatorPage = location.pathname === '/simulador';
   
   const handleFieldChange = (field: string, value: any) => {
     simulatorContext.setSimulationData((prev: any) => ({ ...prev, [field]: value }));
@@ -74,7 +78,8 @@ const SimulatorHeader = () => {
       </div>
       
       {/* Campos de configuração - Expandidos para ocupar mais espaço */}
-      <div className="hidden md:flex items-center gap-4 ml-auto flex-1 max-w-2xl">
+      {isSimulatorPage && (
+        <div className="hidden md:flex items-center gap-4 ml-auto flex-1 max-w-2xl">
         <div className="flex flex-col gap-1 flex-1">
           <label className="text-xs font-medium text-muted-foreground">Modalidade</label>
           <Select 
@@ -141,6 +146,19 @@ const SimulatorHeader = () => {
           </Select>
         </div>
         
+        <div className="flex flex-col gap-1 flex-1">
+          <label className="text-xs font-medium text-muted-foreground">Mês Contemplação</label>
+          <Input
+            type="number"
+            value={simulatorContext.simulationData.contemplationMonth || ''}
+            onChange={e => handleFieldChange('contemplationMonth', e.target.value ? Number(e.target.value) : 6)}
+            placeholder="6"
+            min={6}
+            max={120}
+            className="h-8 text-xs"
+          />
+        </div>
+        
         <Button 
           variant="outline" 
           size="sm"
@@ -152,16 +170,18 @@ const SimulatorHeader = () => {
       </div>
       
       {/* Botão de configurações para mobile */}
-      <div className="md:hidden ml-auto">
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => simulatorContext.setShowConfigModal(true)}
-          className="h-8 w-8 p-0"
-        >
-          <Settings className="w-4 h-4" />
-        </Button>
-      </div>
+      {isSimulatorPage && (
+        <div className="md:hidden ml-auto">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => simulatorContext.setShowConfigModal(true)}
+            className="h-8 w-8 p-0"
+          >
+            <Settings className="w-4 h-4" />
+          </Button>
+        </div>
+      )}
     </header>
   );
 };
@@ -175,7 +195,8 @@ export const SimulatorLayout = ({ children }: SimulatorLayoutProps) => {
       searchType: 'contribution',
       value: 0,
       term: 120,
-      installmentType: 'full'
+      installmentType: 'full',
+      contemplationMonth: 6
     },
     setSimulationData: (data) => {
       setSimulatorContextValue(prev => ({
