@@ -35,32 +35,32 @@ export const SimulatorMenu = ({ onNavigate, onToggleSection }: SimulatorMenuProp
   };
 
   const menuItems = [
-    { key: 'settings', icon: Settings, label: 'Configurações', color: 'text-gray-200 hover:text-white' },
-    { key: 'home', icon: Home, label: 'Alavancagem', color: 'text-gray-200 hover:text-white' },
-    { key: 'dollar', icon: DollarSign, label: 'Financeiro', color: 'text-gray-200 hover:text-white' },
-    { key: 'trending', icon: TrendingUp, label: 'Performance', color: 'text-gray-200 hover:text-white' },
-    { key: 'clock', icon: Clock, label: 'Histórico', color: 'text-gray-200 hover:text-white' },
-    { key: 'search', icon: Search, label: 'Detalhamento', color: 'text-gray-200 hover:text-white' }
+    { key: 'settings', icon: Settings, label: 'Configurações', color: 'text-gray-600 hover:text-blue-600' },
+    { key: 'home', icon: Home, label: 'Alavancagem', color: 'text-gray-600 hover:text-green-600' },
+    { key: 'dollar', icon: DollarSign, label: 'Financeiro', color: 'text-gray-600 hover:text-yellow-600' },
+    { key: 'trending', icon: TrendingUp, label: 'Performance', color: 'text-gray-600 hover:text-purple-600' },
+    { key: 'clock', icon: Clock, label: 'Histórico', color: 'text-gray-600 hover:text-orange-600' },
+    { key: 'search', icon: Search, label: 'Detalhamento', color: 'text-gray-600 hover:text-red-600' }
   ];
 
   return (
-    <div className="fixed right-4 top-1/2 transform -translate-y-1/2 z-50">
-      <div className="bg-gray-600 dark:bg-gray-700 rounded-xl shadow-lg p-2">
-        <div className="flex flex-col space-y-3">
+    <div className="fixed left-4 top-1/2 transform -translate-y-1/2 z-50">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-2">
+        <div className="flex flex-col space-y-2">
           {menuItems.map(({ key, icon: Icon, label, color }) => (
             <Button
               key={key}
               variant="ghost"
               size="sm"
-              className={`w-10 h-10 p-0 ${color} transition-all duration-200 rounded-md`}
+              className={`w-12 h-12 p-0 ${color} transition-all duration-200 hover:scale-110`}
               onClick={() => handleClick(key)}
               title={label}
             >
-              <Icon size={16} />
+              <Icon size={20} />
             </Button>
           ))}
         </div>
       </div>
     </div>
   );
-};
+}; 

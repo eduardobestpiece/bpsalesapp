@@ -5,14 +5,13 @@ import { SimulationDataPanel } from './SimulationDataPanel';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Settings } from 'lucide-react';
+import { Settings, Home, DollarSign, TrendingUp, Clock, Search } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { SimulatorConfigModal } from './SimulatorConfigModal';
 import { useSimulatorSync } from '@/hooks/useSimulatorSync';
 import { DetailTable } from './DetailTable';
 import { CreditAccessPanel } from './CreditAccessPanel';
 import { PatrimonialLeverageNew } from './PatrimonialLeverageNew';
-import { SimulatorMenu } from './SimulatorMenu';
 
 export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   const { 
@@ -67,20 +66,13 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
     }
   };
 
-  // Função para acompanhar a rolagem - baseada na posição real dos campos originais
+  // Função para acompanhar a rolagem - agora baseada na posição dos campos originais
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
       
-      // Verificar se passou dos campos originais usando a referência real
-      if (creditSectionRef.current) {
-        const fieldsRect = creditSectionRef.current.getBoundingClientRect();
-        const fieldsTop = fieldsRect.top + scrollTop;
-        const fieldsHeight = fieldsRect.height;
-        
-        // Mostrar cabeçalho fixo quando os campos originais saírem da tela
-        setIsFieldsFixed(scrollTop > fieldsTop + fieldsHeight);
-      }
+      // Verificar se passou dos campos originais (aproximadamente 200px)
+      setIsFieldsFixed(scrollTop > 200);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -208,122 +200,160 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
   // Componente dos campos de configuração (reutilizável)
   const ConfigurationFields = ({ className = "" }: { className?: string }) => (
-    <div className={`bg-card rounded-2xl shadow border border-border p-2 md:p-3 w-full max-w-full overflow-x-hidden ${className}`}>
-      <div className="flex flex-col lg:flex-row gap-2 md:gap-3 w-full">
-        <div className="flex flex-col gap-1 flex-1 min-w-0">
-          <label className="font-medium text-xs text-foreground">Modalidade</label>
-          <Select value={localSimulationData.searchType} onValueChange={v => handleFieldChange('searchType', v === 'contribution' ? 'contribution' : 'credit')}>
-            <SelectTrigger className="text-xs h-8 w-full">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="contribution">Aporte</SelectItem>
-              <SelectItem value="credit">Crédito</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex flex-col gap-1 flex-1 min-w-0">
-          <label className="font-medium text-xs text-foreground">
-            {localSimulationData.searchType === 'contribution' ? 'Valor do aporte' : 'Valor do crédito'}
-          </label>
-          <Input
-            type="number"
-            value={localSimulationData.value || ''}
-            onChange={e => handleFieldChange('value', e.target.value ? Number(e.target.value) : 0)}
-            placeholder="0,00"
-            className="text-xs h-8 w-full"
-          />
-        </div>
-        <div className="flex flex-col gap-1 flex-1 min-w-0">
-          <label className="font-medium text-xs text-foreground">Número de parcelas</label>
-          <Select
-            value={termValue.toString()}
-            onValueChange={v => handleTermChange(Number(v))}
-          >
-            <SelectTrigger className="text-xs h-8 w-full">
-              <SelectValue placeholder="Selecione" />
-            </SelectTrigger>
-            <SelectContent>
-              {installmentTypes.map((it: any) => (
-                <SelectItem key={it.id} value={it.installment_count.toString()}>
-                  {it.installment_count}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex flex-col gap-1 flex-1 min-w-0">
-          <label className="font-medium text-xs text-foreground">Tipo de Parcela</label>
-          <Select value={localSimulationData.installmentType} onValueChange={v => handleFieldChange('installmentType', v)}>
-            <SelectTrigger className="text-xs h-8 w-full">
-              <SelectValue placeholder="Selecione" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="full">Parcela Cheia</SelectItem>
-              {reducoesParcela.map((red: any) => (
-                <SelectItem key={red.id} value={red.id}>{red.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex items-end">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={() => setShowConfigModal(true)}
-            className="h-8 w-8 p-0"
-          >
-            <Settings className="w-3 h-3" />
-          </Button>
-        </div>
+    <div className={`bg-card rounded-2xl shadow border border-border p-4 md:p-6 flex flex-col lg:flex-row lg:items-end gap-3 md:gap-4 ${className}`}>
+      <div className="flex flex-col gap-2 w-full lg:w-1/4">
+        <label className="font-medium text-sm">Modalidade</label>
+        <Select value={localSimulationData.searchType} onValueChange={v => handleFieldChange('searchType', v === 'contribution' ? 'contribution' : 'credit')}>
+          <SelectTrigger className="text-sm"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="contribution">Aporte</SelectItem>
+            <SelectItem value="credit">Crédito</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex flex-col gap-2 w-full lg:w-1/4">
+        <label className="font-medium text-sm">
+          {localSimulationData.searchType === 'contribution' && 'Valor do aporte'}
+          {localSimulationData.searchType === 'credit' && 'Valor do crédito'}
+        </label>
+        <Input
+          type="number"
+          value={localSimulationData.value || ''}
+          onChange={e => handleFieldChange('value', e.target.value ? Number(e.target.value) : 0)}
+          placeholder="0,00"
+          className="text-sm"
+        />
+      </div>
+      <div className="flex flex-col gap-2 w-full lg:w-1/4">
+        <label className="font-medium text-sm">Número de parcelas</label>
+        <Select
+          value={termValue.toString()}
+          onValueChange={v => handleTermChange(Number(v))}
+        >
+          <SelectTrigger className="text-sm"><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectContent>
+            {installmentTypes.map((it: any) => (
+              <SelectItem key={it.id} value={it.installment_count.toString()}>
+                {it.installment_count}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex flex-col gap-2 w-full lg:w-1/4">
+        <label className="font-medium text-sm">Tipo de Parcela</label>
+        <Select value={localSimulationData.installmentType} onValueChange={v => handleFieldChange('installmentType', v)}>
+          <SelectTrigger className="text-sm"><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="full">Parcela Cheia</SelectItem>
+            {reducoesParcela.map((red: any) => (
+              <SelectItem key={red.id} value={red.id}>{red.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex items-end">
+        <Button variant="outline" size="sm" onClick={() => setShowConfigModal(true)}>
+          <Settings className="w-4 h-4" />
+        </Button>
       </div>
     </div>
   );
 
   return (
-    <div className="flex flex-col gap-6 h-full relative w-full max-w-full overflow-x-hidden">
-      {/* Menu lateral fixo usando o componente SimulatorMenu */}
-      <SimulatorMenu 
-        onNavigate={handleNavigate} 
-        onToggleSection={handleToggleSection}
-      />
+    <div className="flex flex-col gap-6 h-full relative max-w-full overflow-x-hidden">
+      {/* Menu Lateral Fixo à Direita - Mais próximo da borda e sempre centralizado */}
+      <div className="fixed right-2 top-1/2 transform -translate-y-1/2 z-50">
+        <div className="bg-gray-700 dark:bg-gray-800 rounded-lg shadow-lg border border-gray-600 dark:border-gray-700 p-2">
+          <div className="flex flex-col space-y-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-10 h-10 p-0 text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-200 hover:scale-110"
+              onClick={() => handleNavigate('settings')}
+              title="Configurações"
+            >
+              <Settings size={18} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-10 h-10 p-0 text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-200 hover:scale-110"
+              onClick={() => handleNavigate('home')}
+              title="Alavancagem"
+            >
+              <Home size={18} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-10 h-10 p-0 text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-200 hover:scale-110"
+              title="Financeiro"
+            >
+              <DollarSign size={18} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-10 h-10 p-0 text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-200 hover:scale-110"
+              title="Performance"
+            >
+              <TrendingUp size={18} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-10 h-10 p-0 text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-200 hover:scale-110"
+              title="Histórico"
+            >
+              <Clock size={18} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-10 h-10 p-0 text-gray-300 hover:text-amber-600 dark:hover:text-amber-400 transition-all duration-200 hover:scale-110"
+              onClick={() => handleNavigate('search')}
+              title="Detalhamento"
+            >
+              <Search size={18} />
+            </Button>
+          </div>
+        </div>
+      </div>
 
       {/* Campos de configuração fixos no topo quando rolar */}
       {isFieldsFixed && (
-        <div className="fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border shadow-sm">
-          <div className="w-full px-2 md:px-4 lg:px-6 py-2 md:py-3 overflow-x-hidden">
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground dark:text-gray-300 mb-2">
-              <span className="font-medium">Faça a sua simulação</span>
-            </div>
-            <ConfigurationFields className="!p-2 md:!p-3 !rounded-lg !shadow-sm" />
+        <div className="fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+          <div className="container mx-auto px-4 py-3 max-w-full">
+            <ConfigurationFields className="!p-3 !rounded-lg" />
           </div>
         </div>
       )}
 
       {/* Bloco de campos dinâmicos acima do resultado */}
       {visibleSections.credit && (
-        <div ref={creditSectionRef} className={`${isFieldsFixed ? 'pt-20 md:pt-24' : ''} w-full overflow-x-hidden`}>
+        <div ref={creditSectionRef} className={`${isFieldsFixed ? 'pt-24' : ''} max-w-full`}>
           <ConfigurationFields />
         </div>
       )}
 
       {/* Seção de Crédito Acessado */}
       {visibleSections.credit && (
-        <div className="w-full overflow-x-hidden">
+        <div className="w-full max-w-full">
           <CreditAccessPanel data={localSimulationData} onCreditoAcessado={setCreditoAcessado} />
         </div>
       )}
 
       {/* Seção de Alavancagem Patrimonial - Entre crédito acessado e detalhamento */}
       {visibleSections.leverage && (
-        <div ref={leverageSectionRef} className="w-full overflow-x-hidden">
+        <div ref={leverageSectionRef} className="w-full max-w-full">
           <PatrimonialLeverageNew simulationData={localSimulationData} creditoAcessado={creditoAcessado} />
         </div>
       )}
 
       {/* Seção de Detalhamento */}
       {visibleSections.detail && (
-        <div ref={detailSectionRef} className="w-full overflow-x-hidden">
+        <div ref={detailSectionRef} className="w-full max-w-full">
           <DetailTable 
             product={{ nominalCreditValue: localSimulationData.value, termMonths: termValue }}
             administrator={{ administrationRate: 0.27 }}
