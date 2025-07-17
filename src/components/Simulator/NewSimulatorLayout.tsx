@@ -180,7 +180,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
   return (
     <div className="flex flex-col gap-6 h-full relative">
-      {/* Menu Lateral Fixo à Direita */}
+      {/* Menu Lateral Fixo à Direita - Acompanha rolagem */}
       <div className="fixed right-4 top-1/2 transform -translate-y-1/2 z-50">
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-2">
           <div className="flex flex-col space-y-2">
@@ -300,7 +300,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
         </div>
       )}
 
-      {/* Painel de resultados sincronizado com simulationData */}
+      {/* Seção de Alavancagem Patrimonial - Entre crédito acessado e detalhamento */}
       {visibleSections.leverage && (
         <div ref={leverageSectionRef} className="w-full">
           <SimulationResultsPanel data={localSimulationData} />

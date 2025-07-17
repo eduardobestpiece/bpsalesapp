@@ -14,20 +14,20 @@ interface DetailTableProps {
 
 export const DetailTable = ({ product, administrator, contemplationMonth }: DetailTableProps) => {
   const [showConfig, setShowConfig] = useState(false);
-  const [maxMonths, setMaxMonths] = useState(30);
+  const [maxMonths, setMaxMonths] = useState(product.termMonths || 240);
   const [visibleColumns, setVisibleColumns] = useState({
     mes: true,
     credito: true,
-    taxaAdministracao: false,
-    fundoReserva: false,
-    seguro: false,
-    somaCredito: false,
+    taxaAdministracao: true,
+    fundoReserva: true,
+    seguro: true,
+    somaCredito: true,
     valorParcela: true,
-    saldoDevedor: false,
-    compraAgio: false,
-    lucro: false,
-    percentualLucro: false,
-    lucroMes: false
+    saldoDevedor: true,
+    compraAgio: true,
+    lucro: true,
+    percentualLucro: true,
+    lucroMes: true
   });
 
   // Gerar dados da tabela
@@ -94,19 +94,19 @@ export const DetailTable = ({ product, administrator, contemplationMonth }: Deta
         <CardContent className="border-b">
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium">Máximo de meses a exibir:</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Máximo de meses a exibir:</label>
               <input
                 type="number"
                 value={maxMonths}
                 onChange={(e) => setMaxMonths(Number(e.target.value))}
                 min="1"
                 max={product.termMonths || 240}
-                className="ml-2 px-2 py-1 border rounded text-sm w-20"
+                className="ml-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm w-24 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
               />
             </div>
             
             <div>
-              <label className="text-sm font-medium">Colunas visíveis:</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Colunas visíveis:</label>
               <div className="flex flex-wrap gap-2 mt-2">
                 {Object.entries(visibleColumns).map(([key, visible]) => (
                   <Badge

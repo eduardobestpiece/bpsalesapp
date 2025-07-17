@@ -26,6 +26,7 @@ const formSchema = z.object({
   special_entry_percentage: z.number().min(0).max(100).optional(),
   special_entry_fixed_value: z.number().min(0).optional(),
   special_entry_installments: z.number().min(0).optional(),
+  post_contemplation_adjustment: z.number().min(0).max(100).optional(),
   is_default: z.boolean().optional(),
 });
 
@@ -50,6 +51,7 @@ export const CreateAdministratorModal: React.FC<{
       special_entry_percentage: undefined,
       special_entry_fixed_value: undefined,
       special_entry_installments: undefined,
+      post_contemplation_adjustment: undefined,
       is_default: false,
     }
   });
@@ -72,6 +74,7 @@ export const CreateAdministratorModal: React.FC<{
         special_entry_percentage: data.special_entry_percentage ?? null,
         special_entry_fixed_value: data.special_entry_fixed_value ?? null,
         special_entry_installments: data.special_entry_installments ?? null,
+        post_contemplation_adjustment: data.post_contemplation_adjustment ?? null,
         credit_update_type: data.update_type || 'specific_month',
         is_default: data.is_default || false,
         company_id: selectedCompanyId,
@@ -178,6 +181,19 @@ export const CreateAdministratorModal: React.FC<{
                 render={({ field }) => (
                   <FormItem>
                   <FormLabel>Máximo embutido (%)</FormLabel>
+                  <FormControl>
+                    <Input type="number" min="0" max="100" step="0.01" placeholder="0.00" {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} value={field.value || ''} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="post_contemplation_adjustment"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Ajuste pós contemplação (mensal) (%)</FormLabel>
                   <FormControl>
                     <Input type="number" min="0" max="100" step="0.01" placeholder="0.00" {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} value={field.value || ''} />
                   </FormControl>
@@ -295,8 +311,7 @@ export const CreateAdministratorModal: React.FC<{
                     <FormMessage />
                   </FormItem>
                 )}
-              />
-            </div>
+              </div>
             )}
             {/* Botão de ação */}
             <Button type="submit">Cadastrar</Button>
@@ -327,6 +342,7 @@ export const EditAdministratorModal: React.FC<{
       special_entry_percentage: undefined,
       special_entry_fixed_value: undefined,
       special_entry_installments: undefined,
+      post_contemplation_adjustment: undefined,
       is_default: false,
     }
   });
@@ -343,6 +359,7 @@ export const EditAdministratorModal: React.FC<{
         special_entry_percentage: administrator.special_entry_percentage || undefined,
         special_entry_fixed_value: administrator.special_entry_fixed_value || undefined,
         special_entry_installments: administrator.special_entry_installments || undefined,
+        post_contemplation_adjustment: administrator.post_contemplation_adjustment || undefined,
         is_default: administrator.is_default || false,
       });
     }
@@ -360,6 +377,7 @@ export const EditAdministratorModal: React.FC<{
         special_entry_percentage: data.special_entry_percentage ?? null,
         special_entry_fixed_value: data.special_entry_fixed_value ?? null,
         special_entry_installments: data.special_entry_installments ?? null,
+        post_contemplation_adjustment: data.post_contemplation_adjustment ?? null,
         is_default: data.is_default || false,
         company_id: selectedCompanyId,
       };
@@ -466,6 +484,19 @@ export const EditAdministratorModal: React.FC<{
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Máximo embutido (%)</FormLabel>
+                  <FormControl>
+                    <Input type="number" min="0" max="100" step="0.01" placeholder="0.00" {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} value={field.value || ''} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="post_contemplation_adjustment"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Ajuste pós contemplação (mensal) (%)</FormLabel>
                   <FormControl>
                     <Input type="number" min="0" max="100" step="0.01" placeholder="0.00" {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} value={field.value || ''} />
                   </FormControl>
