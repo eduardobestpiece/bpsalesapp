@@ -137,3 +137,13 @@ export function gerarDiasUltimos90AteHoje() {
   }
   return periodos;
 }
+
+// Função para formatar valores monetários em reais
+export function formatCurrency(value: number): string {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value);
+}
