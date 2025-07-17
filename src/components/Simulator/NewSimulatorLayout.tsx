@@ -47,8 +47,11 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   const leverageSectionRef = useRef<HTMLDivElement>(null);
   const detailSectionRef = useRef<HTMLDivElement>(null);
 
-  // Estado para posição do menu lateral
+  // Estado para posição do menu lateral - agora sem limitações
   const [menuPosition, setMenuPosition] = useState(50); // 50% = centro
+
+  // Estado para campos fixos no topo
+  const [isFieldsFixed, setIsFieldsFixed] = useState(false);
 
   // Sincronizar campos do topo com simulationData e com o contexto global
   const handleFieldChange = (field: string, value: any) => {
@@ -66,19 +69,22 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
     }
   };
 
-  // Função para acompanhar a rolagem
+  // Função para acompanhar a rolagem - agora sem limitações
   useEffect(() => {
     const handleScroll = () => {
       const scrollTop = window.scrollY;
       const windowHeight = window.innerHeight;
       const documentHeight = document.documentElement.scrollHeight;
       
-      // Calcular a posição baseada na rolagem
+      // Calcular a posição baseada na rolagem - sem limitações
       const scrollPercentage = (scrollTop / (documentHeight - windowHeight)) * 100;
       
-      // Manter o menu sempre visível, mas acompanhar a rolagem
-      const newPosition = Math.max(10, Math.min(90, 50 + (scrollPercentage - 50) * 0.3));
+      // Menu pode percorrer toda a página (0% a 100%)
+      const newPosition = Math.max(5, Math.min(95, scrollPercentage));
       setMenuPosition(newPosition);
+
+      // Verificar se os campos devem ficar fixos (após 100px de rolagem)
+      setIsFieldsFixed(scrollTop > 100);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -204,9 +210,70 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
     }
   };
 
+  // Componente dos campos de configuração (reutilizável)
+  const ConfigurationFields = ({ className = "" }: { className?: string }) => (
+    <div className={`bg-card rounded-2xl shadow border border-border p-6 flex flex-col md:flex-row md:items-end gap-4 ${className}`}>
+      <div className="flex flex-col gap-2 w-full md:w-1/4">
+        <label className="font-medium">Modalidade</label>
+        <Select value={localSimulationData.searchType} onValueChange={v => handleFieldChange('searchType', v === 'contribution' ? 'contribution' : 'credit')}>
+          <SelectTrigger><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="contribution">Aporte</SelectItem>
+            <SelectItem value="credit">Crédito</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex flex-col gap-2 w-full md:w-1/4">
+        <label className="font-medium">
+          {localSimulationData.searchType === 'contribution' && 'Valor do aporte'}
+          {localSimulationData.searchType === 'credit' && 'Valor do crédito'}
+        </label>
+        <Input
+          type="number"
+          value={localSimulationData.value || ''}
+          onChange={e => handleFieldChange('value', e.target.value ? Number(e.target.value) : 0)}
+          placeholder="0,00"
+        />
+      </div>
+      <div className="flex flex-col gap-2 w-full md:w-1/4">
+        <label className="font-medium">Número de parcelas</label>
+        <Select
+          value={termValue.toString()}
+          onValueChange={v => handleTermChange(Number(v))}
+        >
+          <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectContent>
+            {installmentTypes.map((it: any) => (
+              <SelectItem key={it.id} value={it.installment_count.toString()}>
+                {it.installment_count}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex flex-col gap-2 w-full md:w-1/4">
+        <label className="font-medium">Tipo de Parcela</label>
+        <Select value={localSimulationData.installmentType} onValueChange={v => handleFieldChange('installmentType', v)}>
+          <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="full">Parcela Cheia</SelectItem>
+            {reducoesParcela.map((red: any) => (
+              <SelectItem key={red.id} value={red.id}>{red.name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex items-end">
+        <Button variant="outline" onClick={() => setShowConfigModal(true)}>
+          <Settings className="w-5 h-5" />
+        </Button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex flex-col gap-6 h-full relative">
-      {/* Menu Lateral Fixo à Direita - Acompanha rolagem com cores adaptativas */}
+      {/* Menu Lateral Fixo à Direita - Agora percorre toda a página */}
       <div 
         className="fixed right-4 z-50 transition-all duration-300 ease-in-out"
         style={{ top: `${menuPosition}%`, transform: 'translateY(-50%)' }}
@@ -268,64 +335,19 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
         </div>
       </div>
 
+      {/* Campos de configuração fixos no topo quando rolar */}
+      {isFieldsFixed && (
+        <div className="fixed top-0 left-0 right-0 z-40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+          <div className="container mx-auto px-4 py-3">
+            <ConfigurationFields className="!p-4 !rounded-lg" />
+          </div>
+        </div>
+      )}
+
       {/* Bloco de campos dinâmicos acima do resultado */}
       {visibleSections.credit && (
-        <div ref={creditSectionRef} className="bg-card rounded-2xl shadow border border-border p-6 flex flex-col md:flex-row md:items-end gap-4">
-          <div className="flex flex-col gap-2 w-full md:w-1/4">
-            <label className="font-medium">Modalidade</label>
-            <Select value={localSimulationData.searchType} onValueChange={v => handleFieldChange('searchType', v === 'contribution' ? 'contribution' : 'credit')}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="contribution">Aporte</SelectItem>
-                <SelectItem value="credit">Crédito</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex flex-col gap-2 w-full md:w-1/4">
-            <label className="font-medium">
-              {localSimulationData.searchType === 'contribution' && 'Valor do aporte'}
-              {localSimulationData.searchType === 'credit' && 'Valor do crédito'}
-            </label>
-            <Input
-              type="number"
-              value={localSimulationData.value || ''}
-              onChange={e => handleFieldChange('value', e.target.value ? Number(e.target.value) : 0)}
-              placeholder="0,00"
-            />
-          </div>
-          <div className="flex flex-col gap-2 w-full md:w-1/4">
-            <label className="font-medium">Número de parcelas</label>
-            <Select
-              value={termValue.toString()}
-              onValueChange={v => handleTermChange(Number(v))}
-            >
-              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-              <SelectContent>
-                {installmentTypes.map((it: any) => (
-                  <SelectItem key={it.id} value={it.installment_count.toString()}>
-                    {it.installment_count}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex flex-col gap-2 w-full md:w-1/4">
-            <label className="font-medium">Tipo de Parcela</label>
-            <Select value={localSimulationData.installmentType} onValueChange={v => handleFieldChange('installmentType', v)}>
-              <SelectTrigger><SelectValue placeholder="Selecione" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="full">Parcela Cheia</SelectItem>
-                {reducoesParcela.map((red: any) => (
-                  <SelectItem key={red.id} value={red.id}>{red.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-end">
-            <Button variant="outline" onClick={() => setShowConfigModal(true)}>
-              <Settings className="w-5 h-5" />
-            </Button>
-          </div>
+        <div ref={creditSectionRef} className={`${isFieldsFixed ? 'pt-20' : ''}`}>
+          <ConfigurationFields />
         </div>
       )}
 
