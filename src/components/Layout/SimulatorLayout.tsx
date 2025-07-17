@@ -77,9 +77,9 @@ const SimulatorHeader = () => {
         <span className="font-medium">Faça a sua simulação</span>
       </div>
       
-      {/* Campos de configuração - Expandidos para ocupar mais espaço */}
+      {/* Campos de configuração - Expandidos para ocupar 70% do espaço */}
       {isSimulatorPage && (
-        <div className="hidden md:flex items-center gap-4 ml-auto flex-1 max-w-2xl">
+        <div className="hidden lg:flex items-center gap-4 ml-auto flex-1" style={{ maxWidth: '70%' }}>
         <div className="flex flex-col gap-1 flex-1">
           <label className="text-xs font-medium text-muted-foreground">Modalidade</label>
           <Select 
@@ -170,9 +170,9 @@ const SimulatorHeader = () => {
         </div>
       )}
       
-      {/* Botão de configurações para mobile */}
+      {/* Botão de configurações para mobile e telas médias */}
       {isSimulatorPage && (
-        <div className="md:hidden ml-auto">
+        <div className="lg:hidden ml-auto">
           <Button 
             variant="outline" 
             size="sm"

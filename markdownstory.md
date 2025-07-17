@@ -109,6 +109,14 @@ Bloco 1
 
 # Histórico de Atividades
 
+## [15/01/2025] Correção de Erro de Build - SimulatorLayout.tsx
+
+- **Problema**: Erro de sintaxe no arquivo `SimulatorLayout.tsx` na linha 172, causando falha no build da Vercel.
+- **Causa**: Faltava o fechamento da `div` dos campos de configuração no cabeçalho.
+- **Solução**: Adicionado o fechamento correto da `div` e da condição `{isSimulatorPage && (...)}`.
+- **Deploy**: Commit e push realizados automaticamente.
+- **Status**: ✅ Concluído
+
 ## 11/07/2024 - Ajustes Avançados CRM/Simulador (Bloco 1 Ajustes Finais de Layout e Filtro Concluído)
 
 - Todas as etapas do Bloco 1 (ajustes finais de layout e filtro) concluídas:
