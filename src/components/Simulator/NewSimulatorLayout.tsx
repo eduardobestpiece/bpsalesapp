@@ -27,15 +27,15 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   // Usar o contexto do simulador
   const simulatorContext = useSimulatorContext();
   
-  // Estado principal dos dados da simulação - mantido para compatibilidade
+  // Estado principal dos dados da simulação - sincronizado com o contexto
   const [localSimulationData, setLocalSimulationData] = useState({
     administrator: '',
     consortiumType: 'property' as 'property' | 'vehicle',
-    installmentType: 'full',
-    value: 0,
-    term: 120,
+    installmentType: simulatorContext.simulationData.installmentType,
+    value: simulatorContext.simulationData.value,
+    term: simulatorContext.simulationData.term,
     updateRate: 6,
-    searchType: 'contribution' as 'contribution' | 'credit',
+    searchType: simulatorContext.simulationData.searchType,
     bidType: '',
   });
 
@@ -163,6 +163,17 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
     setSelectedTerm(value);
     handleFieldChange('term', value);
   };
+
+  // Sincronizar dados locais com o contexto
+  useEffect(() => {
+    setLocalSimulationData(prev => ({
+      ...prev,
+      searchType: simulatorContext.simulationData.searchType,
+      value: simulatorContext.simulationData.value,
+      term: simulatorContext.simulationData.term,
+      installmentType: simulatorContext.simulationData.installmentType,
+    }));
+  }, [simulatorContext.simulationData]);
 
   // Se houver valor manual vindo do modal, ele se sobrepõe
   const termValue = manualTerm !== undefined && manualTerm !== null ? manualTerm : localSimulationData.term;

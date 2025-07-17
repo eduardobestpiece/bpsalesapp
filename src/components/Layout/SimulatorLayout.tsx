@@ -69,15 +69,15 @@ const SimulatorHeader = () => {
         <span className="font-medium">Faça a sua simulação</span>
       </div>
       
-      {/* Campos de configuração */}
-      <div className="flex items-center gap-3 ml-auto">
-        <div className="flex flex-col gap-1">
+      {/* Campos de configuração - Expandidos para ocupar mais espaço */}
+      <div className="hidden md:flex items-center gap-4 ml-auto flex-1 max-w-2xl">
+        <div className="flex flex-col gap-1 flex-1">
           <label className="text-xs font-medium text-muted-foreground">Modalidade</label>
           <Select 
             value={simulatorContext.simulationData.searchType} 
             onValueChange={v => handleFieldChange('searchType', v === 'contribution' ? 'contribution' : 'credit')}
           >
-            <SelectTrigger className="w-24 h-8 text-xs">
+            <SelectTrigger className="h-8 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -87,7 +87,7 @@ const SimulatorHeader = () => {
           </Select>
         </div>
         
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 flex-1">
           <label className="text-xs font-medium text-muted-foreground">
             {simulatorContext.simulationData.searchType === 'contribution' ? 'Valor do aporte' : 'Valor do crédito'}
           </label>
@@ -96,17 +96,17 @@ const SimulatorHeader = () => {
             value={simulatorContext.simulationData.value || ''}
             onChange={e => handleFieldChange('value', e.target.value ? Number(e.target.value) : 0)}
             placeholder="0,00"
-            className="w-24 h-8 text-xs"
+            className="h-8 text-xs"
           />
         </div>
         
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 flex-1">
           <label className="text-xs font-medium text-muted-foreground">Número de parcelas</label>
           <Select
             value={simulatorContext.simulationData.term.toString()}
             onValueChange={v => handleTermChange(Number(v))}
           >
-            <SelectTrigger className="w-24 h-8 text-xs">
+            <SelectTrigger className="h-8 text-xs">
               <SelectValue placeholder="Selecione" />
             </SelectTrigger>
             <SelectContent>
@@ -119,13 +119,13 @@ const SimulatorHeader = () => {
           </Select>
         </div>
         
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 flex-1">
           <label className="text-xs font-medium text-muted-foreground">Tipo de Parcela</label>
           <Select 
             value={simulatorContext.simulationData.installmentType} 
             onValueChange={v => handleFieldChange('installmentType', v)}
           >
-            <SelectTrigger className="w-24 h-8 text-xs">
+            <SelectTrigger className="h-8 text-xs">
               <SelectValue placeholder="Selecione" />
             </SelectTrigger>
             <SelectContent>
@@ -146,6 +146,18 @@ const SimulatorHeader = () => {
           <Settings className="w-4 h-4" />
         </Button>
       </div>
+      
+      {/* Botão de configurações para mobile */}
+      <div className="md:hidden ml-auto">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={() => simulatorContext.setShowConfigModal(true)}
+          className="h-8 w-8 p-0"
+        >
+          <Settings className="w-4 h-4" />
+        </Button>
+      </div>
     </header>
   );
 };
@@ -153,19 +165,29 @@ const SimulatorHeader = () => {
 export const SimulatorLayout = ({ children }: SimulatorLayoutProps) => {
   const { companyId } = useCrmAuth();
   
-  // Estado inicial do contexto do simulador
-  const [simulatorContextValue] = useState<SimulatorContextType>({
+  // Estado do contexto do simulador com funções reais
+  const [simulatorContextValue, setSimulatorContextValue] = useState<SimulatorContextType>({
     simulationData: {
       searchType: 'contribution',
       value: 0,
       term: 120,
       installmentType: 'full'
     },
-    setSimulationData: () => {},
+    setSimulationData: (data) => {
+      setSimulatorContextValue(prev => ({
+        ...prev,
+        simulationData: typeof data === 'function' ? data(prev.simulationData) : data
+      }));
+    },
     installmentTypes: [],
     reducoesParcela: [],
     showConfigModal: false,
-    setShowConfigModal: () => {}
+    setShowConfigModal: (show) => {
+      setSimulatorContextValue(prev => ({
+        ...prev,
+        showConfigModal: show
+      }));
+    }
   });
   
   return (
