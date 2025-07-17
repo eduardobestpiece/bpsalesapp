@@ -694,3 +694,14 @@ Próximos passos:
 - **Componentes criados:** SimulatorMenu.tsx, DetailTable.tsx, UnifiedSimulator.tsx
 - Deploy automático realizado
 - Status: ✅ CONCLUÍDO
+
+## [12/07/2024] Ajustes no Simulador - CONCLUÍDA ✅
+
+- **Menu lateral fixo à direita:** Agora acompanha a rolagem do usuário
+- **Ordem das seções corrigida:** Alavancagem patrimonial entre crédito acessado e detalhamento
+- **Layout do campo de meses corrigido:** Aplicado padrão da plataforma (cores e estilos)
+- **Todas as colunas visíveis por padrão:** Configurado para mostrar todas as colunas com número máximo de meses
+- **Campo "Ajuste pós contemplação (mensal)":** Adicionado ao modal de administradora
+- **Migração criada:** Arquivo de migração para adicionar campo na tabela administrators
+- Deploy automático realizado
+- Status: ✅ CONCLUÍDO (migração pendente de aplicação manual no Supabase)
