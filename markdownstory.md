@@ -135,6 +135,43 @@
 
 ## 📅 2025-01-15
 
+### ✅ **Implementação da Coluna "Crédito Acessado" na Tabela de Detalhamento**
+
+**Nova Funcionalidade Implementada:**
+
+1. **Nova Coluna "Crédito Acessado":**
+   - Adicionada à direita da coluna "Crédito"
+   - Idêntica à coluna "Crédito" com uma ressalva especial
+   - Congelada a coluna "Crédito" original conforme solicitado
+
+2. **Lógica do Embutido:**
+   - **Se "Com embutido" estiver selecionado:** No mês de contemplação, o crédito acessado é reduzido baseado no "Máximo embutido (%)" da administradora
+   - **Fórmula:** Crédito Acessado = Crédito - (Crédito × Máximo embutido (%))
+   - **Exemplo:** Se o crédito no mês 60 for R$ 1.944.214,52 e o máximo embutido for 25%, o crédito acessado será R$ 1.458.160,89
+
+3. **Atualização Pós Contemplação:**
+   - A atualização mensal pós contemplação ocorre sobre o valor reduzido do crédito acessado
+   - Mantém a lógica de atualização anual antes da contemplação
+
+4. **Integração com Estado do Embutido:**
+   - Sincronização do estado "Com embutido" / "Sem embutido" entre componentes
+   - Passagem do estado do embutido do `PatrimonialLeverageNew` para o `DetailTable`
+
+**Arquivos Modificados:**
+- `src/components/Simulator/DetailTable.tsx` - Adicionada nova coluna e lógica do embutido
+- `src/components/Simulator/PatrimonialLeverageNew.tsx` - Sincronização do estado do embutido
+- `src/components/Simulator/NewSimulatorLayout.tsx` - Integração do estado do embutido
+
+**Status:** ✅ **CONCLUÍDO**
+- Nova coluna "Crédito Acessado" implementada
+- Lógica do embutido funcionando corretamente
+- Coluna "Crédito" original congelada
+- Deploy realizado via `npm run dev`
+
+---
+
+## 📅 2025-01-15 (Anterior)
+
 ### ✅ **Correção da Base de Cálculo da Tabela "Detalhamento do Consórcio"**
 
 **Problema Identificado:**

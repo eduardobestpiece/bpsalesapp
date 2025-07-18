@@ -36,28 +36,10 @@ interface PropertyData {
 interface PatrimonialLeverageNewProps {
   administrator?: Administrator;
   product?: Product;
-  simulationData: {
-    administrator: string;
-    consortiumType: 'property' | 'vehicle';
-    installmentType: string;
-    value: number;
-    term: number;
-    updateRate: number;
-    searchType: 'contribution' | 'credit';
-    bidType?: string;
-    // Configurações do modal "Mais Configurações"
-    configFilters?: {
-      parcelas?: number;
-      taxaAdministracao?: number;
-      fundoReserva?: number;
-      reducaoParcela?: number;
-      atualizacaoAnual?: number;
-      atualizacaoAnualCredito?: number;
-      ativacaoSeguro?: boolean;
-      tipoParcela?: string;
-    };
-  };
+  simulationData: any;
   creditoAcessado?: number | null;
+  embutido?: 'com' | 'sem';
+  setEmbutido?: (embutido: 'com' | 'sem') => void;
 }
 
 // Dados padrão baseados na documentação
@@ -91,7 +73,9 @@ export const PatrimonialLeverageNew = ({
   administrator = DEFAULT_ADMINISTRATOR, 
   product = DEFAULT_PRODUCT, 
   simulationData,
-  creditoAcessado
+  creditoAcessado,
+  embutido,
+  setEmbutido
 }: PatrimonialLeverageNewProps) => {
   // Aplicar configurações do modal sobre os dados padrão
   const configFilters = simulationData.configFilters || {};
@@ -125,7 +109,7 @@ export const PatrimonialLeverageNew = ({
     dailyRate: 150,
     occupancyRate: 80,
     fixedCosts: 800,
-    appreciationRate: simulationData.updateRate || 8
+    appreciationRate: finalSimulationData.updateRate || 8
   });
   // Valor base para cálculos: crédito acessado se disponível, senão valor digitado
   const valorBase = creditoAcessado && creditoAcessado > 0 ? creditoAcessado : simulationData.value;
@@ -133,7 +117,7 @@ export const PatrimonialLeverageNew = ({
   const [valorImovelManual, setValorImovelManual] = useState<number | ''>('');
   const [contemplationMonth, setContemplationMonth] = useState(simulationData.contemplationMonth || 6);
   // Estado para embutido
-  const [embutido, setEmbutido] = useState<'com' | 'sem'>('com');
+  const [embutidoState, setEmbutidoState] = useState<'com' | 'sem'>('com');
 
   // Determinar se a alavanca tem valor fixo
   const hasValorFixo = !!leverageData?.fixed_property_value;
@@ -150,10 +134,10 @@ export const PatrimonialLeverageNew = ({
 
   // Crédito por imóvel com embutido
   const creditoPorImovelComEmbutido = useMemo(() => {
-    if (embutido !== 'com' || !valorImovel) return valorImovel;
+    if (embutidoState !== 'com' || !valorImovel) return valorImovel;
     const embutidoTotal = percentualEmbutido + (percentualEmbutido * percentualEmbutido);
     return valorImovel + (valorImovel * embutidoTotal);
-  }, [embutido, valorImovel, percentualEmbutido]);
+  }, [embutidoState, valorImovel, percentualEmbutido]);
 
   // Número de imóveis (considerando embutido se ativado)
   const numeroImoveis = useMemo(() => {
@@ -163,7 +147,7 @@ export const PatrimonialLeverageNew = ({
 
   // Crédito recomendado (quando embutido ativado)
   const creditoRecomendado = useMemo(() => {
-    if (embutido !== 'com' || !creditoPorImovelComEmbutido || !valorImovel) return null;
+    if (embutidoState !== 'com' || !creditoPorImovelComEmbutido || !valorImovel) return null;
     
     // Calcular crédito por imóvel com embutido usando a fórmula correta
     const embutidoTotal = percentualEmbutido + (percentualEmbutido * percentualEmbutido);
@@ -179,7 +163,7 @@ export const PatrimonialLeverageNew = ({
     const creditoArredondado = Math.ceil(creditoBase / 10000) * 10000;
     
     return creditoArredondado;
-  }, [embutido, valorImovel, percentualEmbutido, valorBase]);
+  }, [embutidoState, valorImovel, percentualEmbutido, valorBase]);
 
   // Despesas
   const despesas = useMemo(() => {
@@ -207,7 +191,7 @@ export const PatrimonialLeverageNew = ({
     // Debug: Patrimônio na contemplação calculado corretamente
     
     return patrimonioComValorizacao;
-  }, [simulationData.searchType, numeroImoveis, valorImovel, valorBase, creditoPorImovelComEmbutido, embutido, percentualEmbutido, finalSimulationData.updateRate, contemplationMonth]);
+  }, [simulationData.searchType, numeroImoveis, valorImovel, valorBase, creditoPorImovelComEmbutido, embutidoState, percentualEmbutido, finalSimulationData.updateRate, contemplationMonth]);
 
   // Atualizar valorização anual automaticamente baseado na taxa de atualização
   useEffect(() => {
@@ -216,6 +200,20 @@ export const PatrimonialLeverageNew = ({
       appreciationRate: finalSimulationData.updateRate || 8
     }));
   }, [finalSimulationData.updateRate]);
+
+  // Sincronizar estado do embutido com o componente pai
+  useEffect(() => {
+    if (setEmbutido) {
+      setEmbutido(embutidoState);
+    }
+  }, [embutidoState, setEmbutido]);
+
+  // Sincronizar estado do embutido recebido do componente pai
+  useEffect(() => {
+    if (embutido && embutido !== embutidoState) {
+      setEmbutidoState(embutido);
+    }
+  }, [embutido, embutidoState]);
 
   // Converter dados da alavanca para propertyData
   useEffect(() => {
@@ -261,7 +259,7 @@ export const PatrimonialLeverageNew = ({
   return (
     <div className="space-y-6">
       {/* Exibir Crédito Recomendado no topo, apenas se embutido estiver ativado */}
-      {embutido === 'com' && creditoRecomendado && (
+      {embutidoState === 'com' && creditoRecomendado && (
         <div className="bg-muted/50 dark:bg-[#161616] border border-border dark:border-[#A86F57]/20 rounded-lg p-3 mb-2">
           <span className="text-foreground font-semibold">Crédito Recomendado: </span>
           <span className="text-primary dark:text-[#A86F57] font-bold text-lg">{creditoRecomendado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
@@ -302,14 +300,14 @@ export const PatrimonialLeverageNew = ({
             {/* Botões Com/Sem embutido */}
             <div className="flex gap-2 mb-2">
               <Button
-                variant={embutido === 'com' ? 'default' : 'outline'}
-                onClick={() => setEmbutido('com')}
+                variant={embutidoState === 'com' ? 'default' : 'outline'}
+                onClick={() => setEmbutidoState('com')}
               >
                 Com embutido
               </Button>
               <Button
-                variant={embutido === 'sem' ? 'default' : 'outline'}
-                onClick={() => setEmbutido('sem')}
+                variant={embutidoState === 'sem' ? 'default' : 'outline'}
+                onClick={() => setEmbutidoState('sem')}
               >
                 Sem embutido
               </Button>

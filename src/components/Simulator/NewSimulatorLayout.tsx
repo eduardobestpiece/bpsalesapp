@@ -166,6 +166,9 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   // Estado para créditos selecionados (cotas)
   const [selectedCredits, setSelectedCredits] = useState<any[]>([]);
 
+  // Estado para embutido
+  const [embutido, setEmbutido] = useState<'com' | 'sem'>('com');
+
   // Funções do menu lateral
   const handleNavigate = (section: string) => {
     const refs = {
@@ -291,7 +294,12 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
       {/* Seção de Alavancagem Patrimonial - Entre crédito acessado e detalhamento */}
       {visibleSections.leverage && (
         <div ref={leverageSectionRef} className="w-full">
-          <PatrimonialLeverageNew simulationData={localSimulationData} creditoAcessado={creditoAcessado} />
+          <PatrimonialLeverageNew 
+            simulationData={localSimulationData} 
+            creditoAcessado={creditoAcessado}
+            embutido={embutido}
+            setEmbutido={setEmbutido}
+          />
         </div>
       )}
 
@@ -305,11 +313,13 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
               updateMonth: 8, // Agosto
               gracePeriodDays: 90, // 90 dias de carência
               inccRate: 6, // Taxa INCC 6%
-              postContemplationAdjustment: 0.5 // Ajuste pós contemplação 0.5%
+              postContemplationAdjustment: 0.5, // Ajuste pós contemplação 0.5%
+              maxEmbeddedPercentage: 25 // Máximo embutido 25%
             }}
             contemplationMonth={localSimulationData.contemplationMonth || 60}
             selectedCredits={selectedCredits}
             creditoAcessado={creditoAcessado || localSimulationData.value}
+            embutido={embutido}
           />
         </div>
       )}

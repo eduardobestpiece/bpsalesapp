@@ -12,6 +12,7 @@ interface DetailTableProps {
   contemplationMonth: number;
   selectedCredits?: any[]; // Créditos selecionados pelo usuário
   creditoAcessado?: number; // Crédito acessado total
+  embutido?: 'com' | 'sem'; // Estado do embutido
 }
 
 export const DetailTable = ({ 
@@ -19,13 +20,15 @@ export const DetailTable = ({
   administrator, 
   contemplationMonth, 
   selectedCredits = [], 
-  creditoAcessado = 0 
+  creditoAcessado = 0,
+  embutido = 'sem'
 }: DetailTableProps) => {
   const [showConfig, setShowConfig] = useState(false);
   const [maxMonths, setMaxMonths] = useState(100);
   const [visibleColumns, setVisibleColumns] = useState({
     mes: true,
     credito: true,
+    creditoAcessado: true,
     taxaAdministracao: true,
     fundoReserva: true,
     seguro: true,
@@ -83,6 +86,51 @@ export const DetailTable = ({
     return currentCredit;
   };
 
+  // Função para calcular o crédito acessado com embutido
+  const calculateCreditoAcessado = (month: number, baseCredit: number) => {
+    if (baseCredit === 0) return 0;
+    
+    let currentCredit = baseCredit;
+    
+    // Para os primeiros 12 meses, retorna o valor base sem atualização
+    if (month <= 12) {
+      return currentCredit;
+    }
+    
+    // Calcular as atualizações mês a mês
+    for (let m = 13; m <= month; m++) {
+      // Verificar se é um mês de atualização anual (13, 25, 37, etc.)
+      const isAnnualUpdate = (m - 1) % 12 === 0;
+      
+      if (isAnnualUpdate) {
+        // Verificar se já passou do mês de contemplação
+        if (m > contemplationMonth) {
+          // Após contemplação: atualização mensal pelo ajuste pós contemplação
+          const postContemplationRate = administrator.postContemplationAdjustment || 0;
+          currentCredit = currentCredit + (currentCredit * postContemplationRate / 100);
+        } else {
+          // Antes da contemplação: atualização anual pelo INCC
+          const inccRate = administrator.inccRate || 6; // Taxa INCC padrão
+          currentCredit = currentCredit + (currentCredit * inccRate / 100);
+        }
+      }
+      
+      // Após contemplação, aplicar atualização mensal em todos os meses
+      if (m > contemplationMonth) {
+        const postContemplationRate = administrator.postContemplationAdjustment || 0;
+        currentCredit = currentCredit + (currentCredit * postContemplationRate / 100);
+      }
+    }
+    
+    // Aplicar redução do embutido no mês de contemplação se "Com embutido" estiver selecionado
+    if (embutido === 'com' && month === contemplationMonth) {
+      const maxEmbeddedPercentage = administrator.maxEmbeddedPercentage || 25; // 25% padrão
+      currentCredit = currentCredit - (currentCredit * maxEmbeddedPercentage / 100);
+    }
+    
+    return currentCredit;
+  };
+
   // Gerar dados da tabela
   const generateTableData = () => {
     const data = [];
@@ -95,6 +143,7 @@ export const DetailTable = ({
     
     for (let month = 1; month <= totalMonths; month++) {
       const credito = calculateCreditValue(month, baseCredit);
+      const creditoAcessado = calculateCreditoAcessado(month, baseCredit);
       const taxaAdmin = credito * (administrator.administrationRate || 0.27);
       const fundoReserva = credito * 0.01; // 1%
       const seguro = (credito * 0.01) / 12; // 1%
@@ -105,6 +154,7 @@ export const DetailTable = ({
       data.push({
         mes: month,
         credito,
+        creditoAcessado,
         taxaAdministracao: taxaAdmin,
         fundoReserva,
         seguro,
@@ -175,6 +225,7 @@ export const DetailTable = ({
                   >
                     {key === 'mes' && 'Mês'}
                     {key === 'credito' && 'Crédito'}
+                    {key === 'creditoAcessado' && 'Crédito Acessado'}
                     {key === 'taxaAdministracao' && 'Taxa de Administração'}
                     {key === 'fundoReserva' && 'Fundo de Reserva'}
                     {key === 'seguro' && 'Seguro'}
@@ -201,6 +252,7 @@ export const DetailTable = ({
               <TableRow>
                 {visibleColumns.mes && <TableHead>Mês</TableHead>}
                 {visibleColumns.credito && <TableHead>Crédito</TableHead>}
+                {visibleColumns.creditoAcessado && <TableHead>Crédito Acessado</TableHead>}
                 {visibleColumns.taxaAdministracao && <TableHead>Taxa de Administração</TableHead>}
                 {visibleColumns.fundoReserva && <TableHead>Fundo de Reserva</TableHead>}
                 {visibleColumns.seguro && <TableHead>Seguro</TableHead>}
@@ -221,6 +273,7 @@ export const DetailTable = ({
                 >
                   {visibleColumns.mes && <TableCell>{row.mes}</TableCell>}
                   {visibleColumns.credito && <TableCell>{formatCurrency(row.credito)}</TableCell>}
+                  {visibleColumns.creditoAcessado && <TableCell>{formatCurrency(row.creditoAcessado)}</TableCell>}
                   {visibleColumns.taxaAdministracao && <TableCell>{formatCurrency(row.taxaAdministracao)}</TableCell>}
                   {visibleColumns.fundoReserva && <TableCell>{formatCurrency(row.fundoReserva)}</TableCell>}
                   {visibleColumns.seguro && <TableCell>{formatCurrency(row.seguro)}</TableCell>}
