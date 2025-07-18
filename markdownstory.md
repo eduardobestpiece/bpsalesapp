@@ -135,6 +135,43 @@
 
 ## 📅 **Última Atualização:** 2025-01-27
 
+### 🎯 **Correção de Performance e Lógica Pós Contemplação**
+
+**Status:** ✅ **CONCLUÍDO**
+
+#### **🔧 Problemas Identificados e Corrigidos:**
+
+1. **✅ Performance ao Trocar Tipo de Parcela**
+   - **Problema:** Demorava muito ao trocar de parcela cheia para especial
+   - **Causa:** Logs desnecessários e recálculos excessivos
+   - **Solução:** Removidos logs de debug e otimizada lógica
+
+2. **✅ Regra Pós Contemplação Unificada**
+   - **Problema:** Regras diferentes para parcela cheia e especial após contemplação
+   - **Solução:** Regra única para ambos os tipos: `Saldo devedor / (Prazo - parcelas pagas)`
+
+#### **📊 Lógica Implementada:**
+
+**Antes da Contemplação:**
+- **Parcela Cheia:** `(Crédito + Taxa + Fundo) / Prazo`
+- **Parcela Especial:** Aplicar reduções conforme configuração
+
+**Após Contemplação (IGUAL PARA AMBOS):**
+- **Primeiro mês:** `Saldo devedor / (Prazo - parcelas pagas)`
+- **Meses seguintes:** Valor fixo até próxima atualização anual
+- **Atualização anual:** Recalcular com saldo devedor atualizado
+
+#### **🔗 Arquivos Modificados:**
+- `src/components/Simulator/DetailTable.tsx` - Lógica unificada e otimização
+- `src/components/Simulator/NewSimulatorLayout.tsx` - Remoção de logs
+
+#### **🎯 Benefícios:**
+- **Performance:** Carregamento mais rápido ao trocar tipos de parcela
+- **Consistência:** Regra única pós contemplação para ambos os tipos
+- **Simplicidade:** Lógica mais clara e fácil de manter
+
+---
+
 ### 🎯 **Implementação da Lógica Correta de Cálculo de Parcelas**
 
 **Status:** ✅ **CONCLUÍDO**

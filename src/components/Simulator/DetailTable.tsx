@@ -187,11 +187,6 @@ export const DetailTable = ({
 
   // Função para gerar dados da tabela
   const generateTableData = () => {
-    console.log('🔍 [DetailTable] Iniciando geração de dados da tabela');
-    console.log('🔍 [DetailTable] installmentType:', installmentType);
-    console.log('🔍 [DetailTable] creditoAcessado:', creditoAcessado);
-    console.log('🔍 [DetailTable] contemplationMonth:', contemplationMonth);
-    
     setIsLoading(true);
     const data = [];
     const totalMonths = Math.min(maxMonths, product.termMonths || 240);
@@ -200,8 +195,6 @@ export const DetailTable = ({
     const baseCredit = selectedCredits.length > 0 
       ? selectedCredits.reduce((sum, credit) => sum + (credit.value || 0), 0)
       : creditoAcessado || 0;
-    
-    console.log('🔍 [DetailTable] baseCredit:', baseCredit);
     
     let saldoDevedorAcumulado = 0;
     let valorBaseInicial = 0; // Valor base para cálculo antes da contemplação
@@ -281,19 +274,14 @@ export const DetailTable = ({
           valorParcela = calculateSpecialInstallment(credito, month, false);
         }
       } else {
-        // Após contemplação: Saldo devedor / (Prazo - número de Parcelas pagas)
+        // Após contemplação: REGRA IGUAL PARA AMBOS OS TIPOS
+        // Saldo devedor / (Prazo - número de Parcelas pagas)
         const parcelasPagas = contemplationMonth;
         const prazoRestante = (product.termMonths || 240) - parcelasPagas;
         
         if (month === contemplationMonth + 1) {
-          // Primeiro mês após contemplação: calcular parcela fixa
-          if (installmentType === 'full') {
-            // Parcela cheia pós contemplação
-            valorParcela = (creditoAcessadoContemplacao + taxaAdmin + fundoReserva) / prazoRestante;
-          } else {
-            // Parcela especial pós contemplação
-            valorParcela = calculateSpecialInstallment(creditoAcessadoContemplacao, month, true);
-          }
+          // Primeiro mês após contemplação: calcular parcela fixa baseada no saldo devedor
+          valorParcela = saldoDevedorAcumulado / prazoRestante;
           valorParcelaFixo = valorParcela; // Fixar o valor para os próximos meses
         } else {
           // Meses seguintes: usar o valor fixo até próxima atualização
@@ -306,13 +294,8 @@ export const DetailTable = ({
             const parcelasPagasAteAgora = month - 1;
             const prazoRestanteAtualizado = (product.termMonths || 240) - parcelasPagasAteAgora;
             
-            if (installmentType === 'full') {
-              valorParcela = saldoDevedorAcumulado / prazoRestanteAtualizado;
-            } else {
-              // Para parcelas especiais, manter proporção da redução
-              const parcelaCheiaAtualizada = saldoDevedorAcumulado / prazoRestanteAtualizado;
-              valorParcela = calculateSpecialInstallment(saldoDevedorAcumulado, month, true);
-            }
+            // REGRA IGUAL PARA AMBOS OS TIPOS: saldo devedor / prazo restante
+            valorParcela = saldoDevedorAcumulado / prazoRestanteAtualizado;
             valorParcelaFixo = valorParcela; // Atualizar valor fixo
           }
         }
@@ -342,9 +325,6 @@ export const DetailTable = ({
       });
     }
     
-    console.log('🔍 [DetailTable] Dados gerados:', data.length, 'linhas');
-    console.log('🔍 [DetailTable] Primeira linha:', data[0]);
-    
     setTableData(data);
     setIsLoading(false);
     return data;
@@ -352,7 +332,6 @@ export const DetailTable = ({
 
   // Executar cálculo quando as dependências mudarem
   React.useEffect(() => {
-    console.log('🔍 [DetailTable] useEffect executado');
     generateTableData();
   }, [product, administrator, contemplationMonth, selectedCredits, creditoAcessado, installmentType, maxMonths]);
 

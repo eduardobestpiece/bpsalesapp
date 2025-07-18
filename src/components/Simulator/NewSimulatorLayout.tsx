@@ -306,7 +306,6 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
       {/* Seção de Detalhamento */}
       {visibleSections.detail && (
         <div ref={detailSectionRef} className="w-full">
-          {console.log('🔍 [NewSimulatorLayout] installmentType sendo passado:', localSimulationData.installmentType)}
           <DetailTable 
             product={{ nominalCreditValue: localSimulationData.value, termMonths: termValue }}
             administrator={{ 
