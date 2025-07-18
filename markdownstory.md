@@ -135,6 +135,35 @@
 
 ## 📅 2025-01-15
 
+### ✅ **Correção da Lógica de Atualização Pós Contemplação na Coluna "Crédito Acessado"**
+
+**Problema Identificado:**
+- A coluna "Crédito Acessado" estava aplicando a redução do embutido no final do cálculo
+- Após a contemplação, as atualizações mensais estavam ocorrendo sobre o valor original, não sobre o valor reduzido
+
+**Correção Implementada:**
+
+1. **Lógica Corrigida:**
+   - A redução do embutido agora é aplicada **durante** o mês de contemplação
+   - Após a contemplação, as atualizações mensais ocorrem sobre o valor já reduzido
+   - **Exemplo:** Se o crédito no mês 60 for R$ 1.944.214,52, após a redução de 25% fica R$ 1.458.160,89
+   - **Mês 61:** R$ 1.458.160,89 + (R$ 1.458.160,89 × 0.5%) = R$ 1.465.451,69
+
+2. **Fluxo Correto:**
+   - **Até contemplação:** Atualização anual pelo INCC
+   - **Mês de contemplação:** Aplica redução do embutido (se "Com embutido" ativo)
+   - **Após contemplação:** Atualização mensal sobre o valor reduzido
+
+**Arquivo Modificado:**
+- `src/components/Simulator/DetailTable.tsx` - Correção da função `calculateCreditoAcessado`
+
+**Status:** ✅ **CONCLUÍDO**
+- Lógica de atualização pós contemplação corrigida
+- Atualizações mensais agora ocorrem sobre o valor reduzido do embutido
+- Deploy realizado via `npm run dev`
+
+---
+
 ### ✅ **Implementação da Coluna "Crédito Acessado" na Tabela de Detalhamento**
 
 **Nova Funcionalidade Implementada:**
@@ -234,7 +263,7 @@
 
 - Todas as etapas do Bloco 1 (ajustes finais de layout e filtro) concluídas:
   - Título do gráfico agora exibe o nome do funil selecionado.
-  - Layout dos cards laterais ajustado: fontes menores, valor igual ao nome da etapa do funil, nome do item igual ao percentual do funil, títulos “Dados semanais” e “Dados do Período” acima dos cards.
+  - Layout dos cards laterais ajustado: fontes menores, valor igual ao nome da etapa do funil, nome do item igual ao percentual do funil, títulos "Dados semanais" e "Dados do Período" acima dos cards.
   - Filtro de funil mostra apenas os funis da empresa selecionada, inclusive para Master/Admin.
 - Checklist do Bloco 1 marcado como concluído em `requeststory.md`.
 - Pronto para deploy automático.
@@ -389,7 +418,7 @@ Próximos passos: ajustes no gráfico do funil, modais de indicadores, permissõ
 - [x] Adicionar nova aba "Redução de Parcela" em `Configuracoes.tsx`
 - [x] Implementar filtros: administradora e nome
 - [x] Listar colunas: Nome, Administradora, Percentual reduzido, Número de aplicações, Ações (Editar, Arquivar, Copiar)
-- [x] Modal de criação/edição: campos Nome, Administradora (dropdown + opção de adicionar), Percentual reduzido, Aplicação (multiselect: “Parcela”, “Taxa de administração”, “Fundo de reserva”, “Seguro”)
+- [x] Modal de criação/edição: campos Nome, Administradora (dropdown + opção de adicionar), Percentual reduzido, Aplicação (multiselect: "Parcela", "Taxa de administração", "Fundo de reserva", "Seguro")
 - [x] Implementar ações: editar, arquivar/restaurar, copiar (não duplicar para mesma administradora)
 - [x] Garantir integração correta com Supabase (tabela `installment_reductions`)
 - [x] Garantir que nada afeta o CRM
@@ -530,7 +559,7 @@ Concluído e pronto para deploy.
    - O projeto é multiempresa, com permissões específicas e dados isolados por empresa.
 
 2. **Solicitação Principal**
-   - O usuário solicitou a criação e evolução de um modal de “Mais configurações” para o simulador, com campos dinâmicos, alternância entre “Manual” e “Sistema” (global e por campo), integração com dados das administradoras, tipos de crédito, parcelas, taxas, fundo de reserva, seguro, redução de parcela e atualização anual. O modal deve permitir salvar/aplicar configurações, redefinir para padrão e ter UX clara.
+   - O usuário solicitou a criação e evolução de um modal de "Mais configurações" para o simulador, com campos dinâmicos, alternância entre "Manual" e "Sistema" (global e por campo), integração com dados das administradoras, tipos de crédito, parcelas, taxas, fundo de reserva, seguro, redução de parcela e atualização anual. O modal deve permitir salvar/aplicar configurações, redefinir para padrão e ter UX clara.
 
 3. **Execução e Ajustes**
    - O assistente criou a tabela `simulator_configurations` no Supabase, forneceu SQL, e implementou o componente do modal.
@@ -543,16 +572,16 @@ Concluído e pronto para deploy.
    - O modal estava esticado verticalmente; foi ajustado para altura máxima (80vh), centralizado, com rolagem interna.
    - O cabeçalho e rodapé do modal foram fixados, mantendo título e botões sempre visíveis.
    - O switch global Manual/Sistema foi ajustado para refletir o estado dos campos (ligado, desligado, misto), com visual diferenciado e tooltip.
-   - O campo “Administradora” foi aprimorado para exibir um placeholder e garantir seleção automática da administradora padrão.
-   - O campo “Tipo de Crédito” foi ajustado para exibir apenas os tipos presentes nos produtos da administradora selecionada.
-   - O campo “Parcelas” foi ajustado para alternar entre dropdown (Sistema) e input numérico (Manual), filtrando corretamente por administradora e tipo de crédito.
+   - O campo "Administradora" foi aprimorado para exibir um placeholder e garantir seleção automática da administradora padrão.
+   - O campo "Tipo de Crédito" foi ajustado para exibir apenas os tipos presentes nos produtos da administradora selecionada.
+   - O campo "Parcelas" foi ajustado para alternar entre dropdown (Sistema) e input numérico (Manual), filtrando corretamente por administradora e tipo de crédito.
    - Foram identificados problemas de relacionamento entre produtos, tipos de crédito e tipos de parcela, levando à necessidade de usar a tabela `product_installment_types` para filtrar corretamente as opções de parcelas.
 
 5. **Novas Solicitações e Melhorias**
    - O usuário solicitou ajustes adicionais:
-     - Campo “Atualização anual” (percentual, padrão 6%).
-     - Campo “Redução de parcela” com percentual e seleção de aplicação.
-     - Campo “Atualização anual do crédito” com lógica dependente do tipo de atualização da administradora (após 12 parcelas ou mês específico, com campos adicionais conforme o caso).
+     - Campo "Atualização anual" (percentual, padrão 6%).
+     - Campo "Redução de parcela" com percentual e seleção de aplicação.
+     - Campo "Atualização anual do crédito" com lógica dependente do tipo de atualização da administradora (após 12 parcelas ou mês específico, com campos adicionais conforme o caso).
    - O assistente registrou todas as solicitações em `requeststory.md` e analisou a estrutura das tabelas no Supabase para garantir a correta implementação dos relacionamentos.
 
 6. **Deploys e Histórico**
@@ -566,7 +595,7 @@ Concluído e pronto para deploy.
 ---
 
 **Situação Atual:**  
-O modal de “Mais configurações” está funcional, mas ajustes finais estão sendo feitos para garantir que os campos “Parcelas”, “Tipo de Crédito” e outros campos dinâmicos reflitam corretamente os dados do Supabase, especialmente considerando os relacionamentos entre produtos, tipos de crédito e tipos de parcela. Novos campos e lógicas estão sendo implementados conforme as últimas solicitações do usuário.
+O modal de "Mais configurações" está funcional, mas ajustes finais estão sendo feitos para garantir que os campos "Parcelas", "Tipo de Crédito" e outros campos dinâmicos reflitam corretamente os dados do Supabase, especialmente considerando os relacionamentos entre produtos, tipos de crédito e tipos de parcela. Novos campos e lógicas estão sendo implementados conforme as últimas solicitações do usuário.
 
 ## [Registro] Ajustes no modal "Mais Configurações" do Simulador (concluído)
 

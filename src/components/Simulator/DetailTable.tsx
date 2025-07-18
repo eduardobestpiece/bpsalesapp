@@ -91,6 +91,7 @@ export const DetailTable = ({
     if (baseCredit === 0) return 0;
     
     let currentCredit = baseCredit;
+    let embutidoAplicado = false;
     
     // Para os primeiros 12 meses, retorna o valor base sem atualização
     if (month <= 12) {
@@ -120,12 +121,13 @@ export const DetailTable = ({
         const postContemplationRate = administrator.postContemplationAdjustment || 0;
         currentCredit = currentCredit + (currentCredit * postContemplationRate / 100);
       }
-    }
-    
-    // Aplicar redução do embutido no mês de contemplação se "Com embutido" estiver selecionado
-    if (embutido === 'com' && month === contemplationMonth) {
-      const maxEmbeddedPercentage = administrator.maxEmbeddedPercentage || 25; // 25% padrão
-      currentCredit = currentCredit - (currentCredit * maxEmbeddedPercentage / 100);
+      
+      // Aplicar redução do embutido no mês de contemplação se "Com embutido" estiver selecionado
+      if (embutido === 'com' && m === contemplationMonth && !embutidoAplicado) {
+        const maxEmbeddedPercentage = administrator.maxEmbeddedPercentage || 25; // 25% padrão
+        currentCredit = currentCredit - (currentCredit * maxEmbeddedPercentage / 100);
+        embutidoAplicado = true;
+      }
     }
     
     return currentCredit;
