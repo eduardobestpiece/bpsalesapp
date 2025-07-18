@@ -203,17 +203,17 @@ export const PatrimonialLeverageNew = ({
 
   // Sincronizar estado do embutido com o componente pai
   useEffect(() => {
-    if (setEmbutido) {
+    if (setEmbutido && embutidoState !== embutido) {
       setEmbutido(embutidoState);
     }
-  }, [embutidoState, setEmbutido]);
+  }, [embutidoState, setEmbutido, embutido]);
 
   // Sincronizar estado do embutido recebido do componente pai
   useEffect(() => {
     if (embutido && embutido !== embutidoState) {
       setEmbutidoState(embutido);
     }
-  }, [embutido, embutidoState]);
+  }, [embutido]);
 
   // Converter dados da alavanca para propertyData
   useEffect(() => {

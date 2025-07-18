@@ -135,6 +135,37 @@
 
 ## 📅 2025-01-15
 
+### ✅ **Correções de Interface e Bug do Embutido**
+
+**Problemas Identificados:**
+1. **Cabeçalho da Tabela:** Cor incorreta (#111827) e não ficava fixo ao rolar
+2. **Bug do Embutido:** Loop infinito nos useEffect causando travamento ao trocar entre "Com embutido" e "Sem embutido"
+
+**Correções Implementadas:**
+
+1. **✅ Cabeçalho Fixo da Tabela:**
+   - **Cor Corrigida:** Alterada de #111827 para #131313 conforme solicitado
+   - **CSS Ajustado:** `sticky top-0 z-10` com `style={{ backgroundColor: '#131313' }}`
+   - **Funcionalidade:** Cabeçalho agora fica fixo ao rolar a tabela
+   - **Z-index:** Configurado para ficar acima do conteúdo
+
+2. **✅ Bug do Embutido Corrigido:**
+   - **Problema:** useEffect causando loops infinitos entre `embutidoState` e `embutido`
+   - **Solução:** Simplificação da lógica de sincronização
+   - **Correção:** Adicionada verificação `embutidoState !== embutido` para evitar loops
+   - **Resultado:** Troca entre "Com embutido" e "Sem embutido" funciona na primeira tentativa
+
+3. **✅ Melhorias de UX:**
+   - Cabeçalho sempre visível durante a rolagem
+   - Transições suaves entre estados do embutido
+   - Interface mais responsiva e estável
+
+**Resultado:**
+- ✅ Cabeçalho da tabela com cor correta (#131313)
+- ✅ Cabeçalho fixo funcionando corretamente
+- ✅ Bug do embutido corrigido
+- ✅ Interface mais estável e responsiva
+
 ### ✅ **Remoção da Trava de Contemplação e Implementação de Cabeçalho Fixo**
 
 **Problemas Identificados:**

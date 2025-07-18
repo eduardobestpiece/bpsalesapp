@@ -316,7 +316,7 @@ export const DetailTable = ({
         <div className="w-full overflow-x-auto border rounded-lg" style={{ maxHeight: '400px' }}>
           <div className="min-w-max">
             <Table>
-            <TableHeader className="sticky top-0 bg-white dark:bg-gray-900 z-10">
+            <TableHeader className="sticky top-0 z-10" style={{ backgroundColor: '#131313' }}>
               <TableRow>
                 {visibleColumns.mes && <TableHead>Mês</TableHead>}
                 {visibleColumns.credito && <TableHead>Crédito</TableHead>}
