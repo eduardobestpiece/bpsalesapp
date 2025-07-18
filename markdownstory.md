@@ -135,6 +135,34 @@
 
 ## 📅 2025-01-15
 
+### ✅ **Remoção da Trava de Contemplação e Implementação de Cabeçalho Fixo**
+
+**Problemas Identificados:**
+1. **Trava de Contemplação:** O sistema só permitia contemplação a partir do mês 12, bloqueando contemplações antes desse período
+2. **Cabeçalho da Tabela:** Não ficava fixo ao rolar, dificultando a visualização
+
+**Correções Implementadas:**
+
+1. **✅ Remoção da Trava de Contemplação:**
+   - **Antes:** Contemplação só permitida a partir do mês 12 (`if (month <= 12)`)
+   - **Agora:** Contemplação permitida desde a primeira parcela até o número de parcelas definido
+   - **Lógica Corrigida:** 
+     - Primeiro mês: valor base sem atualização
+     - Meses seguintes: atualizações conforme regras (anual e pós contemplação)
+   - **Flexibilidade:** Usuário pode definir contemplação em qualquer mês válido
+
+2. **✅ Cabeçalho Fixo da Tabela:**
+   - **Implementação:** CSS `sticky top-0` no cabeçalho da tabela
+   - **Funcionalidade:** Cabeçalho permanece visível ao rolar a tabela
+   - **Estilo:** Background adaptado para modo claro/escuro
+   - **Z-index:** Configurado para ficar acima do conteúdo
+
+**Resultado:**
+- ✅ Contemplação permitida desde a primeira parcela
+- ✅ Cabeçalho da tabela sempre visível ao rolar
+- ✅ Melhor experiência do usuário na visualização da tabela
+- ✅ Flexibilidade total para definição do mês de contemplação
+
 ### ✅ **Correção da Lógica Pós Contemplação - Taxa de Administração, Fundo de Reserva e Saldo Devedor**
 
 **Problema Identificado:**

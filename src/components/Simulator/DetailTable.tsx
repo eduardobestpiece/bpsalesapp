@@ -51,13 +51,13 @@ export const DetailTable = ({
     
     let currentCredit = baseCredit;
     
-    // Para os primeiros 12 meses, retorna o valor base sem atualização
-    if (month <= 12) {
+    // Para o primeiro mês, retorna o valor base sem atualização
+    if (month === 1) {
       return currentCredit;
     }
     
     // Calcular as atualizações mês a mês
-    for (let m = 13; m <= month; m++) {
+    for (let m = 2; m <= month; m++) {
       // Verificar se é um mês de atualização anual (13, 25, 37, etc.)
       const isAnnualUpdate = (m - 1) % 12 === 0;
       
@@ -91,13 +91,13 @@ export const DetailTable = ({
     let currentCredit = baseCredit;
     let embutidoAplicado = false;
     
-    // Para os primeiros 12 meses, retorna o valor base sem atualização
-    if (month <= 12) {
+    // Para o primeiro mês, retorna o valor base sem atualização
+    if (month === 1) {
       return currentCredit;
     }
     
     // Calcular as atualizações mês a mês
-    for (let m = 13; m <= month; m++) {
+    for (let m = 2; m <= month; m++) {
       // Verificar se é um mês de atualização anual (13, 25, 37, etc.)
       const isAnnualUpdate = (m - 1) % 12 === 0;
       
@@ -316,7 +316,7 @@ export const DetailTable = ({
         <div className="w-full overflow-x-auto border rounded-lg" style={{ maxHeight: '400px' }}>
           <div className="min-w-max">
             <Table>
-            <TableHeader>
+            <TableHeader className="sticky top-0 bg-white dark:bg-gray-900 z-10">
               <TableRow>
                 {visibleColumns.mes && <TableHead>Mês</TableHead>}
                 {visibleColumns.credito && <TableHead>Crédito</TableHead>}
