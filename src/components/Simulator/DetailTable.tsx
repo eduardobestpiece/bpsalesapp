@@ -31,8 +31,6 @@ export const DetailTable = ({
     creditoAcessado: true,
     taxaAdministracao: true,
     fundoReserva: true,
-    seguro: true,
-    somaCredito: true,
     valorParcela: true,
     saldoDevedor: true,
     compraAgio: true,
@@ -143,15 +141,32 @@ export const DetailTable = ({
       ? selectedCredits.reduce((sum, credit) => sum + (credit.value || 0), 0)
       : creditoAcessado || 0;
     
+    let saldoDevedorAcumulado = 0;
+    
     for (let month = 1; month <= totalMonths; month++) {
       const credito = calculateCreditValue(month, baseCredit);
       const creditoAcessado = calculateCreditoAcessado(month, baseCredit);
       const taxaAdmin = credito * (administrator.administrationRate || 0.27);
       const fundoReserva = credito * 0.01; // 1%
-      const seguro = (credito * 0.01) / 12; // 1%
-      const somaCredito = credito + fundoReserva + taxaAdmin;
-      const valorParcela = somaCredito / (product.termMonths || 240);
-      const saldoDevedor = credito - (valorParcela * month);
+      
+      // Calcular o saldo devedor
+      if (month === 1) {
+        // Primeiro mês: soma de Crédito + Taxa de Administração + Fundo de Reserva
+        saldoDevedorAcumulado = credito + taxaAdmin + fundoReserva;
+      } else {
+        // Meses seguintes: saldo anterior menos a parcela do mês anterior
+        const parcelaAnterior = data[month - 2]?.valorParcela || 0;
+        saldoDevedorAcumulado = saldoDevedorAcumulado - parcelaAnterior;
+      }
+      
+      const valorParcela = (credito + taxaAdmin + fundoReserva) / (product.termMonths || 240);
+      const compraAgio = credito * 0.05; // 5%
+      const lucro = credito - compraAgio;
+      const percentualLucro = (lucro / compraAgio) * 100;
+      const lucroMes = lucro / (product.termMonths || 240);
+      
+      // Destacar linha do mês de contemplação
+      const isContemplationMonth = month === contemplationMonth;
       
       data.push({
         mes: month,
@@ -159,14 +174,13 @@ export const DetailTable = ({
         creditoAcessado,
         taxaAdministracao: taxaAdmin,
         fundoReserva,
-        seguro,
-        somaCredito,
         valorParcela,
-        saldoDevedor: Math.max(0, saldoDevedor),
-        compraAgio: 0, // Placeholder
-        lucro: 0, // Placeholder
-        percentualLucro: 0, // Placeholder
-        lucroMes: 0 // Placeholder
+        saldoDevedor: saldoDevedorAcumulado,
+        compraAgio,
+        lucro,
+        percentualLucro,
+        lucroMes,
+        isContemplationMonth
       });
     }
     
@@ -230,8 +244,6 @@ export const DetailTable = ({
                     {key === 'creditoAcessado' && 'Crédito Acessado'}
                     {key === 'taxaAdministracao' && 'Taxa de Administração'}
                     {key === 'fundoReserva' && 'Fundo de Reserva'}
-                    {key === 'seguro' && 'Seguro'}
-                    {key === 'somaCredito' && 'Soma do Crédito'}
                     {key === 'valorParcela' && 'Valor da Parcela'}
                     {key === 'saldoDevedor' && 'Saldo Devedor'}
                     {key === 'compraAgio' && 'Compra do Ágio'}
@@ -257,8 +269,6 @@ export const DetailTable = ({
                 {visibleColumns.creditoAcessado && <TableHead>Crédito Acessado</TableHead>}
                 {visibleColumns.taxaAdministracao && <TableHead>Taxa de Administração</TableHead>}
                 {visibleColumns.fundoReserva && <TableHead>Fundo de Reserva</TableHead>}
-                {visibleColumns.seguro && <TableHead>Seguro</TableHead>}
-                {visibleColumns.somaCredito && <TableHead>Soma do Crédito</TableHead>}
                 {visibleColumns.valorParcela && <TableHead>Valor da Parcela</TableHead>}
                 {visibleColumns.saldoDevedor && <TableHead>Saldo Devedor</TableHead>}
                 {visibleColumns.compraAgio && <TableHead>Compra do Ágio</TableHead>}
@@ -271,15 +281,13 @@ export const DetailTable = ({
               {tableData.map((row) => (
                 <TableRow 
                   key={row.mes}
-                  className={row.mes === contemplationMonth ? "bg-green-100 dark:bg-green-900" : ""}
+                  className={row.isContemplationMonth ? "bg-green-100 dark:bg-green-900" : ""}
                 >
                   {visibleColumns.mes && <TableCell>{row.mes}</TableCell>}
                   {visibleColumns.credito && <TableCell>{formatCurrency(row.credito)}</TableCell>}
                   {visibleColumns.creditoAcessado && <TableCell>{formatCurrency(row.creditoAcessado)}</TableCell>}
                   {visibleColumns.taxaAdministracao && <TableCell>{formatCurrency(row.taxaAdministracao)}</TableCell>}
                   {visibleColumns.fundoReserva && <TableCell>{formatCurrency(row.fundoReserva)}</TableCell>}
-                  {visibleColumns.seguro && <TableCell>{formatCurrency(row.seguro)}</TableCell>}
-                  {visibleColumns.somaCredito && <TableCell>{formatCurrency(row.somaCredito)}</TableCell>}
                   {visibleColumns.valorParcela && <TableCell>{formatCurrency(row.valorParcela)}</TableCell>}
                   {visibleColumns.saldoDevedor && <TableCell>{formatCurrency(row.saldoDevedor)}</TableCell>}
                   {visibleColumns.compraAgio && <TableCell>{formatCurrency(row.compraAgio)}</TableCell>}
