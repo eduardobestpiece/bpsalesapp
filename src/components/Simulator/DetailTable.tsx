@@ -143,12 +143,31 @@ export const DetailTable = ({
     
     let saldoDevedorAcumulado = 0;
     let valorBaseInicial = 0; // Valor base para cálculo antes da contemplação
+    let creditoAcessadoContemplacao = 0; // Valor do crédito acessado no mês de contemplação
     
     for (let month = 1; month <= totalMonths; month++) {
       const credito = calculateCreditValue(month, baseCredit);
       const creditoAcessado = calculateCreditoAcessado(month, baseCredit);
-      const taxaAdmin = credito * (administrator.administrationRate || 0.27);
-      const fundoReserva = credito * 0.01; // 1%
+      
+      // Calcular taxa de administração e fundo de reserva
+      let taxaAdmin, fundoReserva;
+      
+      if (month <= contemplationMonth) {
+        // Antes da contemplação: calcula sobre o crédito normal
+        taxaAdmin = credito * (administrator.administrationRate || 0.27);
+        fundoReserva = credito * 0.01; // 1%
+      } else {
+        // Após a contemplação: calcula sobre o crédito acessado da contemplação
+        if (creditoAcessadoContemplacao === 0) {
+          // Se ainda não temos o valor da contemplação, calcula baseado no mês de contemplação
+          const creditoContemplacao = calculateCreditValue(contemplationMonth, baseCredit);
+          const creditoAcessadoContemplacaoTemp = calculateCreditoAcessado(contemplationMonth, baseCredit);
+          creditoAcessadoContemplacao = creditoAcessadoContemplacaoTemp;
+        }
+        
+        taxaAdmin = creditoAcessadoContemplacao * (administrator.administrationRate || 0.27);
+        fundoReserva = creditoAcessadoContemplacao * 0.01; // 1%
+      }
       
       // Calcular o saldo devedor
       if (month === 1) {
@@ -161,24 +180,40 @@ export const DetailTable = ({
         const somaParcelasAnteriores = data.slice(0, month - 1).reduce((sum, row) => sum + row.valorParcela, 0);
         saldoDevedorAcumulado = valorBase - somaParcelasAnteriores;
       } else {
-        // Após a contemplação: atualização anual sobre o próprio saldo devedor
-        const saldoAnterior = data[month - 2]?.saldoDevedor || 0;
-        const parcelaAnterior = data[month - 2]?.valorParcela || 0;
-        
-        // Verificar se é um mês de atualização anual após contemplação
-        const isAnnualUpdateAfterContemplation = (month - 1) % 12 === 0 && month > contemplationMonth;
-        
-        if (isAnnualUpdateAfterContemplation) {
-          // Atualização anual sobre o próprio saldo devedor
-          const inccRate = administrator.inccRate || 6;
-          saldoDevedorAcumulado = saldoAnterior + (saldoAnterior * inccRate / 100) - parcelaAnterior;
+        // Após a contemplação: nova lógica baseada no crédito acessado
+        if (month === contemplationMonth + 1) {
+          // Primeiro mês após contemplação: saldo baseado no crédito acessado
+          const valorBasePosContemplacao = creditoAcessadoContemplacao + taxaAdmin + fundoReserva;
+          const somaParcelasAteContemplacao = data.slice(0, contemplationMonth).reduce((sum, row) => sum + row.valorParcela, 0);
+          saldoDevedorAcumulado = valorBasePosContemplacao - somaParcelasAteContemplacao;
         } else {
-          // Mês normal após contemplação: saldo anterior menos parcela
-          saldoDevedorAcumulado = saldoAnterior - parcelaAnterior;
+          // Meses seguintes após contemplação
+          const saldoAnterior = data[month - 2]?.saldoDevedor || 0;
+          const parcelaAnterior = data[month - 2]?.valorParcela || 0;
+          
+          // Verificar se é um mês de atualização anual após contemplação
+          const isAnnualUpdateAfterContemplation = (month - 1) % 12 === 0 && month > contemplationMonth;
+          
+          if (isAnnualUpdateAfterContemplation) {
+            // Atualização anual sobre o próprio saldo devedor
+            const inccRate = administrator.inccRate || 6;
+            saldoDevedorAcumulado = saldoAnterior + (saldoAnterior * inccRate / 100) - parcelaAnterior;
+          } else {
+            // Mês normal após contemplação: saldo anterior menos parcela
+            saldoDevedorAcumulado = saldoAnterior - parcelaAnterior;
+          }
         }
       }
       
-      const valorParcela = (credito + taxaAdmin + fundoReserva) / (product.termMonths || 240);
+      // Calcular valor da parcela
+      let valorParcela;
+      if (month <= contemplationMonth) {
+        valorParcela = (credito + taxaAdmin + fundoReserva) / (product.termMonths || 240);
+      } else {
+        // Após contemplação: parcela baseada no crédito acessado
+        valorParcela = (creditoAcessadoContemplacao + taxaAdmin + fundoReserva) / (product.termMonths || 240);
+      }
+      
       const compraAgio = credito * 0.05; // 5%
       const lucro = credito - compraAgio;
       const percentualLucro = (lucro / compraAgio) * 100;
