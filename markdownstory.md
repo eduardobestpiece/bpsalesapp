@@ -135,6 +135,18 @@
 
 ## 📅 2025-01-15
 
+### ✅ **Configuração Permanente da Porta 8080**
+
+**Configuração Implementada:**
+- **Porta fixa:** 8080 configurada no `vite.config.ts`
+- **Regra permanente:** Servidor sempre inicia na porta 8080
+- **Configuração:** `server: { host: "::", port: 8080 }`
+
+**Resultado:**
+- ✅ Servidor sempre roda na porta 8080
+- ✅ Configuração persistente entre reinicializações
+- ✅ URL fixa: `http://localhost:8080/`
+
 ### ✅ **Remoção de Colunas e Ajuste do Saldo Devedor na Tabela de Detalhamento**
 
 **Alterações Implementadas:**
