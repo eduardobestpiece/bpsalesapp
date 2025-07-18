@@ -152,7 +152,7 @@ export const DetailTable = ({
     const reductionPercent = 0.5; // 50% de redução padrão
     const applications = ['installment', 'admin_tax', 'reserve_fund']; // Aplicar em todos por padrão
 
-    // Calcular componentes com redução
+    // Calcular componentes com redução conforme a fórmula especificada
     let principal = credit;
     let adminTax = credit * (administrator.administrationRate || 0.27);
     let reserveFund = credit * 0.01;
@@ -164,18 +164,32 @@ export const DetailTable = ({
       reserveFund = creditoAcessado * 0.01;
     }
 
-    // Aplicar reduções conforme configuração
+    // Aplicar reduções conforme configuração usando a fórmula correta
+    // Fórmula: (((Se(Redução de Parcela no Crédito = Verdadeiro; Crédito / Redução de parcela ; Crédito )) + ((SE(Redução de parcela sobre a taxa de administração = Verdadeiro ; (Crédito * Taxa da administração)*Redução de parcela); Crédito * Taxa de administração) + (SE(Redução de parcela sobre o fundo de reserva = Verdadeiro ; (Crédito * fundo de reserva)*redução de parcela); Crédito * fundo de reserva))) / Prazo
     if (applications.includes('installment')) {
-      principal = principal - (principal * reductionPercent);
+      principal = principal * (1 - reductionPercent); // Crédito * (1 - redução)
     }
     if (applications.includes('admin_tax')) {
-      adminTax = adminTax - (adminTax * reductionPercent);
+      adminTax = adminTax * (1 - reductionPercent); // Taxa * (1 - redução)
     }
     if (applications.includes('reserve_fund')) {
-      reserveFund = reserveFund - (reserveFund * reductionPercent);
+      reserveFund = reserveFund * (1 - reductionPercent); // Fundo * (1 - redução)
     }
 
-    return (principal + adminTax + reserveFund) / (product.termMonths || 240);
+    const result = (principal + adminTax + reserveFund) / (product.termMonths || 240);
+    
+    // Debug: logar os valores para verificar
+    console.log('🔍 [calculateSpecialInstallment] Debug:', {
+      credit,
+      principal,
+      adminTax,
+      reserveFund,
+      reductionPercent,
+      applications,
+      result
+    });
+    
+    return result;
   };
 
   // Função para calcular parcela pós contemplação
