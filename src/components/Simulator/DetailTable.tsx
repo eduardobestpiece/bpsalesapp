@@ -150,7 +150,7 @@ export const DetailTable = ({
     // Para parcelas especiais, usar valores padrão se não conseguir buscar do banco
     // Isso evita problemas de performance e loops infinitos
     const reductionPercent = 0.5; // 50% de redução padrão
-    const applications = ['installment', 'admin_tax', 'reserve_fund']; // Aplicar em todos por padrão
+    const applications = ['installment']; // Aplicar apenas no crédito por padrão
 
     // Calcular componentes com redução conforme a fórmula especificada
     let principal = credit;
@@ -165,16 +165,13 @@ export const DetailTable = ({
     }
 
     // Aplicar reduções conforme configuração usando a fórmula correta
-    // Fórmula: (((Se(Redução de Parcela no Crédito = Verdadeiro; Crédito / Redução de parcela ; Crédito )) + ((SE(Redução de parcela sobre a taxa de administração = Verdadeiro ; (Crédito * Taxa da administração)*Redução de parcela); Crédito * Taxa de administração) + (SE(Redução de parcela sobre o fundo de reserva = Verdadeiro ; (Crédito * fundo de reserva)*redução de parcela); Crédito * fundo de reserva))) / Prazo
+    // Fórmula: (Crédito * (1 - redução)) + Taxa de Administração + Fundo de Reserva
     if (applications.includes('installment')) {
       principal = principal * (1 - reductionPercent); // Crédito * (1 - redução)
     }
-    if (applications.includes('admin_tax')) {
-      adminTax = adminTax * (1 - reductionPercent); // Taxa * (1 - redução)
-    }
-    if (applications.includes('reserve_fund')) {
-      reserveFund = reserveFund * (1 - reductionPercent); // Fundo * (1 - redução)
-    }
+    // Taxa de administração e fundo de reserva NÃO são reduzidos
+    // adminTax = adminTax (sem redução)
+    // reserveFund = reserveFund (sem redução)
 
     const result = (principal + adminTax + reserveFund) / (product.termMonths || 240);
     
