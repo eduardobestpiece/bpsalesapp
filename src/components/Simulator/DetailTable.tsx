@@ -142,6 +142,7 @@ export const DetailTable = ({
       : creditoAcessado || 0;
     
     let saldoDevedorAcumulado = 0;
+    let valorBaseInicial = 0; // Valor base para cálculo antes da contemplação
     
     for (let month = 1; month <= totalMonths; month++) {
       const credito = calculateCreditValue(month, baseCredit);
@@ -152,11 +153,29 @@ export const DetailTable = ({
       // Calcular o saldo devedor
       if (month === 1) {
         // Primeiro mês: soma de Crédito + Taxa de Administração + Fundo de Reserva
-        saldoDevedorAcumulado = credito + taxaAdmin + fundoReserva;
+        valorBaseInicial = credito + taxaAdmin + fundoReserva;
+        saldoDevedorAcumulado = valorBaseInicial;
+      } else if (month <= contemplationMonth) {
+        // Antes da contemplação: (Crédito + Taxa + Fundo Reserva) - soma das parcelas anteriores
+        const valorBase = credito + taxaAdmin + fundoReserva;
+        const somaParcelasAnteriores = data.slice(0, month - 1).reduce((sum, row) => sum + row.valorParcela, 0);
+        saldoDevedorAcumulado = valorBase - somaParcelasAnteriores;
       } else {
-        // Meses seguintes: saldo anterior menos a parcela do mês anterior
+        // Após a contemplação: atualização anual sobre o próprio saldo devedor
+        const saldoAnterior = data[month - 2]?.saldoDevedor || 0;
         const parcelaAnterior = data[month - 2]?.valorParcela || 0;
-        saldoDevedorAcumulado = saldoDevedorAcumulado - parcelaAnterior;
+        
+        // Verificar se é um mês de atualização anual após contemplação
+        const isAnnualUpdateAfterContemplation = (month - 1) % 12 === 0 && month > contemplationMonth;
+        
+        if (isAnnualUpdateAfterContemplation) {
+          // Atualização anual sobre o próprio saldo devedor
+          const inccRate = administrator.inccRate || 6;
+          saldoDevedorAcumulado = saldoAnterior + (saldoAnterior * inccRate / 100) - parcelaAnterior;
+        } else {
+          // Mês normal após contemplação: saldo anterior menos parcela
+          saldoDevedorAcumulado = saldoAnterior - parcelaAnterior;
+        }
       }
       
       const valorParcela = (credito + taxaAdmin + fundoReserva) / (product.termMonths || 240);

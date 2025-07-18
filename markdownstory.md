@@ -135,6 +135,34 @@
 
 ## 📅 2025-01-15
 
+### ✅ **Correção da Lógica do Saldo Devedor - Regras Antes e Após Contemplação**
+
+**Problema Identificado:**
+- A lógica do saldo devedor estava simplificada e não considerava as regras diferentes antes e após a contemplação
+- Após a contemplação, a atualização anual não estava sendo aplicada sobre o próprio saldo devedor
+
+**Correção Implementada:**
+
+1. **Antes da Contemplação:**
+   - **Fórmula:** Saldo Devedor = (Crédito + Taxa de Administração + Fundo Reserva) - soma das parcelas anteriores
+   - **Cálculo:** Para cada mês, recalcula o valor base e subtrai todas as parcelas já pagas
+
+2. **Após a Contemplação:**
+   - **Atualização Anual:** Acontece sobre o próprio saldo devedor (não sobre o cálculo antes da contemplação)
+   - **Meses de Atualização:** 13, 25, 37, etc. (a cada 12 meses após contemplação)
+   - **Fórmula:** Saldo Devedor = Saldo Anterior + (Saldo Anterior × Taxa INCC) - Parcela Anterior
+   - **Meses Normais:** Saldo Devedor = Saldo Anterior - Parcela Anterior
+
+3. **Lógica Implementada:**
+   - **Mês 1:** Saldo inicial = Crédito + Taxa + Fundo Reserva
+   - **Meses 2 até Contemplação:** Valor base - soma parcelas anteriores
+   - **Após Contemplação:** Atualização anual sobre saldo devedor quando aplicável
+
+**Resultado:**
+- ✅ Saldo devedor calculado corretamente antes da contemplação
+- ✅ Atualização anual aplicada sobre o próprio saldo devedor após contemplação
+- ✅ Lógica diferenciada para períodos antes e depois da contemplação
+
 ### ✅ **Configuração Permanente da Porta 8080**
 
 **Configuração Implementada:**
