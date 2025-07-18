@@ -1,31 +1,28 @@
 # Requisição Atual
 
-**Funcionalidade:** Correção dos Cálculos + Nova Estrutura Unificada do Simulador
+**Funcionalidade:** Correção de Loop Infinito - Lógica Simplificada
 
 **Resumo:**
-1. **Correção dos Cálculos:** Corrigir o cálculo dos ganhos mensais para alavancagem patrimonial (exemplo Airbnb/Short Stay), garantindo que siga exatamente a ordem e as fórmulas fornecidas pelo usuário, pois o valor apresentado estava incorreto.
-2. **Nova Estrutura:** Eliminar as abas do simulador e criar uma interface unificada com menu lateral, combinando todas as seções em uma única página.
+Corrigido problema de loop infinito e implementada lógica simplificada para atualização no mês 14.
 
-## Detalhes do problema:
+## Problema Identificado:
 
-### Cálculos Corrigidos:
-- **Ganhos Mensais:** Seguir fórmula: valor da diária, ocupação, valor mensal, taxa da administradora, custos do imóvel e custos totais
-- **Fluxo de Caixa Pós 240 meses:** Usar patrimônio ao final no lugar do patrimônio na contemplação
-- **Pago do Próprio Bolso e Pago pelo Inquilino:** Considerar valor total do crédito acessado e calcular percentuais corretos
-- **Crédito Recomendado:** Seguir fórmula correta de embutido
+### Problema de Loop Infinito:
+- **Problema:** Lógica complexa de datas estava causando loop infinito e travando a página
+- **Causa:** Cálculos de datas complexos gerando re-renderizações infinitas
+- **Exemplo:** Console lotado de logs e página travando
+- **Resultado Incorreto:** Página travada e console infinito
+- **Resultado Correto:** Lógica simples e funcional
 
-### Nova Estrutura Implementada:
-- **Menu Lateral:** Ícones com funcionalidades de navegação e ocultação
-  - Engrenagem: Configurações (crédito acessado)
-  - Casinha: Alavancagem patrimonial
-  - Sifrão: Financeiro (ganho de capital)
-  - Seta de gráfico: Performance (futuro)
-  - Relógio: Histórico (futuro)
-  - Lupinha: Detalhamento (tabela mês a mês)
-- **Seções Unificadas:** Todas as informações em uma única página
-- **Tabela de Detalhamento:** Com configuração de colunas e meses visíveis
+### Correção Implementada:
+- ✅ Simplificada completamente a lógica de atualização
+- ✅ Fixado mês 14 como primeiro mês de atualização
+- ✅ Após mês 14, atualização a cada 12 meses (26, 38, 50, etc.)
+- ✅ Removida toda lógica complexa de datas que causava loop
+- ✅ Lógica direta e eficiente implementada
 
 ## Status: ✅ CONCLUÍDO
-- Todos os cálculos corrigidos conforme especificação
-- Nova estrutura unificada implementada com menu lateral
-- Deploy realizado com sucesso
+- ✅ Loop infinito corrigido
+- ✅ Lógica simplificada implementada
+- ✅ Atualização no mês 14 funcionando
+- ✅ Arquivo atualizado: DetailTable.tsx

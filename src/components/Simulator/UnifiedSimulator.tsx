@@ -35,6 +35,9 @@ export const UnifiedSimulator = () => {
     detail: true
   });
 
+  // Estado para créditos selecionados
+  const [selectedCredits, setSelectedCredits] = useState<any[]>([]);
+
   // Refs para navegação
   const creditSectionRef = useRef<HTMLDivElement>(null);
   const leverageSectionRef = useRef<HTMLDivElement>(null);
@@ -189,8 +192,16 @@ export const UnifiedSimulator = () => {
 
             <DetailTable 
               product={product}
-              administrator={administrator}
+              administrator={{
+                ...administrator,
+                updateMonth: administrator.updateMonth || 8, // Agosto
+                gracePeriodDays: administrator.gracePeriodDays || 90, // 90 dias de carência
+                inccRate: administrator.inccRate || 6, // Taxa INCC 6%
+                postContemplationAdjustment: administrator.postContemplationAdjustment || 0.5 // Ajuste pós contemplação 0.5%
+              }}
               contemplationMonth={contemplationMonth}
+              selectedCredits={selectedCredits}
+              creditoAcessado={product.nominalCreditValue}
             />
           </div>
         )}

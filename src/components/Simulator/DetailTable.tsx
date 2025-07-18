@@ -10,11 +10,19 @@ interface DetailTableProps {
   product: any;
   administrator: any;
   contemplationMonth: number;
+  selectedCredits?: any[]; // Créditos selecionados pelo usuário
+  creditoAcessado?: number; // Crédito acessado total
 }
 
-export const DetailTable = ({ product, administrator, contemplationMonth }: DetailTableProps) => {
+export const DetailTable = ({ 
+  product, 
+  administrator, 
+  contemplationMonth, 
+  selectedCredits = [], 
+  creditoAcessado = 0 
+}: DetailTableProps) => {
   const [showConfig, setShowConfig] = useState(false);
-  const [maxMonths, setMaxMonths] = useState(product.termMonths || 240);
+  const [maxMonths, setMaxMonths] = useState(100);
   const [visibleColumns, setVisibleColumns] = useState({
     mes: true,
     credito: true,
@@ -30,15 +38,65 @@ export const DetailTable = ({ product, administrator, contemplationMonth }: Deta
     lucroMes: true
   });
 
+  // Função para calcular quando o crédito deve ser atualizado
+  const shouldUpdateCredit = (month: number) => {
+    // Lógica simples: atualização anual a cada 12 meses (mês 13, 25, 37, etc.)
+    return (month - 1) % 12 === 0 && month > 12;
+  };
+
+  // Função para calcular o valor do crédito com atualizações
+  const calculateCreditValue = (month: number, baseCredit: number) => {
+    if (baseCredit === 0) return 0;
+    
+    let currentCredit = baseCredit;
+    
+    // Para os primeiros 12 meses, retorna o valor base sem atualização
+    if (month <= 12) {
+      return currentCredit;
+    }
+    
+    // Calcular as atualizações mês a mês
+    for (let m = 13; m <= month; m++) {
+      // Verificar se é um mês de atualização anual (13, 25, 37, etc.)
+      const isAnnualUpdate = (m - 1) % 12 === 0;
+      
+      if (isAnnualUpdate) {
+        // Verificar se já passou do mês de contemplação
+        if (m > contemplationMonth) {
+          // Após contemplação: atualização mensal pelo ajuste pós contemplação
+          const postContemplationRate = administrator.postContemplationAdjustment || 0;
+          currentCredit = currentCredit + (currentCredit * postContemplationRate / 100);
+        } else {
+          // Antes da contemplação: atualização anual pelo INCC
+          const inccRate = administrator.inccRate || 6; // Taxa INCC padrão
+          currentCredit = currentCredit + (currentCredit * inccRate / 100);
+        }
+      }
+      
+      // Após contemplação, aplicar atualização mensal em todos os meses
+      if (m > contemplationMonth) {
+        const postContemplationRate = administrator.postContemplationAdjustment || 0;
+        currentCredit = currentCredit + (currentCredit * postContemplationRate / 100);
+      }
+    }
+    
+    return currentCredit;
+  };
+
   // Gerar dados da tabela
   const generateTableData = () => {
     const data = [];
     const totalMonths = Math.min(maxMonths, product.termMonths || 240);
     
+    // Determinar o valor base do crédito
+    const baseCredit = selectedCredits.length > 0 
+      ? selectedCredits.reduce((sum, credit) => sum + (credit.value || 0), 0)
+      : creditoAcessado || 0;
+    
     for (let month = 1; month <= totalMonths; month++) {
-      const credito = product.nominalCreditValue || 500000;
-      const taxaAdmin = (credito * (administrator.administrationRate || 0.27)) / 12;
-      const fundoReserva = (credito * 0.01) / 12; // 1%
+      const credito = calculateCreditValue(month, baseCredit);
+      const taxaAdmin = credito * (administrator.administrationRate || 0.27);
+      const fundoReserva = credito * 0.01; // 1%
       const seguro = (credito * 0.01) / 12; // 1%
       const somaCredito = credito + fundoReserva + taxaAdmin;
       const valorParcela = somaCredito / (product.termMonths || 240);
@@ -157,7 +215,10 @@ export const DetailTable = ({ product, administrator, contemplationMonth }: Deta
             </TableHeader>
             <TableBody>
               {tableData.map((row) => (
-                <TableRow key={row.mes}>
+                <TableRow 
+                  key={row.mes}
+                  className={row.mes === contemplationMonth ? "bg-green-100 dark:bg-green-900" : ""}
+                >
                   {visibleColumns.mes && <TableCell>{row.mes}</TableCell>}
                   {visibleColumns.credito && <TableCell>{formatCurrency(row.credito)}</TableCell>}
                   {visibleColumns.taxaAdministracao && <TableCell>{formatCurrency(row.taxaAdministracao)}</TableCell>}

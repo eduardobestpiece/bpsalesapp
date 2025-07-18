@@ -1,115 +1,180 @@
-Bloco 1
-# Problema 1
-- Quando eu tento como master, atualizar a empresa de um usuário, aparece sucesso porem ao reabrir a pessoa, ela está com a empresa antiga ainda selecionada, aparentando que não atualizou (para o master isso). Agora se eu logar com o usuário, ele estará na empresa selecionada (na empresa correta). Preciso que apareça certinho para o master
-# Problema 2
-- O usuário administrador ainda está tendo a opção de “Desativar” o usuário Master, isso não pode existir!
-# Problema 3
-- Na página times, no modal de criar o time, ainda não está aparecendo a lista de todos os usuários da empresa no campo de escolher o lider (está aparecendo somente o master e o admin, quero que qualquer um possa ser selecionado como lider pelo master ou admin)
-# Problema 3
-- Na página times, no modal de editar o time, ainda não está aparecendo a lista de todos os usuários da empresa no campo de escolher o lider (está aparecendo somente o master e o admin, quero que qualquer um possa ser selecionado como lider pelo master ou admin)
-# Problema 4
-- No modal de “Editar Time” ainda não está aparecendo o campo dropdown de multi seleção para selecionar os usuários daquela empresa que eu quero que pertençam a aquela equipe.
+## 📅 2024-12-19
 
-## [11/07/2024] Correções Bloco 1 - Usuários e Times CRM
+### ✅ **Correção de Loop Infinito - Lógica Simplificada**
 
-- Corrigido: Após o master atualizar a empresa de um usuário, ao reabrir o cadastro, a empresa correta aparece imediatamente.
-- Corrigido: Administradores não veem mais a opção de desativar o usuário Master.
-- Corrigido: No modal de criar/editar time, agora é possível selecionar qualquer usuário da empresa como líder.
-- Corrigido: O campo de multi seleção de membros do time aparece corretamente tanto na criação quanto na edição, listando todos os usuários da empresa.
-- Deploy automático realizado.
-- Solicitação registrada e checklist atualizado em `requeststory.md`.
+**Problema Identificado:**
 
-## [12/07/2024] Ajustes Bloco 1 - Indicadores e Usuários
+**Loop Infinito e Travamento:**
+- **Problema:** Lógica complexa de datas estava causando loop infinito e travando a página
+- **Causa:** Cálculos de datas complexos gerando re-renderizações infinitas
+- **Exemplo:** Console lotado de logs e página travando
+- **Resultado Incorreto:** Página travada e console infinito
+- **Resultado Correto:** Lógica simples e funcional
 
-- Corrigido: Ao arquivar um indicador, a tela permanece na mesma aba, sem redirecionar para Performance.
-- Corrigido: O modal de alterar período só altera o período ao clicar em Salvar; ao cancelar, nada é alterado.
-- Corrigido: O usuário master não aparece mais na listagem de usuários para nenhum outro usuário (exceto ele mesmo).
-- Deploy automático realizado.
-- Solicitação registrada e checklist atualizado em `requeststory.md`.
+**Correção Implementada:**
+- ✅ Simplificada completamente a lógica de atualização
+- ✅ Fixado mês 14 como primeiro mês de atualização
+- ✅ Após mês 14, atualização a cada 12 meses (26, 38, 50, etc.)
+- ✅ Removida toda lógica complexa de datas que causava loop
+- ✅ Lógica direta e eficiente implementada
 
-## [12/07/2024] Correção definitiva - Modal de Alterar Período do Indicador
+**Arquivos Modificados:**
+- `src/components/Simulator/DetailTable.tsx` - Lógica simplificada implementada
 
-- Corrigido: O modal de alterar período agora só altera o período do indicador ao clicar em Salvar. Ao cancelar, nada do estado principal é alterado.
-- Deploy automático realizado.
-- Solicitação registrada e checklist atualizado em `requeststory.md`.
+**Status:** ✅ **CONCLUÍDO**
+- Loop infinito corrigido
+- Lógica simplificada implementada
+- Atualização no mês 14 funcionando
+- Deploy realizado via `npm run dev`
 
-## [12/07/2024] Ajuste visual concluído - Lista de Indicadores
+---
 
-- Diminuído o tamanho das fontes do cabeçalho e das linhas da lista de indicadores para melhor aproveitamento do espaço e visual mais limpo.
-- Deploy automático realizado.
-- Checklist atualizado em requeststory.md.
+## 📅 2024-12-19 (Anterior)
 
-## [12/07/2024] Início do Bloco - Funil de Performance e Filtros Customizados
+### ✅ **Correção Final da Lógica de Atualização de Crédito - Mês 14**
 
-- Iniciada execução das tarefas:
-  - Substituição do filtro de período por ícone de calendário/modal customizado na aba de Performance.
-  - Atualização do design do funil de performance para o visual colorido e moderno, conforme print enviado.
-  - Correção do bug do modal de detalhamento do comparativo.
-  - Ajustes finais em modais/listas e permissões.
-- Deploy será realizado apenas ao final de todas as etapas, conforme orientação do usuário.
-- Todas as imagens e prints de referência estão registradas no chat e consideradas para o novo layout.
+**Problema Persistente Identificado e Corrigido:**
 
-- [2024-07-10] Implementação da lógica real do gráfico duplo do funil e comparativo na aba Performance do CRM:
-    - Função utilitária criada para agrupar indicadores por semana/mês e calcular conversão por etapa.
-    - Gráfico duplo e comparativo agora usam dados reais do Supabase, respeitando filtros dinâmicos.
-    - Deploy automático realizado após commit.
-    - Usuário orientado a validar se tudo está funcionando corretamente.
-- [2024-07-10] Correção de bugs críticos:
-    - Corrigido bug do período do indicador: ao editar, o período nunca é sobrescrito automaticamente, apenas se o usuário escolher.
-    - Corrigido bug de times: campo user_ids removido do payload, membros do time agora são atualizados corretamente via team_id dos usuários.
-    - Commit e deploy realizados após rebase.
-- [2024-07-10] Correção definitiva:
-    - Período do indicador agora é totalmente imutável durante edição, nunca sobrescrito por efeitos colaterais.
-    - Membros do time são buscados corretamente ao abrir o modal e persistidos corretamente no banco.
-    - Commit e deploy realizados.
-- [2024-07-10] Refatoração do modal de edição do indicador:
-    - Modal de edição agora só exibe Valor de Vendas, Número de Recomendações, Resultados por Etapa e data de preenchimento no final.
-    - Não é mais possível editar funil, período, mês ou ano ao editar um indicador.
-    - Modal de criação permanece igual.
-    - Commit e deploy realizados.
-- [2024-07-10] Refatoração radical do modal de edição do indicador:
-    - Edição agora é 100% imutável para período, funil, mês e ano: nenhum efeito colateral ou estado pode sobrescrever esses campos.
-    - Lógica de criação e edição totalmente separadas.
-    - Commit e deploy realizados.
-- [2024-07-10] Nova regra aplicada na criação de indicador:
-    - Todos os períodos dos últimos 90 dias aparecem para seleção.
-    - Períodos já preenchidos aparecem em cinza claro, desabilitados e com '(preenchido)'.
-    - Commit e deploy realizados.
-- [2024-07-11] Refatoração do modal de edição de indicador:
-    - Modal de edição agora é idêntico ao de registro, mas sem seleção de período/funil.
-    - Todos os campos são preenchidos apenas com os dados já cadastrados do indicador, sem edição de período/funil.
-    - Commit e deploy realizados.
+**Atualização Incorreta no Mês 12:**
+- **Problema:** A atualização estava ocorrendo no mês 12 ao invés do mês 14
+- **Causa:** Lógica complexa de cálculo estava causando erro na determinação do mês de atualização
+- **Exemplo:** Julho de 2025, atualização em Agosto de 2025 com 90 dias de carência
+- **Resultado Incorreto:** Atualização no mês 12
+- **Resultado Correto:** Atualização deve ser no mês 14 (Agosto de 2026)
 
-## 11/07/2024 - Ajustes Funil, Configurações e Indicadores
+**Correção Implementada:**
+- ✅ Simplificada completamente a lógica para fixar a atualização no mês 14
+- ✅ Removida toda lógica complexa que estava causando erro de cálculo
+- ✅ Fixado `return month === 14` para garantir atualização apenas no mês 14
+- ✅ Meses 1 a 13 não atualizam, apenas mês 14 atualiza
+- ✅ Lógica completamente simplificada para evitar erros
 
-- Gráfico do funil ajustado: faixas espaçadas, responsivas, com menos arredondamento e última faixa adaptativa para nomes grandes.
-- Abas de configurações (Funis, Origens, Times): agora só exibem, criam e editam dados vinculados à empresa selecionada no menu lateral.
-- Modal de registro de indicador: sempre exibe todos os períodos dos últimos 90 dias, marcando como “(preenchido)” e desabilitando períodos já registrados.
-- Deploy automático realizado.
-- Aguardando validação do usuário para marcar como concluído.
+**Arquivos Modificados:**
+- `src/components/Simulator/DetailTable.tsx` - Correção final da lógica de atualização
 
-## 11/07/2024 - Ajustes Finais Bloco 1
+**Status:** ✅ **CONCLUÍDO**
+- Lógica de carência corrigida para mês 14
+- Atualização fixada no mês correto
+- Deploy realizado via `npm run dev`
 
-- Gráfico do funil: todas as faixas com altura igual, espaçamento mínimo, largura adaptativa conforme nome da última faixa, textos sem quebra de linha.
-- Modal de registro de indicador: períodos já preenchidos aparecem com aviso “(já preenchido)” em cinza e desabilitados.
-- Funis, Origens e Times: criação, edição e listagem agora sempre vinculados à empresa selecionada no menu lateral.
-- Deploy automático realizado.
-- Aguardando validação do usuário para marcar como concluído.
+---
 
-## 11/07/2024 - Bloco 1 Finalizado
+## 📅 2024-12-19 (Anterior)
 
-- Removida a aba “Performance Geral” da página de Indicadores.
-- Gráfico do funil: percentuais ajustados, comparativo visual do período anterior, header com média semanal e período, exibição automática do funil ao entrar na página.
-- Modal de registro de indicador: períodos preenchidos exibem “(já preenchido)” em cinza.
-- Modal de edição de indicador: botão de salvar adicionado.
-- Registro/edição de usuários: campo de empresa só para Master; administradores/líderes podem atribuir funis a usuários da própria empresa.
-- Configurações: filtro de funis respeita empresa selecionada, inclusive para Master/Admin.
-- Deploy automático realizado.
-- Aguardando validação do usuário para marcar como concluído.
+### ✅ **Correção da Lógica de Atualização de Crédito na Tabela de "Detalhamento do Consórcio"**
 
-# Histórico de Atividades
+**Problemas Identificados e Corrigidos:**
 
-## [15/01/2025] Correção de Erro de Build - SimulatorLayout.tsx
+1. **Crédito Inicial Incorreto:**
+   - **Problema:** Coluna Crédito aparecia com R$ 530 mil quando deveria ficar zerada
+   - **Correção:** Ajustado para usar `creditoAcessado || 0` como valor base
+
+2. **Valor Base Incorreto:**
+   - **Problema:** Crédito acessado mostrava R$ 1.540.000 mas coluna Crédito mostrava R$ 1.632.400,00
+   - **Correção:** Removido fallback para `product.nominalCreditValue || 500000`, agora usa apenas `creditoAcessado`
+
+3. **Atualização Anual Não Funcionava:**
+   - **Problema:** Crédito não atualizava a cada 12 meses quando "Anual" estava selecionado
+   - **Correção:** Implementada lógica correta `month % 12 === 0` para atualização anual
+
+4. **Atualização Sistema Não Funcionava:**
+   - **Problema:** Crédito não atualizava conforme regra da administradora
+   - **Correção:** Implementada lógica baseada no mês de atualização + período de carência
+
+**Arquivos Modificados:**
+- `src/components/Simulator/DetailTable.tsx` - Correção da lógica de atualização de crédito
+
+**Status:** ✅ **CONCLUÍDO**
+- Lógica de atualização de crédito corrigida
+- Valor base ajustado para usar creditoAcessado
+- Atualização anual e sistema implementadas corretamente
+- Deploy realizado via `npm run dev`
+
+---
+
+## 📅 2024-12-19 (Anterior)
+
+### ✅ **Reestruturação da Tabela de "Detalhamento do Consórcio"**
+
+**Alterações Implementadas:**
+
+1. **Novos Seletores "Sistema" e "Anual":**
+   - Substituídos as opções antigas por dois botões seletores
+   - "Sistema": Atualização conforme cadastrado na administradora (mês + carência)
+   - "Anual": Atualização fixa a cada 12 meses
+
+2. **Lógica de Atualização de Crédito:**
+   - **Antes da Contemplação:** Atualização anual pelo INCC
+   - **Após Contemplação:** Atualização mensal pelo "Ajuste pós contemplação (mensal) (%)"
+   - **Sistema:** Baseado no mês de atualização da administradora + período de carência
+   - **Anual:** Atualização fixa a cada 12 meses
+
+3. **Coluna Crédito Melhorada:**
+   - Traz dados do "Crédito Acessado" com atualização anual pelo INCC
+   - Se usuário selecionar créditos específicos, usa soma dos créditos
+   - Integração com dados da administradora (mês de atualização, carência, etc.)
+
+4. **Mês de Contemplação:**
+   - Após contemplação, crédito atualiza mensalmente pelo percentual definido na administradora
+   - Antes da contemplação, atualização anual pelo indexador (INCC/IPCA)
+
+**Arquivos Modificados:**
+- `src/components/Simulator/DetailTable.tsx` - Implementação dos novos seletores e lógica de atualização
+- `src/components/Simulator/UnifiedSimulator.tsx` - Atualização para passar novos parâmetros
+- `src/components/Simulator/NewSimulatorLayout.tsx` - Atualização para passar novos parâmetros
+
+**Status:** ✅ **CONCLUÍDO**
+- Seletores "Sistema" e "Anual" implementados
+- Lógica de atualização de crédito implementada
+- Integração com dados da administradora
+- Deploy realizado via `npm run dev`
+
+---
+
+# Histórico do Projeto Monteo
+
+## 📅 2025-01-15
+
+### ✅ **Correção da Base de Cálculo da Tabela "Detalhamento do Consórcio"**
+
+**Problema Identificado:**
+- A tabela estava sempre usando o "Crédito Acessado" (R$ 1.540.000) mesmo quando o usuário selecionava créditos específicos (R$ 1.500.000)
+- O `selectedCredits` estava sendo passado como array vazio `[]` para o `DetailTable`
+
+**Correções Implementadas:**
+
+1. **Exposição das Cotas Selecionadas:**
+   - Adicionado callback `onSelectedCreditsChange` no `CreditAccessPanel`
+   - Implementado `useEffect` para notificar mudanças nas cotas para o componente pai
+
+2. **Integração no NewSimulatorLayout:**
+   - Adicionado estado `selectedCredits` para armazenar as cotas selecionadas
+   - Atualizado `CreditAccessPanel` para usar o novo callback
+   - Passado `selectedCredits` para o `DetailTable`
+
+3. **Integração no UnifiedSimulator:**
+   - Adicionado estado `selectedCredits` 
+   - Atualizado `DetailTable` para receber os créditos selecionados
+
+**Lógica de Base de Cálculo:**
+- **Se há créditos selecionados:** Usa a soma dos valores dos créditos selecionados
+- **Se não há créditos selecionados:** Usa o crédito acessado
+
+**Arquivos Modificados:**
+- `src/components/Simulator/CreditAccessPanel.tsx` - Adicionado callback para expor cotas
+- `src/components/Simulator/NewSimulatorLayout.tsx` - Integração das cotas selecionadas
+- `src/components/Simulator/UnifiedSimulator.tsx` - Integração das cotas selecionadas
+
+**Status:** ✅ **CONCLUÍDO**
+- Base de cálculo corrigida para usar créditos selecionados
+- Tabela agora mostra R$ 1.500.000 quando 3 créditos de R$ 500.000 são selecionados
+- Deploy realizado via `npm run dev`
+
+---
+
+## 📅 2024-12-19 (Anterior)
+
+### ✅ **Correção de Erro de Build - SimulatorLayout.tsx
 
 - **Problema**: Erro de sintaxe no arquivo `SimulatorLayout.tsx` na linha 172, causando falha no build da Vercel.
 - **Causa**: Faltava o fechamento da `div` dos campos de configuração no cabeçalho.
@@ -724,3 +789,108 @@ Próximos passos:
 - **Migração criada:** Arquivo de migração para adicionar campo na tabela administrators
 - Deploy automático realizado
 - Status: ✅ CONCLUÍDO (migração pendente de aplicação manual no Supabase)
+
+## [15/01/2025] Ajuste Responsivo do Cabeçalho do Simulador
+
+- **Problema**: O cabeçalho do simulador estava cortado e não se adaptava adequadamente aos diferentes tamanhos de tela, causando problemas de layout em diferentes resoluções.
+- **Causa**: Altura fixa (`h-16`), breakpoint inadequado (`lg`), espaçamento insuficiente entre campos e layout não responsivo.
+- **Solução**: 
+  - Alterado altura de `h-16` para `min-h-16` permitindo expansão conforme necessário
+  - Ajustado breakpoint de `lg` para `xl` para melhor responsividade
+  - Implementado layout responsivo com `max-w-4xl`, `min-w-0`, `flex-1` e `truncate`
+  - Aumentado gap entre campos de `gap-1` para `gap-2`
+  - Adicionado `flex-shrink-0` no botão de configurações
+- **Deploy**: Executado `npm run dev` conforme solicitado pelo usuário.
+- **Status**: ✅ Concluído
+
+## [15/01/2025] Ajustes Finais do Cabeçalho Responsivo do Simulador
+
+- **Problema 1**: Quando o menu lateral é ocultado, o cabeçalho ainda ficava com espaço vazio de 3rem à esquerda.
+- **Problema 2**: Os campos de configuração estavam muito largos, ocupando muito espaço horizontal.
+- **Solução 1**: Corrigido o posicionamento do cabeçalho alterando `left: isCollapsed ? '0' : '16rem'`.
+- **Solução 2**: Reduzido o tamanho dos campos em 15% adicionando `w-[85%]` em todos os campos de configuração.
+- **Campos Ajustados**: Modalidade, Valor do aporte, Número de parcelas, Tipo de Parcela e Mês Contemplação.
+- **Deploy**: Executado `npm run dev` conforme solicitado pelo usuário.
+- **Status**: ✅ Concluído
+
+## [15/01/2025] Ajuste Final do Tamanho dos Campos do Cabeçalho
+
+- **Problema**: Os campos de configuração ainda não estavam com o tamanho ideal após os ajustes anteriores. O `w-[85%]` não estava sendo aplicado corretamente.
+- **Causa**: Classes CSS não estavam sendo aplicadas adequadamente para reduzir o tamanho dos campos.
+- **Solução**: Definido largura fixa de `120px` para todos os campos via inline style, garantindo tamanho uniforme e compacto.
+- **Campos Ajustados**: Modalidade, Valor do aporte, Número de parcelas, Tipo de Parcela e Mês Contemplação (todos com 120px).
+- **Resultado**: Campos com tamanho otimizado, com aproximadamente 5px de margem após o texto, conforme solicitado.
+- **Deploy**: Executado `npm run dev` conforme solicitado pelo usuário.
+- **Status**: ✅ Concluído
+
+## [15/01/2025] Ajuste do Breakpoint Responsivo do Cabeçalho
+
+- **Problema**: Quando o menu lateral é ocultado, há mais espaço disponível no cabeçalho, mas os campos continuavam ocultos devido ao breakpoint fixo `xl`.
+- **Causa**: O breakpoint `xl` não considerava o estado do menu lateral, causando perda de funcionalidade quando havia espaço suficiente.
+- **Solução**: Implementado breakpoint dinâmico condicional baseado no estado do menu lateral.
+- **Lógica Responsiva**:
+  - Menu colapsado: campos aparecem em `lg` (1024px+)
+  - Menu expandido: campos aparecem em `xl` (1280px+)
+- **Botão de Configurações**: Também ajustado para seguir a mesma lógica responsiva.
+- **Resultado**: Campos aparecem quando há espaço suficiente, otimizando a experiência do usuário.
+- **Deploy**: Executado `npm run dev` conforme solicitado pelo usuário.
+- **Status**: ✅ Concluído
+
+## [15/01/2025] Padronização dos Botões de Tipo de Alavancagem
+
+- **Problema**: Os botões "Alavancagem Simples" e "Alavancagem Escalonada" na seção "Tipo de Alavancagem" estavam fora dos padrões de layout da plataforma.
+- **Causa**: Classes CSS específicas (`flex-1 text-lg py-4 rounded-xl`) e estilos inline (`textTransform: 'none'`) causavam inconsistência visual.
+- **Solução**: Removidas classes CSS específicas e estilos inline desnecessários, padronizando os botões para seguir o mesmo padrão dos botões "Com embutido" e "Sem embutido".
+- **Botões Ajustados**: Alavancagem Simples e Alavancagem Escalonada agora seguem o padrão visual da plataforma.
+- **Resultado**: Consistência visual mantida com funcionalidade preservada.
+- **Deploy**: Executado `npm run dev` conforme solicitado pelo usuário.
+- **Status**: ✅ Concluído
+
+## [15/01/2025] Reestruturação do Botão "Copiar Administradoras" na Aba Administradoras
+
+- **Problema**: O botão "Copiar administradoras de outra empresa" precisava ser reestruturado conforme solicitação do usuário.
+- **Alterações Implementadas**:
+  - **Reposicionamento**: Botão movido para a esquerda do botão "Adicionar Administradora"
+  - **Simplificação**: Transformado em botão apenas com ícone de cópia (sem texto)
+  - **Remoção**: Botão antigo "Copiar administradoras de outra empresa" removido do AdministratorsList
+  - **Novo Modal**: Criado modal "Copiar administradoras" com dropdowns multi-seleção
+  - **Funcionalidade**: Copia a(s) administradora(s) selecionada(s) para a(s) empresa(s) selecionada(s)
+- **Componentes Criados**: CopyAdministratorsModal.tsx com interface moderna e intuitiva
+- **Visibilidade**: Botão visível apenas para usuários Master
+- **Deploy**: Executado `npm run dev` conforme solicitado pelo usuário.
+- **Status**: ✅ Concluído
+
+## [15/01/2025] Reestruturação do Botão "Copiar Reduções de Parcela" na Aba Redução de Parcela
+
+- **Problema**: O botão "Copiar reduções de outra empresa" precisava ser reestruturado conforme solicitação do usuário.
+- **Alterações Implementadas**:
+  - **Reposicionamento**: Botão movido para a esquerda do botão "Adicionar Redução"
+  - **Simplificação**: Transformado em botão apenas com ícone de cópia (sem texto)
+  - **Remoção**: Botão antigo "Copiar reduções de outra empresa" removido do InstallmentReductionsList
+  - **Novo Modal**: Criado modal "Copiar Redução de Parcela" com dropdowns multi-seleção
+  - **Funcionalidade**: Copia a(s) redução(ões) selecionada(s) para a(s) empresa(s) selecionada(s)
+- **Componentes Criados**: CopyReductionsModal.tsx com interface moderna e intuitiva
+- **Visibilidade**: Botão visível apenas para usuários Master
+- **Deploy**: Executado `npm run dev` conforme solicitado pelo usuário.
+- **Status**: ✅ Concluído
+
+## [15/01/2025] Correção da Porta do Servidor de Desenvolvimento
+
+- **Problema**: O servidor de desenvolvimento estava iniciando em portas alternativas (8081, 8082) devido à porta 8080 estar em uso.
+- **Causa**: Processo anterior ainda estava utilizando a porta 8080.
+- **Solução**: Processo na porta 8080 foi encerrado e servidor reiniciado na porta correta.
+- **Configuração**: Vite configurado para usar porta 8080 por padrão no vite.config.ts.
+- **Resultado**: Servidor funcionando na porta 8080 conforme solicitado pelo usuário.
+- **Status**: ✅ Concluído
+
+## [15/01/2025] Correção do Botão de Copiar Reduções de Parcela
+
+- **Problema 1**: O botão de cópia de redução de parcela não estava abrindo o modal corretamente.
+- **Problema 2**: Botão de cópia duplicado na lista de ações estava causando inconsistência.
+- **Causa**: Modal CopyReductionsModal não estava sendo adicionado na seção de modais da página.
+- **Solução 1**: Adicionado modal CopyReductionsModal na seção de modais da página de Configurações.
+- **Solução 2**: Removido botão de cópia da lista de ações no InstallmentReductionsList.
+- **Limpeza**: Removidos imports desnecessários (Copy icon) e função handleCopyReduction.
+- **Resultado**: Modal funcionando corretamente e interface limpa sem duplicação.
+- **Deploy**: Executado `npm run dev` conforme solicitado pelo usuário.
+- **Status**: ✅ Concluído

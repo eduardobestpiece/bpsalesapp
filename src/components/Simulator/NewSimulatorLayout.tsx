@@ -163,6 +163,9 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   // Estado para crédito acessado
   const [creditoAcessado, setCreditoAcessado] = useState<number | null>(null);
 
+  // Estado para créditos selecionados (cotas)
+  const [selectedCredits, setSelectedCredits] = useState<any[]>([]);
+
   // Funções do menu lateral
   const handleNavigate = (section: string) => {
     const refs = {
@@ -277,7 +280,11 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
       {/* Seção de Crédito Acessado */}
       {visibleSections.credit && (
         <div className="w-full">
-          <CreditAccessPanel data={localSimulationData} onCreditoAcessado={setCreditoAcessado} />
+          <CreditAccessPanel 
+            data={localSimulationData} 
+            onCreditoAcessado={setCreditoAcessado}
+            onSelectedCreditsChange={setSelectedCredits}
+          />
         </div>
       )}
 
@@ -293,8 +300,16 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
         <div ref={detailSectionRef} className="w-full">
           <DetailTable 
             product={{ nominalCreditValue: localSimulationData.value, termMonths: termValue }}
-            administrator={{ administrationRate: 0.27 }}
-            contemplationMonth={12}
+            administrator={{ 
+              administrationRate: 0.27,
+              updateMonth: 8, // Agosto
+              gracePeriodDays: 90, // 90 dias de carência
+              inccRate: 6, // Taxa INCC 6%
+              postContemplationAdjustment: 0.5 // Ajuste pós contemplação 0.5%
+            }}
+            contemplationMonth={localSimulationData.contemplationMonth || 60}
+            selectedCredits={selectedCredits}
+            creditoAcessado={creditoAcessado || localSimulationData.value}
           />
         </div>
       )}

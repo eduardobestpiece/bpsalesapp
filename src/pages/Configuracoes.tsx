@@ -5,11 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Search } from 'lucide-react';
+import { Plus, Search, Copy } from 'lucide-react';
 
 import { SimulatorLayout } from '@/components/Layout/SimulatorLayout';
 import { CreateAdministratorModal, EditAdministratorModal } from '@/components/Administrators/AdministratorModal';
 import { AdministratorsList } from '@/components/Administrators/AdministratorsList';
+import { CopyAdministratorsModal } from '@/components/Administrators/CopyAdministratorsModal';
+import { CopyReductionsModal } from '@/components/Administrators/CopyReductionsModal';
 import { ProductModal } from '@/components/Administrators/ProductModal';
 import { ProductsList } from '@/components/Administrators/ProductsList';
 import { InstallmentTypeModal } from '@/components/Administrators/InstallmentTypeModal';
@@ -19,6 +21,7 @@ import { LeveragesList } from '@/components/Administrators/LeveragesList';
 import { InstallmentReductionsList } from '@/components/Administrators/InstallmentReductionsList';
 import { InstallmentReductionModal } from '@/components/Administrators/InstallmentReductionModal';
 import { UsersList } from '@/components/CRM/Configuration/UsersList';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
 
 export default function Configuracoes() {
   const [selectedAdministrator, setSelectedAdministrator] = useState<any>(null);
@@ -54,6 +57,15 @@ export default function Configuracoes() {
   const [isCopyReduction, setIsCopyReduction] = useState(false);
 
   const [refreshKey, setRefreshKey] = useState(0);
+
+  // Estados para o novo modal de copiar administradoras
+  const [showCopyAdministratorsModal, setShowCopyAdministratorsModal] = useState(false);
+
+  // Estados para o novo modal de copiar reduções
+  const [showCopyReductionsModal, setShowCopyReductionsModal] = useState(false);
+
+  const { userRole } = useCrmAuth();
+  const isMaster = userRole === 'master';
 
   const handleRefresh = () => {
     setRefreshKey(prev => prev + 1);
@@ -92,11 +104,6 @@ export default function Configuracoes() {
   const handleEditReduction = (reduction: any) => {
     setSelectedReduction(reduction);
     setIsCopyReduction(false);
-    setShowReductionModal(true);
-  };
-  const handleCopyReduction = (reduction: any) => {
-    setSelectedReduction(reduction);
-    setIsCopyReduction(true);
     setShowReductionModal(true);
   };
   const handleCreateReduction = () => {
@@ -149,10 +156,22 @@ export default function Configuracoes() {
                         <h2 className="text-2xl font-semibold text-foreground">Administradoras</h2>
                         <p className="text-muted-foreground mt-1">Gerencie as administradoras de consórcio</p>
                       </div>
-                      <Button onClick={() => setShowCreateAdministratorModal(true)} className="bg-gradient-primary hover:opacity-90">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Adicionar Administradora
-                      </Button>
+                      <div className="flex gap-2">
+                        {isMaster && (
+                          <Button 
+                            variant="outline" 
+                            size="icon"
+                            onClick={() => setShowCopyAdministratorsModal(true)}
+                            title="Copiar administradoras"
+                          >
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                        )}
+                        <Button onClick={() => setShowCreateAdministratorModal(true)} className="bg-gradient-primary hover:opacity-90">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Adicionar Administradora
+                        </Button>
+                      </div>
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-4">
@@ -203,6 +222,10 @@ export default function Configuracoes() {
                         setSelectedAdministrator(null);
                         handleRefresh();
                       }}
+                    />
+                    <CopyAdministratorsModal
+                      open={showCopyAdministratorsModal}
+                      onOpenChange={setShowCopyAdministratorsModal}
                     />
                   </div>
                 </TabsContent>
@@ -319,10 +342,22 @@ export default function Configuracoes() {
                         <h2 className="text-2xl font-semibold text-foreground">Redução de Parcela</h2>
                         <p className="text-muted-foreground mt-1">Gerencie as regras de redução de parcela</p>
                       </div>
-                      <Button onClick={handleCreateReduction} className="bg-gradient-primary hover:opacity-90">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Adicionar Redução
-                      </Button>
+                      <div className="flex gap-2">
+                        {isMaster && (
+                          <Button 
+                            variant="outline" 
+                            size="icon"
+                            onClick={() => setShowCopyReductionsModal(true)}
+                            title="Copiar reduções de parcela"
+                          >
+                            <Copy className="w-4 h-4" />
+                          </Button>
+                        )}
+                        <Button onClick={handleCreateReduction} className="bg-gradient-primary hover:opacity-90">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Adicionar Redução
+                        </Button>
+                      </div>
                     </div>
                     <div className="flex flex-col sm:flex-row gap-4">
                       <div className="relative flex-1">
@@ -351,7 +386,6 @@ export default function Configuracoes() {
                       statusFilter={reductionStatusFilter}
                       selectedAdministrator={reductionAdminFilter || ''}
                       onEdit={handleEditReduction}
-                      onCopy={handleCopyReduction}
                     />
                     <InstallmentReductionModal
                       open={showReductionModal}
@@ -421,6 +455,16 @@ export default function Configuracoes() {
             onClose={closeModals}
             leverage={selectedLeverage}
             onSave={closeModals}
+          />
+
+          <CopyAdministratorsModal
+            open={showCopyAdministratorsModal}
+            onOpenChange={setShowCopyAdministratorsModal}
+          />
+
+          <CopyReductionsModal
+            open={showCopyReductionsModal}
+            onOpenChange={setShowCopyReductionsModal}
           />
         </div>
       </div>

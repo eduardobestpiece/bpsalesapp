@@ -380,17 +380,13 @@ export const PatrimonialLeverageNew = ({
             <div className="flex gap-2 mt-2">
               <Button
                 variant={leverageType === 'single' ? 'default' : 'outline'}
-                className={`flex-1 text-lg py-4 rounded-xl ${leverageType === 'single' ? '' : ''}`}
                 onClick={() => setLeverageType('single')}
-                style={{ textTransform: 'none' }}
               >
                 Alavancagem Simples
               </Button>
               <Button
                 variant={leverageType === 'scaled' ? 'default' : 'outline'}
-                className={`flex-1 text-lg py-4 rounded-xl ${leverageType === 'scaled' ? '' : ''}`}
                 onClick={() => setLeverageType('scaled')}
-                style={{ textTransform: 'none' }}
               >
                 Alavancagem Escalonada
               </Button>

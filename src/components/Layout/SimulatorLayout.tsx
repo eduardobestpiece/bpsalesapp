@@ -64,9 +64,9 @@ const SimulatorHeader = () => {
   
   return (
     <header 
-      className="flex h-16 shrink-0 items-center gap-4 border-b border-border dark:border-[#A86F57]/20 px-4 bg-background dark:bg-[#1E1E1E] fixed top-0 z-40"
+      className="flex min-h-16 shrink-0 items-center gap-4 border-b border-border dark:border-[#A86F57]/20 px-4 bg-background dark:bg-[#1E1E1E] fixed top-0 z-40"
       style={{
-        left: isCollapsed ? '3rem' : '16rem',
+        left: isCollapsed ? '0' : '16rem',
         right: '0',
         transition: 'left 0.2s ease-linear'
       }}
@@ -77,102 +77,101 @@ const SimulatorHeader = () => {
         <span className="font-medium">Faça a sua simulação</span>
       </div>
       
-      {/* Campos de configuração - Reduzidos para garantir que caibam */}
+      {/* Campos de configuração - Layout responsivo melhorado */}
       {isSimulatorPage && (
-        <div className="hidden lg:flex items-center gap-1 ml-auto flex-1" style={{ maxWidth: '50%' }}>
-        <div className="flex flex-col gap-1 flex-1">
-          <label className="text-xs font-medium text-muted-foreground">Modalidade</label>
-          <Select 
-            value={simulatorContext.simulationData.searchType} 
-            onValueChange={v => handleFieldChange('searchType', v === 'contribution' ? 'contribution' : 'credit')}
+        <div className={`hidden ${isCollapsed ? 'lg:flex' : 'xl:flex'} items-center gap-2 ml-auto flex-1 max-w-4xl`}>
+          <div className="flex flex-col gap-1 min-w-0 flex-1" style={{ width: '120px' }}>
+            <label className="text-xs font-medium text-muted-foreground truncate">Modalidade</label>
+            <Select 
+              value={simulatorContext.simulationData.searchType} 
+              onValueChange={v => handleFieldChange('searchType', v === 'contribution' ? 'contribution' : 'credit')}
+            >
+              <SelectTrigger className="h-8 text-xs min-w-0">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="contribution">Aporte</SelectItem>
+                <SelectItem value="credit">Crédito</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex flex-col gap-1 min-w-0 flex-1" style={{ width: '80px' }}>
+            <label className="text-xs font-medium text-muted-foreground truncate">
+              {simulatorContext.simulationData.searchType === 'contribution' ? 'Valor do aporte' : 'Valor do crédito'}
+            </label>
+            <Input
+              type="number"
+              value={simulatorContext.simulationData.value || ''}
+              onChange={e => handleFieldChange('value', e.target.value ? Number(e.target.value) : 0)}
+              placeholder="0,00"
+              className="h-8 text-xs min-w-0"
+            />
+          </div>
+          
+          <div className="flex flex-col gap-1 min-w-0 flex-1" style={{ width: '80px' }}>
+            <label className="text-xs font-medium text-muted-foreground truncate">Número de parcelas</label>
+            <Select
+              value={simulatorContext.simulationData.term.toString()}
+              onValueChange={v => handleTermChange(Number(v))}
+            >
+              <SelectTrigger className="h-8 text-xs min-w-0">
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                {simulatorContext.installmentTypes.map((it: any) => (
+                  <SelectItem key={it.id} value={it.installment_count.toString()}>
+                    {it.installment_count}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex flex-col gap-1 min-w-0 flex-1" style={{ width: '80px' }}>
+            <label className="text-xs font-medium text-muted-foreground truncate">Tipo de Parcela</label>
+            <Select 
+              value={simulatorContext.simulationData.installmentType} 
+              onValueChange={v => handleFieldChange('installmentType', v)}
+            >
+              <SelectTrigger className="h-8 text-xs min-w-0">
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="full">Parcela Cheia</SelectItem>
+                {simulatorContext.reducoesParcela.map((red: any) => (
+                  <SelectItem key={red.id} value={red.id}>{red.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="flex flex-col gap-1 min-w-0 flex-1" style={{ width: '80px' }}>
+            <label className="text-xs font-medium text-muted-foreground truncate">Mês Contemplação</label>
+            <Input
+              type="number"
+              value={simulatorContext.simulationData.contemplationMonth || ''}
+              onChange={e => handleFieldChange('contemplationMonth', e.target.value ? Number(e.target.value) : 6)}
+              placeholder="6"
+              min={1}
+              className="h-8 text-xs min-w-0"
+            />
+          </div>
+          
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => simulatorContext.setShowConfigModal(true)}
+            className="h-8 w-8 p-0 flex-shrink-0"
           >
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="contribution">Aporte</SelectItem>
-              <SelectItem value="credit">Crédito</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="flex flex-col gap-1 flex-1">
-          <label className="text-xs font-medium text-muted-foreground">
-            {simulatorContext.simulationData.searchType === 'contribution' ? 'Valor do aporte' : 'Valor do crédito'}
-          </label>
-          <Input
-            type="number"
-            value={simulatorContext.simulationData.value || ''}
-            onChange={e => handleFieldChange('value', e.target.value ? Number(e.target.value) : 0)}
-            placeholder="0,00"
-            className="h-8 text-xs"
-          />
-        </div>
-        
-        <div className="flex flex-col gap-1 flex-1">
-          <label className="text-xs font-medium text-muted-foreground">Número de parcelas</label>
-          <Select
-            value={simulatorContext.simulationData.term.toString()}
-            onValueChange={v => handleTermChange(Number(v))}
-          >
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue placeholder="Selecione" />
-            </SelectTrigger>
-            <SelectContent>
-              {simulatorContext.installmentTypes.map((it: any) => (
-                <SelectItem key={it.id} value={it.installment_count.toString()}>
-                  {it.installment_count}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="flex flex-col gap-1 flex-1">
-          <label className="text-xs font-medium text-muted-foreground">Tipo de Parcela</label>
-          <Select 
-            value={simulatorContext.simulationData.installmentType} 
-            onValueChange={v => handleFieldChange('installmentType', v)}
-          >
-            <SelectTrigger className="h-8 text-xs">
-              <SelectValue placeholder="Selecione" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="full">Parcela Cheia</SelectItem>
-              {simulatorContext.reducoesParcela.map((red: any) => (
-                <SelectItem key={red.id} value={red.id}>{red.name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="flex flex-col gap-1 flex-1">
-          <label className="text-xs font-medium text-muted-foreground">Mês Contemplação</label>
-          <Input
-            type="number"
-            value={simulatorContext.simulationData.contemplationMonth || ''}
-            onChange={e => handleFieldChange('contemplationMonth', e.target.value ? Number(e.target.value) : 6)}
-            placeholder="6"
-            min={6}
-            max={120}
-            className="h-8 text-xs"
-          />
-        </div>
-        
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={() => simulatorContext.setShowConfigModal(true)}
-          className="h-8 w-8 p-0"
-        >
-          <Settings className="w-4 h-4" />
-        </Button>
+            <Settings className="w-4 h-4" />
+          </Button>
         </div>
       )}
       
       {/* Botão de configurações para mobile e telas médias */}
       {isSimulatorPage && (
-        <div className="lg:hidden ml-auto">
+        <div className={`${isCollapsed ? 'lg:hidden' : 'xl:hidden'} ml-auto`}>
           <Button 
             variant="outline" 
             size="sm"

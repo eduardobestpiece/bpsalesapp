@@ -1,11 +1,11 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Archive, Trash2 } from 'lucide-react';
+import { Edit, Archive } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useQuery } from '@tanstack/react-query';
@@ -37,6 +37,7 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
   statusFilter,
   onEdit
 }) => {
+  const { toast } = useToast();
   const [administrators, setAdministrators] = useState<Administrator[]>([]);
   const [loading, setLoading] = useState(true);
   const { userRole } = useCrmAuth();
@@ -45,68 +46,7 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
   const canCopy = isMaster || isSubMaster;
   const { selectedCompanyId } = useCompany();
 
-  // Modal de cópia
-  const [copyModalOpen, setCopyModalOpen] = useState(false);
-  const [originCompanyId, setOriginCompanyId] = useState<string>('');
-  const [copyLoading, setCopyLoading] = useState(false);
-
-  // Buscar empresas para seleção
-  const { data: companies = [], isLoading: companiesLoading } = useQuery({
-    queryKey: ['companies'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('companies')
-        .select('id, name, status')
-        .eq('status', 'active')
-        .order('name');
-      if (error) throw error;
-      return data;
-    },
-    enabled: canCopy,
-  });
-
   const [defaultAdminId, setDefaultAdminId] = useState<string | null>(null);
-
-  // Função de cópia de administradoras
-  const handleCopyAdministrators = async () => {
-    if (!originCompanyId || !selectedCompanyId) {
-      toast.error('Selecione a empresa de origem e destino.');
-      return;
-    }
-    setCopyLoading(true);
-    try {
-      // Buscar administradoras da empresa de origem
-      const { data: adminsToCopy, error } = await supabase
-        .from('administrators')
-        .select('*')
-        .eq('company_id', originCompanyId)
-        .eq('is_archived', false);
-      if (error) throw error;
-      if (!adminsToCopy || adminsToCopy.length === 0) {
-        toast.error('Nenhuma administradora encontrada na empresa de origem.');
-        setCopyLoading(false);
-        return;
-      }
-      // Remover campos que não devem ser copiados
-      const adminsInsert = adminsToCopy.map((admin: any) => {
-        const { id, created_at, updated_at, ...rest } = admin;
-        return { ...rest, company_id: selectedCompanyId };
-      });
-      // Inserir na empresa de destino
-      const { error: insertError } = await supabase
-        .from('administrators')
-        .insert(adminsInsert);
-      if (insertError) throw insertError;
-      toast.success('Administradoras copiadas com sucesso!');
-      setCopyModalOpen(false);
-      fetchAdministrators();
-    } catch (err: any) {
-      console.error('Erro ao copiar administradoras:', err);
-      toast.error('Erro ao copiar administradoras: ' + (err.message || ''));
-    } finally {
-      setCopyLoading(false);
-    }
-  };
 
   const fetchAdministrators = async () => {
     try {
@@ -128,7 +68,11 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
       setAdministrators(data || []);
     } catch (error) {
       console.error('Error fetching administrators:', error);
-      toast.error('Erro ao carregar administradoras');
+      toast({
+        title: 'Erro',
+        description: 'Erro ao carregar administradoras',
+        variant: 'destructive'
+      });
     } finally {
       setLoading(false);
     }
@@ -142,11 +86,18 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
         .eq('id', id);
       
       if (error) throw error;
-      toast.success(`Administradora ${isArchived ? 'restaurada' : 'arquivada'} com sucesso!`);
+      toast({
+        title: 'Sucesso',
+        description: `Administradora ${isArchived ? 'restaurada' : 'arquivada'} com sucesso!`
+      });
       fetchAdministrators();
     } catch (error) {
       console.error('Error archiving administrator:', error);
-      toast.error('Erro ao arquivar administradora');
+      toast({
+        title: 'Erro',
+        description: 'Erro ao arquivar administradora',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -160,11 +111,18 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
         .eq('id', id);
       
       if (error) throw error;
-      toast.success('Administradora excluída com sucesso!');
+      toast({
+        title: 'Sucesso',
+        description: 'Administradora excluída com sucesso!'
+      });
       fetchAdministrators();
     } catch (error) {
       console.error('Error deleting administrator:', error);
-      toast.error('Erro ao excluir administradora');
+      toast({
+        title: 'Erro',
+        description: 'Erro ao excluir administradora',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -187,9 +145,16 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
       if (error) throw error;
       setDefaultAdminId(id);
       fetchAdministrators();
-      toast.success('Administradora padrão atualizada!');
+      toast({
+        title: 'Sucesso',
+        description: 'Administradora padrão atualizada!'
+      });
     } catch (error) {
-      toast.error('Erro ao definir administradora padrão');
+      toast({
+        title: 'Erro',
+        description: 'Erro ao definir administradora padrão',
+        variant: 'destructive'
+      });
     }
   };
 
@@ -211,42 +176,6 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Botão de cópia de administradoras */}
-      {canCopy && (
-        <div className="flex justify-end">
-          <Button variant="outline" onClick={() => setCopyModalOpen(true)}>
-            Copiar administradoras de outra empresa
-          </Button>
-        </div>
-      )}
-      {/* Modal de cópia */}
-      <Dialog open={copyModalOpen} onOpenChange={setCopyModalOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Copiar administradoras de outra empresa</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Empresa de origem</label>
-              <Select value={originCompanyId} onValueChange={setOriginCompanyId} disabled={companiesLoading}>
-                <SelectTrigger>
-                  <SelectValue placeholder={companiesLoading ? 'Carregando...' : 'Selecione a empresa'} />
-                </SelectTrigger>
-                <SelectContent>
-                  {companies
-                    .filter((c: any) => c.id !== selectedCompanyId)
-                    .map((c: any) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button onClick={handleCopyAdministrators} disabled={!originCompanyId || copyLoading}>
-              {copyLoading ? 'Copiando...' : 'Copiar'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
       {/* Tabela de administradoras */}
       <Table>
         <TableHeader>
@@ -303,16 +232,6 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
                   >
                     <Archive className="w-4 h-4" />
                   </Button>
-                  {/* Remover botão de excluir */}
-                  {/* <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => handleDelete(admin.id)}
-                    className="text-red-600 hover:text-red-700"
-                    disabled={isSubMaster}
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button> */}
                 </div>
               </TableCell>
             </TableRow>

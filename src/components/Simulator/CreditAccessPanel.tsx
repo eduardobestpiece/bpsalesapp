@@ -46,6 +46,7 @@ interface MonthlyDetail {
 interface CreditAccessPanelProps {
   data: SimulationData;
   onCreditoAcessado?: (valor: number) => void;
+  onSelectedCreditsChange?: (credits: any[]) => void; // Novo callback para expor as cotas
 }
 
 // Adicionar/ajustar o componente ResumoCard
@@ -60,7 +61,7 @@ function ResumoCard({ titulo, valor, destaquePositivo, destaqueNegativo }: { tit
   );
 }
 
-export const CreditAccessPanel = ({ data, onCreditoAcessado }: CreditAccessPanelProps) => {
+export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsChange }: CreditAccessPanelProps) => {
   const { selectedCompanyId } = useCompany();
   const { crmUser, companyId } = useCrmAuth();
   const [credits, setCredits] = useState<Credit[]>([]);
@@ -524,6 +525,20 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado }: CreditAccessPanel
       onCreditoAcessado(creditoAcessado);
     }
   }, [creditoAcessado, onCreditoAcessado]);
+
+  // Notificar mudanças nas cotas para o componente pai
+  useEffect(() => {
+    if (onSelectedCreditsChange) {
+      const selectedCredits = cotas.map(cota => ({
+        id: cota.produtoId,
+        name: cota.nome,
+        value: cota.valor,
+        installmentValue: cota.parcela,
+        quantity: cota.quantidade
+      }));
+      onSelectedCreditsChange(selectedCredits);
+    }
+  }, [cotas, onSelectedCreditsChange]);
 
   // 5. Funções para adicionar/remover cotas
   const adicionarProduto = () => {
