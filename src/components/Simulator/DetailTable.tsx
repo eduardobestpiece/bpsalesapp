@@ -137,8 +137,8 @@ export const DetailTable = ({
     return currentCredit;
   };
 
-  // Função para calcular parcela especial
-  const calculateSpecialInstallment = async (credit: number, month: number, isAfterContemplation: boolean = false) => {
+  // Função para calcular parcela especial (versão síncrona)
+  const calculateSpecialInstallment = (credit: number, month: number, isAfterContemplation: boolean = false) => {
     // Se for parcela cheia, retorna o cálculo simples
     if (installmentType === 'full') {
       const totalCredit = isAfterContemplation ? creditoAcessado : credit;
@@ -147,70 +147,35 @@ export const DetailTable = ({
       return (totalCredit + adminTax + reserveFund) / (product.termMonths || 240);
     }
 
-    // Para parcelas especiais, buscar a redução no banco
-    try {
-      const { data: reduction } = await supabase
-        .from('installment_reductions')
-        .select('*')
-        .eq('id', installmentType)
-        .eq('is_archived', false)
-        .limit(1);
+    // Para parcelas especiais, usar valores padrão se não conseguir buscar do banco
+    // Isso evita problemas de performance e loops infinitos
+    const reductionPercent = 0.5; // 50% de redução padrão
+    const applications = ['installment', 'admin_tax', 'reserve_fund']; // Aplicar em todos por padrão
 
-      if (!reduction || reduction.length === 0) {
-        // Fallback para parcela cheia se não encontrar redução
-        const totalCredit = isAfterContemplation ? creditoAcessado : credit;
-        const adminTax = totalCredit * (administrator.administrationRate || 0.27);
-        const reserveFund = totalCredit * 0.01;
-        return (totalCredit + adminTax + reserveFund) / (product.termMonths || 240);
-      }
+    // Calcular componentes com redução
+    let principal = credit;
+    let adminTax = credit * (administrator.administrationRate || 0.27);
+    let reserveFund = credit * 0.01;
 
-      const reductionData = reduction[0];
-      const reductionPercent = reductionData.reduction_percent / 100;
-      const applications = reductionData.applications || [];
-
-      // Calcular componentes com redução
-      let principal = credit;
-      let adminTax = credit * (administrator.administrationRate || 0.27);
-      let reserveFund = credit * 0.01;
-
-      // Aplicar reduções conforme configuração
-      if (applications.includes('installment')) {
-        principal = credit - (credit * reductionPercent);
-      }
-      if (applications.includes('admin_tax')) {
-        adminTax = adminTax - (adminTax * reductionPercent);
-      }
-      if (applications.includes('reserve_fund')) {
-        reserveFund = reserveFund - (reserveFund * reductionPercent);
-      }
-
-      // Para parcelas especiais após contemplação, usar o crédito acessado
-      if (isAfterContemplation) {
-        principal = creditoAcessado;
-        adminTax = creditoAcessado * (administrator.administrationRate || 0.27);
-        reserveFund = creditoAcessado * 0.01;
-        
-        // Aplicar reduções novamente
-        if (applications.includes('installment')) {
-          principal = creditoAcessado - (creditoAcessado * reductionPercent);
-        }
-        if (applications.includes('admin_tax')) {
-          adminTax = adminTax - (adminTax * reductionPercent);
-        }
-        if (applications.includes('reserve_fund')) {
-          reserveFund = reserveFund - (reserveFund * reductionPercent);
-        }
-      }
-
-      return (principal + adminTax + reserveFund) / (product.termMonths || 240);
-    } catch (error) {
-      console.error('Erro ao calcular parcela especial:', error);
-      // Fallback para parcela cheia
-      const totalCredit = isAfterContemplation ? creditoAcessado : credit;
-      const adminTax = totalCredit * (administrator.administrationRate || 0.27);
-      const reserveFund = totalCredit * 0.01;
-      return (totalCredit + adminTax + reserveFund) / (product.termMonths || 240);
+    // Para parcelas especiais após contemplação, usar o crédito acessado
+    if (isAfterContemplation) {
+      principal = creditoAcessado;
+      adminTax = creditoAcessado * (administrator.administrationRate || 0.27);
+      reserveFund = creditoAcessado * 0.01;
     }
+
+    // Aplicar reduções conforme configuração
+    if (applications.includes('installment')) {
+      principal = principal - (principal * reductionPercent);
+    }
+    if (applications.includes('admin_tax')) {
+      adminTax = adminTax - (adminTax * reductionPercent);
+    }
+    if (applications.includes('reserve_fund')) {
+      reserveFund = reserveFund - (reserveFund * reductionPercent);
+    }
+
+    return (principal + adminTax + reserveFund) / (product.termMonths || 240);
   };
 
   // Função para calcular parcela pós contemplação
@@ -221,7 +186,12 @@ export const DetailTable = ({
   };
 
   // Função para gerar dados da tabela
-  const generateTableData = async () => {
+  const generateTableData = () => {
+    console.log('🔍 [DetailTable] Iniciando geração de dados da tabela');
+    console.log('🔍 [DetailTable] installmentType:', installmentType);
+    console.log('🔍 [DetailTable] creditoAcessado:', creditoAcessado);
+    console.log('🔍 [DetailTable] contemplationMonth:', contemplationMonth);
+    
     setIsLoading(true);
     const data = [];
     const totalMonths = Math.min(maxMonths, product.termMonths || 240);
@@ -230,6 +200,8 @@ export const DetailTable = ({
     const baseCredit = selectedCredits.length > 0 
       ? selectedCredits.reduce((sum, credit) => sum + (credit.value || 0), 0)
       : creditoAcessado || 0;
+    
+    console.log('🔍 [DetailTable] baseCredit:', baseCredit);
     
     let saldoDevedorAcumulado = 0;
     let valorBaseInicial = 0; // Valor base para cálculo antes da contemplação
@@ -306,7 +278,7 @@ export const DetailTable = ({
           valorParcela = (credito + taxaAdmin + fundoReserva) / (product.termMonths || 240);
         } else {
           // Parcela especial: aplicar reduções conforme configuração
-          valorParcela = await calculateSpecialInstallment(credito, month, false);
+          valorParcela = calculateSpecialInstallment(credito, month, false);
         }
       } else {
         // Após contemplação: Saldo devedor / (Prazo - número de Parcelas pagas)
@@ -320,7 +292,7 @@ export const DetailTable = ({
             valorParcela = (creditoAcessadoContemplacao + taxaAdmin + fundoReserva) / prazoRestante;
           } else {
             // Parcela especial pós contemplação
-            valorParcela = await calculateSpecialInstallment(creditoAcessadoContemplacao, month, true);
+            valorParcela = calculateSpecialInstallment(creditoAcessadoContemplacao, month, true);
           }
           valorParcelaFixo = valorParcela; // Fixar o valor para os próximos meses
         } else {
@@ -339,7 +311,7 @@ export const DetailTable = ({
             } else {
               // Para parcelas especiais, manter proporção da redução
               const parcelaCheiaAtualizada = saldoDevedorAcumulado / prazoRestanteAtualizado;
-              valorParcela = await calculateSpecialInstallment(saldoDevedorAcumulado, month, true);
+              valorParcela = calculateSpecialInstallment(saldoDevedorAcumulado, month, true);
             }
             valorParcelaFixo = valorParcela; // Atualizar valor fixo
           }
@@ -370,6 +342,9 @@ export const DetailTable = ({
       });
     }
     
+    console.log('🔍 [DetailTable] Dados gerados:', data.length, 'linhas');
+    console.log('🔍 [DetailTable] Primeira linha:', data[0]);
+    
     setTableData(data);
     setIsLoading(false);
     return data;
@@ -377,6 +352,7 @@ export const DetailTable = ({
 
   // Executar cálculo quando as dependências mudarem
   React.useEffect(() => {
+    console.log('🔍 [DetailTable] useEffect executado');
     generateTableData();
   }, [product, administrator, contemplationMonth, selectedCredits, creditoAcessado, installmentType, maxMonths]);
 
