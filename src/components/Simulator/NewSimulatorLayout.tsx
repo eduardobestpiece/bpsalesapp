@@ -320,6 +320,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             selectedCredits={selectedCredits}
             creditoAcessado={creditoAcessado || localSimulationData.value}
             embutido={embutido}
+            installmentType={localSimulationData.installmentType}
           />
         </div>
       )}

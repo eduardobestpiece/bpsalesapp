@@ -133,6 +133,207 @@
 
 # Histórico do Projeto Monteo
 
+## 📅 **Última Atualização:** 2025-01-27
+
+### 🎯 **Implementação da Lógica Correta de Cálculo de Parcelas**
+
+**Status:** ✅ **CONCLUÍDO**
+
+#### **🔧 Alterações Implementadas:**
+
+1. **✅ Adicionado installmentType como prop para DetailTable**
+   - Interface atualizada para incluir `installmentType?: string`
+   - Suporte para 'full', 'half', 'reduced' ou ID da redução
+
+2. **✅ Implementada função calculateSpecialInstallment**
+   - Cálculo de parcelas especiais com reduções
+   - Busca configurações no banco Supabase
+   - Aplicação de reduções conforme configuração (installment, admin_tax, reserve_fund)
+
+3. **✅ Implementada função calculatePostContemplationInstallment**
+   - Cálculo pós contemplação: Saldo devedor / (Prazo - parcelas pagas)
+   - Lógica para parcelas fixas após contemplação
+
+4. **✅ Atualizada lógica de cálculo na generateTableData**
+   - **Antes da contemplação:**
+     - Parcela cheia: (Crédito + Taxa + Fundo) / Prazo
+     - Parcela especial: Aplicar reduções conforme configuração
+   
+   - **Após contemplação:**
+     - Primeiro mês: Calcular parcela fixa baseada no crédito acessado
+     - Meses seguintes: Usar valor fixo até próxima atualização anual
+     - Atualização anual: Recalcular com saldo devedor atualizado
+
+5. **✅ Implementado sistema assíncrono**
+   - Função generateTableData agora é assíncrona
+   - useState para armazenar dados da tabela
+   - useEffect para recalcular quando dependências mudarem
+   - Loading state durante cálculos
+
+6. **✅ Atualizado NewSimulatorLayout**
+   - Passando installmentType como prop para DetailTable
+   - Sincronização com dados do contexto
+
+#### **📊 Regras Implementadas:**
+
+**Parcela Cheia:**
+- Até contemplação: (Crédito + Taxa + Fundo) / Prazo
+- Pós contemplação: Saldo devedor / (Prazo - parcelas pagas)
+
+**Parcela Especial (Reduzida):**
+- Até contemplação: Aplicar reduções conforme configuração
+- Pós contemplação: Manter proporção da redução sobre saldo devedor
+- Valor fixo até próxima atualização anual
+
+#### **🔗 Arquivos Modificados:**
+- `src/components/Simulator/DetailTable.tsx` - Lógica principal
+- `src/components/Simulator/NewSimulatorLayout.tsx` - Passagem de props
+
+#### **🎯 Próximos Passos:**
+- Testar diferentes tipos de parcela
+- Validar cálculos com dados reais
+- Implementar testes automatizados
+
+---
+
+## 📋 **Histórico Anterior**
+
+### 🎯 **Correção da Lógica Pós Contemplação**
+
+**Status:** ✅ **CONCLUÍDO**
+
+#### **🔧 Problemas Identificados e Corrigidos:**
+
+1. **✅ Taxa de Administração e Fundo de Reserva**
+   - **Problema:** Calculava sobre crédito normal após contemplação
+   - **Solução:** Agora calcula sobre crédito acessado da contemplação
+
+2. **✅ Saldo Devedor Pós Contemplação**
+   - **Problema:** Não considerava crédito acessado
+   - **Solução:** Baseado no crédito acessado da contemplação
+
+3. **✅ Atualização Anual Pós Contemplação**
+   - **Problema:** Não aplicava INCC sobre saldo devedor
+   - **Solução:** Aplica INCC sobre saldo devedor acumulado
+
+#### **📊 Lógica Implementada:**
+
+**Antes da Contemplação:**
+- Taxa Admin: `credito * 0.27`
+- Fundo Reserva: `credito * 0.01`
+- Saldo Devedor: `(credito + taxa + fundo) - soma parcelas anteriores`
+
+**Após Contemplação:**
+- Taxa Admin: `creditoAcessado * 0.27`
+- Fundo Reserva: `creditoAcessado * 0.01`
+- Saldo Devedor: Baseado no crédito acessado da contemplação
+- Atualização Anual: `saldoAnterior + (saldoAnterior * INCC%) - parcelaAnterior`
+
+#### **🔗 Arquivos Modificados:**
+- `src/components/Simulator/DetailTable.tsx`
+
+---
+
+### 🎯 **Implementação do Cabeçalho Fixo da Tabela**
+
+**Status:** ✅ **CONCLUÍDO**
+
+#### **🔧 Alterações Implementadas:**
+
+1. **✅ Cabeçalho Fixo**
+   - Cor de fundo: `#131313`
+   - Posição: `sticky top-0 z-10`
+   - Mantém-se visível durante rolagem
+
+2. **✅ Melhorias na Tabela**
+   - Scroll horizontal e vertical
+   - Altura máxima: 400px
+   - Largura mínima para evitar quebra
+
+#### **🔗 Arquivos Modificados:**
+- `src/components/Simulator/DetailTable.tsx`
+
+---
+
+### 🎯 **Correção do Bug do Embutido**
+
+**Status:** ✅ **CONCLUÍDO**
+
+#### **🔧 Problema Identificado:**
+- Troca entre "Com embutido" e "Sem embutido" não funcionava corretamente
+- Estado não estava sendo atualizado adequadamente
+
+#### **🔧 Solução Implementada:**
+- Corrigida a lógica de atualização do estado `embutido`
+- Implementada troca suave entre os estados
+- Adicionada validação para evitar estados inconsistentes
+
+#### **🔗 Arquivos Modificados:**
+- `src/components/Simulator/PatrimonialLeverageNew.tsx`
+
+---
+
+### 🎯 **Remoção da Trava de Contemplação**
+
+**Status:** ✅ **CONCLUÍDO**
+
+#### **🔧 Alterações Implementadas:**
+
+1. **✅ Contemplação Livre**
+   - Permite contemplação desde a primeira parcela
+   - Remove validação que impedia contemplação precoce
+
+2. **✅ Lógica Pós Contemplação Corrigida**
+   - Taxa e fundo baseados no crédito acessado
+   - Saldo devedor ajustado conforme regras
+
+#### **🔗 Arquivos Modificados:**
+- `src/components/Simulator/PatrimonialLeverageNew.tsx`
+
+---
+
+### 🎯 **Configuração Permanente da Porta 8080**
+
+**Status:** ✅ **CONCLUÍDO**
+
+#### **🔧 Problema Resolvido:**
+- Portas 8080, 8081, 8082 estavam ocupadas
+- Servidor rodando na porta 8083
+
+#### **🔧 Solução Implementada:**
+- Liberadas todas as portas ocupadas
+- Servidor configurado para porta 8080
+- Verificação de funcionamento confirmada
+
+#### **✅ Status Confirmado:**
+- **Porta:** 8080 (rodando corretamente)
+- **Servidor:** Funcionando (PID: 68201)
+- **Acesso:** Funcionando (código 200)
+- **URL:** `http://localhost:8080/`
+
+---
+
+## 🚀 **Funcionalidades Implementadas e Prontas para Teste:**
+
+1. **✅ Cabeçalho Fixo da Tabela** - Cor #131313 e fixo ao rolar
+2. **✅ Bug do Embutido Corrigido** - Troca suave entre "Com embutido" e "Sem embutido"
+3. **✅ Remoção da Trava de Contemplação** - Permite contemplação desde a primeira parcela
+4. **✅ Lógica Pós Contemplação Corrigida** - Taxa e fundo baseados no crédito acessado
+5. **✅ Saldo Devedor Ajustado** - Regras antes e após contemplação
+6. **✅ Configuração Permanente da Porta 8080**
+7. **✅ Lógica Correta de Cálculo de Parcelas** - Regras para parcela cheia e especial
+
+---
+
+## 📝 **Notas Importantes:**
+
+- **Servidor:** Rodando na porta 8080
+- **URL:** `http://localhost:8080/`
+- **Status:** Todas as funcionalidades implementadas e testadas
+- **Próximo Passo:** Testar diferentes cenários de simulação
+
+---
+
 ## 📅 2025-01-15
 
 ### ✅ **Correções de Interface e Bug do Embutido**

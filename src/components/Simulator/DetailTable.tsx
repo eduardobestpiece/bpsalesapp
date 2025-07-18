@@ -5,6 +5,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Settings, ChevronDown, ChevronUp } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
+import React from 'react'; // Added missing import for React.useEffect
 
 interface DetailTableProps {
   product: any;
@@ -13,6 +15,7 @@ interface DetailTableProps {
   selectedCredits?: any[]; // Créditos selecionados pelo usuário
   creditoAcessado?: number; // Crédito acessado total
   embutido?: 'com' | 'sem'; // Estado do embutido
+  installmentType?: string; // Tipo de parcela: 'full', 'half', 'reduced' ou ID da redução
 }
 
 export const DetailTable = ({ 
@@ -21,10 +24,13 @@ export const DetailTable = ({
   contemplationMonth, 
   selectedCredits = [], 
   creditoAcessado = 0,
-  embutido = 'sem'
+  embutido = 'sem',
+  installmentType = 'full'
 }: DetailTableProps) => {
   const [showConfig, setShowConfig] = useState(false);
   const [maxMonths, setMaxMonths] = useState(100);
+  const [tableData, setTableData] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState({
     mes: true,
     credito: true,
@@ -131,8 +137,92 @@ export const DetailTable = ({
     return currentCredit;
   };
 
-  // Gerar dados da tabela
-  const generateTableData = () => {
+  // Função para calcular parcela especial
+  const calculateSpecialInstallment = async (credit: number, month: number, isAfterContemplation: boolean = false) => {
+    // Se for parcela cheia, retorna o cálculo simples
+    if (installmentType === 'full') {
+      const totalCredit = isAfterContemplation ? creditoAcessado : credit;
+      const adminTax = totalCredit * (administrator.administrationRate || 0.27);
+      const reserveFund = totalCredit * 0.01; // 1%
+      return (totalCredit + adminTax + reserveFund) / (product.termMonths || 240);
+    }
+
+    // Para parcelas especiais, buscar a redução no banco
+    try {
+      const { data: reduction } = await supabase
+        .from('installment_reductions')
+        .select('*')
+        .eq('id', installmentType)
+        .eq('is_archived', false)
+        .limit(1);
+
+      if (!reduction || reduction.length === 0) {
+        // Fallback para parcela cheia se não encontrar redução
+        const totalCredit = isAfterContemplation ? creditoAcessado : credit;
+        const adminTax = totalCredit * (administrator.administrationRate || 0.27);
+        const reserveFund = totalCredit * 0.01;
+        return (totalCredit + adminTax + reserveFund) / (product.termMonths || 240);
+      }
+
+      const reductionData = reduction[0];
+      const reductionPercent = reductionData.reduction_percent / 100;
+      const applications = reductionData.applications || [];
+
+      // Calcular componentes com redução
+      let principal = credit;
+      let adminTax = credit * (administrator.administrationRate || 0.27);
+      let reserveFund = credit * 0.01;
+
+      // Aplicar reduções conforme configuração
+      if (applications.includes('installment')) {
+        principal = credit - (credit * reductionPercent);
+      }
+      if (applications.includes('admin_tax')) {
+        adminTax = adminTax - (adminTax * reductionPercent);
+      }
+      if (applications.includes('reserve_fund')) {
+        reserveFund = reserveFund - (reserveFund * reductionPercent);
+      }
+
+      // Para parcelas especiais após contemplação, usar o crédito acessado
+      if (isAfterContemplation) {
+        principal = creditoAcessado;
+        adminTax = creditoAcessado * (administrator.administrationRate || 0.27);
+        reserveFund = creditoAcessado * 0.01;
+        
+        // Aplicar reduções novamente
+        if (applications.includes('installment')) {
+          principal = creditoAcessado - (creditoAcessado * reductionPercent);
+        }
+        if (applications.includes('admin_tax')) {
+          adminTax = adminTax - (adminTax * reductionPercent);
+        }
+        if (applications.includes('reserve_fund')) {
+          reserveFund = reserveFund - (reserveFund * reductionPercent);
+        }
+      }
+
+      return (principal + adminTax + reserveFund) / (product.termMonths || 240);
+    } catch (error) {
+      console.error('Erro ao calcular parcela especial:', error);
+      // Fallback para parcela cheia
+      const totalCredit = isAfterContemplation ? creditoAcessado : credit;
+      const adminTax = totalCredit * (administrator.administrationRate || 0.27);
+      const reserveFund = totalCredit * 0.01;
+      return (totalCredit + adminTax + reserveFund) / (product.termMonths || 240);
+    }
+  };
+
+  // Função para calcular parcela pós contemplação
+  const calculatePostContemplationInstallment = (creditoAcessado: number, parcelasPagas: number) => {
+    const prazoRestante = (product.termMonths || 240) - parcelasPagas;
+    const saldoDevedor = creditoAcessado + (creditoAcessado * (administrator.administrationRate || 0.27)) + (creditoAcessado * 0.01);
+    return saldoDevedor / prazoRestante;
+  };
+
+  // Função para gerar dados da tabela
+  const generateTableData = async () => {
+    setIsLoading(true);
     const data = [];
     const totalMonths = Math.min(maxMonths, product.termMonths || 240);
     
@@ -144,6 +234,7 @@ export const DetailTable = ({
     let saldoDevedorAcumulado = 0;
     let valorBaseInicial = 0; // Valor base para cálculo antes da contemplação
     let creditoAcessadoContemplacao = 0; // Valor do crédito acessado no mês de contemplação
+    let valorParcelaFixo = 0; // Valor fixo da parcela após contemplação
     
     for (let month = 1; month <= totalMonths; month++) {
       const credito = calculateCreditValue(month, baseCredit);
@@ -205,13 +296,54 @@ export const DetailTable = ({
         }
       }
       
-      // Calcular valor da parcela
+      // Calcular valor da parcela conforme as regras especificadas
       let valorParcela;
+      
       if (month <= contemplationMonth) {
-        valorParcela = (credito + taxaAdmin + fundoReserva) / (product.termMonths || 240);
+        // Antes da contemplação: usar regras da parcela (cheia ou especial)
+        if (installmentType === 'full') {
+          // Parcela cheia: (Valor do Crédito + Taxa de Administração + Fundo de Reserva) / Prazo
+          valorParcela = (credito + taxaAdmin + fundoReserva) / (product.termMonths || 240);
+        } else {
+          // Parcela especial: aplicar reduções conforme configuração
+          valorParcela = await calculateSpecialInstallment(credito, month, false);
+        }
       } else {
-        // Após contemplação: parcela baseada no crédito acessado
-        valorParcela = (creditoAcessadoContemplacao + taxaAdmin + fundoReserva) / (product.termMonths || 240);
+        // Após contemplação: Saldo devedor / (Prazo - número de Parcelas pagas)
+        const parcelasPagas = contemplationMonth;
+        const prazoRestante = (product.termMonths || 240) - parcelasPagas;
+        
+        if (month === contemplationMonth + 1) {
+          // Primeiro mês após contemplação: calcular parcela fixa
+          if (installmentType === 'full') {
+            // Parcela cheia pós contemplação
+            valorParcela = (creditoAcessadoContemplacao + taxaAdmin + fundoReserva) / prazoRestante;
+          } else {
+            // Parcela especial pós contemplação
+            valorParcela = await calculateSpecialInstallment(creditoAcessadoContemplacao, month, true);
+          }
+          valorParcelaFixo = valorParcela; // Fixar o valor para os próximos meses
+        } else {
+          // Meses seguintes: usar o valor fixo até próxima atualização
+          valorParcela = valorParcelaFixo;
+          
+          // Verificar se é mês de atualização anual
+          const isAnnualUpdate = (month - 1) % 12 === 0 && month > contemplationMonth;
+          if (isAnnualUpdate) {
+            // Recalcular parcela com saldo devedor atualizado
+            const parcelasPagasAteAgora = month - 1;
+            const prazoRestanteAtualizado = (product.termMonths || 240) - parcelasPagasAteAgora;
+            
+            if (installmentType === 'full') {
+              valorParcela = saldoDevedorAcumulado / prazoRestanteAtualizado;
+            } else {
+              // Para parcelas especiais, manter proporção da redução
+              const parcelaCheiaAtualizada = saldoDevedorAcumulado / prazoRestanteAtualizado;
+              valorParcela = await calculateSpecialInstallment(saldoDevedorAcumulado, month, true);
+            }
+            valorParcelaFixo = valorParcela; // Atualizar valor fixo
+          }
+        }
       }
       
       const compraAgio = credito * 0.05; // 5%
@@ -238,10 +370,15 @@ export const DetailTable = ({
       });
     }
     
+    setTableData(data);
+    setIsLoading(false);
     return data;
   };
 
-  const tableData = generateTableData();
+  // Executar cálculo quando as dependências mudarem
+  React.useEffect(() => {
+    generateTableData();
+  }, [product, administrator, contemplationMonth, selectedCredits, creditoAcessado, installmentType, maxMonths]);
 
   const toggleColumn = (column: string) => {
     setVisibleColumns(prev => ({
@@ -332,24 +469,38 @@ export const DetailTable = ({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {tableData.map((row) => (
-                <TableRow 
-                  key={row.mes}
-                  className={row.isContemplationMonth ? "bg-green-100 dark:bg-green-900" : ""}
-                >
-                  {visibleColumns.mes && <TableCell>{row.mes}</TableCell>}
-                  {visibleColumns.credito && <TableCell>{formatCurrency(row.credito)}</TableCell>}
-                  {visibleColumns.creditoAcessado && <TableCell>{formatCurrency(row.creditoAcessado)}</TableCell>}
-                  {visibleColumns.taxaAdministracao && <TableCell>{formatCurrency(row.taxaAdministracao)}</TableCell>}
-                  {visibleColumns.fundoReserva && <TableCell>{formatCurrency(row.fundoReserva)}</TableCell>}
-                  {visibleColumns.valorParcela && <TableCell>{formatCurrency(row.valorParcela)}</TableCell>}
-                  {visibleColumns.saldoDevedor && <TableCell>{formatCurrency(row.saldoDevedor)}</TableCell>}
-                  {visibleColumns.compraAgio && <TableCell>{formatCurrency(row.compraAgio)}</TableCell>}
-                  {visibleColumns.lucro && <TableCell>{formatCurrency(row.lucro)}</TableCell>}
-                  {visibleColumns.percentualLucro && <TableCell>{row.percentualLucro}%</TableCell>}
-                  {visibleColumns.lucroMes && <TableCell>{formatCurrency(row.lucroMes)}</TableCell>}
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={11} className="text-center py-8">
+                    <p>Carregando dados...</p>
+                  </TableCell>
                 </TableRow>
-              ))}
+              ) : tableData.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={11} className="text-center py-8">
+                    <p>Nenhum dado disponível para exibir.</p>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                tableData.map((row) => (
+                  <TableRow 
+                    key={row.mes}
+                    className={row.isContemplationMonth ? "bg-green-100 dark:bg-green-900" : ""}
+                  >
+                    {visibleColumns.mes && <TableCell>{row.mes}</TableCell>}
+                    {visibleColumns.credito && <TableCell>{formatCurrency(row.credito)}</TableCell>}
+                    {visibleColumns.creditoAcessado && <TableCell>{formatCurrency(row.creditoAcessado)}</TableCell>}
+                    {visibleColumns.taxaAdministracao && <TableCell>{formatCurrency(row.taxaAdministracao)}</TableCell>}
+                    {visibleColumns.fundoReserva && <TableCell>{formatCurrency(row.fundoReserva)}</TableCell>}
+                    {visibleColumns.valorParcela && <TableCell>{formatCurrency(row.valorParcela)}</TableCell>}
+                    {visibleColumns.saldoDevedor && <TableCell>{formatCurrency(row.saldoDevedor)}</TableCell>}
+                    {visibleColumns.compraAgio && <TableCell>{formatCurrency(row.compraAgio)}</TableCell>}
+                    {visibleColumns.lucro && <TableCell>{formatCurrency(row.lucro)}</TableCell>}
+                    {visibleColumns.percentualLucro && <TableCell>{row.percentualLucro}%</TableCell>}
+                    {visibleColumns.lucroMes && <TableCell>{formatCurrency(row.lucroMes)}</TableCell>}
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
             </div>
