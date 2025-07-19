@@ -132,7 +132,14 @@ const SimulatorHeader = () => {
             <label className="text-xs font-medium text-muted-foreground truncate">Tipo de Parcela</label>
             <Select 
               value={simulatorContext.simulationData.installmentType} 
-              onValueChange={v => handleFieldChange('installmentType', v)}
+              onValueChange={v => {
+                handleFieldChange('installmentType', v);
+                // Sincronizar com o modal de configurações
+                simulatorContext.setSimulationData((prev: any) => ({ 
+                  ...prev, 
+                  installmentType: v 
+                }));
+              }}
             >
               <SelectTrigger className="h-8 text-xs min-w-0">
                 <SelectValue placeholder="Selecione" />

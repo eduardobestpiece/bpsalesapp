@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogFooter } from '../ui/dialog';
+import { FullScreenModal } from '../ui/FullScreenModal';
 import { Button } from '../ui/button';
 import { Switch } from '../ui/switch';
 import { Input } from '../ui/input';
@@ -440,7 +440,6 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   useEffect(() => {
     if (term && !manualFieldsState.parcelas) {
       setSelectedInstallmentTypeId(term.toString());
-      setTerm(term); // Sincronizar com o simulador principal
     }
   }, [term, manualFieldsState.parcelas]);
 
@@ -449,7 +448,6 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
       const foundType = installmentTypes.find(it => it.name === installmentType);
       if (foundType) {
         setSelectedInstallmentTypeId(foundType.id);
-        setInstallmentType(foundType.name); // Sincronizar com o simulador principal
       }
     }
   }, [installmentType, installmentTypes, manualFieldsState.parcelas]);
@@ -495,6 +493,11 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
       if (selectedType?.name) {
         setInstallmentType(selectedType.name);
       }
+    }
+    
+    // Sincronizar Tipo de Parcela com o cabeçalho
+    if (installmentType) {
+      setInstallmentType(installmentType);
     }
     
     toast({ title: 'Configuração aplicada localmente!' });
@@ -571,29 +574,39 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="flex flex-col h-[80vh] max-h-[80vh] max-w-2xl">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <DialogTitle>Mais configurações</DialogTitle>
+    <FullScreenModal
+      isOpen={open}
+      onClose={onClose}
+      title="Mais configurações"
+      actions={
+        <>
+          <div className="flex items-center gap-2 mr-4">
+            <span className="text-xs text-muted-foreground">Sistema</span>
+            <Switch
+              checked={globalSwitchState === true}
+              onCheckedChange={handleGlobalSwitch}
+              className={globalSwitchState === null ? 'bg-gray-400 border border-gray-500' : ''}
+            />
+            <span className="text-xs text-muted-foreground">Manual</span>
             {globalSwitchState === null && (
               <div title="Alguns campos estão em Manual, outros em Sistema">
                 <Info size={16} className="text-muted-foreground" />
               </div>
             )}
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs">Sistema</span>
-            <Switch
-              checked={globalSwitchState === true}
-              onCheckedChange={handleGlobalSwitch}
-              className={globalSwitchState === null ? 'bg-gray-400 border border-gray-500' : ''}
-            />
-            <span className="text-xs">Manual</span>
-          </div>
-        </div>
-        
-        <div className="flex-1 overflow-y-auto space-y-6 p-1">
+          <Button variant="outline" onClick={handleReset}>
+            Redefinir
+          </Button>
+          <Button variant="secondary" onClick={handleApply}>
+            Aplicar
+          </Button>
+          <Button onClick={handleSaveAndApply}>
+            Salvar e Aplicar
+          </Button>
+        </>
+      }
+    >
+      <div className="space-y-6">
           {/* Administradora */}
           <div className="space-y-2">
             <label className="block text-sm font-medium">Administradora</label>
@@ -687,7 +700,13 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
             <label className="block text-sm font-medium">Tipo de Parcela</label>
             <Select
               value={installmentType}
-              onValueChange={setInstallmentType}
+              onValueChange={v => {
+                setInstallmentType(v);
+                // Sincronizar com o cabeçalho do simulador
+                if (setInstallmentType) {
+                  setInstallmentType(v);
+                }
+              }}
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecione o tipo de parcela..." />
@@ -713,19 +732,6 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
             />
           </div>
         </div>
-
-        <DialogFooter className="mt-4 flex gap-2 justify-end">
-          <Button variant="outline" onClick={handleReset}>
-            Redefinir
-          </Button>
-          <Button variant="secondary" onClick={handleApply}>
-            Aplicar
-          </Button>
-          <Button onClick={handleSaveAndApply}>
-            Salvar e Aplicar
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    </FullScreenModal>
   );
 };

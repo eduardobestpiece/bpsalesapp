@@ -405,22 +405,22 @@ export const DetailTable = ({
       )}
 
       <CardContent>
-        <div className="w-full overflow-x-auto border rounded-lg" style={{ maxHeight: '400px' }}>
+        <div className="w-full overflow-x-auto border rounded-lg relative" style={{ maxHeight: '400px', overflowY: 'auto' }}>
           <div className="min-w-max">
             <Table>
-            <TableHeader className="sticky top-0 z-10" style={{ backgroundColor: '#131313' }}>
-              <TableRow>
-                {visibleColumns.mes && <TableHead>Mês</TableHead>}
-                {visibleColumns.credito && <TableHead>Crédito</TableHead>}
-                {visibleColumns.creditoAcessado && <TableHead>Crédito Acessado</TableHead>}
-                {visibleColumns.taxaAdministracao && <TableHead>Taxa de Administração</TableHead>}
-                {visibleColumns.fundoReserva && <TableHead>Fundo de Reserva</TableHead>}
-                {visibleColumns.valorParcela && <TableHead>Valor da Parcela</TableHead>}
-                {visibleColumns.saldoDevedor && <TableHead>Saldo Devedor</TableHead>}
-                {visibleColumns.compraAgio && <TableHead>Compra do Ágio</TableHead>}
-                {visibleColumns.lucro && <TableHead>Lucro</TableHead>}
-                {visibleColumns.percentualLucro && <TableHead>Percentual de Lucro</TableHead>}
-                {visibleColumns.lucroMes && <TableHead>Lucro ao Mês</TableHead>}
+            <TableHeader className="sticky top-0 z-20 bg-[#131313] border-b border-gray-700 shadow-sm">
+              <TableRow className="hover:bg-[#131313]">
+                {visibleColumns.mes && <TableHead className="bg-[#131313] text-white font-semibold sticky top-0">Mês</TableHead>}
+                {visibleColumns.credito && <TableHead className="bg-[#131313] text-white font-semibold sticky top-0">Crédito</TableHead>}
+                {visibleColumns.creditoAcessado && <TableHead className="bg-[#131313] text-white font-semibold sticky top-0">Crédito Acessado</TableHead>}
+                {visibleColumns.taxaAdministracao && <TableHead className="bg-[#131313] text-white font-semibold sticky top-0">Taxa de Administração</TableHead>}
+                {visibleColumns.fundoReserva && <TableHead className="bg-[#131313] text-white font-semibold sticky top-0">Fundo de Reserva</TableHead>}
+                {visibleColumns.valorParcela && <TableHead className="bg-[#131313] text-white font-semibold sticky top-0">Valor da Parcela</TableHead>}
+                {visibleColumns.saldoDevedor && <TableHead className="bg-[#131313] text-white font-semibold sticky top-0">Saldo Devedor</TableHead>}
+                {visibleColumns.compraAgio && <TableHead className="bg-[#131313] text-white font-semibold sticky top-0">Compra do Ágio</TableHead>}
+                {visibleColumns.lucro && <TableHead className="bg-[#131313] text-white font-semibold sticky top-0">Lucro</TableHead>}
+                {visibleColumns.percentualLucro && <TableHead className="bg-[#131313] text-white font-semibold sticky top-0">Percentual de Lucro</TableHead>}
+                {visibleColumns.lucroMes && <TableHead className="bg-[#131313] text-white font-semibold sticky top-0">Lucro ao Mês</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>

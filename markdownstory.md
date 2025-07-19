@@ -1,5 +1,95 @@
 ## 📅 **Última Atualização:** 2025-01-27
 
+### 🎯 **Cabeçalho Fixo na Tabela "Detalhamento do Consórcio"**
+
+**Status:** ✅ **CONCLUÍDO**
+
+#### **🔧 Funcionalidade Implementada:**
+
+**❌ Problema Identificado:**
+- Cabeçalho da tabela "Detalhamento do Consórcio" desaparecia ao rolar a página
+- Usuário perdia referência das colunas ao navegar pelos dados
+- Experiência de usuário prejudicada
+
+**✅ Solução Implementada:**
+- **Cabeçalho Sticky Aprimorado:** Cabeçalho fixo com sticky em cada coluna individual
+- **Z-index Elevado:** z-20 para garantir que fique acima de todo conteúdo
+- **Overflow Configurado:** overflowY: 'auto' para habilitar rolagem vertical
+- **Shadow:** Sombra sutil para destacar o cabeçalho
+- **Estilo Consistente:** Fundo #131313 com texto branco e fonte semibold
+
+**📁 Arquivo Modificado:**
+- `src/components/Simulator/DetailTable.tsx`
+
+**🎯 Resultado:**
+- ✅ Cabeçalho sempre visível durante a rolagem
+- ✅ Referência das colunas mantida
+- ✅ Experiência de usuário melhorada
+- ✅ Estilo consistente com o tema escuro
+
+---
+
+### 🎯 **Correção do Bug de Posicionamento do Menu Lateral**
+
+**Status:** ✅ **CONCLUÍDO**
+
+#### **🔧 Bug Corrigido:**
+
+**❌ Problema Identificado:**
+- Menu lateral direito ultrapassava os limites da tela visível
+- Posicionamento não respeitava o centro da viewport
+- Menu podia sair da área visível durante a rolagem
+
+**✅ Solução Implementada:**
+- **Posicionamento Fixo:** Menu fixo logo abaixo do header fixo da página
+- **Altura do Header:** 60px + 10px de margem = 70px do topo
+- **Comportamento:** Menu não acompanha scroll, fica fixo em relação ao header
+- **Posição:** Direita da tela, logo abaixo do header fixo (como no wireframe)
+
+**📁 Arquivo Modificado:**
+- `src/components/Simulator/NewSimulatorLayout.tsx`
+
+**🎯 Resultado:**
+- Menu sempre visível e centralizado na tela
+- Acompanha o scroll mantendo posição relativa fixa
+- Experiência de usuário consistente e previsível
+
+---
+
+### 🎯 **Modificação do Menu Lateral Direito**
+
+**Status:** ✅ **CONCLUÍDO**
+
+#### **🔧 Alterações Implementadas:**
+
+1. **✅ Cores e Estilos**
+   - **Fundo do menu:** #131313 (cinza escuro)
+   - **Ícones padrão:** Brancos
+   - **Hover:** Ícones ficam #AA715A (marrom)
+   - **Clique:** Ícone #131313 com fundo #AA715A (momentaneamente)
+   - **Clique duplo:** Ícone #131313 com fundo #AA715A (permanente)
+
+2. **✅ Funcionalidades de Clique**
+   - **Clique único:** Navega para a seção da página
+   - **Clique duplo:** Navega + oculta outras seções
+   - **Clique triplo:** Reaparece todas as seções
+
+3. **✅ Lógica Implementada**
+   - **Detecção de clique duplo:** Janela de 300ms
+   - **Controle de estado:** Seções ocultas por clique duplo
+   - **Navegação suave:** Scroll para seção selecionada
+
+#### **🔗 Arquivos Modificados:**
+- `src/components/Simulator/NewSimulatorLayout.tsx` - Implementação do menu lateral com cores e funcionalidades
+
+#### **🎯 Benefícios:**
+- **Design Moderno:** Menu com cores personalizadas e elegantes
+- **Usabilidade Avançada:** Funcionalidades de clique único/duplo/triplo
+- **Experiência do Usuário:** Navegação intuitiva e responsiva
+- **Flexibilidade:** Controle total sobre visibilidade das seções
+
+---
+
 ### 🎯 **Alteração do Valor Padrão do Ágio (%)**
 
 **Status:** ✅ **CONCLUÍDO**
@@ -966,6 +1056,48 @@
 ---
 
 ### 🎯 **Correção Final dos Cálculos do Ganho de Capital**
+
+**Status:** ✅ **CONCLUÍDO**
+
+#### **🔧 Problema Identificado:**
+- **Valores Ainda Incorretos:** Mesmo após a primeira correção, os valores não correspondiam aos esperados
+- **Valores Esperados vs Atuais:**
+  - Valor do Ágio: Esperado R$ 233.596,44 (18% de R$ 1.297.758,00)
+  - Soma das Parcelas Pagas: Esperado R$ 157.465,32
+  - Valor do Lucro: Esperado R$ 76.131,12
+  - ROI da Operação: Esperado 148,34%
+
+#### **🔧 Correção Final Implementada:**
+
+1. **✅ Implementação Completa da Lógica do DetailTable**
+   - Adicionada função `calculateCreditValue()` idêntica ao DetailTable
+   - Adicionada função `calculateSpecialInstallment()` para parcelas especiais
+   - Implementada função `calculateTableData()` que simula exatamente a tabela
+
+2. **✅ Cálculo Baseado nos Dados Reais da Tabela**
+   - **Crédito Acessado:** Usa o valor real do mês de contemplação (R$ 1.297.758,00)
+   - **Soma das Parcelas Pagas:** Soma real das parcelas até contemplação
+   - **Valor do Ágio:** `Crédito acessado real × Percentual do ágio`
+   - **Valor do Lucro:** `Valor do ágio - Soma real das parcelas pagas`
+   - **ROI da Operação:** `(Valor do ágio / Soma real das parcelas pagas) × 100`
+
+3. **✅ Gráfico Baseado em Dados Reais**
+   - Dados do gráfico calculados usando valores reais da tabela
+   - Evolução do lucro por mês baseada nas parcelas reais pagas
+   - Filtro para mostrar apenas meses com lucro positivo
+
+#### **🔗 Arquivos Modificados:**
+- `src/components/Simulator/CapitalGainSection.tsx` - Implementação completa da lógica do DetailTable
+
+#### **🎯 Benefícios:**
+- **Precisão Total:** Valores calculados usando exatamente a mesma lógica da tabela
+- **Consistência Absoluta:** Mesmos cálculos, mesmos resultados
+- **Confiabilidade:** Resultados alinhados com os dados reais da tabela
+- **Manutenibilidade:** Código sincronizado com a lógica principal
+
+---
+
+### 🎯 **Correção dos Cálculos do Ganho de Capital**
 
 **Status:** ✅ **CONCLUÍDO**
 

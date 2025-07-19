@@ -58,6 +58,9 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   // Estado para posição do menu lateral - agora sem limitações
   const [menuPosition, setMenuPosition] = useState(50); // 50% = centro
 
+  // Estado para controlar seções ocultas por clique duplo
+  const [sectionsHiddenByDoubleClick, setSectionsHiddenByDoubleClick] = useState<string | null>(null);
+
   // Sincronizar campos do topo com simulationData e com o contexto global
   const handleFieldChange = (field: string, value: any) => {
     setLocalSimulationData((prev) => ({ ...prev, [field]: value }));
@@ -80,23 +83,15 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
     }
   };
 
-  // Função para acompanhar a rolagem - agora sem limitações
+  // Menu fixo abaixo do cabeçalho - posicionado logo abaixo do header fixo
   useEffect(() => {
-    const handleScroll = () => {
-      const scrollTop = window.scrollY;
-      const windowHeight = window.innerHeight;
-      const documentHeight = document.documentElement.scrollHeight;
-      
-      // Calcular a posição baseada na rolagem - sem limitações
-      const scrollPercentage = (scrollTop / (documentHeight - windowHeight)) * 100;
-      
-      // Menu pode percorrer toda a página (0% a 100%)
-      const newPosition = Math.max(5, Math.min(95, scrollPercentage));
-      setMenuPosition(newPosition);
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    // Menu fixo logo abaixo do cabeçalho fixo
+    // Altura do cabeçalho + pequena margem
+    const headerHeight = 60; // Altura do header fixo
+    const menuOffset = 10; // Pequena margem abaixo do header
+    
+    const fixedPosition = headerHeight + menuOffset;
+    setMenuPosition(fixedPosition);
   }, []);
 
   // Buscar administradora padrão e opções de parcelas
@@ -122,7 +117,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
       }
     };
     fetchInstallmentTypes();
-  }, [localSimulationData.administrator, simulatorContext]);
+  }, [localSimulationData.administrator]);
 
   const [parcelaSelecionada, setParcelaSelecionada] = useState<string>('');
   const [tiposParcela, setTiposParcela] = useState<any[]>([]);
@@ -139,8 +134,6 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
   // Estado para reduções de parcela
   const [reducoesParcela, setReducoesParcela] = useState<any[]>([]);
-
-
 
   // Atualizar ao receber do painel de dados
   useEffect(() => {
@@ -219,22 +212,68 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
     }
   };
 
+  // Nova função para lidar com clique único/duplo/triplo
+  const handleMenuClick = (section: string) => {
+    // Clique único: navegar para a seção
+    handleNavigate(section);
+    
+    // Verificar se é clique duplo
+    const now = Date.now();
+    const lastClick = (window as any).lastMenuClick || 0;
+    const timeDiff = now - lastClick;
+    
+    if (timeDiff < 300) { // Clique duplo detectado
+      const sectionMap = {
+        settings: 'credit',
+        home: 'leverage',
+        search: 'detail',
+        capital: 'capital'
+      };
+      
+      const targetSection = sectionMap[section as keyof typeof sectionMap];
+      
+      if (sectionsHiddenByDoubleClick === targetSection) {
+        // Clique triplo: mostrar todas as seções
+        setSectionsHiddenByDoubleClick(null);
+        setVisibleSections({
+          credit: true,
+          leverage: true,
+          detail: true,
+          capital: true
+        });
+      } else {
+        // Clique duplo: ocultar outras seções
+        setSectionsHiddenByDoubleClick(targetSection);
+        setVisibleSections({
+          credit: targetSection === 'credit',
+          leverage: targetSection === 'leverage',
+          detail: targetSection === 'detail',
+          capital: targetSection === 'capital'
+        });
+      }
+    }
+    
+    (window as any).lastMenuClick = now;
+  };
 
 
   return (
     <div className="flex flex-col gap-6 h-full relative w-full max-w-full">
-      {/* Menu Lateral Fixo à Direita - Ajustado para não causar corte */}
+      {/* Menu Lateral Fixo à Direita - Posicionado logo abaixo do header fixo */}
       <div 
-        className="fixed right-4 z-50 transition-all duration-300 ease-in-out"
-        style={{ top: `${menuPosition}%`, transform: 'translateY(-50%)' }}
+        className="fixed right-4 z-50"
+        style={{ top: `${menuPosition}px` }}
       >
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-1">
+        <div 
+          className="rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-1"
+          style={{ backgroundColor: '#131313' }}
+        >
           <div className="flex flex-col space-y-1">
             <Button
               variant="ghost"
               size="sm"
-              className="w-8 h-8 p-0 text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-all duration-200 hover:scale-110"
-              onClick={() => handleNavigate('settings')}
+              className="w-8 h-8 p-0 text-white hover:text-[#AA715A] transition-all duration-200 hover:scale-110 active:bg-[#AA715A] active:text-[#131313]"
+              onClick={() => handleMenuClick('settings')}
               title="Configurações"
             >
               <Settings size={16} />
@@ -242,8 +281,8 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             <Button
               variant="ghost"
               size="sm"
-              className="w-8 h-8 p-0 text-gray-600 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-all duration-200 hover:scale-110"
-              onClick={() => handleNavigate('home')}
+              className="w-8 h-8 p-0 text-white hover:text-[#AA715A] transition-all duration-200 hover:scale-110 active:bg-[#AA715A] active:text-[#131313]"
+              onClick={() => handleMenuClick('home')}
               title="Alavancagem"
             >
               <Home size={16} />
@@ -251,8 +290,8 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             <Button
               variant="ghost"
               size="sm"
-              className="w-8 h-8 p-0 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-200 hover:scale-110"
-              onClick={() => handleNavigate('capital')}
+              className="w-8 h-8 p-0 text-white hover:text-[#AA715A] transition-all duration-200 hover:scale-110 active:bg-[#AA715A] active:text-[#131313]"
+              onClick={() => handleMenuClick('capital')}
               title="Ganho de Capital"
             >
               <DollarSign size={16} />
@@ -260,7 +299,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             <Button
               variant="ghost"
               size="sm"
-              className="w-8 h-8 p-0 text-gray-600 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors"
+              className="w-8 h-8 p-0 text-white hover:text-[#AA715A] transition-all duration-200 hover:scale-110 active:bg-[#AA715A] active:text-[#131313]"
               title="Financeiro"
             >
               <TrendingUp size={16} />
@@ -268,7 +307,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             <Button
               variant="ghost"
               size="sm"
-              className="w-8 h-8 p-0 text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400 transition-all duration-200 hover:scale-110"
+              className="w-8 h-8 p-0 text-white hover:text-[#AA715A] transition-all duration-200 hover:scale-110 active:bg-[#AA715A] active:text-[#131313]"
               title="Histórico"
             >
               <Clock size={16} />
@@ -276,8 +315,8 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             <Button
               variant="ghost"
               size="sm"
-              className="w-8 h-8 p-0 text-gray-600 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-all duration-200 hover:scale-110"
-              onClick={() => handleNavigate('search')}
+              className="w-8 h-8 p-0 text-white hover:text-[#AA715A] transition-all duration-200 hover:scale-110 active:bg-[#AA715A] active:text-[#131313]"
+              onClick={() => handleMenuClick('search')}
               title="Detalhamento"
             >
               <Search size={16} />

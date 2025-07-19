@@ -233,7 +233,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
         }
       })();
     }
-  }, [data]);
+  }, [data.administrator, data.value, selectedCompanyId]);
 
   useEffect(() => {
     if (showDetails && credits.length > 0) {
