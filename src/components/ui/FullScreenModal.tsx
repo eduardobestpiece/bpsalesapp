@@ -22,26 +22,29 @@ export const FullScreenModal: React.FC<FullScreenModalProps> = ({
 }) => {
   // Controlar animação de entrada/saída
   const [isVisible, setIsVisible] = React.useState(false);
-  const [shouldRender, setShouldRender] = React.useState(false);
 
   React.useEffect(() => {
     if (isOpen) {
-      setShouldRender(true);
       // Bloquear scroll do body
       document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = '0px'; // Evitar shift de layout
       // Pequeno delay para garantir que o DOM seja renderizado antes da animação
-      setTimeout(() => setIsVisible(true), 10);
+      setTimeout(() => setIsVisible(true), 50);
     } else {
       setIsVisible(false);
-      // Restaurar scroll do body
-      document.body.style.overflow = 'unset';
-      // Aguardar animação terminar antes de remover do DOM
-      setTimeout(() => setShouldRender(false), 300);
+      // Restaurar scroll do body após animação
+      setTimeout(() => {
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+      }, 300);
     }
 
     // Cleanup - restaurar scroll se componente for desmontado
     return () => {
-      document.body.style.overflow = 'unset';
+      if (isOpen) {
+        document.body.style.overflow = '';
+        document.body.style.paddingRight = '';
+      }
     };
   }, [isOpen]);
 
@@ -55,66 +58,116 @@ export const FullScreenModal: React.FC<FullScreenModalProps> = ({
 
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
     }
-
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-    };
   }, [isOpen, onClose]);
 
-  if (!shouldRender) return null;
+  if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999]">
-      {/* Overlay */}
+    <>
+      {/* Portal-like behavior - render at root level */}
       <div 
         className={cn(
-          "absolute inset-0 bg-black/60 transition-opacity duration-300",
+          "fixed inset-0 z-[99999] transition-all duration-300",
           isVisible ? "opacity-100" : "opacity-0"
         )}
-        onClick={onClose}
-      />
-      
-      {/* Modal Container - Slide from right */}
-      <div className="absolute inset-0 flex justify-end">
-        <div className={cn(
-          "w-full h-full bg-background dark:bg-[#1E1E1E] shadow-2xl",
-          "flex flex-col",
-          "transition-transform duration-300 ease-out",
-          isVisible ? "translate-x-0" : "translate-x-full",
-          className
-        )}>
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-border dark:border-[#A86F57]/20 bg-card dark:bg-[#1F1F1F] shadow-sm min-h-[60px] flex-shrink-0">
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onClose}
-                className="p-1 h-8 w-8 hover:bg-muted dark:hover:bg-[#161616] rounded-md"
-              >
-                <X size={16} className="text-muted-foreground dark:text-gray-300" />
-              </Button>
-              <h2 className="text-lg font-semibold text-foreground dark:text-white">
-                {title}
-              </h2>
+        style={{ 
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          zIndex: 99999
+        }}
+      >
+        {/* Overlay - Escurecimento da tela */}
+        <div 
+          className="absolute inset-0 bg-black/50"
+          onClick={onClose}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)'
+          }}
+        />
+        
+        {/* Modal Container - Slide from right */}
+        <div 
+          className={cn(
+            "absolute inset-0 flex justify-end transition-transform duration-300 ease-out",
+            isVisible ? "translate-x-0" : "translate-x-full"
+          )}
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0
+          }}
+        >
+          <div 
+            className={cn(
+              "w-full h-full bg-white dark:bg-[#1E1E1E] shadow-2xl flex flex-col",
+              className
+            )}
+            style={{
+              width: '100%',
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+          >
+            {/* Header - Fixo no topo */}
+            <div 
+              className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-[#A86F57]/20 bg-white dark:bg-[#1F1F1F] shadow-sm"
+              style={{
+                flexShrink: 0,
+                minHeight: '60px',
+                borderBottom: '1px solid',
+                borderBottomColor: 'var(--border)'
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onClose}
+                  className="p-1 h-8 w-8 hover:bg-gray-100 dark:hover:bg-[#161616] rounded-md"
+                >
+                  <X size={16} className="text-gray-500 dark:text-gray-300" />
+                </Button>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {title}
+                </h2>
+              </div>
+              
+              {/* Actions */}
+              <div className="flex items-center gap-2">
+                {actions}
+              </div>
             </div>
             
-            {/* Actions */}
-            <div className="flex items-center gap-2">
-              {actions}
-            </div>
-          </div>
-          
-          {/* Content - Scroll apenas aqui */}
-          <div className="flex-1 overflow-y-auto bg-background dark:bg-[#131313] p-6">
-            <div className="max-w-4xl mx-auto">
-              {children}
+            {/* Content - Área scrollável */}
+            <div 
+              className="flex-1 bg-gray-50 dark:bg-[#131313] p-6"
+              style={{
+                flex: 1,
+                overflowY: 'auto',
+                overflowX: 'hidden'
+              }}
+            >
+              <div className="max-w-4xl mx-auto">
+                {children}
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
