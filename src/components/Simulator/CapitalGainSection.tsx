@@ -24,7 +24,7 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
   embutido = 'sem',
   selectedCredits = [] // Adicionar selectedCredits
 }: CapitalGainSectionProps) => {
-  const [agioPercent, setAgioPercent] = useState(5); // 5% padrão
+  const [agioPercent, setAgioPercent] = useState(17); // 17% padrão
 
   // Função para calcular valor da parcela (mesma lógica do DetailTable)
   const calculateInstallmentValue = (credit: number, month: number, isAfterContemplation: boolean = false) => {

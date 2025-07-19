@@ -1,5 +1,57 @@
 ## 📅 **Última Atualização:** 2025-01-27
 
+### 🎯 **Alteração do Valor Padrão do Ágio (%)**
+
+**Status:** ✅ **CONCLUÍDO**
+
+#### **🔧 Alteração Implementada:**
+
+1. **✅ Valor Padrão Alterado**
+   - **Antes:** Ágio (%) com valor padrão de 5%
+   - **Depois:** Ágio (%) com valor padrão de 17%
+   - **Localização:** Campo "Ágio (%)" na seção "Ganho de Capital"
+
+2. **✅ Aplicação da Mudança**
+   - **Arquivo:** `src/components/Simulator/CapitalGainSection.tsx`
+   - **Linha:** Estado `agioPercent` inicializado com 17
+   - **Resultado:** Campo agora inicia com 17% por padrão
+
+#### **🔗 Arquivos Modificados:**
+- `src/components/Simulator/CapitalGainSection.tsx` - Alteração do valor padrão do Ágio
+
+#### **🎯 Benefícios:**
+- **Usabilidade:** Valor mais realista para cálculos de ganho de capital
+- **Experiência do Usuário:** Campo pré-configurado com valor adequado
+- **Eficiência:** Menos necessidade de ajuste manual do valor
+
+---
+
+### 🎯 **Correção do Erro 500 no CreditAccessPanel.tsx**
+
+**Status:** ✅ **CONCLUÍDO**
+
+#### **🔧 Problema Identificado e Corrigido:**
+
+1. **✅ Erro de Sintaxe Corrigido**
+   - **Problema:** Erro 500 causado por sintaxe incorreta no useEffect
+   - **Localização:** Linhas 203-207 do CreditAccessPanel.tsx
+   - **Correção:** Removido código mal estruturado que causava erro de compilação
+
+2. **✅ Código Limpo**
+   - **Antes:** Código com estrutura incorreta causando erro de servidor
+   - **Depois:** Sintaxe correta e funcional
+   - **Resultado:** Aplicação funcionando normalmente sem erros 500
+
+#### **🔗 Arquivos Modificados:**
+- `src/components/Simulator/CreditAccessPanel.tsx` - Correção de sintaxe no useEffect
+
+#### **🎯 Benefícios:**
+- **Estabilidade:** Aplicação funcionando sem erros de servidor
+- **Performance:** Carregamento normal da página do simulador
+- **Experiência do Usuário:** Interface responsiva e funcional
+
+---
+
 ### 🎯 **Remoção de Todos os Debugs do Simulador**
 
 **Status:** ✅ **CONCLUÍDO**
