@@ -200,12 +200,8 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
   // Atualizar para usar a função de múltiplos créditos
   useEffect(() => {
     if (data.administrator && data.value > 0 && selectedCompanyId) {
-              (async () => {
-          try {
-            administrator_id: data.administrator,
-            type: data.consortiumType,
-            company_id: selectedCompanyId
-          });
+      (async () => {
+        try {
           // Primeira tentativa: buscar produtos da empresa atual
           let { data: products, error } = await supabase
             .from('products')
