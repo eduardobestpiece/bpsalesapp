@@ -16,6 +16,7 @@ interface DetailTableProps {
   creditoAcessado?: number; // Crédito acessado total
   embutido?: 'com' | 'sem'; // Estado do embutido
   installmentType?: string; // Tipo de parcela: 'full', 'half', 'reduced' ou ID da redução
+  onDataChange?: (data: any[]) => void; // Callback para compartilhar dados
 }
 
 export const DetailTable = ({ 
@@ -25,7 +26,8 @@ export const DetailTable = ({
   selectedCredits = [], 
   creditoAcessado = 0,
   embutido = 'sem',
-  installmentType = 'full'
+  installmentType = 'full',
+  onDataChange
 }: DetailTableProps) => {
   const [showConfig, setShowConfig] = useState(false);
   const [maxMonths, setMaxMonths] = useState(100);
@@ -338,6 +340,12 @@ export const DetailTable = ({
     
     setTableData(data);
     setIsLoading(false);
+    
+    // Chamar callback se fornecido
+    if (onDataChange) {
+      onDataChange(data);
+    }
+    
     return data;
   };
 

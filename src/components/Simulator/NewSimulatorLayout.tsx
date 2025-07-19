@@ -1,18 +1,16 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { SimulationDataPanel } from './SimulationDataPanel';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Settings, Home, DollarSign, TrendingUp, Clock, Search } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { SimulatorConfigModal } from './SimulatorConfigModal';
-import { useSimulatorSync } from '@/hooks/useSimulatorSync';
-import { DetailTable } from './DetailTable';
+import { Badge } from '@/components/ui/badge';
+import { Settings, Home, DollarSign, TrendingUp, Clock, Search, ChevronDown, ChevronUp } from 'lucide-react';
 import { CreditAccessPanel } from './CreditAccessPanel';
 import { PatrimonialLeverageNew } from './PatrimonialLeverageNew';
-import { useSimulatorContext } from '@/components/Layout/SimulatorLayout';
+import { CapitalGain } from './CapitalGain';
+import { DetailTable } from './DetailTable';
+import { SimulatorConfigModal } from './SimulatorConfigModal';
+import { useSimulatorSync } from '@/hooks/useSimulatorSync';
+import { useSimulatorContext } from '@/contexts/SimulatorContext';
 
 export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   const { 
@@ -169,6 +167,9 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   // Estado para embutido
   const [embutido, setEmbutido] = useState<'com' | 'sem'>('com');
 
+  // Estado para dados da tabela
+  const [tableData, setTableData] = useState<any[]>([]);
+
   // Funções do menu lateral
   const handleNavigate = (section: string) => {
     const refs = {
@@ -303,6 +304,17 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
         </div>
       )}
 
+      {/* Seção de Ganho de Capital */}
+      {visibleSections.detail && (
+        <div className="w-full">
+          <CapitalGain 
+            contemplationMonth={localSimulationData.contemplationMonth || 60}
+            creditoAcessado={creditoAcessado || localSimulationData.value}
+            tableData={tableData}
+          />
+        </div>
+      )}
+
       {/* Seção de Detalhamento */}
       {visibleSections.detail && (
         <div ref={detailSectionRef} className="w-full">
@@ -321,6 +333,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             creditoAcessado={creditoAcessado || localSimulationData.value}
             embutido={embutido}
             installmentType={localSimulationData.installmentType}
+            onDataChange={setTableData}
           />
         </div>
       )}

@@ -135,6 +135,68 @@
 
 ## 📅 **Última Atualização:** 2025-01-27
 
+### 🎯 **Implementação da Seção Ganho de Capital**
+
+**Status:** ✅ **CONCLUÍDO**
+
+#### **🔧 Funcionalidades Implementadas:**
+
+1. **✅ Componente CapitalGain**
+   - Campo para percentual de ágio (padrão 5%)
+   - 4 cards de resultados com mesmo design da alavancagem patrimonial
+   - Gráfico de barras verticais com evolução do lucro
+
+2. **✅ Campos de Resultado:**
+   - **Valor do Ágio:** Crédito acessado * percentual do ágio
+   - **Soma das Parcelas Pagas:** Volume de parcelas pagas até a contemplação
+   - **Valor do Lucro:** Valor do ágio - soma das parcelas pagas
+   - **ROI da Operação:** (Valor do ágio / Soma das parcelas pagas) * 100
+
+3. **✅ Gráfico de Barras Verticais:**
+   - Eixo X: Números dos meses
+   - Eixo Y: Valores do lucro (ágio - parcelas pagas)
+   - Ordenação: Do menor lucro para maior lucro
+   - Filtro: Apenas meses com lucro positivo
+
+4. **✅ Integração com Dados da Tabela:**
+   - Compartilhamento de dados entre DetailTable e CapitalGain
+   - Cálculos baseados nos dados reais da simulação
+   - Atualização automática quando parâmetros mudam
+
+#### **📊 Lógica de Cálculo:**
+
+**Valor do Ágio:**
+```
+Ágio = Crédito Acessado × Percentual do Ágio
+```
+
+**Soma das Parcelas Pagas:**
+```
+Soma = Σ(Valor da Parcela) até o mês de contemplação
+```
+
+**Valor do Lucro:**
+```
+Lucro = Valor do Ágio - Soma das Parcelas Pagas
+```
+
+**ROI da Operação:**
+```
+ROI = (Valor do Ágio / Soma das Parcelas Pagas) × 100
+```
+
+#### **🔗 Arquivos Criados/Modificados:**
+- `src/components/Simulator/CapitalGain.tsx` - Componente principal
+- `src/components/Simulator/NewSimulatorLayout.tsx` - Integração
+- `src/components/Simulator/DetailTable.tsx` - Compartilhamento de dados
+
+#### **🎯 Posicionamento:**
+- Localização: Entre Alavancagem Patrimonial e Tabela de Detalhamento
+- Design: Consistente com outros componentes
+- Responsividade: Adaptável a diferentes tamanhos de tela
+
+---
+
 ### 🎯 **Correção de Performance e Lógica Pós Contemplação**
 
 **Status:** ✅ **CONCLUÍDO**
