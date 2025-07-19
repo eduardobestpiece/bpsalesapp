@@ -32,6 +32,8 @@ interface SimulatorConfigModalProps {
   setTerm: (v: number) => void;
   installmentType: string;
   setInstallmentType: (v: string) => void;
+  contemplationMonth?: number;
+  setContemplationMonth?: (v: number) => void;
 }
 
 type Administrator = Database['public']['Tables']['administrators']['Row'];
@@ -93,6 +95,8 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   setTerm,
   installmentType,
   setInstallmentType,
+  contemplationMonth = 6,
+  setContemplationMonth,
 }) => {
   const { selectedCompanyId } = useCompany();
   
@@ -104,6 +108,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   const [bidTypes, setBidTypes] = useState<BidType[]>([]);
   const [installmentTypes, setInstallmentTypes] = useState<InstallmentType[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
+  const [reducoesParcela, setReducoesParcela] = useState<any[]>([]);
 
   // Seleções do usuário
   const [selectedAdministratorId, setSelectedAdministratorId] = useState<string | null>(null);
@@ -210,6 +215,25 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
     };
     fetchProducts();
   }, [selectedAdministratorId]);
+
+  // Buscar reduções de parcela ao selecionar administradora
+  useEffect(() => {
+    if (!selectedAdministratorId || !selectedCompanyId) return;
+    const fetchReducoesParcela = async () => {
+      const { data, error } = await supabase
+        .from('installment_reductions')
+        .select('id, name')
+        .eq('administrator_id', selectedAdministratorId)
+        .eq('company_id', selectedCompanyId)
+        .eq('is_archived', false);
+      if (!error && data) {
+        setReducoesParcela(data);
+      } else {
+        setReducoesParcela([]);
+      }
+    };
+    fetchReducoesParcela();
+  }, [selectedAdministratorId, selectedCompanyId]);
 
   // Buscar product_installment_types ao selecionar produto
   const [productInstallmentTypes, setProductInstallmentTypes] = useState<{ product_id: string, installment_type_id: string }[]>([]);
@@ -590,13 +614,13 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
 
           {/* Tipo de Crédito */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium">Tipo de Crédito</label>
+            <label className="block text-sm font-medium">Tipo de Imóvel</label>
             <Select
               value={selectedCreditType || ''}
               onValueChange={setSelectedCreditType}
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione um tipo de crédito..." />
+                <SelectValue placeholder="Selecione um tipo de imóvel..." />
               </SelectTrigger>
               <SelectContent>
                 {creditTypes.map((type) => (
@@ -624,9 +648,12 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
               </SelectContent>
             </Select>
           </div>
-          {/* Valor do aporte */}
+
+          {/* Valor do aporte/crédito */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium">Valor do aporte</label>
+            <label className="block text-sm font-medium">
+              {searchType === 'contribution' ? 'Valor do aporte' : 'Valor do crédito'}
+            </label>
             <Input
               type="number"
               placeholder="0,00"
@@ -635,57 +662,24 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
             />
           </div>
 
-          {/* Parcelas */}
+          {/* Número de parcelas */}
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">Parcelas</label>
-              <Checkbox 
-                checked={manualFieldsState.parcelas} 
-                onCheckedChange={(checked) => {
-                  handleFieldSwitch('parcelas', checked as boolean);
-                  if (checked && setManualTerm) {
-                    setManualTerm(Number(selectedInstallmentTypeId) || undefined);
-                  } else if (!checked && setManualTerm) {
-                    setManualTerm(undefined);
-                  }
-                }} 
-              />
-              <span className="text-xs text-muted-foreground">Manual</span>
-            </div>
-            {manualFieldsState.parcelas ? (
-              <Input
-                type="number"
-                placeholder="Número de parcelas (meses)"
-                min={1}
-                step={1}
-                value={selectedInstallmentTypeId || ''}
-                onChange={e => {
-                  setSelectedInstallmentTypeId(e.target.value);
-                  if (setManualTerm) setManualTerm(Number(e.target.value) || undefined);
-                  if (setSelectedTerm) setSelectedTerm(Number(e.target.value) || undefined);
-                }}
-              />
-            ) : (
-              <Select
-                value={selectedInstallmentTypeId || ''}
-                onValueChange={v => {
-                  setSelectedInstallmentTypeId(v);
-                  if (setManualTerm) setManualTerm(undefined);
-                  if (setSelectedTerm) setSelectedTerm(Number(v));
-                }}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione a quantidade de parcelas..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {installmentTypes.map((it) => (
-                    <SelectItem key={it.id} value={it.installment_count.toString()}>
-                      {it.installment_count}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+            <label className="block text-sm font-medium">Número de parcelas</label>
+            <Select
+              value={term.toString()}
+              onValueChange={v => setTerm(Number(v))}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione a quantidade de parcelas..." />
+              </SelectTrigger>
+              <SelectContent>
+                {installmentTypes.map((it) => (
+                  <SelectItem key={it.id} value={it.installment_count.toString()}>
+                    {it.installment_count}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Tipo de Parcela */}
@@ -700,226 +694,23 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="full">Parcela Cheia</SelectItem>
-                {/* Adicione outras opções se necessário */}
+                {reducoesParcela.map((red: any) => (
+                  <SelectItem key={red.id} value={red.id}>{red.name}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Taxa de administração */}
+          {/* Mês Contemplação */}
           <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">Taxa de administração</label>
-              <Checkbox 
-                checked={manualFieldsState.taxaAdministracao} 
-                onCheckedChange={(checked) => handleFieldSwitch('taxaAdministracao', checked as boolean)} 
-              />
-              <span className="text-xs text-muted-foreground">Manual</span>
-            </div>
+            <label className="block text-sm font-medium">Mês Contemplação</label>
             <Input
               type="number"
-              placeholder="%"
-              value={adminTax}
-              onChange={(e) => setAdminTax(e.target.value)}
-              disabled={!manualFieldsState.taxaAdministracao}
+              placeholder="6"
+              min={1}
+              value={contemplationMonth || ''}
+              onChange={e => setContemplationMonth(e.target.value ? Number(e.target.value) : 6)}
             />
-          </div>
-
-          {/* Fundo de reserva */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">Fundo de reserva</label>
-              <Checkbox 
-                checked={manualFieldsState.fundoReserva} 
-                onCheckedChange={(checked) => handleFieldSwitch('fundoReserva', checked as boolean)} 
-              />
-              <span className="text-xs text-muted-foreground">Manual</span>
-            </div>
-            <Input
-              type="number"
-              placeholder="%"
-              value={reserveFund}
-              onChange={(e) => setReserveFund(e.target.value)}
-              disabled={!manualFieldsState.fundoReserva}
-            />
-          </div>
-
-          {/* Atualização anual (novo campo) */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">Atualização anual</label>
-              <Checkbox 
-                checked={manualFieldsState.atualizacaoAnual} 
-                onCheckedChange={(checked) => handleFieldSwitch('atualizacaoAnual', checked as boolean)} 
-              />
-              <span className="text-xs text-muted-foreground">Manual</span>
-            </div>
-            <Input
-              type="number"
-              placeholder="%"
-              value={annualUpdate}
-              onChange={(e) => setAnnualUpdate(e.target.value)}
-              disabled={!manualFieldsState.atualizacaoAnual}
-              min={0}
-              max={20}
-              step={0.1}
-            />
-          </div>
-
-          {/* Ativar seguro */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Ativar seguro</label>
-            <div className="flex gap-4">
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="radio"
-                  name="seguro"
-                  value="nao_incluir"
-                  checked={insuranceMode === 'nao_incluir'}
-                  onChange={() => setInsuranceMode('nao_incluir')}
-                />
-                Não incluir
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="radio"
-                  name="seguro"
-                  value="incluir"
-                  checked={insuranceMode === 'incluir'}
-                  onChange={() => setInsuranceMode('incluir')}
-                />
-                Incluir
-              </label>
-            </div>
-            {insuranceMode === 'incluir' && (
-              <Input
-                type="number"
-                placeholder="%"
-                value={insurancePercent}
-                onChange={(e) => setInsurancePercent(e.target.value)}
-              />
-            )}
-          </div>
-
-          {/* Redução de parcela */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">Redução de parcela</label>
-              <Checkbox 
-                checked={manualFieldsState.reducaoParcela} 
-                onCheckedChange={(checked) => handleFieldSwitch('reducaoParcela', checked as boolean)} 
-              />
-              <span className="text-xs text-muted-foreground">Manual</span>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Input
-                type="number"
-                placeholder="Percentual reduzido (%)"
-                value={reductionPercent}
-                onChange={(e) => setReductionPercent(e.target.value)}
-                disabled={!manualFieldsState.reducaoParcela}
-              />
-              <Select
-                value={reductionApplications[0] || ''}
-                onValueChange={(value) => setReductionApplications([value])}
-                disabled={!manualFieldsState.reducaoParcela}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Aplicação" />
-                </SelectTrigger>
-                <SelectContent>
-                  {applicationsOptions.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Atualização anual do crédito */}
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <label className="text-sm font-medium">Atualização anual do crédito</label>
-              <Checkbox 
-                checked={manualFieldsState.atualizacaoAnualCredito} 
-                onCheckedChange={(checked) => handleFieldSwitch('atualizacaoAnualCredito', checked as boolean)} 
-              />
-              <span className="text-xs text-muted-foreground">Manual</span>
-            </div>
-            {/* Sistema: busca tipo da administradora */}
-            {!manualFieldsState.atualizacaoAnualCredito ? (
-              updateType === 'after_12_installments' ? (
-                <div className="p-3 bg-muted rounded-md">
-                  <span className="text-sm">Após 12 parcelas</span>
-                </div>
-              ) : updateType === 'specific_month' ? (
-                <div className="grid grid-cols-2 gap-2">
-                  <Input
-                    type="number"
-                    placeholder="Mês de Atualização"
-                    value={updateMonth}
-                    disabled
-                  />
-                  <Input
-                    type="number"
-                    placeholder="Carência (em dias)"
-                    value={updateGrace}
-                    disabled
-                  />
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-2">
-                  <Input
-                    type="text"
-                    placeholder="Tipo de Atualização"
-                    value={updateType}
-                    disabled
-                  />
-                  <Input
-                    type="text"
-                    placeholder="Percentual/Índice"
-                    value={updatePercent}
-                    disabled
-                  />
-                </div>
-              )
-            ) : (
-              // Manual: campos editáveis
-              <div className="grid grid-cols-2 gap-2">
-                <Select value={updateType} onValueChange={setUpdateType}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Tipo de Atualização" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="after_12_installments">Após 12 parcelas</SelectItem>
-                    <SelectItem value="specific_month">Mês específico</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input
-                  type="text"
-                  placeholder="Percentual/Índice"
-                  value={updatePercent}
-                  onChange={(e) => setUpdatePercent(e.target.value)}
-                />
-                {updateType === 'specific_month' && (
-                  <>
-                    <Input
-                      type="number"
-                      placeholder="Mês de Atualização"
-                      value={updateMonth}
-                      onChange={(e) => setUpdateMonth(e.target.value)}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="Carência (em dias)"
-                      value={updateGrace}
-                      onChange={(e) => setUpdateGrace(e.target.value)}
-                    />
-                  </>
-                )}
-              </div>
-            )}
           </div>
         </div>
 

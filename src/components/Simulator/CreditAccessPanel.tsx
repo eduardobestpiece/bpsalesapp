@@ -799,7 +799,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
                 <Button onClick={() => setShowComingSoon(true)} className="flex-1 bg-green-600 hover:bg-green-700 text-white">Gerar proposta</Button>
               )}
               <Button onClick={redefinirMontagem} variant="outline" className="flex-1">Redefinir</Button>
-              <Button onClick={salvarMontagem} disabled={saving} className="flex-1 bg-[#A05A2C] text-white hover:bg-[#7a3f1a] border-none">{saving ? 'Salvando...' : 'Salvar'}</Button>
+              <Button onClick={salvarMontagem} disabled={saving} className="flex-1 bg-[#AA715A] text-white hover:bg-[#AA715A]/80 border-none">{saving ? 'Salvando...' : 'Salvar'}</Button>
             </div>
       </div>
         </CardContent>

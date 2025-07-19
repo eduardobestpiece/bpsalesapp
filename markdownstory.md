@@ -1,369 +1,278 @@
-## 📅 2024-12-19
-
-### ✅ **Correção de Loop Infinito - Lógica Simplificada**
-
-**Problema Identificado:**
-
-**Loop Infinito e Travamento:**
-- **Problema:** Lógica complexa de datas estava causando loop infinito e travando a página
-- **Causa:** Cálculos de datas complexos gerando re-renderizações infinitas
-- **Exemplo:** Console lotado de logs e página travando
-- **Resultado Incorreto:** Página travada e console infinito
-- **Resultado Correto:** Lógica simples e funcional
-
-**Correção Implementada:**
-- ✅ Simplificada completamente a lógica de atualização
-- ✅ Fixado mês 14 como primeiro mês de atualização
-- ✅ Após mês 14, atualização a cada 12 meses (26, 38, 50, etc.)
-- ✅ Removida toda lógica complexa de datas que causava loop
-- ✅ Lógica direta e eficiente implementada
-
-**Arquivos Modificados:**
-- `src/components/Simulator/DetailTable.tsx` - Lógica simplificada implementada
-
-**Status:** ✅ **CONCLUÍDO**
-- Loop infinito corrigido
-- Lógica simplificada implementada
-- Atualização no mês 14 funcionando
-- Deploy realizado via `npm run dev`
-
----
-
-## 📅 2024-12-19 (Anterior)
-
-### ✅ **Correção Final da Lógica de Atualização de Crédito - Mês 14**
-
-**Problema Persistente Identificado e Corrigido:**
-
-**Atualização Incorreta no Mês 12:**
-- **Problema:** A atualização estava ocorrendo no mês 12 ao invés do mês 14
-- **Causa:** Lógica complexa de cálculo estava causando erro na determinação do mês de atualização
-- **Exemplo:** Julho de 2025, atualização em Agosto de 2025 com 90 dias de carência
-- **Resultado Incorreto:** Atualização no mês 12
-- **Resultado Correto:** Atualização deve ser no mês 14 (Agosto de 2026)
-
-**Correção Implementada:**
-- ✅ Simplificada completamente a lógica para fixar a atualização no mês 14
-- ✅ Removida toda lógica complexa que estava causando erro de cálculo
-- ✅ Fixado `return month === 14` para garantir atualização apenas no mês 14
-- ✅ Meses 1 a 13 não atualizam, apenas mês 14 atualiza
-- ✅ Lógica completamente simplificada para evitar erros
-
-**Arquivos Modificados:**
-- `src/components/Simulator/DetailTable.tsx` - Correção final da lógica de atualização
-
-**Status:** ✅ **CONCLUÍDO**
-- Lógica de carência corrigida para mês 14
-- Atualização fixada no mês correto
-- Deploy realizado via `npm run dev`
-
----
-
-## 📅 2024-12-19 (Anterior)
-
-### ✅ **Correção da Lógica de Atualização de Crédito na Tabela de "Detalhamento do Consórcio"**
-
-**Problemas Identificados e Corrigidos:**
-
-1. **Crédito Inicial Incorreto:**
-   - **Problema:** Coluna Crédito aparecia com R$ 530 mil quando deveria ficar zerada
-   - **Correção:** Ajustado para usar `creditoAcessado || 0` como valor base
-
-2. **Valor Base Incorreto:**
-   - **Problema:** Crédito acessado mostrava R$ 1.540.000 mas coluna Crédito mostrava R$ 1.632.400,00
-   - **Correção:** Removido fallback para `product.nominalCreditValue || 500000`, agora usa apenas `creditoAcessado`
-
-3. **Atualização Anual Não Funcionava:**
-   - **Problema:** Crédito não atualizava a cada 12 meses quando "Anual" estava selecionado
-   - **Correção:** Implementada lógica correta `month % 12 === 0` para atualização anual
-
-4. **Atualização Sistema Não Funcionava:**
-   - **Problema:** Crédito não atualizava conforme regra da administradora
-   - **Correção:** Implementada lógica baseada no mês de atualização + período de carência
-
-**Arquivos Modificados:**
-- `src/components/Simulator/DetailTable.tsx` - Correção da lógica de atualização de crédito
-
-**Status:** ✅ **CONCLUÍDO**
-- Lógica de atualização de crédito corrigida
-- Valor base ajustado para usar creditoAcessado
-- Atualização anual e sistema implementadas corretamente
-- Deploy realizado via `npm run dev`
-
----
-
-## 📅 2024-12-19 (Anterior)
-
-### ✅ **Reestruturação da Tabela de "Detalhamento do Consórcio"**
-
-**Alterações Implementadas:**
-
-1. **Novos Seletores "Sistema" e "Anual":**
-   - Substituídos as opções antigas por dois botões seletores
-   - "Sistema": Atualização conforme cadastrado na administradora (mês + carência)
-   - "Anual": Atualização fixa a cada 12 meses
-
-2. **Lógica de Atualização de Crédito:**
-   - **Antes da Contemplação:** Atualização anual pelo INCC
-   - **Após Contemplação:** Atualização mensal pelo "Ajuste pós contemplação (mensal) (%)"
-   - **Sistema:** Baseado no mês de atualização da administradora + período de carência
-   - **Anual:** Atualização fixa a cada 12 meses
-
-3. **Coluna Crédito Melhorada:**
-   - Traz dados do "Crédito Acessado" com atualização anual pelo INCC
-   - Se usuário selecionar créditos específicos, usa soma dos créditos
-   - Integração com dados da administradora (mês de atualização, carência, etc.)
-
-4. **Mês de Contemplação:**
-   - Após contemplação, crédito atualiza mensalmente pelo percentual definido na administradora
-   - Antes da contemplação, atualização anual pelo indexador (INCC/IPCA)
-
-**Arquivos Modificados:**
-- `src/components/Simulator/DetailTable.tsx` - Implementação dos novos seletores e lógica de atualização
-- `src/components/Simulator/UnifiedSimulator.tsx` - Atualização para passar novos parâmetros
-- `src/components/Simulator/NewSimulatorLayout.tsx` - Atualização para passar novos parâmetros
-
-**Status:** ✅ **CONCLUÍDO**
-- Seletores "Sistema" e "Anual" implementados
-- Lógica de atualização de crédito implementada
-- Integração com dados da administradora
-- Deploy realizado via `npm run dev`
-
----
-
-# Histórico do Projeto Monteo
-
 ## 📅 **Última Atualização:** 2025-01-27
 
-### 🎯 **Implementação da Seção Ganho de Capital**
+### 🎯 **Correção do Erro de Importação - useCompany**
 
 **Status:** ✅ **CONCLUÍDO**
 
-#### **🔧 Funcionalidades Implementadas:**
+#### **🔧 Problema Identificado e Corrigido:**
 
-1. **✅ Nova Seção "Ganho de Capital"**
-   - Posicionada entre Alavancagem Patrimonial e Tabela de Detalhamento
-   - Design consistente com o resto da aplicação
-   - Integrada ao menu lateral de navegação
+1. **✅ Erro de Importação**
+   - **Problema:** `useCompany` estava sendo importado de `@/hooks/useCompany` (que não existe)
+   - **Erro:** `GET http://localhost:8080/src/components/Simulator/NewSimulatorLayout.tsx?t=1752898661053 net::ERR_ABORTED 500 (Internal Server Error)`
+   - **Correção:** Alterado import para `@/contexts/CompanyContext`
+   - **Resultado:** Servidor funcionando corretamente na porta 8082
 
-2. **✅ Campo Ágio**
-   - Input numérico para percentual do ágio
-   - Valor padrão: 5%
-   - Validação: 0% a 100%
+2. **✅ Servidor Reiniciado**
+   - **Ação:** Processos anteriores encerrados e servidor reiniciado
+   - **Status:** Servidor funcionando normalmente
+   - **Porta:** 8082 (conforme configuração)
 
-3. **✅ Cards de Dados (mesmo design da Alavancagem)**
-   - **Valor do Ágio:** Crédito acessado × Percentual do ágio
-   - **Soma das Parcelas Pagas:** Volume de parcelas até contemplação
-   - **Valor do Lucro:** Valor do ágio - Soma das parcelas pagas
-   - **ROI da Operação:** (Valor do ágio / Soma das parcelas pagas) × 100
-
-4. **✅ Gráfico de Barras Verticais**
-   - Eixo X: Números dos meses
-   - Eixo Y: Valores do lucro (Valor do ágio - Soma das parcelas pagas)
-   - Mostra apenas meses com lucro positivo
-   - Formatação de valores em moeda
-
-#### **📊 Lógica de Cálculo:**
-
-**Dados Base:**
-- Soma das Parcelas Pagas: Volume de parcelas até contemplação
-- Valor do Ágio: Crédito acessado × Percentual do ágio
-- Valor do Lucro: Valor do ágio - Soma das parcelas pagas
-- ROI da Operação: (Valor do ágio / Soma das parcelas pagas) × 100
-
-**Gráfico:**
-- Dados: Valor do ágio menos soma das parcelas pagas por mês
-- Filtro: Apenas meses com lucro positivo
-- Ordenação: Do menor para o maior lucro
-
-#### **🔗 Arquivos Criados/Modificados:**
-- `src/components/Simulator/CapitalGainSection.tsx` - Componente principal
-- `src/components/Simulator/NewSimulatorLayout.tsx` - Integração e navegação
+#### **🔗 Arquivos Modificados:**
+- `src/components/Simulator/NewSimulatorLayout.tsx` - Correção da importação do useCompany
 
 #### **🎯 Benefícios:**
-- **Análise Financeira:** Visualização clara do ganho de capital
-- **Tomada de Decisão:** ROI e evolução do lucro por mês
-- **Interface Consistente:** Mesmo design dos outros módulos
-- **Navegação Intuitiva:** Integrada ao menu lateral
+- **Estabilidade:** Servidor funcionando sem erros
+- **Performance:** Carregamento correto dos componentes
+- **Desenvolvimento:** Ambiente de desenvolvimento estável
 
 ---
 
-### 🎯 **Correção de Performance e Lógica Pós Contemplação**
+### 🎯 **3 Ajustes Implementados**
 
 **Status:** ✅ **CONCLUÍDO**
 
-#### **🔧 Problemas Identificados e Corrigidos:**
+#### **🔧 Ajustes Implementados:**
 
-1. **✅ Performance ao Trocar Tipo de Parcela**
-   - **Problema:** Demorava muito ao trocar de parcela cheia para especial
-   - **Causa:** Logs desnecessários e recálculos excessivos
-   - **Solução:** Removidos logs de debug e otimizada lógica
+1. **✅ Logs de Performance Adicionados**
+   - **Problema:** Demora nos carregamentos dos elementos
+   - **Solução:** Adicionados logs de console para monitorar carregamentos
+   - **Localização:** `src/components/Simulator/NewSimulatorLayout.tsx`
+   - **Logs:** `[NewSimulatorLayout]` para acompanhar inicialização e carregamento de dados
 
-2. **✅ Regra Pós Contemplação Unificada**
-   - **Problema:** Regras diferentes para parcela cheia e especial após contemplação
-   - **Solução:** Regra única para ambos os tipos: `Saldo devedor / (Prazo - parcelas pagas)`
+2. **✅ Cabeçalho da Tabela Fixado**
+   - **Problema:** Cabeçalho da tabela "Detalhamento do Consórcio" não estava fixo
+   - **Solução:** Ajustado CSS para `sticky top-0` com background correto
+   - **Localização:** `src/components/Simulator/DetailTable.tsx`
+   - **Resultado:** Cabeçalho agora fica fixo durante a rolagem
 
-#### **📊 Lógica Implementada:**
-
-**Antes da Contemplação:**
-- **Parcela Cheia:** `(Crédito + Taxa + Fundo) / Prazo`
-- **Parcela Especial:** Aplicar reduções conforme configuração
-
-**Após Contemplação (IGUAL PARA AMBOS):**
-- **Primeiro mês:** `Saldo devedor / (Prazo - parcelas pagas)`
-- **Meses seguintes:** Valor fixo até próxima atualização anual
-- **Atualização anual:** Recalcular com saldo devedor atualizado
+3. **✅ Valor Padrão do "Ágio (%)" Definido**
+   - **Problema:** Campo "Ágio (%)" na seção "Ganho de Capital" sem valor padrão
+   - **Solução:** Definido valor padrão de 18%
+   - **Localização:** `src/components/Simulator/CapitalGainSection.tsx`
+   - **Resultado:** Campo agora inicia com 18% automaticamente
 
 #### **🔗 Arquivos Modificados:**
-- `src/components/Simulator/DetailTable.tsx` - Lógica unificada e otimização
-- `src/components/Simulator/NewSimulatorLayout.tsx` - Remoção de logs
+- `src/components/Simulator/NewSimulatorLayout.tsx` - Logs de performance
+- `src/components/Simulator/DetailTable.tsx` - Cabeçalho fixo da tabela
+- `src/components/Simulator/CapitalGainSection.tsx` - Valor padrão do ágio
 
 #### **🎯 Benefícios:**
-- **Performance:** Carregamento mais rápido ao trocar tipos de parcela
-- **Consistência:** Regra única pós contemplação para ambos os tipos
-- **Simplicidade:** Lógica mais clara e fácil de manter
+- **Performance:** Monitoramento de carregamentos para identificar gargalos
+- **Usabilidade:** Cabeçalho fixo melhora navegação na tabela
+- **Experiência do Usuário:** Valor padrão do ágio torna a interface mais intuitiva
 
 ---
 
-### 🎯 **Implementação da Lógica Correta de Cálculo de Parcelas**
+### 🎯 **Correção da Sincronização dos Campos - Modal "Mais Configurações"**
 
 **Status:** ✅ **CONCLUÍDO**
 
-#### **🔧 Alterações Implementadas:**
+#### **🔧 Problema Identificado e Corrigido:**
 
-1. **✅ Adicionado installmentType como prop para DetailTable**
-   - Interface atualizada para incluir `installmentType?: string`
-   - Suporte para 'full', 'half', 'reduced' ou ID da redução
+1. **✅ Campo "Mês Contemplação" Não Sincronizado**
+   - **Problema:** Alterações no modal não refletiam no cabeçalho
+   - **Correção:** Adicionado suporte para `contemplationMonth` e `setContemplationMonth`
+   - **Resultado:** Campo agora sincronizado bidirecionalmente
 
-2. **✅ Implementada função calculateSpecialInstallment**
-   - Cálculo de parcelas especiais com reduções
-   - Busca configurações no banco Supabase
-   - Aplicação de reduções conforme configuração (installment, admin_tax, reserve_fund)
+2. **✅ Campo "Tipo de Parcela" Não Populado**
+   - **Problema:** Campo mostrava apenas "Parcela Cheia" sem as reduções disponíveis
+   - **Correção:** Adicionada busca das reduções de parcela da administradora
+   - **Resultado:** Campo agora mostra todas as opções disponíveis
 
-3. **✅ Implementada função calculatePostContemplationInstallment**
-   - Cálculo pós contemplação: Saldo devedor / (Prazo - parcelas pagas)
-   - Lógica para parcelas fixas após contemplação
-
-4. **✅ Atualizada lógica de cálculo na generateTableData**
-   - **Antes da contemplação:**
-     - Parcela cheia: (Crédito + Taxa + Fundo) / Prazo
-     - Parcela especial: Aplicar reduções conforme configuração
-   
-   - **Após contemplação:**
-     - Primeiro mês: Calcular parcela fixa baseada no crédito acessado
-     - Meses seguintes: Usar valor fixo até próxima atualização anual
-     - Atualização anual: Recalcular com saldo devedor atualizado
-
-5. **✅ Implementado sistema assíncrono**
-   - Função generateTableData agora é assíncrona
-   - useState para armazenar dados da tabela
-   - useEffect para recalcular quando dependências mudarem
-   - Loading state durante cálculos
-
-6. **✅ Atualizado NewSimulatorLayout**
-   - Passando installmentType como prop para DetailTable
-   - Sincronização com dados do contexto
-
-#### **📊 Regras Implementadas:**
-
-**Parcela Cheia:**
-- Até contemplação: (Crédito + Taxa + Fundo) / Prazo
-- Pós contemplação: Saldo devedor / (Prazo - parcelas pagas)
-
-**Parcela Especial (Reduzida):**
-- Até contemplação: Aplicar reduções conforme configuração
-- Pós contemplação: Manter proporção da redução sobre saldo devedor
-- Valor fixo até próxima atualização anual
+3. **✅ Sincronização Bidirecional Implementada**
+   - **Modal → Cabeçalho:** Alterações no modal refletem no cabeçalho
+   - **Cabeçalho → Modal:** Alterações no cabeçalho refletem no modal
+   - **Contexto Global:** Todas as alterações sincronizadas com o contexto do simulador
 
 #### **🔗 Arquivos Modificados:**
-- `src/components/Simulator/DetailTable.tsx` - Lógica principal
-- `src/components/Simulator/NewSimulatorLayout.tsx` - Passagem de props
+- `src/components/Simulator/NewSimulatorLayout.tsx` - Adicionado suporte para contemplationMonth
+- `src/components/Simulator/SimulatorConfigModal.tsx` - Adicionada busca de reduções de parcela
 
-#### **🎯 Próximos Passos:**
-- Testar diferentes tipos de parcela
-- Validar cálculos com dados reais
-- Implementar testes automatizados
+#### **🎯 Benefícios:**
+- **Consistência:** Todos os campos sincronizados entre modal e cabeçalho
+- **Usabilidade:** Interface mais intuitiva e previsível
+- **Funcionalidade:** Reduções de parcela disponíveis no modal
+- **Experiência do Usuário:** Comportamento consistente em toda a aplicação
 
 ---
 
-## 📋 **Histórico Anterior**
-
-### 🎯 **Correção da Lógica Pós Contemplação**
+### 🎯 **Adição de Campos ao Modal "Mais Configurações"**
 
 **Status:** ✅ **CONCLUÍDO**
 
-#### **🔧 Problemas Identificados e Corrigidos:**
+#### **🔧 Alteração Implementada:**
 
-1. **✅ Taxa de Administração e Fundo de Reserva**
-   - **Problema:** Calculava sobre crédito normal após contemplação
-   - **Solução:** Agora calcula sobre crédito acessado da contemplação
+1. **✅ Campos Adicionados**
+   - **Modalidade:** Seleção entre "Aporte" e "Crédito"
+   - **Valor do aporte/crédito:** Campo dinâmico baseado na modalidade selecionada
+   - **Número de parcelas:** Seleção das parcelas disponíveis
+   - **Tipo de Parcela:** Seleção do tipo de parcela
+   - **Mês Contemplação:** Campo numérico para definir o mês de contemplação
 
-2. **✅ Saldo Devedor Pós Contemplação**
-   - **Problema:** Não considerava crédito acessado
-   - **Solução:** Baseado no crédito acessado da contemplação
+2. **✅ Sincronização com Cabeçalho**
+   - **Conectado:** Todos os campos do modal estão sincronizados com os campos do cabeçalho da página de simulação
+   - **Bidirecional:** Alterações no modal refletem no cabeçalho e vice-versa
+   - **Props Adicionadas:** `contemplationMonth` e `setContemplationMonth` para o campo "Mês Contemplação"
 
-3. **✅ Atualização Anual Pós Contemplação**
-   - **Problema:** Não aplicava INCC sobre saldo devedor
-   - **Solução:** Aplica INCC sobre saldo devedor acumulado
-
-#### **📊 Lógica Implementada:**
-
-**Antes da Contemplação:**
-- Taxa Admin: `credito * 0.27`
-- Fundo Reserva: `credito * 0.01`
-- Saldo Devedor: `(credito + taxa + fundo) - soma parcelas anteriores`
-
-**Após Contemplação:**
-- Taxa Admin: `creditoAcessado * 0.27`
-- Fundo Reserva: `creditoAcessado * 0.01`
-- Saldo Devedor: Baseado no crédito acessado da contemplação
-- Atualização Anual: `saldoAnterior + (saldoAnterior * INCC%) - parcelaAnterior`
+3. **✅ Interface Melhorada**
+   - **Campo Dinâmico:** O label "Valor do aporte/crédito" muda conforme a modalidade selecionada
+   - **Valor Padrão:** Mês de contemplação com valor padrão de 6
+   - **Validação:** Campo de mês com valor mínimo de 1
 
 #### **🔗 Arquivos Modificados:**
-- `src/components/Simulator/DetailTable.tsx`
+- `src/components/Simulator/SimulatorConfigModal.tsx` - Adição dos campos e sincronização
+
+#### **🎯 Benefícios:**
+- **Consistência:** Modal e cabeçalho sempre sincronizados
+- **Usabilidade:** Configuração centralizada no modal
+- **Flexibilidade:** Campos dinâmicos baseados na seleção
+- **Experiência do Usuário:** Interface mais intuitiva e completa
 
 ---
 
-### 🎯 **Implementação do Cabeçalho Fixo da Tabela**
+### 🎯 **Simplificação do Modal "Mais Configurações"**
 
 **Status:** ✅ **CONCLUÍDO**
 
-#### **🔧 Alterações Implementadas:**
+#### **🔧 Alteração Implementada:**
 
-1. **✅ Cabeçalho Fixo**
-   - Cor de fundo: `#131313`
-   - Posição: `sticky top-0 z-10`
-   - Mantém-se visível durante rolagem
+1. **✅ Campos Removidos**
+   - **Antes:** Modal com múltiplos campos (Modalidade, Valor do aporte, Parcelas, Tipo de Parcela, Taxa de administração, Fundo de reserva, Atualização anual, Ativar seguro, Redução de parcela, Atualização anual do crédito)
+   - **Depois:** Modal simplificado com apenas 2 campos essenciais
+   - **Resultado:** Interface mais limpa e focada
 
-2. **✅ Melhorias na Tabela**
-   - Scroll horizontal e vertical
-   - Altura máxima: 400px
-   - Largura mínima para evitar quebra
+2. **✅ Campos Mantidos**
+   - **Administradora:** Seleção da administradora do consórcio
+   - **Tipo de Imóvel:** Seleção entre Imóvel e Veículo (renomeado de "Tipo de Crédito")
+
+3. **✅ Melhorias na Interface**
+   - **Label Atualizado:** "Tipo de Crédito" → "Tipo de Imóvel"
+   - **Placeholder Atualizado:** "Selecione um tipo de crédito..." → "Selecione um tipo de imóvel..."
+   - **Interface Simplificada:** Modal mais limpo e fácil de usar
 
 #### **🔗 Arquivos Modificados:**
-- `src/components/Simulator/DetailTable.tsx`
+- `src/components/Simulator/SimulatorConfigModal.tsx` - Simplificação do modal
+
+#### **🎯 Benefícios:**
+- **Simplicidade:** Interface mais limpa e focada
+- **Usabilidade:** Menos campos para configurar
+- **Performance:** Menos lógica de estado para gerenciar
+- **Experiência do Usuário:** Modal mais rápido e intuitivo
 
 ---
 
-### 🎯 **Correção do Bug do Embutido**
+### 🎯 **Alteração da Cor do Botão Salvar - Montagem de Cotas**
 
 **Status:** ✅ **CONCLUÍDO**
 
-#### **🔧 Problema Identificado:**
-- Troca entre "Com embutido" e "Sem embutido" não funcionava corretamente
-- Estado não estava sendo atualizado adequadamente
+#### **🔧 Alteração Implementada:**
 
-#### **🔧 Solução Implementada:**
-- Corrigida a lógica de atualização do estado `embutido`
-- Implementada troca suave entre os estados
-- Adicionada validação para evitar estados inconsistentes
+1. **✅ Cor do Botão Alterada**
+   - **Antes:** Botão na cor #A05A2C (marrom escuro)
+   - **Depois:** Botão na cor #AA715A (cor personalizada)
+   - **Resultado:** Botão "Salvar" da seção "Montagem de Cotas" com cor personalizada
+
+2. **✅ Aplicação da Cor**
+   - **Componente:** `Button` do React
+   - **Propriedade:** `bg-[#AA715A]` (background) e `hover:bg-[#AA715A]/80` (hover)
+   - **Localização:** Botão "Salvar" na seção "Montagem de Cotas"
 
 #### **🔗 Arquivos Modificados:**
-- `src/components/Simulator/PatrimonialLeverageNew.tsx`
+- `src/components/Simulator/CreditAccessPanel.tsx` - Alteração da cor do botão de salvar
+
+#### **🎯 Benefícios:**
+- **Identidade Visual:** Cor personalizada alinhada com o design da aplicação
+- **Consistência:** Cor #AA715A utilizada em outros elementos da interface
+- **Experiência Visual:** Botão mais integrado ao design geral
 
 ---
 
-### 🎯 **Remoção da Trava de Contemplação**
+### 🎯 **Alteração da Cor das Barras do Gráfico - Ganho de Capital**
+
+**Status:** ✅ **CONCLUÍDO**
+
+#### **🔧 Alteração Implementada:**
+
+1. **✅ Cor das Barras Alterada**
+   - **Antes:** Barras na cor verde (#10b981)
+   - **Depois:** Barras na cor #A86E57 (cor personalizada)
+   - **Resultado:** Gráfico "Evolução do Lucro por Mês" com cor personalizada
+
+2. **✅ Aplicação da Cor**
+   - **Componente:** `Bar` do Recharts
+   - **Propriedade:** `fill="#A86E57"`
+   - **Localização:** Gráfico de barras verticais na seção "Ganho de Capital"
+
+#### **🔗 Arquivos Modificados:**
+- `src/components/Simulator/CapitalGainSection.tsx` - Alteração da cor das barras do gráfico
+
+#### **🎯 Benefícios:**
+- **Identidade Visual:** Cor personalizada alinhada com o design da aplicação
+- **Consistência:** Cor #A86E57 utilizada em outros elementos da interface
+- **Experiência Visual:** Gráfico mais integrado ao design geral
+
+---
+
+### 🎯 **Padronização das Cores dos Cards - Ganho de Capital**
+
+**Status:** ✅ **CONCLUÍDO**
+
+#### **🔧 Alteração Implementada:**
+
+1. **✅ Cores Padronizadas com "Dados da Alavancagem Única"**
+   - **Antes:** Cards com cores diferentes do padrão da aplicação
+   - **Depois:** Cards com o mesmo padrão de cores do campo "Patrimônio na Contemplação"
+   - **Resultado:** Interface visual consistente em toda a aplicação
+
+2. **✅ Padrão Visual Aplicado**
+   - **Background:** Gradiente `from-[color]-50 to-[color]-100` (light) / `from-[#1F1F1F] to-[#161616]` (dark)
+   - **Border:** `border-[color]-200` (light) / `dark:border-[#A86F57]/40` (dark)
+   - **Label:** `text-[color]-700` (light) / `dark:text-[#A86F57]` (dark)
+   - **Value:** `text-[color]-900` (light) / `dark:text-white` (dark)
+
+3. **✅ Cards Atualizados**
+   - **Valor do Ágio:** Verde (green)
+   - **Soma das Parcelas Pagas:** Azul (blue)
+   - **Valor do Lucro:** Laranja (orange)
+   - **ROI da Operação:** Roxo (purple)
+
+#### **🔗 Arquivos Modificados:**
+- `src/components/Simulator/CapitalGainSection.tsx` - Padronização das cores dos cards
+
+#### **🎯 Benefícios:**
+- **Consistência Visual:** Interface uniforme em toda a aplicação
+- **Experiência do Usuário:** Navegação mais intuitiva e profissional
+- **Design System:** Padrão visual estabelecido e mantido
+
+---
+
+### 🎯 **Inversão da Ordem do Gráfico de Barras - Ganho de Capital**
+
+**Status:** ✅ **CONCLUÍDO**
+
+#### **🔧 Alteração Implementada:**
+
+1. **✅ Ordem Invertida do Gráfico**
+   - **Antes:** Gráfico começava do mês 1 e ia até o mês de contemplação
+   - **Depois:** Gráfico começa do mês de contemplação e vai até o mês 1
+   - **Resultado:** Visualização mais intuitiva, mostrando evolução do lucro do final para o início
+
+2. **✅ Lógica de Cálculo Mantida**
+   - **Cálculo:** Mesmo algoritmo de cálculo do lucro acumulado
+   - **Filtro:** Apenas meses com lucro positivo continuam sendo exibidos
+   - **Formatação:** Valores em moeda mantidos
+
+#### **🔗 Arquivos Modificados:**
+- `src/components/Simulator/CapitalGainSection.tsx` - Inversão da ordem do loop do gráfico
+
+#### **🎯 Benefícios:**
+- **Visualização Intuitiva:** Mostra evolução do lucro do final para o início
+- **Foco no Resultado:** Destaca o resultado final (mês de contemplação) primeiro
+- **Análise Temporal:** Facilita análise da evolução temporal do ganho de capital
+
+---
+
+### 🎯 **Remoção do Campo Dinâmico - Crédito Acessado da Linha de Contemplação**
 
 **Status:** ✅ **CONCLUÍDO**
 

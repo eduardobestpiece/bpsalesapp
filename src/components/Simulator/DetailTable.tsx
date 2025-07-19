@@ -416,10 +416,10 @@ export const DetailTable = ({
       )}
 
       <CardContent>
-        <div className="w-full overflow-x-auto border rounded-lg" style={{ maxHeight: '400px' }}>
+        <div className="w-full border rounded-lg" style={{ maxHeight: '400px', overflowY: 'auto' }}>
           <div className="min-w-max">
             <Table>
-            <TableHeader className="sticky top-0 z-10" style={{ backgroundColor: '#131313' }}>
+            <TableHeader className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b">
               <TableRow>
                 {visibleColumns.mes && <TableHead>Mês</TableHead>}
                 {visibleColumns.credito && <TableHead>Crédito</TableHead>}

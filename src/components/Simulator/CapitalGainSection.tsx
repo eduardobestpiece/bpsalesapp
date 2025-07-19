@@ -12,6 +12,7 @@ interface CapitalGainSectionProps {
   product: any;
   administrator: any;
   embutido?: 'com' | 'sem';
+  selectedCredits?: any[]; // Adicionar selectedCredits
 }
 
 export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
@@ -20,9 +21,10 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
   installmentType,
   product,
   administrator,
-  embutido = 'sem'
+  embutido = 'sem',
+  selectedCredits = [] // Adicionar selectedCredits
 }: CapitalGainSectionProps) => {
-  const [agioPercent, setAgioPercent] = useState(5); // 5% padrão
+  const [agioPercent, setAgioPercent] = useState(18); // 18% padrão
 
   // Função para calcular valor da parcela (mesma lógica do DetailTable)
   const calculateInstallmentValue = (credit: number, month: number, isAfterContemplation: boolean = false) => {
@@ -174,13 +176,16 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
     const data = [];
     const totalMonths = contemplationMonth;
     
-    // Determinar o valor base do crédito
-    const baseCredit = product.nominalCreditValue || creditoAcessado || 0;
+    // Determinar o valor base do crédito (mesma lógica do DetailTable)
+    const baseCredit = selectedCredits.length > 0 
+      ? selectedCredits.reduce((sum, credit) => sum + (credit.value || 0), 0)
+      : creditoAcessado || 0;
     
     let saldoDevedorAcumulado = 0;
     let creditoAcessadoContemplacao = 0;
     
     for (let month = 1; month <= totalMonths; month++) {
+      // Usar a mesma lógica do DetailTable
       const credito = calculateCreditValue(month, baseCredit);
       const creditoAcessado = calculateCreditoAcessado(month, baseCredit);
       
@@ -209,7 +214,7 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
         if (installmentType === 'full') {
           valorParcela = (credito + taxaAdmin + fundoReserva) / (product.termMonths || 240);
         } else {
-          valorParcela = calculateInstallmentValue(credito, month, false);
+          valorParcela = calculateSpecialInstallment(credito, month, false);
         }
       } else {
         // Após contemplação
@@ -255,7 +260,7 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
     // Gerar dados para o gráfico
     const chartData = [];
     
-    for (let month = 1; month <= contemplationMonth; month++) {
+    for (let month = contemplationMonth; month >= 1; month--) {
       const somaParcelasAteMes = tableData
         .slice(0, month)
         .reduce((sum, row) => sum + row.valorParcela, 0);
@@ -278,7 +283,7 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
       chartData,
       creditoAcessadoContemplacao
     };
-  }, [creditoAcessado, contemplationMonth, installmentType, agioPercent, product, administrator, embutido]);
+  }, [creditoAcessado, contemplationMonth, installmentType, agioPercent, product, administrator, embutido, selectedCredits]);
 
   if (!creditoAcessado) {
     return (
@@ -314,59 +319,36 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
           />
         </div>
 
-        {/* Campo Dinâmico - Crédito Acessado da Linha de Contemplação */}
-        {capitalGainData && (
-          <div className="space-y-2">
-            <Label>Crédito Acessado (Mês {contemplationMonth})</Label>
-            <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
-              <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
-                {formatCurrency(capitalGainData.creditoAcessadoContemplacao)}
-              </div>
-              <div className="text-sm text-gray-600 dark:text-gray-400">
-                Valor da coluna "Crédito Acessado" da linha {contemplationMonth} da tabela
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Cards com os dados */}
         {capitalGainData && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
-              <CardContent className="p-4">
-                <div className="text-sm font-medium text-green-600 dark:text-green-400">Valor do Ágio</div>
-                <div className="text-2xl font-bold text-green-700 dark:text-green-300">
-                  {formatCurrency(capitalGainData.valorAgio)}
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-2 p-4 bg-gradient-to-r from-green-50 to-green-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-green-200 dark:border-[#A86F57]/40">
+              <Label className="text-sm text-green-700 dark:text-[#A86F57] font-medium">Valor do Ágio</Label>
+              <div className="text-2xl font-bold text-green-900 dark:text-white">
+                {formatCurrency(capitalGainData.valorAgio)}
+              </div>
+            </div>
 
-            <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-              <CardContent className="p-4">
-                <div className="text-sm font-medium text-blue-600 dark:text-blue-400">Soma das Parcelas Pagas</div>
-                <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">
-                  {formatCurrency(capitalGainData.somaParcelasPagas)}
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-2 p-4 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-blue-200 dark:border-[#A86F57]/40">
+              <Label className="text-sm text-blue-700 dark:text-[#A86F57] font-medium">Soma das Parcelas Pagas</Label>
+              <div className="text-2xl font-bold text-blue-900 dark:text-white">
+                {formatCurrency(capitalGainData.somaParcelasPagas)}
+              </div>
+            </div>
 
-            <Card className="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800">
-              <CardContent className="p-4">
-                <div className="text-sm font-medium text-orange-600 dark:text-orange-400">Valor do Lucro</div>
-                <div className="text-2xl font-bold text-orange-700 dark:text-orange-300">
-                  {formatCurrency(capitalGainData.valorLucro)}
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-2 p-4 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-orange-200 dark:border-[#A86F57]/40">
+              <Label className="text-sm text-orange-700 dark:text-[#A86F57] font-medium">Valor do Lucro</Label>
+              <div className="text-2xl font-bold text-orange-900 dark:text-white">
+                {formatCurrency(capitalGainData.valorLucro)}
+              </div>
+            </div>
 
-            <Card className="bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800">
-              <CardContent className="p-4">
-                <div className="text-sm font-medium text-purple-600 dark:text-purple-400">ROI da Operação</div>
-                <div className="text-2xl font-bold text-purple-700 dark:text-purple-300">
-                  {capitalGainData.roiOperacao.toFixed(2)}%
-                </div>
-              </CardContent>
-            </Card>
+            <div className="space-y-2 p-4 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-purple-200 dark:border-[#A86F57]/40">
+              <Label className="text-sm text-purple-700 dark:text-[#A86F57] font-medium">ROI da Operação</Label>
+              <div className="text-2xl font-bold text-purple-900 dark:text-white">
+                {capitalGainData.roiOperacao.toFixed(2)}%
+              </div>
+            </div>
           </div>
         )}
 
@@ -390,7 +372,7 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
                     formatter={(value: number) => [formatCurrency(value), 'Lucro']}
                     labelFormatter={(label) => `Mês ${label}`}
                   />
-                  <Bar dataKey="lucro" fill="#10b981" />
+                  <Bar dataKey="lucro" fill="#A86E57" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
