@@ -1,4 +1,5 @@
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { Button } from './button';
 import { cn } from '@/lib/utils';
@@ -64,110 +65,126 @@ export const FullScreenModal: React.FC<FullScreenModalProps> = ({
 
   if (!isOpen) return null;
 
-  return (
-    <>
-      {/* Portal-like behavior - render at root level */}
+  // Usar Portal para renderizar diretamente no body
+  return createPortal(
+    <div 
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 999999,
+        transition: 'opacity 300ms ease-out',
+        opacity: isVisible ? 1 : 0
+      }}
+    >
+      {/* Overlay - Escurecimento da tela */}
       <div 
-        className={cn(
-          "fixed inset-0 z-[99999] transition-all duration-300",
-          isVisible ? "opacity-100" : "opacity-0"
-        )}
-        style={{ 
-          position: 'fixed',
+        onClick={onClose}
+        style={{
+          position: 'absolute',
           top: 0,
           left: 0,
           right: 0,
           bottom: 0,
-          zIndex: 99999
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          cursor: 'pointer'
+        }}
+      />
+      
+      {/* Modal Container - Slide from right */}
+      <div 
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          display: 'flex',
+          justifyContent: 'flex-end',
+          transform: isVisible ? 'translateX(0)' : 'translateX(100%)',
+          transition: 'transform 300ms ease-out'
         }}
       >
-        {/* Overlay - Escurecimento da tela */}
         <div 
-          className="absolute inset-0 bg-black/50"
-          onClick={onClose}
           style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)'
+            width: '100%',
+            height: '100%',
+            backgroundColor: 'white',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            display: 'flex',
+            flexDirection: 'column'
           }}
-        />
-        
-        {/* Modal Container - Slide from right */}
-        <div 
-          className={cn(
-            "absolute inset-0 flex justify-end transition-transform duration-300 ease-out",
-            isVisible ? "translate-x-0" : "translate-x-full"
-          )}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0
-          }}
+          className="dark:bg-[#1E1E1E]"
         >
+          {/* Header - Fixo no topo */}
           <div 
-            className={cn(
-              "w-full h-full bg-white dark:bg-[#1E1E1E] shadow-2xl flex flex-col",
-              className
-            )}
             style={{
-              width: '100%',
-              height: '100%',
               display: 'flex',
-              flexDirection: 'column'
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '16px',
+              borderBottom: '1px solid #e5e7eb',
+              backgroundColor: 'white',
+              minHeight: '60px',
+              flexShrink: 0
             }}
+            className="dark:bg-[#1F1F1F] dark:border-[#A86F57]/20"
           >
-            {/* Header - Fixo no topo */}
-            <div 
-              className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-[#A86F57]/20 bg-white dark:bg-[#1F1F1F] shadow-sm"
-              style={{
-                flexShrink: 0,
-                minHeight: '60px',
-                borderBottom: '1px solid',
-                borderBottomColor: 'var(--border)'
-              }}
-            >
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onClose}
-                  className="p-1 h-8 w-8 hover:bg-gray-100 dark:hover:bg-[#161616] rounded-md"
-                >
-                  <X size={16} className="text-gray-500 dark:text-gray-300" />
-                </Button>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {title}
-                </h2>
-              </div>
-              
-              {/* Actions */}
-              <div className="flex items-center gap-2">
-                {actions}
-              </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClose}
+                style={{
+                  padding: '4px',
+                  height: '32px',
+                  width: '32px',
+                  borderRadius: '6px'
+                }}
+                className="hover:bg-gray-100 dark:hover:bg-[#161616]"
+              >
+                <X size={16} className="text-gray-500 dark:text-gray-300" />
+              </Button>
+              <h2 
+                style={{
+                  fontSize: '18px',
+                  fontWeight: '600',
+                  color: '#111827',
+                  margin: 0
+                }}
+                className="dark:text-white"
+              >
+                {title}
+              </h2>
             </div>
             
-            {/* Content - Área scrollável */}
-            <div 
-              className="flex-1 bg-gray-50 dark:bg-[#131313] p-6"
-              style={{
-                flex: 1,
-                overflowY: 'auto',
-                overflowX: 'hidden'
-              }}
-            >
-              <div className="max-w-4xl mx-auto">
-                {children}
-              </div>
+            {/* Actions */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {actions}
+            </div>
+          </div>
+          
+          {/* Content - Área scrollável */}
+          <div 
+            style={{
+              flex: 1,
+              backgroundColor: '#f9fafb',
+              padding: '24px',
+              overflowY: 'auto',
+              overflowX: 'hidden'
+            }}
+            className="dark:bg-[#131313]"
+          >
+            <div style={{ maxWidth: '1024px', margin: '0 auto' }}>
+              {children}
             </div>
           </div>
         </div>
       </div>
-    </>
+    </div>,
+    document.body
   );
 };
 
