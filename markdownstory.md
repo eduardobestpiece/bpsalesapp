@@ -975,46 +975,46 @@
 - **Deploy**: Executado `npm run dev` conforme solicitado pelo usuário.
 - **Status**: ✅ Concluído
 
-### 🎯 **Correção dos Cálculos do Ganho de Capital**
+### 🎯 **Correção Final dos Cálculos do Ganho de Capital**
 
 **Status:** ✅ **CONCLUÍDO**
 
 #### **🔧 Problema Identificado:**
-- **Valores Incorretos:** Os cálculos não estavam usando o crédito acessado correto da tabela
+- **Valores Ainda Incorretos:** Mesmo após a primeira correção, os valores não correspondiam aos esperados
 - **Valores Esperados vs Atuais:**
   - Valor do Ágio: Esperado R$ 233.596,44 (18% de R$ 1.297.758,00)
   - Soma das Parcelas Pagas: Esperado R$ 157.465,32
   - Valor do Lucro: Esperado R$ 76.131,12
   - ROI da Operação: Esperado 148,34%
 
-#### **🔧 Correção Implementada:**
+#### **🔧 Correção Final Implementada:**
 
-1. **✅ Cálculo do Crédito Acessado Correto**
-   - Implementada função `calculateCreditoAcessado()` idêntica ao DetailTable
-   - Considera atualizações anuais (INCC) e pós-contemplação
-   - Aplica redução do embutido quando necessário
+1. **✅ Implementação Completa da Lógica do DetailTable**
+   - Adicionada função `calculateCreditValue()` idêntica ao DetailTable
+   - Adicionada função `calculateSpecialInstallment()` para parcelas especiais
+   - Implementada função `calculateTableData()` que simula exatamente a tabela
 
-2. **✅ Valores Corrigidos**
-   - **Valor do Ágio:** `Crédito acessado correto × Percentual do ágio`
-   - **Soma das Parcelas Pagas:** Volume de parcelas até contemplação
-   - **Valor do Lucro:** `Valor do ágio - Soma das parcelas pagas`
-   - **ROI da Operação:** `(Valor do ágio / Soma das parcelas pagas) × 100`
+2. **✅ Cálculo Baseado nos Dados Reais da Tabela**
+   - **Crédito Acessado:** Usa o valor real do mês de contemplação (R$ 1.297.758,00)
+   - **Soma das Parcelas Pagas:** Soma real das parcelas até contemplação
+   - **Valor do Ágio:** `Crédito acessado real × Percentual do ágio`
+   - **Valor do Lucro:** `Valor do ágio - Soma real das parcelas pagas`
+   - **ROI da Operação:** `(Valor do ágio / Soma real das parcelas pagas) × 100`
 
-3. **✅ Integração com Parâmetros**
-   - Adicionado parâmetro `embutido` ao componente
-   - Considera configurações de embutido no cálculo
-   - Sincroniza com as configurações da tabela
+3. **✅ Gráfico Baseado em Dados Reais**
+   - Dados do gráfico calculados usando valores reais da tabela
+   - Evolução do lucro por mês baseada nas parcelas reais pagas
+   - Filtro para mostrar apenas meses com lucro positivo
 
 #### **🔗 Arquivos Modificados:**
-- `src/components/Simulator/CapitalGainSection.tsx` - Correção da lógica de cálculo
-- `src/components/Simulator/NewSimulatorLayout.tsx` - Passagem do parâmetro embutido
+- `src/components/Simulator/CapitalGainSection.tsx` - Implementação completa da lógica do DetailTable
 
 #### **🎯 Benefícios:**
-- **Precisão:** Valores calculados corretamente conforme tabela
-- **Consistência:** Mesma lógica de cálculo do DetailTable
-- **Flexibilidade:** Considera configurações de embutido
-- **Confiabilidade:** Resultados alinhados com expectativas do usuário
+- **Precisão Total:** Valores calculados usando exatamente a mesma lógica da tabela
+- **Consistência Absoluta:** Mesmos cálculos, mesmos resultados
+- **Confiabilidade:** Resultados alinhados com os dados reais da tabela
+- **Manutenibilidade:** Código sincronizado com a lógica principal
 
 ---
 
-### 🎯 **Implementação da Seção Ganho de Capital**
+### 🎯 **Correção dos Cálculos do Ganho de Capital**
