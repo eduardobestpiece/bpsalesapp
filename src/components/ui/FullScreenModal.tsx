@@ -27,39 +27,65 @@ export const FullScreenModal: React.FC<FullScreenModalProps> = ({
   React.useEffect(() => {
     if (isOpen) {
       setShouldRender(true);
+      // Bloquear scroll do body
+      document.body.style.overflow = 'hidden';
       // Pequeno delay para garantir que o DOM seja renderizado antes da animação
       setTimeout(() => setIsVisible(true), 10);
     } else {
       setIsVisible(false);
+      // Restaurar scroll do body
+      document.body.style.overflow = 'unset';
       // Aguardar animação terminar antes de remover do DOM
       setTimeout(() => setShouldRender(false), 300);
     }
+
+    // Cleanup - restaurar scroll se componente for desmontado
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
   }, [isOpen]);
+
+  // Fechar com ESC
+  React.useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen, onClose]);
 
   if (!shouldRender) return null;
 
   return (
-    <>
+    <div className="fixed inset-0 z-[9999]">
       {/* Overlay */}
       <div 
         className={cn(
-          "fixed inset-0 bg-black/50 z-50 transition-opacity duration-300",
+          "absolute inset-0 bg-black/60 transition-opacity duration-300",
           isVisible ? "opacity-100" : "opacity-0"
         )}
         onClick={onClose}
       />
       
       {/* Modal Container - Slide from right */}
-      <div className="fixed inset-0 z-50 flex justify-end">
+      <div className="absolute inset-0 flex justify-end">
         <div className={cn(
           "w-full h-full bg-background dark:bg-[#1E1E1E] shadow-2xl",
-          "flex flex-col overflow-hidden",
+          "flex flex-col",
           "transition-transform duration-300 ease-out",
           isVisible ? "translate-x-0" : "translate-x-full",
           className
         )}>
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-border dark:border-[#A86F57]/20 bg-card dark:bg-[#1F1F1F] shadow-sm min-h-[60px]">
+          <div className="flex items-center justify-between p-4 border-b border-border dark:border-[#A86F57]/20 bg-card dark:bg-[#1F1F1F] shadow-sm min-h-[60px] flex-shrink-0">
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
@@ -80,7 +106,7 @@ export const FullScreenModal: React.FC<FullScreenModalProps> = ({
             </div>
           </div>
           
-          {/* Content */}
+          {/* Content - Scroll apenas aqui */}
           <div className="flex-1 overflow-y-auto bg-background dark:bg-[#131313] p-6">
             <div className="max-w-4xl mx-auto">
               {children}
@@ -88,7 +114,7 @@ export const FullScreenModal: React.FC<FullScreenModalProps> = ({
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
