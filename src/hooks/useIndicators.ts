@@ -20,9 +20,9 @@ export const useIndicators = (companyId?: string, userId?: string) => {
   return useQuery({
     queryKey,
     queryFn: async () => {
-      console.log('[useIndicators] Starting fetch for companyId:', effectiveCompanyId, 'userId:', userId);
+      
       if (!effectiveCompanyId) {
-        console.log('[useIndicators] No companyId provided, returning empty array');
+        
         return [] as IndicatorWithValues[];
       }
       
@@ -44,7 +44,7 @@ export const useIndicators = (companyId?: string, userId?: string) => {
         
         if (error) {
           if (error.code === 'PGRST301' || error.message.includes('RLS')) {
-            console.log('[useIndicators] RLS restriction, returning empty array');
+  
             return [] as IndicatorWithValues[];
           }
           console.error('[useIndicators] Database error:', error);
@@ -54,7 +54,7 @@ export const useIndicators = (companyId?: string, userId?: string) => {
         // Filter and validate data more carefully
         const validData = (data || []).filter((indicator): indicator is IndicatorWithValues => {
           if (!indicator || typeof indicator !== 'object') {
-            console.log('[useIndicators] Invalid indicator object:', indicator);
+
             return false;
           }
           
@@ -69,7 +69,7 @@ export const useIndicators = (companyId?: string, userId?: string) => {
                                  indicator.updated_at;
           
           if (!hasRequiredProps) {
-            console.log('[useIndicators] Missing required properties:', indicator);
+            
             return false;
           }
           
@@ -97,7 +97,7 @@ export const useIndicators = (companyId?: string, userId?: string) => {
           }
         }
         
-        console.log('[useIndicators] Successfully fetched', validData.length, 'indicators');
+
         return validData;
       } catch (err) {
         console.error('[useIndicators] Error fetching indicators:', err);
@@ -136,7 +136,7 @@ export const useCreateIndicator = () => {
           indicator_id: indicator.id
         }));
         
-        console.log('Saving indicator_values:', valuesToInsert);
+
 
         const { error: valuesError } = await supabase
           .from('indicator_values')

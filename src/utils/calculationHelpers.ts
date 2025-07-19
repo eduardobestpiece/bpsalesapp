@@ -93,7 +93,7 @@ export function aggregateFunnelIndicators(indicators, stages, periodType = 'mont
       const v = ind.values?.find(val => val.stage_id === stage.id);
       return v?.value || 0;
     });
-    console.log('[aggregateFunnelIndicators] Stage', stage.name, 'id', stage.id, 'valores:', valoresEtapa);
+    
     const total = valoresEtapa.reduce((sum, v) => sum + v, 0);
     return {
       name: stage.name,

@@ -36,7 +36,7 @@ export const useCreateTeam = () => {
 
   return useMutation({
     mutationFn: async (team: TeamInsert) => {
-      console.log('Creating team:', team);
+      
       const { data, error } = await supabase
         .from('teams')
         .insert([team])
@@ -48,7 +48,7 @@ export const useCreateTeam = () => {
         throw error;
       }
 
-      console.log('Team created:', data);
+      
       return data;
     },
     onSuccess: () => {
@@ -63,7 +63,7 @@ export const useUpdateTeam = () => {
 
   return useMutation({
     mutationFn: async ({ id, ...team }: TeamUpdate & { id: string }) => {
-      console.log('Updating team:', id, team);
+      
       const { data, error } = await supabase
         .from('teams')
         .update(team)
@@ -76,7 +76,7 @@ export const useUpdateTeam = () => {
         throw error;
       }
 
-      console.log('Team updated:', data);
+      
       return data;
     },
     onSuccess: () => {
@@ -91,7 +91,7 @@ export const useDeleteTeam = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      console.log('Deleting team:', id);
+      
       const { error } = await supabase
         .from('teams')
         .update({ status: 'archived' })
@@ -102,7 +102,7 @@ export const useDeleteTeam = () => {
         throw error;
       }
 
-      console.log('Team deleted:', id);
+      
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teams', selectedCompanyId] });

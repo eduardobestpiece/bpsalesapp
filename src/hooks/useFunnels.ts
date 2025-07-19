@@ -17,7 +17,7 @@ export const useFunnels = (companyId?: string | null, status: 'active' | 'archiv
     queryKey: ['funnels', effectiveCompanyId, status],
     queryFn: async () => {
       if (!effectiveCompanyId) {
-        console.log('No company ID available for funnels query');
+
         return [];
       }
 
@@ -50,7 +50,7 @@ export const useCreateFunnel = () => {
 
   return useMutation({
     mutationFn: async (funnel: FunnelInsert) => {
-      console.log('Creating funnel:', funnel);
+      
       const { data, error } = await supabase
         .from('funnels')
         .insert([funnel])
@@ -62,7 +62,7 @@ export const useCreateFunnel = () => {
         throw error;
       }
 
-      console.log('Funnel created:', data);
+      
       return data;
     },
     onSuccess: () => {
@@ -77,7 +77,7 @@ export const useUpdateFunnel = () => {
 
   return useMutation({
     mutationFn: async ({ id, ...funnel }: FunnelUpdate & { id: string }) => {
-      console.log('Updating funnel:', id, funnel);
+      
       const { data, error } = await supabase
         .from('funnels')
         .update(funnel)
@@ -90,7 +90,7 @@ export const useUpdateFunnel = () => {
         throw error;
       }
 
-      console.log('Funnel updated:', data);
+      
       return data;
     },
     onSuccess: () => {
@@ -105,7 +105,7 @@ export const useDeleteFunnel = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      console.log('Deleting funnel:', id);
+      
       const { error } = await supabase
         .from('funnels')
         .update({ status: 'archived' })
@@ -116,7 +116,7 @@ export const useDeleteFunnel = () => {
         throw error;
       }
 
-      console.log('Funnel deleted:', id);
+      
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['funnels', selectedCompanyId] });

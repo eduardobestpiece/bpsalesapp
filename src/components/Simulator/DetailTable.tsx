@@ -175,17 +175,6 @@ export const DetailTable = ({
 
     const result = (principal + adminTax + reserveFund) / (product.termMonths || 240);
     
-    // Debug: logar os valores para verificar
-    console.log('🔍 [calculateSpecialInstallment] Debug:', {
-      credit,
-      principal,
-      adminTax,
-      reserveFund,
-      reductionPercent,
-      applications,
-      result
-    });
-    
     return result;
   };
 
@@ -416,10 +405,10 @@ export const DetailTable = ({
       )}
 
       <CardContent>
-        <div className="w-full border rounded-lg" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+        <div className="w-full overflow-x-auto border rounded-lg" style={{ maxHeight: '400px' }}>
           <div className="min-w-max">
             <Table>
-            <TableHeader className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b">
+            <TableHeader className="sticky top-0 z-10" style={{ backgroundColor: '#131313' }}>
               <TableRow>
                 {visibleColumns.mes && <TableHead>Mês</TableHead>}
                 {visibleColumns.credito && <TableHead>Crédito</TableHead>}

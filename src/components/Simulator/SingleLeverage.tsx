@@ -84,12 +84,6 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
   // Patrimônio na contemplação (já vem valorizado do componente pai)
   const patrimonioNaContemplacaoCalculado = patrimonioContemplacao !== undefined ? patrimonioContemplacao : patrimonioNaContemplacao;
   
-  console.log('=== DEBUG SINGLE LEVERAGE ===');
-  console.log('patrimonioContemplacao (parâmetro):', patrimonioContemplacao);
-  console.log('patrimonioNaContemplacao (local):', patrimonioNaContemplacao);
-  console.log('patrimonioNaContemplacaoCalculado (final):', patrimonioNaContemplacaoCalculado);
-  console.log('numeroImoveis:', numeroImoveis);
-  
   // Patrimônio ao final
   const patrimonioAoFinal = patrimonioNaContemplacaoCalculado * Math.pow(1 + taxaValorizacao, (product.termMonths - contemplationMonth) / 12);
   
@@ -110,19 +104,6 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
   // 7. Ganhos Mensais: valor mensal - custos totais
   const ganhosMensaisBase = valorMensal - custosTotais;
   const ganhosMensais = ganhosMensaisBase;
-  
-  // Debug: Log dos valores calculados
-  console.log('=== NOVO CÁLCULO GANHOS MENSAIS ===');
-  console.log('Patrimônio na contemplação:', patrimonioNaContemplacaoCalculado);
-  console.log('1. Valor da diária (0,06%):', valorDiaria);
-  console.log('2. Dias de ocupação (70%):', diasOcupacao);
-  console.log('3. Valor mensal:', valorMensal);
-  console.log('4. Taxa Airbnb (15%):', taxaAirbnb);
-  console.log('5. Custos do imóvel (0,35%):', custosImovel);
-  console.log('6. Custos totais:', custosTotais);
-  console.log('7. Ganhos mensais base:', ganhosMensaisBase);
-  console.log('8. Número de imóveis:', numeroImoveis);
-  console.log('9. Ganhos mensais total:', ganhosMensais);
 
   // 2. Parcela mensal do consórcio
   const parcelaMensalConsorcio = creditValue / product.termMonths;

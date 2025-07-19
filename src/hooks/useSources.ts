@@ -16,11 +16,11 @@ export const useSources = () => {
     queryKey: ['sources', selectedCompanyId],
     queryFn: async () => {
       if (!selectedCompanyId) {
-        console.log('No company ID available for sources query');
+
         return [];
       }
 
-      console.log('Fetching sources for company:', selectedCompanyId);
+      
       const { data, error } = await supabase
         .from('sources')
         .select('*')
@@ -33,7 +33,7 @@ export const useSources = () => {
         throw error;
       }
 
-      console.log('Sources fetched:', data);
+      
       return data as Source[];
     },
     enabled: !!selectedCompanyId
@@ -46,7 +46,7 @@ export const useCreateSource = () => {
 
   return useMutation({
     mutationFn: async (source: SourceInsert) => {
-      console.log('Creating source:', source);
+      
       const { data, error } = await supabase
         .from('sources')
         .insert([source])
@@ -58,7 +58,7 @@ export const useCreateSource = () => {
         throw error;
       }
 
-      console.log('Source created:', data);
+      
       return data;
     },
     onSuccess: () => {
@@ -73,7 +73,7 @@ export const useUpdateSource = () => {
 
   return useMutation({
     mutationFn: async ({ id, ...source }: SourceUpdate & { id: string }) => {
-      console.log('Updating source:', id, source);
+      
       const { data, error } = await supabase
         .from('sources')
         .update(source)
@@ -86,7 +86,7 @@ export const useUpdateSource = () => {
         throw error;
       }
 
-      console.log('Source updated:', data);
+      
       return data;
     },
     onSuccess: () => {
@@ -101,7 +101,7 @@ export const useDeleteSource = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      console.log('Deleting source:', id);
+      
       const { error } = await supabase
         .from('sources')
         .update({ status: 'archived' })
@@ -112,7 +112,7 @@ export const useDeleteSource = () => {
         throw error;
       }
 
-      console.log('Source deleted:', id);
+      
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['sources', selectedCompanyId] });

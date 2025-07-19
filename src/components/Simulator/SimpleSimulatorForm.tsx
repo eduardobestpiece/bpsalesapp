@@ -204,15 +204,12 @@ export const SimpleSimulatorForm = () => {
     };
   };
 
-  const handleCalculate = () => {
-    console.log('Calculando simulação com:', config);
+      const handleCalculate = () => {
     
     if (config.searchType === 'contribution_value' && config.contributionValue) {
-      const result = calculateByContribution(config.contributionValue);
-      console.log('Resultado por valor de aporte:', result);
+              const result = calculateByContribution(config.contributionValue);
     } else if (config.searchType === 'credit_value' && config.creditValue) {
-      const result = calculateByCreditValue(config.creditValue);
-      console.log('Resultado por valor de crédito:', result);
+              const result = calculateByCreditValue(config.creditValue);
     }
   };
 

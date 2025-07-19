@@ -39,7 +39,7 @@ export const ProposalGenerator = ({ data }: ProposalGeneratorProps) => {
     };
 
     // In a real application, this would generate a PDF or send to backend
-    console.log('Proposta gerada:', proposalData);
+
     
     // For now, just download as JSON
     const blob = new Blob([JSON.stringify(proposalData, null, 2)], { 

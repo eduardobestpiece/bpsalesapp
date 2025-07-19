@@ -14,12 +14,8 @@ import { CreditAccessPanel } from './CreditAccessPanel';
 import { PatrimonialLeverageNew } from './PatrimonialLeverageNew';
 import { useSimulatorContext } from '@/components/Layout/SimulatorLayout';
 import { CapitalGainSection } from './CapitalGainSection';
-import { useCompany } from '@/contexts/CompanyContext';
-import { formatCurrency } from '@/lib/utils';
 
 export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
-  console.log('[NewSimulatorLayout] Componente iniciando...');
-  
   const { 
     simulationData, 
     setSimulationData,
@@ -31,7 +27,6 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   
   // Usar o contexto do simulador
   const simulatorContext = useSimulatorContext();
-  const { selectedCompanyId } = useCompany();
   
   // Estado principal dos dados da simulação - sincronizado com o contexto
   const [localSimulationData, setLocalSimulationData] = useState({
@@ -65,9 +60,6 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
   // Sincronizar campos do topo com simulationData e com o contexto global
   const handleFieldChange = (field: string, value: any) => {
-    console.log(`[NewSimulatorLayout] Campo alterado: ${field} = ${value}`);
-    const startTime = performance.now();
-    
     setLocalSimulationData((prev) => ({ ...prev, [field]: value }));
     
     // Sincronizar com o contexto global do simulador
@@ -86,9 +78,6 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
         contemplationMonth: value
       }));
     }
-    
-    const endTime = performance.now();
-    console.log(`[NewSimulatorLayout] Atualização de campo concluída em ${(endTime - startTime).toFixed(2)}ms`);
   };
 
   // Função para acompanhar a rolagem - agora sem limitações
@@ -112,46 +101,25 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
   // Buscar administradora padrão e opções de parcelas
   useEffect(() => {
-    console.log('[NewSimulatorLayout] Iniciando busca de dados...');
-    const startTime = performance.now();
-    
     const fetchInstallmentTypes = async () => {
       let adminId = localSimulationData.administrator;
       if (!adminId) {
-        console.log('[NewSimulatorLayout] Buscando administradora padrão...');
-        const adminStartTime = performance.now();
-        
         // Buscar administradora padrão
         const { data: admins } = await supabase
           .from('administrators')
           .select('id')
           .eq('is_default', true)
           .limit(1);
-        
-        const adminEndTime = performance.now();
-        console.log(`[NewSimulatorLayout] Administradora carregada em ${(adminEndTime - adminStartTime).toFixed(2)}ms`);
-        
         adminId = admins?.[0]?.id || '';
         if (adminId && !localSimulationData.administrator) {
           setLocalSimulationData((prev) => ({ ...prev, administrator: adminId }));
         }
       }
-      
       if (adminId) {
-        console.log('[NewSimulatorLayout] Carregando tipos de parcelas...');
-        const typesStartTime = performance.now();
-        
         // Usar as funções do contexto para carregar dados
         await simulatorContext.loadInstallmentTypes(adminId);
         await simulatorContext.loadReducoesParcela(adminId);
-        
-        const typesEndTime = performance.now();
-        console.log(`[NewSimulatorLayout] Tipos de parcelas carregados em ${(typesEndTime - typesStartTime).toFixed(2)}ms`);
-        console.log('[NewSimulatorLayout] Dados carregados com sucesso');
       }
-      
-      const endTime = performance.now();
-      console.log(`[NewSimulatorLayout] Total de carregamento: ${(endTime - startTime).toFixed(2)}ms`);
     };
     fetchInstallmentTypes();
   }, [localSimulationData.administrator, simulatorContext]);
@@ -188,9 +156,6 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
   // Sincronizar dados locais com o contexto
   useEffect(() => {
-    console.log('[NewSimulatorLayout] Sincronizando dados com contexto global...');
-    const startTime = performance.now();
-    
     setLocalSimulationData(prev => ({
       ...prev,
       searchType: simulatorContext.simulationData.searchType,
@@ -199,9 +164,6 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
       installmentType: simulatorContext.simulationData.installmentType,
       contemplationMonth: simulatorContext.simulationData.contemplationMonth,
     }));
-    
-    const endTime = performance.now();
-    console.log(`[NewSimulatorLayout] Sincronização concluída em ${(endTime - startTime).toFixed(2)}ms`);
   }, [simulatorContext.simulationData]);
 
   // Se houver valor manual vindo do modal, ele se sobrepõe
@@ -209,13 +171,6 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
   // Estado para crédito acessado
   const [creditoAcessado, setCreditoAcessado] = useState<number | null>(null);
-  
-  // Monitorar mudanças no crédito acessado
-  useEffect(() => {
-    if (creditoAcessado !== null) {
-      console.log(`[NewSimulatorLayout] Crédito acessado atualizado: ${formatCurrency(creditoAcessado)}`);
-    }
-  }, [creditoAcessado]);
 
   // Estado para créditos selecionados (cotas)
   const [selectedCredits, setSelectedCredits] = useState<any[]>([]);

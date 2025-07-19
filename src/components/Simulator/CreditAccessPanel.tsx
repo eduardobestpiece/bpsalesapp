@@ -200,10 +200,8 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
   // Atualizar para usar a função de múltiplos créditos
   useEffect(() => {
     if (data.administrator && data.value > 0 && selectedCompanyId) {
-      (async () => {
-        try {
-          console.log('[DEBUG] selectedCompanyId:', selectedCompanyId);
-          console.log('[DEBUG] Filtros para fetch de produtos:', {
+              (async () => {
+          try {
             administrator_id: data.administrator,
             type: data.consortiumType,
             company_id: selectedCompanyId
@@ -218,7 +216,6 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
 
           // Se não encontrou produtos da empresa atual, buscar de qualquer empresa
           if (!products || products.length === 0) {
-            console.log('[DEBUG] Nenhum produto encontrado para empresa', selectedCompanyId, '. Buscando de qualquer empresa...');
             const { data: allProducts, error: allError } = await supabase
               .from('products')
               .select('*, installment_types:product_installment_types(installment_types(*))')
@@ -230,12 +227,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
           }
 
           if (error) throw error;
-          console.log('Produtos retornados:', products);
-          if (products && products.length > 0) {
-            products.forEach(p => console.log('Produto', p.id, 'installment_types:', p.installment_types));
-          }
           setAvailableProducts(products || []);
-          console.log('[DEBUG] setAvailableProducts chamado:', products);
 
           // Remover chamada de sugerirCreditosInteligente e setCredits, manter apenas setAvailableProducts
           // const calculatedCredits = await sugerirCreditosInteligente(products || [], data);
