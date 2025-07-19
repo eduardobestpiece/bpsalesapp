@@ -232,6 +232,34 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
     return data;
   };
 
+  // Função para calcular o Crédito Acessado na linha da contemplação
+  const calculateCreditoAcessadoContemplacao = () => {
+    if (!creditoAcessado) return 0;
+    
+    // Determinar o valor base do crédito
+    const baseCredit = product.nominalCreditValue || creditoAcessado || 0;
+    
+    // Calcular o crédito acessado especificamente no mês de contemplação
+    return calculateCreditoAcessado(contemplationMonth, baseCredit);
+  };
+
+  /*
+   * CÁLCULO DO CRÉDITO ACESSADO NA CONTEMPLAÇÃO:
+   * 
+   * 1. VALOR BASE: R$ 1.540.000 (valor do crédito inicial)
+   * 
+   * 2. ATUALIZAÇÕES ANUAIS (INCC 6%):
+   *    - Mês 13: R$ 1.540.000 + 6% = R$ 1.632.400
+   *    - Mês 25: R$ 1.632.400 + 6% = R$ 1.730.344
+   * 
+   * 3. MÊS DE CONTEMPLAÇÃO (mês 30):
+   *    - Crédito atualizado: R$ 1.730.344
+   *    - Se "Com embutido" estiver selecionado: -25% = R$ 1.297.758
+   *    - Se "Sem embutido" estiver selecionado: R$ 1.730.344
+   * 
+   * 4. RESULTADO: R$ 1.297.758 (com embutido) ou R$ 1.730.344 (sem embutido)
+   */
+
   // Calcular dados do ganho de capital
   const capitalGainData = useMemo(() => {
     if (!creditoAcessado) return null;
@@ -248,7 +276,7 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
       .reduce((sum, row) => sum + row.valorParcela, 0);
 
     // Calcular valores do ganho de capital
-    const valorAgio = creditoAcessadoContemplacao; // Mostrar diretamente o valor do crédito acessado
+    const valorAgio = creditoAcessadoContemplacao * (agioPercent / 100);
     const valorLucro = valorAgio - somaParcelasPagas;
     const roiOperacao = somaParcelasPagas > 0 ? (valorAgio / somaParcelasPagas) * 100 : 0;
 
@@ -313,12 +341,20 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
           />
         </div>
 
+        {/* Campo Crédito Acessado na Contemplação */}
+        <div className="space-y-2">
+          <Label htmlFor="credito-contemplacao">Crédito Acessado na Contemplação</Label>
+          <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+            {formatCurrency(calculateCreditoAcessadoContemplacao())}
+          </div>
+        </div>
+
         {/* Cards com os dados */}
         {capitalGainData && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
               <CardContent className="p-4">
-                <div className="text-sm font-medium text-green-600 dark:text-green-400">Crédito Acessado (Contemplação)</div>
+                <div className="text-sm font-medium text-green-600 dark:text-green-400">Valor do Ágio</div>
                 <div className="text-2xl font-bold text-green-700 dark:text-green-300">
                   {formatCurrency(capitalGainData.valorAgio)}
                 </div>
