@@ -326,6 +326,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
               postContemplationAdjustment: 0.5,
               maxEmbeddedPercentage: 25
             }}
+            embutido={embutido}
           />
         </div>
       )}

@@ -11,6 +11,7 @@ interface CapitalGainSectionProps {
   installmentType: string;
   product: any;
   administrator: any;
+  embutido?: 'com' | 'sem';
 }
 
 export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
@@ -18,8 +19,9 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
   contemplationMonth,
   installmentType,
   product,
-  administrator
-}) => {
+  administrator,
+  embutido = 'sem'
+}: CapitalGainSectionProps) => {
   const [agioPercent, setAgioPercent] = useState(5); // 5% padrão
 
   // Função para calcular valor da parcela (mesma lógica do DetailTable)
@@ -40,11 +42,61 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
     return (principal + adminTax + reserveFund) / (product.termMonths || 240);
   };
 
+  // Função para calcular o crédito acessado (mesma lógica do DetailTable)
+  const calculateCreditoAcessado = (month: number, baseCredit: number) => {
+    if (baseCredit === 0) return 0;
+    
+    let currentCredit = baseCredit;
+    let embutidoAplicado = false;
+    
+    // Para o primeiro mês, retorna o valor base sem atualização
+    if (month === 1) {
+      return currentCredit;
+    }
+    
+    // Calcular as atualizações mês a mês
+    for (let m = 2; m <= month; m++) {
+      // Verificar se é um mês de atualização anual (13, 25, 37, etc.)
+      const isAnnualUpdate = (m - 1) % 12 === 0;
+      
+      if (isAnnualUpdate) {
+        // Verificar se já passou do mês de contemplação
+        if (m > contemplationMonth) {
+          // Após contemplação: atualização mensal pelo ajuste pós contemplação
+          const postContemplationRate = administrator.postContemplationAdjustment || 0;
+          currentCredit = currentCredit + (currentCredit * postContemplationRate / 100);
+        } else {
+          // Antes da contemplação: atualização anual pelo INCC
+          const inccRate = administrator.inccRate || 6; // Taxa INCC padrão
+          currentCredit = currentCredit + (currentCredit * inccRate / 100);
+        }
+      }
+      
+      // Após contemplação, aplicar atualização mensal em todos os meses
+      if (m > contemplationMonth) {
+        const postContemplationRate = administrator.postContemplationAdjustment || 0;
+        currentCredit = currentCredit + (currentCredit * postContemplationRate / 100);
+      }
+      
+      // Aplicar redução do embutido no mês de contemplação se "Com embutido" estiver selecionado
+      if (embutido === 'com' && m === contemplationMonth && !embutidoAplicado) {
+        const maxEmbeddedPercentage = administrator.maxEmbeddedPercentage || 25; // 25% padrão
+        currentCredit = currentCredit - (currentCredit * maxEmbeddedPercentage / 100);
+        embutidoAplicado = true;
+      }
+    }
+    
+    return currentCredit;
+  };
+
   // Calcular dados do ganho de capital
   const capitalGainData = useMemo(() => {
     if (!creditoAcessado) return null;
 
-    const baseCredit = creditoAcessado;
+    // Calcular o crédito acessado correto no mês de contemplação
+    const baseCredit = product.nominalCreditValue || creditoAcessado;
+    const creditoAcessadoContemplacao = calculateCreditoAcessado(contemplationMonth, baseCredit);
+    
     let somaParcelasPagas = 0;
     const parcelasData = [];
 
@@ -61,18 +113,17 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
       });
     }
 
-    // Calcular valores do ganho de capital
-    const valorAgio = creditoAcessado * (agioPercent / 100);
+    // Calcular valores do ganho de capital usando o crédito acessado correto
+    const valorAgio = creditoAcessadoContemplacao * (agioPercent / 100);
     const valorLucro = valorAgio - somaParcelasPagas;
     const roiOperacao = somaParcelasPagas > 0 ? (valorAgio / somaParcelasPagas) * 100 : 0;
 
     // Gerar dados para o gráfico
     const chartData = [];
-    let lucroAcumulado = 0;
     
     for (let month = 1; month <= contemplationMonth; month++) {
       const parcela = parcelasData[month - 1];
-      lucroAcumulado = valorAgio - parcela.somaAcumulada;
+      const lucroAcumulado = valorAgio - parcela.somaAcumulada;
       
       if (lucroAcumulado >= 0) {
         chartData.push({
@@ -89,7 +140,7 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
       roiOperacao,
       chartData
     };
-  }, [creditoAcessado, contemplationMonth, installmentType, agioPercent, product, administrator]);
+  }, [creditoAcessado, contemplationMonth, installmentType, agioPercent, product, administrator, embutido]);
 
   if (!creditoAcessado) {
     return (
