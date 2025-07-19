@@ -975,49 +975,50 @@
 - **Deploy**: Executado `npm run dev` conforme solicitado pelo usuário.
 - **Status**: ✅ Concluído
 
-### 🎯 **Adição do Campo "Crédito Acessado na Contemplação"**
+### 🎯 **Implementação de Campo Dinâmico - Crédito Acessado da Linha de Contemplação**
 
 **Status:** ✅ **CONCLUÍDO**
 
 #### **🔧 Funcionalidade Implementada:**
 
-1. **✅ Campo Informativo**
-   - **Localização:** Seção Ganho de Capital, abaixo do campo Ágio
-   - **Função:** Mostra o valor do "Crédito Acessado" na linha da contemplação
-   - **Design:** Texto destacado em azul, formato de moeda
+1. **✅ Campo Dinâmico na Seção Ganho de Capital**
+   - **Localização:** Entre o campo Ágio e os cards de dados
+   - **Funcionalidade:** Mostra o valor exato da coluna "Crédito Acessado" da linha de contemplação da tabela
+   - **Design:** Campo destacado com fundo diferenciado e tipografia especial
 
-2. **✅ Cálculo Detalhado**
-   - **Valor Base:** R$ 1.540.000 (crédito inicial)
-   - **Atualizações Anuais (INCC 6%):**
-     - Mês 13: R$ 1.540.000 + 6% = R$ 1.632.400
-     - Mês 25: R$ 1.632.400 + 6% = R$ 1.730.344
-   - **Mês de Contemplação (30):**
-     - Com embutido: R$ 1.730.344 - 25% = **R$ 1.297.758**
-     - Sem embutido: **R$ 1.730.344**
+2. **✅ Cálculo Dinâmico**
+   - **Base:** Usa a mesma lógica da tabela "Detalhamento do Consórcio"
+   - **Linha:** Corresponde ao "Mês Contemplação" configurado
+   - **Coluna:** "Crédito Acessado" da tabela
+   - **Atualização:** Automática quando o mês de contemplação é alterado
 
-3. **✅ Função Específica**
-   - `calculateCreditoAcessadoContemplacao()` - Calcula o valor exato
-   - Usa a mesma lógica do DetailTable
-   - Considera configurações de embutido
+3. **✅ Interface Visual**
+   - **Título:** "Crédito Acessado (Mês X)"
+   - **Valor:** Formatação em moeda (R$)
+   - **Descrição:** Explicação clara da origem do valor
+   - **Estilo:** Consistente com o design da aplicação
 
-#### **📊 Explicação do Cálculo:**
+#### **📊 Lógica de Funcionamento:**
 
-**Passo a Passo:**
-1. **Valor Inicial:** R$ 1.540.000
-2. **Atualização Mês 13:** +6% INCC = R$ 1.632.400
-3. **Atualização Mês 25:** +6% INCC = R$ 1.730.344
-4. **Mês 30 (Contemplação):**
-   - **Com embutido:** R$ 1.730.344 - 25% = **R$ 1.297.758**
-   - **Sem embutido:** **R$ 1.730.344**
+**Cálculo Base:**
+- **Função:** `calculateCreditoAcessado(contemplationMonth, baseCredit)`
+- **Parâmetros:** Mês de contemplação e crédito base
+- **Resultado:** Valor exato da tabela na linha de contemplação
+
+**Fatores Considerados:**
+- Atualizações anuais (INCC)
+- Configuração de embutido
+- Taxa de administração
+- Ajustes pós-contemplação
 
 #### **🔗 Arquivos Modificados:**
-- `src/components/Simulator/CapitalGainSection.tsx` - Adição do campo e função de cálculo
+- `src/components/Simulator/CapitalGainSection.tsx` - Adição do campo dinâmico
 
 #### **🎯 Benefícios:**
-- **Transparência:** Usuário vê exatamente o valor usado nos cálculos
-- **Verificação:** Confirma se o valor está correto
-- **Referência:** Base para cálculos do Ganho de Capital
-- **Consistência:** Mesmo valor da tabela de detalhamento
+- **Transparência:** Mostra exatamente o valor usado nos cálculos
+- **Verificação:** Permite confirmar se os valores estão corretos
+- **Debugging:** Facilita a identificação de problemas nos cálculos
+- **Usabilidade:** Interface clara e intuitiva
 
 ---
 

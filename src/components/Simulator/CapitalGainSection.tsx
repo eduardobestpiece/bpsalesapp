@@ -232,34 +232,6 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
     return data;
   };
 
-  // Função para calcular o Crédito Acessado na linha da contemplação
-  const calculateCreditoAcessadoContemplacao = () => {
-    if (!creditoAcessado) return 0;
-    
-    // Determinar o valor base do crédito
-    const baseCredit = product.nominalCreditValue || creditoAcessado || 0;
-    
-    // Calcular o crédito acessado especificamente no mês de contemplação
-    return calculateCreditoAcessado(contemplationMonth, baseCredit);
-  };
-
-  /*
-   * CÁLCULO DO CRÉDITO ACESSADO NA CONTEMPLAÇÃO:
-   * 
-   * 1. VALOR BASE: R$ 1.540.000 (valor do crédito inicial)
-   * 
-   * 2. ATUALIZAÇÕES ANUAIS (INCC 6%):
-   *    - Mês 13: R$ 1.540.000 + 6% = R$ 1.632.400
-   *    - Mês 25: R$ 1.632.400 + 6% = R$ 1.730.344
-   * 
-   * 3. MÊS DE CONTEMPLAÇÃO (mês 30):
-   *    - Crédito atualizado: R$ 1.730.344
-   *    - Se "Com embutido" estiver selecionado: -25% = R$ 1.297.758
-   *    - Se "Sem embutido" estiver selecionado: R$ 1.730.344
-   * 
-   * 4. RESULTADO: R$ 1.297.758 (com embutido) ou R$ 1.730.344 (sem embutido)
-   */
-
   // Calcular dados do ganho de capital
   const capitalGainData = useMemo(() => {
     if (!creditoAcessado) return null;
@@ -303,7 +275,8 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
       somaParcelasPagas,
       valorLucro,
       roiOperacao,
-      chartData
+      chartData,
+      creditoAcessadoContemplacao
     };
   }, [creditoAcessado, contemplationMonth, installmentType, agioPercent, product, administrator, embutido]);
 
@@ -341,13 +314,20 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
           />
         </div>
 
-        {/* Campo Crédito Acessado na Contemplação */}
-        <div className="space-y-2">
-          <Label htmlFor="credito-contemplacao">Crédito Acessado na Contemplação</Label>
-          <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
-            {formatCurrency(calculateCreditoAcessadoContemplacao())}
+        {/* Campo Dinâmico - Crédito Acessado da Linha de Contemplação */}
+        {capitalGainData && (
+          <div className="space-y-2">
+            <Label>Crédito Acessado (Mês {contemplationMonth})</Label>
+            <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
+              <div className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+                {formatCurrency(capitalGainData.creditoAcessadoContemplacao)}
+              </div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">
+                Valor da coluna "Crédito Acessado" da linha {contemplationMonth} da tabela
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Cards com os dados */}
         {capitalGainData && (
