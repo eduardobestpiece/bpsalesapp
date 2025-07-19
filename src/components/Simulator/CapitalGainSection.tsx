@@ -248,7 +248,7 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
       .reduce((sum, row) => sum + row.valorParcela, 0);
 
     // Calcular valores do ganho de capital
-    const valorAgio = creditoAcessadoContemplacao * (agioPercent / 100);
+    const valorAgio = creditoAcessadoContemplacao; // Mostrar diretamente o valor do crédito acessado
     const valorLucro = valorAgio - somaParcelasPagas;
     const roiOperacao = somaParcelasPagas > 0 ? (valorAgio / somaParcelasPagas) * 100 : 0;
 
@@ -275,8 +275,7 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
       somaParcelasPagas,
       valorLucro,
       roiOperacao,
-      chartData,
-      creditoAcessadoContemplacao
+      chartData
     };
   }, [creditoAcessado, contemplationMonth, installmentType, agioPercent, product, administrator, embutido]);
 
@@ -319,12 +318,9 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Card className="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800">
               <CardContent className="p-4">
-                <div className="text-sm font-medium text-green-600 dark:text-green-400">Valor do Ágio</div>
+                <div className="text-sm font-medium text-green-600 dark:text-green-400">Crédito Acessado (Contemplação)</div>
                 <div className="text-2xl font-bold text-green-700 dark:text-green-300">
                   {formatCurrency(capitalGainData.valorAgio)}
-                </div>
-                <div className="text-xs text-green-500 dark:text-green-400 mt-1">
-                  Crédito Acessado: {formatCurrency(capitalGainData.creditoAcessadoContemplacao)}
                 </div>
               </CardContent>
             </Card>
