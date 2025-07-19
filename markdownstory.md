@@ -141,59 +141,50 @@
 
 #### **🔧 Funcionalidades Implementadas:**
 
-1. **✅ Componente CapitalGain**
-   - Campo para percentual de ágio (padrão 5%)
-   - 4 cards de resultados com mesmo design da alavancagem patrimonial
-   - Gráfico de barras verticais com evolução do lucro
+1. **✅ Nova Seção "Ganho de Capital"**
+   - Posicionada entre Alavancagem Patrimonial e Tabela de Detalhamento
+   - Design consistente com o resto da aplicação
+   - Integrada ao menu lateral de navegação
 
-2. **✅ Campos de Resultado:**
-   - **Valor do Ágio:** Crédito acessado * percentual do ágio
-   - **Soma das Parcelas Pagas:** Volume de parcelas pagas até a contemplação
-   - **Valor do Lucro:** Valor do ágio - soma das parcelas pagas
-   - **ROI da Operação:** (Valor do ágio / Soma das parcelas pagas) * 100
+2. **✅ Campo Ágio**
+   - Input numérico para percentual do ágio
+   - Valor padrão: 5%
+   - Validação: 0% a 100%
 
-3. **✅ Gráfico de Barras Verticais:**
+3. **✅ Cards de Dados (mesmo design da Alavancagem)**
+   - **Valor do Ágio:** Crédito acessado × Percentual do ágio
+   - **Soma das Parcelas Pagas:** Volume de parcelas até contemplação
+   - **Valor do Lucro:** Valor do ágio - Soma das parcelas pagas
+   - **ROI da Operação:** (Valor do ágio / Soma das parcelas pagas) × 100
+
+4. **✅ Gráfico de Barras Verticais**
    - Eixo X: Números dos meses
-   - Eixo Y: Valores do lucro (ágio - parcelas pagas)
-   - Ordenação: Do menor lucro para maior lucro
-   - Filtro: Apenas meses com lucro positivo
-
-4. **✅ Integração com Dados da Tabela:**
-   - Compartilhamento de dados entre DetailTable e CapitalGain
-   - Cálculos baseados nos dados reais da simulação
-   - Atualização automática quando parâmetros mudam
+   - Eixo Y: Valores do lucro (Valor do ágio - Soma das parcelas pagas)
+   - Mostra apenas meses com lucro positivo
+   - Formatação de valores em moeda
 
 #### **📊 Lógica de Cálculo:**
 
-**Valor do Ágio:**
-```
-Ágio = Crédito Acessado × Percentual do Ágio
-```
+**Dados Base:**
+- Soma das Parcelas Pagas: Volume de parcelas até contemplação
+- Valor do Ágio: Crédito acessado × Percentual do ágio
+- Valor do Lucro: Valor do ágio - Soma das parcelas pagas
+- ROI da Operação: (Valor do ágio / Soma das parcelas pagas) × 100
 
-**Soma das Parcelas Pagas:**
-```
-Soma = Σ(Valor da Parcela) até o mês de contemplação
-```
-
-**Valor do Lucro:**
-```
-Lucro = Valor do Ágio - Soma das Parcelas Pagas
-```
-
-**ROI da Operação:**
-```
-ROI = (Valor do Ágio / Soma das Parcelas Pagas) × 100
-```
+**Gráfico:**
+- Dados: Valor do ágio menos soma das parcelas pagas por mês
+- Filtro: Apenas meses com lucro positivo
+- Ordenação: Do menor para o maior lucro
 
 #### **🔗 Arquivos Criados/Modificados:**
-- `src/components/Simulator/CapitalGain.tsx` - Componente principal
-- `src/components/Simulator/NewSimulatorLayout.tsx` - Integração
-- `src/components/Simulator/DetailTable.tsx` - Compartilhamento de dados
+- `src/components/Simulator/CapitalGainSection.tsx` - Componente principal
+- `src/components/Simulator/NewSimulatorLayout.tsx` - Integração e navegação
 
-#### **🎯 Posicionamento:**
-- Localização: Entre Alavancagem Patrimonial e Tabela de Detalhamento
-- Design: Consistente com outros componentes
-- Responsividade: Adaptável a diferentes tamanhos de tela
+#### **🎯 Benefícios:**
+- **Análise Financeira:** Visualização clara do ganho de capital
+- **Tomada de Decisão:** ROI e evolução do lucro por mês
+- **Interface Consistente:** Mesmo design dos outros módulos
+- **Navegação Intuitiva:** Integrada ao menu lateral
 
 ---
 

@@ -1,178 +1,135 @@
 
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { formatCurrency } from '@/lib/utils';
+import { Badge } from '@/components/ui/badge';
+import { useSimulatorSync } from '@/hooks/useSimulatorSync';
 
-interface CapitalGainProps {
-  contemplationMonth: number;
-  creditoAcessado: number;
-  tableData: any[];
-}
-
-export const CapitalGain = ({ contemplationMonth, creditoAcessado, tableData }: CapitalGainProps) => {
-  const [agioPercent, setAgioPercent] = useState(5); // 5% padrão
-  const [valorAgio, setValorAgio] = useState(0);
-  const [somaParcelasPagas, setSomaParcelasPagas] = useState(0);
-  const [valorLucro, setValorLucro] = useState(0);
-  const [roiOperacao, setRoiOperacao] = useState(0);
-  const [chartData, setChartData] = useState<any[]>([]);
-
-  // Calcular dados quando as dependências mudarem
+export const CapitalGain = () => {
+  const { 
+    product, 
+    updateSimulationValue,
+    simulationData
+  } = useSimulatorSync();
+  
+  const [purchasePercentage, setPurchasePercentage] = useState(20);
+  const [creditValue, setCreditValue] = useState(product.nominalCreditValue || 1000000);
+  const [paidInstallments, setPaidInstallments] = useState(120000);
+  
+  // Sincronizar o valor do crédito com o produto do contexto
   useEffect(() => {
-    if (!tableData || tableData.length === 0 || !creditoAcessado) return;
-
-    // Calcular soma das parcelas pagas até a contemplação
-    const parcelasAteContemplacao = tableData
-      .filter(row => row.mes <= contemplationMonth)
-      .reduce((sum, row) => sum + row.valorParcela, 0);
-    
-    setSomaParcelasPagas(parcelasAteContemplacao);
-
-    // Calcular valor do ágio
-    const agioValue = creditoAcessado * (agioPercent / 100);
-    setValorAgio(agioValue);
-
-    // Calcular valor do lucro
-    const lucroValue = agioValue - parcelasAteContemplacao;
-    setValorLucro(lucroValue);
-
-    // Calcular ROI da operação
-    const roiValue = parcelasAteContemplacao > 0 ? (agioValue / parcelasAteContemplacao) * 100 : 0;
-    setRoiOperacao(roiValue);
-
-    // Gerar dados do gráfico
-    const chartDataTemp = tableData
-      .map(row => {
-        const parcelasAteMes = tableData
-          .filter(r => r.mes <= row.mes)
-          .reduce((sum, r) => sum + r.valorParcela, 0);
-        
-        const lucroMes = agioValue - parcelasAteMes;
-        
-        return {
-          mes: row.mes,
-          lucro: lucroMes,
-          parcelasPagas: parcelasAteMes
-        };
-      })
-      .filter(item => item.lucro > 0) // Apenas meses com lucro positivo
-      .sort((a, b) => a.lucro - b.lucro); // Ordenar do menor para maior lucro
-
-    setChartData(chartDataTemp);
-  }, [tableData, creditoAcessado, contemplationMonth, agioPercent]);
+    setCreditValue(product.nominalCreditValue);
+  }, [product.nominalCreditValue]);
+  
+  // Atualizar o contexto quando o valor do crédito mudar neste componente
+  const handleCreditValueChange = (value: number) => {
+    setCreditValue(value);
+    updateSimulationValue(value);
+  };
+  
+  const monteoPayment = (creditValue * purchasePercentage) / 100;
+  const profit = monteoPayment - paidInstallments;
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <h2 className="text-2xl font-bold">Ganho de Capital</h2>
-      </div>
-
-      {/* Campos de entrada */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">Ágio (%)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              <Label htmlFor="agio-percent">Percentual do Ágio</Label>
-              <Input
-                id="agio-percent"
-                type="number"
-                value={agioPercent}
-                onChange={(e) => setAgioPercent(Number(e.target.value))}
-                min="0"
-                max="100"
-                step="0.1"
-                className="w-full"
-              />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Cards de resultados */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground">Valor do Ágio</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {formatCurrency(valorAgio)}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground">Soma das Parcelas Pagas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {formatCurrency(somaParcelasPagas)}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground">Valor do Lucro</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${valorLucro >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {formatCurrency(valorLucro)}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-sm text-muted-foreground">ROI da Operação</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className={`text-2xl font-bold ${roiOperacao >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {roiOperacao.toFixed(2)}%
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Gráfico de Barras */}
-      <Card>
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* Left Panel - Input Form */}
+      <Card className="p-6">
         <CardHeader>
-          <CardTitle>Evolução do Lucro por Mês</CardTitle>
+          <CardTitle>Simulação de Ganho de Capital</CardTitle>
         </CardHeader>
-        <CardContent>
-          {chartData.length > 0 ? (
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="mes" 
-                    label={{ value: 'Mês', position: 'insideBottom', offset: -5 }}
-                  />
-                  <YAxis 
-                    label={{ value: 'Lucro (R$)', angle: -90, position: 'insideLeft' }}
-                    tickFormatter={(value) => formatCurrency(value)}
-                  />
-                  <Tooltip 
-                    formatter={(value: number) => [formatCurrency(value), 'Lucro']}
-                    labelFormatter={(label) => `Mês ${label}`}
-                  />
-                  <Bar dataKey="lucro" fill="#10b981" />
-                </BarChart>
-              </ResponsiveContainer>
+        <CardContent className="space-y-6">
+          <div className="space-y-2">
+            <Label htmlFor="percentage">Percentual de Compra (%)</Label>
+            <Input
+              id="percentage"
+              type="number"
+              value={purchasePercentage}
+              onChange={(e) => setPurchasePercentage(Number(e.target.value))}
+              placeholder="Ex: 20"
+            />
+            <p className="text-sm text-muted-foreground">
+              Percentual que a Monteo paga pelo crédito
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="credit">Valor do Crédito (R$)</Label>
+            <Input
+              id="credit"
+              type="number"
+              value={creditValue}
+              onChange={(e) => handleCreditValueChange(Number(e.target.value))}
+              placeholder="Ex: 1000000"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="paid">Valor Pago em Parcelas (R$)</Label>
+            <Input
+              id="paid"
+              type="number"
+              value={paidInstallments}
+              onChange={(e) => setPaidInstallments(Number(e.target.value))}
+              placeholder="Ex: 120000"
+            />
+          </div>
+
+          <Button className="w-full bg-amber-600 hover:bg-amber-700">
+            Calcular Ganho
+          </Button>
+        </CardContent>
+      </Card>
+
+      {/* Right Panel - Results */}
+      <Card className="p-6">
+        <CardHeader>
+          <CardTitle>Resultado do Ganho de Capital</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div className="grid grid-cols-1 gap-4">
+            <div className="p-4 border rounded-lg">
+              <div className="text-sm text-muted-foreground">Valor do Crédito</div>
+              <div className="text-2xl font-bold">
+                R$ {creditValue.toLocaleString('pt-BR')}
+              </div>
             </div>
-          ) : (
-            <div className="h-80 flex items-center justify-center text-muted-foreground">
-              <p>Nenhum dado disponível para o gráfico</p>
+
+            <div className="p-4 border rounded-lg">
+              <div className="text-sm text-muted-foreground">Pagamento da Monteo</div>
+              <div className="text-2xl font-bold text-amber-600">
+                R$ {monteoPayment.toLocaleString('pt-BR')}
+              </div>
             </div>
-          )}
+
+            <div className="p-4 border rounded-lg">
+              <div className="text-sm text-muted-foreground">Valor Pago pelo Cliente</div>
+              <div className="text-2xl font-bold">
+                R$ {paidInstallments.toLocaleString('pt-BR')}
+              </div>
+            </div>
+
+            <div className="p-4 border rounded-lg bg-green-50">
+              <div className="text-sm text-muted-foreground">Lucro Líquido</div>
+              <div className="text-3xl font-bold text-green-600">
+                R$ {profit.toLocaleString('pt-BR')}
+              </div>
+              {profit > 0 && (
+                <Badge className="mt-2 bg-green-100 text-green-800">
+                  Operação Rentável
+                </Badge>
+              )}
+            </div>
+          </div>
+
+          <div className="p-4 bg-blue-50 rounded-lg">
+            <h4 className="font-semibold mb-2">Como funciona:</h4>
+            <p className="text-sm text-muted-foreground">
+              A Monteo compra seu crédito por {purchasePercentage}% do valor total. 
+              Você recebe de volta tudo que já pagou em parcelas mais o lucro adicional.
+            </p>
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -1,16 +1,19 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { SimulationDataPanel } from './SimulationDataPanel';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Settings, Home, DollarSign, TrendingUp, Clock, Search, ChevronDown, ChevronUp } from 'lucide-react';
-import { CreditAccessPanel } from './CreditAccessPanel';
-import { PatrimonialLeverageNew } from './PatrimonialLeverageNew';
-import { CapitalGain } from './CapitalGain';
-import { DetailTable } from './DetailTable';
+import { Settings, Home, DollarSign, TrendingUp, Clock, Search } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import { SimulatorConfigModal } from './SimulatorConfigModal';
 import { useSimulatorSync } from '@/hooks/useSimulatorSync';
-import { useSimulatorContext } from '@/contexts/SimulatorContext';
+import { DetailTable } from './DetailTable';
+import { CreditAccessPanel } from './CreditAccessPanel';
+import { PatrimonialLeverageNew } from './PatrimonialLeverageNew';
+import { useSimulatorContext } from '@/components/Layout/SimulatorLayout';
+import { CapitalGainSection } from './CapitalGainSection';
 
 export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   const { 
@@ -42,13 +45,15 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   const [visibleSections, setVisibleSections] = useState({
     credit: true,
     leverage: true,
-    detail: true
+    detail: true,
+    capital: true
   });
 
   // Refs para navegação
   const creditSectionRef = useRef<HTMLDivElement>(null);
   const leverageSectionRef = useRef<HTMLDivElement>(null);
   const detailSectionRef = useRef<HTMLDivElement>(null);
+  const capitalSectionRef = useRef<HTMLDivElement>(null);
 
   // Estado para posição do menu lateral - agora sem limitações
   const [menuPosition, setMenuPosition] = useState(50); // 50% = centro
@@ -167,15 +172,13 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   // Estado para embutido
   const [embutido, setEmbutido] = useState<'com' | 'sem'>('com');
 
-  // Estado para dados da tabela
-  const [tableData, setTableData] = useState<any[]>([]);
-
   // Funções do menu lateral
   const handleNavigate = (section: string) => {
     const refs = {
       settings: creditSectionRef,
       home: leverageSectionRef,
-      search: detailSectionRef
+      search: detailSectionRef,
+      capital: capitalSectionRef
     };
 
     const ref = refs[section as keyof typeof refs];
@@ -189,13 +192,15 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
       setVisibleSections({
         credit: true,
         leverage: true,
-        detail: true
+        detail: true,
+        capital: true
       });
     } else {
       const sectionMap = {
         settings: 'credit',
         home: 'leverage',
-        search: 'detail'
+        search: 'detail',
+        capital: 'capital'
       };
 
       const targetSection = sectionMap[section as keyof typeof sectionMap];
@@ -240,16 +245,17 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             <Button
               variant="ghost"
               size="sm"
-              className="w-8 h-8 p-0 text-gray-600 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 transition-all duration-200 hover:scale-110"
-              title="Financeiro"
+              className="w-8 h-8 p-0 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-200 hover:scale-110"
+              onClick={() => handleNavigate('capital')}
+              title="Ganho de Capital"
             >
               <DollarSign size={16} />
             </Button>
             <Button
               variant="ghost"
               size="sm"
-              className="w-8 h-8 p-0 text-gray-600 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400 transition-all duration-200 hover:scale-110"
-              title="Performance"
+              className="w-8 h-8 p-0 text-gray-600 dark:text-gray-300 hover:text-yellow-600 dark:hover:text-yellow-400 transition-colors"
+              title="Financeiro"
             >
               <TrendingUp size={16} />
             </Button>
@@ -305,12 +311,21 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
       )}
 
       {/* Seção de Ganho de Capital */}
-      {visibleSections.detail && (
-        <div className="w-full">
-          <CapitalGain 
+      {visibleSections.capital && (
+        <div ref={capitalSectionRef} className="w-full">
+          <CapitalGainSection 
+            creditoAcessado={creditoAcessado}
             contemplationMonth={localSimulationData.contemplationMonth || 60}
-            creditoAcessado={creditoAcessado || localSimulationData.value}
-            tableData={tableData}
+            installmentType={localSimulationData.installmentType}
+            product={{ nominalCreditValue: localSimulationData.value, termMonths: termValue }}
+            administrator={{ 
+              administrationRate: 0.27,
+              updateMonth: 8,
+              gracePeriodDays: 90,
+              inccRate: 6,
+              postContemplationAdjustment: 0.5,
+              maxEmbeddedPercentage: 25
+            }}
           />
         </div>
       )}
@@ -333,7 +348,6 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             creditoAcessado={creditoAcessado || localSimulationData.value}
             embutido={embutido}
             installmentType={localSimulationData.installmentType}
-            onDataChange={setTableData}
           />
         </div>
       )}

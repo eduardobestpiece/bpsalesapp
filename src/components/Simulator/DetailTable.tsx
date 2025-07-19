@@ -16,7 +16,6 @@ interface DetailTableProps {
   creditoAcessado?: number; // Crédito acessado total
   embutido?: 'com' | 'sem'; // Estado do embutido
   installmentType?: string; // Tipo de parcela: 'full', 'half', 'reduced' ou ID da redução
-  onDataChange?: (data: any[]) => void; // Callback para compartilhar dados
 }
 
 export const DetailTable = ({ 
@@ -26,8 +25,7 @@ export const DetailTable = ({
   selectedCredits = [], 
   creditoAcessado = 0,
   embutido = 'sem',
-  installmentType = 'full',
-  onDataChange
+  installmentType = 'full'
 }: DetailTableProps) => {
   const [showConfig, setShowConfig] = useState(false);
   const [maxMonths, setMaxMonths] = useState(100);
@@ -340,12 +338,6 @@ export const DetailTable = ({
     
     setTableData(data);
     setIsLoading(false);
-    
-    // Chamar callback se fornecido
-    if (onDataChange) {
-      onDataChange(data);
-    }
-    
     return data;
   };
 
@@ -461,18 +453,18 @@ export const DetailTable = ({
                     key={row.mes}
                     className={row.isContemplationMonth ? "bg-green-100 dark:bg-green-900" : ""}
                   >
-                    {visibleColumns.mes && <TableCell>{row.mes}</TableCell>}
-                    {visibleColumns.credito && <TableCell>{formatCurrency(row.credito)}</TableCell>}
+                  {visibleColumns.mes && <TableCell>{row.mes}</TableCell>}
+                  {visibleColumns.credito && <TableCell>{formatCurrency(row.credito)}</TableCell>}
                     {visibleColumns.creditoAcessado && <TableCell>{formatCurrency(row.creditoAcessado)}</TableCell>}
-                    {visibleColumns.taxaAdministracao && <TableCell>{formatCurrency(row.taxaAdministracao)}</TableCell>}
-                    {visibleColumns.fundoReserva && <TableCell>{formatCurrency(row.fundoReserva)}</TableCell>}
-                    {visibleColumns.valorParcela && <TableCell>{formatCurrency(row.valorParcela)}</TableCell>}
-                    {visibleColumns.saldoDevedor && <TableCell>{formatCurrency(row.saldoDevedor)}</TableCell>}
-                    {visibleColumns.compraAgio && <TableCell>{formatCurrency(row.compraAgio)}</TableCell>}
-                    {visibleColumns.lucro && <TableCell>{formatCurrency(row.lucro)}</TableCell>}
-                    {visibleColumns.percentualLucro && <TableCell>{row.percentualLucro}%</TableCell>}
-                    {visibleColumns.lucroMes && <TableCell>{formatCurrency(row.lucroMes)}</TableCell>}
-                  </TableRow>
+                  {visibleColumns.taxaAdministracao && <TableCell>{formatCurrency(row.taxaAdministracao)}</TableCell>}
+                  {visibleColumns.fundoReserva && <TableCell>{formatCurrency(row.fundoReserva)}</TableCell>}
+                  {visibleColumns.valorParcela && <TableCell>{formatCurrency(row.valorParcela)}</TableCell>}
+                  {visibleColumns.saldoDevedor && <TableCell>{formatCurrency(row.saldoDevedor)}</TableCell>}
+                  {visibleColumns.compraAgio && <TableCell>{formatCurrency(row.compraAgio)}</TableCell>}
+                  {visibleColumns.lucro && <TableCell>{formatCurrency(row.lucro)}</TableCell>}
+                  {visibleColumns.percentualLucro && <TableCell>{row.percentualLucro}%</TableCell>}
+                  {visibleColumns.lucroMes && <TableCell>{formatCurrency(row.lucroMes)}</TableCell>}
+                </TableRow>
                 ))
               )}
             </TableBody>
