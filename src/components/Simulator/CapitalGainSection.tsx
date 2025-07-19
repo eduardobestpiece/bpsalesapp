@@ -275,7 +275,8 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
       somaParcelasPagas,
       valorLucro,
       roiOperacao,
-      chartData
+      chartData,
+      creditoAcessadoContemplacao
     };
   }, [creditoAcessado, contemplationMonth, installmentType, agioPercent, product, administrator, embutido]);
 
@@ -321,6 +322,9 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
                 <div className="text-sm font-medium text-green-600 dark:text-green-400">Valor do Ágio</div>
                 <div className="text-2xl font-bold text-green-700 dark:text-green-300">
                   {formatCurrency(capitalGainData.valorAgio)}
+                </div>
+                <div className="text-xs text-green-500 dark:text-green-400 mt-1">
+                  Crédito Acessado: {formatCurrency(capitalGainData.creditoAcessadoContemplacao)}
                 </div>
               </CardContent>
             </Card>
