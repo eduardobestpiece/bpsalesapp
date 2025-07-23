@@ -7,6 +7,7 @@ import { AdvancedResultsPanel } from './AdvancedResultsPanel';
 import { CapitalGain } from './CapitalGain';
 import { DetailTable } from './DetailTable';
 import { SimulatorMenu } from './SimulatorMenu';
+import { PatrimonyChart } from './PatrimonyChart';
 import { useSimulatorSync } from '@/hooks/useSimulatorSync';
 
 export const UnifiedSimulator = () => {
@@ -38,6 +39,9 @@ export const UnifiedSimulator = () => {
   // Estado para créditos selecionados
   const [selectedCredits, setSelectedCredits] = useState<any[]>([]);
 
+  // Estado para dados do gráfico patrimonial (exemplo)
+  const [patrimonyData, setPatrimonyData] = useState<any[]>([]);
+
   // Refs para navegação
   const creditSectionRef = useRef<HTMLDivElement>(null);
   const leverageSectionRef = useRef<HTMLDivElement>(null);
@@ -49,6 +53,22 @@ export const UnifiedSimulator = () => {
     updateInstallments(product.termMonths);
     updateInstallmentType(installmentType);
     setShowResults(true);
+
+    // Gerar dados de exemplo para o gráfico patrimonial
+    const mockPatrimonyData = Array.from({ length: 60 }, (_, i) => ({
+      month: i + 1,
+      patrimony: 300000 + (i * 5000),
+      income: 2000 + (i * 50),
+      cashFlow: 1000 + (i * 25),
+      isContemplation: i + 1 === contemplationMonth,
+      patrimonioInicial: 300000,
+      valorizacaoMes: 2000,
+      valorizacaoAcumulada: 2000 * (i + 1),
+      acumuloCaixa: 1000 * (i + 1),
+      parcelasPagas: Math.min(i + 1, contemplationMonth) * 5000
+    }));
+
+    setPatrimonyData(mockPatrimonyData);
   };
 
   const handleNavigate = (section: string) => {
@@ -169,6 +189,25 @@ export const UnifiedSimulator = () => {
                 />
               </Card>
             )}
+
+            {/* Gráfico de Evolução Patrimonial com dados sincronizados */}
+            {showResults && patrimonyData.length > 0 && (
+              <Card className="p-6">
+                <CardHeader>
+                  <CardTitle>Evolução Patrimonial</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <PatrimonyChart 
+                    data={patrimonyData}
+                    product={product}
+                    administrator={administrator}
+                    contemplationMonth={contemplationMonth}
+                    installmentType={installmentType}
+                    creditoAcessado={product.nominalCreditValue}
+                  />
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
 
@@ -194,19 +233,19 @@ export const UnifiedSimulator = () => {
               product={product}
               administrator={{
                 ...administrator,
-                updateMonth: administrator.updateMonth || 8, // Agosto
-                gracePeriodDays: administrator.gracePeriodDays || 90, // 90 dias de carência
-                inccRate: administrator.inccRate || 6, // Taxa INCC 6%
-                postContemplationAdjustment: administrator.postContemplationAdjustment || 0.5 // Ajuste pós contemplação 0.5%
+                updateMonth: administrator.updateMonth || 8,
+                gracePeriodDays: administrator.gracePeriodDays || 90,
+                inccRate: administrator.inccRate || 6,
+                postContemplationAdjustment: administrator.postContemplationAdjustment || 0.5
               }}
               contemplationMonth={contemplationMonth}
               selectedCredits={selectedCredits}
               creditoAcessado={product.nominalCreditValue}
-              onFirstRowData={undefined} // Callback opcional
+              onFirstRowData={undefined}
             />
           </div>
         )}
       </div>
     </div>
   );
-}; 
+};

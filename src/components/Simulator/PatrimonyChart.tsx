@@ -2,6 +2,7 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { House } from 'lucide-react';
 import { useState } from 'react';
+import { generateConsortiumInstallments } from '@/utils/consortiumInstallments';
 
 interface ChartDataPoint {
   month: number;
@@ -13,13 +14,18 @@ interface ChartDataPoint {
   valorizacaoMes?: number;
   valorizacaoAcumulada?: number;
   acumuloCaixa?: number;
-  parcelaMes?: number;
-  parcelaTabelaMes?: number; // NOVO campo para parcela da tabela
+  parcelaTabelaMes?: number; // Valor exato da tabela de detalhamento
   parcelasPagas?: number;
 }
 
 interface PatrimonyChartProps {
   data: ChartDataPoint[];
+  // Parâmetros necessários para gerar os dados da tabela de detalhamento
+  product?: any;
+  administrator?: any;
+  contemplationMonth?: number;
+  installmentType?: string;
+  creditoAcessado?: number;
 }
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -40,8 +46,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     const valorizacaoMes = data.valorizacaoMes || 0;
     const valorizacaoAcumulada = data.valorizacaoAcumulada || 0;
     const acumuloCaixa = data.acumuloCaixa || 0;
-    // const parcelaMes = data.parcelaMes || 0; // REMOVER campo antigo
-    const parcelaTabelaMes = data.parcelaTabelaMes || 0; // NOVO campo
+    const parcelaTabelaMes = data.parcelaTabelaMes || 0; // Valor exato da tabela
     const parcelasPagas = data.parcelasPagas || 0;
     const ganho = data.cashFlow + valorizacaoMes;
     const ganhoTotal = valorizacaoAcumulada + acumuloCaixa;
@@ -125,9 +130,77 @@ const CustomDot = (props: any) => {
   return null;
 };
 
-export const PatrimonyChart = ({ data }: PatrimonyChartProps) => {
+// Função para sincronizar os dados do gráfico com a tabela de detalhamento
+const synchronizeWithTable = (
+  chartData: ChartDataPoint[],
+  product: any,
+  administrator: any,
+  contemplationMonth: number,
+  installmentType: string,
+  creditoAcessado: number
+): ChartDataPoint[] => {
+  if (!product || !administrator) {
+    console.warn('[PatrimonyChart] Parâmetros insuficientes para sincronização com tabela');
+    return chartData;
+  }
+
+  try {
+    // Gerar dados da tabela de detalhamento com os mesmos parâmetros
+    const tableData = generateConsortiumInstallments({
+      product,
+      administrator,
+      contemplationMonth,
+      selectedCredits: [],
+      creditoAcessado,
+      embutido: 'com', // ou 'sem', dependendo da configuração
+      installmentType,
+      maxEmbeddedPercentage: administrator.maxEmbeddedPercentage || 25
+    });
+
+    console.log('[PatrimonyChart] Sincronizando dados da tabela:', tableData.slice(0, 5));
+
+    // Sincronizar os valores de parcela do gráfico com a tabela
+    return chartData.map((point, index) => {
+      const tableEntry = tableData.find(entry => entry.month === point.month);
+      
+      if (tableEntry) {
+        return {
+          ...point,
+          parcelaTabelaMes: tableEntry.installmentValue // Valor exato da tabela
+        };
+      }
+      
+      return {
+        ...point,
+        parcelaTabelaMes: 0
+      };
+    });
+  } catch (error) {
+    console.error('[PatrimonyChart] Erro na sincronização com tabela:', error);
+    return chartData;
+  }
+};
+
+export const PatrimonyChart = ({ 
+  data, 
+  product, 
+  administrator, 
+  contemplationMonth = 24, 
+  installmentType = 'full',
+  creditoAcessado = 0
+}: PatrimonyChartProps) => {
   const [tooltipVisible, setTooltipVisible] = useState(false);
   const [tooltipData, setTooltipData] = useState<any>(null);
+
+  // Sincronizar dados do gráfico com a tabela de detalhamento
+  const synchronizedData = synchronizeWithTable(
+    data,
+    product,
+    administrator,
+    contemplationMonth,
+    installmentType,
+    creditoAcessado
+  );
 
   const formatYAxis = (value: number) => {
     if (value >= 1000000) {
@@ -161,7 +234,7 @@ export const PatrimonyChart = ({ data }: PatrimonyChartProps) => {
     <div className="w-full h-96 relative">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
-          data={data}
+          data={synchronizedData}
           margin={{
             top: 20,
             right: 30,
