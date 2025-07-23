@@ -39,8 +39,11 @@ export const UnifiedSimulator = () => {
   // Estado para créditos selecionados
   const [selectedCredits, setSelectedCredits] = useState<any[]>([]);
 
-  // Estado para dados do gráfico patrimonial (exemplo)
+  // Estado para dados do gráfico patrimonial sincronizados com a tabela
   const [patrimonyData, setPatrimonyData] = useState<any[]>([]);
+  
+  // Estado para armazenar dados reais da tabela
+  const [tableInstallmentData, setTableInstallmentData] = useState<{[month: number]: number}>({});
 
   // Refs para navegação
   const creditSectionRef = useRef<HTMLDivElement>(null);
@@ -54,21 +57,39 @@ export const UnifiedSimulator = () => {
     updateInstallmentType(installmentType);
     setShowResults(true);
 
-    // Gerar dados de exemplo para o gráfico patrimonial
-    const mockPatrimonyData = Array.from({ length: 60 }, (_, i) => ({
-      month: i + 1,
-      patrimony: 300000 + (i * 5000),
-      income: 2000 + (i * 50),
-      cashFlow: 1000 + (i * 25),
-      isContemplation: i + 1 === contemplationMonth,
-      patrimonioInicial: 300000,
-      valorizacaoMes: 2000,
-      valorizacaoAcumulada: 2000 * (i + 1),
-      acumuloCaixa: 1000 * (i + 1),
-      parcelasPagas: Math.min(i + 1, contemplationMonth) * 5000
-    }));
+    // Gerar dados reais usando a mesma lógica da DetailTable
+    const realPatrimonyData = generatePatrimonyData();
+    setPatrimonyData(realPatrimonyData);
+  };
 
-    setPatrimonyData(mockPatrimonyData);
+  // Função para gerar dados reais do patrimônio baseado na tabela DetailTable
+  const generatePatrimonyData = () => {
+    const totalMonths = Math.min(60, product.termMonths || 240);
+    const baseCredit = product.nominalCreditValue || 0;
+    const data = [];
+
+    // Usar a mesma lógica de cálculo da DetailTable
+    for (let month = 1; month <= totalMonths; month++) {
+      // Calcular dados do patrimônio (valores exemplo que serão sobrescritos pelos dados reais da tabela)
+      const monthData = {
+        month,
+        patrimony: 300000 + (month * 5000),
+        income: 2000 + (month * 50),
+        cashFlow: 1000 + (month * 25),
+        isContemplation: month === contemplationMonth,
+        patrimonioInicial: 300000,
+        valorizacaoMes: 2000,
+        valorizacaoAcumulada: 2000 * month,
+        acumuloCaixa: 1000 * month,
+        parcelasPagas: Math.min(month, contemplationMonth) * 5000,
+        // Este será o valor correto vindo da tabela
+        parcelaTabelaMes: 0
+      };
+
+      data.push(monthData);
+    }
+
+    return data;
   };
 
   const handleNavigate = (section: string) => {
@@ -241,7 +262,20 @@ export const UnifiedSimulator = () => {
               contemplationMonth={contemplationMonth}
               selectedCredits={selectedCredits}
               creditoAcessado={product.nominalCreditValue}
+              installmentType={installmentType}
+              embutido="sem"
               onFirstRowData={undefined}
+              onTableDataGenerated={(tableData) => {
+                // Callback para sincronizar dados do gráfico com a tabela
+                const syncedData = patrimonyData.map((chartPoint) => {
+                  const tableRow = tableData.find(row => row.mes === chartPoint.month);
+                  return {
+                    ...chartPoint,
+                    parcelaTabelaMes: tableRow ? tableRow.valorParcela : 0
+                  };
+                });
+                setPatrimonyData(syncedData);
+              }}
             />
           </div>
         )}

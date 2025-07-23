@@ -21,6 +21,7 @@ interface DetailTableProps {
   agioPercent?: number; // NOVO: percentual de ágio
   onFirstRowData?: (data: { credit: number, installmentValue: number }) => void; // Callback para expor dados da primeira linha
   onContemplationRowData?: (data: { creditAccessed: number, month: number, parcelaAfter?: number, somaParcelasAteContemplacao?: number, mesContemplacao?: number }) => void; // Callback para expor dados da linha de contemplação
+  onTableDataGenerated?: (tableData: any[]) => void; // Callback para sincronizar dados com outros componentes
 }
 
 export const DetailTable = ({ 
@@ -36,7 +37,8 @@ export const DetailTable = ({
   customAnnualUpdateRate,
   agioPercent = 5, // padrão 5%
   onFirstRowData,
-  onContemplationRowData
+  onContemplationRowData,
+  onTableDataGenerated
 }: DetailTableProps) => {
   const [showConfig, setShowConfig] = useState(false);
   // Remover o estado e input de maxMonths
@@ -412,6 +414,12 @@ export const DetailTable = ({
     
     setTableData(data);
     setIsLoading(false);
+    
+    // Notificar dados da tabela para outros componentes
+    if (onTableDataGenerated) {
+      onTableDataGenerated(data);
+    }
+    
     // Após gerar o array completo
     console.log('[DEBUG][Tabela] Parâmetros usados:', { product, administrator, contemplationMonth, selectedCredits, creditoAcessado, embutido, installmentType, customAdminTaxPercent, customReserveFundPercent, customAnnualUpdateRate, maxEmbeddedPercentage: administrator.maxEmbeddedPercentage });
     return data;
