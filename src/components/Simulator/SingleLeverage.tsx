@@ -168,19 +168,16 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
   
   // Dados para o gráfico com atualização anual
   const chartData = [];
-  for (let month = 1; month <= product.termMonths; month++) {
+  for (let month = contemplationMonth; month <= product.termMonths; month++) {
     // Patrimônio com valorização
-    const appreciatedValue = month >= contemplationMonth ? 
-      patrimonioNaContemplacaoCalculado * Math.pow(1 + taxaValorizacao, (month - contemplationMonth) / 12) : 0;
+    const appreciatedValue = patrimonioNaContemplacaoCalculado * Math.pow(1 + taxaValorizacao, (month - contemplationMonth) / 12);
     
     // Rendimentos com atualização anual
     const yearsFromContemplation = Math.floor((month - contemplationMonth) / 12);
-    const currentIncome = month >= contemplationMonth ? 
-      ganhosMensais * Math.pow(1 + taxaValorizacao, yearsFromContemplation) : 0;
+    const currentIncome = ganhosMensais * Math.pow(1 + taxaValorizacao, yearsFromContemplation);
     
     // Fluxo de caixa com atualização anual
-    const currentCashFlow = month >= contemplationMonth ? 
-      (month <= product.termMonths ? fluxoCaixaAntes : fluxoCaixaApos) * Math.pow(1 + taxaValorizacao, yearsFromContemplation) : 0;
+    const currentCashFlow = (month <= product.termMonths ? fluxoCaixaAntes : fluxoCaixaApos) * Math.pow(1 + taxaValorizacao, yearsFromContemplation);
     
     chartData.push({
       month,

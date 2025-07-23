@@ -1,12 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Settings, ChevronDown, ChevronUp } from 'lucide-react';
+import { Settings, ChevronDown, ChevronUp, Target } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
-import React from 'react'; // Added missing import for React.useEffect
 
 interface DetailTableProps {
   product: any;
@@ -16,6 +15,12 @@ interface DetailTableProps {
   creditoAcessado?: number; // Crédito acessado total
   embutido?: 'com' | 'sem'; // Estado do embutido
   installmentType?: string; // Tipo de parcela: 'full', 'half', 'reduced' ou ID da redução
+  customAdminTaxPercent?: number; // Taxa de administração customizada
+  customReserveFundPercent?: number; // Fundo de reserva customizado
+  customAnnualUpdateRate?: number; // Taxa de atualização anual customizada
+  agioPercent?: number; // NOVO: percentual de ágio
+  onFirstRowData?: (data: { credit: number, installmentValue: number }) => void; // Callback para expor dados da primeira linha
+  onContemplationRowData?: (data: { creditAccessed: number, month: number, parcelaAfter?: number, somaParcelasAteContemplacao?: number, mesContemplacao?: number }) => void; // Callback para expor dados da linha de contemplação
 }
 
 export const DetailTable = ({ 
@@ -25,25 +30,86 @@ export const DetailTable = ({
   selectedCredits = [], 
   creditoAcessado = 0,
   embutido = 'sem',
-  installmentType = 'full'
+  installmentType = 'full',
+  customAdminTaxPercent,
+  customReserveFundPercent,
+  customAnnualUpdateRate,
+  agioPercent = 5, // padrão 5%
+  onFirstRowData,
+  onContemplationRowData
 }: DetailTableProps) => {
   const [showConfig, setShowConfig] = useState(false);
-  const [maxMonths, setMaxMonths] = useState(100);
+  // Remover o estado e input de maxMonths
+  // const [maxMonths, setMaxMonths] = useState(100);
   const [tableData, setTableData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState({
     mes: true,
     credito: true,
     creditoAcessado: true,
-    taxaAdministracao: true,
-    fundoReserva: true,
+    taxaAdministracao: false,
+    fundoReserva: false,
     valorParcela: true,
-    saldoDevedor: true,
-    compraAgio: true,
-    lucro: true,
-    percentualLucro: true,
-    lucroMes: true
+    saldoDevedor: false,
+    agio: false,
+    lucro: false,
+    roi: false,
+    // lucroMes: false, // removido
   });
+
+  // Refs para sincronizar scroll horizontal
+  const headerRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+
+  // Refs para colunas do cabeçalho e corpo
+  const thRefs = useRef<(HTMLTableCellElement | null)[]>([]);
+  const tdRefs = useRef<(HTMLTableCellElement | null)[]>([]);
+  const [colWidths, setColWidths] = useState<number[]>([]);
+
+  // Ref para a linha de contemplação e última linha
+  const contemplationRowRef = useRef<HTMLTableRowElement>(null);
+  const lastRowRef = useRef<HTMLTableRowElement>(null);
+  const [highlightContemplation, setHighlightContemplation] = useState(false);
+
+  // Sincronizar scroll horizontal
+  useEffect(() => {
+    const header = headerRef.current;
+    const body = bodyRef.current;
+    if (!header || !body) return;
+
+    const syncScroll = (source: HTMLElement, target: HTMLElement) => {
+      return () => {
+        if (target.scrollLeft !== source.scrollLeft) {
+          target.scrollLeft = source.scrollLeft;
+        }
+      };
+    };
+    const onHeaderScroll = syncScroll(header, body);
+    const onBodyScroll = syncScroll(body, header);
+    header.addEventListener('scroll', onHeaderScroll);
+    body.addEventListener('scroll', onBodyScroll);
+    return () => {
+      header.removeEventListener('scroll', onHeaderScroll);
+      body.removeEventListener('scroll', onBodyScroll);
+    };
+  }, []);
+
+  // Medir larguras das colunas após renderização
+  useLayoutEffect(() => {
+    // Resetar larguras antes de medir
+    setColWidths([]);
+    // Usar setTimeout para garantir que o DOM está atualizado
+    setTimeout(() => {
+      const ths = thRefs.current;
+      const tds = tdRefs.current;
+      const widths = ths.map((th, i) => {
+        const thWidth = th ? th.offsetWidth : 0;
+        const tdWidth = tds[i] ? tds[i].offsetWidth : 0;
+        return Math.max(thWidth, tdWidth, 80); // 80px mínimo
+      });
+      setColWidths(widths);
+    }, 0);
+  }, [tableData, visibleColumns]); // garantir dependência de visibleColumns
 
   // Função para calcular quando o crédito deve ser atualizado
   const shouldUpdateCredit = (month: number) => {
@@ -75,8 +141,9 @@ export const DetailTable = ({
           currentCredit = currentCredit + (currentCredit * postContemplationRate / 100);
         } else {
           // Antes da contemplação: atualização anual pelo INCC
-          const inccRate = administrator.inccRate || 6; // Taxa INCC padrão
-          currentCredit = currentCredit + (currentCredit * inccRate / 100);
+          // Usar valor customizado se disponível, senão usar o valor padrão
+          const annualUpdateRate = customAnnualUpdateRate !== undefined ? customAnnualUpdateRate : (administrator.inccRate || 6);
+          currentCredit = currentCredit + (currentCredit * annualUpdateRate / 100);
         }
       }
       
@@ -115,8 +182,9 @@ export const DetailTable = ({
           currentCredit = currentCredit + (currentCredit * postContemplationRate / 100);
         } else {
           // Antes da contemplação: atualização anual pelo INCC
-          const inccRate = administrator.inccRate || 6; // Taxa INCC padrão
-          currentCredit = currentCredit + (currentCredit * inccRate / 100);
+          // Usar valor customizado se disponível, senão usar o valor padrão
+          const annualUpdateRate = customAnnualUpdateRate !== undefined ? customAnnualUpdateRate : (administrator.inccRate || 6);
+          currentCredit = currentCredit + (currentCredit * annualUpdateRate / 100);
         }
       }
       
@@ -139,11 +207,15 @@ export const DetailTable = ({
 
   // Função para calcular parcela especial (versão síncrona)
   const calculateSpecialInstallment = (credit: number, month: number, isAfterContemplation: boolean = false) => {
+    // Usar valores customizados se disponíveis, senão usar os valores padrão
+    const adminTaxRate = customAdminTaxPercent !== undefined ? customAdminTaxPercent / 100 : (administrator.administrationRate || 0.27);
+    const reserveFundRate = customReserveFundPercent !== undefined ? customReserveFundPercent / 100 : 0.01; // 1% padrão
+    
     // Se for parcela cheia, retorna o cálculo simples
     if (installmentType === 'full') {
       const totalCredit = isAfterContemplation ? creditoAcessado : credit;
-      const adminTax = totalCredit * (administrator.administrationRate || 0.27);
-      const reserveFund = totalCredit * 0.01; // 1%
+      const adminTax = totalCredit * adminTaxRate;
+      const reserveFund = totalCredit * reserveFundRate;
       return (totalCredit + adminTax + reserveFund) / (product.termMonths || 240);
     }
 
@@ -154,14 +226,14 @@ export const DetailTable = ({
 
     // Calcular componentes com redução conforme a fórmula especificada
     let principal = credit;
-    let adminTax = credit * (administrator.administrationRate || 0.27);
-    let reserveFund = credit * 0.01;
+    let adminTax = credit * adminTaxRate;
+    let reserveFund = credit * reserveFundRate;
 
     // Para parcelas especiais após contemplação, usar o crédito acessado
     if (isAfterContemplation) {
       principal = creditoAcessado;
-      adminTax = creditoAcessado * (administrator.administrationRate || 0.27);
-      reserveFund = creditoAcessado * 0.01;
+      adminTax = creditoAcessado * adminTaxRate;
+      reserveFund = creditoAcessado * reserveFundRate;
     }
 
     // Aplicar reduções conforme configuração usando a fórmula correta
@@ -181,15 +253,19 @@ export const DetailTable = ({
   // Função para calcular parcela pós contemplação
   const calculatePostContemplationInstallment = (creditoAcessado: number, parcelasPagas: number) => {
     const prazoRestante = (product.termMonths || 240) - parcelasPagas;
-    const saldoDevedor = creditoAcessado + (creditoAcessado * (administrator.administrationRate || 0.27)) + (creditoAcessado * 0.01);
+    const adminTaxRate = customAdminTaxPercent !== undefined ? customAdminTaxPercent / 100 : (administrator.administrationRate || 0.27);
+    const reserveFundRate = customReserveFundPercent !== undefined ? customReserveFundPercent / 100 : 0.01; // 1% padrão
+    const saldoDevedor = creditoAcessado + (creditoAcessado * adminTaxRate) + (creditoAcessado * reserveFundRate);
     return saldoDevedor / prazoRestante;
   };
 
   // Função para gerar dados da tabela
   const generateTableData = () => {
+    
     setIsLoading(true);
     const data = [];
-    const totalMonths = Math.min(maxMonths, product.termMonths || 240);
+    // const totalMonths = Math.min(maxMonths, product.termMonths || 240);
+    const totalMonths = product.termMonths || 240;
     
     // Determinar o valor base do crédito
     const baseCredit = selectedCredits.length > 0 
@@ -208,10 +284,14 @@ export const DetailTable = ({
       // Calcular taxa de administração e fundo de reserva
       let taxaAdmin, fundoReserva;
       
+      // Usar valores customizados se disponíveis, senão usar os valores padrão da administradora
+      const adminTaxRate = customAdminTaxPercent !== undefined ? customAdminTaxPercent / 100 : (administrator.administrationRate || 0.27);
+      const reserveFundRate = customReserveFundPercent !== undefined ? customReserveFundPercent / 100 : 0.01; // 1% padrão
+      
       if (month <= contemplationMonth) {
         // Antes da contemplação: calcula sobre o crédito normal
-        taxaAdmin = credito * (administrator.administrationRate || 0.27);
-        fundoReserva = credito * 0.01; // 1%
+        taxaAdmin = credito * adminTaxRate;
+        fundoReserva = credito * reserveFundRate;
       } else {
         // Após a contemplação: calcula sobre o crédito acessado da contemplação
         if (creditoAcessadoContemplacao === 0) {
@@ -221,8 +301,8 @@ export const DetailTable = ({
           creditoAcessadoContemplacao = creditoAcessadoContemplacaoTemp;
         }
         
-        taxaAdmin = creditoAcessadoContemplacao * (administrator.administrationRate || 0.27);
-        fundoReserva = creditoAcessadoContemplacao * 0.01; // 1%
+        taxaAdmin = creditoAcessadoContemplacao * adminTaxRate;
+        fundoReserva = creditoAcessadoContemplacao * reserveFundRate;
       }
       
       // Calcular o saldo devedor
@@ -252,8 +332,9 @@ export const DetailTable = ({
           
           if (isAnnualUpdateAfterContemplation) {
             // Atualização anual sobre o próprio saldo devedor
-            const inccRate = administrator.inccRate || 6;
-            saldoDevedorAcumulado = saldoAnterior + (saldoAnterior * inccRate / 100) - parcelaAnterior;
+            // Usar valor customizado se disponível, senão usar o valor padrão
+            const annualUpdateRate = customAnnualUpdateRate !== undefined ? customAnnualUpdateRate : (administrator.inccRate || 6);
+            saldoDevedorAcumulado = saldoAnterior + (saldoAnterior * annualUpdateRate / 100) - parcelaAnterior;
           } else {
             // Mês normal após contemplação: saldo anterior menos parcela
             saldoDevedorAcumulado = saldoAnterior - parcelaAnterior;
@@ -301,10 +382,15 @@ export const DetailTable = ({
         }
       }
       
-      const compraAgio = credito * 0.05; // 5%
-      const lucro = credito - compraAgio;
-      const percentualLucro = (lucro / compraAgio) * 100;
-      const lucroMes = lucro / (product.termMonths || 240);
+      // Ágio = creditoAcessado (da linha) * (agioPercent / 100)
+      // Aqui, garantir que está usando o creditoAcessado da linha, não da prop global
+      const agioLinha = creditoAcessado * (agioPercent / 100); // creditoAcessado aqui é o da linha
+      // Soma das parcelas pagas até o mês atual
+      const somaParcelasPagas = data.reduce((sum, row) => sum + row.valorParcela, 0) + valorParcela;
+      // Lucro = Ágio - soma das parcelas pagas até o mês
+      const lucro = agioLinha - somaParcelasPagas;
+      // ROI = Lucro / soma das parcelas pagas até o mês
+      const roi = somaParcelasPagas !== 0 ? lucro / somaParcelasPagas : 0;
       
       // Destacar linha do mês de contemplação
       const isContemplationMonth = month === contemplationMonth;
@@ -317,23 +403,53 @@ export const DetailTable = ({
         fundoReserva,
         valorParcela,
         saldoDevedor: saldoDevedorAcumulado,
-        compraAgio,
+        agio: agioLinha,
         lucro,
-        percentualLucro,
-        lucroMes,
+        roi,
         isContemplationMonth
       });
     }
     
     setTableData(data);
     setIsLoading(false);
+    // Após gerar o array completo
+    console.log('[DEBUG][Tabela] Parâmetros usados:', { product, administrator, contemplationMonth, selectedCredits, creditoAcessado, embutido, installmentType, customAdminTaxPercent, customReserveFundPercent, customAnnualUpdateRate, maxEmbeddedPercentage: administrator.maxEmbeddedPercentage });
     return data;
   };
 
   // Executar cálculo quando as dependências mudarem
-  React.useEffect(() => {
+  useEffect(() => {
     generateTableData();
-  }, [product, administrator, contemplationMonth, selectedCredits, creditoAcessado, installmentType, maxMonths]);
+  }, [product, administrator, contemplationMonth, selectedCredits, creditoAcessado, installmentType, customAdminTaxPercent, customReserveFundPercent, customAnnualUpdateRate, agioPercent]);
+
+  // Notificar dados da primeira linha quando disponíveis
+  useEffect(() => {
+    if (onFirstRowData && tableData.length > 0) {
+      const firstRow = tableData[0];
+      onFirstRowData({
+        credit: firstRow.credito,
+        installmentValue: firstRow.valorParcela
+      });
+    }
+  }, [tableData, onFirstRowData]);
+
+  // Notificar dados da linha de contemplação e linha seguinte quando disponíveis
+  useEffect(() => {
+    if (typeof window !== 'undefined' && tableData.length > 0) {
+      const contemplacaoIdx = tableData.findIndex(row => row.isContemplationMonth);
+      const contemplacaoRow = tableData[contemplacaoIdx];
+      const afterContemplacaoRow = tableData[contemplacaoIdx + 1];
+      if (onContemplationRowData && contemplacaoRow) {
+        onContemplationRowData({
+          creditAccessed: contemplacaoRow.creditoAcessado,
+          month: contemplacaoRow.mes,
+          parcelaAfter: afterContemplacaoRow?.valorParcela || 0,
+          somaParcelasAteContemplacao: tableData.slice(0, contemplacaoIdx + 1).reduce((sum, row) => sum + row.valorParcela, 0),
+          mesContemplacao: contemplacaoRow.mes
+        });
+      }
+    }
+  }, [tableData, onContemplationRowData]);
 
   const toggleColumn = (column: string) => {
     setVisibleColumns(prev => ({
@@ -342,28 +458,45 @@ export const DetailTable = ({
     }));
   };
 
+  // Gerar lista de colunas visíveis para indexação
+  const visibleKeys = Object.keys(visibleColumns).filter((key) => visibleColumns[key as keyof typeof visibleColumns]);
+
   return (
     <Card className="w-full">
       <CardHeader>
         <div className="flex justify-between items-center">
           <CardTitle>Detalhamento do Consórcio</CardTitle>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowConfig(!showConfig)}
-            className="flex items-center gap-2"
-          >
-            <Settings size={16} />
-            Configurar
-            {showConfig ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Target size={20} onClick={() => {
+              if (contemplationRowRef.current) {
+                contemplationRowRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setHighlightContemplation(true);
+                setTimeout(() => setHighlightContemplation(false), 2000);
+              }
+            }} style={{ cursor: 'pointer' }} />
+            <ChevronDown size={20} onClick={() => {
+              if (lastRowRef.current) {
+                lastRowRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+            }} style={{ cursor: 'pointer' }} />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowConfig(!showConfig)}
+              className="flex items-center gap-2"
+              aria-label="Configurar"
+            >
+              <Settings size={20} />
+            </Button>
+          </div>
         </div>
       </CardHeader>
 
       {showConfig && (
         <CardContent className="border-b">
           <div className="space-y-4">
-            <div>
+            {/* Remover o campo de máximo de meses */}
+            {/* <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Máximo de meses a exibir:</label>
               <input
                 type="number"
@@ -373,7 +506,7 @@ export const DetailTable = ({
                 max={product.termMonths || 240}
                 className="ml-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm w-24 bg-gray-800 dark:bg-gray-700 text-gray-100 dark:text-gray-100"
               />
-            </div>
+            </div> */}
             
             <div>
               <label className="text-sm font-medium text-gray-700 dark:text-gray-300">Colunas visíveis:</label>
@@ -392,10 +525,9 @@ export const DetailTable = ({
                     {key === 'fundoReserva' && 'Fundo de Reserva'}
                     {key === 'valorParcela' && 'Valor da Parcela'}
                     {key === 'saldoDevedor' && 'Saldo Devedor'}
-                    {key === 'compraAgio' && 'Compra do Ágio'}
+                    {key === 'agio' && 'Ágio'}
                     {key === 'lucro' && 'Lucro'}
-                    {key === 'percentualLucro' && 'Percentual de Lucro'}
-                    {key === 'lucroMes' && 'Lucro ao Mês'}
+                    {key === 'roi' && 'ROI'}
                   </Badge>
                 ))}
               </div>
@@ -405,61 +537,102 @@ export const DetailTable = ({
       )}
 
       <CardContent>
-        <div className="w-full overflow-x-auto border rounded-lg relative" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+        {/* Cabeçalho separado */}
+        <div
+          ref={headerRef}
+          className="w-full overflow-x-auto border rounded-t-lg table-header-scrollbar"
+          style={{ overflowY: 'hidden' }}
+        >
           <div className="min-w-max">
             <Table>
-            <TableHeader className="sticky top-0 z-20 bg-[#131313] border-b border-gray-700 shadow-sm">
-              <TableRow className="hover:bg-[#131313]">
-                {visibleColumns.mes && <TableHead className="bg-[#131313] text-white font-semibold sticky top-0">Mês</TableHead>}
-                {visibleColumns.credito && <TableHead className="bg-[#131313] text-white font-semibold sticky top-0">Crédito</TableHead>}
-                {visibleColumns.creditoAcessado && <TableHead className="bg-[#131313] text-white font-semibold sticky top-0">Crédito Acessado</TableHead>}
-                {visibleColumns.taxaAdministracao && <TableHead className="bg-[#131313] text-white font-semibold sticky top-0">Taxa de Administração</TableHead>}
-                {visibleColumns.fundoReserva && <TableHead className="bg-[#131313] text-white font-semibold sticky top-0">Fundo de Reserva</TableHead>}
-                {visibleColumns.valorParcela && <TableHead className="bg-[#131313] text-white font-semibold sticky top-0">Valor da Parcela</TableHead>}
-                {visibleColumns.saldoDevedor && <TableHead className="bg-[#131313] text-white font-semibold sticky top-0">Saldo Devedor</TableHead>}
-                {visibleColumns.compraAgio && <TableHead className="bg-[#131313] text-white font-semibold sticky top-0">Compra do Ágio</TableHead>}
-                {visibleColumns.lucro && <TableHead className="bg-[#131313] text-white font-semibold sticky top-0">Lucro</TableHead>}
-                {visibleColumns.percentualLucro && <TableHead className="bg-[#131313] text-white font-semibold sticky top-0">Percentual de Lucro</TableHead>}
-                {visibleColumns.lucroMes && <TableHead className="bg-[#131313] text-white font-semibold sticky top-0">Lucro ao Mês</TableHead>}
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {isLoading ? (
-                <TableRow>
-                  <TableCell colSpan={11} className="text-center py-8">
-                    <p>Carregando dados...</p>
-                  </TableCell>
+              <TableHeader className="bg-[#131313] border-b border-gray-700 shadow-sm">
+                <TableRow className="hover:bg-[#131313]">
+                  {visibleKeys.map((key, idx) => (
+                    <TableHead
+                      key={key}
+                      ref={el => thRefs.current[idx] = el}
+                      className="bg-[#131313] text-white font-semibold"
+                      style={{whiteSpace: 'nowrap', width: colWidths[idx] ? colWidths[idx] : undefined, minWidth: 80}}
+                    >
+                      {key === 'mes' && 'Mês'}
+                      {key === 'credito' && 'Crédito'}
+                      {key === 'creditoAcessado' && 'Crédito Acessado'}
+                      {key === 'taxaAdministracao' && 'Taxa de Administração'}
+                      {key === 'fundoReserva' && 'Fundo de Reserva'}
+                      {key === 'valorParcela' && 'Valor da Parcela'}
+                      {key === 'saldoDevedor' && 'Saldo Devedor'}
+                      {key === 'agio' && 'Ágio'}
+                      {key === 'lucro' && 'Lucro'}
+                      {key === 'roi' && 'ROI'}
+                    </TableHead>
+                  ))}
                 </TableRow>
-              ) : tableData.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={11} className="text-center py-8">
-                    <p>Nenhum dado disponível para exibir.</p>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                tableData.map((row) => (
-                  <TableRow 
-                    key={row.mes}
-                    className={row.isContemplationMonth ? "bg-green-100 dark:bg-green-900" : ""}
-                  >
-                  {visibleColumns.mes && <TableCell>{row.mes}</TableCell>}
-                  {visibleColumns.credito && <TableCell>{formatCurrency(row.credito)}</TableCell>}
-                    {visibleColumns.creditoAcessado && <TableCell>{formatCurrency(row.creditoAcessado)}</TableCell>}
-                  {visibleColumns.taxaAdministracao && <TableCell>{formatCurrency(row.taxaAdministracao)}</TableCell>}
-                  {visibleColumns.fundoReserva && <TableCell>{formatCurrency(row.fundoReserva)}</TableCell>}
-                  {visibleColumns.valorParcela && <TableCell>{formatCurrency(row.valorParcela)}</TableCell>}
-                  {visibleColumns.saldoDevedor && <TableCell>{formatCurrency(row.saldoDevedor)}</TableCell>}
-                  {visibleColumns.compraAgio && <TableCell>{formatCurrency(row.compraAgio)}</TableCell>}
-                  {visibleColumns.lucro && <TableCell>{formatCurrency(row.lucro)}</TableCell>}
-                  {visibleColumns.percentualLucro && <TableCell>{row.percentualLucro}%</TableCell>}
-                  {visibleColumns.lucroMes && <TableCell>{formatCurrency(row.lucroMes)}</TableCell>}
-                </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-            </div>
+              </TableHeader>
+            </Table>
           </div>
+        </div>
+        {/* Corpo da tabela */}
+        <div
+          ref={bodyRef}
+          className="w-full overflow-x-auto border-b border-l border-r rounded-b-lg table-body-scrollbar"
+          style={{ maxHeight: '400px', overflowY: 'auto' }}
+        >
+          <div className="min-w-max">
+            <Table>
+              <TableBody>
+                {isLoading ? (
+                  <TableRow>
+                    <TableCell colSpan={visibleKeys.length} className="text-center py-8">
+                      <p>Carregando dados...</p>
+                    </TableCell>
+                  </TableRow>
+                ) : tableData.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={visibleKeys.length} className="text-center py-8">
+                      <p>Nenhum dado disponível para exibir.</p>
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  tableData.map((row, rowIdx) => (
+                    <TableRow 
+                      key={row.mes}
+                      ref={
+                        row.isContemplationMonth ? contemplationRowRef :
+                        rowIdx === tableData.length - 1 ? lastRowRef : undefined
+                      }
+                      className={
+                        row.isContemplationMonth && highlightContemplation
+                          ? "bg-yellow-200 dark:bg-yellow-900 animate-pulse"
+                          : row.isContemplationMonth
+                            ? "bg-green-100 dark:bg-green-900"
+                            : ""
+                      }
+                    >
+                      {visibleKeys.map((key, idx) => (
+                        <TableCell
+                          key={key}
+                          ref={rowIdx === 0 ? el => tdRefs.current[idx] = el : undefined}
+                          style={{whiteSpace: 'nowrap', width: colWidths[idx] ? colWidths[idx] : undefined, minWidth: 80}}
+                        >
+                          {key === 'mes' && row.mes}
+                          {key === 'credito' && formatCurrency(row.credito)}
+                          {key === 'creditoAcessado' && formatCurrency(row.creditoAcessado)}
+                          {key === 'taxaAdministracao' && formatCurrency(row.taxaAdministracao)}
+                          {key === 'fundoReserva' && formatCurrency(row.fundoReserva)}
+                          {key === 'valorParcela' && formatCurrency(row.valorParcela)}
+                          {key === 'saldoDevedor' && formatCurrency(row.saldoDevedor)}
+                          {key === 'agio' && formatCurrency(row.agio)}
+                          {key === 'lucro' && formatCurrency(row.lucro)}
+                          {key === 'roi' && `${(row.roi * 100).toFixed(2)}%`}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

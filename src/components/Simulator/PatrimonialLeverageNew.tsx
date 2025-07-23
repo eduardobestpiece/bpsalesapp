@@ -201,14 +201,7 @@ export const PatrimonialLeverageNew = ({
     }));
   }, [finalSimulationData.updateRate]);
 
-  // Sincronizar estado do embutido com o componente pai
-  useEffect(() => {
-    if (setEmbutido && embutidoState !== embutido) {
-      setEmbutido(embutidoState);
-    }
-  }, [embutidoState, setEmbutido, embutido]);
-
-  // Sincronizar estado do embutido recebido do componente pai
+  // Sincronizar estado do embutido - apenas quando embutido muda
   useEffect(() => {
     if (embutido && embutido !== embutidoState) {
       setEmbutidoState(embutido);
@@ -297,21 +290,7 @@ export const PatrimonialLeverageNew = ({
                 </div>
               )}
             </div>
-            {/* Botões Com/Sem embutido */}
-            <div className="flex gap-2 mb-2">
-              <Button
-                variant={embutidoState === 'com' ? 'default' : 'outline'}
-                onClick={() => setEmbutidoState('com')}
-              >
-                Com embutido
-              </Button>
-              <Button
-                variant={embutidoState === 'sem' ? 'default' : 'outline'}
-                onClick={() => setEmbutidoState('sem')}
-              >
-                Sem embutido
-              </Button>
-            </div>
+
             {/* Informações do imóvel */}
             {leverageData && (
               <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground mt-2">

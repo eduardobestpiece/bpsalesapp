@@ -110,23 +110,24 @@ export const calculateCapitalGain = (purchasePercentage: number, creditValue: nu
 export const calculatePatrimonialEvolution = (data: SimulatorData) => {
   const consortiumCalc = calculateConsortium(data);
   const airbnbCalc = calculateAirbnb(consortiumCalc);
-  
+
   const contemplationMonths = data.contemplationPeriod;
   const totalMonths = data.simulationTime;
-  const propertiesAcquired = Math.floor(totalMonths / contemplationMonths);
-  
-  const evolution = [];
+
   let totalProperties = 0;
   let totalEquity = 0;
   let totalPassiveIncome = 0;
-  
-  for (let month = 0; month <= totalMonths; month += contemplationMonths) {
-    if (month > 0) {
+
+  const evolution = [];
+
+  for (let month = 1; month <= totalMonths; month++) {
+    // Só adquire imóvel no mês de contemplação e seus múltiplos
+    if (month % contemplationMonths === 0) {
       totalProperties++;
       totalEquity += airbnbCalc.paidPropertyValue;
       totalPassiveIncome += airbnbCalc.activeCashGeneration;
     }
-    
+
     evolution.push({
       month,
       properties: totalProperties,
@@ -134,7 +135,7 @@ export const calculatePatrimonialEvolution = (data: SimulatorData) => {
       passiveIncome: totalPassiveIncome
     });
   }
-  
+
   return evolution;
 };
 

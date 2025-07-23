@@ -1,29 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import { FullScreenModal } from '../ui/FullScreenModal';
 import { Button } from '../ui/button';
-import { Switch } from '../ui/switch';
 import { Input } from '../ui/input';
-import { Checkbox } from '../ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { useCompany } from '@/contexts/CompanyContext';
 import { toast } from '../ui/use-toast';
-import { Tooltip } from '../ui/tooltip';
-import { Info } from 'lucide-react';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
 
 interface SimulatorConfigModalProps {
   open: boolean;
   onClose: () => void;
   onApply: () => void;
-  onSaveAndApply: () => void;
+  onSaveAndApply: (config: Record<string, unknown>) => void;
   onReset: () => void;
-  setManualTerm?: (term?: number) => void; // nova prop opcional
-  selectedTerm?: number;
-  setSelectedTerm?: (term: number) => void;
-  adminTaxPercent?: number;
-  reserveFundPercent?: number;
-  // Novos props para sincronização de filtros principais
+  // Props para sincronização com o header
   searchType: string;
   setSearchType: (v: string) => void;
   value: number;
@@ -34,47 +26,13 @@ interface SimulatorConfigModalProps {
   setInstallmentType: (v: string) => void;
   contemplationMonth?: number;
   setContemplationMonth?: (v: number) => void;
+  agioPercent: number;
+  setAgioPercent: (v: number) => void;
 }
 
 type Administrator = Database['public']['Tables']['administrators']['Row'];
-type BidType = Database['public']['Tables']['bid_types']['Row'];
 type InstallmentType = Database['public']['Tables']['installment_types']['Row'];
 type Product = Database['public']['Tables']['products']['Row'];
-
-const manualFields = [
-  'parcelas',
-  'taxaAdministracao',
-  'fundoReserva',
-  'reducaoParcela',
-  'atualizacaoAnual',
-  'atualizacaoAnualCredito',
-];
-
-type ManualFieldsState = {
-  parcelas: boolean;
-  taxaAdministracao: boolean;
-  fundoReserva: boolean;
-  reducaoParcela: boolean;
-  atualizacaoAnual: boolean;
-  atualizacaoAnualCredito: boolean;
-};
-
-const initialManualFields: ManualFieldsState = {
-  parcelas: false,
-  taxaAdministracao: false,
-  fundoReserva: false,
-  reducaoParcela: false,
-  atualizacaoAnual: false,
-  atualizacaoAnualCredito: false,
-};
-
-// Opções para o campo de aplicação da redução de parcela
-const applicationsOptions = [
-  { value: 'installment', label: 'Parcela' },
-  { value: 'admin_tax', label: 'Taxa de administração' },
-  { value: 'reserve_fund', label: 'Fundo de reserva' },
-  { value: 'insurance', label: 'Seguro' },
-];
 
 export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   open,
@@ -82,11 +40,6 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   onApply,
   onSaveAndApply,
   onReset,
-  setManualTerm,
-  selectedTerm,
-  setSelectedTerm,
-  adminTaxPercent,
-  reserveFundPercent,
   searchType,
   setSearchType,
   value,
@@ -97,47 +50,77 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   setInstallmentType,
   contemplationMonth = 6,
   setContemplationMonth,
+  agioPercent,
+  setAgioPercent,
 }) => {
+  const { user, companyId } = useCrmAuth();
   const { selectedCompanyId } = useCompany();
   
-  // Estado individual dos campos
-  const [manualFieldsState, setManualFieldsState] = useState<ManualFieldsState>(initialManualFields);
+  // Estados locais para os campos
+  const [localSearchType, setLocalSearchType] = useState(searchType);
+  const [localValue, setLocalValue] = useState(value);
+  const [localTerm, setLocalTerm] = useState(term);
+  const [localInstallmentType, setLocalInstallmentType] = useState(installmentType);
+  const [localContemplationMonth, setLocalContemplationMonth] = useState(contemplationMonth);
+  const [localAdminTaxPercent, setLocalAdminTaxPercent] = useState<number>(0);
+  const [localReserveFundPercent, setLocalReserveFundPercent] = useState<number>(0);
+  const [localAnnualUpdateRate, setLocalAnnualUpdateRate] = useState<number>(6);
+  const [isAdminTaxCustomized, setIsAdminTaxCustomized] = useState<boolean>(false);
+  const [isReserveFundCustomized, setIsReserveFundCustomized] = useState<boolean>(false);
+  const [isAnnualUpdateCustomized, setIsAnnualUpdateCustomized] = useState<boolean>(false);
+  // Adicionar estado local para Ágio (%)
+  const [localAgioPercent, setLocalAgioPercent] = useState<number>(agioPercent);
 
-  // Dados do Supabase
+  // Dados do banco
   const [administrators, setAdministrators] = useState<Administrator[]>([]);
-  const [bidTypes, setBidTypes] = useState<BidType[]>([]);
   const [installmentTypes, setInstallmentTypes] = useState<InstallmentType[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
-  const [reducoesParcela, setReducoesParcela] = useState<any[]>([]);
+  const [reducoesParcela, setReducoesParcela] = useState<Array<{ id: string; name: string }>>([]);
 
-  // Seleções do usuário
+  // Estados selecionados
   const [selectedAdministratorId, setSelectedAdministratorId] = useState<string | null>(null);
-  const [selectedBidTypeId, setSelectedBidTypeId] = useState<string | null>(null);
-  const [selectedInstallmentTypeId, setSelectedInstallmentTypeId] = useState<string | null>(null);
   const [selectedCreditType, setSelectedCreditType] = useState<string | null>(null);
 
-  // Estados para campos dinâmicos
-  const [adminTax, setAdminTax] = useState<string>('');
-  const [reserveFund, setReserveFund] = useState<string>('');
-  const [insuranceMode, setInsuranceMode] = useState<'incluir' | 'nao_incluir'>('nao_incluir');
-  const [insurancePercent, setInsurancePercent] = useState<string>('1');
+  // Controle de mudanças
+  const [hasChanges, setHasChanges] = useState(false);
 
-  // Estados para Atualização Anual (campo novo com padrão 6%)
-  const [annualUpdate, setAnnualUpdate] = useState<string>('6');
+  // Sincronizar estados locais com props quando modal abrir
+  useEffect(() => {
+    if (open) {
+      // Definir valores padrão se não estiverem definidos
+      const defaultSearchType = searchType || 'contribution';
+      const defaultValue = value || 0;
+      const defaultTerm = term || 120;
+      const defaultInstallmentType = installmentType || 'full';
+      const defaultContemplationMonth = contemplationMonth || 6;
+      
+      setLocalSearchType(defaultSearchType);
+      setLocalValue(defaultValue);
+      setLocalTerm(defaultTerm);
+      setLocalInstallmentType(defaultInstallmentType);
+      setLocalContemplationMonth(defaultContemplationMonth);
+      setLocalAgioPercent(agioPercent);
+      setHasChanges(false);
+    }
+  }, [open, searchType, value, term, installmentType, contemplationMonth, agioPercent]);
 
-  // Estados para Redução de Parcela
-  const [reductionPercent, setReductionPercent] = useState<string>('');
-  const [reductionApplications, setReductionApplications] = useState<string[]>([]);
-  
-  // Estados para Atualização Anual do Crédito
-  const [updatePercent, setUpdatePercent] = useState<string>('');
-  const [updateType, setUpdateType] = useState<string>('');
-  const [updateMonth, setUpdateMonth] = useState<string>('');
-  const [updateGrace, setUpdateGrace] = useState<string>('');
+  // Detectar mudanças
+  useEffect(() => {
+    const changed = 
+      localSearchType !== searchType ||
+      localValue !== value ||
+      localTerm !== term ||
+      localInstallmentType !== installmentType ||
+      localContemplationMonth !== contemplationMonth ||
+      localAgioPercent !== agioPercent;
+    
+    setHasChanges(changed);
+  }, [localSearchType, localValue, localTerm, localInstallmentType, localContemplationMonth, localAgioPercent, searchType, value, term, installmentType, contemplationMonth, agioPercent]);
 
-  // Buscar administradoras ao abrir o modal
+  // Buscar administradoras
   useEffect(() => {
     if (!open || !selectedCompanyId) return;
+    
     const fetchAdministrators = async () => {
       const { data, error } = await supabase
         .from('administrators')
@@ -145,80 +128,73 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
         .eq('company_id', selectedCompanyId)
         .eq('is_archived', false)
         .order('name');
+      
       if (!error && data) {
         setAdministrators(data);
-        const defaultAdmin = data.find((a) => a.is_default);
-        setSelectedAdministratorId(defaultAdmin ? defaultAdmin.id : data[0]?.id || null);
+        // Selecionar administradora padrão
+        const defaultAdmin = data.find(a => a.is_default) || data[0];
+        if (defaultAdmin) {
+          setSelectedAdministratorId(defaultAdmin.id);
+        }
       }
     };
+    
     fetchAdministrators();
   }, [open, selectedCompanyId]);
 
-  // Buscar tipos de crédito ao selecionar administradora
+  // Buscar tipos de parcelas
   useEffect(() => {
     if (!selectedAdministratorId) return;
-    const fetchBidTypes = async () => {
+    
+    const fetchInstallmentTypes = async () => {
       const { data, error } = await supabase
-        .from('bid_types')
+        .from('installment_types')
         .select('*')
         .eq('administrator_id', selectedAdministratorId)
         .eq('is_archived', false)
-        .order('name');
+        .order('installment_count');
+      
       if (!error && data) {
-        setBidTypes(data);
-        setSelectedBidTypeId(data[0]?.id || null);
+        setInstallmentTypes(data);
+        // Definir número de parcelas padrão se não estiver definido
+        if (data.length > 0 && !localTerm) {
+          const defaultTerm = data.find(it => it.is_default) || data[0];
+          setLocalTerm(defaultTerm.installment_count);
+        }
       }
     };
-    fetchBidTypes();
-  }, [selectedAdministratorId]);
-
-  // Buscar installment_types ao selecionar administradora
-  useEffect(() => {
-    let adminId = selectedAdministratorId;
-    if (!adminId && administrators.length > 0) {
-      const defaultAdmin = administrators.find(a => a.is_default);
-      adminId = defaultAdmin ? defaultAdmin.id : administrators[0].id;
-      setSelectedAdministratorId(adminId);
-    }
-    if (adminId) {
-      const fetchInstallmentTypes = async () => {
-        const { data, error } = await supabase
-          .from('installment_types')
-          .select('*')
-          .eq('administrator_id', adminId)
-          .eq('is_archived', false)
-          .order('installment_count');
-        if (!error && data) {
-          setInstallmentTypes(data);
-        } else {
-          setInstallmentTypes([]);
-        }
-      };
+    
       fetchInstallmentTypes();
-    }
-  }, [selectedAdministratorId, administrators]);
+  }, [selectedAdministratorId, localTerm]);
 
-  // Buscar produtos ao selecionar administradora
+  // Buscar produtos
   useEffect(() => {
     if (!selectedAdministratorId) return;
+    
     const fetchProducts = async () => {
       const { data, error } = await supabase
         .from('products')
         .select('*')
         .eq('administrator_id', selectedAdministratorId)
         .eq('is_archived', false);
+      
       if (!error && data) {
         setProducts(data);
-      } else {
-        setProducts([]);
+        // Definir tipo de crédito padrão
+        if (data.length > 0) {
+          const defaultProduct = data.find(p => p.is_default) || data[0];
+          setSelectedCreditType(defaultProduct.type);
+        }
       }
     };
+    
     fetchProducts();
   }, [selectedAdministratorId]);
 
-  // Buscar reduções de parcela ao selecionar administradora
+  // Buscar reduções de parcela
   useEffect(() => {
     if (!selectedAdministratorId || !selectedCompanyId) return;
+    
     const fetchReducoesParcela = async () => {
       const { data, error } = await supabase
         .from('installment_reductions')
@@ -226,350 +202,320 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
         .eq('administrator_id', selectedAdministratorId)
         .eq('company_id', selectedCompanyId)
         .eq('is_archived', false);
+      
       if (!error && data) {
         setReducoesParcela(data);
-      } else {
-        setReducoesParcela([]);
+        // Definir tipo de parcela padrão se não estiver definido
+        if (data.length > 0 && !localInstallmentType) {
+          const defaultReduction = data.find(r => r.is_default) || data[0];
+          setLocalInstallmentType(defaultReduction.id);
+        }
       }
     };
+    
     fetchReducoesParcela();
-  }, [selectedAdministratorId, selectedCompanyId]);
+  }, [selectedAdministratorId, selectedCompanyId, localInstallmentType]);
 
-  // Buscar product_installment_types ao selecionar produto
-  const [productInstallmentTypes, setProductInstallmentTypes] = useState<{ product_id: string, installment_type_id: string }[]>([]);
-  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
-
+  // Buscar valores da parcela selecionada (taxa de administração, fundo de reserva e atualização anual)
   useEffect(() => {
-    if (!selectedProductId) return;
-    const fetchProductInstallmentTypes = async () => {
+    if (!selectedAdministratorId || !localTerm) return;
+    
+    const fetchInstallmentDetails = async () => {
       const { data, error } = await supabase
-        .from('product_installment_types')
-        .select('product_id, installment_type_id')
-        .eq('product_id', selectedProductId);
-      if (!error && data) {
-        setProductInstallmentTypes(data);
+        .from('installment_types')
+        .select('admin_tax_percent, reserve_fund_percent, annual_update_rate')
+        .eq('administrator_id', selectedAdministratorId)
+        .eq('installment_count', localTerm)
+        .eq('is_archived', false)
+        .limit(1);
+      
+      if (!error && data && data.length > 0) {
+        const installment = data[0];
+        console.log('📊 [DEBUG] Dados da parcela encontrados:', installment);
+        
+        // Só atualizar se não foram customizados pelo usuário
+        if (!isAdminTaxCustomized) {
+          setLocalAdminTaxPercent(installment.admin_tax_percent || 0);
+        }
+        if (!isReserveFundCustomized) {
+          setLocalReserveFundPercent(installment.reserve_fund_percent || 0);
+        }
+        if (!isAnnualUpdateCustomized) {
+          setLocalAnnualUpdateRate(installment.annual_update_rate || 6);
+        }
       } else {
-        setProductInstallmentTypes([]);
+        console.log('⚠️ [DEBUG] Nenhuma parcela encontrada para:', { selectedAdministratorId, localTerm });
+        if (!isAdminTaxCustomized) {
+          setLocalAdminTaxPercent(0);
+        }
+        if (!isReserveFundCustomized) {
+          setLocalReserveFundPercent(0);
+        }
+        if (!isAnnualUpdateCustomized) {
+          setLocalAnnualUpdateRate(6);
+        }
       }
     };
-    fetchProductInstallmentTypes();
-  }, [selectedProductId]);
+    
+    fetchInstallmentDetails();
+  }, [selectedAdministratorId, localTerm, isAdminTaxCustomized, isReserveFundCustomized, isAnnualUpdateCustomized]);
 
-  // Atualizar selectedProductId ao trocar administradora ou tipo de crédito
-  useEffect(() => {
-    if (products.length > 0 && selectedCreditType) {
-      const product = products.find(p => p.type === selectedCreditType);
-      setSelectedProductId(product?.id || null);
-    } else {
-      setSelectedProductId(null);
-    }
-  }, [products, selectedCreditType]);
-
-  // Extrair tipos únicos dos produtos e traduzir para português
+  // Definir tipos de crédito baseado nos produtos
   const creditTypes = Array.from(new Set(products.map(p => p.type))).filter(Boolean);
   
   // Função para traduzir tipos de crédito
   const translateCreditType = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'property':
-        return 'Imóvel';
-      case 'vehicle':
-        return 'Veículo';
-      default:
-        return type;
-    }
+    const translations: { [key: string]: string } = {
+      'property': 'Imóvel',
+      'car': 'Carro',
+      'residential': 'Residencial',
+      'commercial': 'Comercial',
+      'land': 'Terreno',
+    };
+    return translations[type] || type;
   };
 
-  // Resetar tipo de crédito selecionado ao trocar administradora
-  useEffect(() => {
-    if (creditTypes.length > 0) {
-      setSelectedCreditType(creditTypes[0]);
-    } else {
-      setSelectedCreditType(null);
-    }
-  }, [selectedAdministratorId, creditTypes.length]);
-
-  // Resetar parcela selecionada se não existir mais ao trocar administradora ou tipo de crédito
-  useEffect(() => {
-    if (!manualFieldsState.parcelas) {
-      const validInstallments = installmentTypes.filter(
-        it => it.administrator_id === selectedAdministratorId
-      );
-      if (!validInstallments.find(it => it.id === selectedInstallmentTypeId)) {
-        setSelectedInstallmentTypeId(validInstallments[0]?.id || null);
-      }
-    }
-  }, [selectedAdministratorId, selectedCreditType, installmentTypes, manualFieldsState.parcelas]);
-
-  // Atualizar valores automáticos ao trocar parcela (Sistema)
-  useEffect(() => {
-    if (!manualFieldsState.taxaAdministracao && selectedInstallmentTypeId) {
-      const selected = installmentTypes.find((it) => it.installment_count.toString() === selectedInstallmentTypeId);
-      setAdminTax(selected?.admin_tax_percent?.toString() || '');
-    }
-  }, [manualFieldsState.taxaAdministracao, selectedInstallmentTypeId, installmentTypes]);
-
-  useEffect(() => {
-    if (!manualFieldsState.fundoReserva && selectedInstallmentTypeId) {
-      const selected = installmentTypes.find((it) => it.installment_count.toString() === selectedInstallmentTypeId);
-      setReserveFund(selected?.reserve_fund_percent?.toString() || '');
-    }
-  }, [manualFieldsState.fundoReserva, selectedInstallmentTypeId, installmentTypes]);
-
-  // Atualizar seguro automático ao trocar parcela (Sistema)
-  useEffect(() => {
-    if (insuranceMode === 'incluir' && !manualFieldsState.parcelas && selectedInstallmentTypeId) {
-      const selected = installmentTypes.find((it) => it.id === selectedInstallmentTypeId);
-      setInsurancePercent(selected?.insurance_percent?.toString() || '1');
-    }
-  }, [insuranceMode, manualFieldsState.parcelas, selectedInstallmentTypeId, installmentTypes]);
-
-  // Buscar valores automáticos para Redução de Parcela (Sistema)
-  useEffect(() => {
-    if (!manualFieldsState.reducaoParcela && selectedInstallmentTypeId) {
-      // Só executa se selectedAdministratorId for válido
-      if (!selectedAdministratorId) {
-        setReductionPercent('');
-        setReductionApplications([]);
-        return;
-      }
-      const fetchReduction = async () => {
-        const { data } = await supabase
-          .from('installment_reductions')
-          .select('*')
-          .eq('administrator_id', selectedAdministratorId)
-          .eq('company_id', selectedCompanyId)
-          .eq('is_archived', false)
-          .limit(1);
-        if (data && data.length > 0) {
-          setReductionPercent(data[0].reduction_percent?.toString() || '');
-          setReductionApplications(data[0].applications || []);
-        } else {
-          setReductionPercent('');
-          setReductionApplications([]);
-        }
-      };
-      fetchReduction();
-    }
-  }, [manualFieldsState.reducaoParcela, selectedInstallmentTypeId, selectedAdministratorId, selectedCompanyId]);
-
-  // Buscar valores automáticos para Atualização Anual do Crédito (Sistema)
-  useEffect(() => {
-    if (!manualFieldsState.atualizacaoAnualCredito && selectedAdministratorId) {
-      const admin = administrators.find(a => a.id === selectedAdministratorId);
-      setUpdateType(admin?.credit_update_type || '');
-      setUpdateMonth(admin?.update_month?.toString() || '');
-      setUpdateGrace(admin?.grace_period_days?.toString() || '');
-      
-      // Definir percentual baseado no tipo de crédito
-      if (selectedCreditType === 'property') {
-        setUpdatePercent('INCC');
-      } else if (selectedCreditType === 'vehicle') {
-        setUpdatePercent('IPCA');
-      } else {
-        setUpdatePercent('');
-      }
-    }
-  }, [manualFieldsState.atualizacaoAnualCredito, selectedAdministratorId, administrators, selectedCreditType]);
-
-  // Resetar valores ao abrir modal
-  useEffect(() => {
-    if (open) {
-      // Se houver configuração salva, carregar os valores
-      const loadConfig = async () => {
-        const userId = localStorage.getItem('user_id');
-        if (!userId || !selectedCompanyId) return;
-        const { data } = await supabase
-          .from('simulator_configurations')
-          .select('configuration')
-          .eq('user_id', userId)
-          .eq('company_id', selectedCompanyId)
-          .single();
-        if (data && data.configuration) {
-          const config = data.configuration as any;
-          setSelectedAdministratorId(config.administratorId || null);
-          setSelectedBidTypeId(config.bidTypeId || null);
-          setSelectedInstallmentTypeId(config.installmentTypeId || null);
-          setSelectedCreditType(config.creditType || null);
-          setManualFieldsState(config.manualFields || initialManualFields);
-          setAdminTax(config.adminTax || '');
-          setReserveFund(config.reserveFund || '');
-          setInsuranceMode(config.insuranceMode || 'nao_incluir');
-          setInsurancePercent(config.insurancePercent || '1');
-          setAnnualUpdate(config.annualUpdate || '6');
-          setReductionPercent(config.reductionPercent || '');
-          setReductionApplications(config.reductionApplications || []);
-          setUpdatePercent(config.updatePercent || '');
-          setUpdateType(config.updateType || '');
-          setUpdateMonth(config.updateMonth || '');
-          setUpdateGrace(config.updateGrace || '');
-        } else {
-          setAdminTax('');
-          setReserveFund('');
-          setInsuranceMode('nao_incluir');
-          setInsurancePercent('1');
-          setAnnualUpdate('6');
-          setReductionPercent('');
-          setReductionApplications([]);
-          setUpdatePercent('');
-          setUpdateType('');
-          setUpdateMonth('');
-          setUpdateGrace('');
-          setManualFieldsState(initialManualFields);
-          setSelectedInstallmentTypeId(null);
-        }
-      };
-      loadConfig();
-    }
-  }, [open, selectedCompanyId]);
-
-  // Atualizar valores automáticos ao abrir modal ou ao receber novos percentuais
-  useEffect(() => {
-    if (!manualFieldsState.taxaAdministracao && adminTaxPercent !== undefined) {
-      setAdminTax(adminTaxPercent.toString());
-    }
-  }, [manualFieldsState.taxaAdministracao, adminTaxPercent]);
-
-  useEffect(() => {
-    if (!manualFieldsState.fundoReserva && reserveFundPercent !== undefined) {
-      setReserveFund(reserveFundPercent.toString());
-    }
-  }, [manualFieldsState.fundoReserva, reserveFundPercent]);
-
-  // Sincronizar parcelas e tipo de parcela do simulador principal
-  useEffect(() => {
-    if (term && !manualFieldsState.parcelas) {
-      setSelectedInstallmentTypeId(term.toString());
-    }
-  }, [term, manualFieldsState.parcelas]);
-
-  useEffect(() => {
-    if (installmentType && !manualFieldsState.parcelas) {
-      const foundType = installmentTypes.find(it => it.name === installmentType);
-      if (foundType) {
-        setSelectedInstallmentTypeId(foundType.id);
-      }
-    }
-  }, [installmentType, installmentTypes, manualFieldsState.parcelas]);
-
-  // Função para calcular o estado do switch global
-  const getGlobalSwitchState = () => {
-    const values = Object.values(manualFieldsState);
-    if (values.every(v => v)) return true;
-    if (values.every(v => !v)) return false;
-    return null; // misto
-  };
-
-  const globalSwitchState = getGlobalSwitchState();
-
-  const handleGlobalSwitch = (checked: boolean) => {
-    setManualFieldsState({
-      parcelas: checked,
-      taxaAdministracao: checked,
-      fundoReserva: checked,
-      reducaoParcela: checked,
-      atualizacaoAnual: checked,
-      atualizacaoAnualCredito: checked,
-    });
-  };
-
-  // Alternância individual
-  const handleFieldSwitch = (field: keyof ManualFieldsState, checked: boolean) => {
-    setManualFieldsState((prev) => ({ ...prev, [field]: checked }));
-  };
-
-  // Aplicar localmente
+  // Função para aplicar mudanças
   const handleApply = () => {
-    // Sincronizar valores com o simulador principal
-    if (manualFieldsState.parcelas && selectedInstallmentTypeId) {
-      const selectedType = installmentTypes.find(it => it.id === selectedInstallmentTypeId);
-      if (selectedType?.installment_count) {
-        setTerm(selectedType.installment_count);
-      }
-    }
+    console.log('🔧 [DEBUG] Aplicando mudanças:', {
+      searchType: localSearchType,
+      value: localValue,
+      term: localTerm,
+      installmentType: localInstallmentType,
+      contemplationMonth: localContemplationMonth,
+      adminTaxPercent: localAdminTaxPercent,
+      reserveFundPercent: localReserveFundPercent,
+      annualUpdateRate: localAnnualUpdateRate
+    });
     
-    if (manualFieldsState.parcelas && selectedInstallmentTypeId) {
-      const selectedType = installmentTypes.find(it => it.id === selectedInstallmentTypeId);
-      if (selectedType?.name) {
-        setInstallmentType(selectedType.name);
-      }
-    }
+    console.log('🔧 [DEBUG] Funções disponíveis:', {
+      setSearchType: typeof setSearchType,
+      setValue: typeof setValue,
+      setTerm: typeof setTerm,
+      setInstallmentType: typeof setInstallmentType,
+      setContemplationMonth: typeof setContemplationMonth
+    });
     
-    // Sincronizar Tipo de Parcela com o cabeçalho
-    if (installmentType) {
-      setInstallmentType(installmentType);
-    }
+    console.log('🔧 [DEBUG] Valores atuais no header:', {
+      searchType,
+      value,
+      term,
+      installmentType,
+      contemplationMonth
+    });
     
-    toast({ title: 'Configuração aplicada localmente!' });
+    console.log('🔄 [DEBUG] Chamando funções de atualização...');
+    
+    setSearchType(localSearchType);
+    console.log('✅ [DEBUG] setSearchType chamado com:', localSearchType);
+    
+    setValue(localValue);
+    console.log('✅ [DEBUG] setValue chamado com:', localValue);
+    
+    setTerm(localTerm);
+    console.log('✅ [DEBUG] setTerm chamado com:', localTerm);
+    
+    setInstallmentType(localInstallmentType);
+    console.log('✅ [DEBUG] setInstallmentType chamado com:', localInstallmentType);
+    
+    if (setContemplationMonth) {
+      setContemplationMonth(localContemplationMonth);
+      console.log('✅ [DEBUG] setContemplationMonth chamado com:', localContemplationMonth);
+    } else {
+      console.log('⚠️ [DEBUG] setContemplationMonth não está disponível');
+    }
+
+    if (typeof window !== 'undefined') {
+      (window as any).globalAgioPercent = localAgioPercent;
+    }
+    setAgioPercent(localAgioPercent);
+    
+    console.log('✅ [DEBUG] Mudanças aplicadas ao header');
+    toast({ title: 'Configurações aplicadas!' });
     onApply();
   };
 
-  // Salvar e aplicar no Supabase
+  // Função para salvar e aplicar
   const handleSaveAndApply = async () => {
-    if (!selectedCompanyId) return;
-    const config = {
-      administratorId: selectedAdministratorId,
-      bidTypeId: selectedBidTypeId,
-      installmentTypeId: selectedInstallmentTypeId,
-      creditType: selectedCreditType,
-      manualFields: manualFieldsState,
-      adminTax,
-      reserveFund,
-      insuranceMode,
-      insurancePercent,
-      annualUpdate,
-      reductionPercent,
-      reductionApplications,
-      updatePercent,
-      updateType,
-      updateMonth,
-      updateGrace,
-    };
-    
     try {
-      const userId = localStorage.getItem('user_id');
-      if (!userId) {
-        toast({ title: 'Usuário não identificado!', variant: 'destructive' });
+      console.log('🔧 [DEBUG] Iniciando save and apply...');
+      
+      const { data: { user: crmUser } } = await supabase.auth.getUser();
+      if (!crmUser || !companyId) {
+        console.log('❌ [DEBUG] Usuário não autenticado ou companyId não encontrado');
+        toast({ title: 'Erro: Usuário não autenticado!', variant: 'destructive' });
         return;
       }
       
-      const { error } = await supabase
-        .from('simulator_configurations')
-        .upsert([
-          {
-            user_id: userId,
-            company_id: selectedCompanyId,
-            configuration: config,
-            updated_at: new Date().toISOString(),
-          },
-        ], { onConflict: 'user_id,company_id' });
+      const config = {
+        searchType: localSearchType,
+        value: localValue,
+        term: localTerm,
+        installmentType: localInstallmentType,
+        contemplationMonth: localContemplationMonth,
+        administratorId: selectedAdministratorId,
+        creditType: selectedCreditType,
+        adminTaxPercent: localAdminTaxPercent,
+        reserveFundPercent: localReserveFundPercent,
+        annualUpdateRate: localAnnualUpdateRate,
+        isAdminTaxCustomized,
+        isReserveFundCustomized,
+        isAnnualUpdateCustomized,
+        agioPercent: localAgioPercent,
+      };
+      
+      console.log('📊 [DEBUG] Configuração a ser salva:', config);
+      
+      // Salvar no banco de dados
+      try {
+        console.log('🔧 [DEBUG] Dados do usuário:', {
+          userId: crmUser?.id,
+          companyId: companyId,
+          user: crmUser
+        });
         
-      if (error) {
-        toast({ title: 'Erro ao salvar configuração!', description: error.message, variant: 'destructive' });
-      } else {
-        toast({ title: 'Configuração salva e aplicada com sucesso!' });
-        onSaveAndApply();
+        // Verificar se temos os dados necessários
+        if (!crmUser?.id) {
+          console.error('❌ [DEBUG] crmUser.id não encontrado');
+          return;
+        }
+        
+        if (!companyId) {
+          console.error('❌ [DEBUG] companyId não encontrado');
+          return;
+        }
+        
+        const { error: insertError } = await supabase
+          .from('simulator_configurations')
+          .insert({
+            user_id: crmUser.id,
+            company_id: companyId,
+            configuration: {
+              searchType: config.searchType,
+              value: config.value,
+              term: config.term,
+              installmentType: config.installmentType,
+              contemplationMonth: config.contemplationMonth,
+              administratorId: config.administratorId,
+              creditType: config.creditType,
+              adminTaxPercent: config.adminTaxPercent,
+              reserveFundPercent: config.reserveFundPercent,
+              annualUpdateRate: config.annualUpdateRate,
+              isAdminTaxCustomized: config.isAdminTaxCustomized,
+              isReserveFundCustomized: config.isReserveFundCustomized,
+              isAnnualUpdateCustomized: config.isAnnualUpdateCustomized,
+            }
+          });
+        
+        if (insertError) {
+          console.log('⚠️ [DEBUG] Erro na inserção, tentando update:', insertError);
+          
+          // Se erro de conflito, tentar update
+          const { error: updateError } = await supabase
+            .from('simulator_configurations')
+            .update({
+                          configuration: {
+              searchType: config.searchType,
+              value: config.value,
+              term: config.term,
+              installmentType: config.installmentType,
+              contemplationMonth: config.contemplationMonth,
+              administratorId: config.administratorId,
+              creditType: config.creditType,
+              adminTaxPercent: config.adminTaxPercent,
+              reserveFundPercent: config.reserveFundPercent,
+              annualUpdateRate: config.annualUpdateRate,
+              isAdminTaxCustomized: config.isAdminTaxCustomized,
+              isReserveFundCustomized: config.isReserveFundCustomized,
+              isAnnualUpdateCustomized: config.isAnnualUpdateCustomized,
+            },
+              updated_at: new Date().toISOString(),
+            })
+            .eq('user_id', crmUser.id)
+            .eq('company_id', companyId);
+          
+          if (updateError) {
+            console.error('❌ [DEBUG] Erro no update:', updateError);
+            return;
+          }
+        }
+        
+        console.log('✅ [DEBUG] Configuração atualizada com sucesso');
+        
+        // Aplicar mudanças ao header
+        console.log('🔄 [DEBUG] Aplicando mudanças ao header...');
+        console.log('🔧 [DEBUG] Aplicando mudanças:', config);
+        
+        // Verificar se as funções estão disponíveis
+        console.log('🔧 [DEBUG] Funções disponíveis:', {
+          setSearchType: typeof setSearchType,
+          setValue: typeof setValue,
+          setTerm: typeof setTerm,
+          setInstallmentType: typeof setInstallmentType,
+          setContemplationMonth: typeof setContemplationMonth,
+        });
+        
+        // Aplicar mudanças
+        console.log('🔄 [DEBUG] Chamando funções de atualização...');
+        
+        // Atualizar valores no contexto global
+        if (setSearchType) {
+          console.log('🔄 [DEBUG] handleFieldChange chamado:', { field: 'searchType', value: config.searchType });
+          setSearchType(config.searchType);
+        }
+        
+        if (setValue) {
+          console.log('🔄 [DEBUG] handleFieldChange chamado:', { field: 'value', value: config.value });
+          setValue(config.value);
+        }
+        
+        if (setTerm) {
+          console.log('🔄 [DEBUG] handleTermChange chamado:', { value: config.term });
+          setTerm(config.term);
+        }
+        
+        if (setInstallmentType) {
+          console.log('🔄 [DEBUG] handleFieldChange chamado:', { field: 'installmentType', value: config.installmentType });
+          setInstallmentType(config.installmentType);
+        }
+        
+        if (setContemplationMonth) {
+          console.log('🔄 [DEBUG] handleFieldChange chamado:', { field: 'contemplationMonth', value: config.contemplationMonth });
+          setContemplationMonth(config.contemplationMonth);
+        }
+
+        if (typeof window !== 'undefined') {
+          (window as any).globalAgioPercent = localAgioPercent;
+        }
+        
+        // Atualizar valores customizados
+        console.log('🔄 [DEBUG] Atualizando valores customizados...');
+        console.log('🔄 [DEBUG] handleFieldChange chamado:', { field: 'adminTaxPercent', value: config.adminTaxPercent });
+        console.log('🔄 [DEBUG] handleFieldChange chamado:', { field: 'reserveFundPercent', value: config.reserveFundPercent });
+        console.log('🔄 [DEBUG] handleFieldChange chamado:', { field: 'isAdminTaxCustomized', value: config.isAdminTaxCustomized });
+        console.log('🔄 [DEBUG] handleFieldChange chamado:', { field: 'isReserveFundCustomized', value: config.isReserveFundCustomized });
+        
+        console.log('✅ [DEBUG] Mudanças aplicadas ao header');
+        
+        onSaveAndApply(config);
+      } catch (error) {
+        console.error('❌ [DEBUG] Erro ao salvar configuração:', error);
       }
-    } catch (err: any) {
-      toast({ title: 'Erro inesperado!', description: err.message, variant: 'destructive' });
+    } catch (err: unknown) {
+      console.log('❌ [DEBUG] Erro inesperado:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+      toast({ title: 'Erro inesperado!', description: errorMessage, variant: 'destructive' });
     }
   };
 
-  // Redefinir para padrão
+  // Função para resetar
   const handleReset = () => {
-    setManualFieldsState(initialManualFields);
-    setAdminTax('');
-    setReserveFund('');
-    setInsuranceMode('nao_incluir');
-    setInsurancePercent('1');
-    setAnnualUpdate('6');
-    setReductionPercent('');
-    setReductionApplications([]);
-    setUpdatePercent('');
-    setUpdateType('');
-    setUpdateMonth('');
-    setUpdateGrace('');
-    toast({ title: 'Configurações redefinidas para o padrão.' });
+    setLocalSearchType(searchType);
+    setLocalValue(value);
+    setLocalTerm(term);
+    setLocalInstallmentType(installmentType);
+    setLocalContemplationMonth(contemplationMonth);
+    toast({ title: 'Configurações redefinidas!' });
     onReset();
   };
 
@@ -578,22 +524,9 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
       isOpen={open}
       onClose={onClose}
       title="Mais configurações"
+      hasChanges={hasChanges}
       actions={
         <>
-          <div className="flex items-center gap-2 mr-4">
-            <span className="text-xs text-muted-foreground">Sistema</span>
-            <Switch
-              checked={globalSwitchState === true}
-              onCheckedChange={handleGlobalSwitch}
-              className={globalSwitchState === null ? 'bg-gray-400 border border-gray-500' : ''}
-            />
-            <span className="text-xs text-muted-foreground">Manual</span>
-            {globalSwitchState === null && (
-              <div title="Alguns campos estão em Manual, outros em Sistema">
-                <Info size={16} className="text-muted-foreground" />
-              </div>
-            )}
-          </div>
           <Button variant="outline" onClick={handleReset}>
             Redefinir
           </Button>
@@ -607,37 +540,39 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
       }
     >
       <div className="space-y-6">
-          {/* Administradora */}
+        {/* Linha 1: Administradora */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium">Administradora</label>
+          <label className="block text-sm font-medium text-white">Administradora</label>
             <Select
               value={selectedAdministratorId || ''}
               onValueChange={setSelectedAdministratorId}
             >
-              <SelectTrigger className="w-full">
+            <SelectTrigger className="w-full bg-[#2A2A2A] border-gray-600 text-white hover:bg-[#3A3A3A] focus:ring-2 focus:ring-blue-500">
                 <SelectValue placeholder="Selecione uma administradora..." />
               </SelectTrigger>
-              <SelectContent>
+            <SelectContent className="bg-[#2A2A2A] border-gray-600">
                 {administrators.map((admin) => (
-                  <SelectItem key={admin.id} value={admin.id}>{admin.name}</SelectItem>
+                <SelectItem key={admin.id} value={admin.id} className="text-white hover:bg-[#3A3A3A]">
+                  {admin.name}
+                </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Tipo de Crédito */}
+        {/* Linha 2: Tipo de Crédito */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium">Tipo de Imóvel</label>
+          <label className="block text-sm font-medium text-white">Tipo de Crédito</label>
             <Select
               value={selectedCreditType || ''}
               onValueChange={setSelectedCreditType}
             >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione um tipo de imóvel..." />
+            <SelectTrigger className="w-full bg-[#2A2A2A] border-gray-600 text-white hover:bg-[#3A3A3A] focus:ring-2 focus:ring-blue-500">
+              <SelectValue placeholder="Selecione um tipo de crédito..." />
               </SelectTrigger>
-              <SelectContent>
+            <SelectContent className="bg-[#2A2A2A] border-gray-600">
                 {creditTypes.map((type) => (
-                  <SelectItem key={type} value={type}>
+                <SelectItem key={type} value={type} className="text-white hover:bg-[#3A3A3A]">
                     {translateCreditType(type)}
                   </SelectItem>
                 ))}
@@ -645,76 +580,46 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
             </Select>
           </div>
 
-          {/* Modalidade */}
+        {/* Linha 3: Tipo de Parcela */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium">Modalidade</label>
+          <label className="block text-sm font-medium text-white">Tipo de Parcela</label>
             <Select
-              value={searchType}
-              onValueChange={setSearchType}
+            value={localInstallmentType}
+            onValueChange={setLocalInstallmentType}
             >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione a modalidade..." />
+            <SelectTrigger className="w-full bg-[#2A2A2A] border-gray-600 text-white hover:bg-[#3A3A3A] focus:ring-2 focus:ring-blue-500">
+              <SelectValue placeholder="Selecione o tipo de parcela..." />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="contribution">Aporte</SelectItem>
-                <SelectItem value="credit">Crédito</SelectItem>
+            <SelectContent className="bg-[#2A2A2A] border-gray-600">
+              <SelectItem value="full" className="text-white hover:bg-[#3A3A3A]">
+                Parcela Cheia
+              </SelectItem>
+              {reducoesParcela.map((reducao) => (
+                <SelectItem key={reducao.id} value={reducao.id} className="text-white hover:bg-[#3A3A3A]">
+                  {reducao.name}
+                </SelectItem>
+              ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Valor do aporte/crédito */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium">
-              {searchType === 'contribution' ? 'Valor do aporte' : 'Valor do crédito'}
-            </label>
-            <Input
-              type="number"
-              placeholder="0,00"
-              value={value}
-              onChange={e => setValue(Number(e.target.value))}
-            />
-          </div>
-
+        {/* Linha 4: Número de parcelas, Mês Contemplação e Ágio (%) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Número de parcelas */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium">Número de parcelas</label>
+            <label className="block text-sm font-medium text-white">Número de parcelas</label>
             <Select
-              value={term.toString()}
-              onValueChange={v => setTerm(Number(v))}
+              value={localTerm.toString()}
+              onValueChange={(value) => setLocalTerm(Number(value))}
             >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione a quantidade de parcelas..." />
+              <SelectTrigger className="w-full bg-[#2A2A2A] border-gray-600 text-white hover:bg-[#3A3A3A] focus:ring-2 focus:ring-blue-500">
+                <SelectValue placeholder="Selecione o número de parcelas..." />
               </SelectTrigger>
-              <SelectContent>
-                {installmentTypes.map((it) => (
-                  <SelectItem key={it.id} value={it.installment_count.toString()}>
-                    {it.installment_count}
+              <SelectContent className="bg-[#2A2A2A] border-gray-600">
+                {installmentTypes.map((type) => (
+                  <SelectItem key={type.id} value={type.installment_count.toString()} className="text-white hover:bg-[#3A3A3A]">
+                    {type.installment_count}
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Tipo de Parcela */}
-          <div className="space-y-2">
-            <label className="block text-sm font-medium">Tipo de Parcela</label>
-            <Select
-              value={installmentType}
-              onValueChange={v => {
-                setInstallmentType(v);
-                // Sincronizar com o cabeçalho do simulador
-                if (setInstallmentType) {
-                  setInstallmentType(v);
-                }
-              }}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione o tipo de parcela..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="full">Parcela Cheia</SelectItem>
-                {reducoesParcela.map((red: any) => (
-                  <SelectItem key={red.id} value={red.id}>{red.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -722,16 +627,108 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
 
           {/* Mês Contemplação */}
           <div className="space-y-2">
-            <label className="block text-sm font-medium">Mês Contemplação</label>
+            <label className="block text-sm font-medium text-white">Mês Contemplação</label>
             <Input
               type="number"
+              value={localContemplationMonth}
+              onChange={(e) => setLocalContemplationMonth(Number(e.target.value))}
               placeholder="6"
               min={1}
-              value={contemplationMonth || ''}
-              onChange={e => setContemplationMonth(e.target.value ? Number(e.target.value) : 6)}
+              className="w-full bg-[#2A2A2A] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Ágio (%) */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-white">Ágio (%)</label>
+            <Input
+              type="number"
+              value={localAgioPercent}
+              onChange={(e) => setLocalAgioPercent(Number(e.target.value))}
+              placeholder="17"
+              min={0}
+              max={100}
+              step={0.1}
+              className="w-full bg-[#2A2A2A] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
             />
           </div>
         </div>
+
+        {/* Linha 5: Modalidade e Valor do aporte */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Modalidade */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-white">Modalidade</label>
+            <Select
+              value={localSearchType}
+              onValueChange={setLocalSearchType}
+            >
+              <SelectTrigger className="w-full bg-[#2A2A2A] border-gray-600 text-white hover:bg-[#3A3A3A] focus:ring-2 focus:ring-blue-500">
+                <SelectValue placeholder="Selecione a modalidade..." />
+              </SelectTrigger>
+              <SelectContent className="bg-[#2A2A2A] border-gray-600">
+                <SelectItem value="contribution" className="text-white hover:bg-[#3A3A3A]">
+                  Aporte
+                </SelectItem>
+                <SelectItem value="credit" className="text-white hover:bg-[#3A3A3A]">
+                  Crédito
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Valor do aporte */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-white">Valor do aporte</label>
+            <Input
+              type="number"
+              value={localValue}
+              onChange={(e) => setLocalValue(Number(e.target.value))}
+              placeholder="0,00"
+              className="w-full bg-[#2A2A2A] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+
+        {/* Linha 6: Taxa de administração (%), Fundo de reserva (%) e Atualização anual (%) */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Taxa de administração (%) */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-white">Taxa de administração (%)</label>
+            <Input
+              type="number"
+              value={localAdminTaxPercent}
+              onChange={(e) => setLocalAdminTaxPercent(Number(e.target.value))}
+              placeholder="0,00"
+              className="w-full bg-[#2A2A2A] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Fundo de reserva (%) */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-white">Fundo de reserva (%)</label>
+            <Input
+              type="number"
+              value={localReserveFundPercent}
+              onChange={(e) => setLocalReserveFundPercent(Number(e.target.value))}
+              placeholder="0,00"
+              className="w-full bg-[#2A2A2A] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          {/* Atualização anual (%) */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-white">Atualização anual (%)</label>
+            <Input
+              type="number"
+              value={localAnnualUpdateRate}
+              onChange={(e) => setLocalAnnualUpdateRate(Number(e.target.value))}
+              placeholder="6,00"
+              className="w-full bg-[#2A2A2A] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+        </div>
+      </div>
     </FullScreenModal>
   );
 };

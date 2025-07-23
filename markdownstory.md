@@ -1,4 +1,138 @@
-## 📅 **Última Atualização:** 2025-01-27
+## 📅 **Última Atualização:** 2025-01-15
+
+### 🎯 **Correções nos Botões "Com embutido" e "Sem embutido"**
+
+**Status:** ✅ **CONCLUÍDO**
+
+#### **🔧 Correções Implementadas:**
+
+**✅ 1. Bug dos Botões Disparando - Corrigido:**
+- **Problema Identificado:** Loop infinito causado por dois `useEffect` sincronizando bidirecionalmente
+- **Causa Raiz:** `useEffect` no `PatrimonialLeverageNew` causando sincronização circular
+- **Solução Implementada:** 
+  - Removido `useEffect` que sincronizava do componente pai para o filho
+  - Mantido apenas `useEffect` que sincroniza do filho para o pai
+  - Adicionada verificação nos botões para evitar cliques desnecessários
+- **Código Corrigido:**
+  ```typescript
+  // ANTES (problemático):
+  useEffect(() => {
+    if (setEmbutido && embutidoState !== embutido) {
+      setEmbutido(embutidoState);
+    }
+  }, [embutidoState, setEmbutido, embutido]);
+  
+  useEffect(() => {
+    if (embutido && embutido !== embutidoState) {
+      setEmbutidoState(embutido);
+    }
+  }, [embutido, embutidoState]);
+  
+  // DEPOIS (corrigido):
+  useEffect(() => {
+    if (embutido && embutido !== embutidoState) {
+      setEmbutidoState(embutido);
+    }
+  }, [embutido]);
+  
+  // Botões com verificação:
+  onClick={() => {
+    if (embutido !== 'com') {
+      setEmbutido('com');
+    }
+  }}
+  ```
+
+**✅ 2. Redução do Espaçamento - Implementado:**
+- **Alteração:** Mudança de `mb-4` para `mb-2` nos botões
+- **Resultado:** Espaçamento reduzido pela metade conforme solicitado
+- **Layout:** Botões mantêm funcionalidade com espaçamento otimizado
+
+**📁 Arquivos Modificados:**
+- `src/components/Simulator/PatrimonialLeverageNew.tsx`
+- `src/components/Simulator/CreditAccessPanel.tsx`
+
+**🎯 Resultado:**
+- ✅ Botões "Com embutido" e "Sem embutido" funcionando sem disparos
+- ✅ Troca suave entre estados sem loops infinitos
+- ✅ Espaçamento reduzido pela metade conforme solicitado
+- ✅ Funcionalidade completa mantida
+- ✅ Performance otimizada sem re-renderizações desnecessárias
+
+---
+
+### 🎯 **Implementação do Campo "Atualização Anual"**
+
+**Status:** ✅ **CONCLUÍDO**
+
+#### **🔧 Mudanças Implementadas:**
+
+**✅ Campo "Atualização Anual (%):**
+- **Localização:** Mesma linha dos campos "Taxa de administração" e "Fundo de reserva"
+- **Layout:** Grid de 3 colunas responsivo
+- **Valor Padrão:** 6.00 (6%)
+- **Funcionalidade:** Carrega automaticamente valor da parcela, permite edição
+
+**✅ Banco de Dados:**
+- **Migração:** Adicionado campo `annual_update_rate` na tabela `installment_types`
+- **Tipo:** NUMERIC com valor padrão 6.00
+- **Comentário:** Explicativo sobre o uso do campo
+
+**✅ Correção de Bug:**
+- **Problema:** Campos de taxa de administração e fundo de reserva pararam de funcionar
+- **Causa:** Lógica incorreta na passagem de valores customizados
+- **Solução:** Corrigida passagem de valores e adicionados logs para debug
+
+**📁 Arquivos Modificados:**
+- `src/components/Simulator/SimulatorConfigModal.tsx`
+- `src/components/Simulator/NewSimulatorLayout.tsx`
+- `src/components/Simulator/DetailTable.tsx`
+- `supabase/migrations/20250115000000-add-annual-update-rate.sql`
+
+**🎯 Resultado:**
+- ✅ Campo "Atualização anual" implementado e funcionando
+- ✅ Campos de taxa de administração e fundo de reserva corrigidos
+- ✅ Sistema de customização mantido
+- ✅ Logs adicionados para facilitar debug
+
+---
+
+### 🎯 **Modal no Padrão Google Tag Manager**
+
+**Status:** ✅ **CONCLUÍDO**
+
+#### **🔧 Funcionalidade Implementada:**
+
+**✅ Comportamento do Modal:**
+- **Sobreposição Total:** Modal se sobrepõe a toda a tela, incluindo barra de navegação superior e menu lateral
+- **Ocupação Vertical:** Modal ocupa 100vh (altura total da viewport)
+- **Largura:** 70% da largura da tela, da direita para esquerda
+- **Posicionamento:** Inicia do topo absoluto da tela (top: 0)
+- **Cobertura Completa:** Overlay cobre toda a tela desde o topo absoluto
+
+**✅ Animações:**
+- **Abertura:** Slide da direita para esquerda (300ms ease-out)
+- **Fechamento:** Slide da esquerda para direita
+- **Overlay:** Fundo preto com 50% de opacidade
+
+**✅ Funcionalidades:**
+- **Scroll Interno:** Conteúdo do modal com scroll independente
+- **Header Fixo:** Cabeçalho fixo com título e botões de ação
+- **Fechamento:** Clique no overlay, ESC ou botão X
+- **Prevenção de Scroll:** Body bloqueado quando modal aberto
+- **Z-index Elevado:** z-[99999] para overlay e z-[100000] para modal, garantindo sobreposição completa
+- **Portal:** Renderizado diretamente no body usando React Portal para garantir sobreposição total
+
+**📁 Arquivo Modificado:**
+- `src/components/ui/FullScreenModal.tsx`
+
+**🎯 Resultado:**
+- ✅ Modal funciona exatamente como Google Tag Manager
+- ✅ Sobreposição completa da página
+- ✅ Animações suaves e profissionais
+- ✅ Experiência de usuário consistente
+
+---
 
 ### 🎯 **Cabeçalho Fixo na Tabela "Detalhamento do Consórcio"**
 
@@ -1228,3 +1362,383 @@
 - Pronto para migração gradual dos demais modais
 
 **Resultado:** Interface mais profissional e moderna, seguindo padrões de UX de ferramentas enterprise como Google Tag Manager! 🚀
+
+## 📅 **2024-12-19 - Melhorias de Responsividade e Correção de Campos**
+
+### 🎯 **Responsividade do Modal:**
+- **Desktop:** Modal ocupa 70% da largura da tela
+- **Mobile:** Modal ocupa 100% da largura da tela
+- **Largura máxima:** 95% em telas grandes
+- **Largura mínima:** 70% em todas as telas
+- **Container dos campos:** Responsivo com min-w-[70%] e max-w-[95%]
+
+### 🎯 **Correção dos Campos do Modal:**
+- **Cores dos campos:** Fundo #2A2A2A, bordas cinza
+- **Estados hover:** Fundo #3A3A3A para melhor feedback visual
+- **Focus states:** Anel azul (focus:ring-2 focus:ring-blue-500)
+- **Textos:** Brancos para melhor contraste
+- **Placeholders:** Cinza claro para melhor legibilidade
+- **Labels:** Brancos para consistência visual
+
+### 🎯 **Melhorias de UX:**
+- **Campos interativos:** Todos os selects e inputs agora são clicáveis
+- **Feedback visual:** Hover states em todos os elementos interativos
+- **Acessibilidade:** Focus states bem definidos
+- **Responsividade:** Layout adapta-se a diferentes tamanhos de tela
+
+## 📅 **2024-12-19 - Responsividade Avançada e Correção de Campos**
+
+### 🎯 **Responsividade Específica do Modal:**
+- **Desktop (md+):** Container ocupa 70% do espaço
+- **Tablet (sm-md):** Container ocupa 80% do espaço  
+- **Mobile (< sm):** Container ocupa 95% do espaço
+- **Modal:** 70% da tela em desktop, 100% em mobile
+
+### 🎯 **Animações de Entrada e Saída:**
+- **Entrada:** Modal desliza da direita para a esquerda
+- **Saída:** Modal desliza da esquerda para a direita
+- **Duração:** 300ms com easing suave
+- **Transição:** Transform com translate-x
+
+### 🎯 **Controle de Fechamento:**
+- **Clique fora:** Fecha automaticamente se não há mudanças
+- **ESC:** Fecha com tecla ESC
+- **X:** Botão de fechar no header
+- **Proteção:** Não fecha se há mudanças não salvas
+
+### 🎯 **Correção dos Campos:**
+- **Administradora:** Agora carrega a administradora padrão automaticamente
+- **Tipo de Crédito:** Renomeado de "Tipo de Imóvel" para "Tipo de Crédito"
+- **Número de Parcelas:** Sincronizado com os dados do header do simulador
+- **Tipo de Parcela:** Sincronizado com as reduções disponíveis
+- **Campos Interativos:** Todos os campos agora são clicáveis e funcionais
+
+### 🎯 **Melhorias de UX:**
+- **Sincronização:** Campos sincronizados com dados do header
+- **Valores Padrão:** Carregamento automático de valores padrão
+- **Feedback Visual:** Estados hover e focus bem definidos
+- **Responsividade:** Layout adapta-se perfeitamente a qualquer dispositivo
+
+## 📅 **2024-12-19 - Refatoração Completa do Modal "Mais Configurações"**
+
+### 🎯 **Nova Estrutura Simplificada:**
+- **Administradora:** Carrega automaticamente a administradora padrão da empresa
+- **Tipo de Crédito:** Se é carro ou imóvel (property/car)
+- **Modalidade:** Sincronizado com o campo "Modalidade" do header
+- **Valor do aporte:** Sincronizado com o campo "Valor do aporte" do header
+- **Número de parcelas:** Sincronizado com o campo "Número de parcelas" do header
+- **Tipo de Parcela:** Sincronizado com o campo "Tipo de Parcela" do header
+- **Mês Contemplação:** Sincronizado com o campo "Mês Contemplação" do header
+
+### 🎯 **Melhorias Implementadas:**
+- **Estados Locais:** Cada campo tem seu próprio estado local para controle independente
+- **Detecção de Mudanças:** Sistema automático para detectar se há alterações não salvas
+- **Sincronização Bidirecional:** Mudanças no modal refletem no header e vice-versa
+- **Controle de Fechamento:** Modal não fecha se há mudanças não salvas
+- **Interface Limpa:** Removidos campos desnecessários e switches complexos
+
+### 🎯 **Funcionalidades:**
+- **Aplicar:** Aplica mudanças temporariamente sem salvar
+- **Salvar e Aplicar:** Salva no banco e aplica as mudanças
+- **Redefinir:** Volta aos valores originais do header
+- **Responsividade:** Mantém a responsividade 70%/80%/95% implementada
+
+### 🎯 **Correções Técnicas:**
+- **Tabela Correta:** Corrigido nome da tabela de `user_simulator_configurations` para `simulator_configurations`
+- **Estados Locais:** Implementado sistema de estados locais para controle independente
+- **Sincronização:** Melhorada a sincronização entre modal e header
+- **Validação:** Adicionada validação para mês de contemplação (1-12)
+- **Erro 409 Corrigido:** Substituído upsert por insert/update para evitar conflitos de constraint
+- **Logs de Debug Adicionados:** Implementados logs detalhados para investigar por que apenas o campo "Mês Contemplação" está funcionando
+- **Valores Padrão Corrigidos:** Adicionada lógica para definir valores padrão nos campos quando os dados são carregados
+- **Z-Index Corrigido:** Aumentado z-index do modal e SelectContent para resolver problema dos dropdowns não abrirem
+- **Sincronização Debug:** Adicionados logs para investigar problema do valor não sendo aplicado ao header
+- **Logs de Debug Detalhados:** Adicionados logs específicos para verificar funções e valores durante a sincronização
+- **Logs de Sincronização Expandidos:** Adicionados logs detalhados em handleFieldChange e handleTermChange para rastrear o fluxo de dados
+- **Sincronização de Contextos Corrigida:** Adicionada atualização do contexto global do simulador para garantir que as mudanças apareçam no header
+- **Campos de Taxa Adicionados:** Adicionados campos "Taxa de administração" e "Fundo de reserva" que puxam automaticamente os valores da parcela selecionada
+- **Layout do Modal Ajustado:** Reorganizado layout para que campos de valor, taxa e fundo fiquem na mesma linha, e campo de parcelas movido para antes do valor
+- **Campos de Taxa Editáveis:** Implementados campos editáveis de "Taxa de administração" e "Fundo de reserva" com lógica condicional para usar valores customizados em todos os cálculos do simulador
+- **Sincronização de Valores Customizados Corrigida:** Corrigida a passagem de valores customizados do modal para os componentes de cálculo, garantindo que os valores editados sejam aplicados corretamente
+- **Estrutura da Tabela Corrigida:** Corrigida a estrutura da tabela simulator_configurations para usar a coluna configuration (jsonb) conforme o schema existente
+- **CompanyId Corrigido:** Corrigido o uso do companyId para usar o valor do contexto CrmAuth em vez de user?.company_id
+- **Logs de Debug Adicionados:** Adicionados logs detalhados no CreditAccessPanel para debugar os cálculos de crédito acessado com valores customizados
+- **Lógica Iterativa Implementada:** Implementada lógica iterativa que aumenta automaticamente o crédito acessado até que a parcela chegue ou passe um pouco do valor do aporte, otimizando o cálculo com taxas customizadas
+- **Sincronização de Cards com Tabela:** Implementada sincronização dos cards "Crédito Acessado" e "Valor da Parcela" do header com os valores da primeira linha da tabela "Detalhamento do Consórcio"
+- **Correção de Erro onFirstRowData:** Corrigido erro de referência undefined no DetailTable, adicionando onFirstRowData na desestruturação dos props e passando callback opcional no UnifiedSimulator
+- **Correção de Sincronização de Taxas Customizadas:** Corrigido problema onde taxas customizadas não eram aplicadas nos cálculos, atualizando CreditAccessPanel para receber valores via props e corrigindo handleFieldChange para não converter installmentType incorretamente
+- **Correção de Erro de Banco de Dados:** Corrigido erro de user_id não encontrado na tabela crm_users, alterando para usar crmUser.id em vez de user.id no SimulatorConfigModal
+- **Reorganização do Layout do Modal:** Reorganizado layout do modal "Mais configurações" em 6 linhas bem definidas: Linha 1 (Administradora), Linha 2 (Tipo de Crédito), Linha 3 (Tipo de Parcela), Linha 4 (Número de parcelas e Mês Contemplação), Linha 5 (Modalidade e Valor do aporte), Linha 6 (Taxa de administração e Fundo de reserva) com layout responsivo para desktop/tablet e mobile
+- **Correção do Cálculo da Taxa Anual:** Corrigido cálculo da "Taxa anual" para incluir tanto a taxa de administração quanto o fundo de reserva, somando ambos os valores antes de calcular a taxa anual
+
+### 🎯 **Correção: Evolução Patrimonial - Início no mês de contemplação**
+
+**Status:** ✅ **CONCLUÍDO**
+
+- A evolução patrimonial agora inicia apenas no mês de contemplação definido pelo usuário.
+- O gráfico não mostra mais pontos zerados antes do mês de contemplação.
+- Implementação no `SingleLeverage.tsx` - loop alterado para iniciar no `contemplationMonth`.
+
+# Histórico de Atividades - Projeto Monteo
+
+## 2024-12-19
+
+### ✅ **Implementação da Alavancagem Escalonada**
+- **Arquivo**: `src/components/Simulator/NovaAlavancagemPatrimonial.tsx`
+- **Funcionalidades implementadas**:
+  - **Contemplações múltiplas**: Após cada contemplação, adiciona novo crédito no mesmo valor
+  - **Patrimônio ao final**: Soma de todos os patrimônios de todas as contemplações
+  - **Renda passiva**: Renda do primeiro imóvel + fluxos de caixa de todos os imóveis contemplados
+  - **Gráfico**: Mostra casinha a cada contemplação com aumento progressivo
+  - **Cálculos**: Contemplações a cada 240 meses com valorização do patrimônio anterior
+- **Lógica**:
+  - Primeira contemplação: patrimônio inicial
+  - Contemplações subsequentes: patrimônio anterior valorizado + novo patrimônio
+  - Rendimentos acumulados de todos os imóveis contemplados
+- **Status**: ✅ Concluído
+
+### ✅ **Remoção da Seção "Antiga Alavancagem Patrimonial"**
+- **Arquivo**: `src/components/Simulator/NewSimulatorLayout.tsx`
+- **Mudança**: Removida completamente a seção "Antiga Alavancagem Patrimonial" do simulador
+- **Detalhes**:
+  - Removido o import do componente `PatrimonialLeverageNew`
+  - Removida a seção de renderização da alavancagem antiga
+  - Removida a referência `leverageSectionRef` que não é mais necessária
+  - Ajustada a função de navegação para não incluir mais a seção removida
+- **Status**: ✅ Concluído
+
+### ✅ **Valores Padrão na Nova Alavancagem Patrimonial**
+- **Arquivo**: `src/components/Simulator/NovaAlavancagemPatrimonial.tsx`
+- **Mudanças**:
+  - Campo "Valor da alavanca" agora vem preenchido com R$ 500.000,00 por padrão
+  - Campo "Selecione a alavancagem" automaticamente seleciona o Airbnb
+  - Ambos os campos permanecem totalmente editáveis
+- **Status**: ✅ Concluído
+
+### ✅ **Ajustes nos Cálculos da Nova Alavancagem Patrimonial**
+- **Arquivo**: `src/components/Simulator/NovaAlavancagemPatrimonial.tsx`
+- **Mudanças**:
+  - **Pago do Próprio Bolso**: Ajustado para considerar acúmulo de caixa
+    - Fórmula: `(Soma das Parcelas pagas - Acúmulo de Caixa) / Valor do patrimônio na contemplação * 100`
+  - **Pago pelo Inquilino**: Mantido como complemento do valor líquido pago pelo próprio bolso
+- **Status**: ✅ Concluído
+
+### ✅ **Aprimoramento do Gráfico de Evolução Patrimonial**
+- **Arquivo**: `src/components/Simulator/PatrimonyChart.tsx`
+- **Mudanças**:
+  - Adicionado mês adicional após o período (sem parcela do consórcio)
+  - Novas informações no tooltip:
+    - **Acúmulo de Caixa**: Soma de todos os fluxos de caixa
+    - **Valorização**: Valorização apenas daquele mês
+    - **Valorização Acumulada**: Soma de todas as valorizações
+    - **Ganho**: Fluxo de caixa + valorização do mês
+    - **Ganho Total**: Valorização acumulada + acúmulo de caixa
+  - Comportamento de clique: tooltip fica aberto ao clicar, fecha ao clicar novamente
+- **Status**: ✅ Concluído
+
+### ✅ **Correção do Patrimônio ao Final**
+- **Arquivo**: `src/components/Simulator/NovaAlavancagemPatrimonial.tsx`
+- **Mudança**: Corrigido cálculo do "Patrimônio ao final" para usar valorização mensal equivalente
+- **Resultado**: Valor agora bate exatamente com o gráfico (R$ 2.772.379)
+- **Status**: ✅ Concluído
+
+### ✅ **Renomeação do Campo "Fluxo de Caixa Pós 240 meses"**
+- **Arquivo**: `src/components/Simulator/NovaAlavancagemPatrimonial.tsx`
+- **Mudança**: Renomeado para "Renda passiva" e corrigido valor para mostrar rendimentos do último mês
+- **Status**: ✅ Concluído
+
+### ✅ **Refatoração da Nova Alavancagem Patrimonial**
+- **Arquivo**: `src/components/Simulator/NovaAlavancagemPatrimonial.tsx`
+- **Mudanças**:
+  - Criado componente independente para "Nova Alavancagem Patrimonial"
+  - Integração com dados do `DetailTable` via props
+  - Cálculos dinâmicos baseados em alavancas do Supabase
+  - Gráfico de evolução patrimonial integrado
+- **Status**: ✅ Concluído
+
+### ✅ **Integração com Supabase**
+- **Arquivo**: `src/components/Simulator/NovaAlavancagemPatrimonial.tsx`
+- **Mudanças**:
+  - Busca dinâmica de alavancas da tabela `leverages`
+  - Cálculos baseados nos percentuais cadastrados
+  - Formatação monetária em tempo real
+- **Status**: ✅ Concluído
+
+### ✅ **Correção de Erros**
+- **Arquivo**: `src/components/Simulator/NovaAlavancagemPatrimonial.tsx`
+- **Problema**: Variável `ganhosMensais` definida duas vezes
+- **Solução**: Removida definição duplicada e organizado código
+- **Status**: ✅ Concluído
+
+### ✅ **Ajustes nos Cálculos de Rendimentos**
+- **Arquivo**: `src/components/Simulator/NovaAlavancagemPatrimonial.tsx`
+- **Mudança**: Aplicada fórmula correta dos rendimentos mensais
+- **Fórmula**: `((Patrimônio * Percentual da diária) * dias de ocupação) - ((Patrimônio * Percentual dos custos) + (((Patrimônio * Percentual da diária) * dias de ocupação) * Percentual da administradora))`
+- **Status**: ✅ Concluído
+
+### ✅ **Correção do Número de Imóveis**
+- **Arquivo**: `src/components/Simulator/NovaAlavancagemPatrimonial.tsx`
+- **Mudança**: Ajustado cálculo para usar "Crédito Acessado" da linha de contemplação
+- **Status**: ✅ Concluído
+
+### ✅ **Correção do Patrimônio Final**
+- **Arquivo**: `src/components/Simulator/NovaAlavancagemPatrimonial.tsx`
+- **Mudança**: Ajustado cálculo para considerar valorização anual composta
+- **Status**: ✅ Concluído
+
+### ✅ **Ajustes nos Percentuais**
+- **Arquivo**: `src/components/Simulator/NovaAlavancagemPatrimonial.tsx`
+- **Mudanças**:
+  - "Pago do Próprio Bolso" e "Pago pelo Inquilino" agora mostram percentuais
+  - Valores absolutos mantidos em labels secundários
+- **Status**: ✅ Concluído
+
+### ✅ **Correção do Gráfico**
+- **Arquivo**: `src/components/Simulator/NovaAlavancagemPatrimonial.tsx`
+- **Problemas resolvidos**:
+  - Gráfico mostrava zero antes da contemplação
+  - Valorização incorreta do patrimônio
+  - Rendimentos e fluxo de caixa não atualizavam corretamente
+- **Status**: ✅ Concluído
+
+### ✅ **Criação da Nova Alavancagem Patrimonial**
+- **Arquivo**: `src/components/Simulator/NovaAlavancagemPatrimonial.tsx`
+- **Funcionalidades implementadas**:
+  - Filtros com seleção de alavancagem e valor
+  - Informações da alavanca (valor da diária, ocupação, etc.)
+  - Resultados com patrimônio, ganhos e fluxo de caixa
+  - Gráfico de evolução patrimonial
+- **Status**: ✅ Concluído
+
+### ✅ **Integração no Layout Principal**
+- **Arquivo**: `src/components/Simulator/NewSimulatorLayout.tsx`
+- **Mudanças**:
+  - Adicionada seção "Nova Alavancagem Patrimonial"
+  - Integração com dados do `DetailTable`
+  - Passagem de props necessárias
+- **Status**: ✅ Concluído
+
+### ✅ **Refatoração da Alavancagem Patrimonial**
+- **Arquivo**: `src/components/Simulator/NewSimulatorLayout.tsx`
+- **Mudanças**:
+  - Renomeada seção existente para "Antiga Alavancagem Patrimonial"
+  - Adicionada nova seção "Nova Alavancagem Patrimonial"
+  - Mantidas ambas as seções para comparação
+- **Status**: ✅ Concluído
+
+### ✅ **Correção de Bugs no Simulador**
+- **Arquivo**: `src/components/Simulator/NewSimulatorLayout.tsx`
+- **Problemas resolvidos**:
+  - Erro de tipo no `useEffect`
+  - Problemas de sincronização de dados
+  - Bugs na navegação entre seções
+- **Status**: ✅ Concluído
+
+### ✅ **Melhorias na Interface**
+- **Arquivos**: Múltiplos componentes
+- **Mudanças**:
+  - Design mais limpo e organizado
+  - Melhor responsividade
+  - Tooltips informativos
+  - Navegação aprimorada
+- **Status**: ✅ Concluído
+
+### ✅ **Otimizações de Performance**
+- **Arquivos**: Múltiplos componentes
+- **Mudanças**:
+  - Uso de `useMemo` para cálculos pesados
+  - Otimização de re-renderizações
+  - Melhor gestão de estado
+- **Status**: ✅ Concluído
+
+---
+
+## Histórico Anterior
+
+### ✅ **Implementação do Sistema de Alavancagem**
+- **Data**: 2024-12-18
+- **Status**: ✅ Concluído
+
+### ✅ **Integração com Supabase**
+- **Data**: 2024-12-18
+- **Status**: ✅ Concluído
+
+### ✅ **Desenvolvimento do Simulador**
+- **Data**: 2024-12-17
+- **Status**: ✅ Concluído
+
+# Histórico de Atividades
+
+- [x] Adicionado campo "Ágio (%)" ao modal "Mais configurações", sincronizado com a seção "Ganho de Capital", na mesma linha de "Número de parcelas" e "Mês Contemplação". Valor agora é salvo/aplicado corretamente.
+- [x] Adicionada engrenagem de configurações na seção "Ganho de Capital", que exibe o campo "Ágio (%)" apenas ao clicar, oculto por padrão.
+- [x] Agora a seção "Ganho de Capital" só é exibida se o ROI da operação for maior ou igual a 110%. Se for menor, a seção é ocultada automaticamente.
+- [x] Corrigido cálculo da "Renda passiva" na etapa "Nova Alavancagem Patrimonial" para considerar o "Patrimônio ao final" em vez do patrimônio na contemplação.
+- [x] Ajustado cálculo da "Renda passiva" para Alavancagem Escalonada usar o Fluxo de Caixa do último mês do gráfico, enquanto Alavancagem Simples continua usando o patrimônio final.
+- [x] Corrigido cálculo do Fluxo de Caixa no gráfico da Nova Alavancagem Patrimonial para considerar a atualização anual da parcela, usando a mesma lógica da tabela de detalhamento.
+- [x] Corrigida lógica da Alavancagem Escalonada para considerar corretamente a adição de novos créditos a cada contemplação, incluindo custo inicial e atualizações de créditos anteriores.
+- [x] Adicionadas informações "Parcela do mês" e "Parcelas pagas" ao tooltip do gráfico de evolução patrimonial.
+- [x] Corrigido cálculo das parcelas pagas para incluir as parcelas pagas antes da contemplação no gráfico de evolução patrimonial.
+- [x] Corrigido valor da parcela no gráfico para usar a parcela inicial correta da tabela de detalhamento.
+- [x] Corrigido cálculo das parcelas para considerar atualização anual antes da contemplação e acumular parcelas pagas mês a mês corretamente.
+- [x] Corrigido cálculo da parcela pós-contemplação para usar o valor exato da tabela de detalhamento.
+
+### 🎯 **Correção da Parcela Pós-Contemplação no Gráfico**
+
+**Status:** ✅ **CONCLUÍDO**
+
+#### **🔧 Problema Identificado:**
+- **Problema:** Parcela pós-contemplação no gráfico mostrava R$ 10.716, mas deveria ser R$ 8.488,23 conforme tabela
+- **Causa:** Função `calcularParcelaComAtualizacao` aplicava atualização anual incorretamente para meses pós-contemplação
+
+#### **🔧 Solução Implementada:**
+
+**✅ Nova Função `calcularParcelaPosContemplacao`:**
+```typescript
+function calcularParcelaPosContemplacao(mes: number): number {
+  if (mes <= mesContemplacao) {
+    return 0;
+  }
+  
+  // Calcular quantos anos se passaram desde a contemplação
+  const anosDesdeContemplacao = Math.floor((mes - mesContemplacao - 1) / 12);
+  
+  // Usar parcelaAfterContemplacao como base (valor da tabela) e aplicar atualização anual
+  const parcelaAtualizada = parcelaAfterContemplacao * Math.pow(1 + taxaValorizacaoAnual, anosDesdeContemplacao);
+  
+  return parcelaAtualizada;
+}
+```
+
+**✅ Correções Aplicadas:**
+- **Mês de Contemplação:** Usar `parcelaAfterContemplacao` diretamente (valor exato da tabela)
+- **Meses Pós-Contemplação:** Usar `calcularParcelaPosContemplacao` para aplicar atualização anual corretamente
+- **Alavancagem Escalonada:** Aplicada mesma correção para todas as cotas
+
+**📁 Arquivos Modificados:**
+- `src/components/Simulator/NovaAlavancagemPatrimonial.tsx`
+
+**🎯 Resultado:**
+- ✅ Parcela pós-contemplação agora mostra R$ 8.488,23 (valor correto da tabela)
+- ✅ Atualização anual aplicada corretamente para meses subsequentes
+- ✅ Gráfico alinhado com a tabela de detalhamento
+- ✅ Funciona tanto para Alavancagem Simples quanto Escalonada
+- ✅ Parcelas não são calculadas após o prazo máximo do consórcio (240 meses)
+- ✅ Prazo máximo agora é dinâmico baseado no campo "Número de parcelas"
+- ✅ Alavancagem escalonada agora soma corretamente as parcelas de todos os créditos ativos
+- ✅ Parcela não atualiza no mês da contemplação, apenas 1 mês depois
+- ✅ Soma correta de parcelas existentes + novas parcelas na alavancagem escalonada
+- 🔍 Adicionados logs de debug para investigar problema na soma das parcelas
+
+# Histórico de Atividades
+
+- [Em andamento] Correção da lógica de amortização pós-contemplação na função generateConsortiumInstallments para manter parcelas e saldo devedor até o final do prazo, igual à tabela do consórcio. Ajuste realizado em src/utils/consortiumInstallments.ts.
+- [Em andamento] Adicionados logs detalhados para debug da função generateConsortiumInstallments, especialmente nos meses pós-contemplação, para identificar onde o saldo devedor está zerando antes do prazo.
+- [Em andamento] Correção da função generateConsortiumInstallments para usar exatamente a mesma lógica da tabela DetailTable.tsx, especialmente para parcelas especiais (reduzidas). A lógica agora é: (principal + adminTax + reserveFund) / prazo, onde principal = credit * (1 - reductionPercent), adminTax = credit * adminTaxRate (sem redução), reserveFund = credit * reserveFundRate (sem redução).
+- [Concluído] Correção do parâmetro creditoAcessado do gráfico NovaAlavancagemPatrimonial para usar os mesmos parâmetros da tabela (creditoAcessado || localSimulationData.value) em vez de firstRowCredit, garantindo que ambos usem os mesmos valores e parâmetros. Ajuste realizado em src/components/Simulator/NewSimulatorLayout.tsx.
+- [Em andamento] Correção da interface ChartDataPoint no PatrimonyChart.tsx para incluir o campo parcelaTabelaMes, permitindo que o gráfico acesse corretamente o valor da parcela da tabela.
+- [Em andamento] Adição do campo parcelaTabelaMes à interface ChartDataPoint para permitir que o gráfico acesse corretamente o valor da parcela da tabela.
+- [Em andamento] Adição de logs de debug para verificar o valor de parcelaTabelaMes que está sendo passado para o gráfico, especialmente para o mês 1.
+- [Em andamento] Adição de logs para verificar a estrutura do array parcelasTabela retornado pela função generateConsortiumInstallments, especialmente o primeiro elemento.
+- [Em andamento] Correção do acesso à propriedade da parcela. O objeto retornado pela função generateConsortiumInstallments tem a propriedade 'installmentValue', não 'valorParcela'.
+
+</rewritten_file>

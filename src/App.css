@@ -40,3 +40,52 @@
 .read-the-docs {
   color: #888;
 }
+
+thead th {
+  position: sticky !important;
+  top: 0;
+  z-index: 50;
+  background: #131313;
+}
+
+.sticky-header {
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  background: #131313;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Ocultar barra de rolagem do cabeçalho da tabela horizontal (NUNCA aparece) */
+.table-header-scrollbar {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE/Edge */
+  overflow-y: hidden !important;
+}
+.table-header-scrollbar::-webkit-scrollbar {
+  display: none !important; /* Safari/Chrome */
+  height: 0 !important;
+  background: transparent !important;
+}
+
+/* Customizar barra de rolagem do corpo da tabela */
+.table-body-scrollbar::-webkit-scrollbar {
+  height: 8px;
+  background: #131313;
+}
+.table-body-scrollbar::-webkit-scrollbar-thumb {
+  background: #1F1F1F;
+  border-radius: 8px;
+}
+.table-body-scrollbar {
+  scrollbar-color: #1F1F1F #131313;
+  scrollbar-width: thin;
+}
+
+/* Garantir alinhamento perfeito das colunas */
+.table-header-scrollbar table,
+.table-body-scrollbar table {
+  table-layout: fixed;
+  width: 100%;
+}

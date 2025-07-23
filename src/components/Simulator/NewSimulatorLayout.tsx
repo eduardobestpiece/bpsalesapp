@@ -11,9 +11,10 @@ import { SimulatorConfigModal } from './SimulatorConfigModal';
 import { useSimulatorSync } from '@/hooks/useSimulatorSync';
 import { DetailTable } from './DetailTable';
 import { CreditAccessPanel } from './CreditAccessPanel';
-import { PatrimonialLeverageNew } from './PatrimonialLeverageNew';
+
 import { useSimulatorContext } from '@/components/Layout/SimulatorLayout';
 import { CapitalGainSection } from './CapitalGainSection';
+import { NovaAlavancagemPatrimonial } from './NovaAlavancagemPatrimonial';
 
 export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   const { 
@@ -51,7 +52,6 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
   // Refs para navegação
   const creditSectionRef = useRef<HTMLDivElement>(null);
-  const leverageSectionRef = useRef<HTMLDivElement>(null);
   const detailSectionRef = useRef<HTMLDivElement>(null);
   const capitalSectionRef = useRef<HTMLDivElement>(null);
 
@@ -63,24 +63,65 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
   // Sincronizar campos do topo com simulationData e com o contexto global
   const handleFieldChange = (field: string, value: any) => {
-    setLocalSimulationData((prev) => ({ ...prev, [field]: value }));
+    console.log('🔄 [DEBUG] handleFieldChange chamado:', { field, value });
     
-    // Sincronizar com o contexto global do simulador
-    if (field === 'searchType') {
-      updateSimulationMode(value === 'contribution' ? 'aporte' : 'credito');
-    } else if (field === 'value') {
-      updateSimulationValue(value);
-    } else if (field === 'term') {
-      updateInstallments(value);
-    } else if (field === 'installmentType') {
-      updateInstallmentType(value === 'full' ? 'full' : value === 'half' ? 'half' : 'reduced');
-    } else if (field === 'contemplationMonth') {
-      // Atualizar o mês de contemplação no contexto global
-      simulatorContext.setSimulationData(prev => ({
-        ...prev,
-        contemplationMonth: value
-      }));
+    // Atualizar dados locais
+    setLocalSimulationData(prev => {
+      const updated = { ...prev, [field]: value };
+      console.log('✅ [DEBUG] localSimulationData atualizado');
+      return updated;
+    });
+    
+    // Atualizar contexto global do simulador
+    if (simulatorContext) {
+      console.log('🔄 [DEBUG] Atualizando', field, 'no contexto global');
+      
+      switch (field) {
+        case 'searchType':
+          simulatorContext.setSimulationData(prev => ({
+            ...prev,
+            mode: value === 'contribution' ? 'aporte' : 'credito'
+          }));
+          break;
+        case 'value':
+          simulatorContext.setSimulationData(prev => ({
+            ...prev,
+            value: value
+          }));
+          break;
+        case 'term':
+          simulatorContext.setSimulationData(prev => ({
+            ...prev,
+            installments: value
+          }));
+          break;
+        case 'installmentType':
+          simulatorContext.setSimulationData(prev => ({
+            ...prev,
+            installmentType: value
+          }));
+          break;
+        case 'contemplationMonth':
+          // Atualizar contemplationMonth no contexto
+          break;
+        case 'adminTaxPercent':
+          setAdminTaxPercent(value);
+          setIsAdminTaxCustomized(true);
+          break;
+        case 'reserveFundPercent':
+          setReserveFundPercent(value);
+          setIsReserveFundCustomized(true);
+          break;
+        case 'isAdminTaxCustomized':
+          setIsAdminTaxCustomized(value);
+          break;
+        case 'isReserveFundCustomized':
+          setIsReserveFundCustomized(value);
+          break;
+      }
     }
+    
+    console.log('✅ [DEBUG] handleFieldChange concluído');
   };
 
   // Menu fixo abaixo do cabeçalho - posicionado logo abaixo do header fixo
@@ -131,6 +172,41 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   // Adicionar estados para adminTaxPercent e reserveFundPercent
   const [adminTaxPercent, setAdminTaxPercent] = useState<number | undefined>(undefined);
   const [reserveFundPercent, setReserveFundPercent] = useState<number | undefined>(undefined);
+  const [annualUpdateRate, setAnnualUpdateRate] = useState<number | undefined>(undefined);
+  const [isAdminTaxCustomized, setIsAdminTaxCustomized] = useState<boolean>(false);
+  const [isReserveFundCustomized, setIsReserveFundCustomized] = useState<boolean>(false);
+  const [isAnnualUpdateCustomized, setIsAnnualUpdateCustomized] = useState<boolean>(false);
+  
+  // Estado para controlar recálculo automático
+  const [shouldRecalculateCredit, setShouldRecalculateCredit] = useState<boolean>(false);
+
+  // Adicionar estados para os valores da primeira linha da tabela
+  const [firstRowCredit, setFirstRowCredit] = useState<number | undefined>(undefined);
+  const [firstRowInstallmentValue, setFirstRowInstallmentValue] = useState<number | undefined>(undefined);
+  
+  // Resetar flag de recálculo após execução
+  useEffect(() => {
+    if (shouldRecalculateCredit) {
+      // Aguardar um pouco para garantir que o recálculo foi executado
+      const timer = setTimeout(() => {
+        setShouldRecalculateCredit(false);
+        console.log('🔄 [DEBUG] NewSimulatorLayout - Flag de recálculo resetado');
+      }, 100);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [shouldRecalculateCredit]);
+
+  // Log para debug dos dados passados para CreditAccessPanel
+  useEffect(() => {
+    console.log('🔄 [DEBUG] NewSimulatorLayout - Dados para CreditAccessPanel:', {
+      adminTaxPercent,
+      reserveFundPercent,
+      isAdminTaxCustomized,
+      isReserveFundCustomized,
+      shouldRecalculateCredit
+    });
+  }, [adminTaxPercent, reserveFundPercent, isAdminTaxCustomized, isReserveFundCustomized, shouldRecalculateCredit]);
 
   // Estado para reduções de parcela
   const [reducoesParcela, setReducoesParcela] = useState<any[]>([]);
@@ -143,8 +219,13 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
   // Atualizar selectedTerm ao mudar no simulador
   const handleTermChange = (value: number) => {
+    console.log('🔄 [DEBUG] handleTermChange chamado:', { value });
+    
     setSelectedTerm(value);
+    console.log('✅ [DEBUG] selectedTerm atualizado');
+    
     handleFieldChange('term', value);
+    console.log('✅ [DEBUG] handleTermChange concluído');
   };
 
   // Sincronizar dados locais com o contexto
@@ -171,11 +252,16 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   // Estado para embutido
   const [embutido, setEmbutido] = useState<'com' | 'sem'>('com');
 
+  // Estado para armazenar o valor de crédito acessado da contemplação e outros dados
+  const [creditoAcessadoContemplacao, setCreditoAcessadoContemplacao] = useState<number>(0);
+  const [parcelaAfterContemplacao, setParcelaAfterContemplacao] = useState<number>(0);
+  const [somaParcelasAteContemplacao, setSomaParcelasAteContemplacao] = useState<number>(0);
+  const [mesContemplacao, setMesContemplacao] = useState<number>(0);
+
   // Funções do menu lateral
   const handleNavigate = (section: string) => {
     const refs = {
       settings: creditSectionRef,
-      home: leverageSectionRef,
       search: detailSectionRef,
       capital: capitalSectionRef
     };
@@ -256,6 +342,17 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
     (window as any).lastMenuClick = now;
   };
 
+  // Estado para o ROI da operação
+  const [roiOperacao, setRoiOperacao] = useState<number | null>(null);
+
+  // Debug do ROI
+  useEffect(() => {
+    console.log('🔧 [DEBUG] NewSimulatorLayout - ROI recebido:', roiOperacao);
+    console.log('🔧 [DEBUG] NewSimulatorLayout - Deve exibir seção?', roiOperacao !== null && roiOperacao >= 110);
+  }, [roiOperacao]);
+
+  // Estado para o Ágio (%) global
+  const [agioPercent, setAgioPercent] = useState(17);
 
   return (
     <div className="flex flex-col gap-6 h-full relative w-full max-w-full">
@@ -336,27 +433,61 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
       {visibleSections.credit && (
         <div className="w-full">
           <CreditAccessPanel 
-            data={localSimulationData} 
+            data={{
+              ...localSimulationData,
+              adminTaxPercent: adminTaxPercent,
+              reserveFundPercent: reserveFundPercent,
+              isAdminTaxCustomized,
+              isReserveFundCustomized
+            }}
             onCreditoAcessado={setCreditoAcessado}
             onSelectedCreditsChange={setSelectedCredits}
-          />
-        </div>
-      )}
-
-      {/* Seção de Alavancagem Patrimonial - Entre crédito acessado e detalhamento */}
-      {visibleSections.leverage && (
-        <div ref={leverageSectionRef} className="w-full">
-          <PatrimonialLeverageNew 
-            simulationData={localSimulationData} 
-            creditoAcessado={creditoAcessado}
+            firstRowCredit={firstRowCredit}
+            firstRowInstallmentValue={firstRowInstallmentValue}
+            shouldRecalculateCredit={shouldRecalculateCredit}
             embutido={embutido}
             setEmbutido={setEmbutido}
           />
         </div>
       )}
 
+
+
+      {/* Seção de Nova Alavancagem Patrimonial */}
+      {visibleSections.leverage && (firstRowCredit > 0) && (
+        <div className="w-full mt-8">
+          <h2 className="text-xl font-bold mb-2">Nova Alavancagem Patrimonial</h2>
+          <NovaAlavancagemPatrimonial 
+            product={{ nominalCreditValue: firstRowCredit, termMonths: termValue }}
+            administrator={{ 
+              administrationRate: 0.27,
+              updateMonth: 8, // Agosto
+              gracePeriodDays: 90, // 90 dias de carência
+              inccRate: 6, // Taxa INCC 6%
+              postContemplationAdjustment: 0.5, // Ajuste pós contemplação 0.5%
+              maxEmbeddedPercentage: 25 // Máximo embutido 25%
+            }}
+            contemplationMonth={localSimulationData.contemplationMonth || 60}
+            selectedCredits={selectedCredits}
+            creditoAcessado={creditoAcessado || localSimulationData.value}
+            embutido={embutido}
+            installmentType={localSimulationData.installmentType} // Voltar a ser dinâmico
+            customAdminTaxPercent={adminTaxPercent}
+            customReserveFundPercent={reserveFundPercent}
+            customAnnualUpdateRate={annualUpdateRate}
+            maxEmbeddedPercentage={25}
+            creditoAcessadoContemplacao={creditoAcessadoContemplacao}
+            parcelaAfterContemplacao={parcelaAfterContemplacao}
+            somaParcelasAteContemplacao={somaParcelasAteContemplacao}
+            mesContemplacao={mesContemplacao}
+            parcelaInicial={firstRowInstallmentValue || 0}
+            prazoTotal={termValue}
+          />
+        </div>
+      )}
+
       {/* Seção de Ganho de Capital */}
-      {visibleSections.capital && (
+      {visibleSections.capital && (roiOperacao === null || roiOperacao >= 10) && (
         <div ref={capitalSectionRef} className="w-full">
           <CapitalGainSection 
             creditoAcessado={creditoAcessado}
@@ -373,6 +504,10 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             }}
             embutido={embutido}
             selectedCredits={selectedCredits}
+            customAnnualUpdateRate={annualUpdateRate}
+            agioPercent={agioPercent}
+            setAgioPercent={setAgioPercent}
+            onRoiChange={setRoiOperacao}
           />
         </div>
       )}
@@ -395,6 +530,20 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             creditoAcessado={creditoAcessado || localSimulationData.value}
             embutido={embutido}
             installmentType={localSimulationData.installmentType}
+            customAdminTaxPercent={adminTaxPercent}
+            customReserveFundPercent={reserveFundPercent}
+            customAnnualUpdateRate={annualUpdateRate}
+            agioPercent={agioPercent}
+            onFirstRowData={(data) => {
+              setFirstRowCredit(data.credit);
+              setFirstRowInstallmentValue(data.installmentValue);
+            }}
+            onContemplationRowData={(data) => {
+              setCreditoAcessadoContemplacao(data.creditAccessed);
+              setParcelaAfterContemplacao(data.parcelaAfter || 0);
+              setSomaParcelasAteContemplacao(data.somaParcelasAteContemplacao || 0);
+              setMesContemplacao(data.mesContemplacao || 0);
+            }}
           />
         </div>
       )}
@@ -404,14 +553,49 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
         open={simulatorContext.showConfigModal}
         onClose={() => simulatorContext.setShowConfigModal(false)}
         onApply={() => simulatorContext.setShowConfigModal(false)}
-        onSaveAndApply={() => simulatorContext.setShowConfigModal(false)}
+        onSaveAndApply={(config?: any) => {
+          // Se config foi passada, atualizar os valores customizados
+          if (config) {
+            console.log('🔧 [DEBUG] Configuração recebida:', config);
+            let hasTaxChanges = false;
+            
+            if (config.adminTaxPercent !== undefined) {
+              setAdminTaxPercent(config.adminTaxPercent);
+              setIsAdminTaxCustomized(config.isAdminTaxCustomized || false);
+              console.log('✅ [DEBUG] adminTaxPercent atualizado:', config.adminTaxPercent);
+              hasTaxChanges = true;
+            }
+            if (config.reserveFundPercent !== undefined) {
+              setReserveFundPercent(config.reserveFundPercent);
+              setIsReserveFundCustomized(config.isReserveFundCustomized || false);
+              console.log('✅ [DEBUG] reserveFundPercent atualizado:', config.reserveFundPercent);
+              hasTaxChanges = true;
+            }
+            if (config.annualUpdateRate !== undefined) {
+              setAnnualUpdateRate(config.annualUpdateRate);
+              setIsAnnualUpdateCustomized(config.isAnnualUpdateCustomized || false);
+              console.log('✅ [DEBUG] annualUpdateRate atualizado:', config.annualUpdateRate);
+              hasTaxChanges = true;
+            }
+            if (config.agioPercent !== undefined) {
+              setAgioPercent(config.agioPercent);
+            }
+            
+            // Se houve mudança nas taxas, ativar recálculo automático
+            if (hasTaxChanges) {
+              console.log('🔄 [DEBUG] Taxas alteradas, ativando recálculo automático');
+              console.log('🔄 [DEBUG] Valores das taxas:', {
+                adminTaxPercent: config.adminTaxPercent,
+                reserveFundPercent: config.reserveFundPercent,
+                annualUpdateRate: config.annualUpdateRate
+              });
+              setShouldRecalculateCredit(true);
+            }
+          }
+          simulatorContext.setShowConfigModal(false);
+        }}
         onReset={() => {}}
-        setManualTerm={() => {}}
-        selectedTerm={selectedTerm}
-        setSelectedTerm={setSelectedTerm}
-        adminTaxPercent={adminTaxPercent}
-        reserveFundPercent={reserveFundPercent}
-        // Novos props para sincronização de filtros principais
+        // Props para sincronização de filtros principais
         searchType={localSimulationData.searchType}
         setSearchType={v => handleFieldChange('searchType', v)}
         value={localSimulationData.value}
@@ -422,6 +606,8 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
         setInstallmentType={v => handleFieldChange('installmentType', v)}
         contemplationMonth={localSimulationData.contemplationMonth}
         setContemplationMonth={v => handleFieldChange('contemplationMonth', v)}
+        agioPercent={agioPercent}
+        setAgioPercent={setAgioPercent}
       />
     </div>
   );

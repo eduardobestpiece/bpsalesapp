@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { Button } from './button';
-import { cn } from '@/lib/utils';
 
 interface FullScreenModalProps {
   isOpen: boolean;
@@ -9,7 +9,7 @@ interface FullScreenModalProps {
   title: string;
   children: React.ReactNode;
   actions?: React.ReactNode;
-  className?: string;
+  hasChanges?: boolean; // Para controlar se pode fechar ao clicar fora
 }
 
 export const FullScreenModal: React.FC<FullScreenModalProps> = ({
@@ -18,156 +18,103 @@ export const FullScreenModal: React.FC<FullScreenModalProps> = ({
   title,
   children,
   actions,
-  className
+  hasChanges = false
 }) => {
-  // Controlar animação de entrada/saída
-  const [isVisible, setIsVisible] = React.useState(false);
+  const [isAnimating, setIsAnimating] = useState(false);
 
-  React.useEffect(() => {
+  // Bloquear scroll do body quando modal está aberto
+  useEffect(() => {
     if (isOpen) {
-      // Bloquear scroll do body
       document.body.style.overflow = 'hidden';
-      document.body.style.paddingRight = '0px'; // Evitar shift de layout
-      // Pequeno delay para garantir que o DOM seja renderizado antes da animação
-      setTimeout(() => setIsVisible(true), 50);
+      setIsAnimating(true);
     } else {
-      setIsVisible(false);
-      // Restaurar scroll do body após animação
-      setTimeout(() => {
-        document.body.style.overflow = '';
-        document.body.style.paddingRight = '';
-      }, 300);
+      document.body.style.overflow = 'unset';
     }
 
-    // Cleanup - restaurar scroll se componente for desmontado
     return () => {
-      if (isOpen) {
-        document.body.style.overflow = '';
-        document.body.style.paddingRight = '';
-      }
+      document.body.style.overflow = 'unset';
     };
   }, [isOpen]);
 
-  // Fechar com ESC
-  React.useEffect(() => {
+  // Fechar modal com ESC
+  useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
-        onClose();
+        handleClose();
       }
     };
 
     if (isOpen) {
       document.addEventListener('keydown', handleEscape);
-      return () => document.removeEventListener('keydown', handleEscape);
     }
-  }, [isOpen, onClose]);
+
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [isOpen]);
+
+  const handleClose = () => {
+    if (hasChanges) {
+      // Se há mudanças, não fecha automaticamente
+      return;
+    }
+    setIsAnimating(false);
+    setTimeout(() => {
+      onClose();
+    }, 300); // Tempo da animação
+  };
+
+  const handleOverlayClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      handleClose();
+    }
+  };
 
   if (!isOpen) return null;
 
-  return (
-    <>
-      {/* Portal-like behavior - render at root level */}
+  return createPortal(
+    <div 
+      className="fixed inset-0 z-[99999] bg-black/80 backdrop-blur-sm"
+      onClick={handleOverlayClick}
+    >
+      {/* Modal container com animação slide-in/slide-out */}
       <div 
-        className={cn(
-          "fixed inset-0 z-[99999] transition-all duration-300",
-          isVisible ? "opacity-100" : "opacity-0"
-        )}
-        style={{ 
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          zIndex: 99999
-        }}
+        className={`fixed right-0 top-0 h-full w-full md:w-[70%] lg:w-[70%] xl:w-[70%] 2xl:w-[70%] max-w-[95%] bg-[#131313] shadow-2xl transform transition-transform duration-300 ease-out ${
+          isAnimating ? 'translate-x-0' : 'translate-x-full'
+        }`}
+        style={{ zIndex: 100000 }}
       >
-        {/* Overlay - Escurecimento da tela */}
-        <div 
-          className="absolute inset-0 bg-black/50"
-          onClick={onClose}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)'
-          }}
-        />
-        
-        {/* Modal Container - Slide from right */}
-        <div 
-          className={cn(
-            "absolute inset-0 flex justify-end transition-transform duration-300 ease-out",
-            isVisible ? "translate-x-0" : "translate-x-full"
-          )}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0
-          }}
-        >
-          <div 
-            className={cn(
-              "w-full h-full bg-white dark:bg-[#1E1E1E] shadow-2xl flex flex-col",
-              className
-            )}
-            style={{
-              width: '100%',
-              height: '100%',
-              display: 'flex',
-              flexDirection: 'column'
-            }}
-          >
-            {/* Header - Fixo no topo */}
-            <div 
-              className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-[#A86F57]/20 bg-white dark:bg-[#1F1F1F] shadow-sm"
-              style={{
-                flexShrink: 0,
-                minHeight: '60px',
-                borderBottom: '1px solid',
-                borderBottomColor: 'var(--border)'
-              }}
+        {/* Header fixo */}
+        <div className="sticky top-0 z-10 flex items-center justify-between bg-[#131313] border-b border-gray-700 px-6 py-4">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleClose}
+              className="h-8 w-8 p-0 hover:bg-gray-700"
             >
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={onClose}
-                  className="p-1 h-8 w-8 hover:bg-gray-100 dark:hover:bg-[#161616] rounded-md"
-                >
-                  <X size={16} className="text-gray-500 dark:text-gray-300" />
-                </Button>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {title}
-                </h2>
-              </div>
-              
-              {/* Actions */}
-              <div className="flex items-center gap-2">
-                {actions}
-              </div>
+              <X className="h-4 w-4" />
+            </Button>
+            <h2 className="text-lg font-semibold text-white">{title}</h2>
+          </div>
+          {actions && (
+            <div className="flex items-center gap-2">
+              {actions}
             </div>
-            
-            {/* Content - Área scrollável */}
-            <div 
-              className="flex-1 bg-gray-50 dark:bg-[#131313] p-6"
-              style={{
-                flex: 1,
-                overflowY: 'auto',
-                overflowX: 'hidden'
-              }}
-            >
-              <div className="max-w-4xl mx-auto">
-                {children}
-              </div>
+          )}
+        </div>
+
+        {/* Conteúdo scrollável do modal */}
+        <div className="h-[calc(100vh-4rem)] overflow-y-auto bg-[#131313]">
+          <div className="p-6 flex justify-center">
+            <div className="bg-[#1F1F1F] rounded-lg p-6 w-full md:w-[70%] lg:w-[70%] xl:w-[70%] 2xl:w-[70%] max-w-[95%] min-w-[70%] sm:w-[95%]">
+              {children}
             </div>
           </div>
         </div>
       </div>
-    </>
+    </div>,
+    document.body
   );
 };
 

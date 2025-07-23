@@ -1,6 +1,7 @@
 
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { House } from 'lucide-react';
+import { useState } from 'react';
 
 interface ChartDataPoint {
   month: number;
@@ -8,6 +9,13 @@ interface ChartDataPoint {
   income: number;
   cashFlow: number;
   isContemplation: boolean;
+  patrimonioInicial?: number;
+  valorizacaoMes?: number;
+  valorizacaoAcumulada?: number;
+  acumuloCaixa?: number;
+  parcelaMes?: number;
+  parcelaTabelaMes?: number; // NOVO campo para parcela da tabela
+  parcelasPagas?: number;
 }
 
 interface PatrimonyChartProps {
@@ -27,21 +35,63 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       }).format(value);
     };
 
+    // Calcular valores
+    const patrimonioInicial = data.patrimonioInicial || 0;
+    const valorizacaoMes = data.valorizacaoMes || 0;
+    const valorizacaoAcumulada = data.valorizacaoAcumulada || 0;
+    const acumuloCaixa = data.acumuloCaixa || 0;
+    // const parcelaMes = data.parcelaMes || 0; // REMOVER campo antigo
+    const parcelaTabelaMes = data.parcelaTabelaMes || 0; // NOVO campo
+    const parcelasPagas = data.parcelasPagas || 0;
+    const ganho = data.cashFlow + valorizacaoMes;
+    const ganhoTotal = valorizacaoAcumulada + acumuloCaixa;
+
     return (
       <div className="bg-white p-4 border rounded-lg shadow-lg">
-        <p className="font-semibold">{`Mês ${label}`}</p>
-        <p className="text-primary">
-          <span className="font-medium">Patrimônio:</span> {formatCurrency(data.patrimony)}
-        </p>
-        <p className="text-success">
-          <span className="font-medium">Rendimentos:</span> {formatCurrency(data.income)}
-        </p>
-        <p className="text-warning">
-          <span className="font-medium">Fluxo de Caixa:</span> {formatCurrency(data.cashFlow)}
-        </p>
-        {data.isContemplation && (
-          <p className="text-primary font-bold text-sm mt-2">📍 Contemplação</p>
-        )}
+        {active && payload && payload.length ? (
+          <div className="custom-tooltip">
+            <div style={{ fontWeight: 'bold', marginBottom: 4, color: '#222' }}>
+              {payload[0]?.payload?.month
+                ? `Mês: ${payload[0].payload.month}`
+                : label
+                  ? `Mês: ${label}`
+                  : ''}
+            </div>
+            <p className="text-primary">
+              <span className="font-medium">Patrimônio:</span> {formatCurrency(data.patrimony)}
+            </p>
+            <p className="text-success">
+              <span className="font-medium">Rendimentos:</span> {formatCurrency(data.income)}
+            </p>
+            <p className="text-warning">
+              <span className="font-medium">Fluxo de Caixa:</span> {formatCurrency(data.cashFlow)}
+            </p>
+            <p className="text-blue-600">
+              <span className="font-medium">Acúmulo de Caixa:</span> {formatCurrency(acumuloCaixa)}
+            </p>
+            <p className="text-purple-600">
+              <span className="font-medium">Valorização:</span> {formatCurrency(valorizacaoMes)}
+            </p>
+            <p className="text-indigo-600">
+              <span className="font-medium">Valorização Acumulada:</span> {formatCurrency(valorizacaoAcumulada)}
+            </p>
+            <p className="text-orange-600">
+              <span className="font-medium">Ganho:</span> {formatCurrency(ganho)}
+            </p>
+            <p className="text-green-600">
+              <span className="font-medium">Ganho Total:</span> {formatCurrency(ganhoTotal)}
+            </p>
+            <p className="text-red-600">
+              <span className="font-medium">Parcela do mês (tabela):</span> {formatCurrency(parcelaTabelaMes)}
+            </p>
+            <p className="text-gray-600">
+              <span className="font-medium">Parcelas pagas:</span> {formatCurrency(parcelasPagas)}
+            </p>
+            {data.isContemplation && (
+              <p className="text-primary font-bold text-sm mt-2">📍 Contemplação</p>
+            )}
+          </div>
+        ) : null}
       </div>
     );
   }
@@ -76,6 +126,9 @@ const CustomDot = (props: any) => {
 };
 
 export const PatrimonyChart = ({ data }: PatrimonyChartProps) => {
+  const [tooltipVisible, setTooltipVisible] = useState(false);
+  const [tooltipData, setTooltipData] = useState<any>(null);
+
   const formatYAxis = (value: number) => {
     if (value >= 1000000) {
       return `${(value / 1000000).toFixed(1)}M`;
@@ -94,8 +147,18 @@ export const PatrimonyChart = ({ data }: PatrimonyChartProps) => {
     return `${months}m`;
   };
 
+  const handleClick = (data: any) => {
+    if (tooltipVisible && tooltipData && tooltipData.month === data.month) {
+      setTooltipVisible(false);
+      setTooltipData(null);
+    } else {
+      setTooltipVisible(true);
+      setTooltipData(data);
+    }
+  };
+
   return (
-    <div className="w-full h-96">
+    <div className="w-full h-96 relative">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={data}
@@ -105,6 +168,7 @@ export const PatrimonyChart = ({ data }: PatrimonyChartProps) => {
             left: 20,
             bottom: 20,
           }}
+          onClick={handleClick}
         >
           <CartesianGrid strokeDasharray="3 3" className="opacity-30" stroke="rgba(200, 200, 200, 0.3)" />
           <XAxis 
@@ -113,7 +177,11 @@ export const PatrimonyChart = ({ data }: PatrimonyChartProps) => {
             interval="preserveStartEnd"
           />
           <YAxis tickFormatter={formatYAxis} />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip 
+            content={<CustomTooltip />} 
+            active={tooltipVisible}
+            payload={tooltipData ? [tooltipData] : []}
+          />
           <Line 
             type="monotone" 
             dataKey="patrimony" 

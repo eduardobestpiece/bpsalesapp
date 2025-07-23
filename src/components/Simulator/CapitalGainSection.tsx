@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { formatCurrency } from '@/lib/utils';
+import { Settings } from 'lucide-react';
 
 interface CapitalGainSectionProps {
   creditoAcessado: number | null;
@@ -13,6 +14,10 @@ interface CapitalGainSectionProps {
   administrator: any;
   embutido?: 'com' | 'sem';
   selectedCredits?: any[]; // Adicionar selectedCredits
+  customAnnualUpdateRate?: number; // Taxa de atualização anual customizada
+  agioPercent: number;
+  setAgioPercent: (value: number) => void;
+  onRoiChange?: (roi: number) => void;
 }
 
 export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
@@ -22,9 +27,13 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
   product,
   administrator,
   embutido = 'sem',
-  selectedCredits = [] // Adicionar selectedCredits
+  selectedCredits = [], // Adicionar selectedCredits
+  customAnnualUpdateRate,
+  agioPercent,
+  setAgioPercent,
+  onRoiChange
 }: CapitalGainSectionProps) => {
-  const [agioPercent, setAgioPercent] = useState(17); // 17% padrão
+  // Remover o estado local de agioPercent, usar prop
 
   // Função para calcular valor da parcela (mesma lógica do DetailTable)
   const calculateInstallmentValue = (credit: number, month: number, isAfterContemplation: boolean = false) => {
@@ -69,8 +78,9 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
           currentCredit = currentCredit + (currentCredit * postContemplationRate / 100);
         } else {
           // Antes da contemplação: atualização anual pelo INCC
-          const inccRate = administrator.inccRate || 6; // Taxa INCC padrão
-          currentCredit = currentCredit + (currentCredit * inccRate / 100);
+          // Usar valor customizado se disponível, senão usar o valor padrão
+          const annualUpdateRate = customAnnualUpdateRate !== undefined ? customAnnualUpdateRate : (administrator.inccRate || 6);
+          currentCredit = currentCredit + (currentCredit * annualUpdateRate / 100);
         }
       }
       
@@ -115,8 +125,9 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
           currentCredit = currentCredit + (currentCredit * postContemplationRate / 100);
         } else {
           // Antes da contemplação: atualização anual pelo INCC
-          const inccRate = administrator.inccRate || 6; // Taxa INCC padrão
-          currentCredit = currentCredit + (currentCredit * inccRate / 100);
+          // Usar valor customizado se disponível, senão usar o valor padrão
+          const annualUpdateRate = customAnnualUpdateRate !== undefined ? customAnnualUpdateRate : (administrator.inccRate || 6);
+          currentCredit = currentCredit + (currentCredit * annualUpdateRate / 100);
         }
       }
       
@@ -181,7 +192,7 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
       ? selectedCredits.reduce((sum, credit) => sum + (credit.value || 0), 0)
       : creditoAcessado || 0;
     
-    let saldoDevedorAcumulado = 0;
+    const saldoDevedorAcumulado = 0;
     let creditoAcessadoContemplacao = 0;
     
     for (let month = 1; month <= totalMonths; month++) {
@@ -244,7 +255,7 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
     // Usar os dados reais da tabela
     const tableData = calculateTableData();
     
-    // Encontrar o crédito acessado no mês de contemplação (R$ 1.297.758,00)
+    // Encontrar o crédito acessado no mês de contemplação
     const creditoAcessadoContemplacao = tableData[contemplationMonth - 1]?.creditoAcessado || 0;
     
     // Calcular soma das parcelas pagas até a contemplação
@@ -255,7 +266,8 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
     // Calcular valores do ganho de capital
     const valorAgio = creditoAcessadoContemplacao * (agioPercent / 100);
     const valorLucro = valorAgio - somaParcelasPagas;
-    const roiOperacao = somaParcelasPagas > 0 ? (valorAgio / somaParcelasPagas) * 100 : 0;
+    // ROI = (Lucro / soma das parcelas pagas) * 100
+    const roiOperacao = somaParcelasPagas > 0 ? (valorLucro / somaParcelasPagas) * 100 : 0;
 
     // Gerar dados para o gráfico
     const chartData = [];
@@ -285,6 +297,16 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
     };
   }, [creditoAcessado, contemplationMonth, installmentType, agioPercent, product, administrator, embutido, selectedCredits]);
 
+  useEffect(() => {
+    if (capitalGainData && typeof onRoiChange === 'function') {
+      console.log('🔧 [DEBUG] CapitalGainSection - ROI calculado:', capitalGainData.roiOperacao);
+      onRoiChange(capitalGainData.roiOperacao);
+    }
+  }, [capitalGainData, onRoiChange]);
+
+  // Estado para exibir/ocultar configurações
+  const [showConfig, setShowConfig] = useState(false);
+
   if (!creditoAcessado) {
     return (
       <Card className="w-full">
@@ -301,23 +323,35 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Ganho de Capital</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle>Ganho de Capital</CardTitle>
+          <button
+            type="button"
+            className="ml-2 p-1 rounded hover:bg-gray-200 dark:hover:bg-[#232323]"
+            aria-label="Configurações"
+            onClick={() => setShowConfig((v) => !v)}
+          >
+            <Settings size={20} />
+          </button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Campo Ágio */}
-        <div className="space-y-2">
-          <Label htmlFor="agio-percent">Ágio (%)</Label>
-          <Input
-            id="agio-percent"
-            type="number"
-            value={agioPercent}
-            onChange={(e) => setAgioPercent(Number(e.target.value))}
-            min="0"
-            max="100"
-            step="0.1"
-            className="w-32"
-          />
-        </div>
+        {/* Campo Ágio - só aparece se showConfig estiver true */}
+        {showConfig && (
+          <div className="space-y-2">
+            <Label htmlFor="agio-percent">Ágio (%)</Label>
+            <Input
+              id="agio-percent"
+              type="number"
+              value={agioPercent}
+              onChange={(e) => setAgioPercent(Number(e.target.value))}
+              min="0"
+              max="100"
+              step="0.1"
+              className="w-32"
+            />
+          </div>
+        )}
 
         {/* Cards com os dados */}
         {capitalGainData && (

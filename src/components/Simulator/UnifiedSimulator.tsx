@@ -202,6 +202,7 @@ export const UnifiedSimulator = () => {
               contemplationMonth={contemplationMonth}
               selectedCredits={selectedCredits}
               creditoAcessado={product.nominalCreditValue}
+              onFirstRowData={undefined} // Callback opcional
             />
           </div>
         )}
