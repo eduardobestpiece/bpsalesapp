@@ -495,18 +495,19 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
         </div>
       )}
 
-      {/* Seção de Detalhamento */}
+      {/* Seção de Detalhamento removida - tabela DetailTable agora está apenas no componente NovaAlavancagemPatrimonial */}
+      {/* IMPORTANTE: Callback invisível para capturar dados da primeira linha mesmo sem mostrar a tabela aqui */}
       {visibleSections.detail && (
-        <div ref={detailSectionRef} className="w-full">
+        <div style={{ display: 'none' }}>
           <DetailTable 
             product={{ nominalCreditValue: localSimulationData.value, termMonths: termValue }}
             administrator={{ 
               administrationRate: 0.27,
-              updateMonth: 8, // Agosto
-              gracePeriodDays: 90, // 90 dias de carência
-              inccRate: 6, // Taxa INCC 6%
-              postContemplationAdjustment: 0.5, // Ajuste pós contemplação 0.5%
-              maxEmbeddedPercentage: 25 // Máximo embutido 25%
+              updateMonth: 8,
+              gracePeriodDays: 90,
+              inccRate: 6,
+              postContemplationAdjustment: 0.5,
+              maxEmbeddedPercentage: 25
             }}
             contemplationMonth={localSimulationData.contemplationMonth || 60}
             selectedCredits={selectedCredits}

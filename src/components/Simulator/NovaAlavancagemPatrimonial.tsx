@@ -605,18 +605,11 @@ export const NovaAlavancagemPatrimonial = ({
         contemplationMonth={contemplationMonth}
         selectedCredits={selectedCredits}
         creditoAcessado={creditoAcessado}
-        embutido={embutido}
+        embutido={embutido as 'com' | 'sem'}
         installmentType={installmentType}
         customAdminTaxPercent={customAdminTaxPercent}
         customReserveFundPercent={customReserveFundPercent}
         customAnnualUpdateRate={customAnnualUpdateRate}
-        maxEmbeddedPercentage={maxEmbeddedPercentage}
-        creditoAcessadoContemplacao={creditoAcessadoContemplacao}
-        parcelaAfterContemplacao={parcelaAfterContemplacao}
-        somaParcelasAteContemplacao={somaParcelasAteContemplacao}
-        mesContemplacao={mesContemplacao}
-        parcelaInicial={parcelaInicial}
-        prazoTotal={prazoTotal}
         onTableDataGenerated={(tableData) => {
           setChartDataState(tableData.map(row => ({ ...row, month: row.mes, parcelaTabelaMes: row.valorParcela })));
           // Montar dados para o novo gráfico

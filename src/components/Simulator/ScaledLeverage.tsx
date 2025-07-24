@@ -344,7 +344,7 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
 
       <DetailTable
         onTableDataGenerated={(tableData) => {
-          console.log('[DEBUG][onTableDataGenerated][ScaledLeverage] tableData:', tableData.map(row => ({ mes: row.mes, valorParcela: row.valorParcela }));
+          console.log('[DEBUG][onTableDataGenerated][ScaledLeverage] tableData:', tableData.map(row => ({ mes: row.mes, valorParcela: row.valorParcela })));
           setChartData(tableData.map(row => ({ ...row, month: row.mes, parcelaTabelaMes: row.valorParcela })));
         }}
       />
