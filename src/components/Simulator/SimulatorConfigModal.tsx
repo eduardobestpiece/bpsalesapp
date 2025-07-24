@@ -231,7 +231,6 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
       
       if (!error && data && data.length > 0) {
         const installment = data[0];
-        console.log('📊 [DEBUG] Dados da parcela encontrados:', installment);
         
         // Só atualizar se não foram customizados pelo usuário
         if (!isAdminTaxCustomized) {
@@ -244,7 +243,6 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
           setLocalAnnualUpdateRate(installment.annual_update_rate || 6);
         }
       } else {
-        console.log('⚠️ [DEBUG] Nenhuma parcela encontrada para:', { selectedAdministratorId, localTerm });
         if (!isAdminTaxCustomized) {
           setLocalAdminTaxPercent(0);
         }
@@ -277,52 +275,17 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
 
   // Função para aplicar mudanças
   const handleApply = () => {
-    console.log('🔧 [DEBUG] Aplicando mudanças:', {
-      searchType: localSearchType,
-      value: localValue,
-      term: localTerm,
-      installmentType: localInstallmentType,
-      contemplationMonth: localContemplationMonth,
-      adminTaxPercent: localAdminTaxPercent,
-      reserveFundPercent: localReserveFundPercent,
-      annualUpdateRate: localAnnualUpdateRate
-    });
-    
-    console.log('🔧 [DEBUG] Funções disponíveis:', {
-      setSearchType: typeof setSearchType,
-      setValue: typeof setValue,
-      setTerm: typeof setTerm,
-      setInstallmentType: typeof setInstallmentType,
-      setContemplationMonth: typeof setContemplationMonth
-    });
-    
-    console.log('🔧 [DEBUG] Valores atuais no header:', {
-      searchType,
-      value,
-      term,
-      installmentType,
-      contemplationMonth
-    });
-    
-    console.log('🔄 [DEBUG] Chamando funções de atualização...');
     
     setSearchType(localSearchType);
-    console.log('✅ [DEBUG] setSearchType chamado com:', localSearchType);
     
     setValue(localValue);
-    console.log('✅ [DEBUG] setValue chamado com:', localValue);
     
     setTerm(localTerm);
-    console.log('✅ [DEBUG] setTerm chamado com:', localTerm);
     
     setInstallmentType(localInstallmentType);
-    console.log('✅ [DEBUG] setInstallmentType chamado com:', localInstallmentType);
     
     if (setContemplationMonth) {
       setContemplationMonth(localContemplationMonth);
-      console.log('✅ [DEBUG] setContemplationMonth chamado com:', localContemplationMonth);
-    } else {
-      console.log('⚠️ [DEBUG] setContemplationMonth não está disponível');
     }
 
     if (typeof window !== 'undefined') {
@@ -330,7 +293,6 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
     }
     setAgioPercent(localAgioPercent);
     
-    console.log('✅ [DEBUG] Mudanças aplicadas ao header');
     toast({ title: 'Configurações aplicadas!' });
     onApply();
   };
@@ -338,11 +300,9 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   // Função para salvar e aplicar
   const handleSaveAndApply = async () => {
     try {
-      console.log('🔧 [DEBUG] Iniciando save and apply...');
       
       const { data: { user: crmUser } } = await supabase.auth.getUser();
       if (!crmUser || !companyId) {
-        console.log('❌ [DEBUG] Usuário não autenticado ou companyId não encontrado');
         toast({ title: 'Erro: Usuário não autenticado!', variant: 'destructive' });
         return;
       }
@@ -364,15 +324,9 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
         agioPercent: localAgioPercent,
       };
       
-      console.log('📊 [DEBUG] Configuração a ser salva:', config);
       
       // Salvar no banco de dados
       try {
-        console.log('🔧 [DEBUG] Dados do usuário:', {
-          userId: crmUser?.id,
-          companyId: companyId,
-          user: crmUser
-        });
         
         // Verificar se temos os dados necessários
         if (!crmUser?.id) {
@@ -408,7 +362,6 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
           });
         
         if (insertError) {
-          console.log('⚠️ [DEBUG] Erro na inserção, tentando update:', insertError);
           
           // Se erro de conflito, tentar update
           const { error: updateError } = await supabase
@@ -440,47 +393,31 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
           }
         }
         
-        console.log('✅ [DEBUG] Configuração atualizada com sucesso');
         
         // Aplicar mudanças ao header
-        console.log('🔄 [DEBUG] Aplicando mudanças ao header...');
-        console.log('🔧 [DEBUG] Aplicando mudanças:', config);
         
         // Verificar se as funções estão disponíveis
-        console.log('🔧 [DEBUG] Funções disponíveis:', {
-          setSearchType: typeof setSearchType,
-          setValue: typeof setValue,
-          setTerm: typeof setTerm,
-          setInstallmentType: typeof setInstallmentType,
-          setContemplationMonth: typeof setContemplationMonth,
-        });
         
         // Aplicar mudanças
-        console.log('🔄 [DEBUG] Chamando funções de atualização...');
         
         // Atualizar valores no contexto global
         if (setSearchType) {
-          console.log('🔄 [DEBUG] handleFieldChange chamado:', { field: 'searchType', value: config.searchType });
           setSearchType(config.searchType);
         }
         
         if (setValue) {
-          console.log('🔄 [DEBUG] handleFieldChange chamado:', { field: 'value', value: config.value });
           setValue(config.value);
         }
         
         if (setTerm) {
-          console.log('🔄 [DEBUG] handleTermChange chamado:', { value: config.term });
           setTerm(config.term);
         }
         
         if (setInstallmentType) {
-          console.log('🔄 [DEBUG] handleFieldChange chamado:', { field: 'installmentType', value: config.installmentType });
           setInstallmentType(config.installmentType);
         }
         
         if (setContemplationMonth) {
-          console.log('🔄 [DEBUG] handleFieldChange chamado:', { field: 'contemplationMonth', value: config.contemplationMonth });
           setContemplationMonth(config.contemplationMonth);
         }
 
@@ -489,20 +426,12 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
         }
         
         // Atualizar valores customizados
-        console.log('🔄 [DEBUG] Atualizando valores customizados...');
-        console.log('🔄 [DEBUG] handleFieldChange chamado:', { field: 'adminTaxPercent', value: config.adminTaxPercent });
-        console.log('🔄 [DEBUG] handleFieldChange chamado:', { field: 'reserveFundPercent', value: config.reserveFundPercent });
-        console.log('🔄 [DEBUG] handleFieldChange chamado:', { field: 'isAdminTaxCustomized', value: config.isAdminTaxCustomized });
-        console.log('🔄 [DEBUG] handleFieldChange chamado:', { field: 'isReserveFundCustomized', value: config.isReserveFundCustomized });
         
-        console.log('✅ [DEBUG] Mudanças aplicadas ao header');
-        
-        onSaveAndApply(config);
+        // onSaveAndApply(config);
       } catch (error) {
         console.error('❌ [DEBUG] Erro ao salvar configuração:', error);
       }
     } catch (err: unknown) {
-      console.log('❌ [DEBUG] Erro inesperado:', err);
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
       toast({ title: 'Erro inesperado!', description: errorMessage, variant: 'destructive' });
     }

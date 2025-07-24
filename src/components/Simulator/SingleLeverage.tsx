@@ -167,7 +167,7 @@ export const SingleLeverage = ({ administrator, product, propertyData, installme
   // Removido cálculo do Capital em Caixa conforme requisito 6.5
   
   // Dados para o gráfico com atualização anual
-  const chartData = [];
+  const [chartData, setChartData] = useState<any[]>([]);
   for (let month = contemplationMonth; month <= product.termMonths; month++) {
     // Patrimônio com valorização
     const appreciatedValue = patrimonioNaContemplacaoCalculado * Math.pow(1 + taxaValorizacao, (month - contemplationMonth) / 12);

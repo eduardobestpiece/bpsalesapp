@@ -63,18 +63,15 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
   // Sincronizar campos do topo com simulationData e com o contexto global
   const handleFieldChange = (field: string, value: any) => {
-    console.log('🔄 [DEBUG] handleFieldChange chamado:', { field, value });
     
     // Atualizar dados locais
     setLocalSimulationData(prev => {
       const updated = { ...prev, [field]: value };
-      console.log('✅ [DEBUG] localSimulationData atualizado');
       return updated;
     });
     
     // Atualizar contexto global do simulador
     if (simulatorContext) {
-      console.log('🔄 [DEBUG] Atualizando', field, 'no contexto global');
       
       switch (field) {
         case 'searchType':
@@ -121,7 +118,6 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
       }
     }
     
-    console.log('✅ [DEBUG] handleFieldChange concluído');
   };
 
   // Menu fixo abaixo do cabeçalho - posicionado logo abaixo do header fixo
@@ -190,7 +186,6 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
       // Aguardar um pouco para garantir que o recálculo foi executado
       const timer = setTimeout(() => {
         setShouldRecalculateCredit(false);
-        console.log('🔄 [DEBUG] NewSimulatorLayout - Flag de recálculo resetado');
       }, 100);
       
       return () => clearTimeout(timer);
@@ -199,13 +194,6 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
   // Log para debug dos dados passados para CreditAccessPanel
   useEffect(() => {
-    console.log('🔄 [DEBUG] NewSimulatorLayout - Dados para CreditAccessPanel:', {
-      adminTaxPercent,
-      reserveFundPercent,
-      isAdminTaxCustomized,
-      isReserveFundCustomized,
-      shouldRecalculateCredit
-    });
   }, [adminTaxPercent, reserveFundPercent, isAdminTaxCustomized, isReserveFundCustomized, shouldRecalculateCredit]);
 
   // Estado para reduções de parcela
@@ -219,13 +207,10 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
   // Atualizar selectedTerm ao mudar no simulador
   const handleTermChange = (value: number) => {
-    console.log('🔄 [DEBUG] handleTermChange chamado:', { value });
     
     setSelectedTerm(value);
-    console.log('✅ [DEBUG] selectedTerm atualizado');
     
     handleFieldChange('term', value);
-    console.log('✅ [DEBUG] handleTermChange concluído');
   };
 
   // Sincronizar dados locais com o contexto
@@ -347,8 +332,6 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
   // Debug do ROI
   useEffect(() => {
-    console.log('🔧 [DEBUG] NewSimulatorLayout - ROI recebido:', roiOperacao);
-    console.log('🔧 [DEBUG] NewSimulatorLayout - Deve exibir seção?', roiOperacao !== null && roiOperacao >= 110);
   }, [roiOperacao]);
 
   // Estado para o Ágio (%) global
@@ -556,26 +539,20 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
         onSaveAndApply={(config?: any) => {
           // Se config foi passada, atualizar os valores customizados
           if (config) {
-            console.log('🔧 [DEBUG] Configuração recebida:', config);
+            
             let hasTaxChanges = false;
             
             if (config.adminTaxPercent !== undefined) {
               setAdminTaxPercent(config.adminTaxPercent);
               setIsAdminTaxCustomized(config.isAdminTaxCustomized || false);
-              console.log('✅ [DEBUG] adminTaxPercent atualizado:', config.adminTaxPercent);
-              hasTaxChanges = true;
             }
             if (config.reserveFundPercent !== undefined) {
               setReserveFundPercent(config.reserveFundPercent);
               setIsReserveFundCustomized(config.isReserveFundCustomized || false);
-              console.log('✅ [DEBUG] reserveFundPercent atualizado:', config.reserveFundPercent);
-              hasTaxChanges = true;
             }
             if (config.annualUpdateRate !== undefined) {
               setAnnualUpdateRate(config.annualUpdateRate);
               setIsAnnualUpdateCustomized(config.isAnnualUpdateCustomized || false);
-              console.log('✅ [DEBUG] annualUpdateRate atualizado:', config.annualUpdateRate);
-              hasTaxChanges = true;
             }
             if (config.agioPercent !== undefined) {
               setAgioPercent(config.agioPercent);
@@ -583,12 +560,6 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             
             // Se houve mudança nas taxas, ativar recálculo automático
             if (hasTaxChanges) {
-              console.log('🔄 [DEBUG] Taxas alteradas, ativando recálculo automático');
-              console.log('🔄 [DEBUG] Valores das taxas:', {
-                adminTaxPercent: config.adminTaxPercent,
-                reserveFundPercent: config.reserveFundPercent,
-                annualUpdateRate: config.annualUpdateRate
-              });
               setShouldRecalculateCredit(true);
             }
           }

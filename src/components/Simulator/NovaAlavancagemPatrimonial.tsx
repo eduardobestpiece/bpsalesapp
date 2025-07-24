@@ -8,6 +8,8 @@ import { supabase } from '@/integrations/supabase/client';
 import type { Database } from '@/integrations/supabase/types';
 import { PatrimonyChart } from './PatrimonyChart';
 import { generateConsortiumInstallments } from '@/utils/consortiumInstallments';
+import { DetailTable } from './DetailTable';
+import { InstallmentsChart } from './InstallmentsChart';
 
 type Leverage = Database['public']['Tables']['leverages']['Row'];
 
@@ -69,6 +71,9 @@ export const NovaAlavancagemPatrimonial = ({
   // Novo: intervalo entre contemplações (em meses)
   // Usar o valor do mês de contemplação como intervalo
   const intervaloContemplacao = mesContemplacao;
+  const [chartDataState, setChartDataState] = useState<any[]>([]);
+  const [installmentsChartData, setInstallmentsChartData] = useState<any[]>([]);
+  const [showLegend, setShowLegend] = useState(false);
 
   // Buscar alavancas do Supabase ao montar
   useEffect(() => {
@@ -351,10 +356,6 @@ export const NovaAlavancagemPatrimonial = ({
       customAnnualUpdateRate,
       maxEmbeddedPercentage
     });
-    console.log('[DEBUG][Gráfico] Parâmetros usados:', { product, administrator, contemplationMonth, selectedCredits, creditoAcessado, embutido, installmentType, customAdminTaxPercent, customReserveFundPercent, customAnnualUpdateRate, maxEmbeddedPercentage });
-    console.log('[DEBUG][Gráfico] parcelasTabela:', parcelasTabela);
-    console.log('[DEBUG][Gráfico] parcelasTabela[0]:', parcelasTabela[0]);
-    console.log('[DEBUG][Gráfico] parcelasTabela[0]?.valorParcela:', parcelasTabela[0]?.valorParcela);
     for (let mes = 1; mes <= prazoTotal + 1; mes++) {
       let ganhos = 0;
       let fluxoCaixa = 0;
@@ -428,13 +429,6 @@ export const NovaAlavancagemPatrimonial = ({
       acumuloCaixa += fluxoCaixa;
       // Novo campo: parcelaTabelaMes, igual ao valor da tabela
       const parcelaTabelaMes = parcelasTabela[mes - 1]?.installmentValue || 0;
-      
-      // Debug para verificar o valor da parcela da tabela
-      if (mes === 1) {
-        console.log('[DEBUG][NovaAlavancagemPatrimonial] Mês 1 - parcelaTabelaMes:', parcelaTabelaMes);
-        console.log('[DEBUG][NovaAlavancagemPatrimonial] Mês 1 - parcelasTabela[0]:', parcelasTabela[0]);
-        console.log('[DEBUG][NovaAlavancagemPatrimonial] Mês 1 - parcelasTabela[0]?.installmentValue:', parcelasTabela[0]?.installmentValue);
-      }
       
       chartData.push({
         month: mes,
@@ -595,13 +589,167 @@ export const NovaAlavancagemPatrimonial = ({
 
       {/* Quarta seção - Gráfico de evolução patrimonial */}
       <Card>
-        <CardHeader>
-          <CardTitle>Gráfico de Evolução Patrimonial</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle>Gráfico de Parcelas do Mês e Soma das Parcelas</CardTitle>
+          <button onClick={() => setShowLegend((v) => !v)} className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors">
+            <Settings size={16} className="text-gray-300" />
+          </button>
         </CardHeader>
         <CardContent>
-          <PatrimonyChart data={chartData} />
+          <InstallmentsChart data={installmentsChartData} showLegend={showLegend} />
         </CardContent>
       </Card>
+      <DetailTable
+        product={product}
+        administrator={administrator}
+        contemplationMonth={contemplationMonth}
+        selectedCredits={selectedCredits}
+        creditoAcessado={creditoAcessado}
+        embutido={embutido}
+        installmentType={installmentType}
+        customAdminTaxPercent={customAdminTaxPercent}
+        customReserveFundPercent={customReserveFundPercent}
+        customAnnualUpdateRate={customAnnualUpdateRate}
+        maxEmbeddedPercentage={maxEmbeddedPercentage}
+        creditoAcessadoContemplacao={creditoAcessadoContemplacao}
+        parcelaAfterContemplacao={parcelaAfterContemplacao}
+        somaParcelasAteContemplacao={somaParcelasAteContemplacao}
+        mesContemplacao={mesContemplacao}
+        parcelaInicial={parcelaInicial}
+        prazoTotal={prazoTotal}
+        onTableDataGenerated={(tableData) => {
+          setChartDataState(tableData.map(row => ({ ...row, month: row.mes, parcelaTabelaMes: row.valorParcela })));
+          // Montar dados para o novo gráfico
+          let soma = 0;
+          let somaParcelas = 0;
+          let rendaPassivaAcumulada = 0;
+          const patrimonioInicial = patrimonioNaContemplacao;
+          const mesInicioPatrimonio = mesContemplacao + periodoCompra;
+          const taxaMensal = Math.pow(1 + 0.06, 1 / 12) - 1;
+          const taxaAnual = 0.06;
+          let patrimonioAnual = 0;
+          let patrimonioMensal = 0;
+          let receitaMenosCustosAcumulada = 0;
+          const chartData = [];
+          for (let i = 0; i < tableData.length; i++) {
+            const row = tableData[i];
+            soma += row.valorParcela;
+            somaParcelas += row.valorParcela;
+            // Patrimônio (anual)
+            if (row.mes < mesInicioPatrimonio) {
+              patrimonioAnual = 0;
+            } else if (row.mes === mesInicioPatrimonio) {
+              patrimonioAnual = patrimonioInicial;
+            } else if (row.mes > mesInicioPatrimonio) {
+              const mesesDesdeInicio = row.mes - mesInicioPatrimonio;
+              if (mesesDesdeInicio > 0 && mesesDesdeInicio % 12 === 0) {
+                patrimonioAnual = patrimonioAnual * (1 + taxaAnual);
+              }
+            }
+            // Patrimônio (mensal)
+            if (row.mes < mesInicioPatrimonio) {
+              patrimonioMensal = 0;
+            } else if (row.mes === mesInicioPatrimonio) {
+              patrimonioMensal = patrimonioInicial;
+            } else if (row.mes > mesInicioPatrimonio) {
+              patrimonioMensal = patrimonioMensal * (1 + taxaMensal);
+            }
+            // Parâmetros para cálculo
+            const percentualDiaria = (alavanca?.daily_percentage || 0) / 100;
+            const taxaOcupacao = (alavanca?.occupancy_rate || 0) / 100;
+            const despesasTotais = (alavanca?.total_expenses || 0) / 100;
+            const percentualAdmin = (alavanca?.management_percentage || 0) / 100;
+            // Receita do mês
+            const receitaMes = patrimonioAnual * percentualDiaria * (30 * taxaOcupacao);
+            // Custos
+            const custos = (patrimonioAnual * despesasTotais) + (patrimonioAnual * percentualDiaria * (30 * taxaOcupacao) * percentualAdmin);
+            // Receita - Custos
+            const receitaMenosCustos = receitaMes - custos;
+            // Renda passiva e acumulada só após aquisição do patrimônio
+            let rendaPassiva = 0;
+            if (row.mes >= mesInicioPatrimonio) {
+              rendaPassiva = receitaMes - (custos + row.valorParcela);
+            }
+            if (row.mes < mesInicioPatrimonio) {
+              rendaPassivaAcumulada = 0;
+            } else {
+              rendaPassivaAcumulada += rendaPassiva;
+            }
+            receitaMenosCustosAcumulada += receitaMenosCustos;
+            // Fluxo de caixa: soma acumulada de Receita - Custos menos soma das parcelas
+            const fluxoCaixa = receitaMenosCustosAcumulada - somaParcelas;
+            chartData.push({
+              ...row,
+              month: row.mes,
+              parcelaTabelaMes: row.valorParcela,
+              somaParcelas: soma,
+              patrimonio: patrimonioMensal, // já existente
+              patrimonioAnual,
+              receitaMes,
+              receitaMenosCustos,
+              custos,
+              rendaPassiva,
+              rendaPassivaAcumulada,
+              fluxoCaixa,
+            });
+          }
+          if (tableData.length < prazoTotal + 1) {
+            for (let m = tableData.length + 1; m <= prazoTotal + 1; m++) {
+              if (m < mesInicioPatrimonio) {
+                patrimonioAnual = 0;
+                patrimonioMensal = 0;
+              } else if (m === mesInicioPatrimonio) {
+                patrimonioAnual = patrimonioInicial;
+                patrimonioMensal = patrimonioInicial;
+              } else if (m > mesInicioPatrimonio) {
+                patrimonioMensal = patrimonioMensal * (1 + taxaMensal);
+                const mesesDesdeInicio = m - mesInicioPatrimonio;
+                if (mesesDesdeInicio > 0 && mesesDesdeInicio % 12 === 0) {
+                  patrimonioAnual = patrimonioAnual * (1 + taxaAnual);
+                }
+              }
+              // Parâmetros para cálculo
+              const percentualDiaria = (alavanca?.daily_percentage || 0) / 100;
+              const taxaOcupacao = (alavanca?.occupancy_rate || 0) / 100;
+              const despesasTotais = (alavanca?.total_expenses || 0) / 100;
+              const percentualAdmin = (alavanca?.management_percentage || 0) / 100;
+              // Receita do mês
+              const receitaMes = patrimonioAnual * percentualDiaria * (30 * taxaOcupacao);
+              // Custos
+              const custos = (patrimonioAnual * despesasTotais) + (patrimonioAnual * percentualDiaria * (30 * taxaOcupacao) * percentualAdmin);
+              // Receita - Custos
+              const receitaMenosCustos = receitaMes - custos;
+              // Renda passiva e acumulada só após aquisição do patrimônio
+              let rendaPassiva = 0;
+              if (m >= mesInicioPatrimonio) {
+                rendaPassiva = receitaMes - (custos + 0);
+              }
+              if (m < mesInicioPatrimonio) {
+                rendaPassivaAcumulada = 0;
+              } else {
+                rendaPassivaAcumulada += rendaPassiva;
+              }
+              receitaMenosCustosAcumulada += receitaMenosCustos;
+              // Fluxo de caixa: soma acumulada de Receita - Custos menos soma das parcelas
+              const fluxoCaixa = receitaMenosCustosAcumulada - somaParcelas;
+              chartData.push({
+                mes: m,
+                valorParcela: 0,
+                somaParcelas: soma,
+                patrimonio: patrimonioMensal,
+                patrimonioAnual,
+                receitaMes,
+                receitaMenosCustos,
+                custos,
+                rendaPassiva,
+                rendaPassivaAcumulada,
+                fluxoCaixa,
+              });
+            }
+          }
+          setInstallmentsChartData(chartData);
+        }}
+      />
     </div>
   );
 }; 

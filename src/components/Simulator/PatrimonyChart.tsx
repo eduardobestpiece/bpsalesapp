@@ -86,10 +86,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
               <span className="font-medium">Ganho Total:</span> {formatCurrency(ganhoTotal)}
             </p>
             <p className="text-red-600">
-              <span className="font-medium">Parcela do mês (tabela):</span> {formatCurrency(parcelaTabelaMes)}
-            </p>
-            <p className="text-gray-600">
-              <span className="font-medium">Parcelas pagas:</span> {formatCurrency(parcelasPagas)}
+              <span className="font-medium">Parcela do mês:</span> {formatCurrency(parcelaTabelaMes)}
             </p>
             {data.isContemplation && (
               <p className="text-primary font-bold text-sm mt-2">📍 Contemplação</p>

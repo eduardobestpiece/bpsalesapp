@@ -11,6 +11,7 @@ import { Administrator, Product } from '@/types/entities';
 import { calculatePostContemplationInstallment } from '@/utils/postContemplationCalculations';
 import { calculateCashFlowBefore240, calculateCashFlowAfter240, calculateUpdatedPropertyValue } from '@/utils/cashFlowCalculations';
 import { calculateCompleteMonthlyGains } from '@/utils/monthlyGainsCalculations';
+import { DetailTable } from './DetailTable';
 
 interface PropertyData {
   type: 'short-stay' | 'commercial' | 'residential';
@@ -159,7 +160,7 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
   // Removido cálculo do Capital em Caixa conforme requisito 6.5
 
   // Dados para o gráfico com atualização anual
-  const chartData = [];
+  const [chartData, setChartData] = useState<any[]>([]);
   for (let month = 1; month <= product.termMonths; month++) {
     // Quantas propriedades já foram contempladas até este mês
     const contemplatedProperties = contemplationMonths.filter(cm => cm <= month).length;
@@ -340,6 +341,13 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
           <PatrimonyChart data={chartData} />
         </CardContent>
       </Card>
+
+      <DetailTable
+        onTableDataGenerated={(tableData) => {
+          console.log('[DEBUG][onTableDataGenerated][ScaledLeverage] tableData:', tableData.map(row => ({ mes: row.mes, valorParcela: row.valorParcela }));
+          setChartData(tableData.map(row => ({ ...row, month: row.mes, parcelaTabelaMes: row.valorParcela })));
+        }}
+      />
     </div>
   );
 };

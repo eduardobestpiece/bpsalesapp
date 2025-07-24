@@ -421,7 +421,6 @@ export const DetailTable = ({
     }
     
     // Após gerar o array completo
-    console.log('[DEBUG][Tabela] Parâmetros usados:', { product, administrator, contemplationMonth, selectedCredits, creditoAcessado, embutido, installmentType, customAdminTaxPercent, customReserveFundPercent, customAnnualUpdateRate, maxEmbeddedPercentage: administrator.maxEmbeddedPercentage });
     return data;
   };
 

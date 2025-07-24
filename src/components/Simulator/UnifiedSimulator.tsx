@@ -243,42 +243,7 @@ export const UnifiedSimulator = () => {
           </div>
         )}
 
-        {visibleSections.detail && (
-          <div ref={detailSectionRef} className="space-y-6">
-            <div className="flex items-center gap-4">
-              <h2 className="text-2xl font-bold">Detalhamento do Consórcio</h2>
-              <Badge variant="outline">Tabela Mês a Mês</Badge>
-            </div>
-
-            <DetailTable 
-              product={product}
-              administrator={{
-                ...administrator,
-                updateMonth: administrator.updateMonth || 8,
-                gracePeriodDays: administrator.gracePeriodDays || 90,
-                inccRate: administrator.inccRate || 6,
-                postContemplationAdjustment: administrator.postContemplationAdjustment || 0.5
-              }}
-              contemplationMonth={contemplationMonth}
-              selectedCredits={selectedCredits}
-              creditoAcessado={product.nominalCreditValue}
-              installmentType={installmentType}
-              embutido="sem"
-              onFirstRowData={undefined}
-              onTableDataGenerated={(tableData) => {
-                // Callback para sincronizar dados do gráfico com a tabela
-                const syncedData = patrimonyData.map((chartPoint) => {
-                  const tableRow = tableData.find(row => row.mes === chartPoint.month);
-                  return {
-                    ...chartPoint,
-                    parcelaTabelaMes: tableRow ? tableRow.valorParcela : 0
-                  };
-                });
-                setPatrimonyData(syncedData);
-              }}
-            />
-          </div>
-        )}
+        {/* Seção 'Detalhamento do Consórcio' removida - deixando apenas a tabela do NovaAlavancagemPatrimonial */}
       </div>
     </div>
   );

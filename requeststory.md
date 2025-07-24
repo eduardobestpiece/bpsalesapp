@@ -21,21 +21,49 @@
 - [ ] Executar o deploy.
 - [ ] Solicitar conferência.
 
-# Última Requisição
+# Solicitação em andamento
 
-- Adicionar campo "Ágio (%)" ao modal "Mais configurações", sincronizado com a seção "Ganho de Capital", na mesma linha de "Número de parcelas" e "Mês Contemplação". Valor deve ser salvo/aplicado corretamente.
-- Adicionada engrenagem de configurações na seção "Ganho de Capital", que exibe o campo "Ágio (%)" apenas ao clicar, oculto por padrão.
-- Agora a seção "Ganho de Capital" só é exibida se o ROI da operação for maior ou igual a 110%. Se for menor, a seção é ocultada automaticamente.
-- Corrigido cálculo da "Renda passiva" na etapa "Nova Alavancagem Patrimonial" para considerar o "Patrimônio ao final" em vez do patrimônio na contemplação.
-- Ajustado cálculo da "Renda passiva" para Alavancagem Escalonada usar o Fluxo de Caixa do último mês do gráfico, enquanto Alavancagem Simples continua usando o patrimônio final.
-- Corrigido cálculo do Fluxo de Caixa no gráfico da Nova Alavancagem Patrimonial para considerar a atualização anual da parcela, usando a mesma lógica da tabela de detalhamento.
-- Corrigida lógica da Alavancagem Escalonada para considerar corretamente a adição de novos créditos a cada contemplação, incluindo custo inicial e atualizações de créditos anteriores.
-- Adicionadas informações "Parcela do mês" e "Parcelas pagas" ao tooltip do gráfico de evolução patrimonial.
-- Corrigido cálculo das parcelas pagas para incluir as parcelas pagas antes da contemplação no gráfico de evolução patrimonial.
-- Corrigido valor da parcela no gráfico para usar a parcela inicial correta da tabela de detalhamento.
-- Corrigido cálculo das parcelas para considerar atualização anual antes da contemplação e acumular parcelas pagas mês a mês corretamente.
-- Corrigido cálculo da parcela pós-contemplação para usar o valor exato da tabela de detalhamento.
-- Corrigido para usar prazo dinâmico do campo "Número de parcelas" em vez de fixar em 240 meses.
-- Corrigida lógica da alavancagem escalonada para somar corretamente as parcelas de todos os créditos ativos.
-- Corrigida lógica da alavancagem escalonada para não atualizar parcela no mês da contemplação e somar corretamente parcelas existentes + novas.
-- Status: Concluído.
+**Data:** 2024-07-08
+
+**Solicitante:** usuário
+
+**Resumo:** Remover todos os debugs (console.log, console.debug, debugger, prints) do projeto e realizar o deploy.
+
+## Etapas realizadas
+- Análise do histórico e contexto do projeto.
+- Busca e identificação de todos os pontos de debug no código.
+- Remoção de todos os logs de debug dos arquivos:
+  - src/components/Simulator/CreditAccessPanel.tsx
+  - src/components/Simulator/SimulatorConfigModal.tsx
+  - src/components/Simulator/NovaAlavancagemPatrimonial.tsx
+  - src/components/Simulator/NewSimulatorLayout.tsx
+  - src/utils/consortiumInstallments.ts
+- Build de produção iniciado e preview em execução na porta 8080.
+
+## Checklist
+- [x] Analisar contexto e histórico
+- [x] Identificar e remover debugs
+- [x] Atualizar requeststory.md
+- [x] Build e deploy (preview 8080)
+- [ ] Validar funcionamento final
+- [ ] Atualizar markdownstory.md após validação
+
+**Aguardando validação do usuário para finalizar e atualizar o histórico.**
+
+# Solicitação em andamento
+
+**Data:** [Preencher com data atual]
+
+**Solicitação:**
+Adicionar ao tooltip do Gráfico de Evolução Patrimonial a informação 'Parcela do mês', replicando o valor exato da coluna 'Valor da Parcela' da tabela de detalhamento.
+
+**Status:** Sincronização corrigida, pronto para teste
+
+**Checklist:**
+- [x] Garantir sincronização do valor da parcela entre tabela e gráfico
+- [x] Adicionar informação ao tooltip
+- [x] Corrigir sincronização se necessário
+- [ ] Testar alteração
+- [ ] Atualizar porta 8080
+- [ ] Executar deploy
+- [ ] Solicitar conferência

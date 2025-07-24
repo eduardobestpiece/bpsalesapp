@@ -434,17 +434,6 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     const customAdminTax = (data as any).adminTaxPercent !== undefined ? (data as any).adminTaxPercent : installmentCandidato.admin_tax_percent || 0;
     const customReserveFund = (data as any).reserveFundPercent !== undefined ? (data as any).reserveFundPercent : installmentCandidato.reserve_fund_percent || 0;
     
-    console.log('🔧 [DEBUG] CreditAccessPanel - Valores de taxa:', {
-      originalAdminTax: installmentCandidato.admin_tax_percent,
-      customAdminTax,
-      originalReserveFund: installmentCandidato.reserve_fund_percent,
-      customReserveFund,
-      dataAdminTax: (data as any).adminTaxPercent,
-      dataReserveFund: (data as any).reserveFundPercent,
-      isAdminTaxCustomized: (data as any).isAdminTaxCustomized,
-      isReserveFundCustomized: (data as any).isReserveFundCustomized
-    });
-    
     const installmentParams = {
       installment_count: installmentCandidato.installment_count,
       admin_tax_percent: customAdminTax,
@@ -453,8 +442,6 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
       optional_insurance: !!installmentCandidato.optional_insurance
     };
     
-    console.log('🔧 [DEBUG] CreditAccessPanel - Parâmetros da parcela:', installmentParams);
-    
     if (data.installmentType !== 'full') {
       if (data.searchType === 'contribution') {
         // Cálculo baseado em Parcela (Aporte) com parcela especial
@@ -462,12 +449,6 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
           credit: 100000,
           installment: installmentParams,
           reduction: reducaoParcela
-        });
-        
-        console.log('🔧 [DEBUG] CreditAccessPanel - Cálculo com 100k:', {
-          parcelaEspecial100k,
-          fator: 100000 / parcelaEspecial100k,
-          valorAporte: data.value
         });
         
         // Lógica iterativa para encontrar o crédito correto
@@ -481,11 +462,6 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
         const fatorInicial = 100000 / parcelaEspecial100k;
         creditoTeste = Math.ceil((valorAporte * fatorInicial) / 10000) * 10000;
         
-        console.log('🔧 [DEBUG] CreditAccessPanel - Primeira tentativa:', {
-          creditoTeste,
-          fatorInicial
-        });
-        
         // Iterar até encontrar o crédito correto
         while (tentativas < maxTentativas) {
           parcelaTeste = regraParcelaEspecial({
@@ -494,22 +470,10 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
             reduction: reducaoParcela
           });
           
-          console.log('🔧 [DEBUG] CreditAccessPanel - Tentativa', tentativas + 1, ':', {
-            creditoTeste,
-            parcelaTeste,
-            valorAporte,
-            diferenca: parcelaTeste - valorAporte
-          });
-          
           // Se a parcela está próxima ou acima do valor do aporte (com tolerância de 1%)
           if (parcelaTeste >= valorAporte * 0.99) {
             creditoAcessado = creditoTeste;
             valorParcela = parcelaTeste;
-            console.log('🔧 [DEBUG] CreditAccessPanel - Crédito encontrado:', {
-              creditoAcessado,
-              valorParcela,
-              tentativas
-            });
             break;
           }
           
@@ -521,11 +485,6 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
           if (Math.abs(novoCredito - creditoTeste) < 10000) {
             creditoAcessado = creditoTeste;
             valorParcela = parcelaTeste;
-            console.log('🔧 [DEBUG] CreditAccessPanel - Convergência atingida:', {
-              creditoAcessado,
-              valorParcela,
-              tentativas
-            });
             break;
           }
           
@@ -537,11 +496,6 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
         if (tentativas >= maxTentativas) {
           creditoAcessado = creditoTeste;
           valorParcela = parcelaTeste;
-          console.log('🔧 [DEBUG] CreditAccessPanel - Máximo de tentativas atingido:', {
-            creditoAcessado,
-            valorParcela,
-            tentativas
-          });
         }
       } else if (data.searchType === 'credit') {
         // Problema 2: Cálculo baseado em Crédito com parcela especial - arredondar para múltiplos de 10.000
@@ -570,12 +524,6 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
           reduction: null
         }).full;
         
-        console.log('🔧 [DEBUG] CreditAccessPanel - Cálculo parcela cheia com 100k:', {
-          parcelaCheia100k,
-          fator: 100000 / parcelaCheia100k,
-          valorAporte: data.value
-        });
-        
         // Lógica iterativa para parcela cheia
         const valorAporte = data.value;
         let creditoTeste = 100000;
@@ -587,11 +535,6 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
         const fatorInicial = 100000 / parcelaCheia100k;
         creditoTeste = Math.ceil((valorAporte * fatorInicial) / 10000) * 10000;
         
-        console.log('🔧 [DEBUG] CreditAccessPanel - Primeira tentativa parcela cheia:', {
-          creditoTeste,
-          fatorInicial
-        });
-        
         // Iterar até encontrar o crédito correto
         while (tentativas < maxTentativas) {
           parcelaTeste = calcularParcelasProduto({
@@ -600,22 +543,10 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
             reduction: null
           }).full;
           
-          console.log('🔧 [DEBUG] CreditAccessPanel - Tentativa parcela cheia', tentativas + 1, ':', {
-            creditoTeste,
-            parcelaTeste,
-            valorAporte,
-            diferenca: parcelaTeste - valorAporte
-          });
-          
           // Se a parcela está próxima ou acima do valor do aporte (com tolerância de 1%)
           if (parcelaTeste >= valorAporte * 0.99) {
             creditoAcessado = creditoTeste;
             valorParcela = parcelaTeste;
-            console.log('🔧 [DEBUG] CreditAccessPanel - Crédito parcela cheia encontrado:', {
-              creditoAcessado,
-              valorParcela,
-              tentativas
-            });
             break;
           }
           
@@ -627,11 +558,6 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
           if (Math.abs(novoCredito - creditoTeste) < 10000) {
             creditoAcessado = creditoTeste;
             valorParcela = parcelaTeste;
-            console.log('🔧 [DEBUG] CreditAccessPanel - Convergência parcela cheia atingida:', {
-              creditoAcessado,
-              valorParcela,
-              tentativas
-            });
             break;
           }
           
@@ -643,11 +569,6 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
         if (tentativas >= maxTentativas) {
           creditoAcessado = creditoTeste;
           valorParcela = parcelaTeste;
-          console.log('🔧 [DEBUG] CreditAccessPanel - Máximo de tentativas parcela cheia atingido:', {
-            creditoAcessado,
-            valorParcela,
-            tentativas
-          });
         }
       } else if (data.searchType === 'credit') {
         // Problema 3: Busca por Crédito com Parcela Cheia - arredondar crédito para múltiplos de 10.000
@@ -672,13 +593,6 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     const taxaTotal = customAdminTax + customReserveFund;
     taxaAnual = (taxaTotal / data.term) * 12;
     
-    console.log('🔧 [DEBUG] CreditAccessPanel - Cálculo da taxa anual:', {
-      customAdminTax,
-      customReserveFund,
-      taxaTotal,
-      term: data.term,
-      taxaAnual
-    });
     // Usar valor customizado se disponível, senão usar o valor padrão
     const customAnnualUpdateRate = (data as any).annualUpdateRate !== undefined ? (data as any).annualUpdateRate : data.updateRate;
     
@@ -698,25 +612,14 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
 
   // Função para recalcular crédito baseado no valor da parcela desejada
   const recalcularCreditoParaParcela = useCallback((valorParcelaDesejada: number) => {
-    console.log('🔄 [DEBUG] CreditAccessPanel - recalcularCreditoParaParcela chamada com:', valorParcelaDesejada);
     
     if (!produtoCandidato || !installmentCandidato) {
-      console.log('❌ [DEBUG] CreditAccessPanel - produtoCandidato ou installmentCandidato não disponível');
       return 0;
     }
-    
-    console.log('🔄 [DEBUG] CreditAccessPanel - Recalculando crédito para parcela:', valorParcelaDesejada);
     
     // Usar valores customizados se disponíveis
     const customAdminTax = (data as any).adminTaxPercent !== undefined ? (data as any).adminTaxPercent : installmentCandidato.admin_tax_percent || 0;
     const customReserveFund = (data as any).reserveFundPercent !== undefined ? (data as any).reserveFundPercent : installmentCandidato.reserve_fund_percent || 0;
-    
-    console.log('🔄 [DEBUG] CreditAccessPanel - Valores de taxa para recálculo:', {
-      customAdminTax,
-      customReserveFund,
-      originalAdminTax: installmentCandidato.admin_tax_percent,
-      originalReserveFund: installmentCandidato.reserve_fund_percent
-    });
     
     const installmentParams = {
       installment_count: installmentCandidato.installment_count,
@@ -725,8 +628,6 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
       insurance_percent: installmentCandidato.insurance_percent || 0,
       optional_insurance: !!installmentCandidato.optional_insurance
     };
-    
-    console.log('🔄 [DEBUG] CreditAccessPanel - Parâmetros da parcela para recálculo:', installmentParams);
     
     let novoCredito = 0;
     let tentativas = 0;
@@ -741,15 +642,9 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
         reduction: null
       }).full;
       
-      console.log('🔄 [DEBUG] CreditAccessPanel - Parcela cheia para 100k:', parcelaCheia100k);
-      
       const fator = 100000 / parcelaCheia100k;
       novoCredito = Math.ceil((valorParcelaDesejada * fator) / 10000) * 10000;
       
-      console.log('🔄 [DEBUG] CreditAccessPanel - Cálculo simplificado:', {
-        fator,
-        novoCredito
-      });
     } else {
       // Para parcela especial - usar lógica simplificada
       const parcelaEspecial100k = regraParcelaEspecial({
@@ -758,83 +653,42 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
         reduction: reducaoParcela
       });
       
-      console.log('🔄 [DEBUG] CreditAccessPanel - Parcela especial para 100k:', parcelaEspecial100k);
-      
       const fator = 100000 / parcelaEspecial100k;
       novoCredito = Math.ceil((valorParcelaDesejada * fator) / 10000) * 10000;
       
-      console.log('🔄 [DEBUG] CreditAccessPanel - Cálculo simplificado:', {
-        fator,
-        novoCredito
-      });
     }
-    
-    console.log('🔄 [DEBUG] CreditAccessPanel - Novo crédito calculado:', novoCredito);
-    console.log('🔄 [DEBUG] CreditAccessPanel - Resultado final do recálculo:', {
-      valorParcelaDesejada,
-      novoCredito,
-      tentativas,
-      installmentType: data.installmentType,
-      searchType: data.searchType
-    });
     return novoCredito;
   }, [produtoCandidato, installmentCandidato, data.adminTaxPercent, data.reserveFundPercent, data.installmentType, data.term, reducaoParcela]);
 
   // Recálculo automático quando as taxas são alteradas
   useEffect(() => {
-    console.log('🔄 [DEBUG] CreditAccessPanel - useEffect recálculo executado:', {
-      shouldRecalculateCredit,
-      searchType: data.searchType,
-      value: data.value,
-      adminTaxPercent: (data as any).adminTaxPercent,
-      reserveFundPercent: (data as any).reserveFundPercent
-    });
     
     if (shouldRecalculateCredit && data.searchType === 'contribution' && data.value > 0) {
-      console.log('🔄 [DEBUG] CreditAccessPanel - Iniciando recálculo automático');
       
       const valorParcelaDesejada = data.value;
       const novoCredito = recalcularCreditoParaParcela(valorParcelaDesejada);
       
-      console.log('🔄 [DEBUG] CreditAccessPanel - Resultado do recálculo:', {
-        valorParcelaDesejada,
-        novoCredito,
-        onCreditoAcessado: !!onCreditoAcessado
-      });
-      
       if (novoCredito > 0) {
-        console.log('🔄 [DEBUG] CreditAccessPanel - Atualizando crédito acessado para:', novoCredito);
         // Atualizar o crédito acessado no parent
         if (onCreditoAcessado) {
           onCreditoAcessado(novoCredito);
         }
       } else {
-        console.log('❌ [DEBUG] CreditAccessPanel - Falha no recálculo: novoCredito <= 0');
+        // Falha no recálculo: novoCredito <= 0
       }
     } else {
-      console.log('🔄 [DEBUG] CreditAccessPanel - Condições não atendidas para recálculo:', {
-        shouldRecalculateCredit,
-        searchType: data.searchType,
-        value: data.value
-      });
+      // Condições não atendidas para recálculo
     }
   }, [shouldRecalculateCredit, data.searchType, data.value, recalcularCreditoParaParcela, onCreditoAcessado]);
 
   // Teste direto da função de recálculo para debug
   useEffect(() => {
     if (shouldRecalculateCredit && produtoCandidato && installmentCandidato) {
-      console.log('🧪 [DEBUG] CreditAccessPanel - Teste direto da função de recálculo');
       
       // Testar com valores específicos
       const testValue = 5000; // Valor do aporte
       const testAdminTax = (data as any).adminTaxPercent || 27;
       const testReserveFund = (data as any).reserveFundPercent || 1;
-      
-      console.log('🧪 [DEBUG] CreditAccessPanel - Valores de teste:', {
-        testValue,
-        testAdminTax,
-        testReserveFund
-      });
       
       // Calcular parcela com 100k para teste
       const testInstallmentParams = {
@@ -849,16 +703,10 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
         ? calcularParcelasProduto({ credit: 100000, installment: testInstallmentParams, reduction: null }).full
         : regraParcelaEspecial({ credit: 100000, installment: testInstallmentParams, reduction: reducaoParcela });
       
-      console.log('🧪 [DEBUG] CreditAccessPanel - Parcela para 100k:', testParcela100k);
-      
       // Calcular fator
       const testFator = 100000 / testParcela100k;
       const testCredito = Math.ceil((testValue * testFator) / 10000) * 10000;
       
-      console.log('🧪 [DEBUG] CreditAccessPanel - Crédito calculado:', {
-        testFator,
-        testCredito
-      });
     }
   }, [shouldRecalculateCredit, produtoCandidato, installmentCandidato, data]);
 

@@ -52,12 +52,6 @@ export function calculateCreditoAcessado(month, baseCredit, contemplationMonth, 
 }
 
 export function generateConsortiumInstallments(params) {
-  // Debug estratégico para comparar gráfico e tabela
-  try {
-    console.log('[DEBUG][generateConsortiumInstallments] Parâmetros:', JSON.stringify(params, null, 2));
-  } catch (e) {
-    console.log('[DEBUG][generateConsortiumInstallments] Parâmetros (erro ao serializar):', params);
-  }
   const { product, administrator, contemplationMonth, selectedCredits = [], creditoAcessado = 0, embutido = 'sem', installmentType = 'full', customAdminTaxPercent, customReserveFundPercent, customAnnualUpdateRate, maxEmbeddedPercentage } = params;
   const data = [];
   const totalMonths = product.termMonths || 240;
@@ -72,8 +66,6 @@ export function generateConsortiumInstallments(params) {
   let valorBaseInicial = 0;
   let creditoAcessadoContemplacao = 0;
   let valorParcelaFixo = 0;
-  
-  console.log('[DEBUG][generateConsortiumInstallments] Iniciando cálculo com:', { baseCredit, adminTaxRate, reserveFundRate, totalMonths, contemplationMonth });
   
   for (let month = 1; month <= totalMonths; month++) {
     // Calcular crédito e crédito acessado (igual à tabela)
@@ -177,9 +169,6 @@ export function generateConsortiumInstallments(params) {
     // Garantir que a parcela nunca seja negativa
     installmentValue = Math.max(installmentValue, 0.01);
     
-    // Log detalhado para debug
-    console.log(`[DEBUG][Installments] Mês: ${month}, Saldo Devedor: ${saldoDevedorAcumulado}, Parcela: ${installmentValue}`);
-    
     data.push({
       month,
       credit: credito,
@@ -187,9 +176,6 @@ export function generateConsortiumInstallments(params) {
       remainingBalance: saldoDevedorAcumulado
     });
   }
-  
-  console.log('[DEBUG][generateConsortiumInstallments] Primeiras parcelas:', data.slice(0, 10));
-  console.log('[DEBUG][generateConsortiumInstallments] Parcela mês 37:', data[36]?.installmentValue);
   
   return data;
 } 
