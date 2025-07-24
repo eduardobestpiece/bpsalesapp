@@ -436,6 +436,32 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
 
 
+      {/* Seção de Ganho de Capital */}
+      {visibleSections.capital && (roiOperacao === null || roiOperacao >= 10) && (
+        <div ref={capitalSectionRef} className="w-full">
+          <CapitalGainSection 
+            creditoAcessado={creditoAcessado}
+            contemplationMonth={localSimulationData.contemplationMonth || 60}
+            installmentType={localSimulationData.installmentType}
+            product={{ nominalCreditValue: localSimulationData.value, termMonths: termValue }}
+            administrator={{ 
+              administrationRate: 0.27,
+              updateMonth: 8,
+              gracePeriodDays: 90,
+              inccRate: 6,
+              postContemplationAdjustment: 0.5,
+              maxEmbeddedPercentage: 25
+            }}
+            embutido={embutido}
+            selectedCredits={selectedCredits}
+            customAnnualUpdateRate={annualUpdateRate}
+            agioPercent={agioPercent}
+            setAgioPercent={setAgioPercent}
+            onRoiChange={setRoiOperacao}
+          />
+        </div>
+      )}
+
       {/* Seção de Nova Alavancagem Patrimonial */}
       {visibleSections.leverage && (firstRowCredit > 0) && (
         <div className="w-full mt-8">
@@ -465,32 +491,6 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             mesContemplacao={mesContemplacao}
             parcelaInicial={firstRowInstallmentValue || 0}
             prazoTotal={termValue}
-          />
-        </div>
-      )}
-
-      {/* Seção de Ganho de Capital */}
-      {visibleSections.capital && (roiOperacao === null || roiOperacao >= 10) && (
-        <div ref={capitalSectionRef} className="w-full">
-          <CapitalGainSection 
-            creditoAcessado={creditoAcessado}
-            contemplationMonth={localSimulationData.contemplationMonth || 60}
-            installmentType={localSimulationData.installmentType}
-            product={{ nominalCreditValue: localSimulationData.value, termMonths: termValue }}
-            administrator={{ 
-              administrationRate: 0.27,
-              updateMonth: 8,
-              gracePeriodDays: 90,
-              inccRate: 6,
-              postContemplationAdjustment: 0.5,
-              maxEmbeddedPercentage: 25
-            }}
-            embutido={embutido}
-            selectedCredits={selectedCredits}
-            customAnnualUpdateRate={annualUpdateRate}
-            agioPercent={agioPercent}
-            setAgioPercent={setAgioPercent}
-            onRoiChange={setRoiOperacao}
           />
         </div>
       )}
