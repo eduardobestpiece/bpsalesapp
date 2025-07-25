@@ -545,43 +545,157 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     return creditosSugeridos;
   };
 
+  // Função para sugerir créditos dinamicamente baseado no valor de aporte
+  const sugerirCreditosDinamico = async (valorAporte: number, administratorId: string, term: number, installmentType: string) => {
+    console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Iniciando cálculo:', {
+      valorAporte,
+      administratorId,
+      term,
+      installmentType
+    });
+
+    // Buscar installment types da administradora
+    let installmentTypes = [];
+    try {
+      const { data: types } = await supabase
+        .from('installment_types')
+        .select('*')
+        .eq('administrator_id', administratorId)
+        .eq('installment_count', term)
+        .eq('is_archived', false);
+      
+      if (types && types.length > 0) {
+        installmentTypes = types;
+        console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Installment types encontrados:', installmentTypes.length);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar installment types:', error);
+    }
+
+    if (installmentTypes.length === 0) {
+      console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Nenhum installment type encontrado');
+      return [];
+    }
+
+    // Buscar redução de parcela se necessário
+    let reducaoParcela = null;
+    if (installmentType !== 'full') {
+      try {
+        const { data: reducoes } = await supabase
+          .from('installment_reductions')
+          .select('*')
+          .eq('is_archived', false)
+          .eq('id', installmentType);
+        
+        if (reducoes && reducoes.length > 0) {
+          reducaoParcela = reducoes[0];
+          console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Redução de parcela encontrada:', reducaoParcela);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar redução de parcela:', error);
+      }
+    }
+
+    const creditosSugeridos = [];
+    const installmentCandidato = installmentTypes[0]; // Usar o primeiro installment type disponível
+
+    const installmentParams = {
+      installment_count: installmentCandidato.installment_count,
+      admin_tax_percent: installmentCandidato.admin_tax_percent || 0,
+      reserve_fund_percent: installmentCandidato.reserve_fund_percent || 0,
+      insurance_percent: installmentCandidato.insurance_percent || 0,
+      optional_insurance: !!installmentCandidato.optional_insurance
+    };
+
+    console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Parâmetros da parcela:', installmentParams);
+
+    // Gerar créditos começando de 50k até 5M em múltiplos de 10k
+    const creditosTeste = [];
+    for (let credito = 50000; credito <= 5000000; credito += 10000) {
+      creditosTeste.push(credito);
+    }
+
+    console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Testando', creditosTeste.length, 'créditos');
+
+    // Calcular parcela para cada crédito
+    for (const credito of creditosTeste) {
+      let parcela = 0;
+      if (installmentType === 'full') {
+        parcela = calcularParcelasProduto({
+          credit: credito,
+          installment: installmentParams,
+          reduction: null
+        }).full;
+      } else {
+        parcela = regraParcelaEspecial({
+          credit: credito,
+          installment: installmentParams,
+          reduction: reducaoParcela
+        });
+      }
+
+      // Se a parcela é maior ou igual ao valor desejado, adicionar como opção
+      if (parcela >= valorAporte) {
+        const diferenca = Math.abs(parcela - valorAporte);
+        
+        creditosSugeridos.push({
+          id: `generated-${credito}`,
+          name: `R$ ${(credito / 1000).toFixed(0)}.000,00 (Imóvel)`,
+          creditValue: credito,
+          installmentValue: parcela,
+          selected: false,
+          productId: null,
+          administratorId: administratorId,
+          type: 'property',
+          diferenca: diferenca
+        });
+
+        console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Encontrada opção:', {
+          credito,
+          parcela,
+          diferenca
+        });
+      }
+    }
+
+    // Ordenar por valor do crédito (maior primeiro) para encontrar o maior crédito possível
+    creditosSugeridos.sort((a, b) => b.creditValue - a.creditValue);
+
+    // Selecionar as 5 melhores opções (maiores créditos)
+    const melhoresOpcoes = creditosSugeridos.slice(0, 5);
+    
+    if (melhoresOpcoes.length > 0) {
+      melhoresOpcoes[0].selected = true;
+      console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Melhor opção selecionada (maior crédito):', {
+        creditoAcessado: melhoresOpcoes[0].creditValue,
+        valorParcela: melhoresOpcoes[0].installmentValue,
+        diferenca: melhoresOpcoes[0].diferenca
+      });
+    }
+
+    console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Total de créditos sugeridos:', melhoresOpcoes.length);
+    return melhoresOpcoes;
+  };
+
   // Atualizar para usar a função de múltiplos créditos
   useEffect(() => {
     if (data.administrator && data.value > 0 && selectedCompanyId) {
       (async () => {
         try {
-          // Primeira tentativa: buscar produtos da administradora selecionada
-          let { data: products, error } = await supabase
-            .from('products')
-            .select('*, installment_types:product_installment_types(installment_types(*))')
-            .eq('is_archived', false)
-            .eq('administrator_id', data.administrator)
-            .order('credit_value');
-
-          // Se não encontrou produtos da administradora, buscar de qualquer empresa
-          if (!products || products.length === 0) {
-            const { data: allProducts, error: allError } = await supabase
-              .from('products')
-              .select('*, installment_types:product_installment_types(installment_types(*))')
-              .eq('is_archived', false)
-              .order('credit_value');
-            
-            products = allProducts;
-            error = allError;
-          }
-
-          if (error) throw error;
-          setAvailableProducts(products || []);
-
-          // Restaurar chamada de sugerirCreditosInteligente
-          const calculatedCredits = await sugerirCreditosInteligente(products || [], data);
+          // Usar a nova lógica dinâmica em vez de buscar produtos
+          const calculatedCredits = await sugerirCreditosDinamico(
+            data.value,
+            data.administrator,
+            data.term,
+            data.installmentType
+          );
           setCredits(calculatedCredits);
         } catch (error) {
           console.error('Error calculating credits:', error);
         }
       })();
     }
-  }, [data.administrator, data.value, selectedCompanyId]);
+  }, [data.administrator, data.value, selectedCompanyId, data.term, data.installmentType]);
 
   useEffect(() => {
     if (showDetails && credits.length > 0) {
