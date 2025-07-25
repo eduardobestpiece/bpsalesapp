@@ -59,13 +59,74 @@ interface CreditAccessPanelProps {
 
 // Adicionar/ajustar o componente ResumoCard
 function ResumoCard({ titulo, valor, destaquePositivo, destaqueNegativo }: { titulo: string, valor: string, destaquePositivo?: boolean, destaqueNegativo?: boolean }) {
+  // Definir cores baseadas no título para manter consistência
+  const getCardColors = (titulo: string) => {
+    const tituloLower = titulo.toLowerCase();
+    if (tituloLower.includes('crédito') || tituloLower.includes('credit')) {
+      return {
+        bg: 'from-blue-50 to-blue-100 dark:from-[#1F1F1F] dark:to-[#161616]',
+        border: 'border-blue-200 dark:border-[#A86F57]/40',
+        label: 'text-blue-700 dark:text-[#A86F57]',
+        value: 'text-blue-900 dark:text-white'
+      };
+    } else if (tituloLower.includes('parcela') || tituloLower.includes('installment')) {
+      return {
+        bg: 'from-green-50 to-green-100 dark:from-[#1F1F1F] dark:to-[#161616]',
+        border: 'border-green-200 dark:border-[#A86F57]/40',
+        label: 'text-green-700 dark:text-[#A86F57]',
+        value: 'text-green-900 dark:text-white'
+      };
+    } else if (tituloLower.includes('taxa') || tituloLower.includes('rate')) {
+      return {
+        bg: 'from-purple-50 to-purple-100 dark:from-[#1F1F1F] dark:to-[#161616]',
+        border: 'border-purple-200 dark:border-[#A86F57]/40',
+        label: 'text-purple-700 dark:text-[#A86F57]',
+        value: 'text-purple-900 dark:text-white'
+      };
+    } else if (tituloLower.includes('atualização') || tituloLower.includes('update')) {
+      return {
+        bg: 'from-orange-50 to-orange-100 dark:from-[#1F1F1F] dark:to-[#161616]',
+        border: 'border-orange-200 dark:border-[#A86F57]/40',
+        label: 'text-orange-700 dark:text-[#A86F57]',
+        value: 'text-orange-900 dark:text-white'
+      };
+    } else if (tituloLower.includes('total')) {
+      return {
+        bg: 'from-indigo-50 to-indigo-100 dark:from-[#1F1F1F] dark:to-[#161616]',
+        border: 'border-indigo-200 dark:border-[#A86F57]/40',
+        label: 'text-indigo-700 dark:text-[#A86F57]',
+        value: 'text-indigo-900 dark:text-white'
+      };
+    } else if (tituloLower.includes('acréscimo') || tituloLower.includes('increment')) {
+      return {
+        bg: 'from-teal-50 to-teal-100 dark:from-[#1F1F1F] dark:to-[#161616]',
+        border: 'border-teal-200 dark:border-[#A86F57]/40',
+        label: 'text-teal-700 dark:text-[#A86F57]',
+        value: 'text-teal-900 dark:text-white'
+      };
+    } else {
+      // Cor padrão
+      return {
+        bg: 'from-gray-50 to-gray-100 dark:from-[#1F1F1F] dark:to-[#161616]',
+        border: 'border-gray-200 dark:border-[#A86F57]/40',
+        label: 'text-gray-700 dark:text-[#A86F57]',
+        value: 'text-gray-900 dark:text-white'
+      };
+    }
+  };
+
+  const colors = getCardColors(titulo);
+  
+  // Aplicar destaque se necessário
+  const finalValueClass = destaquePositivo ? 'text-green-600 dark:text-green-400' : 
+                         destaqueNegativo ? 'text-red-600 dark:text-red-400' : 
+                         colors.value;
+
   return (
-    <Card className={destaquePositivo ? 'border-green-500' : destaqueNegativo ? 'border-red-500' : ''}>
-      <CardContent className="p-4">
-        <div className="text-sm text-muted-foreground">{titulo}</div>
-        <div className={`text-2xl font-bold ${destaquePositivo ? 'text-green-600' : destaqueNegativo ? 'text-red-600' : 'text-primary'}`}>{valor}</div>
-      </CardContent>
-    </Card>
+    <div className={`space-y-2 p-4 bg-gradient-to-r ${colors.bg} rounded-lg border ${colors.border}`}>
+      <Label className={`text-sm ${colors.label} font-medium`}>{titulo}</Label>
+      <div className={`text-2xl font-bold ${finalValueClass}`}>{valor}</div>
+    </div>
   );
 }
 

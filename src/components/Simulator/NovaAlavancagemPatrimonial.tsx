@@ -10,6 +10,8 @@ import { PatrimonyChart } from './PatrimonyChart';
 import { generateConsortiumInstallments } from '@/utils/consortiumInstallments';
 import { DetailTable } from './DetailTable';
 import { InstallmentsChart } from './InstallmentsChart';
+import { Label } from '@/components/ui/label';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 
 type Leverage = Database['public']['Tables']['leverages']['Row'];
 
@@ -266,10 +268,11 @@ export const NovaAlavancagemPatrimonial = ({
 
   // Usar chartData escalonado se aplicável
   const escalonadaResult = calcularContemplacoesEscalonadas();
-  const patrimonioFinal = isAlavancagemEscalonada ? escalonadaResult.patrimonioTotal : patrimonioAoFinal;
+  const chartData = isAlavancagemEscalonada ? escalonadaResult.chartData : gerarChartDataSimples();
+  // Patrimônio ao final: sempre igual ao patrimônio do último mês do gráfico
+  const patrimonioFinal = chartData.length > 0 ? chartData[chartData.length - 1].patrimony : 0;
   const rendimentosUltimoMes = isAlavancagemEscalonada ? escalonadaResult.rendaPassiva : ganhosMensais;
   const contemplacoes = isAlavancagemEscalonada ? escalonadaResult.contemplacoes : [{ mes: mesContemplacao, patrimonio: patrimonioNaContemplacao }];
-  const chartData = isAlavancagemEscalonada ? escalonadaResult.chartData : gerarChartDataSimples();
 
   // Fluxo de Caixa Antes 240 meses
   const fluxoCaixaAntes = ganhosMensais - parcelaAfterContemplacao;
@@ -290,9 +293,6 @@ export const NovaAlavancagemPatrimonial = ({
 
   // Pago do Próprio Bolso
   const pagoProprioBolso = somaParcelasAteContemplacao;
-
-  // Pago pelo Inquilino (placeholder, pois depende do prazo e lógica de ganhos mensais após contemplação)
-  const pagoPeloInquilino = 0; // Implementar lógica se necessário
 
   // Handler para formatação monetária ao digitar
   function handleValorAlavancaChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -456,133 +456,163 @@ export const NovaAlavancagemPatrimonial = ({
   // Pago pelo Inquilino (% do patrimônio inicial)
   const pagoPeloInquilinoPercent = patrimonioNaContemplacao > 0 ? ((patrimonioNaContemplacao - (pagoProprioBolso - acumuloCaixaFinal)) / patrimonioNaContemplacao) * 100 : 0;
 
+  // Cálculo dos novos campos de resultado
+  // Investimento: soma das parcelas até o mês da aquisição do patrimônio / Patrimônio na Contemplação
+  const mesAquisicao = mesContemplacao + periodoCompra;
+  const investimentoNumerador = chartData && chartData.length > 0 ? chartData.filter(row => row.month <= mesAquisicao).reduce((acc, row) => acc + (row.parcelaTabelaMes || 0), 0) : 0;
+  const investimentoDenominador = patrimonioNaContemplacao || 1;
+  const investimento = investimentoNumerador / investimentoDenominador;
+
+  // Corrigir: pegar o fluxo de caixa do maior mês do gráfico
+  const ultimoMes = chartData && chartData.length > 0 ? Math.max(...chartData.map(row => row.month ?? row.mes ?? 0)) : 0;
+  const fluxoCaixaUltimoMes = chartData && chartData.length > 0 ? (chartData.find(row => (row.month ?? row.mes ?? 0) === ultimoMes)?.fluxoCaixa || 0) : 0;
+  const pagoPeloInquilino = ((patrimonioNaContemplacao - investimentoNumerador) + fluxoCaixaUltimoMes) / investimentoDenominador;
+
+  // Atualizar gráficos instantaneamente ao mudar valorAlavanca
+  useEffect(() => {
+    // Forçar atualização dos gráficos ao mudar valorAlavanca
+    setChartDataState([]); // Limpa para garantir atualização
+    setInstallmentsChartData([]);
+  }, [valorAlavanca]);
+
   return (
     <div className="space-y-8">
-      {/* Primeira seção - Filtros */}
+      {/* Seção unificada - Alavancagem patrimonial */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Filtros da Nova Alavancagem Patrimonial</CardTitle>
+          <CardTitle>Alavancagem patrimonial</CardTitle>
           <Button variant="ghost" size="icon" title="Detalhamento de alavancagem">
             <Settings size={20} />
           </Button>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Selecione a alavancagem</label>
-            <Select value={alavancaSelecionada} onValueChange={setAlavancaSelecionada} disabled={loading || alavancas.length === 0}>
-              <SelectTrigger>
-                <SelectValue placeholder={loading ? 'Carregando...' : 'Escolha uma alavanca'} />
-              </SelectTrigger>
-              <SelectContent>
-                {alavancas.map(opt => (
-                  <SelectItem key={opt.id} value={opt.id}>{opt.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Valor da alavanca</label>
-            <Input type="text" value={valorAlavanca} onChange={handleValorAlavancaChange} placeholder="R$ 0,00" inputMode="numeric" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Tipo de alavancagem</label>
-            <Select value={tipoAlavancagem} onValueChange={setTipoAlavancagem}>
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione o tipo de alavancagem" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="simples">Alavancagem simples</SelectItem>
-                <SelectItem value="escalonada" disabled style={{ color: '#aaa', cursor: 'not-allowed' }}>Alavancagem escalonada (em breve)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Período de Compra (meses)</label>
-            <Input
-              type="number"
-              min={1}
-              value={periodoCompra}
-              onChange={e => setPeriodoCompra(Number(e.target.value))}
-              className="w-full"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Segunda seção - Informações da alavanca */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Informações da Alavanca</CardTitle>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>Valor da diária: <span className="font-bold">{valorDiaria ? valorDiaria.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</span></div>
-          <div>Ocupação: <span className="font-bold">{ocupacaoDias ? `${ocupacaoDias} dias` : '-'}</span></div>
-          <div>Taxa do Airbnb: <span className="font-bold">{taxaAirbnb ? taxaAirbnb.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</span></div>
-          <div>Custos totais: <span className="font-bold">{custosTotais ? custosTotais.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</span></div>
-          <div>Ganhos mensais: <span className="font-bold">{ganhosMensais ? ganhosMensais.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</span></div>
-          <div>Número de imóveis: <span className="font-bold">{numeroImoveis}</span></div>
-        </CardContent>
-      </Card>
-
-      {/* Terceira seção - Resultados */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Resultados</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
-            <Card className="bg-muted border-none">
-              <CardContent className="p-4">
-                <div className="text-sm text-muted-foreground">Patrimônio na Contemplação</div>
-                <div className="text-2xl font-bold" style={{ color: '#A86E57' }}>{patrimonioNaContemplacao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
-              </CardContent>
-            </Card>
-            <Card className="bg-muted border-none">
-              <CardContent className="p-4">
-                <div className="text-sm text-muted-foreground">Patrimônio ao final</div>
-                <div className="text-2xl font-bold" style={{ color: '#A86E57' }}>{patrimonioFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}</div>
-              </CardContent>
-            </Card>
-            <Card className="bg-muted border-none">
-              <CardContent className="p-4">
-                <div className="text-sm text-muted-foreground">Ganhos Mensais</div>
-                <div className="text-2xl font-bold" style={{ color: '#A86E57' }}>{rendimentosUltimoMes.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
-              </CardContent>
-            </Card>
-            <Card className="bg-muted border-none">
-              <CardContent className="p-4">
-                <div className="text-sm text-muted-foreground">Fluxo de Caixa Antes 240 meses</div>
-                <div className="text-2xl font-bold" style={{ color: '#A86E57' }}>{fluxoCaixaAntes.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
-              </CardContent>
-            </Card>
-          </div>
+        <CardContent className="space-y-8">
+          {/* Filtros */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Card className="bg-muted border-none">
-              <CardContent className="p-4">
-                <div className="text-sm text-muted-foreground">Parcela Pós-Contemplação</div>
-                <div className="text-2xl font-bold" style={{ color: '#A86E57' }}>{parcelaPosContemplacao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
-              </CardContent>
-            </Card>
-            <Card className="bg-muted border-none">
-                              <CardContent className="p-4">
-                  <div className="text-sm text-muted-foreground">Renda passiva</div>
-                  <div className="text-2xl font-bold" style={{ color: '#A86E57' }}>{rendaPassiva.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
-                </CardContent>
-            </Card>
-            <Card className="bg-muted border-none">
-                              <CardContent className="p-4">
-                  <div className="text-sm text-muted-foreground">Pago do Próprio Bolso</div>
-                  <div className="text-2xl font-bold" style={{ color: '#A86E57' }}>{pagoProprioBolsoPercent.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%</div>
-                  <div className="text-xs text-muted-foreground">({(pagoProprioBolso - acumuloCaixaFinal).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})</div>
-                </CardContent>
-            </Card>
-            <Card className="bg-muted border-none">
-              <CardContent className="p-4">
-                <div className="text-sm text-muted-foreground">Pago pelo Inquilino</div>
-                <div className="text-2xl font-bold" style={{ color: '#A86E57' }}>{pagoPeloInquilinoPercent.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%</div>
-                <div className="text-xs text-muted-foreground">({(patrimonioNaContemplacao - (pagoProprioBolso - acumuloCaixaFinal)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})</div>
-              </CardContent>
-            </Card>
+            <div>
+              <label className="block text-sm font-medium mb-1">Selecione a alavancagem</label>
+              <Select value={alavancaSelecionada} onValueChange={setAlavancaSelecionada} disabled={loading || alavancas.length === 0}>
+                <SelectTrigger>
+                  <SelectValue placeholder={loading ? 'Carregando...' : 'Escolha uma alavanca'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {alavancas.map(opt => (
+                    <SelectItem key={opt.id} value={opt.id}>{opt.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Valor da alavanca</label>
+              <Input type="text" value={valorAlavanca} onChange={handleValorAlavancaChange} placeholder="R$ 0,00" inputMode="numeric" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Tipo de alavancagem</label>
+              <Select value={tipoAlavancagem} onValueChange={setTipoAlavancagem}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecione o tipo de alavancagem" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="simples">Alavancagem simples</SelectItem>
+                  <SelectItem value="escalonada" disabled style={{ color: '#aaa', cursor: 'not-allowed' }}>Alavancagem escalonada (em breve)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Período de Compra (meses)</label>
+              <Input
+                type="number"
+                min={1}
+                value={periodoCompra}
+                onChange={e => setPeriodoCompra(Number(e.target.value))}
+                className="w-full"
+              />
+            </div>
+          </div>
+          
+          {/* Informações da alavanca */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>Valor da diária: <span className="font-bold">{valorDiaria ? valorDiaria.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</span></div>
+            <div>Ocupação: <span className="font-bold">{ocupacaoDias ? `${ocupacaoDias} dias` : '-'}</span></div>
+            <div>Taxa do Airbnb: <span className="font-bold">{taxaAirbnb ? taxaAirbnb.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</span></div>
+            <div>Custos totais: <span className="font-bold">{custosTotais ? custosTotais.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</span></div>
+            <div>Ganhos mensais: <span className="font-bold">{ganhosMensais ? ganhosMensais.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</span></div>
+            <div>Número de imóveis: <span className="font-bold">{numeroImoveis}</span></div>
+          </div>
+
+          {/* Resultados */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">Resultados</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="space-y-2 p-4 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-blue-200 dark:border-[#A86F57]/40">
+                <Label className="text-sm text-blue-700 dark:text-[#A86F57] font-medium">Patrimônio na Contemplação</Label>
+                <div className="text-2xl font-bold text-blue-900 dark:text-white">
+                  {patrimonioNaContemplacao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </div>
+              </div>
+              
+              <div className="space-y-2 p-4 bg-gradient-to-r from-green-50 to-green-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-green-200 dark:border-[#A86F57]/40">
+                <Label className="text-sm text-green-700 dark:text-[#A86F57] font-medium">Parcela Pós-Contemplação</Label>
+                <div className="text-2xl font-bold text-green-900 dark:text-white">
+                  {parcelaPosContemplacao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </div>
+              </div>
+              
+              <div className="space-y-2 p-4 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-purple-200 dark:border-[#A86F57]/40">
+                <Label className="text-sm text-purple-700 dark:text-[#A86F57] font-medium">Ganhos Mensais</Label>
+                <div className="text-2xl font-bold text-purple-900 dark:text-white">
+                  {rendimentosUltimoMes.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </div>
+              </div>
+              
+              <div className="space-y-2 p-4 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-orange-200 dark:border-[#A86F57]/40">
+                <Label className="text-sm text-orange-700 dark:text-[#A86F57] font-medium">Fluxo de Caixa</Label>
+                <div className="text-2xl font-bold text-orange-900 dark:text-white">
+                  {fluxoCaixaAntes.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </div>
+              </div>
+              
+              <div className="space-y-2 p-4 bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-indigo-200 dark:border-[#A86F57]/40">
+                <Label className="text-sm text-indigo-700 dark:text-[#A86F57] font-medium">Patrimônio final</Label>
+                <div className="text-2xl font-bold text-indigo-900 dark:text-white">
+                  {patrimonioFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}
+                </div>
+              </div>
+              
+              <div className="space-y-2 p-4 bg-gradient-to-r from-teal-50 to-teal-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-teal-200 dark:border-[#A86F57]/40">
+                <Label className="text-sm text-teal-700 dark:text-[#A86F57] font-medium">Renda passiva</Label>
+                <div className="text-2xl font-bold text-teal-900 dark:text-white">
+                  {rendaPassiva.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                </div>
+              </div>
+              
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="space-y-2 p-4 bg-gradient-to-r from-pink-50 to-pink-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-pink-200 dark:border-[#A86F57]/40">
+                    <Label className="text-sm text-pink-700 dark:text-[#A86F57] font-medium">Investimento</Label>
+                    <div className="text-2xl font-bold text-pink-900 dark:text-white">
+                      {(investimento * 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%
+                    </div>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Investimento total: {investimentoNumerador.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                </TooltipContent>
+              </Tooltip>
+              
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="space-y-2 p-4 bg-gradient-to-r from-amber-50 to-amber-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-amber-200 dark:border-[#A86F57]/40">
+                    <Label className="text-sm text-amber-700 dark:text-[#A86F57] font-medium">Pago pelo inquilino</Label>
+                    <div className="text-2xl font-bold text-amber-900 dark:text-white">
+                      {(pagoPeloInquilino * 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%
+                    </div>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Valor pago pelo inquilino: {(patrimonioNaContemplacao - investimentoNumerador).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -591,16 +621,15 @@ export const NovaAlavancagemPatrimonial = ({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Gráfico de Parcelas do Mês e Soma das Parcelas</CardTitle>
-          <button onClick={() => setShowLegend((v) => !v)} className="p-2 rounded-full bg-gray-700 hover:bg-gray-600 transition-colors">
-            <Settings size={16} className="text-gray-300" />
-          </button>
+          {/* Removido: botão de engrenagem de configurações */}
         </CardHeader>
         <CardContent>
           <InstallmentsChart data={installmentsChartData} showLegend={showLegend} />
         </CardContent>
       </Card>
       <DetailTable
-        product={product}
+        key={valorAlavanca}
+        product={{ ...product, nominalCreditValue: valor }}
         administrator={administrator}
         contemplationMonth={contemplationMonth}
         selectedCredits={selectedCredits}
@@ -610,6 +639,8 @@ export const NovaAlavancagemPatrimonial = ({
         customAdminTaxPercent={customAdminTaxPercent}
         customReserveFundPercent={customReserveFundPercent}
         customAnnualUpdateRate={customAnnualUpdateRate}
+        periodoCompra={periodoCompra}
+        valorAlavancaNum={valor}
         onTableDataGenerated={(tableData) => {
           setChartDataState(tableData.map(row => ({ ...row, month: row.mes, parcelaTabelaMes: row.valorParcela })));
           // Montar dados para o novo gráfico
@@ -684,6 +715,8 @@ export const NovaAlavancagemPatrimonial = ({
               rendaPassiva,
               rendaPassivaAcumulada,
               fluxoCaixa,
+              patrimonioNaContemplacao,
+              valorAlavancaNum: valor,
             });
           }
           if (tableData.length < prazoTotal + 1) {
@@ -737,6 +770,8 @@ export const NovaAlavancagemPatrimonial = ({
                 rendaPassiva,
                 rendaPassivaAcumulada,
                 fluxoCaixa,
+                patrimonioNaContemplacao,
+                valorAlavancaNum: valor,
               });
             }
           }

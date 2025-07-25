@@ -20,6 +20,29 @@ interface CapitalGainSectionProps {
   onRoiChange?: (roi: number) => void;
 }
 
+// Constantes para o tooltip personalizado
+const gray1 = '#ededed';
+const gray2 = '#e5e5e5';
+const fundo = '#131313';
+const marrom = '#A86E57';
+
+// CustomTooltip para o gráfico de barras
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div style={{ background: fundo, borderRadius: 16, border: '1px solid #444', padding: 16, color: gray1, minWidth: 200 }}>
+        <div style={{ color: marrom, fontWeight: 700, marginBottom: 8 }}>Mês: {label}</div>
+        {payload.map((entry: any, idx: number) => (
+          <div key={entry.dataKey} style={{ color: idx % 2 === 0 ? gray1 : gray2, fontWeight: 500, marginBottom: 2 }}>
+            <span style={{ color: idx % 2 === 0 ? gray1 : gray2, fontWeight: 700 }}>{entry.name}</span>: <span style={{ color: idx % 2 === 0 ? gray1 : gray2 }}>{typeof entry.value === 'number' ? `R$ ${entry.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : entry.value}</span>
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
 export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
   creditoAcessado,
   contemplationMonth,
@@ -403,8 +426,7 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
                     tickFormatter={(value) => formatCurrency(value)}
                   />
                   <Tooltip 
-                    formatter={(value: number) => [formatCurrency(value), 'Lucro']}
-                    labelFormatter={(label) => `Mês ${label}`}
+                    content={<CustomTooltip />}
                   />
                   <Bar dataKey="lucro" fill="#A86E57" />
                 </BarChart>

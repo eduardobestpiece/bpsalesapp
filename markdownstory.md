@@ -1741,4 +1741,14 @@ function calcularParcelaPosContemplacao(mes: number): number {
 - [Em andamento] Adição de logs para verificar a estrutura do array parcelasTabela retornado pela função generateConsortiumInstallments, especialmente o primeiro elemento.
 - [Em andamento] Correção do acesso à propriedade da parcela. O objeto retornado pela função generateConsortiumInstallments tem a propriedade 'installmentValue', não 'valorParcela'.
 
+## 2024-07-08 - Remoção de debugs e deploy
+
+- Todos os logs de debug (console.log, console.debug, debugger, prints) foram removidos dos arquivos do projeto.
+- Build de produção realizado com sucesso.
+- Push realizado para o repositório GitHub: eduardobestpiece/consorcio-patrimonio-simulador.
+- Deploy automático acionado na Vercel.
+- Preview local testado e validado.
+
+**Status:** Concluído
+
 </rewritten_file>

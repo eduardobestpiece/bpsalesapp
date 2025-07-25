@@ -465,7 +465,6 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
       {/* Seção de Nova Alavancagem Patrimonial */}
       {visibleSections.leverage && (firstRowCredit > 0) && (
         <div className="w-full mt-8">
-          <h2 className="text-xl font-bold mb-2">Nova Alavancagem Patrimonial</h2>
           <NovaAlavancagemPatrimonial 
             product={{ nominalCreditValue: firstRowCredit, termMonths: termValue }}
             administrator={{ 

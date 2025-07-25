@@ -27,22 +27,16 @@
 
 **Solicitante:** usuário
 
-**Resumo:** Remover todos os debugs (console.log, console.debug, debugger, prints) do projeto e realizar o deploy.
+**Resumo:** Remover os campos 'Pago do Próprio Bolso' e 'Pago pelo Inquilino' da seção de Resultados da alavancagem patrimonial.
 
 ## Etapas realizadas
-- Análise do histórico e contexto do projeto.
-- Busca e identificação de todos os pontos de debug no código.
-- Remoção de todos os logs de debug dos arquivos:
-  - src/components/Simulator/CreditAccessPanel.tsx
-  - src/components/Simulator/SimulatorConfigModal.tsx
-  - src/components/Simulator/NovaAlavancagemPatrimonial.tsx
-  - src/components/Simulator/NewSimulatorLayout.tsx
-  - src/utils/consortiumInstallments.ts
+- Análise do contexto e histórico do projeto.
+- Remoção dos cards 'Pago do Próprio Bolso' e 'Pago pelo Inquilino' dos resultados.
 - Build de produção iniciado e preview em execução na porta 8080.
 
 ## Checklist
 - [x] Analisar contexto e histórico
-- [x] Identificar e remover debugs
+- [x] Remover campos dos resultados
 - [x] Atualizar requeststory.md
 - [x] Build e deploy (preview 8080)
 - [ ] Validar funcionamento final

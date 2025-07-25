@@ -16,6 +16,10 @@ const gridColor = '#2E2E2E';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
+    // Calcular número de imóveis
+    const patrimonioNaContemplacao = payload[0]?.payload?.patrimonioNaContemplacao || 0;
+    const valorAlavanca = payload[0]?.payload?.valorAlavancaNum || 1;
+    const numeroImoveis = valorAlavanca > 0 ? patrimonioNaContemplacao / valorAlavanca : 0;
     return (
       <div style={{ background: fundo, borderRadius: 16, border: '1px solid #444', padding: 16, color: gray1, minWidth: 200 }}>
         <div style={{ color: marrom, fontWeight: 700, marginBottom: 8 }}>Mês: {label}</div>
@@ -24,6 +28,9 @@ const CustomTooltip = ({ active, payload, label }: any) => {
             <span style={{ color: idx % 2 === 0 ? gray1 : gray2, fontWeight: 700 }}>{entry.name}</span>: <span style={{ color: idx % 2 === 0 ? gray1 : gray2 }}>{typeof entry.value === 'number' ? `R$ ${entry.value.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}` : entry.value}</span>
           </div>
         ))}
+        <div style={{ color: gray1, fontWeight: 500, marginTop: 8 }}>
+          <span style={{ fontWeight: 700 }}>Imóveis:</span> {numeroImoveis.toLocaleString('pt-BR', { maximumFractionDigits: 2 })}
+        </div>
       </div>
     );
   }

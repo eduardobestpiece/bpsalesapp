@@ -19,6 +19,8 @@ interface DetailTableProps {
   customReserveFundPercent?: number; // Fundo de reserva customizado
   customAnnualUpdateRate?: number; // Taxa de atualização anual customizada
   agioPercent?: number; // NOVO: percentual de ágio
+  periodoCompra?: number; // NOVO: período de compra em meses
+  valorAlavancaNum?: number; // NOVO: valor numérico da alavanca
   onFirstRowData?: (data: { credit: number, installmentValue: number }) => void; // Callback para expor dados da primeira linha
   onContemplationRowData?: (data: { creditAccessed: number, month: number, parcelaAfter?: number, somaParcelasAteContemplacao?: number, mesContemplacao?: number }) => void; // Callback para expor dados da linha de contemplação
   onTableDataGenerated?: (tableData: any[]) => void; // Callback para sincronizar dados com outros componentes
@@ -36,6 +38,8 @@ export const DetailTable = ({
   customReserveFundPercent,
   customAnnualUpdateRate,
   agioPercent = 5, // padrão 5%
+  periodoCompra,
+  valorAlavancaNum,
   onFirstRowData,
   onContemplationRowData,
   onTableDataGenerated
@@ -278,7 +282,8 @@ export const DetailTable = ({
     let valorBaseInicial = 0; // Valor base para cálculo antes da contemplação
     let creditoAcessadoContemplacao = 0; // Valor do crédito acessado no mês de contemplação
     let valorParcelaFixo = 0; // Valor fixo da parcela após contemplação
-    
+    let receitaMenosCustosAcumulada = 0;
+    let somaParcelasAcumulada = 0;
     for (let month = 1; month <= totalMonths; month++) {
       const credito = calculateCreditValue(month, baseCredit);
       const creditoAcessado = calculateCreditoAcessado(month, baseCredit);
@@ -394,6 +399,16 @@ export const DetailTable = ({
       // ROI = Lucro / soma das parcelas pagas até o mês
       const roi = somaParcelasPagas !== 0 ? lucro / somaParcelasPagas : 0;
       
+      // Receita do mês (simples): crédito * alguma taxa, ou lógica do gráfico
+      // Custos do mês (simples): crédito * alguma taxa, ou lógica do gráfico
+      // Aqui, para exemplo, vamos usar receita e custos como zero (ajuste conforme sua lógica real)
+      const receitaMes = 0; // Substitua pela lógica real
+      const custos = 0; // Substitua pela lógica real
+      const receitaMenosCustos = receitaMes - custos;
+      receitaMenosCustosAcumulada += receitaMenosCustos;
+      somaParcelasAcumulada += valorParcela;
+      const fluxoCaixa = receitaMenosCustosAcumulada - somaParcelasAcumulada;
+      
       // Destacar linha do mês de contemplação
       const isContemplationMonth = month === contemplationMonth;
       
@@ -408,7 +423,8 @@ export const DetailTable = ({
         agio: agioLinha,
         lucro,
         roi,
-        isContemplationMonth
+        isContemplationMonth,
+        fluxoCaixa // NOVO campo
       });
     }
     
@@ -427,7 +443,7 @@ export const DetailTable = ({
   // Executar cálculo quando as dependências mudarem
   useEffect(() => {
     generateTableData();
-  }, [product, administrator, contemplationMonth, selectedCredits, creditoAcessado, installmentType, customAdminTaxPercent, customReserveFundPercent, customAnnualUpdateRate, agioPercent]);
+  }, [product, administrator, contemplationMonth, selectedCredits, creditoAcessado, installmentType, customAdminTaxPercent, customReserveFundPercent, customAnnualUpdateRate, agioPercent, periodoCompra, valorAlavancaNum]);
 
   // Notificar dados da primeira linha quando disponíveis
   useEffect(() => {
