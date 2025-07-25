@@ -550,15 +550,15 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     if (data.administrator && data.value > 0 && selectedCompanyId) {
       (async () => {
         try {
-          // Primeira tentativa: buscar produtos da empresa atual
+          // Primeira tentativa: buscar produtos da administradora selecionada
           let { data: products, error } = await supabase
             .from('products')
             .select('*, installment_types:product_installment_types(installment_types(*))')
             .eq('is_archived', false)
-            .eq('company_id', selectedCompanyId)
+            .eq('administrator_id', data.administrator)
             .order('credit_value');
 
-          // Se não encontrou produtos da empresa atual, buscar de qualquer empresa
+          // Se não encontrou produtos da administradora, buscar de qualquer empresa
           if (!products || products.length === 0) {
             const { data: allProducts, error: allError } = await supabase
               .from('products')
