@@ -503,13 +503,13 @@ export const DetailTable = ({
               }
             }} style={{ cursor: 'pointer' }} />
             <Button
-              variant="outline"
-              size="sm"
+              variant="ghost"
+              size="icon"
               onClick={() => setShowConfig(!showConfig)}
-              className="flex items-center gap-2"
+              style={{ backgroundColor: '#1E1E1E' }}
               aria-label="Configurar"
             >
-              <Settings size={20} />
+              <Settings className="w-5 h-5" />
             </Button>
           </div>
         </div>

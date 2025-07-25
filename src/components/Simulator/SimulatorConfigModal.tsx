@@ -28,6 +28,10 @@ interface SimulatorConfigModalProps {
   setContemplationMonth?: (v: number) => void;
   agioPercent: number;
   setAgioPercent: (v: number) => void;
+  administratorId: string | null;
+  setAdministratorId: (v: string) => void;
+  embutido: 'com' | 'sem';
+  setEmbutido: (v: 'com' | 'sem') => void;
 }
 
 type Administrator = Database['public']['Tables']['administrators']['Row'];
@@ -52,6 +56,10 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   setContemplationMonth,
   agioPercent,
   setAgioPercent,
+  administratorId,
+  setAdministratorId,
+  embutido,
+  setEmbutido,
 }) => {
   const { user, companyId } = useCrmAuth();
   const { selectedCompanyId } = useCompany();
@@ -70,6 +78,10 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   const [isAnnualUpdateCustomized, setIsAnnualUpdateCustomized] = useState<boolean>(false);
   // Adicionar estado local para Ágio (%)
   const [localAgioPercent, setLocalAgioPercent] = useState<number>(agioPercent);
+  // Administradora sincronizada
+  const [selectedAdministratorId, setSelectedAdministratorIdLocal] = useState<string | null>(administratorId);
+  // Estado local para embutido
+  const [localEmbutido, setLocalEmbutido] = useState<'com' | 'sem'>(embutido);
 
   // Dados do banco
   const [administrators, setAdministrators] = useState<Administrator[]>([]);
@@ -78,7 +90,6 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   const [reducoesParcela, setReducoesParcela] = useState<Array<{ id: string; name: string }>>([]);
 
   // Estados selecionados
-  const [selectedAdministratorId, setSelectedAdministratorId] = useState<string | null>(null);
   const [selectedCreditType, setSelectedCreditType] = useState<string | null>(null);
 
   // Controle de mudanças
@@ -100,9 +111,11 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
       setLocalInstallmentType(defaultInstallmentType);
       setLocalContemplationMonth(defaultContemplationMonth);
       setLocalAgioPercent(agioPercent);
+      setSelectedAdministratorIdLocal(administratorId);
+      setLocalEmbutido(embutido);
       setHasChanges(false);
     }
-  }, [open, searchType, value, term, installmentType, contemplationMonth, agioPercent]);
+  }, [open, searchType, value, term, installmentType, contemplationMonth, agioPercent, administratorId, embutido]);
 
   // Detectar mudanças
   useEffect(() => {
@@ -112,10 +125,24 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
       localTerm !== term ||
       localInstallmentType !== installmentType ||
       localContemplationMonth !== contemplationMonth ||
-      localAgioPercent !== agioPercent;
+      localAgioPercent !== agioPercent ||
+      localEmbutido !== embutido ||
+      selectedAdministratorId !== administratorId;
     
     setHasChanges(changed);
-  }, [localSearchType, localValue, localTerm, localInstallmentType, localContemplationMonth, localAgioPercent, searchType, value, term, installmentType, contemplationMonth, agioPercent]);
+  }, [localSearchType, localValue, localTerm, localInstallmentType, localContemplationMonth, localAgioPercent, localEmbutido, selectedAdministratorId, searchType, value, term, installmentType, contemplationMonth, agioPercent, embutido, administratorId]);
+
+  // Ao mudar administradora local, propagar para global
+  useEffect(() => {
+    if (selectedAdministratorId) {
+      setAdministratorId(selectedAdministratorId);
+    }
+  }, [selectedAdministratorId]);
+
+  // Ao mudar embutido local, propagar para global
+  useEffect(() => {
+    setEmbutido(localEmbutido);
+  }, [localEmbutido]);
 
   // Buscar administradoras
   useEffect(() => {
@@ -131,10 +158,12 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
       
       if (!error && data) {
         setAdministrators(data);
-        // Selecionar administradora padrão
+        // Usar a administradora salva pelo usuário, ou a padrão se não houver
+        const savedAdmin = data.find(a => a.id === selectedAdministratorId);
         const defaultAdmin = data.find(a => a.is_default) || data[0];
-        if (defaultAdmin) {
-          setSelectedAdministratorId(defaultAdmin.id);
+        const adminToSelect = savedAdmin || defaultAdmin;
+        if (adminToSelect) {
+          setSelectedAdministratorIdLocal(adminToSelect.id);
         }
       }
     };
@@ -288,11 +317,23 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
       setContemplationMonth(localContemplationMonth);
     }
 
-    if (typeof window !== 'undefined') {
-      (window as any).globalAgioPercent = localAgioPercent;
-    }
     setAgioPercent(localAgioPercent);
+    setAdministratorId(selectedAdministratorId || '');
+    setEmbutido(localEmbutido);
     
+    // Atualizar o contexto global do simulador, se disponível
+    if (typeof window !== 'undefined' && (window as any).simulatorContext && (window as any).simulatorContext.setSimulationData) {
+      (window as any).simulatorContext.setSimulationData((prev: any) => ({
+        ...prev,
+        mode: localSearchType === 'contribution' ? 'aporte' : 'credito',
+        value: localValue,
+        installments: localTerm,
+        installmentType: localInstallmentType,
+        contemplationMonth: localContemplationMonth,
+        administrator: selectedAdministratorId,
+        embutido: localEmbutido,
+      }));
+    }
     toast({ title: 'Configurações aplicadas!' });
     onApply();
   };
@@ -322,6 +363,12 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
         isReserveFundCustomized,
         isAnnualUpdateCustomized,
         agioPercent: localAgioPercent,
+        embutido: localEmbutido,
+        // Novos campos do modal
+        administratorName: administrators.find(a => a.id === selectedAdministratorId)?.name || '',
+        creditTypeLabel: selectedCreditType ? translateCreditType(selectedCreditType) : '',
+        installmentTypeLabel: localInstallmentType === 'full' ? 'Parcela Cheia' : reducoesParcela.find(r => r.id === localInstallmentType)?.name || '',
+        aporteValue: localValue, // Valor do aporte
       };
       
       
@@ -330,12 +377,10 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
         
         // Verificar se temos os dados necessários
         if (!crmUser?.id) {
-          console.error('❌ [DEBUG] crmUser.id não encontrado');
           return;
         }
         
         if (!companyId) {
-          console.error('❌ [DEBUG] companyId não encontrado');
           return;
         }
         
@@ -344,21 +389,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
           .insert({
             user_id: crmUser.id,
             company_id: companyId,
-            configuration: {
-              searchType: config.searchType,
-              value: config.value,
-              term: config.term,
-              installmentType: config.installmentType,
-              contemplationMonth: config.contemplationMonth,
-              administratorId: config.administratorId,
-              creditType: config.creditType,
-              adminTaxPercent: config.adminTaxPercent,
-              reserveFundPercent: config.reserveFundPercent,
-              annualUpdateRate: config.annualUpdateRate,
-              isAdminTaxCustomized: config.isAdminTaxCustomized,
-              isReserveFundCustomized: config.isReserveFundCustomized,
-              isAnnualUpdateCustomized: config.isAnnualUpdateCustomized,
-            }
+            configuration: config
           });
         
         if (insertError) {
@@ -367,28 +398,13 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
           const { error: updateError } = await supabase
             .from('simulator_configurations')
             .update({
-                          configuration: {
-              searchType: config.searchType,
-              value: config.value,
-              term: config.term,
-              installmentType: config.installmentType,
-              contemplationMonth: config.contemplationMonth,
-              administratorId: config.administratorId,
-              creditType: config.creditType,
-              adminTaxPercent: config.adminTaxPercent,
-              reserveFundPercent: config.reserveFundPercent,
-              annualUpdateRate: config.annualUpdateRate,
-              isAdminTaxCustomized: config.isAdminTaxCustomized,
-              isReserveFundCustomized: config.isReserveFundCustomized,
-              isAnnualUpdateCustomized: config.isAnnualUpdateCustomized,
-            },
+              configuration: config,
               updated_at: new Date().toISOString(),
             })
             .eq('user_id', crmUser.id)
             .eq('company_id', companyId);
           
           if (updateError) {
-            console.error('❌ [DEBUG] Erro no update:', updateError);
             return;
           }
         }
@@ -425,11 +441,33 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
           (window as any).globalAgioPercent = localAgioPercent;
         }
         
+        // Aplicar mudanças adicionais
+        setAgioPercent(localAgioPercent);
+        setAdministratorId(selectedAdministratorId || '');
+        setEmbutido(localEmbutido);
+        
+        // Atualizar o contexto global do simulador
+        if (typeof window !== 'undefined' && (window as any).simulatorContext && (window as any).simulatorContext.setSimulationData) {
+          (window as any).simulatorContext.setSimulationData((prev: any) => ({
+            ...prev,
+            mode: localSearchType === 'contribution' ? 'aporte' : 'credito',
+            value: localValue,
+            installments: localTerm,
+            installmentType: localInstallmentType,
+            contemplationMonth: localContemplationMonth,
+            administrator: selectedAdministratorId,
+            embutido: localEmbutido,
+          }));
+        }
+        
         // Atualizar valores customizados
         
-        // onSaveAndApply(config);
+        // Chamar o callback para propagar as alterações e fechar o modal
+        if (onSaveAndApply) {
+          onSaveAndApply(config);
+        }
       } catch (error) {
-        console.error('❌ [DEBUG] Erro ao salvar configuração:', error);
+        // Erro ao salvar configuração
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
@@ -474,7 +512,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
           <label className="block text-sm font-medium text-white">Administradora</label>
             <Select
               value={selectedAdministratorId || ''}
-              onValueChange={setSelectedAdministratorId}
+              onValueChange={setSelectedAdministratorIdLocal}
             >
             <SelectTrigger className="w-full bg-[#2A2A2A] border-gray-600 text-white hover:bg-[#3A3A3A] focus:ring-2 focus:ring-blue-500">
                 <SelectValue placeholder="Selecione uma administradora..." />
@@ -656,6 +694,23 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
               className="w-full bg-[#2A2A2A] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
             />
           </div>
+        </div>
+
+        {/* Linha X: Embutido */}
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-white">Embutido</label>
+          <Select
+            value={localEmbutido}
+            onValueChange={setLocalEmbutido}
+          >
+            <SelectTrigger className="w-full bg-[#2A2A2A] border-gray-600 text-white hover:bg-[#3A3A3A] focus:ring-2 focus:ring-blue-500">
+              <SelectValue placeholder="Selecione o embutido..." />
+            </SelectTrigger>
+            <SelectContent className="bg-[#2A2A2A] border-gray-600">
+              <SelectItem value="com" className="text-white hover:bg-[#3A3A3A]">Com embutido</SelectItem>
+              <SelectItem value="sem" className="text-white hover:bg-[#3A3A3A]">Sem embutido</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </FullScreenModal>

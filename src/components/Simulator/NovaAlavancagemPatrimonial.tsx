@@ -640,17 +640,10 @@ export const NovaAlavancagemPatrimonial = ({
               </Tooltip>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Quarta seção - Gráfico de evolução patrimonial */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Gráfico de Parcelas do Mês e Soma das Parcelas</CardTitle>
-          {/* Removido: botão de engrenagem de configurações */}
-        </CardHeader>
-        <CardContent>
-          <InstallmentsChart data={installmentsChartData} showLegend={showLegend} />
+          {/* Gráfico Evolução Patrimonial */}
+          <div className="mt-6 h-96">
+            <InstallmentsChart data={installmentsChartData} showLegend={true} />
+          </div>
         </CardContent>
       </Card>
       <DetailTable

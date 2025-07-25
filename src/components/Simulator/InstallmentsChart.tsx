@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
-import { Settings } from 'lucide-react';
+import { Settings, Home } from 'lucide-react';
 
 interface InstallmentsChartProps {
   data: { mes: number; valorParcela: number; somaParcelas: number; patrimonio: number; patrimonioAnual: number; receitaMes: number; receitaMenosCustos: number; custos: number; rendaPassiva: number; rendaPassivaAcumulada: number; fluxoCaixa: number }[];
@@ -37,6 +37,21 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
+// Componente customizado para o ponto da casinha
+const CasaDot = (props: any) => {
+  const { cx, cy, payload } = props;
+  // Só renderiza se for o primeiro ponto de patrimônio > 0
+  if (!payload || !payload.patrimonio || payload.mes !==  payload.pontoCasaMes) return null;
+  return (
+    <g>
+      <circle cx={cx} cy={cy} r={12} fill="#A86E57" />
+      <foreignObject x={cx - 8} y={cy - 8} width={16} height={16} style={{ pointerEvents: 'none' }}>
+        <Home size={16} color="white" style={{ display: 'block', margin: 0 }} />
+      </foreignObject>
+    </g>
+  );
+};
+
 export const InstallmentsChart = ({ data, showLegend = true }: InstallmentsChartProps) => {
   const [highlight, setHighlight] = useState('patrimonio');
 
@@ -53,8 +68,15 @@ export const InstallmentsChart = ({ data, showLegend = true }: InstallmentsChart
     }
   };
 
+  // Encontrar o primeiro mês onde o patrimônio é adquirido
+  const patrimonioAdquiridoIndex = data.findIndex(item => item.patrimonio > 0);
+  const pontoCasaMes = patrimonioAdquiridoIndex !== -1 ? data[patrimonioAdquiridoIndex]?.mes : null;
+  // Adiciona info ao payload para o dot customizado
+  const dataWithCasa = data.map(d => ({ ...d, pontoCasaMes }));
+
   return (
-    <div className="w-full h-96 mt-8">
+    <div className="w-full h-96 pb-8" style={{ paddingBottom: 56 }}>
+      <h2 className="text-xl font-bold mb-2">Evolução Patrimonial</h2>
       {showLegend && (
         <div className="mb-2">
           <ResponsiveContainer width="100%" height={40}>
@@ -63,7 +85,7 @@ export const InstallmentsChart = ({ data, showLegend = true }: InstallmentsChart
         </div>
       )}
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+        <LineChart data={dataWithCasa} margin={{ top: 0, right: 30, left: 20, bottom: 56 }}>
           <CartesianGrid strokeDasharray="3 3" stroke={gridColor} />
           <XAxis
             dataKey="mes"
@@ -84,7 +106,7 @@ export const InstallmentsChart = ({ data, showLegend = true }: InstallmentsChart
           <Line type="monotone" dataKey="rendaPassivaAcumulada" stroke={highlight === 'rendaPassivaAcumulada' ? marrom : grayLine} name="Renda passiva acumulada" strokeWidth={2} dot={false} />
           <Line type="monotone" dataKey="fluxoCaixa" stroke={highlight === 'fluxoCaixa' ? marrom : grayLine} name="Fluxo de caixa" strokeWidth={2} dot={false} />
           {/* Linha do Patrimônio por último para sobrepor as demais */}
-          <Line type="monotone" dataKey="patrimonio" stroke={highlight === 'patrimonio' ? marrom : grayLine} name="Patrimônio" strokeWidth={2} dot={false} />
+          <Line type="monotone" dataKey="patrimonio" stroke={highlight === 'patrimonio' ? marrom : grayLine} name="Patrimônio" strokeWidth={2} dot={<CasaDot />} />
         </LineChart>
       </ResponsiveContainer>
     </div>

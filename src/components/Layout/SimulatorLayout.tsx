@@ -28,6 +28,8 @@ interface SimulatorContextType {
   reducoesParcela: any[];
   showConfigModal: boolean;
   setShowConfigModal: (show: boolean) => void;
+  embutido: 'com' | 'sem';
+  setEmbutido: (embutido: 'com' | 'sem') => void;
   // Funções para carregar dados
   loadInstallmentTypes: (administratorId: string) => Promise<void>;
   loadReducoesParcela: (administratorId: string) => Promise<void>;
@@ -170,7 +172,7 @@ const SimulatorHeader = () => {
             variant="outline" 
             size="sm"
             onClick={() => simulatorContext.setShowConfigModal(true)}
-            className="h-8 w-8 p-0 flex-shrink-0"
+            className="h-8 w-8 p-0 flex-shrink-0" style={{ backgroundColor: '#1E1E1E' }}
           >
             <Settings className="w-4 h-4" />
           </Button>
@@ -221,6 +223,14 @@ export const SimulatorLayout = ({ children }: SimulatorLayoutProps) => {
         showConfigModal: show
       }));
     },
+    embutido: 'com',
+    setEmbutido: (embutido: 'com' | 'sem') => {
+      setSimulatorContextValue(prev => ({
+        ...prev,
+        embutido
+      }));
+    },
+
     loadInstallmentTypes: async (administratorId: string) => {
       if (!administratorId) return;
       
@@ -260,9 +270,11 @@ export const SimulatorLayout = ({ children }: SimulatorLayoutProps) => {
             <SimulatorSidebar />
             <SidebarInset className="flex-1 overflow-x-hidden">
               <SimulatorHeader />
-              <main className="flex-1 p-6 pt-20 bg-background dark:bg-[#131313] max-w-full">
+              <main className="flex-1 p-6 bg-background dark:bg-[#131313] max-w-full">
                 {children}
               </main>
+
+              {/* Menu lateral */}
               <SimulatorMenu 
                 onNavigate={(section) => {
                   // Implementar navegação se necessário
@@ -272,7 +284,10 @@ export const SimulatorLayout = ({ children }: SimulatorLayoutProps) => {
                   // Implementar toggle de seções se necessário
                   console.log('Toggle seção:', section);
                 }}
+                embutido={simulatorContextValue.embutido}
+                setEmbutido={simulatorContextValue.setEmbutido}
               />
+
             </SidebarInset>
           </div>
         </SidebarProvider>

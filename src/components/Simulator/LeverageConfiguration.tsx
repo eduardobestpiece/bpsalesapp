@@ -111,21 +111,7 @@ export const LeverageConfiguration = ({
               )}
             </div>
             
-            {/* Botões Com/Sem embutido */}
-            <div className="flex gap-2 mb-2">
-              <Button
-                variant={embutido === 'com' ? 'default' : 'outline'}
-                onClick={() => onEmbutidoChange('com')}
-              >
-                Com embutido
-              </Button>
-              <Button
-                variant={embutido === 'sem' ? 'default' : 'outline'}
-                onClick={() => onEmbutidoChange('sem')}
-              >
-                Sem embutido
-              </Button>
-            </div>
+
             
             {/* Informações do imóvel */}
             {leverageData && (

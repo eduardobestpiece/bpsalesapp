@@ -177,8 +177,6 @@ export const PatrimonialLeverageNew = ({
   }, [percentualOcupacao]);
   // Patrimônio na contemplação 
   const patrimonioContemplacao = useMemo(() => {
-    // Debug removido - patrimônio na contemplação está correto
-    
     // Patrimônio base (número de imóveis × valor do imóvel)
     const patrimonioBase = numeroImoveis * valorImovel;
     
@@ -187,8 +185,6 @@ export const PatrimonialLeverageNew = ({
     const taxaValorizacaoAnual = (finalSimulationData.updateRate || 6) / 100;
     const anosAteContemplacao = contemplationMonth / 12;
     const patrimonioComValorizacao = patrimonioBase * Math.pow(1 + taxaValorizacaoAnual, anosAteContemplacao);
-    
-    // Debug: Patrimônio na contemplação calculado corretamente
     
     return patrimonioComValorizacao;
   }, [simulationData.searchType, numeroImoveis, valorImovel, valorBase, creditoPorImovelComEmbutido, embutidoState, percentualEmbutido, finalSimulationData.updateRate, contemplationMonth]);

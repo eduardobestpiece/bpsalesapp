@@ -29,6 +29,7 @@ interface SimulationData {
   reserveFundPercent?: number; // Added for new fields
   isAdminTaxCustomized?: boolean; // Added for new fields
   isReserveFundCustomized?: boolean; // Added for new fields
+  annualUpdateRate?: number; // Added for annual update rate synchronization
 }
 
 interface Credit {
@@ -266,6 +267,284 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
 
   // Remover funções de sugestão automática de créditos e debugs
 
+  // Função para sugerir créditos inteligentemente baseado no valor de aporte
+  const sugerirCreditosInteligente = async (products: any[], simulationData: any) => {
+    if (!products || products.length === 0 || !simulationData.value || simulationData.searchType !== 'contribution') {
+      return [];
+    }
+
+    const valorAporte = simulationData.value;
+    const administratorId = simulationData.administrator;
+    const term = simulationData.term;
+    const installmentType = simulationData.installmentType;
+
+    console.log('🔍 [CÁLCULO CRÉDITO] Iniciando cálculo:', {
+      valorAporte,
+      administratorId,
+      term,
+      installmentType,
+      searchType: simulationData.searchType
+    });
+
+    // Filtrar produtos da administradora selecionada
+    const produtosAdministradora = products.filter(produto => 
+      produto.administrator_id === administratorId
+    );
+
+    console.log('🔍 [CÁLCULO CRÉDITO] Produtos encontrados:', produtosAdministradora.length);
+
+    // Buscar redução de parcela se necessário
+    let reducaoParcela = null;
+    if (installmentType !== 'full') {
+      try {
+        const { data: reducoes } = await supabase
+          .from('installment_reductions')
+          .select('*')
+          .eq('is_archived', false)
+          .eq('id', installmentType);
+        
+        if (reducoes && reducoes.length > 0) {
+          reducaoParcela = reducoes[0];
+          console.log('🔍 [CÁLCULO CRÉDITO] Redução de parcela encontrada:', reducaoParcela);
+        }
+      } catch (error) {
+        console.error('Erro ao buscar redução de parcela:', error);
+      }
+    }
+
+    // Buscar installment types da administradora para gerar créditos dinamicamente
+    let installmentTypes = [];
+    try {
+      const { data: types } = await supabase
+        .from('installment_types')
+        .select('*')
+        .eq('administrator_id', administratorId)
+        .eq('installment_count', term)
+        .eq('is_archived', false);
+      
+      if (types && types.length > 0) {
+        installmentTypes = types;
+        console.log('🔍 [CÁLCULO CRÉDITO] Installment types encontrados:', installmentTypes.length);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar installment types:', error);
+    }
+
+    // Calcular créditos sugeridos para cada produto
+    const creditosSugeridos = [];
+
+    // Se há produtos suficientes, usar a lógica original
+    if (produtosAdministradora.length >= 3) {
+      console.log('🔍 [CÁLCULO CRÉDITO] Usando lógica original - produtos suficientes');
+      
+      for (const produto of produtosAdministradora) {
+        // Buscar installment type compatível
+        let installmentCandidato = null;
+        if (Array.isArray(produto.installment_types)) {
+          for (const it of produto.installment_types) {
+            const real = it.installment_types || it;
+            if (real.installment_count === term) {
+              installmentCandidato = real;
+              break;
+            }
+          }
+        }
+
+        if (!installmentCandidato) continue;
+
+        // Calcular parcela para 100k como referência
+        const installmentParams = {
+          installment_count: installmentCandidato.installment_count,
+          admin_tax_percent: installmentCandidato.admin_tax_percent || 0,
+          reserve_fund_percent: installmentCandidato.reserve_fund_percent || 0,
+          insurance_percent: installmentCandidato.insurance_percent || 0,
+          optional_insurance: !!installmentCandidato.optional_insurance
+        };
+
+        console.log('🔍 [CÁLCULO CRÉDITO] Parâmetros da parcela:', installmentParams);
+
+        let parcelaReferencia = 0;
+        if (installmentType === 'full') {
+          parcelaReferencia = calcularParcelasProduto({
+            credit: 100000,
+            installment: installmentParams,
+            reduction: null
+          }).full;
+        } else {
+          parcelaReferencia = regraParcelaEspecial({
+            credit: 100000,
+            installment: installmentParams,
+            reduction: reducaoParcela
+          });
+        }
+
+        console.log('🔍 [CÁLCULO CRÉDITO] Parcela de referência (100k):', parcelaReferencia);
+
+        // Calcular fator e crédito sugerido
+        const fator = 100000 / parcelaReferencia;
+        const creditoSugerido = Math.ceil((valorAporte * fator) / 10000) * 10000;
+
+        console.log('🔍 [CÁLCULO CRÉDITO] Fator calculado:', fator);
+        console.log('🔍 [CÁLCULO CRÉDITO] Crédito sugerido:', creditoSugerido);
+
+        // Calcular parcela real para o crédito sugerido
+        let parcelaReal = 0;
+        if (installmentType === 'full') {
+          parcelaReal = calcularParcelasProduto({
+            credit: creditoSugerido,
+            installment: installmentParams,
+            reduction: null
+          }).full;
+        } else {
+          parcelaReal = regraParcelaEspecial({
+            credit: creditoSugerido,
+            installment: installmentParams,
+            reduction: reducaoParcela
+          });
+        }
+
+        console.log('🔍 [CÁLCULO CRÉDITO] Parcela real calculada:', parcelaReal);
+        console.log('🔍 [CÁLCULO CRÉDITO] Diferença do valor desejado:', Math.abs(parcelaReal - valorAporte));
+
+        creditosSugeridos.push({
+          id: produto.id,
+          name: produto.name,
+          creditValue: creditoSugerido,
+          installmentValue: parcelaReal,
+          selected: false,
+          productId: produto.id,
+          administratorId: produto.administrator_id,
+          type: produto.type
+        });
+      }
+    } else {
+      console.log('🔍 [CÁLCULO CRÉDITO] Usando lógica dinâmica - poucos produtos');
+      
+      // Lógica para gerar créditos dinamicamente quando há poucos produtos
+      if (installmentTypes.length > 0) {
+        const installmentCandidato = installmentTypes[0]; // Usar o primeiro installment type disponível
+        
+        const installmentParams = {
+          installment_count: installmentCandidato.installment_count,
+          admin_tax_percent: installmentCandidato.admin_tax_percent || 0,
+          reserve_fund_percent: installmentCandidato.reserve_fund_percent || 0,
+          insurance_percent: installmentCandidato.insurance_percent || 0,
+          optional_insurance: !!installmentCandidato.optional_insurance
+        };
+
+        console.log('🔍 [CÁLCULO CRÉDITO] Parâmetros da parcela (dinâmico):', installmentParams);
+
+        // Calcular parcela para 100k como referência
+        let parcelaReferencia = 0;
+        if (installmentType === 'full') {
+          parcelaReferencia = calcularParcelasProduto({
+            credit: 100000,
+            installment: installmentParams,
+            reduction: null
+          }).full;
+        } else {
+          parcelaReferencia = regraParcelaEspecial({
+            credit: 100000,
+            installment: installmentParams,
+            reduction: reducaoParcela
+          });
+        }
+
+        console.log('🔍 [CÁLCULO CRÉDITO] Parcela de referência (100k) - dinâmico:', parcelaReferencia);
+
+        // Calcular fator e crédito sugerido
+        const fator = 100000 / parcelaReferencia;
+        const creditoSugerido = Math.ceil((valorAporte * fator) / 10000) * 10000;
+
+        console.log('🔍 [CÁLCULO CRÉDITO] Fator calculado (dinâmico):', fator);
+        console.log('🔍 [CÁLCULO CRÉDITO] Crédito sugerido (dinâmico):', creditoSugerido);
+
+        // Calcular parcela real para o crédito sugerido
+        let parcelaReal = 0;
+        if (installmentType === 'full') {
+          parcelaReal = calcularParcelasProduto({
+            credit: creditoSugerido,
+            installment: installmentParams,
+            reduction: null
+          }).full;
+        } else {
+          parcelaReal = regraParcelaEspecial({
+            credit: creditoSugerido,
+            installment: installmentParams,
+            reduction: reducaoParcela
+          });
+        }
+
+        console.log('🔍 [CÁLCULO CRÉDITO] Parcela real calculada (dinâmico):', parcelaReal);
+        console.log('🔍 [CÁLCULO CRÉDITO] Diferença do valor desejado (dinâmico):', Math.abs(parcelaReal - valorAporte));
+
+        // Gerar múltiplas opções de crédito baseadas no valor sugerido
+        const opcoesCredito = [
+          creditoSugerido,
+          creditoSugerido + 10000,
+          creditoSugerido - 10000,
+          creditoSugerido + 20000,
+          creditoSugerido - 20000
+        ].filter(valor => valor > 0);
+
+        console.log('🔍 [CÁLCULO CRÉDITO] Opções de crédito geradas:', opcoesCredito);
+
+        for (let i = 0; i < opcoesCredito.length; i++) {
+          const credito = opcoesCredito[i];
+          
+          // Calcular parcela para este crédito
+          let parcela = 0;
+          if (installmentType === 'full') {
+            parcela = calcularParcelasProduto({
+              credit: credito,
+              installment: installmentParams,
+              reduction: null
+            }).full;
+          } else {
+            parcela = regraParcelaEspecial({
+              credit: credito,
+              installment: installmentParams,
+              reduction: reducaoParcela
+            });
+          }
+
+          console.log(`🔍 [CÁLCULO CRÉDITO] Opção ${i + 1}: Crédito ${credito} -> Parcela ${parcela}`);
+
+          creditosSugeridos.push({
+            id: `generated-${i}`,
+            name: `R$ ${(credito / 1000).toFixed(0)}.000,00 (${simulationData.consortiumType === 'property' ? 'Imóvel' : 'Veículo'})`,
+            creditValue: credito,
+            installmentValue: parcela,
+            selected: false,
+            productId: null, // Produto gerado dinamicamente
+            administratorId: administratorId,
+            type: simulationData.consortiumType
+          });
+        }
+      }
+    }
+
+    // Ordenar por diferença do valor de aporte desejado
+    creditosSugeridos.sort((a, b) => {
+      const diffA = Math.abs(a.installmentValue - valorAporte);
+      const diffB = Math.abs(b.installmentValue - valorAporte);
+      return diffA - diffB;
+    });
+
+    // Selecionar o primeiro (mais próximo)
+    if (creditosSugeridos.length > 0) {
+      creditosSugeridos[0].selected = true;
+      console.log('🔍 [CÁLCULO CRÉDITO] Melhor opção selecionada:', {
+        creditoAcessado: creditosSugeridos[0].creditValue,
+        valorParcela: creditosSugeridos[0].installmentValue,
+        diferenca: Math.abs(creditosSugeridos[0].installmentValue - valorAporte)
+      });
+    }
+
+    console.log('🔍 [CÁLCULO CRÉDITO] Total de créditos sugeridos:', creditosSugeridos.length);
+    return creditosSugeridos;
+  };
+
   // Atualizar para usar a função de múltiplos créditos
   useEffect(() => {
     if (data.administrator && data.value > 0 && selectedCompanyId) {
@@ -294,9 +573,9 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
           if (error) throw error;
           setAvailableProducts(products || []);
 
-          // Remover chamada de sugerirCreditosInteligente e setCredits, manter apenas setAvailableProducts
-          // const calculatedCredits = await sugerirCreditosInteligente(products || [], data);
-          // setCredits(calculatedCredits);
+          // Restaurar chamada de sugerirCreditosInteligente
+          const calculatedCredits = await sugerirCreditosInteligente(products || [], data);
+          setCredits(calculatedCredits);
         } catch (error) {
           console.error('Error calculating credits:', error);
         }
@@ -655,7 +934,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     taxaAnual = (taxaTotal / data.term) * 12;
     
     // Usar valor customizado se disponível, senão usar o valor padrão
-    const customAnnualUpdateRate = (data as any).annualUpdateRate !== undefined ? (data as any).annualUpdateRate : data.updateRate;
+    const customAnnualUpdateRate = data.annualUpdateRate !== undefined ? data.annualUpdateRate : data.updateRate;
     
     if (data.consortiumType === 'property') {
       atualizacaoAnual = 'INCC ' + (customAnnualUpdateRate ? customAnnualUpdateRate.toFixed(2) + '%' : '6.00%');
@@ -911,34 +1190,6 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
   // 7. Renderização
   return (
     <div className="space-y-6">
-      {/* Botões Com/Sem embutido */}
-      {embutido !== undefined && setEmbutido && (
-        <div className="flex gap-2 mb-2">
-          <Button
-            variant={embutido === 'com' ? 'default' : 'outline'}
-            onClick={() => {
-              if (embutido !== 'com') {
-                setEmbutido('com');
-              }
-            }}
-            className="flex-1"
-          >
-            Com embutido
-          </Button>
-          <Button
-            variant={embutido === 'sem' ? 'default' : 'outline'}
-            onClick={() => {
-              if (embutido !== 'sem') {
-                setEmbutido('sem');
-              }
-            }}
-            className="flex-1"
-          >
-            Sem embutido
-          </Button>
-        </div>
-      )}
-      
       {/* Painel de resumo */}
       {/* Cards de resumo acima da montagem de cotas */}
       {/* Primeira linha de cards de resumo */}

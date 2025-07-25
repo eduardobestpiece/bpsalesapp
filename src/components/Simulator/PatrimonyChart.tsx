@@ -270,9 +270,6 @@ const generateRealPatrimonyData = (
       };
     });
 
-    console.log('[PatrimonyChart] Dados reais calculados:', resultData.slice(0, 5));
-    console.log('[PatrimonyChart] Parcela mês 31:', resultData[30]?.parcelaTabelaMes);
-    
     return resultData;
   } catch (error) {
     console.error('[PatrimonyChart] Erro na geração de dados reais:', error);

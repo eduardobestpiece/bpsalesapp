@@ -322,19 +322,20 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
 
   useEffect(() => {
     if (capitalGainData && typeof onRoiChange === 'function') {
-      console.log('🔧 [DEBUG] CapitalGainSection - ROI calculado:', capitalGainData.roiOperacao);
       onRoiChange(capitalGainData.roiOperacao);
     }
   }, [capitalGainData, onRoiChange]);
 
   // Estado para exibir/ocultar configurações
   const [showConfig, setShowConfig] = useState(false);
+  // Estado local para edição do ágio
+  const [pendingAgio, setPendingAgio] = useState(agioPercent);
 
   if (!creditoAcessado) {
     return (
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>Ganho de Capital</CardTitle>
+          <CardTitle>Alavancagem Financeira</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">Configure o crédito acessado para visualizar os cálculos.</p>
@@ -347,7 +348,7 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
     <Card className="w-full">
       <CardHeader>
         <div className="flex justify-between items-center">
-          <CardTitle>Ganho de Capital</CardTitle>
+          <CardTitle>Alavancagem Financeira</CardTitle>
           <button
             type="button"
             className="ml-2 p-1 rounded hover:bg-gray-200 dark:hover:bg-[#232323]"
@@ -361,18 +362,25 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
       <CardContent className="space-y-6">
         {/* Campo Ágio - só aparece se showConfig estiver true */}
         {showConfig && (
-          <div className="space-y-2">
-            <Label htmlFor="agio-percent">Ágio (%)</Label>
+          <div className="flex items-center gap-2">
+            <Label>Ágio (%)</Label>
             <Input
-              id="agio-percent"
               type="number"
-              value={agioPercent}
-              onChange={(e) => setAgioPercent(Number(e.target.value))}
-              min="0"
-              max="100"
-              step="0.1"
-              className="w-32"
+              value={pendingAgio}
+              onChange={e => setPendingAgio(Number(e.target.value))}
+              min={0}
+              max={100}
+              step={0.1}
+              className="w-24"
             />
+            <button
+              type="button"
+              className="ml-2 underline cursor-pointer"
+              style={{ color: '#A86E57' }}
+              onClick={() => setAgioPercent(pendingAgio)}
+            >
+              Aplicar
+            </button>
           </div>
         )}
 

@@ -75,7 +75,8 @@ export const CreateAdministratorModal: React.FC<{
         special_entry_fixed_value: data.special_entry_fixed_value ?? null,
         special_entry_installments: data.special_entry_installments ?? null,
         post_contemplation_adjustment: data.post_contemplation_adjustment ?? null,
-        credit_update_type: data.update_type || 'specific_month',
+        // CORRIGIDO: credit_update_type deve ser 'monthly' ou 'annual'
+        credit_update_type: data.update_type === 'specific_month' ? 'monthly' : 'annual',
         is_default: data.is_default || false,
         company_id: selectedCompanyId,
       };

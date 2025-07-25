@@ -15,6 +15,7 @@ import { CreditAccessPanel } from './CreditAccessPanel';
 import { useSimulatorContext } from '@/components/Layout/SimulatorLayout';
 import { CapitalGainSection } from './CapitalGainSection';
 import { NovaAlavancagemPatrimonial } from './NovaAlavancagemPatrimonial';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
 
 export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   const { 
@@ -173,6 +174,9 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   const [isReserveFundCustomized, setIsReserveFundCustomized] = useState<boolean>(false);
   const [isAnnualUpdateCustomized, setIsAnnualUpdateCustomized] = useState<boolean>(false);
   
+  // Adicionar estado para armazenar dados da administradora
+  const [administratorData, setAdministratorData] = useState<any>(null);
+  
   // Estado para controlar recálculo automático
   const [shouldRecalculateCredit, setShouldRecalculateCredit] = useState<boolean>(false);
 
@@ -191,10 +195,6 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
       return () => clearTimeout(timer);
     }
   }, [shouldRecalculateCredit]);
-
-  // Log para debug dos dados passados para CreditAccessPanel
-  useEffect(() => {
-  }, [adminTaxPercent, reserveFundPercent, isAdminTaxCustomized, isReserveFundCustomized, shouldRecalculateCredit]);
 
   // Estado para reduções de parcela
   const [reducoesParcela, setReducoesParcela] = useState<any[]>([]);
@@ -234,8 +234,9 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   // Estado para créditos selecionados (cotas)
   const [selectedCredits, setSelectedCredits] = useState<any[]>([]);
 
-  // Estado para embutido
-  const [embutido, setEmbutido] = useState<'com' | 'sem'>('com');
+  // Estado para embutido - agora usando o contexto global
+  const embutido = simulatorContext.embutido;
+  const setEmbutido = simulatorContext.setEmbutido;
 
   // Estado para armazenar o valor de crédito acessado da contemplação e outros dados
   const [creditoAcessadoContemplacao, setCreditoAcessadoContemplacao] = useState<number>(0);
@@ -259,73 +260,66 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
   const handleToggleSection = (section: string) => {
     if (section === 'all') {
+      // Mostrar todas as seções
       setVisibleSections({
         credit: true,
         leverage: true,
         detail: true,
         capital: true
       });
+      setSectionsHiddenByDoubleClick(null);
     } else {
+      // Mapeamento das seções do menu para as seções da página
       const sectionMap = {
         settings: 'credit',
         home: 'leverage',
-        search: 'detail',
-        capital: 'capital'
+        dollar: 'capital',
+        search: 'detail'
       };
 
       const targetSection = sectionMap[section as keyof typeof sectionMap];
+      
       if (targetSection) {
-        setVisibleSections(prev => ({
-          ...prev,
-          [targetSection]: !prev[targetSection as keyof typeof prev]
-        }));
+        // Isolar apenas a seção selecionada conforme especificação
+        if (section === 'settings') {
+          // Engrenagem: oculta Ganho de Capital, Alavancagem patrimonial, Gráfico e Detalhamento
+          setVisibleSections({
+            credit: true, // Mantém configurações
+            leverage: false, // Oculta alavancagem patrimonial
+            detail: false, // Oculta detalhamento do consórcio
+            capital: false // Oculta ganho de capital
+          });
+        } else if (section === 'home') {
+          // Casinha: oculta Montagem de cotas, Ganho de Capital e Detalhamento
+          setVisibleSections({
+            credit: false, // Oculta montagem de cotas
+            leverage: true, // Mantém alavancagem patrimonial
+            detail: false, // Oculta detalhamento do consórcio
+            capital: false // Oculta ganho de capital
+          });
+        } else if (section === 'dollar') {
+          // Cifrão: oculta Montagem de cotas, Alavancagem patrimonial, Gráfico e Detalhamento
+          setVisibleSections({
+            credit: false, // Oculta montagem de cotas
+            leverage: false, // Oculta alavancagem patrimonial
+            detail: false, // Oculta detalhamento do consórcio
+            capital: true // Mantém ganho de capital
+          });
+        } else if (section === 'search') {
+          // Lupa: oculta Montagem de cotas, Ganho de Capital, Alavancagem patrimonial e Gráfico
+          setVisibleSections({
+            credit: false, // Oculta montagem de cotas
+            leverage: false, // Oculta alavancagem patrimonial
+            detail: true, // Mantém detalhamento do consórcio
+            capital: false // Oculta ganho de capital
+          });
+        }
+        setSectionsHiddenByDoubleClick(targetSection);
       }
     }
   };
 
-  // Nova função para lidar com clique único/duplo/triplo
-  const handleMenuClick = (section: string) => {
-    // Clique único: navegar para a seção
-    handleNavigate(section);
-    
-    // Verificar se é clique duplo
-    const now = Date.now();
-    const lastClick = (window as any).lastMenuClick || 0;
-    const timeDiff = now - lastClick;
-    
-    if (timeDiff < 300) { // Clique duplo detectado
-      const sectionMap = {
-        settings: 'credit',
-        home: 'leverage',
-        search: 'detail',
-        capital: 'capital'
-      };
-      
-      const targetSection = sectionMap[section as keyof typeof sectionMap];
-      
-      if (sectionsHiddenByDoubleClick === targetSection) {
-        // Clique triplo: mostrar todas as seções
-        setSectionsHiddenByDoubleClick(null);
-        setVisibleSections({
-          credit: true,
-          leverage: true,
-          detail: true,
-          capital: true
-        });
-      } else {
-        // Clique duplo: ocultar outras seções
-        setSectionsHiddenByDoubleClick(targetSection);
-        setVisibleSections({
-          credit: targetSection === 'credit',
-          leverage: targetSection === 'leverage',
-          detail: targetSection === 'detail',
-          capital: targetSection === 'capital'
-        });
-      }
-    }
-    
-    (window as any).lastMenuClick = now;
-  };
+
 
   // Estado para o ROI da operação
   const [roiOperacao, setRoiOperacao] = useState<number | null>(null);
@@ -337,8 +331,111 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   // Estado para o Ágio (%) global
   const [agioPercent, setAgioPercent] = useState(17);
 
+  const { user, companyId } = useCrmAuth();
+
+  // Carregar configurações salvas do usuário ao abrir o simulador
+  useEffect(() => {
+    async function loadUserSimulatorConfig() {
+      if (!user?.id || !companyId) return;
+      const { data: configs } = await supabase
+        .from('simulator_configurations')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('company_id', companyId)
+        .limit(1);
+      if (configs && configs.length > 0) {
+        const conf = configs[0].configuration || {};
+        setLocalSimulationData(prev => ({
+          ...prev,
+          searchType: conf.searchType || prev.searchType,
+          value: conf.value || prev.value,
+          term: conf.term || prev.term,
+          installmentType: conf.installmentType || prev.installmentType,
+          contemplationMonth: conf.contemplationMonth || prev.contemplationMonth,
+          administrator: conf.administratorId || prev.administrator,
+          consortiumType: conf.creditType || prev.consortiumType,
+          bidType: conf.bidType || prev.bidType,
+        }));
+        if (conf.adminTaxPercent !== undefined) setAdminTaxPercent(conf.adminTaxPercent);
+        if (conf.reserveFundPercent !== undefined) setReserveFundPercent(conf.reserveFundPercent);
+        if (conf.annualUpdateRate !== undefined) setAnnualUpdateRate(conf.annualUpdateRate);
+        if (conf.isAdminTaxCustomized !== undefined) setIsAdminTaxCustomized(conf.isAdminTaxCustomized);
+        if (conf.isReserveFundCustomized !== undefined) setIsReserveFundCustomized(conf.isReserveFundCustomized);
+        if (conf.isAnnualUpdateCustomized !== undefined) setIsAnnualUpdateCustomized(conf.isAnnualUpdateCustomized);
+        if (conf.agioPercent !== undefined) setAgioPercent(conf.agioPercent);
+        if (conf.embutido !== undefined) setEmbutido(conf.embutido);
+        
+        // Atualizar o contexto global do simulador
+        if (typeof window !== 'undefined' && (window as any).simulatorContext && (window as any).simulatorContext.setSimulationData) {
+          (window as any).simulatorContext.setSimulationData((prev: any) => ({
+            ...prev,
+            mode: conf.searchType === 'contribution' ? 'aporte' : 'credito',
+            value: conf.value || prev.value,
+            installments: conf.term || prev.installments,
+            installmentType: conf.installmentType || prev.installmentType,
+            contemplationMonth: conf.contemplationMonth || prev.contemplationMonth,
+            administrator: conf.administratorId || prev.administrator,
+            consortiumType: conf.creditType || prev.consortiumType,
+            bidType: conf.bidType || prev.bidType,
+          }));
+        }
+        
+        // Carregar dados da administradora se houver administratorId
+        if (conf.administratorId) {
+          await loadAdministratorData(conf.administratorId);
+        }
+      }
+    }
+    loadUserSimulatorConfig();
+  }, [user?.id, companyId]);
+
+  // Função para carregar dados da administradora do banco
+  const loadAdministratorData = async (administratorId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('administrators')
+        .select('*')
+        .eq('id', administratorId)
+        .eq('is_archived', false)
+        .limit(1);
+      
+      if (!error && data && data.length > 0) {
+        const adminData = data[0];
+        
+        // Mapear dados do banco para a interface Administrator
+        const mappedAdministrator = {
+          id: adminData.id,
+          name: adminData.name,
+          updateIndex: adminData.credit_update_type === 'annual' ? 'INCC' : 'IPCA',
+          updateMonth: adminData.update_month || 8,
+          updateGracePeriod: adminData.grace_period_days || 90,
+          maxEmbeddedPercentage: adminData.max_embedded_percentage || 25,
+          // Dados adicionais para cálculos
+          administrationRate: (adminData.admin_tax_percent || 0) / 100,
+          inccRate: 6, // Taxa INCC padrão
+          postContemplationAdjustment: (adminData.post_contemplation_adjustment || 0) / 100,
+          availableBidTypes: []
+        };
+        
+        setAdministratorData(mappedAdministrator);
+        
+      }
+    } catch (error) {
+      console.error('Erro ao carregar dados da administradora:', error);
+    }
+  };
+
+  // Carregar dados da administradora quando o administratorId mudar
+  useEffect(() => {
+    if (localSimulationData.administrator) {
+      loadAdministratorData(localSimulationData.administrator);
+    } else {
+      // console.log('[NewSimulatorLayout] Nenhuma administradora selecionada');
+    }
+  }, [localSimulationData.administrator]);
+
   return (
-    <div className="flex flex-col gap-6 h-full relative w-full max-w-full">
+    <div className="flex flex-col gap-4 h-full relative w-full max-w-full">
       {/* Seção de crédito - sem campos duplicados */}
       {visibleSections.credit && (
         <div ref={creditSectionRef}>
@@ -355,7 +452,8 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
               adminTaxPercent: adminTaxPercent,
               reserveFundPercent: reserveFundPercent,
               isAdminTaxCustomized,
-              isReserveFundCustomized
+              isReserveFundCustomized,
+              annualUpdateRate: annualUpdateRate
             }}
             onCreditoAcessado={setCreditoAcessado}
             onSelectedCreditsChange={setSelectedCredits}
@@ -371,14 +469,14 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
 
       {/* Seção de Ganho de Capital */}
-      {visibleSections.capital && (roiOperacao === null || roiOperacao >= 10) && (
+      {(visibleSections.capital && (roiOperacao === null || roiOperacao >= 10)) && (
         <div ref={capitalSectionRef} id="ganho-capital" className="w-full">
           <CapitalGainSection 
             creditoAcessado={creditoAcessado}
             contemplationMonth={localSimulationData.contemplationMonth || 60}
             installmentType={localSimulationData.installmentType}
             product={{ nominalCreditValue: localSimulationData.value, termMonths: termValue }}
-            administrator={{ 
+            administrator={administratorData || { 
               administrationRate: 0.27,
               updateMonth: 8,
               gracePeriodDays: 90,
@@ -398,10 +496,10 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
       {/* Seção de Nova Alavancagem Patrimonial */}
       {visibleSections.leverage && (firstRowCredit > 0) && (
-        <div id="alavancagem-patrimonial" className="w-full mt-8">
+        <div id="alavancagem-patrimonial" className="w-full">
           <NovaAlavancagemPatrimonial 
             product={{ nominalCreditValue: firstRowCredit, termMonths: termValue }}
-            administrator={{ 
+            administrator={administratorData || { 
               administrationRate: 0.27,
               updateMonth: 8, // Agosto
               gracePeriodDays: 90, // 90 dias de carência
@@ -434,7 +532,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
         <div style={{ display: 'none' }}>
           <DetailTable 
             product={{ nominalCreditValue: localSimulationData.value, termMonths: termValue }}
-            administrator={{ 
+            administrator={administratorData || { 
               administrationRate: 0.27,
               updateMonth: 8,
               gracePeriodDays: 90,
@@ -457,13 +555,18 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             }}
             onContemplationRowData={(data) => {
               setCreditoAcessadoContemplacao(data.creditAccessed);
-              setParcelaAfterContemplacao(data.parcelaAfter || 0);
-              setSomaParcelasAteContemplacao(data.somaParcelasAteContemplacao || 0);
-              setMesContemplacao(data.mesContemplacao || 0);
+              setParcelaAfterContemplacao(data.parcelaAfter);
+              setSomaParcelasAteContemplacao(data.somaParcelasAteContemplacao);
+              setMesContemplacao(data.mesContemplacao);
+            }}
+            onTableDataGenerated={(tableData) => {
+              // Callback para dados da tabela (pode ser usado para outros componentes)
             }}
           />
         </div>
       )}
+
+
 
       {/* Modal de configurações */}
       <SimulatorConfigModal
@@ -513,6 +616,10 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
         setContemplationMonth={v => handleFieldChange('contemplationMonth', v)}
         agioPercent={agioPercent}
         setAgioPercent={setAgioPercent}
+        administratorId={localSimulationData.administrator}
+        setAdministratorId={v => handleFieldChange('administrator', v)}
+        embutido={embutido}
+        setEmbutido={setEmbutido}
       />
     </div>
   );

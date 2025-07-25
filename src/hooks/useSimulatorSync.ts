@@ -47,9 +47,6 @@ export const useSimulatorSync = () => {
         nominalCreditValue: value
       });
     }
-    
-    // Log para debug da sincronização
-    console.log('[useSimulatorSync] Valor atualizado:', value);
   };
 
   // Função para atualizar o número de parcelas
@@ -64,8 +61,6 @@ export const useSimulatorSync = () => {
       ...product,
       termMonths: installments
     });
-    
-    console.log('[useSimulatorSync] Parcelas atualizadas:', installments);
   };
 
   // Função para atualizar o tipo de parcela
@@ -77,8 +72,6 @@ export const useSimulatorSync = () => {
     
     // Atualiza também o tipo de parcela no contexto principal
     setInstallmentType(type);
-    
-    console.log('[useSimulatorSync] Tipo de parcela atualizado:', type);
   };
 
   // Sincroniza o valor do imóvel com o valor do crédito quando apropriado
@@ -88,21 +81,13 @@ export const useSimulatorSync = () => {
         ...property,
         initialValue: product.nominalCreditValue
       });
-      
-      console.log('[useSimulatorSync] Propriedade sincronizada com crédito:', product.nominalCreditValue);
     }
   }, [product.nominalCreditValue]);
 
   // Efeito para garantir consistência entre administradora e produto
   useEffect(() => {
     if (administrator && product) {
-      console.log('[useSimulatorSync] Sincronização ativa:', {
-        administrator: administrator.name,
-        product: product.name,
-        creditValue: product.nominalCreditValue,
-        contemplationMonth,
-        installmentType
-      });
+      // Sincronização ativa entre administradora e produto
     }
   }, [administrator, product, contemplationMonth, installmentType]);
 

@@ -344,8 +344,22 @@ export const ScaledLeverage = ({ administrator, product, propertyData, installme
 
       <DetailTable
         onTableDataGenerated={(tableData) => {
-          console.log('[DEBUG][onTableDataGenerated][ScaledLeverage] tableData:', tableData.map(row => ({ mes: row.mes, valorParcela: row.valorParcela })));
-          setChartData(tableData.map(row => ({ ...row, month: row.mes, parcelaTabelaMes: row.valorParcela })));
+          // Atualizar dados do gráfico com os dados reais da tabela
+          const chartData = tableData.map(row => ({
+            month: row.mes,
+            patrimony: row.patrimonioTotal || 0,
+            income: row.rendaMensal || 0,
+            cashFlow: row.fluxoCaixa || 0,
+            isContemplation: row.mes === contemplationMonth,
+            patrimonioInicial: row.patrimonioInicial || 0,
+            valorizacaoMes: row.valorizacaoMes || 0,
+            valorizacaoAcumulada: row.valorizacaoAcumulada || 0,
+            acumuloCaixa: row.acumuloCaixa || 0,
+            parcelasPagas: row.parcelasPagas || 0,
+            parcelaTabelaMes: row.valorParcela || 0
+          }));
+
+          setChartData(chartData);
         }}
       />
     </div>
