@@ -12,6 +12,7 @@ import { DetailTable } from './DetailTable';
 import { InstallmentsChart } from './InstallmentsChart';
 import { Label } from '@/components/ui/label';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { FullScreenModal } from '../ui/FullScreenModal';
 
 type Leverage = Database['public']['Tables']['leverages']['Row'];
 
@@ -76,6 +77,24 @@ export const NovaAlavancagemPatrimonial = ({
   const [chartDataState, setChartDataState] = useState<any[]>([]);
   const [installmentsChartData, setInstallmentsChartData] = useState<any[]>([]);
   const [showLegend, setShowLegend] = useState(false);
+  const [showAlavancagemModal, setShowAlavancagemModal] = useState(false);
+  
+  // Estados locais para os campos do modal
+  const [localDailyPercentage, setLocalDailyPercentage] = useState<number>(0);
+  const [localManagementPercentage, setLocalManagementPercentage] = useState<number>(0);
+  const [localOccupancyRate, setLocalOccupancyRate] = useState<number>(0);
+  const [localTotalExpenses, setLocalTotalExpenses] = useState<number>(0);
+  
+  // Sincronizar estados locais com a alavanca selecionada
+  useEffect(() => {
+    const currentAlavanca = alavancas.find(a => a.id === alavancaSelecionada);
+    if (currentAlavanca) {
+      setLocalDailyPercentage(currentAlavanca.daily_percentage || 0);
+      setLocalManagementPercentage(currentAlavanca.management_percentage || 0);
+      setLocalOccupancyRate(currentAlavanca.occupancy_rate || 0);
+      setLocalTotalExpenses(currentAlavanca.total_expenses || 0);
+    }
+  }, [alavancaSelecionada, alavancas]);
 
   // Buscar alavancas do Supabase ao montar
   useEffect(() => {
@@ -117,11 +136,11 @@ export const NovaAlavancagemPatrimonial = ({
   }, [valorAlavanca]);
 
   // Cálculos conforme regras fornecidas
-  // Percentuais tratados como porcentagem
-  const dailyPct = (alavanca?.daily_percentage || 0) / 100;
-  const occPct = (alavanca?.occupancy_rate || 0) / 100;
-  const mgmtPct = (alavanca?.management_percentage || 0) / 100;
-  const totalExpPct = (alavanca?.total_expenses || 0) / 100;
+  // Percentuais tratados como porcentagem - usar valores locais do modal se disponíveis
+  const dailyPct = (localDailyPercentage || alavanca?.daily_percentage || 0) / 100;
+  const occPct = (localOccupancyRate || alavanca?.occupancy_rate || 0) / 100;
+  const mgmtPct = (localManagementPercentage || alavanca?.management_percentage || 0) / 100;
+  const totalExpPct = (localTotalExpenses || alavanca?.total_expenses || 0) / 100;
   // Embutido da administradora (usar campo real_estate_percentage se existir, senão mock)
   const embutidoAdmin = (alavanca?.real_estate_percentage ?? 25) / 100;
 
@@ -481,7 +500,7 @@ export const NovaAlavancagemPatrimonial = ({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Alavancagem patrimonial</CardTitle>
-          <Button variant="ghost" size="icon" title="Detalhamento de alavancagem">
+          <Button variant="ghost" size="icon" title="Configurações de alavancagem" onClick={() => setShowAlavancagemModal(true)}>
             <Settings size={20} />
           </Button>
         </CardHeader>
@@ -678,11 +697,11 @@ export const NovaAlavancagemPatrimonial = ({
             } else if (row.mes > mesInicioPatrimonio) {
               patrimonioMensal = patrimonioMensal * (1 + taxaMensal);
             }
-            // Parâmetros para cálculo
-            const percentualDiaria = (alavanca?.daily_percentage || 0) / 100;
-            const taxaOcupacao = (alavanca?.occupancy_rate || 0) / 100;
-            const despesasTotais = (alavanca?.total_expenses || 0) / 100;
-            const percentualAdmin = (alavanca?.management_percentage || 0) / 100;
+            // Parâmetros para cálculo - usar valores locais do modal se disponíveis
+            const percentualDiaria = (localDailyPercentage || alavanca?.daily_percentage || 0) / 100;
+            const taxaOcupacao = (localOccupancyRate || alavanca?.occupancy_rate || 0) / 100;
+            const despesasTotais = (localTotalExpenses || alavanca?.total_expenses || 0) / 100;
+            const percentualAdmin = (localManagementPercentage || alavanca?.management_percentage || 0) / 100;
             // Receita do mês
             const receitaMes = patrimonioAnual * percentualDiaria * (30 * taxaOcupacao);
             // Custos
@@ -734,11 +753,11 @@ export const NovaAlavancagemPatrimonial = ({
                   patrimonioAnual = patrimonioAnual * (1 + taxaAnual);
                 }
               }
-              // Parâmetros para cálculo
-              const percentualDiaria = (alavanca?.daily_percentage || 0) / 100;
-              const taxaOcupacao = (alavanca?.occupancy_rate || 0) / 100;
-              const despesasTotais = (alavanca?.total_expenses || 0) / 100;
-              const percentualAdmin = (alavanca?.management_percentage || 0) / 100;
+              // Parâmetros para cálculo - usar valores locais do modal se disponíveis
+              const percentualDiaria = (localDailyPercentage || alavanca?.daily_percentage || 0) / 100;
+              const taxaOcupacao = (localOccupancyRate || alavanca?.occupancy_rate || 0) / 100;
+              const despesasTotais = (localTotalExpenses || alavanca?.total_expenses || 0) / 100;
+              const percentualAdmin = (localManagementPercentage || alavanca?.management_percentage || 0) / 100;
               // Receita do mês
               const receitaMes = patrimonioAnual * percentualDiaria * (30 * taxaOcupacao);
               // Custos
@@ -778,6 +797,109 @@ export const NovaAlavancagemPatrimonial = ({
           setInstallmentsChartData(chartData);
         }}
       />
+      <FullScreenModal
+        isOpen={showAlavancagemModal}
+        onClose={() => setShowAlavancagemModal(false)}
+        title="Configurações de Alavancagem"
+      >
+        <div className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium mb-1">Selecione a alavancagem</label>
+            <Select value={alavancaSelecionada} onValueChange={setAlavancaSelecionada} disabled={loading || alavancas.length === 0}>
+              <SelectTrigger>
+                <SelectValue placeholder={loading ? 'Carregando...' : 'Escolha uma alavanca'} />
+              </SelectTrigger>
+              <SelectContent>
+                {alavancas.map(opt => (
+                  <SelectItem key={opt.id} value={opt.id}>{opt.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Valor da alavanca</label>
+            <Input type="text" value={valorAlavanca} onChange={handleValorAlavancaChange} placeholder="R$ 0,00" inputMode="numeric" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Tipo de alavancagem</label>
+            <Select value={tipoAlavancagem} onValueChange={setTipoAlavancagem}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione o tipo de alavancagem" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="simples">Alavancagem simples</SelectItem>
+                <SelectItem value="escalonada" disabled style={{ color: '#aaa', cursor: 'not-allowed' }}>Alavancagem escalonada (em breve)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Período de Compra (meses)</label>
+            <Input
+              type="number"
+              min={1}
+              value={periodoCompra}
+              onChange={e => setPeriodoCompra(Number(e.target.value))}
+              className="w-full"
+            />
+          </div>
+          
+          {/* Novos campos de configuração da alavanca */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Percentual da Diária (%)</label>
+              <Input
+                type="number"
+                value={localDailyPercentage}
+                onChange={(e) => setLocalDailyPercentage(Number(e.target.value))}
+                placeholder="0,00"
+                min={0}
+                max={100}
+                step={0.01}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Percentual da Administradora (%)</label>
+              <Input
+                type="number"
+                value={localManagementPercentage}
+                onChange={(e) => setLocalManagementPercentage(Number(e.target.value))}
+                placeholder="0,00"
+                min={0}
+                max={100}
+                step={0.01}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Taxa de Ocupação (%)</label>
+              <Input
+                type="number"
+                value={localOccupancyRate}
+                onChange={(e) => setLocalOccupancyRate(Number(e.target.value))}
+                placeholder="0,00"
+                min={0}
+                max={100}
+                step={0.01}
+                className="w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Valor das Despesas Totais (%)</label>
+              <Input
+                type="number"
+                value={localTotalExpenses}
+                onChange={(e) => setLocalTotalExpenses(Number(e.target.value))}
+                placeholder="0,00"
+                min={0}
+                max={100}
+                step={0.01}
+                className="w-full"
+              />
+            </div>
+          </div>
+        </div>
+      </FullScreenModal>
     </div>
   );
 }; 
