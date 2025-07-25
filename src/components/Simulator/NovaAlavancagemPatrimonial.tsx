@@ -494,6 +494,13 @@ export const NovaAlavancagemPatrimonial = ({
     setInstallmentsChartData([]);
   }, [valorAlavanca]);
 
+  // Atualizar cálculos sempre que campos do modal mudarem
+  useEffect(() => {
+    // Forçar atualização dos gráficos e resultados
+    setChartDataState([]);
+    setInstallmentsChartData([]);
+  }, [localDailyPercentage, localManagementPercentage, localOccupancyRate, localTotalExpenses]);
+
   return (
     <div className="space-y-8">
       {/* Seção unificada - Alavancagem patrimonial */}
@@ -507,55 +514,55 @@ export const NovaAlavancagemPatrimonial = ({
         <CardContent className="space-y-8">
           {/* Filtros */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Selecione a alavancagem</label>
-              <Select value={alavancaSelecionada} onValueChange={setAlavancaSelecionada} disabled={loading || alavancas.length === 0}>
-                <SelectTrigger>
-                  <SelectValue placeholder={loading ? 'Carregando...' : 'Escolha uma alavanca'} />
-                </SelectTrigger>
-                <SelectContent>
-                  {alavancas.map(opt => (
-                    <SelectItem key={opt.id} value={opt.id}>{opt.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Valor da alavanca</label>
-              <Input type="text" value={valorAlavanca} onChange={handleValorAlavancaChange} placeholder="R$ 0,00" inputMode="numeric" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Tipo de alavancagem</label>
-              <Select value={tipoAlavancagem} onValueChange={setTipoAlavancagem}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecione o tipo de alavancagem" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="simples">Alavancagem simples</SelectItem>
-                  <SelectItem value="escalonada" disabled style={{ color: '#aaa', cursor: 'not-allowed' }}>Alavancagem escalonada (em breve)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Período de Compra (meses)</label>
-              <Input
-                type="number"
-                min={1}
-                value={periodoCompra}
-                onChange={e => setPeriodoCompra(Number(e.target.value))}
-                className="w-full"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Selecione a alavancagem</label>
+            <Select value={alavancaSelecionada} onValueChange={setAlavancaSelecionada} disabled={loading || alavancas.length === 0}>
+              <SelectTrigger>
+                <SelectValue placeholder={loading ? 'Carregando...' : 'Escolha uma alavanca'} />
+              </SelectTrigger>
+              <SelectContent>
+                {alavancas.map(opt => (
+                  <SelectItem key={opt.id} value={opt.id}>{opt.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-          
+          <div>
+            <label className="block text-sm font-medium mb-1">Valor da alavanca</label>
+            <Input type="text" value={valorAlavanca} onChange={handleValorAlavancaChange} placeholder="R$ 0,00" inputMode="numeric" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Tipo de alavancagem</label>
+            <Select value={tipoAlavancagem} onValueChange={setTipoAlavancagem}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Selecione o tipo de alavancagem" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="simples">Alavancagem simples</SelectItem>
+                <SelectItem value="escalonada" disabled style={{ color: '#aaa', cursor: 'not-allowed' }}>Alavancagem escalonada (em breve)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">Período de Compra (meses)</label>
+            <Input
+              type="number"
+              min={1}
+              value={periodoCompra}
+              onChange={e => setPeriodoCompra(Number(e.target.value))}
+              className="w-full"
+            />
+          </div>
+          </div>
+
           {/* Informações da alavanca */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>Valor da diária: <span className="font-bold">{valorDiaria ? valorDiaria.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</span></div>
-            <div>Ocupação: <span className="font-bold">{ocupacaoDias ? `${ocupacaoDias} dias` : '-'}</span></div>
-            <div>Taxa do Airbnb: <span className="font-bold">{taxaAirbnb ? taxaAirbnb.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</span></div>
-            <div>Custos totais: <span className="font-bold">{custosTotais ? custosTotais.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</span></div>
-            <div>Ganhos mensais: <span className="font-bold">{ganhosMensais ? ganhosMensais.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</span></div>
-            <div>Número de imóveis: <span className="font-bold">{numeroImoveis}</span></div>
+            <div>Valor da diária: <span className="font-bold">{valorDiaria ? valorDiaria.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</span>{numeroImoveis > 1 && <span className="ml-2 text-xs text-gray-400">({(valorDiaria * numeroImoveis).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})</span>}</div>
+          <div>Ocupação: <span className="font-bold">{ocupacaoDias ? `${ocupacaoDias} dias` : '-'}</span></div>
+            <div>Taxa do Airbnb: <span className="font-bold">{taxaAirbnb ? taxaAirbnb.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</span>{numeroImoveis > 1 && <span className="ml-2 text-xs text-gray-400">({(taxaAirbnb * numeroImoveis).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})</span>}</div>
+            <div>Custos totais: <span className="font-bold">{custosTotais ? custosTotais.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</span>{numeroImoveis > 1 && <span className="ml-2 text-xs text-gray-400">({(custosTotais * numeroImoveis).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})</span>}</div>
+            <div>Ganhos mensais: <span className="font-bold">{ganhosMensais ? ganhosMensais.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</span>{numeroImoveis > 1 && <span className="ml-2 text-xs text-gray-400">({(ganhosMensais * numeroImoveis).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})</span>}</div>
+          <div>Número de imóveis: <span className="font-bold">{numeroImoveis}</span></div>
           </div>
 
           {/* Resultados */}
@@ -801,6 +808,20 @@ export const NovaAlavancagemPatrimonial = ({
         isOpen={showAlavancagemModal}
         onClose={() => setShowAlavancagemModal(false)}
         title="Configurações de Alavancagem"
+        actions={
+          <Button onClick={() => {
+            // Aplicar os valores locais nos cálculos principais
+            if (alavanca) {
+              alavanca.daily_percentage = localDailyPercentage;
+              alavanca.management_percentage = localManagementPercentage;
+              alavanca.occupancy_rate = localOccupancyRate;
+              alavanca.total_expenses = localTotalExpenses;
+            }
+            setShowAlavancagemModal(false);
+          }}>
+            Salvar
+          </Button>
+        }
       >
         <div className="space-y-6">
           <div>

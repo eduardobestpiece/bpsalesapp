@@ -1,5 +1,56 @@
 ## 📅 **Última Atualização:** 2025-01-15
 
+### 🎯 **Menu Lateral - Funcionalidades Completas**
+
+**Status:** ✅ **CONCLUÍDO**
+
+#### **🔧 Funcionalidades Implementadas:**
+
+**✅ 1. Navegação por Clique Único:**
+- **Engrenagem:** Navega para o topo da página de simulação
+- **Casinha:** Navega para o topo da seção "Alavancagem patrimonial"
+- **Cifrão:** Navega para o topo da seção "Ganho de Capital"
+- **Lupa:** Navega para o topo da seção "Detalhamento do Consórcio"
+
+**✅ 2. Navegação por Clique Duplo (Isolamento de Seções):**
+- **Engrenagem:** Oculta "Ganho de Capital", "Alavancagem patrimonial", "Gráfico de Parcelas" e "Detalhamento do Consórcio"
+- **Casinha:** Oculta "Montagem de cotas", "Ganho de Capital" e "Detalhamento do Consórcio"
+- **Cifrão:** Oculta "Montagem de cotas", "Alavancagem patrimonial", "Gráfico de Parcelas" e "Detalhamento do Consórcio"
+- **Lupa:** Oculta "Montagem de cotas", "Ganho de Capital", "Alavancagem patrimonial" e "Gráfico de Parcelas"
+
+**✅ 3. Retorno de Elementos:**
+- **Clique Triplo:** Restaura todas as seções ocultadas
+- **Funcionalidade:** Clicar no mesmo ícone três vezes mostra todas as seções
+
+**✅ 4. Design Personalizado:**
+- **Tamanho:** Aumentado em 20% (de `w-6 h-6` para `w-7.2 h-7.2`)
+- **Borda:** Cor `#333333`
+- **Fundo:** Cor `#131313`
+- **Ícones:** Cor `#333333` (padrão)
+- **Hover:** Fundo `#333333`, ícone `#131313`
+- **Clique Único:** Fundo `#131313`, ícone `#A86E57`
+- **Clique Duplo:** Fundo `#A86E57`, ícone `#131313`
+
+**✅ 5. IDs Adicionados nas Seções:**
+- **Ganho de Capital:** `id="ganho-capital"`
+- **Alavancagem Patrimonial:** `id="alavancagem-patrimonial"`
+- **Detalhamento do Consórcio:** `id="detalhamento-consorcio"`
+
+**📁 Arquivos Modificados:**
+- `src/components/Simulator/SimulatorMenu.tsx`
+- `src/components/Simulator/NewSimulatorLayout.tsx`
+- `src/components/Simulator/DetailTable.tsx`
+- `src/components/Layout/SimulatorLayout.tsx`
+
+**🎯 Resultado:**
+- ✅ Menu lateral com navegação completa implementada
+- ✅ Design personalizado com cores específicas
+- ✅ Funcionalidade de isolamento de seções
+- ✅ Scroll suave para as seções correspondentes
+- ✅ Estados visuais diferenciados para cada interação
+
+---
+
 ### 🎯 **Correções nos Botões "Com embutido" e "Sem embutido"**
 
 **Status:** ✅ **CONCLUÍDO**

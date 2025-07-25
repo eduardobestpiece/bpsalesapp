@@ -339,72 +339,6 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
   return (
     <div className="flex flex-col gap-6 h-full relative w-full max-w-full">
-      {/* Menu Lateral Fixo à Direita - Posicionado logo abaixo do header fixo */}
-      <div 
-        className="fixed right-4 z-50"
-        style={{ top: `${menuPosition}px` }}
-      >
-        <div 
-          className="rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-1"
-          style={{ backgroundColor: '#131313' }}
-        >
-          <div className="flex flex-col space-y-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-8 h-8 p-0 text-white hover:text-[#AA715A] transition-all duration-200 hover:scale-110 active:bg-[#AA715A] active:text-[#131313]"
-              onClick={() => handleMenuClick('settings')}
-              title="Configurações"
-            >
-              <Settings size={16} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-8 h-8 p-0 text-white hover:text-[#AA715A] transition-all duration-200 hover:scale-110 active:bg-[#AA715A] active:text-[#131313]"
-              onClick={() => handleMenuClick('home')}
-              title="Alavancagem"
-            >
-              <Home size={16} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-8 h-8 p-0 text-white hover:text-[#AA715A] transition-all duration-200 hover:scale-110 active:bg-[#AA715A] active:text-[#131313]"
-              onClick={() => handleMenuClick('capital')}
-              title="Ganho de Capital"
-            >
-              <DollarSign size={16} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-8 h-8 p-0 text-white hover:text-[#AA715A] transition-all duration-200 hover:scale-110 active:bg-[#AA715A] active:text-[#131313]"
-              title="Financeiro"
-            >
-              <TrendingUp size={16} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-8 h-8 p-0 text-white hover:text-[#AA715A] transition-all duration-200 hover:scale-110 active:bg-[#AA715A] active:text-[#131313]"
-              title="Histórico"
-            >
-              <Clock size={16} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-8 h-8 p-0 text-white hover:text-[#AA715A] transition-all duration-200 hover:scale-110 active:bg-[#AA715A] active:text-[#131313]"
-              onClick={() => handleMenuClick('search')}
-              title="Detalhamento"
-            >
-              <Search size={16} />
-            </Button>
-          </div>
-        </div>
-      </div>
-
       {/* Seção de crédito - sem campos duplicados */}
       {visibleSections.credit && (
         <div ref={creditSectionRef}>
@@ -438,7 +372,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
       {/* Seção de Ganho de Capital */}
       {visibleSections.capital && (roiOperacao === null || roiOperacao >= 10) && (
-        <div ref={capitalSectionRef} className="w-full">
+        <div ref={capitalSectionRef} id="ganho-capital" className="w-full">
           <CapitalGainSection 
             creditoAcessado={creditoAcessado}
             contemplationMonth={localSimulationData.contemplationMonth || 60}
@@ -464,7 +398,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
       {/* Seção de Nova Alavancagem Patrimonial */}
       {visibleSections.leverage && (firstRowCredit > 0) && (
-        <div className="w-full mt-8">
+        <div id="alavancagem-patrimonial" className="w-full mt-8">
           <NovaAlavancagemPatrimonial 
             product={{ nominalCreditValue: firstRowCredit, termMonths: termValue }}
             administrator={{ 

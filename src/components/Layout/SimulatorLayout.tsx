@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLocation } from 'react-router-dom';
+import { SimulatorMenu } from '@/components/Simulator/SimulatorMenu';
 
 // Contexto para compartilhar dados do simulador
 interface SimulatorContextType {
@@ -262,6 +263,16 @@ export const SimulatorLayout = ({ children }: SimulatorLayoutProps) => {
               <main className="flex-1 p-6 pt-20 bg-background dark:bg-[#131313] max-w-full">
                 {children}
               </main>
+              <SimulatorMenu 
+                onNavigate={(section) => {
+                  // Implementar navegação se necessário
+                  console.log('Navegar para:', section);
+                }}
+                onToggleSection={(section) => {
+                  // Implementar toggle de seções se necessário
+                  console.log('Toggle seção:', section);
+                }}
+              />
             </SidebarInset>
           </div>
         </SidebarProvider>

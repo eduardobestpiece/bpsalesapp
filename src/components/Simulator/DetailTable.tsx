@@ -485,7 +485,7 @@ export const DetailTable = ({
   const visibleKeys = Object.keys(visibleColumns).filter((key) => visibleColumns[key as keyof typeof visibleColumns]);
 
   return (
-    <Card className="w-full">
+    <Card id="detalhamento-consorcio" className="w-full">
       <CardHeader>
         <div className="flex justify-between items-center">
           <CardTitle>Detalhamento do Consórcio</CardTitle>
@@ -560,101 +560,82 @@ export const DetailTable = ({
       )}
 
       <CardContent>
-        {/* Cabeçalho separado */}
-        <div
-          ref={headerRef}
-          className="w-full overflow-x-auto border rounded-t-lg table-header-scrollbar"
-          style={{ overflowY: 'hidden' }}
-        >
-          <div className="min-w-max">
-            <Table>
-              <TableHeader className="bg-[#131313] border-b border-gray-700 shadow-sm">
-                <TableRow className="hover:bg-[#131313]">
-                  {visibleKeys.map((key, idx) => (
-                    <TableHead
-                      key={key}
-                      ref={el => thRefs.current[idx] = el}
-                      className="bg-[#131313] text-white font-semibold"
-                      style={{whiteSpace: 'nowrap', width: colWidths[idx] ? colWidths[idx] : undefined, minWidth: 80}}
-                    >
-                      {key === 'mes' && 'Mês'}
-                      {key === 'credito' && 'Crédito'}
-                      {key === 'creditoAcessado' && 'Crédito Acessado'}
-                      {key === 'taxaAdministracao' && 'Taxa de Administração'}
-                      {key === 'fundoReserva' && 'Fundo de Reserva'}
-                      {key === 'valorParcela' && 'Valor da Parcela'}
-                      {key === 'saldoDevedor' && 'Saldo Devedor'}
-                      {key === 'agio' && 'Ágio'}
-                      {key === 'lucro' && 'Lucro'}
-                      {key === 'roi' && 'ROI'}
-                    </TableHead>
-                  ))}
-                </TableRow>
-              </TableHeader>
-            </Table>
-          </div>
-        </div>
-        {/* Corpo da tabela */}
-        <div
-          ref={bodyRef}
-          className="w-full overflow-x-auto border-b border-l border-r rounded-b-lg table-body-scrollbar"
-          style={{ maxHeight: '400px', overflowY: 'auto' }}
-        >
-          <div className="min-w-max">
-            <Table>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={visibleKeys.length} className="text-center py-8">
-                      <p>Carregando dados...</p>
-                    </TableCell>
-                  </TableRow>
-                ) : tableData.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={visibleKeys.length} className="text-center py-8">
-                      <p>Nenhum dado disponível para exibir.</p>
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  tableData.map((row, rowIdx) => (
-                    <TableRow 
-                      key={row.mes}
-                      ref={
-                        row.isContemplationMonth ? contemplationRowRef :
-                        rowIdx === tableData.length - 1 ? lastRowRef : undefined
-                      }
-                      className={
-                        row.isContemplationMonth && highlightContemplation
-                          ? "bg-yellow-200 dark:bg-yellow-900 animate-pulse"
-                          : row.isContemplationMonth
-                            ? "bg-green-100 dark:bg-green-900"
-                            : ""
-                      }
-                    >
-                      {visibleKeys.map((key, idx) => (
-                        <TableCell
-                          key={key}
-                          ref={rowIdx === 0 ? el => tdRefs.current[idx] = el : undefined}
-                          style={{whiteSpace: 'nowrap', width: colWidths[idx] ? colWidths[idx] : undefined, minWidth: 80}}
-                        >
-                          {key === 'mes' && row.mes}
-                          {key === 'credito' && formatCurrency(row.credito)}
-                          {key === 'creditoAcessado' && formatCurrency(row.creditoAcessado)}
-                          {key === 'taxaAdministracao' && formatCurrency(row.taxaAdministracao)}
-                          {key === 'fundoReserva' && formatCurrency(row.fundoReserva)}
-                          {key === 'valorParcela' && formatCurrency(row.valorParcela)}
-                          {key === 'saldoDevedor' && formatCurrency(row.saldoDevedor)}
-                          {key === 'agio' && formatCurrency(row.agio)}
-                          {key === 'lucro' && formatCurrency(row.lucro)}
-                          {key === 'roi' && `${(row.roi * 100).toFixed(2)}%`}
-                        </TableCell>
-                      ))}
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+        <div className="w-full overflow-x-auto border rounded-lg table-scrollbar" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+          <Table className="min-w-max">
+            <thead className="bg-[#131313] border-b border-gray-700 shadow-sm sticky top-0 z-10">
+              <tr>
+                {visibleKeys.map((key) => (
+                  <th
+                    key={key}
+                    className="bg-[#131313] text-white font-semibold px-4 py-2 text-left"
+                    style={{whiteSpace: 'nowrap', minWidth: 80}}
+                  >
+                    {key === 'mes' && 'Mês'}
+                    {key === 'credito' && 'Crédito'}
+                    {key === 'creditoAcessado' && 'Crédito Acessado'}
+                    {key === 'taxaAdministracao' && 'Taxa de Administração'}
+                    {key === 'fundoReserva' && 'Fundo de Reserva'}
+                    {key === 'valorParcela' && 'Valor da Parcela'}
+                    {key === 'saldoDevedor' && 'Saldo Devedor'}
+                    {key === 'agio' && 'Ágio'}
+                    {key === 'lucro' && 'Lucro'}
+                    {key === 'roi' && 'ROI'}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {isLoading ? (
+                <tr>
+                  <td colSpan={visibleKeys.length} className="text-center py-8">
+                    <p>Carregando dados...</p>
+                  </td>
+                </tr>
+              ) : tableData.length === 0 ? (
+                <tr>
+                  <td colSpan={visibleKeys.length} className="text-center py-8">
+                    <p>Nenhum dado disponível para exibir.</p>
+                  </td>
+                </tr>
+              ) : (
+                tableData.map((row, rowIdx) => (
+                  <tr
+                    key={row.mes}
+                    ref={
+                      row.isContemplationMonth ? contemplationRowRef :
+                      rowIdx === tableData.length - 1 ? lastRowRef : undefined
+                    }
+                    className={
+                      row.isContemplationMonth && highlightContemplation
+                        ? "bg-yellow-200 dark:bg-yellow-900 animate-pulse"
+                        : row.isContemplationMonth
+                          ? "bg-green-100 dark:bg-green-900"
+                          : ""
+                    }
+                  >
+                    {visibleKeys.map((key) => (
+                      <td
+                        key={key}
+                        className="px-4 py-2 text-left"
+                        style={{whiteSpace: 'nowrap', minWidth: 80}}
+                      >
+                        {key === 'mes' && row.mes}
+                        {key === 'credito' && formatCurrency(row.credito)}
+                        {key === 'creditoAcessado' && formatCurrency(row.creditoAcessado)}
+                        {key === 'taxaAdministracao' && formatCurrency(row.taxaAdministracao)}
+                        {key === 'fundoReserva' && formatCurrency(row.fundoReserva)}
+                        {key === 'valorParcela' && formatCurrency(row.valorParcela)}
+                        {key === 'saldoDevedor' && formatCurrency(row.saldoDevedor)}
+                        {key === 'agio' && formatCurrency(row.agio)}
+                        {key === 'lucro' && formatCurrency(row.lucro)}
+                        {key === 'roi' && `${(row.roi * 100).toFixed(2)}%`}
+                      </td>
+                    ))}
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </Table>
         </div>
       </CardContent>
     </Card>
