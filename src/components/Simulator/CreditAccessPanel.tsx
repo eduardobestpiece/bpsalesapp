@@ -567,12 +567,16 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
         .select('*')
         .eq('administrator_id', administratorId)
         .eq('installment_count', term)
-        .eq('name', installmentType)
         .eq('is_archived', false);
       if (types && types.length > 0) {
         installmentTypeData = types[0];
+        console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Installment type encontrado:', installmentTypeData);
       } else {
-        console.log('❌ [CÁLCULO CRÉDITO DINÂMICO] Nenhum installment_type encontrado');
+        console.log('❌ [CÁLCULO CRÉDITO DINÂMICO] Nenhum installment_type encontrado para:', {
+          administratorId,
+          term,
+          installmentType
+        });
         return null;
       }
     } catch (e) {
