@@ -856,7 +856,12 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     fetchReducao();
   }, [produtoCandidato, installmentCandidato, data.installmentType]);
 
-  if (produtoCandidato && installmentCandidato) {
+  // Função assíncrona para calcular o crédito acessado
+  const calcularCreditoAcessado = useCallback(async () => {
+    if (!produtoCandidato || !installmentCandidato) {
+      return { creditoAcessado: 0, valorParcela: 0 };
+    }
+
     // Usar valores customizados se disponíveis, senão usar os valores da parcela
     const customAdminTax = (data as any).adminTaxPercent !== undefined ? (data as any).adminTaxPercent : installmentCandidato.admin_tax_percent || 0;
     const customReserveFund = (data as any).reserveFundPercent !== undefined ? (data as any).reserveFundPercent : installmentCandidato.reserve_fund_percent || 0;
@@ -868,6 +873,9 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
       insurance_percent: installmentCandidato.insurance_percent || 0,
       optional_insurance: !!installmentCandidato.optional_insurance
     };
+    
+    let creditoAcessado = 0;
+    let valorParcela = 0;
     
     if (data.installmentType !== 'full') {
       if (data.searchType === 'contribution') {
@@ -946,14 +954,6 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
           reduction: reducaoParcela
         });
       }
-      // Para ambos, calcular os percentuais e valores auxiliares
-      parcelaReduzida = valorParcela;
-      percentualUsado = parcelaReduzida / creditoAcessado;
-      parcelaCheia = calcularParcelasProduto({
-        credit: creditoAcessado,
-        installment: installmentParams,
-        reduction: null
-      }).full;
     } else {
       // Lógica para parcela cheia
       if (data.searchType === 'contribution') {
@@ -1032,29 +1032,73 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
           reduction: null
         }).full;
       }
-      
-      parcelaCheia = valorParcela;
-      parcelaReduzida = regraParcelaEspecial({
-        credit: creditoAcessado,
-        installment: installmentParams,
-        reduction: reducaoParcela
-      });
-      percentualUsado = parcelaCheia / creditoAcessado;
     }
-    taxaAdministracao = customAdminTax;
-    // Calcular taxa anual incluindo taxa de administração + fundo de reserva
-    const taxaTotal = customAdminTax + customReserveFund;
-    taxaAnual = (taxaTotal / data.term) * 12;
-    
-    // Usar valor customizado se disponível, senão usar o valor padrão
-    const customAnnualUpdateRate = data.annualUpdateRate !== undefined ? data.annualUpdateRate : data.updateRate;
-    
-    if (data.consortiumType === 'property') {
-      atualizacaoAnual = 'INCC ' + (customAnnualUpdateRate ? customAnnualUpdateRate.toFixed(2) + '%' : '6.00%');
-    } else if (data.consortiumType === 'vehicle') {
-      atualizacaoAnual = 'IPCA ' + (customAnnualUpdateRate ? customAnnualUpdateRate.toFixed(2) + '%' : '6.00%');
-    }
-  }
+
+    return { creditoAcessado, valorParcela };
+  }, [produtoCandidato, installmentCandidato, data, reducaoParcela]);
+
+  // Variáveis para exibição (serão calculadas no useEffect acima)
+  let parcelaCheia = 0;
+  let parcelaReduzida = 0;
+  let taxaAdministracao = 0;
+  let taxaAnual = 0;
+  let atualizacaoAnual = '-';
+  let creditoAcessado = 0;
+  let valorParcela = 0;
+
+  // Calcular valores auxiliares quando creditoAcessado estiver disponível
+  useEffect(() => {
+    const calcularValoresAuxiliares = async () => {
+      const resultado = await calcularCreditoAcessado();
+      if (resultado.creditoAcessado > 0) {
+        creditoAcessado = resultado.creditoAcessado;
+        valorParcela = resultado.valorParcela;
+        
+        // Calcular valores auxiliares
+        if (produtoCandidato && installmentCandidato) {
+          const customAdminTax = (data as any).adminTaxPercent !== undefined ? (data as any).adminTaxPercent : installmentCandidato.admin_tax_percent || 0;
+          const customReserveFund = (data as any).reserveFundPercent !== undefined ? (data as any).reserveFundPercent : installmentCandidato.reserve_fund_percent || 0;
+          
+          const installmentParams = {
+            installment_count: installmentCandidato.installment_count,
+            admin_tax_percent: customAdminTax,
+            reserve_fund_percent: customReserveFund,
+            insurance_percent: installmentCandidato.insurance_percent || 0,
+            optional_insurance: !!installmentCandidato.optional_insurance
+          };
+          
+          if (data.installmentType !== 'full') {
+            parcelaReduzida = valorParcela;
+            parcelaCheia = calcularParcelasProduto({
+              credit: creditoAcessado,
+              installment: installmentParams,
+              reduction: null
+            }).full;
+          } else {
+            parcelaCheia = valorParcela;
+            parcelaReduzida = regraParcelaEspecial({
+              credit: creditoAcessado,
+              installment: installmentParams,
+              reduction: reducaoParcela
+            });
+          }
+          
+          taxaAdministracao = customAdminTax;
+          const taxaTotal = customAdminTax + customReserveFund;
+          taxaAnual = (taxaTotal / data.term) * 12;
+          
+          const customAnnualUpdateRate = data.annualUpdateRate !== undefined ? data.annualUpdateRate : data.updateRate;
+          
+          if (data.consortiumType === 'property') {
+            atualizacaoAnual = 'INCC ' + (customAnnualUpdateRate ? customAnnualUpdateRate.toFixed(2) + '%' : '6.00%');
+          } else if (data.consortiumType === 'vehicle') {
+            atualizacaoAnual = 'IPCA ' + (customAnnualUpdateRate ? customAnnualUpdateRate.toFixed(2) + '%' : '6.00%');
+          }
+        }
+      }
+    };
+    calcularValoresAuxiliares();
+  }, [calcularCreditoAcessado, produtoCandidato, installmentCandidato, data, reducaoParcela]);
 
   // Atualizar o valor de crédito acessado no parent sempre que mudar
   useEffect(() => {
@@ -1062,56 +1106,6 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
       onCreditoAcessado(creditoAcessado);
     }
   }, [creditoAcessado, onCreditoAcessado]);
-
-  // Função para recalcular crédito baseado no valor da parcela desejada
-  const recalcularCreditoParaParcela = useCallback((valorParcelaDesejada: number) => {
-    
-    if (!produtoCandidato || !installmentCandidato) {
-      return 0;
-    }
-    
-    // Usar valores customizados se disponíveis
-    const customAdminTax = (data as any).adminTaxPercent !== undefined ? (data as any).adminTaxPercent : installmentCandidato.admin_tax_percent || 0;
-    const customReserveFund = (data as any).reserveFundPercent !== undefined ? (data as any).reserveFundPercent : installmentCandidato.reserve_fund_percent || 0;
-    
-    const installmentParams = {
-      installment_count: installmentCandidato.installment_count,
-      admin_tax_percent: customAdminTax,
-      reserve_fund_percent: customReserveFund,
-      insurance_percent: installmentCandidato.insurance_percent || 0,
-      optional_insurance: !!installmentCandidato.optional_insurance
-    };
-    
-    let novoCredito = 0;
-    let tentativas = 0;
-    const maxTentativas = 50;
-    
-    // Simplificar a lógica para debug
-    if (data.installmentType === 'full') {
-      // Para parcela cheia - usar lógica simplificada
-      const parcelaCheia100k = calcularParcelasProduto({
-        credit: 100000,
-        installment: installmentParams,
-        reduction: null
-      }).full;
-      
-      const fator = 100000 / parcelaCheia100k;
-      novoCredito = Math.ceil((valorParcelaDesejada * fator) / 10000) * 10000;
-      
-    } else {
-      // Para parcela especial - usar lógica simplificada
-      const parcelaEspecial100k = regraParcelaEspecial({
-        credit: 100000,
-        installment: installmentParams,
-        reduction: reducaoParcela
-      });
-      
-      const fator = 100000 / parcelaEspecial100k;
-      novoCredito = Math.ceil((valorParcelaDesejada * fator) / 10000) * 10000;
-      
-    }
-    return novoCredito;
-  }, [produtoCandidato, installmentCandidato, data.adminTaxPercent, data.reserveFundPercent, data.installmentType, data.term, reducaoParcela]);
 
   // Recálculo automático quando as taxas são alteradas
   useEffect(() => {
