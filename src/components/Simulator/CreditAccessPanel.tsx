@@ -827,13 +827,6 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
   }
 
   // 2. Calcular percentual e valores
-  let parcelaCheia = 0;
-  let parcelaReduzida = 0;
-  let taxaAdministracao = 0;
-  let taxaAnual = 0;
-  let atualizacaoAnual = '-';
-  let creditoAcessado = 0;
-  let valorParcela = 0;
   const [reducaoParcela, setReducaoParcela] = useState<any>(null);
 
   useEffect(() => {
@@ -1037,22 +1030,22 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     return { creditoAcessado, valorParcela };
   }, [produtoCandidato, installmentCandidato, data, reducaoParcela]);
 
-  // Variáveis para exibição (serão calculadas no useEffect acima)
-  let parcelaCheia = 0;
-  let parcelaReduzida = 0;
-  let taxaAdministracao = 0;
-  let taxaAnual = 0;
-  let atualizacaoAnual = '-';
-  let creditoAcessado = 0;
-  let valorParcela = 0;
+  // Estados para os valores calculados
+  const [parcelaCheia, setParcelaCheia] = useState(0);
+  const [parcelaReduzida, setParcelaReduzida] = useState(0);
+  const [taxaAdministracao, setTaxaAdministracao] = useState(0);
+  const [taxaAnual, setTaxaAnual] = useState(0);
+  const [atualizacaoAnual, setAtualizacaoAnual] = useState('-');
+  const [creditoAcessado, setCreditoAcessado] = useState(0);
+  const [valorParcela, setValorParcela] = useState(0);
 
   // Calcular valores auxiliares quando creditoAcessado estiver disponível
   useEffect(() => {
     const calcularValoresAuxiliares = async () => {
       const resultado = await calcularCreditoAcessado();
       if (resultado.creditoAcessado > 0) {
-        creditoAcessado = resultado.creditoAcessado;
-        valorParcela = resultado.valorParcela;
+        setCreditoAcessado(resultado.creditoAcessado);
+        setValorParcela(resultado.valorParcela);
         
         // Calcular valores auxiliares
         if (produtoCandidato && installmentCandidato) {
@@ -1068,31 +1061,33 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
           };
           
           if (data.installmentType !== 'full') {
-            parcelaReduzida = valorParcela;
-            parcelaCheia = calcularParcelasProduto({
-              credit: creditoAcessado,
+            setParcelaReduzida(resultado.valorParcela);
+            const parcelaCheiaCalculada = calcularParcelasProduto({
+              credit: resultado.creditoAcessado,
               installment: installmentParams,
               reduction: null
             }).full;
+            setParcelaCheia(parcelaCheiaCalculada);
           } else {
-            parcelaCheia = valorParcela;
-            parcelaReduzida = regraParcelaEspecial({
-              credit: creditoAcessado,
+            setParcelaCheia(resultado.valorParcela);
+            const parcelaReduzidaCalculada = regraParcelaEspecial({
+              credit: resultado.creditoAcessado,
               installment: installmentParams,
               reduction: reducaoParcela
             });
+            setParcelaReduzida(parcelaReduzidaCalculada);
           }
           
-          taxaAdministracao = customAdminTax;
+          setTaxaAdministracao(customAdminTax);
           const taxaTotal = customAdminTax + customReserveFund;
-          taxaAnual = (taxaTotal / data.term) * 12;
+          setTaxaAnual((taxaTotal / data.term) * 12);
           
           const customAnnualUpdateRate = data.annualUpdateRate !== undefined ? data.annualUpdateRate : data.updateRate;
           
           if (data.consortiumType === 'property') {
-            atualizacaoAnual = 'INCC ' + (customAnnualUpdateRate ? customAnnualUpdateRate.toFixed(2) + '%' : '6.00%');
+            setAtualizacaoAnual('INCC ' + (customAnnualUpdateRate ? customAnnualUpdateRate.toFixed(2) + '%' : '6.00%'));
           } else if (data.consortiumType === 'vehicle') {
-            atualizacaoAnual = 'IPCA ' + (customAnnualUpdateRate ? customAnnualUpdateRate.toFixed(2) + '%' : '6.00%');
+            setAtualizacaoAnual('IPCA ' + (customAnnualUpdateRate ? customAnnualUpdateRate.toFixed(2) + '%' : '6.00%'));
           }
         }
       }
