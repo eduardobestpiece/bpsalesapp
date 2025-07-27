@@ -871,58 +871,71 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     
     if (data.installmentType !== 'full') {
       if (data.searchType === 'contribution') {
-        // Cálculo baseado em Parcela (Aporte) com parcela especial
-        const parcelaEspecial100k = regraParcelaEspecial({
-          credit: 100000,
-          installment: installmentParams,
-          reduction: reducaoParcela
-        });
+        // Usar a nova função de cálculo dinâmico
+        const resultado = await sugerirCreditosDinamico(
+          data.value,
+          data.administrator,
+          data.term,
+          data.installmentType
+        );
         
-        // Lógica iterativa para encontrar o crédito correto
-        const valorAporte = data.value;
-        let creditoTeste = 100000; // Começar com 100k
-        let parcelaTeste = 0;
-        let tentativas = 0;
-        const maxTentativas = 50; // Evitar loop infinito
-        
-        // Primeira tentativa com fator inicial
-        const fatorInicial = 100000 / parcelaEspecial100k;
-        creditoTeste = Math.ceil((valorAporte * fatorInicial) / 10000) * 10000;
-        
-        // Iterar até encontrar o crédito correto
-        while (tentativas < maxTentativas) {
-          parcelaTeste = regraParcelaEspecial({
-            credit: creditoTeste,
+        if (resultado) {
+          creditoAcessado = resultado.credit;
+          valorParcela = resultado.valorParcela;
+        } else {
+          // Fallback para lógica antiga se a nova função falhar
+          const parcelaEspecial100k = regraParcelaEspecial({
+            credit: 100000,
             installment: installmentParams,
             reduction: reducaoParcela
           });
           
-          // Se a parcela está próxima ou acima do valor do aporte (com tolerância de 1%)
-          if (parcelaTeste >= valorAporte * 0.99) {
-            creditoAcessado = creditoTeste;
-            valorParcela = parcelaTeste;
-            break;
+          // Lógica iterativa para encontrar o crédito correto
+          const valorAporte = data.value;
+          let creditoTeste = 100000; // Começar com 100k
+          let parcelaTeste = 0;
+          let tentativas = 0;
+          const maxTentativas = 50; // Evitar loop infinito
+          
+          // Primeira tentativa com fator inicial
+          const fatorInicial = 100000 / parcelaEspecial100k;
+          creditoTeste = Math.ceil((valorAporte * fatorInicial) / 10000) * 10000;
+          
+          // Iterar até encontrar o crédito correto
+          while (tentativas < maxTentativas) {
+            parcelaTeste = regraParcelaEspecial({
+              credit: creditoTeste,
+              installment: installmentParams,
+              reduction: reducaoParcela
+            });
+            
+            // Se a parcela está próxima ou acima do valor do aporte (com tolerância de 1%)
+            if (parcelaTeste >= valorAporte * 0.99) {
+              creditoAcessado = creditoTeste;
+              valorParcela = parcelaTeste;
+              break;
+            }
+            
+            // Calcular novo crédito baseado na diferença
+            const fatorAjuste = valorAporte / parcelaTeste;
+            const novoCredito = Math.ceil((creditoTeste * fatorAjuste) / 10000) * 10000;
+            
+            // Se não houve mudança significativa, parar
+            if (Math.abs(novoCredito - creditoTeste) < 10000) {
+              creditoAcessado = creditoTeste;
+              valorParcela = parcelaTeste;
+              break;
+            }
+            
+            creditoTeste = novoCredito;
+            tentativas++;
           }
           
-          // Calcular novo crédito baseado na diferença
-          const fatorAjuste = valorAporte / parcelaTeste;
-          const novoCredito = Math.ceil((creditoTeste * fatorAjuste) / 10000) * 10000;
-          
-          // Se não houve mudança significativa, parar
-          if (Math.abs(novoCredito - creditoTeste) < 10000) {
+          // Se não convergiu, usar o último valor
+          if (tentativas >= maxTentativas) {
             creditoAcessado = creditoTeste;
             valorParcela = parcelaTeste;
-            break;
           }
-          
-          creditoTeste = novoCredito;
-          tentativas++;
-        }
-        
-        // Se não convergiu, usar o último valor
-        if (tentativas >= maxTentativas) {
-          creditoAcessado = creditoTeste;
-          valorParcela = parcelaTeste;
         }
       } else if (data.searchType === 'credit') {
         // Problema 2: Cálculo baseado em Crédito com parcela especial - arredondar para múltiplos de 10.000
@@ -944,58 +957,71 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     } else {
       // Lógica para parcela cheia
       if (data.searchType === 'contribution') {
-        // Problema 1: Busca por Aporte com Parcela Cheia - calcular parcela baseada no crédito acessado
-        const parcelaCheia100k = calcularParcelasProduto({
-          credit: 100000,
-          installment: installmentParams,
-          reduction: null
-        }).full;
+        // Usar a nova função de cálculo dinâmico
+        const resultado = await sugerirCreditosDinamico(
+          data.value,
+          data.administrator,
+          data.term,
+          'full' // Para parcela cheia, usar 'full'
+        );
         
-        // Lógica iterativa para parcela cheia
-        const valorAporte = data.value;
-        let creditoTeste = 100000;
-        let parcelaTeste = 0;
-        let tentativas = 0;
-        const maxTentativas = 50;
-        
-        // Primeira tentativa com fator inicial
-        const fatorInicial = 100000 / parcelaCheia100k;
-        creditoTeste = Math.ceil((valorAporte * fatorInicial) / 10000) * 10000;
-        
-        // Iterar até encontrar o crédito correto
-        while (tentativas < maxTentativas) {
-          parcelaTeste = calcularParcelasProduto({
-            credit: creditoTeste,
+        if (resultado) {
+          creditoAcessado = resultado.credit;
+          valorParcela = resultado.valorParcela;
+        } else {
+          // Fallback para lógica antiga se a nova função falhar
+          const parcelaCheia100k = calcularParcelasProduto({
+            credit: 100000,
             installment: installmentParams,
             reduction: null
           }).full;
           
-          // Se a parcela está próxima ou acima do valor do aporte (com tolerância de 1%)
-          if (parcelaTeste >= valorAporte * 0.99) {
-            creditoAcessado = creditoTeste;
-            valorParcela = parcelaTeste;
-            break;
+          // Lógica iterativa para parcela cheia
+          const valorAporte = data.value;
+          let creditoTeste = 100000;
+          let parcelaTeste = 0;
+          let tentativas = 0;
+          const maxTentativas = 50;
+          
+          // Primeira tentativa com fator inicial
+          const fatorInicial = 100000 / parcelaCheia100k;
+          creditoTeste = Math.ceil((valorAporte * fatorInicial) / 10000) * 10000;
+          
+          // Iterar até encontrar o crédito correto
+          while (tentativas < maxTentativas) {
+            parcelaTeste = calcularParcelasProduto({
+              credit: creditoTeste,
+              installment: installmentParams,
+              reduction: null
+            }).full;
+            
+            // Se a parcela está próxima ou acima do valor do aporte (com tolerância de 1%)
+            if (parcelaTeste >= valorAporte * 0.99) {
+              creditoAcessado = creditoTeste;
+              valorParcela = parcelaTeste;
+              break;
+            }
+            
+            // Calcular novo crédito baseado na diferença
+            const fatorAjuste = valorAporte / parcelaTeste;
+            const novoCredito = Math.ceil((creditoTeste * fatorAjuste) / 10000) * 10000;
+            
+            // Se não houve mudança significativa, parar
+            if (Math.abs(novoCredito - creditoTeste) < 10000) {
+              creditoAcessado = creditoTeste;
+              valorParcela = parcelaTeste;
+              break;
+            }
+            
+            creditoTeste = novoCredito;
+            tentativas++;
           }
           
-          // Calcular novo crédito baseado na diferença
-          const fatorAjuste = valorAporte / parcelaTeste;
-          const novoCredito = Math.ceil((creditoTeste * fatorAjuste) / 10000) * 10000;
-          
-          // Se não houve mudança significativa, parar
-          if (Math.abs(novoCredito - creditoTeste) < 10000) {
+          // Se não convergiu, usar o último valor
+          if (tentativas >= maxTentativas) {
             creditoAcessado = creditoTeste;
             valorParcela = parcelaTeste;
-            break;
           }
-          
-          creditoTeste = novoCredito;
-          tentativas++;
-        }
-        
-        // Se não convergiu, usar o último valor
-        if (tentativas >= maxTentativas) {
-          creditoAcessado = creditoTeste;
-          valorParcela = parcelaTeste;
         }
       } else if (data.searchType === 'credit') {
         // Problema 3: Busca por Crédito com Parcela Cheia - arredondar crédito para múltiplos de 10.000
