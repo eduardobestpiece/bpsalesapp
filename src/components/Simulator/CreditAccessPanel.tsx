@@ -545,36 +545,39 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     return creditosSugeridos;
   };
 
-  // Função para sugerir créditos dinamicamente baseado no valor de aporte
-  const sugerirCreditosDinamico = async (valorAporte: number, administratorId: string, term: number, installmentType: string) => {
-    console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Iniciando cálculo:', {
+  // Função para sugerir créditos dinamicamente baseado na fórmula exata do usuário
+  const sugerirCreditosDinamico = async (
+    valorAporte: number,
+    administratorId: string,
+    term: number,
+    installmentType: string
+  ) => {
+    console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Iniciando cálculo (fórmula exata):', {
       valorAporte,
       administratorId,
       term,
       installmentType
     });
 
-    // Buscar installment types da administradora
-    let installmentTypes = [];
+    // Buscar installment type da administradora
+    let installmentTypeData = null;
     try {
       const { data: types } = await supabase
         .from('installment_types')
         .select('*')
         .eq('administrator_id', administratorId)
         .eq('installment_count', term)
+        .eq('name', installmentType)
         .eq('is_archived', false);
-      
       if (types && types.length > 0) {
-        installmentTypes = types;
-        console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Installment types encontrados:', installmentTypes.length);
+        installmentTypeData = types[0];
+      } else {
+        console.log('❌ [CÁLCULO CRÉDITO DINÂMICO] Nenhum installment_type encontrado');
+        return null;
       }
-    } catch (error) {
-      console.error('Erro ao buscar installment types:', error);
-    }
-
-    if (installmentTypes.length === 0) {
-      console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Nenhum installment type encontrado');
-      return [];
+    } catch (e) {
+      console.log('❌ [CÁLCULO CRÉDITO DINÂMICO] Erro ao buscar installment_types', e);
+      return null;
     }
 
     // Buscar redução de parcela se necessário
@@ -586,95 +589,61 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
           .select('*')
           .eq('is_archived', false)
           .eq('id', installmentType);
-        
         if (reducoes && reducoes.length > 0) {
           reducaoParcela = reducoes[0];
-          console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Redução de parcela encontrada:', reducaoParcela);
         }
       } catch (error) {
         console.error('Erro ao buscar redução de parcela:', error);
       }
     }
 
-    const creditosSugeridos = [];
-    const installmentCandidato = installmentTypes[0]; // Usar o primeiro installment type disponível
+    // Parâmetros base
+    const prazo = term;
+    const taxaAdm = installmentTypeData.admin_tax_percent || 0;
+    const fundoReserva = installmentTypeData.reserve_fund_percent || 0;
+    const percentualReducao = reducaoParcela ? (reducaoParcela.reduction_percent || 1) : 1;
 
-    const installmentParams = {
-      installment_count: installmentCandidato.installment_count,
-      admin_tax_percent: installmentCandidato.admin_tax_percent || 0,
-      reserve_fund_percent: installmentCandidato.reserve_fund_percent || 0,
-      insurance_percent: installmentCandidato.insurance_percent || 0,
-      optional_insurance: !!installmentCandidato.optional_insurance
+    // Aplicar reduções conforme especificação
+    const aplicaReducaoParcela = reducaoParcela ? reducaoParcela.applications?.includes('parcela') : false;
+    const aplicaReducaoTaxaAdm = reducaoParcela ? reducaoParcela.applications?.includes('taxa_administracao') : false;
+    const aplicaReducaoFundoReserva = reducaoParcela ? reducaoParcela.applications?.includes('fundo_reserva') : false;
+
+    // Calcular valores conforme especificação
+    const parcela = aplicaReducaoParcela ? 10000 * percentualReducao : 10000;
+    const taxaAdmCalculada = aplicaReducaoTaxaAdm ? taxaAdm * percentualReducao : taxaAdm;
+    const fundoReservaCalculado = aplicaReducaoFundoReserva ? fundoReserva * percentualReducao : fundoReserva;
+
+    console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Parâmetros calculados:', {
+      prazo,
+      taxaAdm,
+      fundoReserva,
+      percentualReducao,
+      aplicaReducaoParcela,
+      aplicaReducaoTaxaAdm,
+      aplicaReducaoFundoReserva,
+      parcela,
+      taxaAdmCalculada,
+      fundoReservaCalculado
+    });
+
+    // Aplicar a fórmula: Crédito = (Valor de aporte / (Parcela + ((10000 * Taxa de administração) + (10000 * Fundo de Reserva))) / Prazo)) * 10000
+    const denominador = parcela + ((10000 * taxaAdmCalculada) + (10000 * fundoReservaCalculado));
+    const creditoCalculado = (valorAporte / (denominador / prazo)) * 10000;
+
+    // Arredondar para múltiplo de 10 mil
+    const creditoFinal = Math.ceil(creditoCalculado / 10000) * 10000;
+
+    console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Resultado fórmula:', {
+      denominador,
+      creditoCalculado,
+      creditoFinal
+    });
+
+    return {
+      credit: creditoFinal,
+      installment: installmentTypeData,
+      valorParcela: valorAporte
     };
-
-    console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Parâmetros da parcela:', installmentParams);
-
-    // Gerar créditos começando de 50k até 5M em múltiplos de 10k
-    const creditosTeste = [];
-    for (let credito = 50000; credito <= 5000000; credito += 10000) {
-      creditosTeste.push(credito);
-    }
-
-    console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Testando', creditosTeste.length, 'créditos');
-
-    // Calcular parcela para cada crédito
-    for (const credito of creditosTeste) {
-      let parcela = 0;
-      if (installmentType === 'full') {
-        parcela = calcularParcelasProduto({
-          credit: credito,
-          installment: installmentParams,
-          reduction: null
-        }).full;
-      } else {
-        parcela = regraParcelaEspecial({
-          credit: credito,
-          installment: installmentParams,
-          reduction: reducaoParcela
-        });
-      }
-
-      // Se a parcela é maior ou igual ao valor desejado, adicionar como opção
-      if (parcela >= valorAporte) {
-        const diferenca = Math.abs(parcela - valorAporte);
-        
-        creditosSugeridos.push({
-          id: `generated-${credito}`,
-          name: `R$ ${(credito / 1000).toFixed(0)}.000,00 (Imóvel)`,
-          creditValue: credito,
-          installmentValue: parcela,
-          selected: false,
-          productId: null,
-          administratorId: administratorId,
-          type: 'property',
-          diferenca: diferenca
-        });
-
-        console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Encontrada opção:', {
-          credito,
-          parcela,
-          diferenca
-        });
-      }
-    }
-
-    // Ordenar por valor do crédito (maior primeiro) para encontrar o maior crédito possível
-    creditosSugeridos.sort((a, b) => b.creditValue - a.creditValue);
-
-    // Selecionar as 5 melhores opções (maiores créditos)
-    const melhoresOpcoes = creditosSugeridos.slice(0, 5);
-    
-    if (melhoresOpcoes.length > 0) {
-      melhoresOpcoes[0].selected = true;
-      console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Melhor opção selecionada (maior crédito):', {
-        creditoAcessado: melhoresOpcoes[0].creditValue,
-        valorParcela: melhoresOpcoes[0].installmentValue,
-        diferenca: melhoresOpcoes[0].diferenca
-      });
-    }
-
-    console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Total de créditos sugeridos:', melhoresOpcoes.length);
-    return melhoresOpcoes;
   };
 
   // Atualizar para usar a função de múltiplos créditos
