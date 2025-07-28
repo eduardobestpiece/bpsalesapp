@@ -515,6 +515,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             customAdminTaxPercent={adminTaxPercent}
             customReserveFundPercent={reserveFundPercent}
             customAnnualUpdateRate={annualUpdateRate}
+            agioPercent={agioPercent}
             maxEmbeddedPercentage={25}
             creditoAcessadoContemplacao={creditoAcessadoContemplacao}
             parcelaAfterContemplacao={parcelaAfterContemplacao}

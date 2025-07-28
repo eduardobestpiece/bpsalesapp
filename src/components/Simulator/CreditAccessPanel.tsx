@@ -1752,10 +1752,10 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
   }, [totalCotas, data.installmentType, availableProducts, data.term]);
 
   // Calcular:
-  // - acrescimoAporte = soma dos aportes dos créditos selecionados - valor do aporte do cliente (ou Crédito Acessado)
+  // - acrescimoAporte = Total da Parcela - Valor da Parcela (diferença entre parcelas)
   // - acrescimoCredito = soma dos créditos selecionados - Crédito Acessado
   // Exibir ambos como positivo, destacando como benefício
-  const acrescimoAporte = totalCotas - data.value;
+  const acrescimoAporte = totalParcela - valorParcela;
   const acrescimoCredito = totalCotas - creditoAcessado;
 
   // 7. Renderização

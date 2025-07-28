@@ -84,5 +84,51 @@
 - src/components/Simulator/CreditAccessPanel.tsx - Adicionado useEffect para calcular totalParcela de forma assíncrona
 - src/components/Simulator/CreditAccessPanel.tsx - Corrigidas funções `adicionarProduto` e `redefinirSelecionadas` para buscar redução diretamente
 - src/components/Simulator/CreditAccessPanel.tsx - Corrigido useEffect do `totalParcela` para buscar redução diretamente no banco
+- src/components/Simulator/CreditAccessPanel.tsx - Corrigido cálculo do `acrescimoAporte` para ser `totalParcela - valorParcela`
 
 **Status:** ✅ Corrigido - Aplicação funcionando na porta 8080 com cálculo correto da parcela 
+
+## **Requisição Atual - Correção do Cálculo de Parcelas Especiais**
+
+**Data:** 2025-01-15  
+**Problema:** Cálculo incorreto das parcelas especiais (reduzidas) no simulador  
+**Status:** ✅ **RESOLVIDO** - Aplicação funcionando corretamente
+
+### **Problemas Identificados e Corrigidos:**
+
+1. **❌ Parcelas individuais calculadas como "Parcela Cheia" mesmo com "Parcela Especial" selecionado**
+   - **Causa:** Funções `adicionarProduto` e `redefinirSelecionadas` usando `reducaoParcela` não carregado
+   - **Correção:** Adicionada busca direta de reduções no banco de dados
+   - **Resultado:** ✅ Parcelas individuais agora mostram valores reduzidos corretamente
+
+2. **❌ "Total da Parcela" no card calculando valor incorreto**
+   - **Causa:** `useEffect` do `totalParcela` dependendo de `reducaoParcela` não carregado
+   - **Correção:** Convertido para função assíncrona com busca direta de reduções
+   - **Resultado:** ✅ Total da Parcela agora calcula corretamente com redução aplicada
+
+3. **❌ "Acréscimo no Aporte" calculando diferença entre créditos em vez de parcelas**
+   - **Causa:** Fórmula incorreta: `totalCotas - data.value`
+   - **Correção:** Alterado para: `totalParcela - valorParcela`
+   - **Resultado:** ✅ Acréscimo no Aporte agora mostra diferença correta entre parcelas
+
+4. **❌ "Ágio" na tabela "Detalhamento do Consórcio" calculando valor incorreto**
+   - **Causa:** `agioPercent` estava sendo definido como 5% no `DetailTable.tsx` em vez de usar o valor 17% passado do `NewSimulatorLayout.tsx`
+   - **Correção:** 
+     - Adicionado `agioPercent` como prop no `NovaAlavancagemPatrimonial.tsx`
+     - Passado `agioPercent` do `NewSimulatorLayout.tsx` para `NovaAlavancagemPatrimonial.tsx`
+     - Passado `agioPercent` do `NovaAlavancagemPatrimonial.tsx` para `DetailTable.tsx`
+     - Alterado valor padrão de 5% para 17% no `DetailTable.tsx`
+   - **Resultado:** ✅ Ágio agora calcula corretamente: R$ 1.600.000 × 17% = R$ 272.000,00
+
+### **Arquivos Modificados:**
+- src/utils/calculations.ts - Corrigida fórmula de cálculo de parcelas especiais
+- src/components/Simulator/CreditAccessPanel.tsx - Corrigido cálculo do `totalParcela` para usar redução corretamente
+- src/components/Simulator/CreditAccessPanel.tsx - Adicionado useEffect para calcular totalParcela de forma assíncrona
+- src/components/Simulator/CreditAccessPanel.tsx - Corrigidas funções `adicionarProduto` e `redefinirSelecionadas` para buscar redução diretamente
+- src/components/Simulator/CreditAccessPanel.tsx - Corrigido useEffect do `totalParcela` para buscar redução diretamente no banco
+- src/components/Simulator/CreditAccessPanel.tsx - Corrigido cálculo do `acrescimoAporte` para ser `totalParcela - valorParcela`
+- src/components/Simulator/NovaAlavancagemPatrimonial.tsx - Adicionado `agioPercent` como prop
+- src/components/Simulator/NewSimulatorLayout.tsx - Passado `agioPercent` para `NovaAlavancagemPatrimonial.tsx`
+- src/components/Simulator/DetailTable.tsx - Alterado valor padrão de `agioPercent` de 5% para 17%
+
+**Status:** ✅ Corrigido - Aplicação funcionando na porta 8080 com cálculo correto da parcela e ágio 

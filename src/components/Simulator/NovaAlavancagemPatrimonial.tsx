@@ -39,6 +39,7 @@ export const NovaAlavancagemPatrimonial = ({
   customReserveFundPercent,
   customAnnualUpdateRate,
   maxEmbeddedPercentage,
+  agioPercent = 17, // Adicionar agioPercent como prop
   creditoAcessadoContemplacao = 0, 
   parcelaAfterContemplacao = 0, 
   somaParcelasAteContemplacao = 0, 
@@ -57,6 +58,7 @@ export const NovaAlavancagemPatrimonial = ({
   customReserveFundPercent?: number,
   customAnnualUpdateRate?: number,
   maxEmbeddedPercentage?: number,
+  agioPercent?: number, // Adicionar agioPercent ao tipo
   creditoAcessadoContemplacao: number, 
   parcelaAfterContemplacao: number, 
   somaParcelasAteContemplacao: number, 
@@ -658,6 +660,7 @@ export const NovaAlavancagemPatrimonial = ({
         customAdminTaxPercent={customAdminTaxPercent}
         customReserveFundPercent={customReserveFundPercent}
         customAnnualUpdateRate={customAnnualUpdateRate}
+        agioPercent={agioPercent}
         periodoCompra={periodoCompra}
         valorAlavancaNum={valor}
         onTableDataGenerated={(tableData) => {

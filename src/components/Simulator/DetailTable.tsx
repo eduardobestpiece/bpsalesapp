@@ -37,7 +37,7 @@ export const DetailTable = ({
   customAdminTaxPercent,
   customReserveFundPercent,
   customAnnualUpdateRate,
-  agioPercent = 5, // padrão 5%
+  agioPercent = 17, // padrão 17%
   periodoCompra,
   valorAlavancaNum,
   onFirstRowData,
@@ -392,6 +392,16 @@ export const DetailTable = ({
       // Ágio = creditoAcessado (da linha) * (agioPercent / 100)
       // Aqui, garantir que está usando o creditoAcessado da linha, não da prop global
       const agioLinha = creditoAcessado * (agioPercent / 100); // creditoAcessado aqui é o da linha
+      
+      // Debug para verificar valores do ágio
+      if (month === 1) {
+        console.log('🔍 [ÁGIO DEBUG]', {
+          creditoAcessado,
+          agioPercent,
+          agioLinha,
+          calculo: `${creditoAcessado} * (${agioPercent} / 100) = ${agioLinha}`
+        });
+      }
       // Soma das parcelas pagas até o mês atual
       const somaParcelasPagas = data.reduce((sum, row) => sum + row.valorParcela, 0) + valorParcela;
       // Lucro = Ágio - soma das parcelas pagas até o mês
