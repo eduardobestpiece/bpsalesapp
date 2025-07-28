@@ -1674,18 +1674,35 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
   useEffect(() => {
     const calcularTotalParcela = async () => {
       if (totalCotas > 0) {
-        // Buscar installment_type correto para o total
+        // Buscar installment_type correto para o total baseado na administradora selecionada
         let installment = null;
-        if (availableProducts.length > 0) {
-          const primeiroProduto = availableProducts[0];
-          if (Array.isArray(primeiroProduto.installment_types)) {
-            for (const it of primeiroProduto.installment_types) {
-              const real = it.installment_types || it;
-              if (real.installment_count === data.term) {
-                installment = real;
-                break;
+        
+        // Buscar produtos da administradora selecionada
+        if (data.administrator) {
+          try {
+            const { data: products } = await supabase
+              .from('products')
+              .select('*')
+              .eq('administrator_id', data.administrator)
+              .eq('is_archived', false)
+              .order('name')
+              .limit(1);
+            
+            if (products && products.length > 0) {
+              const primeiroProduto = products[0];
+              // Verificar se o produto tem installment_types (pode ser undefined)
+              if (primeiroProduto && (primeiroProduto as any).installment_types && Array.isArray((primeiroProduto as any).installment_types)) {
+                for (const it of (primeiroProduto as any).installment_types) {
+                  const real = it.installment_types || it;
+                  if (real.installment_count === data.term) {
+                    installment = real;
+                    break;
+                  }
+                }
               }
             }
+          } catch (error) {
+            console.error('Erro ao buscar produtos da administradora:', error);
           }
         }
         

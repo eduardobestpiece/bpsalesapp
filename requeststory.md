@@ -120,6 +120,11 @@
      - Alterado valor padrão de 5% para 17% no `DetailTable.tsx`
    - **Resultado:** ✅ Ágio agora calcula corretamente: R$ 1.600.000 × 17% = R$ 272.000,00
 
+5. **❌ "Total da Parcela" usando fórmula da administradora anterior**
+   - **Causa:** O cálculo do `totalParcela` estava usando o `primeiroProduto` dos `availableProducts` que podia ser da administradora anterior (Magalu)
+   - **Correção:** Modificado o `useEffect` do `totalParcela` para buscar produtos diretamente da administradora selecionada no momento do cálculo
+   - **Resultado:** ✅ Total da Parcela agora usa a fórmula correta da administradora selecionada (HS)
+
 ### **Arquivos Modificados:**
 - src/utils/calculations.ts - Corrigida fórmula de cálculo de parcelas especiais
 - src/components/Simulator/CreditAccessPanel.tsx - Corrigido cálculo do `totalParcela` para usar redução corretamente
@@ -130,5 +135,6 @@
 - src/components/Simulator/NovaAlavancagemPatrimonial.tsx - Adicionado `agioPercent` como prop
 - src/components/Simulator/NewSimulatorLayout.tsx - Passado `agioPercent` para `NovaAlavancagemPatrimonial.tsx`
 - src/components/Simulator/DetailTable.tsx - Alterado valor padrão de `agioPercent` de 5% para 17%
+- src/components/Simulator/CreditAccessPanel.tsx - Corrigido cálculo do `totalParcela` para buscar produtos da administradora selecionada
 
 **Status:** ✅ Corrigido - Aplicação funcionando na porta 8080 com cálculo correto da parcela e ágio 
