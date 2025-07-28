@@ -1743,6 +1743,15 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
           reducaoParaCalculo
         });
         
+        // Debug detalhado do installment
+        console.log('🔍 [TOTAL DA PARCELA] Debug do installment:', {
+          installment_count: installment?.installment_count,
+          admin_tax_percent: installment?.admin_tax_percent,
+          reserve_fund_percent: installment?.reserve_fund_percent,
+          insurance_percent: installment?.insurance_percent,
+          optional_insurance: installment?.optional_insurance
+        });
+        
         let novoTotalParcela = 0;
         if (data.installmentType === 'full') {
           novoTotalParcela = calcularParcelasProduto({ credit: totalCotas, installment, reduction: null }).full;

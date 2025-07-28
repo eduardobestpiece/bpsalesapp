@@ -92,7 +92,7 @@
 
 **Data:** 2025-01-15  
 **Problema:** Cálculo incorreto das parcelas especiais (reduzidas) no simulador  
-**Status:** ✅ **RESOLVIDO** - Aplicação funcionando corretamente
+**Status:** 🔍 **EM INVESTIGAÇÃO** - Problema identificado: "Total da Parcela" ainda usando valores da Magalu
 
 ### **Problemas Identificados e Corrigidos:**
 
@@ -125,6 +125,11 @@
    - **Correção:** Modificado o `useEffect` do `totalParcela` para buscar produtos diretamente da administradora selecionada no momento do cálculo
    - **Resultado:** ✅ Total da Parcela agora usa a fórmula correta da administradora selecionada (HS)
 
+6. **🔍 "Total da Parcela" ainda mostrando valor da Magalu (R$ 3.545) em vez da HS (R$ 2.818)**
+   - **Causa:** Em investigação - logs mostram que o cálculo está usando parâmetros da HS corretamente, mas resultado ainda é da Magalu
+   - **Correção:** Adicionados logs detalhados para investigar qual `installment` está sendo usado
+   - **Status:** 🔍 Em investigação - aguardando logs detalhados
+
 ### **Arquivos Modificados:**
 - src/utils/calculations.ts - Corrigida fórmula de cálculo de parcelas especiais
 - src/components/Simulator/CreditAccessPanel.tsx - Corrigido cálculo do `totalParcela` para usar redução corretamente
@@ -136,5 +141,6 @@
 - src/components/Simulator/NewSimulatorLayout.tsx - Passado `agioPercent` para `NovaAlavancagemPatrimonial.tsx`
 - src/components/Simulator/DetailTable.tsx - Alterado valor padrão de `agioPercent` de 5% para 17%
 - src/components/Simulator/CreditAccessPanel.tsx - Corrigido cálculo do `totalParcela` para buscar produtos da administradora selecionada
+- src/components/Simulator/CreditAccessPanel.tsx - Adicionados logs detalhados para investigar problema do "Total da Parcela"
 
-**Status:** ✅ Corrigido - Aplicação funcionando na porta 8080 com cálculo correto da parcela e ágio 
+**Status:** 🔍 Em investigação - Aplicação funcionando na porta 8080, mas "Total da Parcela" ainda mostra valor da Magalu 
