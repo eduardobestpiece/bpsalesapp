@@ -1677,8 +1677,33 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
         // Buscar installment_type correto para o total baseado na administradora selecionada
         let installment = null;
         
-        // Buscar produtos da administradora selecionada
+        // Buscar diretamente da tabela installment_types da administradora selecionada
         if (data.administrator) {
+          try {
+            const { data: installmentTypes } = await supabase
+              .from('installment_types')
+              .select('*')
+              .eq('administrator_id', data.administrator)
+              .eq('installment_count', data.term)
+              .eq('is_archived', false)
+              .limit(1);
+            
+            if (installmentTypes && installmentTypes.length > 0) {
+              installment = installmentTypes[0];
+              console.log('🔍 [TOTAL DA PARCELA] Installment encontrado da administradora:', {
+                administrator: data.administrator,
+                installment_count: installment.installment_count,
+                admin_tax_percent: installment.admin_tax_percent,
+                reserve_fund_percent: installment.reserve_fund_percent
+              });
+            }
+          } catch (error) {
+            console.error('Erro ao buscar installment_types da administradora:', error);
+          }
+        }
+        
+        // Se não encontrou installment_type, buscar dos produtos como fallback
+        if (!installment && data.administrator) {
           try {
             const { data: products } = await supabase
               .from('products')
@@ -1696,6 +1721,12 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
                   const real = it.installment_types || it;
                   if (real.installment_count === data.term) {
                     installment = real;
+                    console.log('🔍 [TOTAL DA PARCELA] Installment encontrado dos produtos:', {
+                      administrator: data.administrator,
+                      installment_count: installment.installment_count,
+                      admin_tax_percent: installment.admin_tax_percent,
+                      reserve_fund_percent: installment.reserve_fund_percent
+                    });
                     break;
                   }
                 }
@@ -1706,7 +1737,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
           }
         }
         
-        // Se não encontrou installment_type, usar valores padrão
+        // Se ainda não encontrou installment_type, usar valores padrão
         if (!installment) {
           installment = {
             installment_count: data.term,
@@ -1715,6 +1746,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
             insurance_percent: 0,
             optional_insurance: false
           };
+          console.log('🔍 [TOTAL DA PARCELA] Usando valores padrão para installment');
         }
         
         // Buscar redução de parcela se necessário
