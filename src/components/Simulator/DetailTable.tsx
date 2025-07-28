@@ -395,12 +395,7 @@ export const DetailTable = ({
       
       // Debug para verificar valores do ágio
       if (month === 1) {
-        console.log('🔍 [ÁGIO DEBUG]', {
-          creditoAcessado,
-          agioPercent,
-          agioLinha,
-          calculo: `${creditoAcessado} * (${agioPercent} / 100) = ${agioLinha}`
-        });
+
       }
       // Soma das parcelas pagas até o mês atual
       const somaParcelasPagas = data.reduce((sum, row) => sum + row.valorParcela, 0) + valorParcela;

@@ -208,7 +208,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
         
         if (products) {
           setAvailableProducts(products);
-          console.log('🔍 [PRODUTOS CARREGADOS]', products);
+  
         }
       } catch (error) {
         console.error('Erro ao carregar produtos:', error);
@@ -1678,6 +1678,12 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
         let installment = null;
         
         // Buscar diretamente da tabela installment_types da administradora selecionada
+        console.log('🔍 [TOTAL DA PARCELA] Debug data.administrator:', {
+          administrator: data.administrator,
+          term: data.term,
+          totalCotas
+        });
+        
         if (data.administrator) {
           try {
             const { data: installmentTypes } = await supabase
@@ -1696,10 +1702,17 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
                 admin_tax_percent: installment.admin_tax_percent,
                 reserve_fund_percent: installment.reserve_fund_percent
               });
+            } else {
+              console.log('🔍 [TOTAL DA PARCELA] Nenhum installment encontrado para:', {
+                administrator: data.administrator,
+                term: data.term
+              });
             }
           } catch (error) {
             console.error('Erro ao buscar installment_types da administradora:', error);
           }
+        } else {
+          console.log('🔍 [TOTAL DA PARCELA] data.administrator está vazio!');
         }
         
         // Se não encontrou installment_type, buscar dos produtos como fallback
