@@ -30,8 +30,6 @@ interface SimulatorConfigModalProps {
   setAgioPercent: (v: number) => void;
   administratorId: string | null;
   setAdministratorId: (v: string) => void;
-  embutido: 'com' | 'sem';
-  setEmbutido: (v: 'com' | 'sem') => void;
 }
 
 type Administrator = Database['public']['Tables']['administrators']['Row'];
@@ -58,8 +56,6 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   setAgioPercent,
   administratorId,
   setAdministratorId,
-  embutido,
-  setEmbutido,
 }) => {
   const { user, companyId } = useCrmAuth();
   const { selectedCompanyId } = useCompany();
@@ -80,8 +76,6 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   const [localAgioPercent, setLocalAgioPercent] = useState<number>(agioPercent);
   // Administradora sincronizada
   const [selectedAdministratorId, setSelectedAdministratorIdLocal] = useState<string | null>(administratorId);
-  // Estado local para embutido
-  const [localEmbutido, setLocalEmbutido] = useState<'com' | 'sem'>(embutido);
 
   // Dados do banco
   const [administrators, setAdministrators] = useState<Administrator[]>([]);
@@ -112,10 +106,9 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
       setLocalContemplationMonth(defaultContemplationMonth);
       setLocalAgioPercent(agioPercent);
       setSelectedAdministratorIdLocal(administratorId);
-      setLocalEmbutido(embutido);
       setHasChanges(false);
     }
-  }, [open, searchType, value, term, installmentType, contemplationMonth, agioPercent, administratorId, embutido]);
+  }, [open, searchType, value, term, installmentType, contemplationMonth, agioPercent, administratorId]);
 
   // Detectar mudanças
   useEffect(() => {
@@ -126,11 +119,10 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
       localInstallmentType !== installmentType ||
       localContemplationMonth !== contemplationMonth ||
       localAgioPercent !== agioPercent ||
-      localEmbutido !== embutido ||
       selectedAdministratorId !== administratorId;
     
     setHasChanges(changed);
-  }, [localSearchType, localValue, localTerm, localInstallmentType, localContemplationMonth, localAgioPercent, localEmbutido, selectedAdministratorId, searchType, value, term, installmentType, contemplationMonth, agioPercent, embutido, administratorId]);
+  }, [localSearchType, localValue, localTerm, localInstallmentType, localContemplationMonth, localAgioPercent, selectedAdministratorId, searchType, value, term, installmentType, contemplationMonth, agioPercent, administratorId]);
 
   // Ao mudar administradora local, propagar para global
   useEffect(() => {
@@ -138,11 +130,6 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
       setAdministratorId(selectedAdministratorId);
     }
   }, [selectedAdministratorId]);
-
-  // Ao mudar embutido local, propagar para global
-  useEffect(() => {
-    setEmbutido(localEmbutido);
-  }, [localEmbutido]);
 
   // Buscar administradoras
   useEffect(() => {
@@ -319,7 +306,6 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
 
     setAgioPercent(localAgioPercent);
     setAdministratorId(selectedAdministratorId || '');
-    setEmbutido(localEmbutido);
     
     // Atualizar o contexto global do simulador, se disponível
     if (typeof window !== 'undefined' && (window as any).simulatorContext && (window as any).simulatorContext.setSimulationData) {
@@ -331,7 +317,6 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
         installmentType: localInstallmentType,
         contemplationMonth: localContemplationMonth,
         administrator: selectedAdministratorId,
-        embutido: localEmbutido,
       }));
     }
     toast({ title: 'Configurações aplicadas!' });
@@ -363,7 +348,6 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
         isReserveFundCustomized,
         isAnnualUpdateCustomized,
         agioPercent: localAgioPercent,
-        embutido: localEmbutido,
         // Novos campos do modal
         administratorName: administrators.find(a => a.id === selectedAdministratorId)?.name || '',
         creditTypeLabel: selectedCreditType ? translateCreditType(selectedCreditType) : '',
@@ -444,7 +428,6 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
         // Aplicar mudanças adicionais
         setAgioPercent(localAgioPercent);
         setAdministratorId(selectedAdministratorId || '');
-        setEmbutido(localEmbutido);
         
         // Atualizar o contexto global do simulador
         if (typeof window !== 'undefined' && (window as any).simulatorContext && (window as any).simulatorContext.setSimulationData) {
@@ -456,7 +439,6 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
             installmentType: localInstallmentType,
             contemplationMonth: localContemplationMonth,
             administrator: selectedAdministratorId,
-            embutido: localEmbutido,
           }));
         }
         
@@ -694,23 +676,6 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
               className="w-full bg-[#2A2A2A] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
             />
           </div>
-        </div>
-
-        {/* Linha X: Embutido */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-white">Embutido</label>
-          <Select
-            value={localEmbutido}
-            onValueChange={setLocalEmbutido}
-          >
-            <SelectTrigger className="w-full bg-[#2A2A2A] border-gray-600 text-white hover:bg-[#3A3A3A] focus:ring-2 focus:ring-blue-500">
-              <SelectValue placeholder="Selecione o embutido..." />
-            </SelectTrigger>
-            <SelectContent className="bg-[#2A2A2A] border-gray-600">
-              <SelectItem value="com" className="text-white hover:bg-[#3A3A3A]">Com embutido</SelectItem>
-              <SelectItem value="sem" className="text-white hover:bg-[#3A3A3A]">Sem embutido</SelectItem>
-            </SelectContent>
-          </Select>
         </div>
       </div>
     </FullScreenModal>

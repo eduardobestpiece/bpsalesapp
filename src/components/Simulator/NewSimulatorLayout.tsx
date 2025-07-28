@@ -413,7 +413,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
           // Dados adicionais para cálculos
           administrationRate: (adminData.admin_tax_percent || 0) / 100,
           inccRate: 6, // Taxa INCC padrão
-          postContemplationAdjustment: (adminData.post_contemplation_adjustment || 0) / 100,
+          postContemplationAdjustment: adminData.post_contemplation_adjustment || 0,
           availableBidTypes: []
         };
         
@@ -618,8 +618,6 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
         setAgioPercent={setAgioPercent}
         administratorId={localSimulationData.administrator}
         setAdministratorId={v => handleFieldChange('administrator', v)}
-        embutido={embutido}
-        setEmbutido={setEmbutido}
       />
     </div>
   );

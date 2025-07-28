@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -162,6 +161,16 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
   const [redefinirQuantidade, setRedefinirQuantidade] = useState(1);
   const [addQuantidade, setAddQuantidade] = useState(1);
 
+  // Estados para os valores calculados
+  const [creditoAcessado, setCreditoAcessado] = useState(0);
+  const [valorParcela, setValorParcela] = useState(0);
+  const [parcelaReduzida, setParcelaReduzida] = useState(0);
+  const [percentualUsado, setPercentualUsado] = useState(0);
+  const [parcelaCheia, setParcelaCheia] = useState(0);
+  const [taxaAdministracao, setTaxaAdministracao] = useState(0);
+  const [taxaAnual, setTaxaAnual] = useState(0);
+  const [atualizacaoAnual, setAtualizacaoAnual] = useState('-');
+
   // Carregar montagem salva ao abrir
   useEffect(() => {
     async function loadSaved() {
@@ -183,6 +192,31 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     loadSaved();
     // eslint-disable-next-line
   }, [crmUser?.id, companyId]);
+
+  // Carregar produtos da administradora selecionada
+  useEffect(() => {
+    async function loadProducts() {
+      if (!data.administrator) return;
+      
+      try {
+        const { data: products } = await supabase
+          .from('products')
+          .select('*')
+          .eq('administrator_id', data.administrator)
+          .eq('is_archived', false)
+          .order('name');
+        
+        if (products) {
+          setAvailableProducts(products);
+          console.log('🔍 [PRODUTOS CARREGADOS]', products);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar produtos:', error);
+      }
+    }
+    
+    loadProducts();
+  }, [data.administrator]);
 
   // Função para salvar montagem
   const salvarMontagem = async () => {
@@ -278,20 +312,14 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     const term = simulationData.term;
     const installmentType = simulationData.installmentType;
 
-    console.log('🔍 [CÁLCULO CRÉDITO] Iniciando cálculo:', {
-      valorAporte,
-      administratorId,
-      term,
-      installmentType,
-      searchType: simulationData.searchType
-    });
+    // Debug removido para limpar console
 
     // Filtrar produtos da administradora selecionada
     const produtosAdministradora = products.filter(produto => 
       produto.administrator_id === administratorId
     );
 
-    console.log('🔍 [CÁLCULO CRÉDITO] Produtos encontrados:', produtosAdministradora.length);
+    // Debug removido para limpar console
 
     // Buscar redução de parcela se necessário
     let reducaoParcela = null;
@@ -305,7 +333,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
         
         if (reducoes && reducoes.length > 0) {
           reducaoParcela = reducoes[0];
-          console.log('🔍 [CÁLCULO CRÉDITO] Redução de parcela encontrada:', reducaoParcela);
+          // Debug removido para limpar console
         }
       } catch (error) {
         console.error('Erro ao buscar redução de parcela:', error);
@@ -324,7 +352,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
       
       if (types && types.length > 0) {
         installmentTypes = types;
-        console.log('🔍 [CÁLCULO CRÉDITO] Installment types encontrados:', installmentTypes.length);
+        // Debug removido para limpar console
       }
     } catch (error) {
       console.error('Erro ao buscar installment types:', error);
@@ -547,68 +575,111 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
 
   // Função para calcular crédito usando a fórmula correta
   const calcularCreditoPorFormula = (valorAporte: number, installmentParams: any, reducaoParcela: any, installmentType: string) => {
-    console.log('🔍 [CÁLCULO CRÉDITO FÓRMULA] Iniciando cálculo:', {
-      valorAporte,
-      installmentParams,
-      reducaoParcela,
-      installmentType
-    });
-
-    // Base de cálculo: 10000
-    const baseCalculo = 10000;
+    console.log('🔍 [CÁLCULO CRÉDITO FÓRMULA] Iniciando cálculo:', { valorAporte, installmentParams, reducaoParcela, installmentType });
     
-    // Calcular parcela base (10000)
+    const baseCalculo = 10000;
+    const prazo = installmentParams.installment_count;
+    
+    // Calcular parcela base (10000) com redução se aplicável
     let parcelaBase = baseCalculo;
-    if (installmentType !== 'full' && reducaoParcela && reducaoParcela.applications && reducaoParcela.applications.includes('parcela')) {
+    if (installmentType !== 'full' && reducaoParcela && reducaoParcela.applications && reducaoParcela.applications.includes('installment')) {
       parcelaBase = baseCalculo * (reducaoParcela.reduction_percent / 100);
-      console.log('🔍 [CÁLCULO CRÉDITO FÓRMULA] Parcela reduzida aplicada:', parcelaBase);
     }
-
-    // Calcular taxa de administração
+    
+    // Calcular taxa de administração com redução se aplicável
     let taxaAdm = installmentParams.admin_tax_percent || 0;
-    if (installmentType !== 'full' && reducaoParcela && reducaoParcela.applications && reducaoParcela.applications.includes('taxa_adm')) {
+    if (installmentType !== 'full' && reducaoParcela && reducaoParcela.applications && reducaoParcela.applications.includes('admin_tax')) {
       taxaAdm = taxaAdm * (reducaoParcela.reduction_percent / 100);
-      console.log('🔍 [CÁLCULO CRÉDITO FÓRMULA] Taxa de administração reduzida:', taxaAdm);
     }
-
-    // Calcular fundo de reserva
+    
+    // Calcular fundo de reserva com redução se aplicável
     let fundoReserva = installmentParams.reserve_fund_percent || 0;
-    if (installmentType !== 'full' && reducaoParcela && reducaoParcela.applications && reducaoParcela.applications.includes('fundo_reserva')) {
+    if (installmentType !== 'full' && reducaoParcela && reducaoParcela.applications && reducaoParcela.applications.includes('reserve_fund')) {
       fundoReserva = fundoReserva * (reducaoParcela.reduction_percent / 100);
-      console.log('🔍 [CÁLCULO CRÉDITO FÓRMULA] Fundo de reserva reduzido:', fundoReserva);
     }
-
+    
+    // Aplicar a nova fórmula: Crédito = (Aporte / ((Parcela + TaxaAdm + FundoReserva) / Prazo)) * 10000
+    const valorTaxaAdm = baseCalculo * (taxaAdm / 100);
+    const valorFundoReserva = baseCalculo * (fundoReserva / 100);
+    const valorTotalTaxas = valorTaxaAdm + valorFundoReserva;
+    
+    const parcelaComTaxas = parcelaBase + valorTotalTaxas;
+    const parcelaComTaxasPorMes = parcelaComTaxas / prazo;
+    
+    const creditoCalculado = (valorAporte / parcelaComTaxasPorMes) * 10000;
+    
+    // Arredondar para múltiplo de 10000
+    const creditoFinal = Math.ceil(creditoCalculado / 10000) * 10000;
+    
     console.log('🔍 [CÁLCULO CRÉDITO FÓRMULA] Parâmetros calculados:', {
       parcelaBase,
       taxaAdm,
       fundoReserva,
-      prazo: installmentParams.installment_count
+      prazo
     });
-
-    // Aplicar a fórmula: Crédito = (ValorAporte / (Parcela + ((10000*TaxaAdm) + (10000*FundoReserva)) / Prazo)) * 10000
-    const valorTaxaAdm = baseCalculo * (taxaAdm / 100);
-    const valorFundoReserva = baseCalculo * (fundoReserva / 100);
-    const valorTotalTaxas = valorTaxaAdm + valorFundoReserva;
-    const valorTotalTaxasPorParcela = valorTotalTaxas / installmentParams.installment_count;
     
     console.log('🔍 [CÁLCULO CRÉDITO FÓRMULA] Valores intermediários:', {
       valorTaxaAdm,
       valorFundoReserva,
       valorTotalTaxas,
-      valorTotalTaxasPorParcela
+      parcelaComTaxas,
+      parcelaComTaxasPorMes
     });
-
-    const parcelaComTaxas = parcelaBase + valorTotalTaxasPorParcela;
+    
     console.log('🔍 [CÁLCULO CRÉDITO FÓRMULA] Parcela com taxas:', parcelaComTaxas);
-
-    const creditoCalculado = (valorAporte / parcelaComTaxas) * 10000;
     console.log('🔍 [CÁLCULO CRÉDITO FÓRMULA] Crédito calculado:', creditoCalculado);
-
-    // Arredondar para múltiplo de 10000
-    const creditoFinal = Math.ceil(creditoCalculado / 10000) * 10000;
     console.log('🔍 [CÁLCULO CRÉDITO FÓRMULA] Crédito final arredondado:', creditoFinal);
-
+    
     return creditoFinal;
+  };
+
+  const calcularParcelaPorFormula = (creditoAcessado: number, installmentParams: any, reducaoParcela: any, installmentType: string) => {
+    console.log('🔍 [CÁLCULO PARCELA FÓRMULA] Iniciando cálculo:', { creditoAcessado, installmentParams, reducaoParcela, installmentType });
+    
+    const prazo = installmentParams.installment_count;
+    
+    // Calcular parcela base com redução se aplicável
+    let parcelaBase = creditoAcessado;
+    if (installmentType !== 'full' && reducaoParcela && reducaoParcela.applications && reducaoParcela.applications.includes('installment')) {
+      parcelaBase = creditoAcessado * (reducaoParcela.reduction_percent / 100);
+    }
+    
+    // Calcular taxa de administração com redução se aplicável
+    let taxaAdm = installmentParams.admin_tax_percent || 0;
+    if (installmentType !== 'full' && reducaoParcela && reducaoParcela.applications && reducaoParcela.applications.includes('admin_tax')) {
+      taxaAdm = taxaAdm * (reducaoParcela.reduction_percent / 100);
+    }
+    
+    // Calcular fundo de reserva com redução se aplicável
+    let fundoReserva = installmentParams.reserve_fund_percent || 0;
+    if (installmentType !== 'full' && reducaoParcela && reducaoParcela.applications && reducaoParcela.applications.includes('reserve_fund')) {
+      fundoReserva = fundoReserva * (reducaoParcela.reduction_percent / 100);
+    }
+    
+    // Aplicar a nova fórmula: Parcela = (ParcelaBase + TaxaAdm + FundoReserva) / Prazo
+    const valorTaxaAdm = creditoAcessado * (taxaAdm / 100);
+    const valorFundoReserva = creditoAcessado * (fundoReserva / 100);
+    const valorTotalTaxas = valorTaxaAdm + valorFundoReserva;
+    
+    const parcelaFinal = (parcelaBase + valorTotalTaxas) / prazo;
+    
+    console.log('🔍 [CÁLCULO PARCELA FÓRMULA] Parâmetros calculados:', {
+      parcelaBase,
+      taxaAdm,
+      fundoReserva,
+      prazo
+    });
+    
+    console.log('🔍 [CÁLCULO PARCELA FÓRMULA] Valores intermediários:', {
+      valorTaxaAdm,
+      valorFundoReserva,
+      valorTotalTaxas,
+      parcelaFinal
+    });
+    
+    console.log('🔍 [CÁLCULO PARCELA FÓRMULA] Parcela final:', parcelaFinal);
+    
+    return parcelaFinal;
   };
 
   // Função para sugerir créditos dinamicamente baseado no valor de aporte
@@ -762,20 +833,76 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     if (data.administrator && data.value > 0 && selectedCompanyId) {
       (async () => {
         try {
-          // Usar a nova lógica dinâmica em vez de buscar produtos
-          const calculatedCredits = await sugerirCreditosDinamico(
-            data.value,
-            data.administrator,
-            data.term,
-            data.installmentType
-          );
-          setCredits(calculatedCredits);
+          // Para modalidade "Aporte", usar a fórmula direta em vez da busca dinâmica
+          if (data.searchType === 'contribution') {
+            // Buscar installment types da administradora
+            const { data: types } = await supabase
+              .from('installment_types')
+              .select('*')
+              .eq('administrator_id', data.administrator)
+              .eq('installment_count', data.term)
+              .eq('is_archived', false);
+            
+            if (types && types.length > 0) {
+              const installmentCandidato = types[0];
+              const installmentParams = {
+                installment_count: installmentCandidato.installment_count,
+                admin_tax_percent: installmentCandidato.admin_tax_percent || 0,
+                reserve_fund_percent: installmentCandidato.reserve_fund_percent || 0,
+                insurance_percent: installmentCandidato.insurance_percent || 0,
+                optional_insurance: !!installmentCandidato.optional_insurance
+              };
+
+              // Buscar redução de parcela se necessário
+              let reducaoParcela = null;
+              if (data.installmentType !== 'full') {
+                const { data: reducoes } = await supabase
+                  .from('installment_reductions')
+                  .select('*')
+                  .eq('is_archived', false)
+                  .eq('id', data.installmentType);
+                
+                if (reducoes && reducoes.length > 0) {
+                  reducaoParcela = reducoes[0];
+                }
+              }
+
+              // Calcular crédito usando a fórmula direta
+              const creditoCalculado = calcularCreditoPorFormula(data.value, installmentParams, reducaoParcela, data.installmentType);
+              
+              // Calcular parcela real usando a nova fórmula
+              const parcelaReal = calcularParcelaPorFormula(creditoCalculado, installmentParams, reducaoParcela, data.installmentType);
+
+              // Criar crédito único com o valor calculado pela fórmula
+              const calculatedCredits = [{
+                id: `formula-${creditoCalculado}`,
+                name: `R$ ${(creditoCalculado / 1000).toFixed(0)}.000,00 (Imóvel)`,
+                creditValue: creditoCalculado,
+                installmentValue: parcelaReal,
+                selected: true,
+                productId: null,
+                administratorId: data.administrator,
+                type: 'property'
+              }];
+              
+              setCredits(calculatedCredits);
+            }
+          } else {
+            // Para modalidade "Crédito", usar a busca dinâmica
+            const calculatedCredits = await sugerirCreditosDinamico(
+              data.value,
+              data.administrator,
+              data.term,
+              data.installmentType
+            );
+            setCredits(calculatedCredits);
+          }
         } catch (error) {
           console.error('Error calculating credits:', error);
         }
       })();
     }
-  }, [data.administrator, data.value, selectedCompanyId, data.term, data.installmentType]);
+  }, [data.administrator, data.value, selectedCompanyId, data.term, data.installmentType, data.searchType]);
 
   useEffect(() => {
     if (showDetails && credits.length > 0) {
@@ -899,11 +1026,11 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
 
   // 4. Calcular crédito sugerido com base no percentual do produto selecionado (usar o menor produto como referência)
   const produtoBase = percentuais.length > 0 ? percentuais[0] : null;
-  let percentualUsado = 0;
+  let percentualUsadoLocal = 0;
   let creditoSugerido = 0;
   if (parcelaDesejada > 0 && produtoBase) {
-    percentualUsado = tipoParcela === 'full' ? produtoBase.percentualFull : produtoBase.percentualSpecial;
-    creditoSugerido = parcelaDesejada / percentualUsado;
+    percentualUsadoLocal = tipoParcela === 'full' ? produtoBase.percentualFull : produtoBase.percentualSpecial;
+    creditoSugerido = parcelaDesejada / percentualUsadoLocal;
     // Arredondar para múltiplo de 20 mil acima
     creditoSugerido = Math.ceil(creditoSugerido / 20000) * 20000;
   }
@@ -934,13 +1061,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
   }
 
   // 2. Calcular percentual e valores
-  let parcelaCheia = 0;
-  let parcelaReduzida = 0;
-  let taxaAdministracao = 0;
-  let taxaAnual = 0;
-  let atualizacaoAnual = '-';
-  let creditoAcessado = 0;
-  let valorParcela = 0;
+
   const [reducaoParcela, setReducaoParcela] = useState<any>(null);
 
   useEffect(() => {
@@ -963,7 +1084,149 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     fetchReducao();
   }, [produtoCandidato, installmentCandidato, data.installmentType]);
 
-  if (produtoCandidato && installmentCandidato) {
+  // Para modalidade "Aporte", buscar installment types diretamente
+  if (data.searchType === 'contribution') {
+    // Função assíncrona para calcular valores para modalidade "Aporte"
+    const calcularValoresAporte = async () => {
+      try {
+        // Buscar installment types da administradora
+        const { data: types } = await supabase
+          .from('installment_types')
+          .select('*')
+          .eq('administrator_id', data.administrator)
+          .eq('installment_count', data.term)
+          .eq('is_archived', false);
+        
+        if (types && types.length > 0) {
+          const installmentCandidato = types[0];
+          
+          // Usar valores customizados se disponíveis, senão usar os valores da parcela
+          const customAdminTax = (data as any).adminTaxPercent !== undefined ? (data as any).adminTaxPercent : installmentCandidato.admin_tax_percent || 0;
+          const customReserveFund = (data as any).reserveFundPercent !== undefined ? (data as any).reserveFundPercent : installmentCandidato.reserve_fund_percent || 0;
+          
+          const installmentParams = {
+            installment_count: installmentCandidato.installment_count,
+            admin_tax_percent: customAdminTax,
+            reserve_fund_percent: customReserveFund,
+            insurance_percent: installmentCandidato.insurance_percent || 0,
+            optional_insurance: !!installmentCandidato.optional_insurance
+          };
+
+          // Buscar redução de parcela se necessário
+          let reducaoParcela = null;
+          if (data.installmentType !== 'full') {
+            const { data: reducoes } = await supabase
+              .from('installment_reductions')
+              .select('*')
+              .eq('is_archived', false)
+              .eq('id', data.installmentType);
+            
+            if (reducoes && reducoes.length > 0) {
+              reducaoParcela = reducoes[0];
+            }
+          }
+
+          if (data.installmentType !== 'full') {
+            // Cálculo baseado em Parcela (Aporte) com parcela especial - usando a nova fórmula
+            const valorAporte = data.value;
+            
+            // Calcular crédito usando a nova fórmula
+            const novoCreditoAcessado = calcularCreditoPorFormula(valorAporte, installmentParams, reducaoParcela, data.installmentType);
+            setCreditoAcessado(novoCreditoAcessado);
+            
+            // Calcular parcela real usando a nova fórmula
+            const novoValorParcela = calcularParcelaPorFormula(novoCreditoAcessado, installmentParams, reducaoParcela, data.installmentType);
+            setValorParcela(novoValorParcela);
+            
+            console.log('🔍 [CÁLCULO APORTE ESPECIAL] Nova fórmula aplicada:', {
+              valorAporte,
+              novoCreditoAcessado,
+              novoValorParcela
+            });
+            setParcelaReduzida(novoValorParcela);
+            setPercentualUsado(novoValorParcela / novoCreditoAcessado);
+            const novaParcelaCheia = calcularParcelasProduto({
+              credit: novoCreditoAcessado,
+              installment: installmentParams,
+              reduction: null
+            }).full;
+            setParcelaCheia(novaParcelaCheia);
+          } else {
+            // Cálculo baseado em Parcela (Aporte) com parcela cheia - usando a nova fórmula
+            const valorAporte = data.value;
+            
+            // Calcular crédito usando a nova fórmula
+            const novoCreditoAcessado = calcularCreditoPorFormula(valorAporte, installmentParams, null, 'full');
+            setCreditoAcessado(novoCreditoAcessado);
+            
+            // Calcular parcela real usando a nova fórmula
+            const novoValorParcela = calcularParcelaPorFormula(novoCreditoAcessado, installmentParams, reducaoParcela, data.installmentType);
+            setValorParcela(novoValorParcela);
+            
+            console.log('🔍 [CÁLCULO APORTE CHEIA] Nova fórmula aplicada:', {
+              valorAporte,
+              novoCreditoAcessado,
+              novoValorParcela
+            });
+            setParcelaCheia(novoValorParcela);
+            const novaParcelaReduzida = regraParcelaEspecial({
+              credit: novoCreditoAcessado,
+              installment: installmentParams,
+              reduction: reducaoParcela
+            });
+            setParcelaReduzida(novaParcelaReduzida);
+            setPercentualUsado(novoValorParcela / novoCreditoAcessado);
+          }
+
+          // Calcular percentuais e valores auxiliares
+          // Remover as linhas que referenciam variáveis fora do escopo
+          // setParcelaReduzida(novoValorParcela);
+          // setPercentualUsado(novoValorParcela / novoCreditoAcessado);
+          // const novaParcelaCheiaCalculada = calcularParcelasProduto({
+          //   credit: novoCreditoAcessado,
+          //   installment: installmentParams,
+          //   reduction: null
+          // }).full;
+          // setParcelaCheia(novaParcelaCheiaCalculada);
+          
+          setTaxaAdministracao(customAdminTax);
+          // Calcular taxa anual incluindo taxa de administração + fundo de reserva
+          const taxaTotal = customAdminTax + customReserveFund;
+          const taxaAnualCalculada = (taxaTotal / data.term) * 12;
+          setTaxaAnual(taxaAnualCalculada);
+          
+          console.log('🔍 [CÁLCULO TAXA ANUAL] Valores:', {
+            customAdminTax,
+            customReserveFund,
+            taxaTotal,
+            prazo: data.term,
+            taxaAnualCalculada
+          });
+          
+          // Usar valor customizado se disponível, senão usar o valor padrão
+          const customAnnualUpdateRate = data.annualUpdateRate !== undefined ? data.annualUpdateRate : data.updateRate;
+          
+          console.log('🔍 [CÁLCULO ATUALIZAÇÃO ANUAL] Valores:', {
+            dataAnnualUpdateRate: data.annualUpdateRate,
+            dataUpdateRate: data.updateRate,
+            customAnnualUpdateRate
+          });
+          
+          if (data.consortiumType === 'property') {
+            setAtualizacaoAnual('INCC ' + (customAnnualUpdateRate ? customAnnualUpdateRate.toFixed(2) + '%' : '6.00%'));
+          } else if (data.consortiumType === 'vehicle') {
+            setAtualizacaoAnual('IPCA ' + (customAnnualUpdateRate ? customAnnualUpdateRate.toFixed(2) + '%' : '6.00%'));
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao calcular valores para modalidade "Aporte":', error);
+      }
+    };
+
+    // Executar a função assíncrona
+    calcularValoresAporte();
+  } else if (produtoCandidato && installmentCandidato) {
+    // Para modalidade "Crédito", usar a lógica existente
     // Usar valores customizados se disponíveis, senão usar os valores da parcela
     const customAdminTax = (data as any).adminTaxPercent !== undefined ? (data as any).adminTaxPercent : installmentCandidato.admin_tax_percent || 0;
     const customReserveFund = (data as any).reserveFundPercent !== undefined ? (data as any).reserveFundPercent : installmentCandidato.reserve_fund_percent || 0;
@@ -978,162 +1241,123 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     
     if (data.installmentType !== 'full') {
       if (data.searchType === 'contribution') {
-        // Cálculo baseado em Parcela (Aporte) com parcela especial
-        const parcelaEspecial100k = regraParcelaEspecial({
-          credit: 100000,
-          installment: installmentParams,
-          reduction: reducaoParcela
-        });
-        
-        // Lógica iterativa para encontrar o crédito correto
+        // Cálculo baseado em Parcela (Aporte) com parcela especial - usando a nova fórmula
         const valorAporte = data.value;
-        let creditoTeste = 100000; // Começar com 100k
-        let parcelaTeste = 0;
-        let tentativas = 0;
-        const maxTentativas = 50; // Evitar loop infinito
         
-        // Primeira tentativa com fator inicial
-        const fatorInicial = 100000 / parcelaEspecial100k;
-        creditoTeste = Math.ceil((valorAporte * fatorInicial) / 10000) * 10000;
+        // Calcular crédito usando a nova fórmula
+        const novoCreditoAcessado = calcularCreditoPorFormula(valorAporte, installmentParams, reducaoParcela, data.installmentType);
+        setCreditoAcessado(novoCreditoAcessado);
         
-        // Iterar até encontrar o crédito correto
-        while (tentativas < maxTentativas) {
-          parcelaTeste = regraParcelaEspecial({
-            credit: creditoTeste,
-            installment: installmentParams,
-            reduction: reducaoParcela
-          });
-          
-          // Se a parcela está próxima ou acima do valor do aporte (com tolerância de 1%)
-          if (parcelaTeste >= valorAporte * 0.99) {
-            creditoAcessado = creditoTeste;
-            valorParcela = parcelaTeste;
-            break;
-          }
-          
-          // Calcular novo crédito baseado na diferença
-          const fatorAjuste = valorAporte / parcelaTeste;
-          const novoCredito = Math.ceil((creditoTeste * fatorAjuste) / 10000) * 10000;
-          
-          // Se não houve mudança significativa, parar
-          if (Math.abs(novoCredito - creditoTeste) < 10000) {
-            creditoAcessado = creditoTeste;
-            valorParcela = parcelaTeste;
-            break;
-          }
-          
-          creditoTeste = novoCredito;
-          tentativas++;
-        }
+        // Calcular parcela real usando a nova fórmula
+        const novoValorParcela = calcularParcelaPorFormula(novoCreditoAcessado, installmentParams, reducaoParcela, data.installmentType);
+        setValorParcela(novoValorParcela);
         
-        // Se não convergiu, usar o último valor
-        if (tentativas >= maxTentativas) {
-          creditoAcessado = creditoTeste;
-          valorParcela = parcelaTeste;
-        }
-      } else if (data.searchType === 'credit') {
+        console.log('🔍 [CÁLCULO APORTE ESPECIAL] Nova fórmula aplicada:', {
+          valorAporte,
+          novoCreditoAcessado,
+          novoValorParcela
+        });
+        setParcelaReduzida(novoValorParcela);
+        setPercentualUsado(novoValorParcela / novoCreditoAcessado);
+        const novaParcelaCheia = calcularParcelasProduto({
+          credit: novoCreditoAcessado,
+          installment: installmentParams,
+          reduction: null
+        }).full;
+        setParcelaCheia(novaParcelaCheia);
+      } else if (data.searchType !== 'contribution') {
         // Problema 2: Cálculo baseado em Crédito com parcela especial - arredondar para múltiplos de 10.000
-        creditoAcessado = Math.ceil(data.value / 10000) * 10000;
-        valorParcela = regraParcelaEspecial({
-          credit: creditoAcessado,
+        const novoCreditoAcessado = Math.ceil(data.value / 10000) * 10000;
+        setCreditoAcessado(novoCreditoAcessado);
+        const novoValorParcela = regraParcelaEspecial({
+          credit: novoCreditoAcessado,
           installment: installmentParams,
           reduction: reducaoParcela
         });
+        setValorParcela(novoValorParcela);
+        setParcelaReduzida(novoValorParcela);
+        setPercentualUsado(novoValorParcela / novoCreditoAcessado);
+        const novaParcelaCheia = calcularParcelasProduto({
+          credit: novoCreditoAcessado,
+          installment: installmentParams,
+          reduction: null
+        }).full;
+        setParcelaCheia(novaParcelaCheia);
       }
-      // Para ambos, calcular os percentuais e valores auxiliares
-      parcelaReduzida = valorParcela;
-      percentualUsado = parcelaReduzida / creditoAcessado;
-      parcelaCheia = calcularParcelasProduto({
-        credit: creditoAcessado,
-        installment: installmentParams,
-        reduction: null
-      }).full;
     } else {
       // Lógica para parcela cheia
       if (data.searchType === 'contribution') {
-        // Problema 1: Busca por Aporte com Parcela Cheia - calcular parcela baseada no crédito acessado
-        const parcelaCheia100k = calcularParcelasProduto({
-          credit: 100000,
-          installment: installmentParams,
-          reduction: null
-        }).full;
-        
-        // Lógica iterativa para parcela cheia
+        // Cálculo baseado em Parcela (Aporte) com parcela cheia - usando a fórmula correta
         const valorAporte = data.value;
-        let creditoTeste = 100000;
-        let parcelaTeste = 0;
-        let tentativas = 0;
-        const maxTentativas = 50;
         
-        // Primeira tentativa com fator inicial
-        const fatorInicial = 100000 / parcelaCheia100k;
-        creditoTeste = Math.ceil((valorAporte * fatorInicial) / 10000) * 10000;
+        // Calcular crédito usando a nova fórmula
+        const novoCreditoAcessado = calcularCreditoPorFormula(valorAporte, installmentParams, null, 'full');
+        setCreditoAcessado(novoCreditoAcessado);
         
-        // Iterar até encontrar o crédito correto
-        while (tentativas < maxTentativas) {
-          parcelaTeste = calcularParcelasProduto({
-            credit: creditoTeste,
-            installment: installmentParams,
-            reduction: null
-          }).full;
-          
-          // Se a parcela está próxima ou acima do valor do aporte (com tolerância de 1%)
-          if (parcelaTeste >= valorAporte * 0.99) {
-            creditoAcessado = creditoTeste;
-            valorParcela = parcelaTeste;
-            break;
-          }
-          
-          // Calcular novo crédito baseado na diferença
-          const fatorAjuste = valorAporte / parcelaTeste;
-          const novoCredito = Math.ceil((creditoTeste * fatorAjuste) / 10000) * 10000;
-          
-          // Se não houve mudança significativa, parar
-          if (Math.abs(novoCredito - creditoTeste) < 10000) {
-            creditoAcessado = creditoTeste;
-            valorParcela = parcelaTeste;
-            break;
-          }
-          
-          creditoTeste = novoCredito;
-          tentativas++;
-        }
+        // Calcular parcela real usando a nova fórmula
+        const novoValorParcela = calcularParcelaPorFormula(novoCreditoAcessado, installmentParams, reducaoParcela, data.installmentType);
+        setValorParcela(novoValorParcela);
         
-        // Se não convergiu, usar o último valor
-        if (tentativas >= maxTentativas) {
-          creditoAcessado = creditoTeste;
-          valorParcela = parcelaTeste;
-        }
-      } else if (data.searchType === 'credit') {
+        console.log('🔍 [CÁLCULO APORTE CHEIA] Nova fórmula aplicada:', {
+          valorAporte,
+          novoCreditoAcessado,
+          novoValorParcela
+        });
+        setParcelaCheia(novoValorParcela);
+        const novaParcelaReduzida = regraParcelaEspecial({
+          credit: novoCreditoAcessado,
+          installment: installmentParams,
+          reduction: reducaoParcela
+        });
+        setParcelaReduzida(novaParcelaReduzida);
+        setPercentualUsado(novoValorParcela / novoCreditoAcessado);
+      } else if (data.searchType !== 'contribution') {
         // Problema 3: Busca por Crédito com Parcela Cheia - arredondar crédito para múltiplos de 10.000
-        creditoAcessado = Math.ceil(data.value / 10000) * 10000;
-        valorParcela = calcularParcelasProduto({
-          credit: creditoAcessado,
+        const novoCreditoAcessado = Math.ceil(data.value / 10000) * 10000;
+        setCreditoAcessado(novoCreditoAcessado);
+        const novoValorParcela = calcularParcelasProduto({
+          credit: novoCreditoAcessado,
           installment: installmentParams,
           reduction: null
         }).full;
+        setValorParcela(novoValorParcela);
+        setParcelaCheia(novoValorParcela);
+        const novaParcelaReduzida = regraParcelaEspecial({
+          credit: novoCreditoAcessado,
+          installment: installmentParams,
+          reduction: reducaoParcela
+        });
+        setParcelaReduzida(novaParcelaReduzida);
+        setPercentualUsado(novoValorParcela / novoCreditoAcessado);
       }
-      
-      parcelaCheia = valorParcela;
-      parcelaReduzida = regraParcelaEspecial({
-        credit: creditoAcessado,
-        installment: installmentParams,
-        reduction: reducaoParcela
-      });
-      percentualUsado = parcelaCheia / creditoAcessado;
     }
-    taxaAdministracao = customAdminTax;
+    setTaxaAdministracao(customAdminTax);
     // Calcular taxa anual incluindo taxa de administração + fundo de reserva
     const taxaTotal = customAdminTax + customReserveFund;
-    taxaAnual = (taxaTotal / data.term) * 12;
+    const taxaAnualCalculada = (taxaTotal / data.term) * 12;
+    setTaxaAnual(taxaAnualCalculada);
+    
+    console.log('🔍 [CÁLCULO TAXA ANUAL - CRÉDITO] Valores:', {
+      customAdminTax,
+      customReserveFund,
+      taxaTotal,
+      prazo: data.term,
+      taxaAnualCalculada
+    });
     
     // Usar valor customizado se disponível, senão usar o valor padrão
     const customAnnualUpdateRate = data.annualUpdateRate !== undefined ? data.annualUpdateRate : data.updateRate;
     
+    console.log('🔍 [CÁLCULO ATUALIZAÇÃO ANUAL - CRÉDITO] Valores:', {
+      dataAnnualUpdateRate: data.annualUpdateRate,
+      dataUpdateRate: data.updateRate,
+      customAnnualUpdateRate
+    });
+    
     if (data.consortiumType === 'property') {
-      atualizacaoAnual = 'INCC ' + (customAnnualUpdateRate ? customAnnualUpdateRate.toFixed(2) + '%' : '6.00%');
+      setAtualizacaoAnual('INCC ' + (customAnnualUpdateRate ? customAnnualUpdateRate.toFixed(2) + '%' : '6.00%'));
     } else if (data.consortiumType === 'vehicle') {
-      atualizacaoAnual = 'IPCA ' + (customAnnualUpdateRate ? customAnnualUpdateRate.toFixed(2) + '%' : '6.00%');
+      setAtualizacaoAnual('IPCA ' + (customAnnualUpdateRate ? customAnnualUpdateRate.toFixed(2) + '%' : '6.00%'));
     }
   }
 
@@ -1259,13 +1483,16 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
   }, [cotas, onSelectedCreditsChange]);
 
   // 5. Funções para adicionar/remover cotas
-  const adicionarProduto = () => {
+  const adicionarProduto = async () => {
     if (!selectedProduct || addQuantidade < 1) return;
     
     const produto = availableProducts.find(p => p.id === selectedProduct);
     if (!produto) return;
     
-    // Encontrar installment compatível
+    // Calcular parcela baseada no tipo selecionado
+    let parcela = 0;
+    
+    // Buscar installment_type correto
     let installment = null;
     if (Array.isArray(produto.installment_types)) {
       for (const it of produto.installment_types) {
@@ -1277,23 +1504,50 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
       }
     }
     
-    if (!installment) return;
+    // Se não encontrou installment_type, usar valores padrão
+    if (!installment) {
+      installment = {
+        installment_count: data.term,
+        admin_tax_percent: produto.admin_tax_percent || 27,
+        reserve_fund_percent: produto.reserve_fund_percent || 1,
+        insurance_percent: produto.insurance_percent || 0,
+        optional_insurance: false
+      };
+    }
+    
+    // Buscar redução de parcela se necessário
+    let reducaoParaCalculo = null;
+    if (data.installmentType !== 'full') {
+      try {
+        const { data: reducoes } = await supabase
+          .from('installment_reductions')
+          .select('*')
+          .eq('id', data.installmentType)
+          .eq('is_archived', false)
+          .limit(1);
+        if (reducoes && reducoes.length > 0) {
+          reducaoParaCalculo = reducoes[0];
+        }
+      } catch (error) {
+        console.error('Erro ao buscar redução:', error);
+      }
+    }
     
     // Calcular parcela baseada no tipo selecionado
-    let parcela = 0;
     if (data.installmentType === 'full') {
-      parcela = calcularParcelasProduto({
-        credit: produto.credit_value,
-        installment,
-        reduction: null
-      }).full;
+      parcela = calcularParcelasProduto({ credit: produto.credit_value, installment, reduction: null }).full;
     } else {
-      parcela = regraParcelaEspecial({
-        credit: produto.credit_value,
-        installment,
-        reduction: reducaoParcela
-      });
+      parcela = calcularParcelasProduto({ credit: produto.credit_value, installment, reduction: reducaoParaCalculo }).special;
     }
+    
+    console.log('🔍 [ADICIONAR PRODUTO]', {
+      produto: produto.name,
+      credit_value: produto.credit_value,
+      parcela,
+      quantidade: addQuantidade,
+      installmentType: data.installmentType,
+      temReducao: !!reducaoParaCalculo
+    });
     
     setCotas(prev => [
       ...prev,
@@ -1332,7 +1586,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     setRedefinirProdutoId('');
     setRedefinirQuantidade(1);
   };
-  const redefinirSelecionadas = () => {
+  const redefinirSelecionadas = async () => {
     if (!redefinirProdutoId || redefinirQuantidade < 1) return;
     const produto = availableProducts.find(p => p.id === redefinirProdutoId);
     if (!produto) return;
@@ -1347,12 +1601,41 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
       }
     }
     if (!installment) return;
+    
+    // Buscar redução de parcela se necessário
+    let reducaoParaCalculo = null;
+    if (data.installmentType !== 'full') {
+      try {
+        const { data: reducoes } = await supabase
+          .from('installment_reductions')
+          .select('*')
+          .eq('id', data.installmentType)
+          .eq('is_archived', false)
+          .limit(1);
+        if (reducoes && reducoes.length > 0) {
+          reducaoParaCalculo = reducoes[0];
+        }
+      } catch (error) {
+        console.error('Erro ao buscar redução:', error);
+      }
+    }
+    
     let parcela = 0;
     if (data.installmentType === 'full') {
       parcela = calcularParcelasProduto({ credit: produto.credit_value, installment, reduction: null }).full;
     } else {
-      parcela = regraParcelaEspecial({ credit: produto.credit_value, installment, reduction: reducaoParcela });
+      parcela = calcularParcelasProduto({ credit: produto.credit_value, installment, reduction: reducaoParaCalculo }).special;
     }
+    
+    console.log('🔍 [REDEFINIR SELEÇÕES]', {
+      produto: produto.name,
+      credit_value: produto.credit_value,
+      parcela,
+      quantidade: redefinirQuantidade,
+      installmentType: data.installmentType,
+      temReducao: !!reducaoParaCalculo
+    });
+    
     setCotas(prev => {
       const novas = prev.filter((_, i) => !selectedCotas.includes(i));
       return [
@@ -1372,7 +1655,101 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
 
   // 6. Calcular total das cotas
   const totalCotas = cotas.reduce((sum, c) => sum + c.valor * c.quantidade, 0);
-  const totalParcela = cotas.reduce((sum, c) => sum + c.parcela * c.quantidade, 0);
+  
+  console.log('🔍 [COTAS INDIVIDUAIS] Detalhes das cotas:', cotas.map(c => ({
+    valor: c.valor,
+    quantidade: c.quantidade,
+    parcela: c.parcela,
+    total: c.valor * c.quantidade,
+    parcelaTotal: c.parcela * c.quantidade
+  })));
+  
+  console.log('🔍 [COTAS INDIVIDUAIS] Soma das parcelas individuais:', cotas.reduce((sum, c) => sum + c.parcela * c.quantidade, 0));
+  console.log('🔍 [COTAS INDIVIDUAIS] Total do crédito:', totalCotas);
+  
+  // Calcular total da parcela baseado no total do crédito, não na soma das parcelas individuais
+  const [totalParcela, setTotalParcela] = useState(0);
+  
+  // useEffect para calcular o total da parcela quando as cotas ou redução mudarem
+  useEffect(() => {
+    const calcularTotalParcela = async () => {
+      if (totalCotas > 0) {
+        // Buscar installment_type correto para o total
+        let installment = null;
+        if (availableProducts.length > 0) {
+          const primeiroProduto = availableProducts[0];
+          if (Array.isArray(primeiroProduto.installment_types)) {
+            for (const it of primeiroProduto.installment_types) {
+              const real = it.installment_types || it;
+              if (real.installment_count === data.term) {
+                installment = real;
+                break;
+              }
+            }
+          }
+        }
+        
+        // Se não encontrou installment_type, usar valores padrão
+        if (!installment) {
+          installment = {
+            installment_count: data.term,
+            admin_tax_percent: 27,
+            reserve_fund_percent: 1,
+            insurance_percent: 0,
+            optional_insurance: false
+          };
+        }
+        
+        // Buscar redução de parcela se necessário
+        let reducaoParaCalculo = null;
+        if (data.installmentType !== 'full') {
+          try {
+            const { data: reducoes } = await supabase
+              .from('installment_reductions')
+              .select('*')
+              .eq('id', data.installmentType)
+              .eq('is_archived', false)
+              .limit(1);
+            if (reducoes && reducoes.length > 0) {
+              reducaoParaCalculo = reducoes[0];
+            }
+          } catch (error) {
+            console.error('Erro ao buscar redução:', error);
+          }
+        }
+        
+        // Calcular parcela baseada no tipo selecionado para o total
+        console.log('🔍 [TOTAL DA PARCELA] Iniciando cálculo:', {
+          totalCotas,
+          installmentType: data.installmentType,
+          installment,
+          reducaoParaCalculo
+        });
+        
+        let novoTotalParcela = 0;
+        if (data.installmentType === 'full') {
+          novoTotalParcela = calcularParcelasProduto({ credit: totalCotas, installment, reduction: null }).full;
+          console.log('🔍 [TOTAL DA PARCELA] Parcela cheia calculada:', novoTotalParcela);
+        } else {
+          novoTotalParcela = calcularParcelasProduto({ credit: totalCotas, installment, reduction: reducaoParaCalculo }).special;
+          console.log('🔍 [TOTAL DA PARCELA] Parcela especial calculada:', novoTotalParcela);
+        }
+        
+        setTotalParcela(novoTotalParcela);
+        
+        console.log('🔍 [TOTAL DA PARCELA] Resultado final:', {
+          totalCotas,
+          totalParcela: novoTotalParcela,
+          installmentType: data.installmentType,
+          temReducao: !!reducaoParaCalculo
+        });
+      } else {
+        setTotalParcela(0);
+      }
+    };
+    
+    calcularTotalParcela();
+  }, [totalCotas, data.installmentType, availableProducts, data.term]);
 
   // Calcular:
   // - acrescimoAporte = soma dos aportes dos créditos selecionados - valor do aporte do cliente (ou Crédito Acessado)
@@ -1388,8 +1765,22 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
       {/* Cards de resumo acima da montagem de cotas */}
       {/* Primeira linha de cards de resumo */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <ResumoCard titulo="Crédito Acessado" valor={formatCurrency(firstRowCredit !== undefined ? firstRowCredit : creditoAcessado)} />
-        <ResumoCard titulo="Valor da Parcela" valor={formatCurrency(firstRowInstallmentValue !== undefined ? firstRowInstallmentValue : valorParcela)} />
+        <ResumoCard 
+          titulo="Crédito Acessado" 
+          valor={formatCurrency(
+            data.searchType === 'contribution' 
+              ? creditoAcessado 
+              : (firstRowCredit !== undefined ? firstRowCredit : creditoAcessado)
+          )} 
+        />
+        <ResumoCard 
+          titulo="Valor da Parcela" 
+          valor={formatCurrency(
+            data.searchType === 'contribution' 
+              ? valorParcela 
+              : (firstRowInstallmentValue !== undefined ? firstRowInstallmentValue : valorParcela)
+          )} 
+        />
         <ResumoCard titulo="Taxa anual" valor={formatPercentage(taxaAnual)} />
         <ResumoCard titulo="Atualização anual" valor={atualizacaoAnual} />
       </div>
@@ -1481,7 +1872,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
                   </div>
                   <div className="flex gap-2 justify-end">
                     <Button variant="outline" onClick={() => setShowAddProduct(false)} className="flex-1">Cancelar</Button>
-                    <Button onClick={adicionarProduto} className="flex-1 bg-[#A05A2C] text-white hover:bg-[#7a3f1a] border-none">Adicionar</Button>
+                    <Button onClick={adicionarProduto} className="flex-1 bg-[#AA705A] text-white hover:bg-[#AA705A]/80 border-none">Adicionar</Button>
                   </div>
                 </DialogContent>
               </Dialog>

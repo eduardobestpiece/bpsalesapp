@@ -65,26 +65,34 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const fetchCrmUser = useCallback(async (email: string) => {
     console.log('[CrmAuth] Buscando CRM user para:', email);
     try {
-      // Timeout de 15 segundos para evitar travamento
+      // Timeout de 30 segundos para evitar travamento
       const timeoutPromise = new Promise((_, reject) => setTimeout(() => {
-        console.error('[CrmAuth] Timeout de 15s ao buscar usuário CRM');
+        console.error('[CrmAuth] Timeout de 30s ao buscar usuário CRM');
         reject(new Error('Timeout ao buscar usuário CRM'));
-      }, 15000));
+      }, 30000));
+      
       const fetchPromise = supabase
         .from('crm_users')
         .select('*')
         .eq('email', email)
         .eq('status', 'active')
         .single();
+        
+      console.log('[CrmAuth] Executando consulta...');
       const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
+      
       if (error) {
         console.error('[CrmAuth] Erro ao buscar CRM user:', error);
         return null;
       }
+      
       if (!data) {
         console.warn('[CrmAuth] Nenhum usuário CRM encontrado para:', email);
         return null;
       }
+      
+      console.log('[CrmAuth] Usuário CRM encontrado:', data);
+      
       // --- NOVO: checar se é líder de algum time ativo ---
       let dynamicRole = data.role;
       if (dynamicRole !== 'admin' && dynamicRole !== 'master' && dynamicRole !== 'submaster') {

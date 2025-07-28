@@ -28,19 +28,20 @@ const queryClient = new QueryClient();
 function AppContent() {
   const { user, crmUser, companyId, loading } = useCrmAuth();
   
+  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="flex flex-col items-center gap-2">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="text-muted-foreground text-sm mt-2">Carregando... Pode demorar até 15 segundos na primeira vez.</span>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-secondary/60">Carregando...</p>
         </div>
       </div>
     );
   }
 
   // Fallback global para usuário autenticado mas não encontrado no CRM
-  if (user && !crmUser) {
+  if (user && !crmUser && !loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
@@ -52,7 +53,7 @@ function AppContent() {
   }
 
   // Fallback global para usuário sem empresa associada
-  if (user && crmUser && !companyId) {
+  if (user && crmUser && !companyId && !loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

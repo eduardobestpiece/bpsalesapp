@@ -160,36 +160,13 @@ export function calcularParcelasProduto({
     applications: string[]
   } | null
 }) {
-  console.log('🔍 [CÁLCULO PARCELA] Iniciando cálculo da parcela:', {
-    credit,
-    installment,
-    reduction
-  });
-
   const nParcelas = installment.installment_count;
   const taxaAdm = installment.admin_tax_percent || 0;
   const fundoReserva = installment.reserve_fund_percent || 0;
   const seguro = installment.optional_insurance ? 0 : (installment.insurance_percent || 0);
   
-  console.log('🔍 [CÁLCULO PARCELA] Parâmetros extraídos:', {
-    nParcelas,
-    taxaAdm,
-    fundoReserva,
-    seguro,
-    optionalInsurance: installment.optional_insurance
-  });
-  
   // Cálculo Parcela Cheia
   const valorCheia = (credit + ((credit * taxaAdm / 100) + (credit * fundoReserva / 100) + (credit * seguro / 100))) / nParcelas;
-  
-  console.log('🔍 [CÁLCULO PARCELA] Cálculo parcela cheia:', {
-    credit,
-    taxaAdmValor: credit * taxaAdm / 100,
-    fundoReservaValor: credit * fundoReserva / 100,
-    seguroValor: credit * seguro / 100,
-    totalComTaxas: credit + ((credit * taxaAdm / 100) + (credit * fundoReserva / 100) + (credit * seguro / 100)),
-    valorCheia
-  });
   
   // Cálculo Parcela Especial
   let percentualReducao = 0;
@@ -201,42 +178,28 @@ export function calcularParcelasProduto({
     aplicaTaxaAdm = reduction.applications?.includes('admin_tax');
     aplicaFundoReserva = reduction.applications?.includes('reserve_fund');
     aplicaSeguro = reduction.applications?.includes('insurance');
-    
-    console.log('🔍 [CÁLCULO PARCELA] Redução aplicada:', {
-      percentualReducao,
-      aplicaParcela,
-      aplicaTaxaAdm,
-      aplicaFundoReserva,
-      aplicaSeguro
-    });
   }
   
-  const principal = aplicaParcela ? credit - (credit * percentualReducao) : credit;
-  const taxa = aplicaTaxaAdm ? (credit * taxaAdm / 100) - ((credit * taxaAdm / 100) * percentualReducao) : (credit * taxaAdm / 100);
-  const fundo = aplicaFundoReserva ? (credit * fundoReserva / 100) - ((credit * fundoReserva / 100) * percentualReducao) : (credit * fundoReserva / 100);
+  // Fórmula correta baseada na configuração da redução
+  // A redução só aplica na parcela (installment), não nas taxas
   
+  // 1. Parcela: SE(Reduz o Crédito/Parcela=Verdadeiro; Total do Crédito * Percentual de redução; Total do Crédito*1)
+  const parcela = aplicaParcela ? credit * percentualReducao : credit;
+  
+  // 2. Taxa de administração: Total do Crédito * Taxa de administração (sempre aplicada integralmente)
+  const taxaAdmValor = credit * (taxaAdm / 100);
+  
+  // 3. Fundo de reserva: Total do Crédito * Fundo de Reserva (sempre aplicado integralmente)
+  const fundoReservaValor = credit * (fundoReserva / 100);
+  
+  // 4. Seguro (se aplicável) - sempre aplicado integralmente
   let seguroValor = 0;
   if (!installment.optional_insurance) {
-    seguroValor = aplicaSeguro
-      ? (credit * seguro / 100) - ((credit * seguro / 100) * percentualReducao)
-      : (credit * seguro / 100);
+    seguroValor = credit * (seguro / 100);
   }
   
-  const valorEspecial = (principal + taxa + fundo + seguroValor) / nParcelas;
-  
-  console.log('🔍 [CÁLCULO PARCELA] Cálculo parcela especial:', {
-    principal,
-    taxa,
-    fundo,
-    seguroValor,
-    totalComReducao: principal + taxa + fundo + seguroValor,
-    valorEspecial
-  });
-  
-  console.log('🔍 [CÁLCULO PARCELA] Resultado final:', {
-    full: valorCheia,
-    special: valorEspecial
-  });
+  // 5. Total dividido pelo prazo
+  const valorEspecial = (parcela + taxaAdmValor + fundoReservaValor + seguroValor) / nParcelas;
   
   return { full: valorCheia, special: valorEspecial };
 }
