@@ -71,11 +71,11 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // Primeiro, vamos tentar uma consulta mais simples
       console.log('🔧 Tentando consulta simples...');
       
+      // Tentar primeiro sem filtros para ver se consegue acessar
       const fetchPromise = supabase
         .from('crm_users')
         .select('id, email, first_name, last_name, role, company_id, status')
         .eq('email', email)
-        .eq('status', 'active')
         .maybeSingle();
         
       console.log('⏳ Aguardando resposta...');
