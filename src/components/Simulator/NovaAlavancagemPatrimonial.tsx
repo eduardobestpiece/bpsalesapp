@@ -45,7 +45,8 @@ export const NovaAlavancagemPatrimonial = ({
   somaParcelasAteContemplacao = 0, 
   mesContemplacao = 0,
   parcelaInicial = 0,
-  prazoTotal = 240
+  prazoTotal = 240,
+  periodoCompra = 3 // NOVO: período de compra em meses
 }: { 
   product: any,
   administrator: any,
@@ -64,7 +65,8 @@ export const NovaAlavancagemPatrimonial = ({
   somaParcelasAteContemplacao: number, 
   mesContemplacao: number,
   parcelaInicial: number,
-  prazoTotal: number
+  prazoTotal: number,
+  periodoCompra?: number // NOVO: período de compra em meses
 }) => {
   // Estados dos filtros
   const [alavancas, setAlavancas] = useState<Leverage[]>([]);
@@ -72,10 +74,10 @@ export const NovaAlavancagemPatrimonial = ({
   const [valorAlavanca, setValorAlavanca] = useState<string>('R$ 500.000,00');
   const [tipoAlavancagem, setTipoAlavancagem] = useState('simples');
   const [loading, setLoading] = useState(false);
-  const [periodoCompra, setPeriodoCompra] = useState<number>(1);
+  const [periodoCompraLocal, setPeriodoCompraLocal] = useState<number>(periodoCompra || 3); // Usar prop se disponível, senão padrão 3
   // Novo: intervalo entre contemplações (em meses)
-  // Usar o valor do mês de contemplação como intervalo
-  const intervaloContemplacao = mesContemplacao;
+  // Calcular automaticamente: Mês Contemplação + Período de Compra
+  const intervaloContemplacaoLocal = mesContemplacao + periodoCompraLocal;
   const [chartDataState, setChartDataState] = useState<any[]>([]);
   const [installmentsChartData, setInstallmentsChartData] = useState<any[]>([]);
   const [showLegend, setShowLegend] = useState(false);
@@ -109,7 +111,6 @@ export const NovaAlavancagemPatrimonial = ({
           .order('name');
         
         if (error) {
-          console.error('Erro ao buscar alavancas:', error);
         } else {
           setAlavancas(data || []);
           // Definir Airbnb como padrão se existir
@@ -119,7 +120,6 @@ export const NovaAlavancagemPatrimonial = ({
           }
         }
       } catch (error) {
-        console.error('Erro ao buscar alavancas:', error);
       } finally {
         setLoading(false);
       }
@@ -130,6 +130,57 @@ export const NovaAlavancagemPatrimonial = ({
 
   // Buscar dados da alavanca selecionada
   const alavanca = useMemo(() => alavancas.find(a => a.id === alavancaSelecionada), [alavancas, alavancaSelecionada]);
+
+  // Função para calcular o crédito acessado no mês correto (contemplação + período de compra)
+  const calculateCreditoAcessado = (month: number, baseCredit: number) => {
+    if (baseCredit === 0) return 0;
+    
+    let currentCredit = baseCredit;
+    let embutidoAplicado = false;
+    
+    // Para o primeiro mês, retorna o valor base sem atualização
+    if (month === 1) {
+      return currentCredit;
+    }
+    
+    // Calcular as atualizações mês a mês
+    for (let m = 2; m <= month; m++) {
+      // Verificar se é um mês de atualização anual (13, 25, 37, etc.)
+      const isAnnualUpdate = (m - 1) % 12 === 0;
+      
+      if (isAnnualUpdate) {
+        // Verificar se já passou do mês de contemplação
+        if (m > contemplationMonth) {
+          // Após contemplação: atualização mensal pelo ajuste pós contemplação
+          const postContemplationRate = administrator.postContemplationAdjustment || 0;
+          currentCredit = currentCredit + (currentCredit * postContemplationRate / 100);
+        } else {
+          // Antes da contemplação: atualização anual pelo INCC
+          const annualUpdateRate = customAnnualUpdateRate !== undefined ? customAnnualUpdateRate : (administrator.inccRate || 6);
+          currentCredit = currentCredit + (currentCredit * annualUpdateRate / 100);
+        }
+      }
+      
+      // Após contemplação, aplicar atualização mensal em todos os meses
+      if (m > contemplationMonth) {
+        const postContemplationRate = administrator.postContemplationAdjustment || 0;
+        currentCredit = currentCredit + (currentCredit * postContemplationRate / 100);
+      }
+      
+      // Aplicar redução do embutido no mês de contemplação se "Com embutido" estiver selecionado
+      if (embutido === 'com' && m === contemplationMonth && !embutidoAplicado) {
+        const maxEmbeddedPercentage = administrator.maxEmbeddedPercentage || 25; // 25% padrão
+        currentCredit = currentCredit - (currentCredit * maxEmbeddedPercentage / 100);
+        embutidoAplicado = true;
+      }
+    }
+    
+    return currentCredit;
+  };
+
+  // Calcular o crédito acessado no mês correto (contemplação + período de compra)
+  const mesAquisicaoCalculo = contemplationMonth + periodoCompraLocal;
+  const creditoAcessadoCorreto = calculateCreditoAcessado(mesAquisicaoCalculo, product.nominalCreditValue);
 
   // Valor numérico da alavanca
   const valor = useMemo(() => {
@@ -152,8 +203,8 @@ export const NovaAlavancagemPatrimonial = ({
   const taxaAirbnb = valorDiaria * ocupacaoDias * mgmtPct;
   const custosTotais = valor * totalExpPct;
 
-  // Número de imóveis corrigido: usar creditoAcessadoContemplacao
-  const numeroImoveis = valor > 0 ? Math.floor(creditoAcessadoContemplacao / valor) : 0; // Corrigido
+  // Número de imóveis corrigido: usar creditoAcessadoCorreto (mês contemplação + período de compra)
+  const numeroImoveis = valor > 0 ? Math.floor(creditoAcessadoCorreto / valor) : 0; // Corrigido
   const patrimonioNaContemplacao = valor > 0 ? numeroImoveis * valor : 0;
 
   // Patrimônio ao final (usando valorização mensal equivalente)
@@ -178,20 +229,35 @@ export const NovaAlavancagemPatrimonial = ({
   const calcularContemplacoesEscalonadas = () => {
     if (!isAlavancagemEscalonada) return { patrimonioTotal: patrimonioAoFinal, rendaPassiva: ganhosMensais, contemplacoes: [{ mes: mesContemplacao, patrimonio: patrimonioNaContemplacao }] };
     
+
+    
     const contemplacoes = [];
     let mesAtual = mesContemplacao;
     let cotaIndex = 0;
     let cotas = [];
     
+    // Calcular quantas contemplações cabem no prazo total
     while (mesAtual <= prazoTotal && cotaIndex < 5) { // Limitar a 5 cotas para evitar muitas contemplações
       contemplacoes.push({ mes: mesAtual });
-      // Cada nova contemplação adiciona um novo crédito com o mesmo valor inicial
+      
+      // Calcular o crédito acessado para esta contemplação específica
+      const creditoAcessadoCota = calculateCreditoAcessado(mesAtual, product.nominalCreditValue);
+      const numeroImoveisCota = valor > 0 ? Math.floor(creditoAcessadoCota / valor) : 0;
+      const patrimonioCota = valor > 0 ? numeroImoveisCota * valor : 0;
+      
+      // Cada nova contemplação adiciona um novo crédito
       cotas.push({ 
         mesContemplacao: mesAtual, 
-        patrimonioInicial: patrimonioNaContemplacao,
-        creditoInicial: creditoAcessadoContemplacao // Valor do crédito inicial
+        patrimonioInicial: patrimonioCota,
+        creditoInicial: creditoAcessadoCota,
+        numeroImoveis: numeroImoveisCota
       });
-      mesAtual += intervaloContemplacao;
+      
+      // Próxima contemplação: mês seguinte à aquisição do patrimônio atual
+      const mesAquisicaoAtual = mesAtual + periodoCompraLocal;
+      const proximoMesContemplacao = mesAquisicaoAtual + 1;
+      
+      mesAtual = proximoMesContemplacao; // Voltar ao comportamento original
       cotaIndex++;
     }
     
@@ -199,8 +265,8 @@ export const NovaAlavancagemPatrimonial = ({
     const chartData = [];
     let acumuloCaixa = 0;
     let valorizacaoAcumulada = 0;
-    let custoTotalAcumulado = 0; // Custo total acumulado de todos os créditos
-    let parcelasPagasAcumulado = 0; // Parcelas pagas acumuladas (inicializar em 0)
+    let custoTotalAcumulado = 0;
+    let parcelasPagasAcumulado = 0;
     
     for (let mes = 1; mes <= prazoTotal + 1; mes++) {
       let patrimonioMes = 0;
@@ -223,21 +289,20 @@ export const NovaAlavancagemPatrimonial = ({
       custoTotalAcumulado += custoMes;
       
       // Lógica do patrimônio: só incrementa após o período de compra
-      cotas.forEach(cota => {
-        const mesAquisicao = cota.mesContemplacao + periodoCompra;
+      cotas.forEach((cota, index) => {
+        const mesAquisicao = cota.mesContemplacao + periodoCompraLocal;
         if (mes >= mesAquisicao) {
           const mesesDesdeAquisicao = mes - mesAquisicao;
           const patrimonioCota = cota.patrimonioInicial * Math.pow(1 + taxaMensal, mesesDesdeAquisicao);
           patrimonioMes += patrimonioCota;
+          
           // Rendimentos desta cota
           const rendimentosCota = ((patrimonioCota * dailyPct * ocupacaoDias) - (patrimonioCota * totalExpPct + ((patrimonioCota * dailyPct * ocupacaoDias) * mgmtPct)));
           ganhosMes += rendimentosCota;
+          
           // Fluxo de caixa desta cota
-          if (mesesDesdeAquisicao < prazoTotal) {
-            fluxoCaixaMes += rendimentosCota - parcelaMes;
-          } else {
-            fluxoCaixaMes += rendimentosCota;
-          }
+          fluxoCaixaMes += rendimentosCota;
+          
           // Valorização desta cota neste mês
           if (mesesDesdeAquisicao > 0) {
             const patrimonioCotaAnterior = cota.patrimonioInicial * Math.pow(1 + taxaMensal, mesesDesdeAquisicao - 1);
@@ -245,8 +310,8 @@ export const NovaAlavancagemPatrimonial = ({
           }
         }
       });
+      
       // Calcular parcelas de todos os créditos ativos
-      parcelaMes = 0;
       cotas.forEach(cota => {
         const mesesDesdeContemplacao = mes - cota.mesContemplacao;
         if (mes === cota.mesContemplacao) {
@@ -258,21 +323,26 @@ export const NovaAlavancagemPatrimonial = ({
             parcelaMes += parcelaAfterContemplacao;
           } else {
             const anosDesdeContemplacaoCota = Math.floor((mes - cota.mesContemplacao - 1) / 12);
-            parcelaMes += parcelaAfterContemplacao * Math.pow(1 + taxaValorizacaoAnual, anosDesdeContemplacaoCota);
+            const parcelaAtualizada = parcelaAfterContemplacao * Math.pow(1 + taxaValorizacaoAnual, anosDesdeContemplacaoCota);
+            parcelaMes += parcelaAtualizada;
           }
         }
       });
       
+      // Subtrair parcelas do fluxo de caixa
+      fluxoCaixaMes -= parcelaMes;
+      
       parcelasPagasAcumulado += parcelaMes;
       valorizacaoAcumulada += valorizacaoMes;
       acumuloCaixa += fluxoCaixaMes;
+      
       chartData.push({
         month: mes,
         patrimony: patrimonioMes,
         income: ganhosMes,
         cashFlow: fluxoCaixaMes,
         isContemplation: isContemplation,
-        patrimonioInicial: patrimonioNaContemplacao,
+        patrimonioInicial: patrimonioMes,
         valorizacaoMes: valorizacaoMes,
         valorizacaoAcumulada: valorizacaoAcumulada,
         acumuloCaixa: acumuloCaixa,
@@ -281,9 +351,11 @@ export const NovaAlavancagemPatrimonial = ({
         parcelasPagas: parcelasPagasAcumulado
       });
     }
+    
     // Patrimônio ao final e renda passiva
     const patrimonioTotalFinal = chartData[chartData.length - 1].patrimony;
-    const rendaPassivaFinal = chartData[chartData.length - 1].cashFlow; // Usar fluxo de caixa como renda passiva
+    const rendaPassivaFinal = chartData[chartData.length - 1].cashFlow;
+    
     return { patrimonioTotal: patrimonioTotalFinal, rendaPassiva: rendaPassivaFinal, contemplacoes, chartData };
   };
 
@@ -384,7 +456,7 @@ export const NovaAlavancagemPatrimonial = ({
       // Parcela do mês: usar exatamente o valor da tabela
       const parcelaMes = parcelasTabela[mes - 1]?.valorParcela || 0;
       // --- Ajuste do mês da casinha ---
-      const isAquisicao = mes === mesContemplacao + periodoCompra;
+      const isAquisicao = mes === mesContemplacao + periodoCompraLocal;
       // Atualização anual: meses 13, 25, 37, ...
       const isAnnualUpdate = (mes - 1) % 12 === 0 && mes > 1;
       // Antes da contemplação
@@ -419,12 +491,12 @@ export const NovaAlavancagemPatrimonial = ({
           // parcelaMes = valorParcelaFixo; // Removido
         }
         // Patrimônio só é adquirido no mês correto
-        if (mes < mesContemplacao + periodoCompra) {
+        if (mes < mesContemplacao + periodoCompraLocal) {
           patrimonio = 0;
           ganhos = 0;
           fluxoCaixa = 0;
           valorizacaoMes = 0;
-        } else if (mes === mesContemplacao + periodoCompra) {
+        } else if (mes === mesContemplacao + periodoCompraLocal) {
           patrimonio = patrimonioNaContemplacao;
           rendimentoMensal = ((patrimonio * dailyPct * ocupacaoDias) - (patrimonio * totalExpPct + ((patrimonio * dailyPct * ocupacaoDias) * mgmtPct)));
           ganhos = rendimentoMensal;
@@ -479,7 +551,7 @@ export const NovaAlavancagemPatrimonial = ({
 
   // Cálculo dos novos campos de resultado
   // Investimento: soma das parcelas até o mês da aquisição do patrimônio / Patrimônio na Contemplação
-  const mesAquisicao = mesContemplacao + periodoCompra;
+  const mesAquisicao = mesContemplacao + periodoCompraLocal;
   const investimentoNumerador = chartData && chartData.length > 0 ? chartData.filter(row => row.month <= mesAquisicao).reduce((acc, row) => acc + (row.parcelaTabelaMes || 0), 0) : 0;
   const investimentoDenominador = patrimonioNaContemplacao || 1;
   const investimento = investimentoNumerador / investimentoDenominador;
@@ -541,7 +613,7 @@ export const NovaAlavancagemPatrimonial = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="simples">Alavancagem simples</SelectItem>
-                <SelectItem value="escalonada" disabled style={{ color: '#aaa', cursor: 'not-allowed' }}>Alavancagem escalonada (em breve)</SelectItem>
+                <SelectItem value="escalonada" disabled className="text-gray-400 cursor-not-allowed">Alavancagem escalonada (em breve)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -550,10 +622,15 @@ export const NovaAlavancagemPatrimonial = ({
             <Input
               type="number"
               min={1}
-              value={periodoCompra}
-              onChange={e => setPeriodoCompra(Number(e.target.value))}
+              value={periodoCompraLocal}
+              onChange={e => setPeriodoCompraLocal(Number(e.target.value))}
               className="w-full"
             />
+            {tipoAlavancagem === 'escalonada' && (
+              <div className="text-xs text-gray-500 mt-1">
+                Intervalo entre contemplações: {mesContemplacao} + {periodoCompraLocal} = {intervaloContemplacaoLocal} meses
+              </div>
+            )}
           </div>
           </div>
 
@@ -661,16 +738,40 @@ export const NovaAlavancagemPatrimonial = ({
         customReserveFundPercent={customReserveFundPercent}
         customAnnualUpdateRate={customAnnualUpdateRate}
         agioPercent={agioPercent}
-        periodoCompra={periodoCompra}
+        periodoCompra={periodoCompraLocal}
         valorAlavancaNum={valor}
         onTableDataGenerated={(tableData) => {
+          // Se for alavancagem escalonada, usar os dados calculados pela função escalonada
+          if (isAlavancagemEscalonada) {
+            const escalonadaResult = calcularContemplacoesEscalonadas();
+            // Converter o formato dos dados para ser compatível com InstallmentsChart
+            const chartDataFormatted = escalonadaResult.chartData.map(item => ({
+              mes: item.month,
+              valorParcela: item.parcelaMes || 0,
+              somaParcelas: item.parcelasPagas || 0,
+              patrimonio: item.patrimony || 0,
+              patrimonioAnual: item.patrimony || 0, // Usar patrimony como patrimonioAnual
+              receitaMes: item.income || 0,
+              receitaMenosCustos: item.income || 0, // Usar income como receitaMenosCustos
+              custos: 0, // Será calculado no tooltip
+              rendaPassiva: item.cashFlow || 0,
+              rendaPassivaAcumulada: item.acumuloCaixa || 0,
+              fluxoCaixa: item.cashFlow || 0,
+              patrimonioNaContemplacao: patrimonioNaContemplacao,
+              valorAlavancaNum: valor
+            }));
+            setInstallmentsChartData(chartDataFormatted);
+            return;
+          }
+          
+          // Para alavancagem simples, usar a lógica original
           setChartDataState(tableData.map(row => ({ ...row, month: row.mes, parcelaTabelaMes: row.valorParcela })));
           // Montar dados para o novo gráfico
           let soma = 0;
           let somaParcelas = 0;
           let rendaPassivaAcumulada = 0;
           const patrimonioInicial = patrimonioNaContemplacao;
-          const mesInicioPatrimonio = mesContemplacao + periodoCompra;
+          const mesInicioPatrimonio = mesContemplacao + periodoCompraLocal;
           const taxaMensal = Math.pow(1 + 0.06, 1 / 12) - 1;
           const taxaAnual = 0.06;
           let patrimonioAnual = 0;
@@ -770,7 +871,7 @@ export const NovaAlavancagemPatrimonial = ({
               // Renda passiva e acumulada só após aquisição do patrimônio
               let rendaPassiva = 0;
               if (m >= mesInicioPatrimonio) {
-                rendaPassiva = receitaMes - (custos + 0);
+                rendaPassiva = receitaMes - custos;
               }
               if (m < mesInicioPatrimonio) {
                 rendaPassivaAcumulada = 0;
@@ -845,7 +946,7 @@ export const NovaAlavancagemPatrimonial = ({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="simples">Alavancagem simples</SelectItem>
-                <SelectItem value="escalonada" disabled style={{ color: '#aaa', cursor: 'not-allowed' }}>Alavancagem escalonada (em breve)</SelectItem>
+                <SelectItem value="escalonada">Alavancagem escalonada</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -854,8 +955,8 @@ export const NovaAlavancagemPatrimonial = ({
             <Input
               type="number"
               min={1}
-              value={periodoCompra}
-              onChange={e => setPeriodoCompra(Number(e.target.value))}
+              value={periodoCompraLocal}
+              onChange={e => setPeriodoCompraLocal(Number(e.target.value))}
               className="w-full"
             />
           </div>

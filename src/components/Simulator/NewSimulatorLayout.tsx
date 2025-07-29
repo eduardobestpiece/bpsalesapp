@@ -174,6 +174,9 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   const [isReserveFundCustomized, setIsReserveFundCustomized] = useState<boolean>(false);
   const [isAnnualUpdateCustomized, setIsAnnualUpdateCustomized] = useState<boolean>(false);
   
+  // Estado para período de compra
+  const [periodoCompra, setPeriodoCompra] = useState<number>(3); // Padrão 3 meses
+  
   // Adicionar estado para armazenar dados da administradora
   const [administratorData, setAdministratorData] = useState<any>(null);
   
@@ -421,7 +424,6 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
         
       }
     } catch (error) {
-      console.error('Erro ao carregar dados da administradora:', error);
     }
   };
 
@@ -430,7 +432,6 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
     if (localSimulationData.administrator) {
       loadAdministratorData(localSimulationData.administrator);
     } else {
-      // console.log('[NewSimulatorLayout] Nenhuma administradora selecionada');
     }
   }, [localSimulationData.administrator]);
 
@@ -490,6 +491,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             agioPercent={agioPercent}
             setAgioPercent={setAgioPercent}
             onRoiChange={setRoiOperacao}
+            periodoCompra={periodoCompra}
           />
         </div>
       )}
@@ -523,50 +525,49 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             mesContemplacao={mesContemplacao}
             parcelaInicial={firstRowInstallmentValue || 0}
             prazoTotal={termValue}
+            periodoCompra={periodoCompra}
           />
         </div>
       )}
 
       {/* Seção de Detalhamento removida - tabela DetailTable agora está apenas no componente NovaAlavancagemPatrimonial */}
       {/* IMPORTANTE: Callback invisível para capturar dados da primeira linha mesmo sem mostrar a tabela aqui */}
-      {visibleSections.detail && (
-        <div style={{ display: 'none' }}>
-          <DetailTable 
-            product={{ nominalCreditValue: localSimulationData.value, termMonths: termValue }}
-            administrator={administratorData || { 
-              administrationRate: 0.27,
-              updateMonth: 8,
-              gracePeriodDays: 90,
-              inccRate: 6,
-              postContemplationAdjustment: 0.5,
-              maxEmbeddedPercentage: 25
-            }}
-            contemplationMonth={localSimulationData.contemplationMonth || 60}
-            selectedCredits={selectedCredits}
-            creditoAcessado={creditoAcessado || localSimulationData.value}
-            embutido={embutido}
-            installmentType={localSimulationData.installmentType}
-            customAdminTaxPercent={adminTaxPercent}
-            customReserveFundPercent={reserveFundPercent}
-            customAnnualUpdateRate={annualUpdateRate}
-            agioPercent={agioPercent}
-            onFirstRowData={(data) => {
-              setFirstRowCredit(data.credit);
-              setFirstRowInstallmentValue(data.installmentValue);
-            }}
-            onContemplationRowData={(data) => {
-              setCreditoAcessadoContemplacao(data.creditAccessed);
-              setParcelaAfterContemplacao(data.parcelaAfter);
-              setSomaParcelasAteContemplacao(data.somaParcelasAteContemplacao);
-              setMesContemplacao(data.mesContemplacao);
-            }}
-            onTableDataGenerated={(tableData) => {
-              // Callback para dados da tabela (pode ser usado para outros componentes)
-            }}
-          />
-        </div>
-      )}
-
+      <div style={{ display: 'none' }}>
+        <DetailTable 
+          product={{ nominalCreditValue: localSimulationData.value, termMonths: termValue }}
+          administrator={administratorData || { 
+            administrationRate: 0.27,
+            updateMonth: 8,
+            gracePeriodDays: 90,
+            inccRate: 6,
+            postContemplationAdjustment: 0.5,
+            maxEmbeddedPercentage: 25
+          }}
+          contemplationMonth={localSimulationData.contemplationMonth || 60}
+          selectedCredits={selectedCredits}
+          creditoAcessado={creditoAcessado || localSimulationData.value}
+          embutido={embutido}
+          installmentType={localSimulationData.installmentType}
+          customAdminTaxPercent={adminTaxPercent}
+          customReserveFundPercent={reserveFundPercent}
+          customAnnualUpdateRate={annualUpdateRate}
+          agioPercent={agioPercent}
+          periodoCompra={periodoCompra}
+          onFirstRowData={(data) => {
+            setFirstRowCredit(data.credit);
+            setFirstRowInstallmentValue(data.installmentValue);
+          }}
+          onContemplationRowData={(data) => {
+            setCreditoAcessadoContemplacao(data.creditAccessed);
+            setParcelaAfterContemplacao(data.parcelaAfter);
+            setSomaParcelasAteContemplacao(data.somaParcelasAteContemplacao);
+            setMesContemplacao(data.mesContemplacao);
+          }}
+          onTableDataGenerated={(tableData) => {
+            // Callback para dados da tabela (pode ser usado para outros componentes)
+          }}
+        />
+      </div>
 
 
       {/* Modal de configurações */}

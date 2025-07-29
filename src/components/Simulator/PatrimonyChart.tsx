@@ -136,7 +136,6 @@ const generateRealPatrimonyData = (
   creditoAcessado: number
 ): ChartDataPoint[] => {
   if (!product || !administrator) {
-    console.warn('[PatrimonyChart] Parâmetros insuficientes para gerar dados reais');
     return chartData.map(point => ({ ...point, parcelaTabelaMes: 0 }));
   }
 
@@ -272,7 +271,6 @@ const generateRealPatrimonyData = (
 
     return resultData;
   } catch (error) {
-    console.error('[PatrimonyChart] Erro na geração de dados reais:', error);
     return chartData.map(point => ({ ...point, parcelaTabelaMes: 0 }));
   }
 };

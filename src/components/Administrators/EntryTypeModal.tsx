@@ -119,7 +119,6 @@ export const EntryTypeModal: React.FC<EntryTypeModalProps> = ({
       form.reset();
       onSuccess();
     } catch (error) {
-      console.error('Erro ao salvar tipo de entrada:', error);
       toast({
         title: 'Erro ao salvar tipo de entrada',
         description: 'Tente novamente em alguns instantes.',

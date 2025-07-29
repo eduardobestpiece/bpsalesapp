@@ -163,6 +163,8 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
     if (!selectedAdministratorId) return;
     
     const fetchInstallmentTypes = async () => {
+      if (!selectedAdministratorId || selectedAdministratorId.trim() === '') return;
+      
       const { data, error } = await supabase
         .from('installment_types')
         .select('*')
@@ -188,6 +190,8 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
     if (!selectedAdministratorId) return;
     
     const fetchProducts = async () => {
+      if (!selectedAdministratorId || selectedAdministratorId.trim() === '') return;
+      
       const { data, error } = await supabase
         .from('products')
         .select('*')
@@ -212,6 +216,8 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
     if (!selectedAdministratorId || !selectedCompanyId) return;
     
     const fetchReducoesParcela = async () => {
+      if (!selectedAdministratorId || selectedAdministratorId.trim() === '') return;
+      
       const { data, error } = await supabase
         .from('installment_reductions')
         .select('id, name')
@@ -237,6 +243,8 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
     if (!selectedAdministratorId || !localTerm) return;
     
     const fetchInstallmentDetails = async () => {
+      if (!selectedAdministratorId || selectedAdministratorId.trim() === '') return;
+      
       const { data, error } = await supabase
         .from('installment_types')
         .select('admin_tax_percent, reserve_fund_percent, annual_update_rate')

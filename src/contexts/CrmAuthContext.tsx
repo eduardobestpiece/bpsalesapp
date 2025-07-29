@@ -63,11 +63,9 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const fetchCrmUser = useCallback(async (email: string) => {
-    console.log('[CrmAuth] Buscando CRM user para:', email);
     try {
       // Timeout de 30 segundos para evitar travamento
       const timeoutPromise = new Promise((_, reject) => setTimeout(() => {
-        console.error('[CrmAuth] Timeout de 30s ao buscar usuário CRM');
         reject(new Error('Timeout ao buscar usuário CRM'));
       }, 30000));
       
@@ -78,20 +76,15 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .eq('status', 'active')
         .single();
         
-      console.log('[CrmAuth] Executando consulta...');
       const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
       
       if (error) {
-        console.error('[CrmAuth] Erro ao buscar CRM user:', error);
         return null;
       }
       
       if (!data) {
-        console.warn('[CrmAuth] Nenhum usuário CRM encontrado para:', email);
         return null;
       }
-      
-      console.log('[CrmAuth] Usuário CRM encontrado:', data);
       
       // --- NOVO: checar se é líder de algum time ativo ---
       let dynamicRole = data.role;
@@ -110,7 +103,6 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
       saveCrmUserCache(email, { ...data, role: dynamicRole }); // Salva no cache
       return { ...data, role: dynamicRole } as CrmUser;
     } catch (err) {
-      console.error('[CrmAuth] Erro inesperado ao buscar CRM user:', err);
       return null;
     }
   }, []);
@@ -119,12 +111,9 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
     let mounted = true;
     let alreadyFetched = false;
     
-    console.log('[CrmAuth] Initializing auth...');
-    
     // Setup auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        console.log('[CrmAuth] Auth state changed:', event, newSession?.user?.email);
         if (!mounted) return;
         setSession(newSession);
         setUser(newSession?.user ?? null);
@@ -134,7 +123,6 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
           // 1. Tenta carregar do cache local
           const cached = getCrmUserCache(newSession.user.email);
           if (cached) {
-            console.log('[CrmAuth] Usuário CRM carregado do cache local:', cached);
             setCrmUser(cached);
             setUserRole(cached.role ?? null);
             setCompanyId(cached.company_id ?? null);
@@ -175,10 +163,8 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
       if (mounted && initialSession && !alreadyFetched) {
         alreadyFetched = true;
-        console.log('[CrmAuth] Initial session found:', initialSession.user.email);
         // A busca será feita pelo onAuthStateChange
       } else if (mounted) {
-        console.log('[CrmAuth] No initial session');
         setLoading(false);
       }
     });
@@ -190,7 +176,6 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [fetchCrmUser]);
 
   const signIn = async (email: string, password: string) => {
-    console.log('Attempting sign in for:', email);
     
     const { error } = await supabase.auth.signInWithPassword({
       email,
@@ -198,14 +183,13 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
 
     if (error) {
-      console.error('Sign in error:', error);
+      return { error };
     }
 
     return { error };
   };
 
   const signUp = async (email: string, password: string, userData: any) => {
-    console.log('Attempting sign up for:', email);
     
     const redirectUrl = `${window.location.origin}/home`;
     
@@ -219,14 +203,13 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
     });
 
     if (error) {
-      console.error('Sign up error:', error);
+      return { error };
     }
 
     return { error };
   };
 
   const signOut = async () => {
-    console.log('Signing out');
     await supabase.auth.signOut();
   };
 

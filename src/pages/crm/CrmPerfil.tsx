@@ -53,7 +53,6 @@ const CrmPerfil = () => {
         .eq('id', crmUser.id);
 
       if (error) {
-        console.error('Error updating profile:', error);
         toast.error('Erro ao atualizar perfil');
         return;
       }
@@ -63,7 +62,6 @@ const CrmPerfil = () => {
         setIsEditing(false);
       }
     } catch (error) {
-      console.error('Error updating profile:', error);
       toast.error('Erro ao atualizar perfil');
     } finally {
       setIsSaving(false);
@@ -79,14 +77,12 @@ const CrmPerfil = () => {
       });
 
       if (error) {
-        console.error('Error sending reset email:', error);
         toast.error('Erro ao enviar email de redefinição');
         return;
       }
 
       toast.success('Email de redefinição de senha enviado com sucesso!');
     } catch (error) {
-      console.error('Error sending reset email:', error);
       toast.error('Erro ao enviar email de redefinição');
     }
   };
@@ -96,14 +92,14 @@ const CrmPerfil = () => {
     : 'U';
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
+    <div className="min-h-screen bg-gradient-to-br from-background via-card to-muted/30">
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">
-          <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-100/50 p-1">
-            <div className="bg-white rounded-[calc(1.5rem-4px)] p-8 shadow-sm min-h-[600px]">
+          <div className="bg-card/95 backdrop-blur-sm rounded-3xl shadow-xl border border-border p-1">
+            <div className="bg-card rounded-[calc(1.5rem-4px)] p-8 shadow-sm min-h-[600px]">
               
               <div className="text-center space-y-2 mb-8">
-                <h2 className="text-2xl font-bold">Meu Perfil</h2>
+                <h2 className="text-2xl font-bold text-foreground">Meu Perfil</h2>
                 <p className="text-muted-foreground">
                   Gerencie suas informações pessoais e configurações
                 </p>
@@ -113,7 +109,7 @@ const CrmPerfil = () => {
                 {/* Avatar Section */}
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-center">Foto do Perfil</CardTitle>
+                    <CardTitle className="text-center text-foreground">Foto do Perfil</CardTitle>
                   </CardHeader>
                   <CardContent className="flex justify-center">
                     <AvatarUpload
@@ -130,7 +126,7 @@ const CrmPerfil = () => {
                   <Card>
                     <CardHeader>
                       <div className="flex justify-between items-center">
-                        <CardTitle>Informações Pessoais</CardTitle>
+                        <CardTitle className="text-foreground">Informações Pessoais</CardTitle>
                         <Button
                           variant={isEditing ? "default" : "outline"}
                           onClick={() => isEditing ? handleSave() : setIsEditing(true)}
@@ -143,33 +139,35 @@ const CrmPerfil = () => {
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="first_name">Nome</Label>
+                          <Label htmlFor="first_name" className="text-foreground">Nome</Label>
                           <Input
                             id="first_name"
                             value={formData.first_name}
                             onChange={(e) => handleInputChange('first_name', e.target.value)}
                             disabled={!isEditing || isSaving}
+                            className="text-foreground"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="last_name">Sobrenome</Label>
+                          <Label htmlFor="last_name" className="text-foreground">Sobrenome</Label>
                           <Input
                             id="last_name"
                             value={formData.last_name}
                             onChange={(e) => handleInputChange('last_name', e.target.value)}
                             disabled={!isEditing || isSaving}
+                            className="text-foreground"
                           />
                         </div>
                       </div>
 
                       <div>
-                        <Label htmlFor="email">Email</Label>
+                        <Label htmlFor="email" className="text-foreground">Email</Label>
                         <Input
                           id="email"
                           type="email"
                           value={formData.email}
                           disabled={true}
-                          className="bg-gray-50"
+                          className="bg-muted text-foreground disabled:opacity-75 disabled:cursor-not-allowed"
                         />
                         <p className="text-xs text-muted-foreground mt-1">
                           O email não pode ser alterado
@@ -178,29 +176,31 @@ const CrmPerfil = () => {
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="phone">Telefone</Label>
+                          <Label htmlFor="phone" className="text-foreground">Telefone</Label>
                           <Input
                             id="phone"
                             value={formData.phone}
                             onChange={(e) => handleInputChange('phone', e.target.value)}
                             disabled={!isEditing || isSaving}
                             placeholder="(11) 99999-9999"
+                            className="text-foreground"
                           />
                         </div>
                         <div>
-                          <Label htmlFor="birth_date">Data de Nascimento</Label>
+                          <Label htmlFor="birth_date" className="text-foreground">Data de Nascimento</Label>
                           <Input
                             id="birth_date"
                             type="date"
                             value={formData.birth_date}
                             onChange={(e) => handleInputChange('birth_date', e.target.value)}
                             disabled={!isEditing || isSaving}
+                            className="text-foreground"
                           />
                         </div>
                       </div>
 
                       <div>
-                        <Label htmlFor="bio">Bio</Label>
+                        <Label htmlFor="bio" className="text-foreground">Bio</Label>
                         <Textarea
                           id="bio"
                           value={formData.bio}
@@ -208,6 +208,7 @@ const CrmPerfil = () => {
                           disabled={!isEditing || isSaving}
                           placeholder="Conte um pouco sobre você..."
                           rows={4}
+                          className="text-foreground"
                         />
                       </div>
 
@@ -236,12 +237,12 @@ const CrmPerfil = () => {
               {/* Security Section */}
               <Card className="mt-8">
                 <CardHeader>
-                  <CardTitle>Segurança</CardTitle>
+                  <CardTitle className="text-foreground">Segurança</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex justify-between items-center">
                     <div>
-                      <h4 className="font-medium">Senha</h4>
+                      <h4 className="font-medium text-foreground">Senha</h4>
                       <p className="text-sm text-muted-foreground">
                         Redefina sua senha para manter sua conta segura
                       </p>

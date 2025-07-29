@@ -82,6 +82,11 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
     }
   }, [isLeader, leaderTeams, selectedTeam]);
 
+  // Resetar usuário selecionado quando o time mudar
+  useEffect(() => {
+    setSelectedUser('');
+  }, [selectedTeam]);
+
   // Usuários disponíveis para o filtro
   const availableUsers = () => {
     if (isAdmin) {
@@ -106,21 +111,34 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
     return [];
   };
 
-  // Filtro de usuários para líderes: incluir o próprio líder além dos membros das equipes
+  // Filtro de usuários baseado no time selecionado e permissões do usuário
   const getUserOptions = () => {
+    let filteredUsers = [];
+    
     if (isAdmin) {
       // Admin/master/submaster: todos os usuários da empresa
-      return users;
-    }
-    if (isLeader) {
-      // Líder: membros das equipes que lidera + ele mesmo
+      filteredUsers = users.filter(user => user.company_id === selectedCompanyId);
+    } else if (isLeader) {
+      // Líder: usuários das equipes que lidera + ele mesmo
       const teamsLed = leaderTeams;
       const teamMemberIds = teamsLed.flatMap(t => users.filter(u => u.team_id === t.id).map(u => u.id));
       const uniqueUserIds = Array.from(new Set([...teamMemberIds, crmUser?.id]));
-      return users.filter(u => uniqueUserIds.includes(u.id));
+      filteredUsers = users.filter(u => uniqueUserIds.includes(u.id));
+    } else {
+      // Usuário comum: só ele mesmo
+      filteredUsers = users.filter(u => u.id === crmUser?.id);
     }
-    // Usuário comum: só ele mesmo
-    return users.filter(u => u.id === crmUser?.id);
+    
+    // Filtrar por time selecionado (se houver)
+    if (selectedTeam && selectedTeam !== 'all') {
+      filteredUsers = filteredUsers.filter(user => user.team_id === selectedTeam);
+    }
+    
+    // Filtrar usuários que não têm nome (primeiro nome ou sobrenome vazios)
+    return filteredUsers.filter(user => 
+      user.first_name && user.first_name.trim() !== '' && 
+      user.last_name && user.last_name.trim() !== ''
+    );
   };
 
   // Atualizar handleApplyFilters para tratar 'all' como seleção vazia
@@ -170,6 +188,12 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
                   <SelectValue placeholder="Selecione a equipe" />
                 </SelectTrigger>
                 <SelectContent>
+                  {/* Opção "Todas as equipes" só aparece se o usuário tem acesso a mais de uma equipe */}
+                  {availableTeams().length > 1 && (
+                    <SelectItem value="all">
+                      Todas as equipes
+                    </SelectItem>
+                  )}
                   {availableTeams().map(team => (
                     <SelectItem key={team.id} value={team.id}>
                       {team.name}
@@ -189,9 +213,25 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
                   <SelectValue placeholder="Selecione o usuário" />
                 </SelectTrigger>
                 <SelectContent>
+                  {/* Opção "Todos os usuários" baseada no contexto */}
+                  {getUserOptions().length > 1 && (
+                    <SelectItem value="all">
+                      <div className="flex items-center justify-between w-full">
+                        <span>Todos os usuários</span>
+                        <span className="text-muted-foreground text-xs ml-2">
+                          ({selectedTeam && selectedTeam !== 'all' ? 'do time selecionado' : 'do funil'})
+                        </span>
+                      </div>
+                    </SelectItem>
+                  )}
                   {getUserOptions().map(user => (
                     <SelectItem key={user.id} value={user.id}>
-                      {user.first_name} {user.last_name}
+                      <div className="flex items-center justify-between w-full">
+                        <span>{user.first_name} {user.last_name}</span>
+                        <span className="text-muted-foreground text-xs ml-2">
+                          ({user.role?.charAt(0).toUpperCase() + user.role?.slice(1) || 'User'})
+                        </span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>

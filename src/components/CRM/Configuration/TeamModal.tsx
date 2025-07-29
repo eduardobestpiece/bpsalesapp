@@ -51,14 +51,12 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
       // Buscar todos os usuários da empresa e filtrar os que pertencem ao time
       (async () => {
         const empresaId = selectedCompanyId || companyId;
-        console.log('[TeamModal] Usando empresaId na query:', empresaId);
         const { data: allUsersDb } = await supabase
           .from('crm_users')
           .select('id, team_id')
           .eq('company_id', empresaId);
         // Corrigir: garantir que todos os usuários com team_id igual ao do time estejam marcados
         const memberIds = (allUsersDb || []).filter(u => u.team_id === team.id).map(u => u.id);
-        console.log('[TeamModal] Membros carregados do banco:', memberIds);
         setMembers(memberIds);
       })();
     } else {
@@ -75,9 +73,6 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
     ...availableMembers,
     ...users.filter(u => members.includes(u.id) && !availableMembers.some(a => a.id === u.id))
   ];
-  console.log('[TeamModal] users recebidos:', users.map(u => ({id: u.id, nome: u.first_name + ' ' + u.last_name, team_id: u.team_id})));
-  console.log('[TeamModal] allAvailableMembers:', allAvailableMembers.map(u => u.id));
-  console.log('[TeamModal] members selecionados:', members);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,7 +149,6 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
       setFormData({ name: '', leader_id: '' });
       setMembers([]);
     } catch (error: any) {
-      console.error('Erro ao salvar time:', error);
       toast.error(error.message || 'Erro ao salvar time');
     } finally {
       setIsLoading(false);

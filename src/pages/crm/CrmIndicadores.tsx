@@ -145,23 +145,19 @@ const CrmIndicadores = () => {
 
   // Filtragem de indicadores por perfil - memoizado com verificações rigorosas de null
   const accessibleIndicators = useMemo(() => {
-    console.log('[CrmIndicadores] Processing indicators:', indicators?.length || 0);
     
     if (!indicators || !Array.isArray(indicators) || !crmUser) {
-      console.log('[CrmIndicadores] No indicators or user, returning empty array');
       return [];
     }
     
     // Filtragem mais rigorosa para garantir que não há valores null
     const validIndicators = indicators.filter((ind): ind is NonNullable<typeof ind> => {
       if (!isValidIndicator(ind)) {
-        console.log('[CrmIndicadores] Filtering out invalid indicator:', ind);
         return false;
       }
       return true;
     });
     
-    console.log('[CrmIndicadores] Valid indicators after filtering:', validIndicators.length);
     
     if (crmUser.role === 'master' || crmUser.role === 'admin') {
       return validIndicators; // vê todos da empresa
@@ -178,12 +174,10 @@ const CrmIndicadores = () => {
 
   // Filtros aplicados com verificações ainda mais rigorosas
   const filteredIndicators = useMemo(() => {
-    console.log('[CrmIndicadores] Filtering accessible indicators:', accessibleIndicators.length);
     
     let result = accessibleIndicators.filter(indicator => {
       // Verificação rigorosa de null no início - dupla verificação
       if (!isValidIndicator(indicator)) {
-        console.log('[CrmIndicadores] Invalid indicator found during filtering');
         return false;
       }
       
@@ -231,7 +225,6 @@ const CrmIndicadores = () => {
     // Validação final - garantir que nenhum indicator null passe
     result = result.filter(isValidIndicator);
     
-    console.log('[CrmIndicadores] Final filtered indicators:', result.length);
     return result;
   }, [accessibleIndicators, selectedFunnelId, filters, showOnlyMine, crmUser, archivedIndicatorIds]);
 
@@ -364,14 +357,12 @@ const CrmIndicadores = () => {
                                 filteredIndicators.map((indicator, idx) => {
                                   // Verificação de segurança final antes do render - verificação tripla
                                   if (!isValidIndicator(indicator)) {
-                                    console.log('[CrmIndicadores] Skipping invalid indicator in render:', indicator);
                                     return null;
                                   }
                                   
                                   // Buscar funil e etapas com verificações de segurança
                                   const funnel = funnels?.find(f => f && f.id === indicator.funnel_id);
                                   if (!funnel) {
-                                    console.log('[CrmIndicadores] Funnel not found for indicator:', indicator.id);
                                     return null;
                                   }
                                   

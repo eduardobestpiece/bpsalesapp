@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -87,20 +87,38 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         ind.user_id === crmUser.id &&
         (!isEditing || ind.id !== indicator?.id) // Exclude current indicator when editing
       )
-      .map((ind) => ind.period_date)
+      .map((ind) => {
+        // Criar uma chave única para identificar o período
+        if (ind.period_start && ind.period_end) {
+          return `${ind.period_start}_${ind.period_end}`;
+        } else if (ind.period_date) {
+          // Fallback para indicadores antigos
+          return ind.period_date;
+        }
+        return null;
+      })
       .filter(Boolean) : [];
     
-    console.log('[IndicatorModal] Períodos já preenchidos:', periodosPreenchidos);
-    console.log('[IndicatorModal] Todos os períodos disponíveis:', todosPeriodos);
+    
+    console.log('Debug - Períodos preenchidos:', periodosPreenchidos);
+    console.log('Debug - Todos os períodos disponíveis:', todosPeriodos);
     
     periodOptions = todosPeriodos.map(opt => ({
       ...opt,
       preenchido: periodosPreenchidos.includes(opt.value)
     }));
+    
+    console.log('Debug - Períodos com status de preenchimento:', periodOptions);
   }
 
   useEffect(() => {
     if (indicator) {
+      console.log('Debug - Carregando indicador para edição:', {
+        period_date: indicator.period_date,
+        period_start: indicator.period_start,
+        period_end: indicator.period_end
+      });
+      
       const stagesValues: Record<string, number> = {};
       if (indicator.values && Array.isArray(indicator.values)) {
         indicator.values.forEach((v: any) => {
@@ -117,7 +135,13 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
       setSalesValue(indicator.sales_value?.toString() || '0,00');
       setRecommendationsCount(indicator.recommendations_count || 0);
       setIsDelayed(indicator.is_delayed || false);
-      if (indicator.period_date) {
+      if (indicator.period_start && indicator.period_end) {
+        setPeriodStart(indicator.period_start);
+        setPeriodEnd(indicator.period_end);
+        setMonthReference(indicator.month_reference);
+        setYearReference(indicator.year_reference);
+      } else if (indicator.period_date) {
+        // Fallback para indicadores antigos que podem ter apenas period_date
         const { start, end } = extractPeriodDates(indicator.period_date);
         setPeriodStart(start);
         setPeriodEnd(end);
@@ -169,7 +193,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     if (!periodString) return { start: '', end: '' };
     if (periodString.includes('_')) {
       const [start, end] = periodString.split('_');
-      return { start, end };
+      return { start: start || '', end: end || '' };
     }
     return { start: periodString, end: periodString };
   }
@@ -244,11 +268,22 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     setIsLoading(true);
 
     try {
+      // Extrair a data de início do período para usar como period_date
+      const periodStartDate = periodStart || formData.period_date;
+      
+      // Debug: verificar os valores antes do envio
+      console.log('Debug - Valores sendo enviados:', {
+        periodStartDate,
+        periodStart,
+        periodEnd,
+        formData_period_date: formData.period_date
+      });
+      
       const indicatorData = {
         user_id: crmUser?.id || '',
         company_id: companyId,
         funnel_id: formData.funnel_id,
-        period_date: formData.period_date,
+        period_date: periodStartDate, // Usar apenas a data de início
         period_start: periodStart,
         period_end: periodEnd,
         month_reference: monthReference,
@@ -274,7 +309,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
             onClose();
           },
           onError: (error: any) => {
-            console.error('Erro ao atualizar indicador:', error);
             toast.error(error.message || 'Erro ao atualizar indicador');
           }
         });
@@ -288,13 +322,11 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
             onClose();
           },
           onError: (error: any) => {
-            console.error('Erro ao salvar indicador:', error);
             toast.error(error.message || 'Erro ao salvar indicador');
           }
         });
       }
     } catch (error: any) {
-      console.error('Erro ao salvar indicador:', error);
       toast.error(error.message || 'Erro ao salvar indicador');
     } finally {
       setIsLoading(false);
@@ -306,6 +338,9 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{isEditing ? 'Editar Indicador' : 'Registrar Indicador'}</DialogTitle>
+          <DialogDescription>
+            {isEditing ? 'Edite as informações do indicador selecionado.' : 'Preencha as informações para registrar um novo indicador.'}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -397,7 +432,6 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                       const { start, end } = extractPeriodDates(value);
                       setPeriodStart(start);
                       setPeriodEnd(end);
-                      console.log('[Indicador] Período selecionado:', value, '| Início:', start, '| Fim:', end);
                     }}
                     disabled={isLoading || !formData.funnel_id || !canEdit}
                   >

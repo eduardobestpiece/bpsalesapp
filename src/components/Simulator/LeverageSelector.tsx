@@ -58,7 +58,6 @@ export const LeverageSelector = ({ selectedLeverage, onLeverageChange, onLeverag
       if (error) throw error;
       setLeverages(data || []);
     } catch (error) {
-      console.error('Error fetching leverages:', error);
     }
   };
 

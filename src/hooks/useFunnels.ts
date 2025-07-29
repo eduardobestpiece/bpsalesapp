@@ -34,7 +34,6 @@ export const useFunnels = (companyId?: string | null, status: 'active' | 'archiv
       const { data, error } = await query;
 
       if (error) {
-        console.error('Error fetching funnels:', error);
         throw error;
       }
 
@@ -58,7 +57,6 @@ export const useCreateFunnel = () => {
         .single();
 
       if (error) {
-        console.error('Error creating funnel:', error);
         throw error;
       }
 
@@ -86,7 +84,6 @@ export const useUpdateFunnel = () => {
         .single();
 
       if (error) {
-        console.error('Error updating funnel:', error);
         throw error;
       }
 
@@ -112,7 +109,6 @@ export const useDeleteFunnel = () => {
         .eq('id', id);
 
       if (error) {
-        console.error('Error deleting funnel:', error);
         throw error;
       }
 

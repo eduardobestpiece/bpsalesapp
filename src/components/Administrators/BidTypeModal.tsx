@@ -63,7 +63,6 @@ export const BidTypeModal: React.FC<BidTypeModalProps> = ({
       if (error) throw error;
       setAdministrators(data || []);
     } catch (error) {
-      console.error('Error fetching administrators:', error);
     }
   };
 
@@ -99,7 +98,6 @@ export const BidTypeModal: React.FC<BidTypeModalProps> = ({
       onSuccess();
       form.reset();
     } catch (error) {
-      console.error('Error:', error);
       toast.error('Erro ao salvar tipo de lance');
     }
   };

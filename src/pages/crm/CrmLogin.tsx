@@ -40,13 +40,11 @@ const CrmLogin = () => {
         } else {
           setError('Erro ao fazer login. Tente novamente.');
         }
-        console.error('Login error:', error);
       } else {
         toast.success('Login realizado com sucesso!');
         // Navigation will be handled by AuthGuard
       }
     } catch (err) {
-      console.error('Unexpected login error:', err);
       setError('Erro inesperado ao fazer login. Tente novamente.');
     } finally {
       setIsLoading(false);

@@ -87,7 +87,6 @@ export const ProductsList: React.FC<ProductsListProps> = ({
       if (error) throw error;
       setAdministrators(data || []);
     } catch (error) {
-      console.error('Erro ao buscar administradoras:', error);
     }
   };
 
@@ -119,7 +118,6 @@ export const ProductsList: React.FC<ProductsListProps> = ({
 
       setProducts(data || []);
     } catch (error) {
-      console.error('Erro ao buscar produtos:', error, 'selectedAdministrator:', selectedAdministrator);
     } finally {
       setLoading(false);
     }
@@ -174,7 +172,6 @@ export const ProductsList: React.FC<ProductsListProps> = ({
       setCopyModalOpen(false);
       fetchProducts();
     } catch (err: any) {
-      console.error('Erro ao copiar produtos:', err);
       toast.error('Erro ao copiar produtos: ' + (err.message || ''));
     } finally {
       setCopyLoading(false);
@@ -225,7 +222,6 @@ export const ProductsList: React.FC<ProductsListProps> = ({
       if (error) throw error;
       fetchProducts();
     } catch (error) {
-      console.error('Erro ao arquivar produto:', error);
     }
   };
 

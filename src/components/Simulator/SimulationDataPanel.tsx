@@ -59,6 +59,8 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
         return;
       }
       // Buscar o installment_type correspondente
+      if (!data.administrator || data.administrator.trim() === '') return;
+      
       const { data: installmentTypes } = await supabase
         .from('installment_types')
         .select('id')
@@ -93,7 +95,7 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
 
   useEffect(() => {
     const fetchInstallmentTypeDetails = async () => {
-      if (!data.term || !data.administrator) return;
+      if (!data.term || !data.administrator || data.administrator.trim() === '') return;
       const { data: installmentTypes } = await supabase
         .from('installment_types')
         .select('*')
@@ -123,12 +125,13 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
       if (error) throw error;
       setAdministrators(adminData || []);
     } catch (error) {
-      console.error('Error fetching administrators:', error);
     }
   };
 
   const fetchInstallmentTypes = async (administratorId: string) => {
     try {
+      if (!administratorId || administratorId.trim() === '') return;
+      
       const { data: installmentData, error } = await supabase
         .from('installment_types')
         .select('*')
@@ -140,12 +143,13 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
       if (error) throw error;
       setInstallmentTypes(installmentData || []);
     } catch (error) {
-      console.error('Error fetching installment types:', error);
     }
   };
 
   const fetchProducts = async (administratorId: string) => {
     try {
+      if (!administratorId || administratorId.trim() === '') return;
+      
       const { data: productsData, error } = await supabase
         .from('products')
         .select('*')
@@ -157,7 +161,6 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
       if (error) throw error;
       setProducts(productsData || []);
     } catch (error) {
-      console.error('Error fetching products:', error);
     }
   };
 

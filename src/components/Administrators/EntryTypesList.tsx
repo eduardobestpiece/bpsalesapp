@@ -96,7 +96,6 @@ export const EntryTypesList: React.FC<EntryTypesListProps> = ({
 
       refetch();
     } catch (error) {
-      console.error('Erro ao arquivar/reativar tipo de entrada:', error);
       toast({
         title: 'Erro ao atualizar tipo de entrada',
         variant: 'destructive',

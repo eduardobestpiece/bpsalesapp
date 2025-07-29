@@ -44,7 +44,6 @@ export const BidTypeSelector = ({ administratorId, value, onValueChange }: BidTy
       if (error) throw error;
       setBidTypes(data || []);
     } catch (error) {
-      console.error('Error fetching bid types:', error);
     } finally {
       setLoading(false);
     }

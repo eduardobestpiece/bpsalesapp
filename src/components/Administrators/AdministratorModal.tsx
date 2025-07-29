@@ -88,7 +88,6 @@ export const CreateAdministratorModal: React.FC<{
       onSuccess();
       form.reset();
     } catch (error) {
-      console.error('Error:', error);
       toast.error('Erro ao salvar administradora');
     }
   };
@@ -392,7 +391,6 @@ export const EditAdministratorModal: React.FC<{
       onSuccess();
       form.reset();
     } catch (error) {
-      console.error('Error:', error);
       toast.error('Erro ao salvar administradora');
     }
   };

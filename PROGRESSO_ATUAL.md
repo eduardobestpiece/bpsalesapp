@@ -1,91 +1,115 @@
-# 📋 **Progresso Atual - Correção do Simulador para Outras Administradoras**
+# Planejamento - Correção do Erro de Formato de Data nos Indicadores
 
-## 📅 **Data:** 2025-01-15
+## Análise do Problema
 
-### 🎯 **Problema Identificado:**
+### Problemas Identificados:
+1. **Erro HTTP 400**: "invalid input syntax for type date: "2025-07-18_2025-07-24""
+2. **Formato de data incorreto**: Campo `period_date` recebendo formato "YYYY-MM-DD_YYYY-MM-DD" em vez de data única
+3. **Warning de acessibilidade**: `DialogContent` sem `Description` ou `aria-describedby`
 
-O simulador não está funcionando corretamente para outras administradoras que não são a Magalu. Especificamente:
+### Análise da Estrutura:
+- **Arquivo principal**: `src/components/CRM/IndicatorModal.tsx`
+- **Hook de dados**: `src/hooks/useIndicators.ts`
+- **Funções de período**: `src/lib/utils.ts`
+- **Tipos**: `src/types/crm.ts` e `src/integrations/supabase/types.ts`
 
-1. **Problema Principal:** Quando o usuário adiciona um valor de aporte de R$ 5.000 para a HS, a plataforma deveria buscar o crédito que mais se aproxima do valor de aporte desejado (seguindo a mesma lógica de cálculo utilizada para a Magalu), mas não está fazendo isso.
+### Análise do Banco de Dados:
+- Campo `period_date` no banco espera formato `date` (YYYY-MM-DD)
+- Funções de período geram formato "YYYY-MM-DD_YYYY-MM-DD" para períodos semanais/mensais
+- Campo `period_start` e `period_end` são separados no banco
 
-2. **Causa Raiz:** A HS Consórcios tem apenas um produto cadastrado (R$ 500.000,00), enquanto a Magalu tem vários produtos com diferentes valores (R$ 100.000, R$ 120.000, R$ 140.000, etc.). Isso limita as opções de crédito disponíveis para a HS.
+## Checklist de Correções
 
-3. **Comportamento Atual:** O sistema não consegue encontrar créditos adequados para a HS quando o usuário informa um valor de aporte baixo, pois não há produtos com valores menores cadastrados.
+### ✅ Etapa 1: Análise e Planejamento
+- [x] Entender bem o que foi pedido
+- [x] Verificar o histórico da conversa
+- [x] Analisar estrutura de documentos
+- [x] Verificar banco de dados
+- [x] Registrar requisição em requeststory.md
+- [x] Criar planejamento e checklist
 
-### 🔍 **Análise Técnica:**
+### ✅ Etapa 2: Implementação das Correções
+- [x] Corrigir formato de data no IndicatorModal
+- [x] Ajustar lógica de envio para usar period_start/period_end
+- [x] Corrigir warning de acessibilidade do DialogContent
+- [x] Adicionar logs de debug para investigação
+- [ ] Testar registro de indicadores
+- [ ] Verificar se funciona para todos os tipos de período
 
-**Dados do Banco:**
-- **HS Consórcios:** 1 produto (R$ 500.000,00)
-- **Magalu:** 12 produtos (R$ 100.000,00 a R$ 600.000,00)
-- **Taxas HS:** 23% (220 meses), 1% fundo de reserva
-- **Taxas Magalu:** 25-27% (200-240 meses), 1% fundo de reserva
+### ⏳ Etapa 3: Teste e Deploy
+- [ ] Testar as alterações
+- [ ] Executar deploy
+- [ ] Conferir se tudo está funcionando
 
-**Lógica Atual:**
-- A função `sugerirCreditosInteligente` filtra produtos da administradora selecionada
-- Calcula fator baseado em parcela de referência (100k)
-- Sugere crédito baseado no valor de aporte desejado
-- **Problema:** Se não há produtos suficientes, não consegue encontrar opções adequadas
+## Soluções Propostas
 
-### 📋 **Plano de Correção:**
+### 1. Formato de Data
+**Problema**: `period_date` recebendo "2025-07-18_2025-07-24"
+**Solução**: 
+- Usar `period_start` e `period_end` separadamente
+- Manter `period_date` como data única (primeira data do período)
+- Ajustar lógica de envio no IndicatorModal
 
-#### **Fase 1 - Análise e Diagnóstico** ✅
-- [x] Identificar o problema específico
-- [x] Verificar dados no banco de dados
-- [x] Analisar lógica de busca de créditos
+### 2. Warning de Acessibilidade
+**Problema**: `DialogContent` sem `Description`
+**Solução**:
+- Adicionar `DialogDescription` ou `aria-describedby`
+- Melhorar acessibilidade do modal
 
-#### **Fase 2 - Implementação da Correção** 🔄
-- [x] **Opção B:** Modificar a lógica para gerar créditos dinamicamente quando não há produtos suficientes
-- [x] Implementar fallback para usar installment_types da administradora
-- [x] Adicionar logs de debug para monitoramento
-- [ ] Testar com diferentes valores de aporte
-- [ ] Verificar se funciona para outras administradoras
+### 3. Lógica de Períodos
+**Problema**: Funções geram formato incorreto
+**Solução**:
+- Manter funções de geração de períodos como estão
+- Ajustar apenas a lógica de envio no modal
+- Extrair datas de início e fim do valor do período
 
-#### **Fase 3 - Testes e Validação** ⏳
-- [ ] Testar com diferentes valores de aporte
-- [ ] Verificar se funciona para outras administradoras
-- [ ] Validar cálculos de parcelas
+## Status Atual
+✅ **Implementação concluída** - Correções de formato de data aplicadas
 
-### 🎯 **Solução Implementada:**
+### Correções Implementadas:
 
-**Implementar Opção B:**
-1. **Modificar a lógica de busca** para gerar créditos dinamicamente quando há poucos produtos
-2. **Usar installment_types** da administradora para calcular parcelas corretas
-3. **Implementar fallback** para usar produtos de outras administradoras como referência
-4. **Manter compatibilidade** com a lógica existente para a Magalu
+#### 1. Formato de Data ✅
+- **Problema**: `period_date` recebendo "2025-07-18_2025-07-24" em vez de data única
+- **Solução**: Extrair apenas a data de início do período para usar como `period_date`
+- **Resultado**: Campo `period_date` agora recebe formato correto (YYYY-MM-DD)
 
-### 📊 **Impacto Esperado:**
+#### 2. Warning de Acessibilidade ✅
+- **Problema**: `DialogContent` sem `Description` ou `aria-describedby`
+- **Solução**: Adicionado `DialogDescription` com texto descritivo
+- **Resultado**: Warning de acessibilidade resolvido
 
-- ✅ Simulador funcionará corretamente para todas as administradoras
-- ✅ Busca de créditos baseada em aporte funcionará para HS
-- ✅ Cálculos de parcelas serão precisos para cada administradora
-- ✅ Experiência do usuário consistente independente da administradora
+#### 3. Logs de Debug ✅
+- **Problema**: Difícil identificar valores sendo enviados
+- **Solução**: Adicionados logs de debug para verificar valores antes do envio
+- **Resultado**: Melhor visibilidade dos dados sendo enviados
 
----
+### Próximos Passos:
+- [x] Testar registro de indicadores com as correções
+- [x] Identificar problema na exibição do período no modal de edição
+- [x] Ajustar espaçamento entre filtros e cards de dados
+- [ ] Verificar se funciona para todos os tipos de período (diário, semanal, mensal)
+- [ ] Remover logs de debug após validação
 
-## 🔄 **Status:** Implementação em andamento
+### Problemas Identificados e Corrigidos:
 
-### ✅ **Progresso Atual:**
+#### 1. Modal de Edição com Período Incorreto ✅
+- **Problema**: Modal de edição mostrava período incorreto (apenas data de início)
+- **Causa**: Código estava usando `indicator.period_date` em vez de `period_start` e `period_end`
+- **Solução**: Alterada a lógica para usar `period_start` e `period_end` separadamente
+- **Resultado**: Modal agora deve mostrar o período correto
 
-#### **Fase 1 - Análise e Diagnóstico** ✅
-- [x] Identificar o problema específico
-- [x] Verificar dados no banco de dados
-- [x] Analisar lógica de busca de créditos
+#### 2. Períodos Já Preenchidos Ainda Aparecendo ✅
+- **Problema**: Períodos já preenchidos pelo usuário ainda aparecem no dropdown
+- **Causa**: Lógica de verificação estava usando `period_date` em vez de criar chave única com `period_start` e `period_end`
+- **Solução**: Alterada a lógica para criar chave única `${period_start}_${period_end}`
+- **Resultado**: Períodos já preenchidos devem aparecer como "já preenchido" ou não aparecer
 
-#### **Fase 2 - Implementação da Correção** 🔄
-- [x] **Opção B:** Modificar a lógica para gerar créditos dinamicamente quando não há produtos suficientes
-- [x] Implementar fallback para usar installment_types da administradora
-- [x] Adicionar logs de debug para monitoramento
-- [ ] Testar com diferentes valores de aporte
-- [ ] Verificar se funciona para outras administradoras
+#### 3. Espaçamento entre Filtros e Cards de Dados ✅
+- **Problema**: Cards de "Dados semanais" e "Dados do Período" muito próximos da seção de "Filtros de Performance"
+- **Solução**: Adicionado `mt-6` (24px) de espaçamento entre os filtros e os cards
+- **Resultado**: Melhor separação visual entre as seções
 
-#### **Fase 3 - Testes e Validação** ⏳
-- [ ] Testar com diferentes valores de aporte
-- [ ] Verificar se funciona para outras administradoras
-- [ ] Validar cálculos de parcelas
-
-### 🎯 **Próximos Passos:**
-1. Testar a implementação com a HS
-2. Verificar se os logs aparecem no console
-3. Validar se os créditos são gerados corretamente
-4. Testar com outras administradoras
-5. Remover logs de debug após validação 
+#### 4. Cores do Degradê do Funil ✅
+- **Problema**: Degradê do funil estava usando cores #AA725B para #CBA89A
+- **Solução**: Alterado para degradê de #AA725B para #93614C
+- **Resultado**: Degradê mais escuro e consistente com a identidade visual 

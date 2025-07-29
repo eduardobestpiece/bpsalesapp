@@ -30,7 +30,6 @@ const CrmResetPasswordInvite = () => {
     const token = searchParams.get('token');
     const type = searchParams.get('type');
     
-    console.log('URL params:', { token, type });
     
     if (token && type === 'invite') {
       // Verificar o token de convite
@@ -39,10 +38,8 @@ const CrmResetPasswordInvite = () => {
         type: 'invite'
       }).then(({ data, error }) => {
         if (error) {
-          console.error('Error verifying invite token:', error);
           setError('Link de convite inválido ou expirado. Entre em contato com o administrador.');
         } else {
-          console.log('Invite token verified:', data);
           if (data.user?.email) {
             setForm(prev => ({ ...prev, email: data.user.email || '' }));
           }
@@ -88,7 +85,6 @@ const CrmResetPasswordInvite = () => {
       });
 
       if (updateError) {
-        console.error('Error updating user:', updateError);
         setError('Erro ao completar cadastro: ' + updateError.message);
         setIsLoading(false);
         return;
@@ -102,7 +98,6 @@ const CrmResetPasswordInvite = () => {
         .single();
 
       if (crmUserError) {
-        console.error('Error fetching CRM user:', crmUserError);
         setError('Erro ao buscar dados do usuário.');
         setIsLoading(false);
         return;
@@ -120,7 +115,6 @@ const CrmResetPasswordInvite = () => {
         .eq('id', crmUser.id);
 
       if (updateCrmError) {
-        console.error('Error updating CRM user:', updateCrmError);
         setError('Erro ao atualizar dados do usuário.');
         setIsLoading(false);
         return;
@@ -130,7 +124,6 @@ const CrmResetPasswordInvite = () => {
       toast.success('Cadastro completado com sucesso! Redirecionando para o login...');
       setTimeout(() => navigate('/home'), 2000);
     } catch (err: any) {
-      console.error('Unexpected error:', err);
       setError('Erro inesperado ao completar cadastro. Tente novamente.');
     } finally {
       setIsLoading(false);

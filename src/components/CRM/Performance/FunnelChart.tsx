@@ -5,11 +5,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { ArrowUp, ArrowDown } from 'lucide-react';
 
 const funnelColors = [
-  'from-primary-500 to-primary-300', // azul principal
-  'from-primary-500 to-primary-300', // azul principal (repetido para manter padrão)
-  'from-primary-500 to-primary-300', // azul principal
-  'from-primary-500 to-primary-300', // azul principal
-  'from-green-500 to-green-300',     // degradê verde na última faixa
+  'from-[#AA725B] to-[#93614C]', // degradê marrom principal
+  'from-[#AA725B] to-[#93614C]', // degradê marrom principal (repetido para manter padrão)
+  'from-[#AA725B] to-[#93614C]', // degradê marrom principal
+  'from-[#AA725B] to-[#93614C]', // degradê marrom principal
+  'from-[#AA725B] to-[#93614C]', // degradê marrom principal (mantido para consistência)
 ];
 
 interface StageData {
@@ -90,9 +90,9 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
   return (
     <div className="flex flex-col w-full items-center justify-center">
       {/* Linha principal: três colunas (esquerda, centro, direita) */}
-      <div className="w-full flex flex-col md:flex-row items-start justify-between mb-0 gap-0 md:gap-2">
+      <div className="w-full flex flex-col md:flex-row items-start justify-between mb-0 gap-0 md:gap-[25px]">
         {/* Esquerda: Dados semanais */}
-        <div className="md:basis-1/6 w-full md:w-1/6 flex flex-col gap-2 min-w-[140px] items-start">
+        <div className="md:basis-1/5 w-full md:w-1/5 flex flex-col gap-2 min-w-[140px] items-start">
           <span className="text-xs text-muted-foreground font-semibold mb-0.5">Dados semanais</span>
           <MetricCard label="Conversão do funil (semana)" value={`${((somaUltimaEtapaPeriodo / somaPrimeiraEtapaPeriodo) / numWeeks * 100 || 0).toFixed(1)}%`} cardClass="w-full min-w-[160px]" />
           <MetricCard label="Valor das vendas (semana)" value={vendasSemanal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} cardClass="w-full min-w-[160px]" />
@@ -100,11 +100,11 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
           <MetricCard label="Média de Recomendações (semana)" value={etapaRecomendacoesSemanal > 0 ? (recomendacoesSemanal / etapaRecomendacoesSemanal).toFixed(2) : '0'} cardClass="w-full min-w-[160px]" />
         </div>
         {/* Centro: Título + Gráfico do funil */}
-        <div className="md:basis-2/3 w-full md:w-2/3 flex flex-col items-center justify-center flex-1">
+        <div className="md:basis-3/5 w-full md:w-3/5 flex flex-col items-center justify-start flex-1">
           <h2 className="text-xl font-bold text-center mb-2">Resultados do Funil {funnelName || ''}</h2>
           {/* Gráfico do funil centralizado */}
           <div className="flex w-full gap-0 items-start justify-center">
-            <div className="flex flex-col items-center w-full max-w-xl md:w-4/5">
+            <div className="flex flex-col items-center w-full max-w-4xl md:w-full">
               <div className="flex flex-col items-center w-full">
                 {stages.map((stage, idx) => {
                   const diff = stage.value - (stage.compareValue || 0);
@@ -134,7 +134,7 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
                       </div>
                       {/* Faixa do funil */}
                       <div
-                        className={`transition-all duration-300 bg-gradient-to-r ${funnelColors[idx % funnelColors.length]} shadow-lg flex items-center justify-between px-6`}
+                        className={`transition-all duration-300 bg-gradient-to-r ${idx === stages.length - 1 ? 'from-[#21C55E] to-[#0dad48]' : funnelColors[idx % funnelColors.length]} shadow-lg flex items-center justify-between px-6`}
                         style={{
                           width: getWidth(idx),
                           height: fixedHeight,
@@ -161,7 +161,7 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
           </div>
         </div>
         {/* Direita: Dados do Período */}
-        <div className="md:basis-1/6 w-full md:w-1/6 flex flex-col gap-2 min-w-[140px] items-end">
+        <div className="md:basis-1/5 w-full md:w-1/5 flex flex-col gap-2 min-w-[140px] items-end">
           <span className="text-xs text-muted-foreground font-semibold mb-0.5">Dados do Período</span>
           <MetricCard label="Conversão do funil (período)" value={`${(somaUltimaEtapaPeriodo / somaPrimeiraEtapaPeriodo * 100 || 0).toFixed(1)}%`} cardClass="w-full min-w-[160px]" />
           <MetricCard label="Valor das vendas (período)" value={vendasPeriodo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} cardClass="w-full min-w-[160px]" />

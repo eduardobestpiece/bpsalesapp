@@ -29,7 +29,6 @@ export const useSources = () => {
         .order('name');
 
       if (error) {
-        console.error('Error fetching sources:', error);
         throw error;
       }
 
@@ -54,7 +53,6 @@ export const useCreateSource = () => {
         .single();
 
       if (error) {
-        console.error('Error creating source:', error);
         throw error;
       }
 
@@ -82,7 +80,6 @@ export const useUpdateSource = () => {
         .single();
 
       if (error) {
-        console.error('Error updating source:', error);
         throw error;
       }
 
@@ -108,7 +105,6 @@ export const useDeleteSource = () => {
         .eq('id', id);
 
       if (error) {
-        console.error('Error deleting source:', error);
         throw error;
       }
 

@@ -17,7 +17,6 @@ export const ExampleFullScreenModal = () => {
 
   const handleSave = () => {
     // Lógica de salvamento aqui
-    console.log('Salvando:', formData);
     closeModal();
   };
 

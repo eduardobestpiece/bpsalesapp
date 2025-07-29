@@ -76,7 +76,6 @@ export const SourceModal = ({ isOpen, onClose, source }: SourceModalProps) => {
       onClose();
       setFormData({ name: '' });
     } catch (error: any) {
-      console.error('Erro ao salvar origem:', error);
       toast.error(error.message || 'Erro ao salvar origem');
     } finally {
       setIsLoading(false);

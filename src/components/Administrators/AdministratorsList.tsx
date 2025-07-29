@@ -67,7 +67,6 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
       if (error) throw error;
       setAdministrators(data || []);
     } catch (error) {
-      console.error('Error fetching administrators:', error);
       toast({
         title: 'Erro',
         description: 'Erro ao carregar administradoras',
@@ -92,7 +91,6 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
       });
       fetchAdministrators();
     } catch (error) {
-      console.error('Error archiving administrator:', error);
       toast({
         title: 'Erro',
         description: 'Erro ao arquivar administradora',
@@ -117,7 +115,6 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
       });
       fetchAdministrators();
     } catch (error) {
-      console.error('Error deleting administrator:', error);
       toast({
         title: 'Erro',
         description: 'Erro ao excluir administradora',

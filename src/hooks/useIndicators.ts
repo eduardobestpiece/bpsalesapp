@@ -47,7 +47,6 @@ export const useIndicators = (companyId?: string, userId?: string) => {
   
             return [] as IndicatorWithValues[];
           }
-          console.error('[useIndicators] Database error:', error);
           throw error;
         }
         
@@ -91,7 +90,6 @@ export const useIndicators = (companyId?: string, userId?: string) => {
                 .eq('indicator_id', ind.id);
               ind.values = values || [];
             } catch (valuesError) {
-              console.error('[useIndicators] Error fetching values for indicator:', ind.id, valuesError);
               ind.values = [];
             }
           }
@@ -100,7 +98,6 @@ export const useIndicators = (companyId?: string, userId?: string) => {
 
         return validData;
       } catch (err) {
-        console.error('[useIndicators] Error fetching indicators:', err);
         return [] as IndicatorWithValues[];
       }
     },
@@ -143,7 +140,6 @@ export const useCreateIndicator = () => {
           .insert(valuesToInsert);
 
         if (valuesError) {
-          console.error('Error saving indicator_values:', valuesError);
           throw valuesError;
         }
       }

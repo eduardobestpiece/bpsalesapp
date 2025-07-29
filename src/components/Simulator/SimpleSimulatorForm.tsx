@@ -47,7 +47,6 @@ export const SimpleSimulatorForm = () => {
       if (error) throw error;
       setAdministrators(data || []);
     } catch (error) {
-      console.error('Error fetching administrators:', error);
     }
   };
 
@@ -66,7 +65,6 @@ export const SimpleSimulatorForm = () => {
       if (error) throw error;
       setProducts(data || []);
     } catch (error) {
-      console.error('Error fetching products:', error);
     }
   };
 

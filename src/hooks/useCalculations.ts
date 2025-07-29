@@ -13,7 +13,6 @@ export const useCalculations = (data: SimulatorData) => {
     try {
       return calculateAdvancedConsortium(data);
     } catch (error) {
-      console.error('Erro no cálculo avançado do consórcio:', error);
       return null;
     }
   }, [data]);
@@ -23,7 +22,6 @@ export const useCalculations = (data: SimulatorData) => {
     try {
       return calculateHalfInstallment(advancedConsortiumData);
     } catch (error) {
-      console.error('Erro no cálculo da meia parcela:', error);
       return null;
     }
   }, [advancedConsortiumData]);
@@ -33,7 +31,6 @@ export const useCalculations = (data: SimulatorData) => {
     try {
       return calculateConsortium(data);
     } catch (error) {
-      console.error('Erro no cálculo do consórcio:', error);
       return null;
     }
   }, [data]);
@@ -43,7 +40,6 @@ export const useCalculations = (data: SimulatorData) => {
     try {
       return calculateAirbnb(consortiumData);
     } catch (error) {
-      console.error('Erro no cálculo do Airbnb:', error);
       return null;
     }
   }, [consortiumData]);
@@ -53,7 +49,6 @@ export const useCalculations = (data: SimulatorData) => {
     try {
       return calculateCommercialProperty(consortiumData);
     } catch (error) {
-      console.error('Erro no cálculo da propriedade comercial:', error);
       return null;
     }
   }, [consortiumData]);
@@ -62,7 +57,6 @@ export const useCalculations = (data: SimulatorData) => {
     try {
       return calculatePatrimonialEvolution(data);
     } catch (error) {
-      console.error('Erro no cálculo da evolução patrimonial:', error);
       return [];
     }
   }, [data]);

@@ -57,7 +57,6 @@ export const CopyAdministratorsModal: React.FC<CopyAdministratorsModalProps> = (
       if (error) throw error;
       setAdministrators(data || []);
     } catch (error) {
-      console.error('Erro ao buscar administradoras:', error);
       toast({
         title: 'Erro',
         description: 'Erro ao carregar administradoras',
@@ -77,7 +76,6 @@ export const CopyAdministratorsModal: React.FC<CopyAdministratorsModalProps> = (
       if (error) throw error;
       setCompanies(data || []);
     } catch (error) {
-      console.error('Erro ao buscar empresas:', error);
       toast({
         title: 'Erro',
         description: 'Erro ao carregar empresas',
@@ -141,7 +139,6 @@ export const CopyAdministratorsModal: React.FC<CopyAdministratorsModalProps> = (
       setSelectedCompanies([]);
       onOpenChange(false);
     } catch (err: any) {
-      console.error('Erro ao copiar administradoras:', err);
       toast({
         title: 'Erro',
         description: 'Erro ao copiar administradoras: ' + (err.message || ''),

@@ -112,12 +112,6 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
         toast.success('Usuário atualizado com sucesso!');
       } else {
         // Chamar Edge Function do Supabase para convite de usuário
-        console.log('Calling invite-user function with data:', {
-          email: formData.email.trim(),
-          role: formData.role,
-          funnels: funisArray,
-          company_id: finalCompanyId
-        });
 
         const { data, error } = await supabase.functions.invoke('invite-user', {
           body: {
@@ -128,10 +122,8 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
           }
         });
 
-        console.log('Function response:', { data, error });
 
         if (error) {
-          console.error('Supabase function error:', error);
           
           // Tentar extrair mais detalhes do erro
           let errorMessage = 'Erro ao convidar usuário';
@@ -149,12 +141,10 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
         }
 
         if (data?.error) {
-          console.error('Function returned error:', data.error);
           throw new Error(data.error);
         }
 
         if (!data?.success) {
-          console.error('Function did not return success:', data);
           throw new Error('Falha ao processar convite do usuário');
         }
 
@@ -164,7 +154,6 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
       onClose();
       setFormData({ first_name: '', last_name: '', email: '', phone: '', role: 'user', funnels: [] });
     } catch (error: any) {
-      console.error('Erro ao salvar usuário:', error);
       toast.error(error.message || 'Erro ao salvar usuário');
     } finally {
       setIsLoading(false);

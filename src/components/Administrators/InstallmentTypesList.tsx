@@ -176,7 +176,6 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
       setCopyModalOpen(false);
       refetch();
     } catch (err: any) {
-      console.error('Erro ao copiar tipos de parcelas:', err);
       toast({
         title: 'Erro ao copiar tipos de parcelas: ' + (err.message || ''),
         variant: 'destructive',
@@ -204,7 +203,6 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
 
       refetch();
     } catch (error) {
-      console.error('Erro ao arquivar/reativar tipo de parcela:', error);
       toast({
         title: 'Erro ao atualizar tipo de parcela',
         variant: 'destructive',

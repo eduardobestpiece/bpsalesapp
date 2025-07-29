@@ -14,7 +14,6 @@ export const useCrmUsers = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching CRM users:', error);
         // Se o erro for de RLS (usuário não autenticado), retornar array vazio
         if (error.code === 'PGRST301' || error.message.includes('RLS')) {
           return [] as CrmUser[];

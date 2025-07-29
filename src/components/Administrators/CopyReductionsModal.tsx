@@ -58,7 +58,6 @@ export const CopyReductionsModal: React.FC<CopyReductionsModalProps> = ({
       if (error) throw error;
       setReductions(data || []);
     } catch (error) {
-      console.error('Erro ao buscar reduções:', error);
       toast({
         title: 'Erro',
         description: 'Erro ao carregar reduções de parcela',
@@ -78,7 +77,6 @@ export const CopyReductionsModal: React.FC<CopyReductionsModalProps> = ({
       if (error) throw error;
       setCompanies(data || []);
     } catch (error) {
-      console.error('Erro ao buscar empresas:', error);
       toast({
         title: 'Erro',
         description: 'Erro ao carregar empresas',
@@ -142,7 +140,6 @@ export const CopyReductionsModal: React.FC<CopyReductionsModalProps> = ({
       setSelectedCompanies([]);
       onOpenChange(false);
     } catch (err: any) {
-      console.error('Erro ao copiar reduções de parcela:', err);
       toast({
         title: 'Erro',
         description: 'Erro ao copiar reduções de parcela: ' + (err.message || ''),

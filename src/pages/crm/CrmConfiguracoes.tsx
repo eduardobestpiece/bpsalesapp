@@ -53,14 +53,14 @@ const CrmConfiguracoes = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
+    <div className="min-h-screen bg-gradient-to-br from-background via-card to-muted/30">
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-full mx-auto">
-          <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-100/50 p-1">
-            <div className="bg-white rounded-[calc(1.5rem-4px)] p-8 shadow-sm min-h-[600px]">
+          <div className="bg-card/95 backdrop-blur-sm rounded-3xl shadow-xl border border-border p-1">
+            <div className="bg-card rounded-[calc(1.5rem-4px)] p-8 shadow-sm min-h-[600px]">
               
               <div className="text-center space-y-2 mb-8">
-                <h2 className="text-2xl font-bold">Configurações CRM</h2>
+                <h2 className="text-2xl font-bold text-foreground">Configurações CRM</h2>
                 <p className="text-muted-foreground">
                   Gerencie funis, times, origens e usuários
                 </p>

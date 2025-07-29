@@ -53,15 +53,10 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
 
   useEffect(() => {
     if (funnel && isOpen) {
-      console.log('Valor recebido do Supabase (funnel.recommendation_stage_id):', funnel.recommendation_stage_id);
-      console.log('Etapas recebidas do Supabase:', funnel.stages);
       if (funnel.stages) {
-        console.log('IDs das etapas recebidas:', funnel.stages.map((s: any) => s.id));
         funnel.stages.forEach((s: any, idx: number) => {
-          console.log(`Tipo do stage[${idx}].id:`, typeof s.id, '| Valor:', s.id);
         });
       }
-      console.log('Tipo de recommendation_stage_id:', typeof funnel.recommendation_stage_id, '| Valor:', funnel.recommendation_stage_id);
       setFormData({
         name: funnel.name,
         verification_type: funnel.verification_type,
@@ -221,7 +216,6 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
     setIsLoading(true);
 
     try {
-      console.log('Valor enviado para recommendation_stage_id:', formData.recommendation_stage_id);
       const funnelData = {
         name: formData.name.trim(),
         verification_type: formData.verification_type,
@@ -277,7 +271,6 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
       setFormData({ name: '', verification_type: 'weekly', verification_day: 1, sales_value_mode: 'manual', recommendations_mode: 'manual', recommendation_stage_id: '', indicator_deadline_hours: 0 });
       setStages([{ name: '', stage_order: 1, target_percentage: 0, target_value: 0 }]);
     } catch (error: any) {
-      console.error('Erro ao salvar funil:', error);
       toast.error(error.message || 'Erro ao salvar funil');
     } finally {
       setIsLoading(false);

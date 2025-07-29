@@ -102,7 +102,6 @@ export const BidTypesList: React.FC<BidTypesListProps> = ({
       setCopyModalOpen(false);
       fetchBidTypes();
     } catch (err: any) {
-      console.error('Erro ao copiar tipos de lances:', err);
       toast.error('Erro ao copiar tipos de lances: ' + (err.message || ''));
     } finally {
       setCopyLoading(false);
@@ -137,7 +136,6 @@ export const BidTypesList: React.FC<BidTypesListProps> = ({
       if (error) throw error;
       setBidTypes(data || []);
     } catch (error) {
-      console.error('Error fetching bid types:', error);
       toast.error('Erro ao carregar tipos de lance');
     } finally {
       setLoading(false);
@@ -155,7 +153,6 @@ export const BidTypesList: React.FC<BidTypesListProps> = ({
       toast.success(`Tipo de lance ${isArchived ? 'restaurado' : 'arquivado'} com sucesso!`);
       fetchBidTypes();
     } catch (error) {
-      console.error('Error archiving bid type:', error);
       toast.error('Erro ao arquivar tipo de lance');
     }
   };
@@ -173,7 +170,6 @@ export const BidTypesList: React.FC<BidTypesListProps> = ({
       toast.success('Tipo de lance excluído com sucesso!');
       fetchBidTypes();
     } catch (error) {
-      console.error('Error deleting bid type:', error);
       toast.error('Erro ao excluir tipo de lance');
     }
   };

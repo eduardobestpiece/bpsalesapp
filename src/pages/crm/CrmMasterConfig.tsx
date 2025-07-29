@@ -79,18 +79,15 @@ const CrmMasterConfig = () => {
   const { data: companies = [], isLoading: companiesLoading } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
-      console.log('Fetching companies...');
       const { data, error } = await supabase
         .from('companies')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching companies:', error);
         throw error;
       }
 
-      console.log('Companies fetched:', data);
       return data as Company[];
     },
     enabled: userRole === 'master'
@@ -99,7 +96,6 @@ const CrmMasterConfig = () => {
   // Create company mutation
   const createCompanyMutation = useMutation({
     mutationFn: async (name: string) => {
-      console.log('Creating company:', name);
       const { data, error } = await supabase
         .from('companies')
         .insert([{ name, status: 'active' }])
@@ -107,11 +103,9 @@ const CrmMasterConfig = () => {
         .single();
 
       if (error) {
-        console.error('Error creating company:', error);
         throw error;
       }
 
-      console.log('Company created:', data);
       return data;
     },
     onSuccess: () => {
@@ -121,7 +115,6 @@ const CrmMasterConfig = () => {
       toast.success('Empresa criada com sucesso!');
     },
     onError: (error: any) => {
-      console.error('Error creating company:', error);
       toast.error('Erro ao criar empresa: ' + error.message);
     }
   });
@@ -129,7 +122,6 @@ const CrmMasterConfig = () => {
   // Archive company mutation
   const archiveCompanyMutation = useMutation({
     mutationFn: async (id: string) => {
-      console.log('Archiving company:', id);
       const { data, error } = await supabase
         .from('companies')
         .update({ status: 'archived' })
@@ -138,11 +130,9 @@ const CrmMasterConfig = () => {
         .single();
 
       if (error) {
-        console.error('Error archiving company:', error);
         throw error;
       }
 
-      console.log('Company archived:', data);
       return data;
     },
     onSuccess: () => {
@@ -150,7 +140,6 @@ const CrmMasterConfig = () => {
       toast.success('Empresa arquivada com sucesso!');
     },
     onError: (error: any) => {
-      console.error('Error archiving company:', error);
       toast.error('Erro ao arquivar empresa: ' + error.message);
     }
   });
@@ -217,7 +206,6 @@ const CrmMasterConfig = () => {
       })));
       setArchivedItems(items);
     } catch (error) {
-      console.error('Error fetching archived items:', error);
     } finally {
       setIsLoadingArchived(false);
     }
@@ -289,15 +277,11 @@ const CrmMasterConfig = () => {
   const safeArchivedItems = Array.isArray(archivedItems) ? archivedItems : [];
 
   // LOG extra para debug
-  console.log('[MasterConfig] allowedTabs:', allowedTabs, 'safeAllowedTabs:', safeAllowedTabs);
-  console.log('[MasterConfig] companies:', companies, 'safeCompanies:', safeCompanies);
-  console.log('[MasterConfig] archivedItems:', archivedItems, 'safeArchivedItems:', safeArchivedItems);
 
   // Garantir que defaultTab é string válida
   const safeDefaultTab = typeof defaultTab === 'string' && defaultTab ? defaultTab : (safeAllowedTabs[0] || 'companies');
 
   // LOG para tabs
-  console.log('[MasterConfig] defaultTab:', safeDefaultTab);
 
   // Renderização defensiva de companies
   let renderedCompanies = null;
@@ -330,7 +314,6 @@ const CrmMasterConfig = () => {
       </div>
     ));
   } catch (e) {
-    console.error('[MasterConfig] Erro ao renderizar companies:', e, safeCompanies);
     renderedCompanies = <p className="text-center py-8 text-red-500">Erro ao renderizar empresas.</p>;
   }
 

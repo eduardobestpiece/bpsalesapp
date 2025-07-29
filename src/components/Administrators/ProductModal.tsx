@@ -67,7 +67,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       if (error) throw error;
       setAdministrators(data || []);
     } catch (error) {
-      console.error('Error fetching administrators:', error);
     }
   };
 
@@ -81,7 +80,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       if (error) throw error;
       setInstallmentTypes(data || []);
     } catch (error) {
-      console.error('Error fetching installment types:', error);
     }
   };
 
@@ -173,7 +171,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       onSuccess();
       form.reset();
     } catch (error) {
-      console.error('Error:', error);
       toast.error('Erro ao salvar produto');
     }
   };
@@ -202,7 +199,6 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         if (error) throw error;
         setInstallmentTypes(data || []);
       } catch (err) {
-        console.error('Erro ao buscar installment_types:', err, 'administrator_id:', adminId);
         setInstallmentTypes([]);
       }
     };

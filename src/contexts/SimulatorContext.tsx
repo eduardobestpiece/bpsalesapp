@@ -103,7 +103,6 @@ export const SimulatorProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       const storedValue = localStorage.getItem(key);
       return storedValue ? JSON.parse(storedValue) : defaultValue;
     } catch (error) {
-      console.error(`Erro ao carregar dados do localStorage para ${key}:`, error);
       return defaultValue;
     }
   };

@@ -130,7 +130,6 @@ export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageMod
       onSave();
       onClose();
     } catch (error) {
-      console.error('Erro ao salvar alavanca:', error);
       toast({
         title: 'Erro',
         description: 'Erro ao salvar alavanca.',

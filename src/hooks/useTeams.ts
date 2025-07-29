@@ -44,7 +44,6 @@ export const useCreateTeam = () => {
         .single();
 
       if (error) {
-        console.error('Error creating team:', error);
         throw error;
       }
 
@@ -72,7 +71,6 @@ export const useUpdateTeam = () => {
         .single();
 
       if (error) {
-        console.error('Error updating team:', error);
         throw error;
       }
 
@@ -98,7 +96,6 @@ export const useDeleteTeam = () => {
         .eq('id', id);
 
       if (error) {
-        console.error('Error deleting team:', error);
         throw error;
       }
 

@@ -44,13 +44,12 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     userIdForIndicators = crmUser.id;
   }
   // For admin, master, and leader: fetch all accessible indicators without pre-filtering
-
-  console.log('[CrmPerformance] useIndicators call:', {
+  const indicatorParams = {
     companyId: selectedCompanyId, 
     userId: userIdForIndicators, 
     crmUserRole: crmUser?.role,
     crmUserId: crmUser?.id
-  });
+  };
   
   const { data: indicators = [] } = useIndicators(
     selectedCompanyId,
@@ -75,28 +74,21 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
   const getFunnelChartData = () => {
     if (!selectedFunnel || !filters) return [];
 
-    console.log('[CrmPerformance] Starting getFunnelChartData with filters:', filters);
-    console.log('[CrmPerformance] All indicators:', indicators.length);
 
     let relevantIndicators = indicators.filter(indicator => {
       if (!indicator || indicator.funnel_id !== filters.funnelId) return false;
       return true;
     });
     
-    console.log('[CrmPerformance] After funnel filter:', relevantIndicators.length);
 
     // Apply user/team filtering with proper logic
     if (filters.userId && filters.userId !== 'all') {
-      console.log('[CrmPerformance] Filtering by specific userId:', filters.userId);
       relevantIndicators = relevantIndicators.filter(indicator => {
         const matches = indicator.user_id === filters.userId;
-        console.log('[CrmPerformance] Indicator', indicator.id, 'user_id:', indicator.user_id, 'matches:', matches);
         return matches;
       });
     } else if (filters.teamId && filters.teamId !== 'all') {
-      console.log('[CrmPerformance] Filtering by team:', filters.teamId);
       const teamMembers = crmUsers.filter(u => u.team_id === filters.teamId).map(u => u.id);
-      console.log('[CrmPerformance] Team members:', teamMembers);
       relevantIndicators = relevantIndicators.filter(indicator => teamMembers.includes(indicator.user_id));
     } else if (crmUser?.role === 'leader') {
       // Leaders see their team members + themselves
@@ -110,7 +102,6 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
       relevantIndicators = relevantIndicators.filter(indicator => indicator.user_id === crmUser.id);
     }
     
-    console.log('[CrmPerformance] After user/team filter:', relevantIndicators.length);
     
     // Apply date filtering
     if (filters.period === 'custom') {
@@ -128,9 +119,7 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
       }
     }
     
-    console.log('[CrmPerformance] Final filtered indicators:', relevantIndicators.length);
     relevantIndicators.forEach(ind => {
-      console.log('[CrmPerformance] Final indicator', ind.id, 'user_id:', ind.user_id, 'values:', ind.values?.length || 0);
     });
     
     if (relevantIndicators.length === 0) return [];
@@ -138,7 +127,6 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
     const orderedStages = selectedFunnel.stages?.sort((a, b) => a.stage_order - b.stage_order) || [];
     const aggregatedStages = aggregateFunnelIndicators(relevantIndicators, orderedStages, 'month', true);
     
-    console.log('[CrmPerformance] Aggregated stages:', aggregatedStages);
     
     return orderedStages.map((stage, idx) => ({
       id: stage.id,
@@ -419,34 +407,36 @@ const CrmPerformance = ({ embedded = false }: { embedded?: boolean }) => {
   const funnelTabContent = (
     <div>
       <PerformanceFilters onFiltersChange={setFilters} funnelOnly />
-      {selectedFunnel && periodStages.length > 0 && weeklyStages.length > 0 ? (
-        <FunnelComparisonChart
-          stages={periodStages}
-          weeklyStages={weeklyStages}
-          numWeeks={numWeeks}
-          vendasPeriodo={vendasPeriodo}
-          vendasSemanal={vendasSemanal}
-          ticketMedioPeriodo={ticketMedioPeriodo}
-          ticketMedioSemanal={ticketMedioSemanal}
-          recomendacoesPeriodo={recomendacoesPeriodo}
-          recomendacoesSemanal={recomendacoesSemanal}
-          etapaRecomendacoesPeriodo={etapaRecomendacoesPeriodo}
-          etapaRecomendacoesSemanal={etapaRecomendacoesSemanal}
-          mediaRecomendacoesPeriodo={mediaRecomendacoesPeriodo}
-          mediaRecomendacoesSemanal={mediaRecomendacoesSemanal}
-          somaPrimeiraEtapaPeriodo={somaPrimeiraEtapaPeriodo}
-          somaUltimaEtapaPeriodo={somaUltimaEtapaPeriodo}
-          somaPrimeiraEtapaSemanal={somaPrimeiraEtapaSemanal}
-          somaUltimaEtapaSemanal={somaUltimaEtapaSemanal}
-          numIndicadores={numIndicadores}
-          comparativo={funnelComparisonData.comparativo}
-          compareStages={funnelComparisonData.compareStages}
-          periodoLabel={getPeriodoLabel()}
-          funnelName={selectedFunnel?.name || ''}
-        />
-      ) : (
-        <div className="text-center text-muted-foreground py-8">Nenhum dado para exibir o funil.</div>
-      )}
+      <div className="mt-6">
+        {selectedFunnel && periodStages.length > 0 && weeklyStages.length > 0 ? (
+          <FunnelComparisonChart
+            stages={periodStages}
+            weeklyStages={weeklyStages}
+            numWeeks={numWeeks}
+            vendasPeriodo={vendasPeriodo}
+            vendasSemanal={vendasSemanal}
+            ticketMedioPeriodo={ticketMedioPeriodo}
+            ticketMedioSemanal={ticketMedioSemanal}
+            recomendacoesPeriodo={recomendacoesPeriodo}
+            recomendacoesSemanal={recomendacoesSemanal}
+            etapaRecomendacoesPeriodo={etapaRecomendacoesPeriodo}
+            etapaRecomendacoesSemanal={etapaRecomendacoesSemanal}
+            mediaRecomendacoesPeriodo={mediaRecomendacoesPeriodo}
+            mediaRecomendacoesSemanal={mediaRecomendacoesSemanal}
+            somaPrimeiraEtapaPeriodo={somaPrimeiraEtapaPeriodo}
+            somaUltimaEtapaPeriodo={somaUltimaEtapaPeriodo}
+            somaPrimeiraEtapaSemanal={somaPrimeiraEtapaSemanal}
+            somaUltimaEtapaSemanal={somaUltimaEtapaSemanal}
+            numIndicadores={numIndicadores}
+            comparativo={funnelComparisonData.comparativo}
+            compareStages={funnelComparisonData.compareStages}
+            periodoLabel={getPeriodoLabel()}
+            funnelName={selectedFunnel?.name || ''}
+          />
+        ) : (
+          <div className="text-center text-muted-foreground py-8">Nenhum dado para exibir o funil.</div>
+        )}
+      </div>
     </div>
   );
 

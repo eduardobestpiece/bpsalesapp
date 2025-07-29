@@ -18,6 +18,7 @@ interface CapitalGainSectionProps {
   agioPercent: number;
   setAgioPercent: (value: number) => void;
   onRoiChange?: (roi: number) => void;
+  periodoCompra?: number; // NOVO: período de compra em meses
 }
 
 // Constantes para o tooltip personalizado
@@ -54,7 +55,8 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
   customAnnualUpdateRate,
   agioPercent,
   setAgioPercent,
-  onRoiChange
+  onRoiChange,
+  periodoCompra
 }: CapitalGainSectionProps) => {
   // Remover o estado local de agioPercent, usar prop
 
@@ -233,7 +235,9 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
       } else {
         // Após a contemplação: calcula sobre o crédito acessado da contemplação
         if (creditoAcessadoContemplacao === 0) {
-          const creditoAcessadoContemplacaoTemp = calculateCreditoAcessado(contemplationMonth, baseCredit);
+          // Calcular baseado no mês de contemplação + período de compra
+          const mesAquisicao = contemplationMonth + (product.periodoCompra || 0);
+          const creditoAcessadoContemplacaoTemp = calculateCreditoAcessado(mesAquisicao, baseCredit);
           creditoAcessadoContemplacao = creditoAcessadoContemplacaoTemp;
         }
         

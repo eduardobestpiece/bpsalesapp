@@ -82,7 +82,6 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
       setCopyModalOpen(false);
       // Refetch leverages - assuming there's a refetch function or state update
     } catch (err: any) {
-      console.error('Erro ao copiar alavancas:', err);
       toast({ title: 'Erro', description: 'Erro ao copiar alavancas: ' + (err.message || ''), variant: 'destructive' });
     } finally {
       setCopyLoading(false);
@@ -114,7 +113,6 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
 
       setLeverages(data || []);
     } catch (error) {
-      console.error('Erro ao carregar alavancas:', error);
       toast({
         title: 'Erro',
         description: 'Erro ao carregar alavancas.',
@@ -150,7 +148,6 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
 
       loadLeverages();
     } catch (error) {
-      console.error('Erro ao arquivar/restaurar alavanca:', error);
       toast({
         title: 'Erro',
         description: 'Erro ao arquivar/restaurar alavanca.',

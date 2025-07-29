@@ -278,11 +278,9 @@ export const SimulatorLayout = ({ children }: SimulatorLayoutProps) => {
               <SimulatorMenu 
                 onNavigate={(section) => {
                   // Implementar navegação se necessário
-                  console.log('Navegar para:', section);
                 }}
                 onToggleSection={(section) => {
                   // Implementar toggle de seções se necessário
-                  console.log('Toggle seção:', section);
                 }}
                 embutido={simulatorContextValue.embutido}
                 setEmbutido={simulatorContextValue.setEmbutido}
