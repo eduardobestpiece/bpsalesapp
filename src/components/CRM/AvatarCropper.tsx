@@ -29,34 +29,32 @@ export const AvatarCropper = ({ isOpen, onClose, file, onCropComplete }: AvatarC
   // Load image when file changes
   useEffect(() => {
     if (file) {
-      console.log('Iniciando carregamento do arquivo:', file.name, 'tamanho:', file.size);
-      
-      // Use object URL directly for simplicity
-      const objectUrl = URL.createObjectURL(file);
-      console.log('Object URL criado:', objectUrl);
-      
-      setImageUrl(objectUrl);
-      setImageLoaded(false);
-      setImageError(false);
-      setPosition({ x: 0, y: 0 });
-      setZoom([1]);
-      setRotation(0);
-      
-      // Clean up object URL when component unmounts or file changes
-      return () => {
-        URL.revokeObjectURL(objectUrl);
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        if (result) {
+          setImageUrl(result);
+          setImageLoaded(false);
+          setImageError(false);
+          setPosition({ x: 0, y: 0 });
+          setZoom([1]);
+          setRotation(0);
+        }
       };
+      reader.onerror = () => {
+        setImageError(true);
+        setImageLoaded(false);
+      };
+      reader.readAsDataURL(file);
     }
   }, [file]);
 
   const handleImageLoad = () => {
-    console.log('Imagem carregada com sucesso no ImageCropper');
     setImageLoaded(true);
     setImageError(false);
   };
 
   const handleImageError = () => {
-    console.error('Erro ao carregar imagem no ImageCropper');
     setImageLoaded(false);
     setImageError(true);
   };
@@ -126,18 +124,10 @@ export const AvatarCropper = ({ isOpen, onClose, file, onCropComplete }: AvatarC
     const canvas = canvasRef.current;
     const image = imageRef.current;
     
-    if (!canvas || !image || !imageLoaded) {
-      console.error('Canvas, image ou imageLoaded não disponível');
-      return;
-    }
+    if (!canvas || !image || !imageLoaded) return;
 
     const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      console.error('Contexto 2D não disponível');
-      return;
-    }
-
-    console.log('Iniciando crop e save...');
+    if (!ctx) return;
 
     // Set canvas size to optimal avatar size
     const size = 256;
@@ -175,26 +165,20 @@ export const AvatarCropper = ({ isOpen, onClose, file, onCropComplete }: AvatarC
     // Restore context
     ctx.restore();
 
-    console.log('Canvas processado, convertendo para blob...');
-
     // Convert to optimized JPEG
     canvas.toBlob((blob) => {
       if (blob) {
-        console.log('Blob criado, tamanho:', blob.size);
         const reader = new FileReader();
         reader.onload = (e) => {
           const result = e.target?.result as string;
           if (result) {
-            console.log('Data URL criado do crop, tamanho:', result.length);
             onCropComplete(result);
           } else {
-            console.error('Erro ao criar data URL do crop');
             toast.error('Erro ao processar a imagem. Tente novamente.');
           }
         };
         reader.readAsDataURL(blob);
       } else {
-        console.error('Erro ao criar blob do canvas');
         toast.error('Erro ao processar a imagem. Tente novamente.');
       }
     }, 'image/jpeg', 0.85);
@@ -339,12 +323,6 @@ export const AvatarCropper = ({ isOpen, onClose, file, onCropComplete }: AvatarC
             </div>
           )}
         </div>
-
-        {/* Hidden canvas for processing */}
-        <canvas
-          ref={canvasRef}
-          style={{ display: 'none' }}
-        />
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>
