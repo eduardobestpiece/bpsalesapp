@@ -68,16 +68,24 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
       
       console.log('🚀 Iniciando requisição Supabase...');
       
+      // Primeiro, vamos tentar uma consulta mais simples
+      console.log('🔧 Tentando consulta simples...');
+      
       const fetchPromise = supabase
         .from('crm_users')
-        .select('*')
+        .select('id, email, first_name, last_name, role, company_id, status')
         .eq('email', email)
         .eq('status', 'active')
         .maybeSingle();
         
       console.log('⏳ Aguardando resposta...');
       
-      const result = await fetchPromise;
+      // Timeout de 10 segundos
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout após 10 segundos')), 10000)
+      );
+      
+      const result = await Promise.race([fetchPromise, timeoutPromise]);
       
       console.log('📊 Resultado da busca:', result);
       
@@ -91,6 +99,20 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
           hint: error.hint,
           code: error.code
         });
+        
+        // Se for erro de timeout, tentar novamente sem timeout
+        if (error.message?.includes('Timeout')) {
+          console.log('🔄 Tentando novamente sem timeout...');
+          try {
+            const retryResult = await fetchPromise;
+            console.log('📊 Resultado da segunda tentativa:', retryResult);
+            return retryResult.data;
+          } catch (retryError) {
+            console.error('❌ Erro na segunda tentativa:', retryError);
+            return null;
+          }
+        }
+        
         return null;
       }
       
