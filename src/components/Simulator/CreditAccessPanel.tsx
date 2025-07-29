@@ -23,7 +23,7 @@ interface SimulationData {
   value: number;
   term: number;
   updateRate: number;
-  searchType: 'contribution' | 'credit';
+  searchType: 'contribution' | 'credit' | string;
   adminTaxPercent?: number; // Added for new fields
   reserveFundPercent?: number; // Added for new fields
   isAdminTaxCustomized?: boolean; // Added for new fields
@@ -1265,7 +1265,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
           reduction: null
         }).full;
         setParcelaCheia(novaParcelaCheia);
-      } else if (data.searchType !== 'contribution') {
+      } else if (data.searchType === 'credit') {
         // Problema 2: Cálculo baseado em Crédito com parcela especial - arredondar para múltiplos de 10.000
         const novoCreditoAcessado = Math.ceil(data.value / 10000) * 10000;
         setCreditoAcessado(novoCreditoAcessado);
@@ -1311,7 +1311,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
         });
         setParcelaReduzida(novaParcelaReduzida);
         setPercentualUsado(novoValorParcela / novoCreditoAcessado);
-      } else if (data.searchType !== 'contribution') {
+      } else if (data.searchType === 'credit') {
         // Problema 3: Busca por Crédito com Parcela Cheia - arredondar crédito para múltiplos de 10.000
         const novoCreditoAcessado = Math.ceil(data.value / 10000) * 10000;
         setCreditoAcessado(novoCreditoAcessado);

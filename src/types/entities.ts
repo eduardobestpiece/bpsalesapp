@@ -24,6 +24,18 @@ export interface Product {
   insurancePct: number;
   reducedPercentage: number; // Para parcelas reduzidas
   advanceInstallments: number; // Parcelas na adesão
+  term_options?: number[]; // Opções de prazo disponíveis
+  type: string;
+  credit_value: number;
+  installment_value: number;
+  admin_tax_percent: number;
+  reserve_fund_percent: number;
+  insurance_percent: number;
+  is_archived: boolean;
+  created_at: string;
+  updated_at: string;
+  company_id: string;
+  administrator_id: string;
 }
 
 export interface BidType {

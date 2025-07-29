@@ -116,7 +116,7 @@ export const ProductsList: React.FC<ProductsListProps> = ({
       const { data, error } = await query;
       if (error) throw error;
 
-      setProducts(data || []);
+      setProducts((data || []).map(product => ({ ...product, term_options: [] })));
     } catch (error) {
     } finally {
       setLoading(false);
