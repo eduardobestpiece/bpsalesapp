@@ -51,12 +51,12 @@ export const CrmSidebar = () => {
   });
 
   useEffect(() => {
-    if (!companyId) return;
+    if (!companyId || !userRole) return;
     supabase
       .from('role_page_permissions')
       .select('*')
       .eq('company_id', companyId)
-      .eq('role', userRole)
+      .eq('role', userRole as any)
       .then(({ data }) => {
         const perms: any = {};
         data?.forEach((row: any) => {

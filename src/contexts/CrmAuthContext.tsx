@@ -64,6 +64,8 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const fetchCrmUser = useCallback(async (email: string) => {
     try {
+      console.log('🔍 Buscando usuário CRM:', email);
+      
       // Timeout de 30 segundos para evitar travamento
       const timeoutPromise = new Promise((_, reject) => setTimeout(() => {
         reject(new Error('Timeout ao buscar usuário CRM'));
@@ -74,17 +76,21 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .select('*')
         .eq('email', email)
         .eq('status', 'active')
-        .single();
+        .maybeSingle();
         
       const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
       
       if (error) {
+        console.error('❌ Erro ao buscar usuário CRM:', error);
         return null;
       }
       
       if (!data) {
+        console.log('⚠️ Usuário CRM não encontrado:', email);
         return null;
       }
+      
+      console.log('✅ Usuário CRM encontrado:', data);
       
       // --- NOVO: checar se é líder de algum time ativo ---
       let dynamicRole = data.role;
@@ -114,6 +120,7 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // Setup auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
+        console.log('🔄 Auth state change:', event, newSession?.user?.email);
         if (!mounted) return;
         setSession(newSession);
         setUser(newSession?.user ?? null);
