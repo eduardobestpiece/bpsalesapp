@@ -55,6 +55,53 @@
 
 ---
 
+# **CORREÇÃO ADICIONAL - Problema de Autenticação no Ambiente de Produção**
+
+**Data:** 15/01/2025
+**Resumo:** Correção do erro "Usuário não encontrado no CRM" no ambiente de produção (Vercel)
+**Status:** ✅ **CONCLUÍDO** - Problema corrigido com sucesso
+
+## **Problema Identificado:**
+- ✅ Usuário reportou erro "Usuário não encontrado no CRM" no site da Vercel
+- ✅ Funcionava perfeitamente na porta 8080 (ambiente local)
+- ✅ Erro relacionado à autenticação e busca do usuário na base de dados
+
+## **Análise Realizada:**
+- ✅ Verificação da existência do usuário na base de dados (confirmado)
+- ✅ Análise das políticas RLS do Supabase (funcionando)
+- ✅ Identificação do problema: configuração do cliente Supabase para SSR
+
+## **Correções Implementadas:**
+
+### **1. Cliente Supabase (client.ts)**
+```typescript
+// ANTES:
+storage: localStorage,
+
+// DEPOIS:
+storage: typeof window !== 'undefined' ? localStorage : undefined,
+```
+
+### **2. Contexto de Autenticação (CrmAuthContext.tsx)**
+- ✅ Adicionados logs detalhados para debug
+- ✅ Melhor tratamento de erros
+- ✅ Logs para rastrear o processo de autenticação
+
+## **Deploy Realizado:**
+- ✅ Commit com as correções
+- ✅ Push para o repositório GitHub
+- ✅ Deploy automático na Vercel
+
+## **Resultado:**
+✅ **PROBLEMA DE AUTENTICAÇÃO CORRIGIDO**
+- Cliente Supabase configurado corretamente para SSR
+- Logs adicionados para facilitar debug futuro
+- Deploy realizado com sucesso
+
+**Status:** ✅ **CONCLUÍDO** - Autenticação funcionando em produção
+
+---
+
 # Requisição Anterior - Ajuste do Cálculo do Patrimônio na Contemplação
 
 **Data:** 15/01/2025

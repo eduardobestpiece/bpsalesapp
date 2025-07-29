@@ -80,8 +80,16 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
         
       const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
       
+      console.log('📊 Resultado da busca:', { data, error });
+      
       if (error) {
         console.error('❌ Erro ao buscar usuário CRM:', error);
+        console.error('🔍 Detalhes do erro:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
         return null;
       }
       
@@ -168,6 +176,7 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
+      console.log('🔐 Sessão inicial:', initialSession?.user?.email);
       if (mounted && initialSession && !alreadyFetched) {
         alreadyFetched = true;
         // A busca será feita pelo onAuthStateChange
