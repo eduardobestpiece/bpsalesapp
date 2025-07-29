@@ -66,87 +66,49 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       console.log('🔍 Buscando usuário CRM:', email);
       
-      console.log('🚀 Iniciando requisição Supabase...');
-      
-      // Primeiro, vamos tentar uma consulta mais simples
-      console.log('🔧 Tentando consulta simples...');
-      
-      // Tentar primeiro sem filtros para ver se consegue acessar
-      const fetchPromise = supabase
+      // Consulta simples e direta
+      const { data, error } = await supabase
         .from('crm_users')
         .select('id, email, first_name, last_name, role, company_id, status')
         .eq('email', email)
-        .maybeSingle();
-        
-      // Se falhar, tentar uma abordagem alternativa
-      console.log('🔄 Tentando abordagem alternativa...');
+        .eq('status', 'active')
+        .single();
       
-      const alternativePromise = supabase
-        .rpc('get_crm_user_by_email', { user_email: email })
-        .maybeSingle();
-        
-      console.log('⏳ Aguardando resposta...');
-      
-      // Timeout de 10 segundos
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout após 10 segundos')), 10000)
-      );
-      
-      // Tentar a primeira abordagem
-      try {
-        const result = await Promise.race([fetchPromise, timeoutPromise]);
-        console.log('📊 Resultado da primeira tentativa:', result);
-        
-        const { data, error } = result;
-        
-        if (!error && data) {
-          console.log('✅ Primeira tentativa bem-sucedida:', data);
-          return data;
-        }
-        
-        console.log('⚠️ Primeira tentativa falhou, tentando alternativa...');
-      } catch (firstError) {
-        console.log('❌ Erro na primeira tentativa:', firstError);
-      }
-      
-      // Tentar abordagem alternativa
-      try {
-        const alternativeResult = await alternativePromise;
-        console.log('📊 Resultado da abordagem alternativa:', alternativeResult);
-        
-        const { data, error } = alternativeResult;
-        
-        if (!error && data) {
-          console.log('✅ Abordagem alternativa bem-sucedida:', data);
-          return data;
-        }
-        
-        console.log('❌ Ambas as tentativas falharam');
-        return null;
-      } catch (alternativeError) {
-        console.log('❌ Erro na abordagem alternativa:', alternativeError);
+      if (error) {
+        console.error('❌ Erro ao buscar usuário CRM:', error);
         return null;
       }
       
-              // Código removido - agora tratado nas tentativas acima
+      if (!data) {
+        console.log('⚠️ Usuário CRM não encontrado:', email);
+        return null;
+      }
       
-      // --- NOVO: checar se é líder de algum time ativo ---
+      console.log('✅ Usuário CRM encontrado:', data);
+      
+      // Verificar se é líder de algum time ativo
       let dynamicRole = data.role;
       if (dynamicRole !== 'admin' && dynamicRole !== 'master' && dynamicRole !== 'submaster') {
-        // Buscar times ativos onde o usuário é líder
-        const { data: teams, error: teamError } = await supabase
-          .from('teams')
-          .select('id')
-          .eq('leader_id', data.id)
-          .eq('status', 'active');
-        if (!teamError && teams && teams.length > 0) {
-          dynamicRole = 'leader';
+        try {
+          const { data: teams, error: teamError } = await supabase
+            .from('teams')
+            .select('id')
+            .eq('leader_id', data.id)
+            .eq('status', 'active');
+          if (!teamError && teams && teams.length > 0) {
+            dynamicRole = 'leader';
+          }
+        } catch (teamErr) {
+          console.log('⚠️ Erro ao verificar liderança de equipes:', teamErr);
+          // Continuar com o role original se falhar
         }
       }
-      // ---
-      saveCrmUserCache(email, { ...data, role: dynamicRole }); // Salva no cache
-      return { ...data, role: dynamicRole } as CrmUser;
+      
+      const userData = { ...data, role: dynamicRole } as CrmUser;
+      saveCrmUserCache(email, userData);
+      return userData;
     } catch (err) {
+      console.error('❌ Erro geral ao buscar usuário CRM:', err);
       return null;
     }
   }, []);
