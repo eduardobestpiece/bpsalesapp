@@ -74,7 +74,7 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .select('*')
         .eq('email', email)
         .eq('status', 'active')
-        .single();
+        .maybeSingle();
         
       const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
       
