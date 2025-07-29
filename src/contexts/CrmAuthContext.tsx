@@ -66,10 +66,7 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
     try {
       console.log('🔍 Buscando usuário CRM:', email);
       
-      // Timeout de 30 segundos para evitar travamento
-      const timeoutPromise = new Promise((_, reject) => setTimeout(() => {
-        reject(new Error('Timeout ao buscar usuário CRM'));
-      }, 30000));
+      console.log('🚀 Iniciando requisição Supabase...');
       
       const fetchPromise = supabase
         .from('crm_users')
@@ -78,9 +75,13 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .eq('status', 'active')
         .maybeSingle();
         
-      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
+      console.log('⏳ Aguardando resposta...');
       
-      console.log('📊 Resultado da busca:', { data, error });
+      const result = await fetchPromise;
+      
+      console.log('📊 Resultado da busca:', result);
+      
+      const { data, error } = result;
       
       if (error) {
         console.error('❌ Erro ao buscar usuário CRM:', error);
@@ -134,10 +135,12 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setUser(newSession?.user ?? null);
         // Só buscar usuário CRM na primeira vez
         if (!alreadyFetched && newSession?.user?.email) {
+          console.log('🎯 Iniciando busca do usuário CRM...');
           alreadyFetched = true;
           // 1. Tenta carregar do cache local
           const cached = getCrmUserCache(newSession.user.email);
           if (cached) {
+            console.log('💾 Usando cache local:', cached);
             setCrmUser(cached);
             setUserRole(cached.role ?? null);
             setCompanyId(cached.company_id ?? null);
@@ -153,7 +156,9 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
             return;
           }
           // Se não houver cache, busca normalmente
+          console.log('🔄 Cache não encontrado, buscando na base...');
           const crmUserData = await fetchCrmUser(newSession.user.email);
+          console.log('📋 Resultado final:', crmUserData);
           if (mounted) {
             setCrmUser(crmUserData);
             setUserRole(crmUserData?.role ?? null);
