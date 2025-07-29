@@ -78,6 +78,13 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .eq('email', email)
         .maybeSingle();
         
+      // Se falhar, tentar uma abordagem alternativa
+      console.log('🔄 Tentando abordagem alternativa...');
+      
+      const alternativePromise = supabase
+        .rpc('get_crm_user_by_email', { user_email: email })
+        .maybeSingle();
+        
       console.log('⏳ Aguardando resposta...');
       
       // Timeout de 10 segundos
@@ -85,43 +92,43 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setTimeout(() => reject(new Error('Timeout após 10 segundos')), 10000)
       );
       
-      const result = await Promise.race([fetchPromise, timeoutPromise]);
-      
-      console.log('📊 Resultado da busca:', result);
-      
-      const { data, error } = result;
-      
-      if (error) {
-        console.error('❌ Erro ao buscar usuário CRM:', error);
-        console.error('🔍 Detalhes do erro:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        });
+      // Tentar a primeira abordagem
+      try {
+        const result = await Promise.race([fetchPromise, timeoutPromise]);
+        console.log('📊 Resultado da primeira tentativa:', result);
         
-        // Se for erro de timeout, tentar novamente sem timeout
-        if (error.message?.includes('Timeout')) {
-          console.log('🔄 Tentando novamente sem timeout...');
-          try {
-            const retryResult = await fetchPromise;
-            console.log('📊 Resultado da segunda tentativa:', retryResult);
-            return retryResult.data;
-          } catch (retryError) {
-            console.error('❌ Erro na segunda tentativa:', retryError);
-            return null;
-          }
+        const { data, error } = result;
+        
+        if (!error && data) {
+          console.log('✅ Primeira tentativa bem-sucedida:', data);
+          return data;
         }
         
+        console.log('⚠️ Primeira tentativa falhou, tentando alternativa...');
+      } catch (firstError) {
+        console.log('❌ Erro na primeira tentativa:', firstError);
+      }
+      
+      // Tentar abordagem alternativa
+      try {
+        const alternativeResult = await alternativePromise;
+        console.log('📊 Resultado da abordagem alternativa:', alternativeResult);
+        
+        const { data, error } = alternativeResult;
+        
+        if (!error && data) {
+          console.log('✅ Abordagem alternativa bem-sucedida:', data);
+          return data;
+        }
+        
+        console.log('❌ Ambas as tentativas falharam');
+        return null;
+      } catch (alternativeError) {
+        console.log('❌ Erro na abordagem alternativa:', alternativeError);
         return null;
       }
       
-      if (!data) {
-        console.log('⚠️ Usuário CRM não encontrado:', email);
-        return null;
-      }
-      
-      console.log('✅ Usuário CRM encontrado:', data);
+              // Código removido - agora tratado nas tentativas acima
       
       // --- NOVO: checar se é líder de algum time ativo ---
       let dynamicRole = data.role;
