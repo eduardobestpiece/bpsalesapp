@@ -98,6 +98,7 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
           <MetricCard label="Valor das vendas (semana)" value={vendasSemanal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} cardClass="w-full min-w-[160px]" />
           <MetricCard label="Ticket Médio (semana)" value={ticketMedioSemanal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} cardClass="w-full min-w-[160px]" />
           <MetricCard label="Média de Recomendações (semana)" value={etapaRecomendacoesSemanal > 0 ? (recomendacoesSemanal / etapaRecomendacoesSemanal).toFixed(2) : '0'} cardClass="w-full min-w-[160px]" />
+          <MetricCard label="Recomendações (semana)" value={recomendacoesSemanal.toFixed(0)} cardClass="w-full min-w-[160px]" />
         </div>
         {/* Centro: Título + Gráfico do funil */}
         <div className="md:basis-3/5 w-full md:w-3/5 flex flex-col items-center justify-start flex-1">
@@ -167,6 +168,7 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
           <MetricCard label="Valor das vendas (período)" value={vendasPeriodo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} cardClass="w-full min-w-[160px]" />
           <MetricCard label="Ticket Médio (período)" value={ticketMedioPeriodo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} cardClass="w-full min-w-[160px]" />
           <MetricCard label="Média de Recomendações (período)" value={etapaRecomendacoesPeriodo > 0 ? (recomendacoesPeriodo / etapaRecomendacoesPeriodo).toFixed(2) : '0'} cardClass="w-full min-w-[160px]" />
+          <MetricCard label="Recomendações (período)" value={recomendacoesPeriodo.toFixed(0)} cardClass="w-full min-w-[160px]" />
         </div>
       </div>
     </div>

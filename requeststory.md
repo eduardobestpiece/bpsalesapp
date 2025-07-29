@@ -1,4 +1,61 @@
-# Requisição Atual - Ajuste do Cálculo do Patrimônio na Contemplação
+# **NOVA REQUISIÇÃO - Adicionar Cards de Recomendações na Página de Performance**
+
+**Data:** 15/01/2025
+**Resumo:** Adicionar dois novos cards na página de performance: "Recomendações (semana)" à esquerda e "Recomendações (período)" à direita
+**Status:** 🔄 **EM DESENVOLVIMENTO**
+
+## **Análise Detalhada Realizada:**
+
+### **1. Entendimento da Solicitação**
+- ✅ Usuário solicitou adicionar dois novos cards na página de performance
+- ✅ Card esquerdo: "Recomendações (semana)" - número de recomendações dividido pelo número de períodos
+- ✅ Card direito: "Recomendações (período)" - número total de recomendações no período
+- ✅ Cards devem ser adicionados na página de performance do CRM
+
+### **2. Verificação do Histórico da Conversa**
+- ✅ Análise completa das correções anteriores
+- ✅ Verificação de que não há repetições de trabalho
+
+### **3. Análise da Estrutura de Documentos**
+- ✅ Identificação dos arquivos responsáveis:
+  - `src/pages/crm/CrmPerformance.tsx` - Página principal de performance
+  - `src/components/CRM/Performance/FunnelChart.tsx` - Componente do gráfico do funil
+- ✅ Verificação da estrutura atual dos cards existentes
+
+### **4. Verificação no Banco de Dados**
+- ✅ Confirmação de que a tabela `indicators` tem o campo `recommendations_count`
+- ✅ Verificação de que os dados estão corretos no Supabase
+
+### **5. Planejamento da Implementação:**
+- ✅ Identificar onde adicionar os novos cards no layout
+- ✅ Calcular "Recomendações (semana)" = total de recomendações ÷ número de semanas
+- ✅ Calcular "Recomendações (período)" = total de recomendações no período
+- ✅ Manter consistência com o design existente
+- ✅ Atualizar a porta 8080 após implementação
+
+## **Checklist Concluído:**
+- [x] Entender bem o que foi pedido (adicionar cards de recomendações)
+- [x] Verificar histórico da conversa
+- [x] Analisar estrutura de documentos
+- [x] Verificar banco de dados (Supabase)
+- [x] Registrar requisição em requeststory.md
+- [x] Implementar os novos cards no FunnelChart.tsx
+- [x] Calcular corretamente as métricas de recomendações
+- [x] Atualizar porta 8080
+- [x] Pedir para conferir se está funcionando
+
+## **Resultado Final:**
+✅ **CARDS DE RECOMENDAÇÕES ADICIONADOS COM SUCESSO**
+- Card "Recomendações (semana)" adicionado à esquerda - mostra o número de recomendações por semana
+- Card "Recomendações (período)" adicionado à direita - mostra o número total de recomendações no período
+- Aplicação funcionando na porta 8080
+- Design consistente com os cards existentes
+
+**Status:** ✅ **CONCLUÍDO** - Cards adicionados conforme solicitado
+
+---
+
+# Requisição Anterior - Ajuste do Cálculo do Patrimônio na Contemplação
 
 **Data:** 15/01/2025
 **Resumo:** Ajuste do cálculo do "Patrimônio na Contemplação" para considerar o mês correto (Mês Contemplação + Período de Compra) ao invés de apenas o mês da contemplação

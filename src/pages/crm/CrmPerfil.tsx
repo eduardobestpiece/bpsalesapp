@@ -12,7 +12,6 @@ import { toast } from 'sonner';
 
 const CrmPerfil = () => {
   const { crmUser } = useCrmAuth();
-  const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     first_name: crmUser?.first_name || '',
@@ -59,7 +58,6 @@ const CrmPerfil = () => {
 
       if (!avatarOnly) {
         toast.success('Perfil atualizado com sucesso!');
-        setIsEditing(false);
       }
     } catch (error) {
       toast.error('Erro ao atualizar perfil');
@@ -128,11 +126,11 @@ const CrmPerfil = () => {
                       <div className="flex justify-between items-center">
                         <CardTitle className="text-foreground">Informações Pessoais</CardTitle>
                         <Button
-                          variant={isEditing ? "default" : "outline"}
-                          onClick={() => isEditing ? handleSave() : setIsEditing(true)}
+                          variant="outline"
+                          onClick={() => handleSave()}
                           disabled={isSaving}
                         >
-                          {isSaving ? 'Salvando...' : isEditing ? 'Salvar' : 'Editar'}
+                          {isSaving ? 'Salvando...' : 'Salvar'}
                         </Button>
                       </div>
                     </CardHeader>
@@ -144,7 +142,7 @@ const CrmPerfil = () => {
                             id="first_name"
                             value={formData.first_name}
                             onChange={(e) => handleInputChange('first_name', e.target.value)}
-                            disabled={!isEditing || isSaving}
+                            disabled={isSaving}
                             className="text-foreground"
                           />
                         </div>
@@ -154,7 +152,7 @@ const CrmPerfil = () => {
                             id="last_name"
                             value={formData.last_name}
                             onChange={(e) => handleInputChange('last_name', e.target.value)}
-                            disabled={!isEditing || isSaving}
+                            disabled={isSaving}
                             className="text-foreground"
                           />
                         </div>
@@ -181,7 +179,7 @@ const CrmPerfil = () => {
                             id="phone"
                             value={formData.phone}
                             onChange={(e) => handleInputChange('phone', e.target.value)}
-                            disabled={!isEditing || isSaving}
+                            disabled={isSaving}
                             placeholder="(11) 99999-9999"
                             className="text-foreground"
                           />
@@ -193,7 +191,7 @@ const CrmPerfil = () => {
                             type="date"
                             value={formData.birth_date}
                             onChange={(e) => handleInputChange('birth_date', e.target.value)}
-                            disabled={!isEditing || isSaving}
+                            disabled={isSaving}
                             className="text-foreground"
                           />
                         </div>
@@ -205,30 +203,12 @@ const CrmPerfil = () => {
                           id="bio"
                           value={formData.bio}
                           onChange={(e) => handleInputChange('bio', e.target.value)}
-                          disabled={!isEditing || isSaving}
+                          disabled={isSaving}
                           placeholder="Conte um pouco sobre você..."
                           rows={4}
                           className="text-foreground"
                         />
                       </div>
-
-                      {isEditing && (
-                        <div className="flex justify-end space-x-2 pt-4">
-                          <Button
-                            variant="outline"
-                            onClick={() => setIsEditing(false)}
-                            disabled={isSaving}
-                          >
-                            Cancelar
-                          </Button>
-                          <Button 
-                            onClick={() => handleSave()}
-                            disabled={isSaving}
-                          >
-                            {isSaving ? 'Salvando...' : 'Salvar Alterações'}
-                          </Button>
-                        </div>
-                      )}
                     </CardContent>
                   </Card>
                 </div>
