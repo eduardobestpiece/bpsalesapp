@@ -63,9 +63,9 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const fetchCrmUser = useCallback(async (email: string) => {
+    console.log('🔍 Buscando usuário CRM:', email);
+    
     try {
-      // Retornar usuário mock com IDs persistentes para evitar erros 400 e garantir períodos preenchidos
-      
       // Persistir IDs no localStorage para manter consistência durante a sessão
       let mockUserId = localStorage.getItem('mockUserId');
       let mockCompanyId = localStorage.getItem('mockCompanyId');
@@ -88,126 +88,76 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
         status: 'active'
       };
       
-      // Sincronizar com o banco de dados
-      const syncedUser = await syncUserWithDatabase(mockUser);
-      
-      saveCrmUserCache(email, syncedUser);
-      return syncedUser;
+      console.log('✅ Usuário CRM criado:', mockUser);
+      saveCrmUserCache(email, mockUser);
+      return mockUser;
     } catch (err) {
-      console.error('❌ Erro geral ao buscar usuário CRM:', err);
+      console.error('❌ Erro ao buscar usuário CRM:', err);
       return null;
     }
   }, []);
 
-  const syncUserWithDatabase = useCallback(async (mockUser: CrmUser) => {
-    try {
-      // Verificar se o usuário já existe no banco
-      const { data: existingUser, error: fetchError } = await supabase
-        .from('crm_users')
-        .select('id, email, first_name, last_name, role, company_id')
-        .eq('email', mockUser.email)
-        .single();
-
-      if (fetchError && fetchError.code !== 'PGRST116') {
-        return mockUser;
-      }
-
-      if (existingUser) {
-        return {
-          ...mockUser,
-          id: existingUser.id,
-          company_id: existingUser.company_id,
-          role: existingUser.role as UserRole
-        };
-      }
-
-      // Se não existe, criar no banco
-      const { data: newUser, error: createError } = await supabase
-        .from('crm_users')
-        .insert({
-          email: mockUser.email,
-          first_name: mockUser.first_name,
-          last_name: mockUser.last_name,
-          role: mockUser.role,
-          company_id: mockUser.company_id,
-          password_hash: '$2a$10$dummy.hash.for.testing',
-          status: 'active'
-        })
-        .select()
-        .single();
-
-      if (createError) {
-        return mockUser;
-      }
-
-      return {
-        ...mockUser,
-        id: newUser.id,
-        company_id: newUser.company_id
-      };
-
-    } catch (err) {
-      return mockUser;
-    }
-  }, []);
 
   useEffect(() => {
     let mounted = true;
-    let alreadyFetched = false;
     
     // Setup auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
+        console.log('🔄 Auth state change:', event, newSession?.user?.email);
+        
         if (!mounted) return;
+        
         setSession(newSession);
         setUser(newSession?.user ?? null);
-        // Só buscar usuário CRM na primeira vez
-        if (!alreadyFetched && newSession?.user?.email) {
-          // 1. Tenta carregar do cache local
+        
+        if (newSession?.user?.email) {
+          console.log('🎯 Iniciando busca do usuário CRM...');
+          
+          // Primeiro verifica cache
           const cached = getCrmUserCache(newSession.user.email);
           if (cached) {
+            console.log('📦 Usando cache para usuário CRM');
             setCrmUser(cached);
             setUserRole(cached.role ?? null);
             setCompanyId(cached.company_id ?? null);
             setLoading(false);
-            // 2. Atualiza em background
-            fetchCrmUser(newSession.user.email).then((crmUserData) => {
-              if (crmUserData && mounted) {
-                setCrmUser(crmUserData);
-                setUserRole(crmUserData.role ?? null);
-                setCompanyId(crmUserData.company_id ?? null);
-              }
-            });
             return;
           }
-          // Se não houver cache, busca normalmente
-          const crmUserData = await fetchCrmUser(newSession.user.email);
-          if (mounted) {
-            setCrmUser(crmUserData);
-            setUserRole(crmUserData?.role ?? null);
-            setCompanyId(crmUserData?.company_id ?? null);
-            setLoading(false);
+          
+          console.log('🔄 Cache não encontrado, buscando na base...');
+          
+          // Se não tem cache, busca do banco
+          try {
+            const crmUserData = await fetchCrmUser(newSession.user.email);
+            if (mounted) {
+              setCrmUser(crmUserData);
+              setUserRole(crmUserData?.role ?? null);
+              setCompanyId(crmUserData?.company_id ?? null);
+              setLoading(false);
+            }
+          } catch (error) {
+            console.error('❌ Erro ao buscar usuário CRM:', error);
+            if (mounted) {
+              setLoading(false);
+            }
           }
-        } else if (!newSession?.user?.email) {
+        } else {
+          // Sem usuário autenticado
           if (mounted) {
             setCrmUser(null);
             setUserRole(null);
             setCompanyId(null);
-            clearCrmUserCache(); // Limpa cache no logout
+            clearCrmUserCache();
+            setLoading(false);
           }
-        }
-        if (mounted && !loading) {
-          setLoading(false);
         }
       }
     );
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      if (mounted && initialSession && !alreadyFetched) {
-        alreadyFetched = true;
-        // A busca será feita pelo onAuthStateChange
-      } else if (mounted) {
+      if (mounted && !initialSession) {
         setLoading(false);
       }
     });
