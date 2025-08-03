@@ -81,11 +81,12 @@ export function generateConsortiumInstallments(params) {
       taxaAdmin = credito * adminTaxRate;
       fundoReserva = credito * reserveFundRate;
     } else if (month === contemplationMonth) {
-      // Mês da contemplação: calcula sobre o crédito acessado
-      taxaAdmin = creditoAcessadoMes * adminTaxRate;
-      fundoReserva = creditoAcessadoMes * reserveFundRate;
+      // Mês da contemplação: calcula sobre o crédito NORMAL (sem redução do embutido)
+      // Taxa de admin e fundo de reserva NUNCA são reduzidos pelo embutido
+      taxaAdmin = credito * adminTaxRate;
+      fundoReserva = credito * reserveFundRate;
     } else {
-      // Após a contemplação: zerados
+      // Após a contemplação: zerados (incorporados no saldo devedor)
       taxaAdmin = 0;
       fundoReserva = 0;
     }
@@ -101,19 +102,13 @@ export function generateConsortiumInstallments(params) {
       const somaParcelasAnteriores = data.slice(0, month - 1).reduce((sum, row) => sum + row.installmentValue, 0);
       saldoDevedorAcumulado = valorBase - somaParcelasAnteriores;
     } else if (month === contemplationMonth) {
-      // Mês da contemplação: saldo baseado no crédito acessado
-      const valorBasePosContemplacao = creditoAcessadoMes + taxaAdmin + fundoReserva;
+      // Mês da contemplação: saldo baseado no crédito NORMAL + taxa admin + fundo reserva
+      // Depois aplicar redução do embutido somente no CRÉDITO ACESSADO
       const somaParcelasAteContemplacao = data.slice(0, contemplationMonth - 1).reduce((sum, row) => sum + row.installmentValue, 0);
       
-      // Cálculo correto: Saldo devedor = Valor base - Parcelas pagas até o mês anterior
-      let saldoDevedorPosContemplacao = valorBasePosContemplacao - somaParcelasAteContemplacao;
-      
-      // Aplicar a regra correta do embutido: Saldo devedor - (Crédito acessado × Embutido)
-      if (embutido === 'com') {
-        const embutidoPercentual = administrator.maxEmbeddedPercentage ?? 25;
-        const reducaoEmbutido = creditoAcessadoMes * (embutidoPercentual / 100);
-        saldoDevedorPosContemplacao = saldoDevedorPosContemplacao - reducaoEmbutido;
-      }
+      // Saldo devedor = (Crédito acessado + Taxa admin + Fundo reserva) - Parcelas pagas
+      // Onde taxa admin e fundo reserva são calculados sobre crédito normal (sem embutido)
+      let saldoDevedorPosContemplacao = creditoAcessadoMes + taxaAdmin + fundoReserva - somaParcelasAteContemplacao;
       
       saldoDevedorAcumulado = saldoDevedorPosContemplacao;
     } else {
