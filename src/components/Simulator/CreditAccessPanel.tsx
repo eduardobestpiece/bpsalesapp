@@ -16,6 +16,8 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { regraParcelaEspecial } from '@/lib/regraParcelaEspecial';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 
+
+
 interface SimulationData {
   administrator: string;
   consortiumType: 'property' | 'vehicle';
@@ -133,6 +135,8 @@ function ResumoCard({ titulo, valor, destaquePositivo, destaqueNegativo }: { tit
 export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsChange, firstRowCredit, firstRowInstallmentValue, shouldRecalculateCredit, embutido, setEmbutido }: CreditAccessPanelProps) => {
   const { selectedCompanyId } = useCompany();
   const { crmUser, companyId } = useCrmAuth();
+  
+
   const [credits, setCredits] = useState<Credit[]>([]);
   const [availableProducts, setAvailableProducts] = useState<any[]>([]);
   const [selectedCreditForChange, setSelectedCreditForChange] = useState<string | null>(null);
@@ -170,6 +174,8 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
   const [taxaAdministracao, setTaxaAdministracao] = useState(0);
   const [taxaAnual, setTaxaAnual] = useState(0);
   const [atualizacaoAnual, setAtualizacaoAnual] = useState('-');
+
+
 
   // Carregar montagem salva ao abrir
   useEffect(() => {
@@ -575,8 +581,6 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
 
   // Função para calcular crédito usando a fórmula correta
   const calcularCreditoPorFormula = (valorAporte: number, installmentParams: any, reducaoParcela: any, installmentType: string) => {
-    console.log('🔍 [CÁLCULO CRÉDITO FÓRMULA] Iniciando cálculo:', { valorAporte, installmentParams, reducaoParcela, installmentType });
-    
     const baseCalculo = 10000;
     const prazo = installmentParams.installment_count;
     
@@ -611,31 +615,10 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     // Arredondar para múltiplo de 10000
     const creditoFinal = Math.ceil(creditoCalculado / 10000) * 10000;
     
-    console.log('🔍 [CÁLCULO CRÉDITO FÓRMULA] Parâmetros calculados:', {
-      parcelaBase,
-      taxaAdm,
-      fundoReserva,
-      prazo
-    });
-    
-    console.log('🔍 [CÁLCULO CRÉDITO FÓRMULA] Valores intermediários:', {
-      valorTaxaAdm,
-      valorFundoReserva,
-      valorTotalTaxas,
-      parcelaComTaxas,
-      parcelaComTaxasPorMes
-    });
-    
-    console.log('🔍 [CÁLCULO CRÉDITO FÓRMULA] Parcela com taxas:', parcelaComTaxas);
-    console.log('🔍 [CÁLCULO CRÉDITO FÓRMULA] Crédito calculado:', creditoCalculado);
-    console.log('🔍 [CÁLCULO CRÉDITO FÓRMULA] Crédito final arredondado:', creditoFinal);
-    
     return creditoFinal;
   };
 
   const calcularParcelaPorFormula = (creditoAcessado: number, installmentParams: any, reducaoParcela: any, installmentType: string) => {
-    console.log('🔍 [CÁLCULO PARCELA FÓRMULA] Iniciando cálculo:', { creditoAcessado, installmentParams, reducaoParcela, installmentType });
-    
     const prazo = installmentParams.installment_count;
     
     // Calcular parcela base com redução se aplicável
@@ -663,34 +646,11 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     
     const parcelaFinal = (parcelaBase + valorTotalTaxas) / prazo;
     
-    console.log('🔍 [CÁLCULO PARCELA FÓRMULA] Parâmetros calculados:', {
-      parcelaBase,
-      taxaAdm,
-      fundoReserva,
-      prazo
-    });
-    
-    console.log('🔍 [CÁLCULO PARCELA FÓRMULA] Valores intermediários:', {
-      valorTaxaAdm,
-      valorFundoReserva,
-      valorTotalTaxas,
-      parcelaFinal
-    });
-    
-    console.log('🔍 [CÁLCULO PARCELA FÓRMULA] Parcela final:', parcelaFinal);
-    
     return parcelaFinal;
   };
 
   // Função para sugerir créditos dinamicamente baseado no valor de aporte
   const sugerirCreditosDinamico = async (valorAporte: number, administratorId: string, term: number, installmentType: string) => {
-    console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Iniciando cálculo:', {
-      valorAporte,
-      administratorId,
-      term,
-      installmentType
-    });
-
     // Buscar installment types da administradora
     let installmentTypes = [];
     try {
@@ -703,14 +663,12 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
       
       if (types && types.length > 0) {
         installmentTypes = types;
-        console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Installment types encontrados:', installmentTypes.length);
       }
     } catch (error) {
       console.error('Erro ao buscar installment types:', error);
     }
 
     if (installmentTypes.length === 0) {
-      console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Nenhum installment type encontrado');
       return [];
     }
 
@@ -726,7 +684,6 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
         
         if (reducoes && reducoes.length > 0) {
           reducaoParcela = reducoes[0];
-          console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Redução de parcela encontrada:', reducaoParcela);
         }
       } catch (error) {
         console.error('Erro ao buscar redução de parcela:', error);
@@ -744,13 +701,9 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
       optional_insurance: !!installmentCandidato.optional_insurance
     };
 
-    console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Parâmetros da parcela:', installmentParams);
-
     // Calcular crédito usando a fórmula correta
     const creditoCalculado = calcularCreditoPorFormula(valorAporte, installmentParams, reducaoParcela, installmentType);
     
-    console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Crédito calculado pela fórmula:', creditoCalculado);
-
     // Calcular parcela real para o crédito calculado
     let parcelaReal = 0;
     if (installmentType === 'full') {
@@ -766,8 +719,6 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
         reduction: reducaoParcela
       });
     }
-
-    console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Parcela real calculada:', parcelaReal);
 
     // Adicionar o crédito calculado como opção
     creditosSugeridos.push({
@@ -809,8 +760,6 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
         });
       }
 
-      console.log(`🔍 [CÁLCULO CRÉDITO DINÂMICO] Opção adicional ${i + 1}: Crédito ${credito} -> Parcela ${parcela}`);
-
       creditosSugeridos.push({
         id: `generated-${credito}`,
         name: `R$ ${(credito / 1000).toFixed(0)}.000,00 (Imóvel)`,
@@ -824,7 +773,6 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
       });
     }
 
-    console.log('🔍 [CÁLCULO CRÉDITO DINÂMICO] Total de créditos sugeridos:', creditosSugeridos.length);
     return creditosSugeridos;
   };
 
@@ -1993,6 +1941,8 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
           <div className="py-6 text-center text-lg">Funcionalidade de geração de proposta estará disponível em breve!</div>
         </DialogContent>
       </Dialog>
+
+
     </div>
   );
 };

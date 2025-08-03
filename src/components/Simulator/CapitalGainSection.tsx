@@ -109,18 +109,20 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
         }
       }
       
+      // Aplicar redução do embutido no mês de contemplação se "Com embutido" estiver selecionado
+      if (embutido === 'com' && m === contemplationMonth && !embutidoAplicado) {
+        const maxEmbeddedPercentage = administrator.maxEmbeddedPercentage ?? 25; // Usar o valor da administradora (mesmo se for 0)
+        currentCredit = currentCredit - (currentCredit * maxEmbeddedPercentage / 100);
+        embutidoAplicado = true;
+      }
+      
       // Após contemplação, aplicar atualização mensal em todos os meses
       if (m > contemplationMonth) {
         const postContemplationRate = administrator.postContemplationAdjustment || 0;
         currentCredit = currentCredit + (currentCredit * postContemplationRate / 100);
       }
       
-      // Aplicar redução do embutido no mês de contemplação se "Com embutido" estiver selecionado
-      if (embutido === 'com' && m === contemplationMonth && !embutidoAplicado) {
-        const maxEmbeddedPercentage = administrator.maxEmbeddedPercentage || 25; // 25% padrão
-        currentCredit = currentCredit - (currentCredit * maxEmbeddedPercentage / 100);
-        embutidoAplicado = true;
-      }
+
     }
     
     return currentCredit;

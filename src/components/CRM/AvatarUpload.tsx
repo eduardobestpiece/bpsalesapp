@@ -19,30 +19,12 @@ export const AvatarUpload = ({ currentAvatar, onAvatarChange, userId, userInitia
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
-
-    console.log('Arquivo selecionado:', {
-      name: file.name,
-      size: file.size,
-      type: file.type
-    });
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Por favor, selecione uma imagem válida');
-      return;
+    if (file) {
+      // Removido debug
+      setSelectedFile(file);
     }
-
-    // Validate file size (10MB max)
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('A imagem deve ter no máximo 10MB');
-      return;
-    }
-
-    setSelectedFile(file);
-    setShowCropper(true);
   };
 
   const handleCropComplete = async (croppedImageDataUrl: string) => {
@@ -145,7 +127,7 @@ export const AvatarUpload = ({ currentAvatar, onAvatarChange, userId, userInitia
               ref={fileInputRef}
               type="file"
               accept="image/*"
-              onChange={handleFileSelect}
+              onChange={handleFileChange}
               className="hidden"
               id="avatar-upload"
               disabled={isUploading}

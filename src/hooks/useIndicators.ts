@@ -124,7 +124,9 @@ export const useCreateIndicator = () => {
         .select()
         .single();
 
-      if (indicatorError) throw indicatorError;
+      if (indicatorError) {
+        throw indicatorError;
+      }
 
       // Then create the indicator values
       if (indicatorData.values.length > 0) {
@@ -132,8 +134,6 @@ export const useCreateIndicator = () => {
           ...value,
           indicator_id: indicator.id
         }));
-        
-
 
         const { error: valuesError } = await supabase
           .from('indicator_values')
@@ -149,6 +149,9 @@ export const useCreateIndicator = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['indicators'] });
     },
+    onError: (error) => {
+      console.error('❌ Erro na mutation createIndicator:', error);
+    }
   });
 };
 

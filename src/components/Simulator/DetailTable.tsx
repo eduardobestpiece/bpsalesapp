@@ -202,7 +202,7 @@ export const DetailTable = ({
       
       // Aplicar redução do embutido no mês de contemplação se "Com embutido" estiver selecionado
       if (embutido === 'com' && m === contemplationMonth && !embutidoAplicado) {
-        const maxEmbeddedPercentage = administrator.maxEmbeddedPercentage || 25; // 25% padrão
+        const maxEmbeddedPercentage = administrator.maxEmbeddedPercentage ?? 25; // Usar o valor da administradora (mesmo se for 0)
         currentCredit = currentCredit - (currentCredit * maxEmbeddedPercentage / 100);
         embutidoAplicado = true;
       }
@@ -312,6 +312,14 @@ export const DetailTable = ({
         fundoReserva = creditoAcessadoContemplacao * reserveFundRate;
       }
       
+                // Para o mês da contemplação, garantir que estamos usando os valores corretos
+          if (month === contemplationMonth) {
+            const creditoAcessadoContemplacaoTemp = calculateCreditoAcessado(contemplationMonth, baseCredit);
+            taxaAdmin = creditoAcessadoContemplacaoTemp * adminTaxRate;
+            fundoReserva = creditoAcessadoContemplacaoTemp * reserveFundRate;
+            creditoAcessadoContemplacao = creditoAcessadoContemplacaoTemp; // Atualizar o valor global
+          }
+      
       // Calcular o saldo devedor
       if (month === 1) {
         // Primeiro mês: soma de Crédito + Taxa de Administração + Fundo de Reserva
@@ -324,11 +332,56 @@ export const DetailTable = ({
         saldoDevedorAcumulado = valorBase - somaParcelasAnteriores;
       } else {
         // Após a contemplação: nova lógica baseada no crédito acessado
-        if (month === contemplationMonth + 1) {
-          // Primeiro mês após contemplação: saldo baseado no crédito acessado
-          const valorBasePosContemplacao = creditoAcessadoContemplacao + taxaAdmin + fundoReserva;
-          const somaParcelasAteContemplacao = data.slice(0, contemplationMonth).reduce((sum, row) => sum + row.valorParcela, 0);
-          saldoDevedorAcumulado = valorBasePosContemplacao - somaParcelasAteContemplacao;
+        if (month === contemplationMonth) {
+          // Mês da contemplação: saldo baseado no crédito acessado
+          // Usar os valores corretos do mês da contemplação
+          const creditoAcessadoContemplacaoTemp = calculateCreditoAcessado(contemplationMonth, baseCredit);
+          
+          // SEMPRE calcular taxa admin e fundo reserva sobre o crédito original (não sobre o crédito acessado)
+          const taxaAdminContemplacao = credito * adminTaxRate;
+          const fundoReservaContemplacao = credito * reserveFundRate;
+          
+          const valorBasePosContemplacao = creditoAcessadoContemplacaoTemp + taxaAdminContemplacao + fundoReservaContemplacao;
+          const somaParcelasAteContemplacao = data.slice(0, contemplationMonth - 1).reduce((sum, row) => sum + row.valorParcela, 0);
+          
+          // Cálculo correto: Saldo devedor = Valor base - Parcelas pagas até o mês anterior
+          let saldoDevedorPosContemplacao = valorBasePosContemplacao - somaParcelasAteContemplacao;
+          
+          // Aplicar a regra correta do embutido: Saldo devedor - (Crédito acessado × Embutido)
+          if (embutido === 'com') {
+            const embutidoPercentual = administrator.maxEmbeddedPercentage ?? 25; // Usar o valor da administradora (mesmo se for 0)
+            const reducaoEmbutido = creditoAcessadoContemplacaoTemp * (embutidoPercentual / 100);
+            saldoDevedorPosContemplacao = saldoDevedorPosContemplacao - reducaoEmbutido;
+          }
+          
+          saldoDevedorAcumulado = saldoDevedorPosContemplacao;
+          
+          // Debug temporário para verificar valores da contemplação
+          console.log('=== DEBUG MÊS CONTEMPLAÇÃO ===');
+          console.log('Mês:', month);
+          console.log('Crédito acessado:', creditoAcessadoContemplacaoTemp);
+          console.log('Taxa admin:', taxaAdminContemplacao);
+          console.log('Fundo reserva:', fundoReservaContemplacao);
+          console.log('Valor base:', valorBasePosContemplacao);
+          console.log('Soma parcelas até contemplação:', somaParcelasAteContemplacao);
+          console.log('Saldo devedor antes embutido:', valorBasePosContemplacao - somaParcelasAteContemplacao);
+          console.log('Embutido percentual:', administrator.maxEmbeddedPercentage ?? 25);
+          console.log('Redução embutido:', embutido === 'com' ? creditoAcessadoContemplacaoTemp * ((administrator.maxEmbeddedPercentage ?? 25) / 100) : 0);
+          console.log('Saldo devedor final:', saldoDevedorAcumulado);
+          console.log('==============================');
+        } else if (month === contemplationMonth + 1) {
+          // Primeiro mês após contemplação: usar saldo da contemplação menos parcela da contemplação
+          const saldoContemplacao = data[contemplationMonth - 1]?.saldoDevedor || 0;
+          const parcelaContemplacao = data[contemplationMonth - 1]?.valorParcela || 0;
+          saldoDevedorAcumulado = saldoContemplacao - parcelaContemplacao;
+          
+          // Debug temporário para verificar valores
+          console.log('=== DEBUG MÊS 31 ===');
+          console.log('Mês:', month);
+          console.log('Saldo contemplação:', saldoContemplacao);
+          console.log('Parcela contemplação:', parcelaContemplacao);
+          console.log('Saldo devedor final:', saldoDevedorAcumulado);
+          console.log('========================');
         } else {
           // Meses seguintes após contemplação
           const saldoAnterior = data[month - 2]?.saldoDevedor || 0;

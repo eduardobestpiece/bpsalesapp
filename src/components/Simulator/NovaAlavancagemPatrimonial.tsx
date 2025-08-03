@@ -169,10 +169,12 @@ export const NovaAlavancagemPatrimonial = ({
       
       // Aplicar redução do embutido no mês de contemplação se "Com embutido" estiver selecionado
       if (embutido === 'com' && m === contemplationMonth && !embutidoAplicado) {
-        const maxEmbeddedPercentage = administrator.maxEmbeddedPercentage || 25; // 25% padrão
+        const maxEmbeddedPercentage = administrator.maxEmbeddedPercentage ?? 25; // Usar o valor da administradora (mesmo se for 0)
         currentCredit = currentCredit - (currentCredit * maxEmbeddedPercentage / 100);
         embutidoAplicado = true;
       }
+      
+
     }
     
     return currentCredit;
