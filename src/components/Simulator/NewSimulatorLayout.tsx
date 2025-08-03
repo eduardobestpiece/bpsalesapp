@@ -43,6 +43,9 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
     bidType: '',
   });
 
+  // Estado para controlar se a administradora foi inicializada
+  const [administratorInitialized, setAdministratorInitialized] = useState(false);
+
   // Estados para o menu lateral
   const [visibleSections, setVisibleSections] = useState({
     credit: true,
@@ -136,22 +139,47 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   useEffect(() => {
     const fetchInstallmentTypes = async () => {
       let adminId = localSimulationData.administrator;
-      if (!adminId) {
+      
+      // Se não há administradora selecionada, buscar uma automaticamente
+      if (!adminId || adminId.trim() === '') {
+        console.log('Nenhuma administradora selecionada, buscando automaticamente...');
+        
         // Buscar administradora padrão
         const { data: admins } = await supabase
           .from('administrators')
           .select('id')
           .eq('is_default', true)
           .limit(1);
-        adminId = admins?.[0]?.id || '';
-        if (adminId && !localSimulationData.administrator) {
+        
+        // Se não há administradora padrão, buscar a primeira disponível
+        if (!admins || admins.length === 0) {
+          const { data: allAdmins } = await supabase
+            .from('administrators')
+            .select('id')
+            .eq('is_archived', false)
+            .limit(1);
+          adminId = allAdmins?.[0]?.id || '';
+          console.log('Administradora encontrada (primeira disponível):', adminId);
+        } else {
+          adminId = admins[0].id;
+          console.log('Administradora padrão encontrada:', adminId);
+        }
+        
+        // Forçar a atualização do estado se encontrou uma administradora
+        if (adminId && adminId.trim() !== '') {
+          console.log('Atualizando administradora para:', adminId);
           setLocalSimulationData((prev) => ({ ...prev, administrator: adminId }));
+          setAdministratorInitialized(true);
+          return; // Sair aqui para evitar execução dupla
         }
       }
-      if (adminId) {
+      
+      if (adminId && adminId.trim() !== '') {
+        console.log('Carregando dados da administradora:', adminId);
         // Usar as funções do contexto para carregar dados
         await simulatorContext.loadInstallmentTypes(adminId);
         await simulatorContext.loadReducoesParcela(adminId);
+        setAdministratorInitialized(true);
       }
     };
     fetchInstallmentTypes();
@@ -434,6 +462,18 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
     } else {
     }
   }, [localSimulationData.administrator]);
+
+  // Só renderizar os componentes quando a administradora estiver inicializada
+  if (!administratorInitialized || !localSimulationData.administrator) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Carregando simulador...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4 h-full relative w-full max-w-full">

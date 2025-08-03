@@ -202,7 +202,10 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
   // Carregar produtos da administradora selecionada
   useEffect(() => {
     async function loadProducts() {
-      if (!data.administrator) return;
+      if (!data.administrator || data.administrator.trim() === '') {
+        console.log('Administrador não selecionado, pulando carregamento de produtos');
+        return;
+      }
       
       try {
         const { data: products } = await supabase
@@ -639,6 +642,12 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
 
   // Função para sugerir créditos dinamicamente baseado no valor de aporte
   const sugerirCreditosDinamico = async (valorAporte: number, administratorId: string, term: number, installmentType: string) => {
+    // Verificar se administratorId é válido
+    if (!administratorId || administratorId.trim() === '') {
+      console.log('AdministratorId inválido:', administratorId);
+      return [];
+    }
+    
     // Buscar installment types da administradora
     let installmentTypes = [];
     try {

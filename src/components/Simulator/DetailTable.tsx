@@ -299,90 +299,26 @@ export const DetailTable = ({
         // Antes da contemplação: calcula sobre o crédito normal
         taxaAdmin = credito * adminTaxRate;
         fundoReserva = credito * reserveFundRate;
+      } else if (month === contemplationMonth + 1) {
+        // Primeiro mês após contemplação: ZERAR taxa admin e fundo reserva
+        taxaAdmin = 0;
+        fundoReserva = 0;
       } else {
-        // Após a contemplação: calcula sobre o crédito acessado da contemplação
-        if (creditoAcessadoContemplacao === 0) {
-          // Se ainda não temos o valor da contemplação, calcula baseado no mês de contemplação
-          const creditoContemplacao = calculateCreditValue(contemplationMonth, baseCredit);
-          const creditoAcessadoContemplacaoTemp = calculateCreditoAcessado(contemplationMonth, baseCredit);
-          creditoAcessadoContemplacao = creditoAcessadoContemplacaoTemp;
-        }
-        
-        taxaAdmin = creditoAcessadoContemplacao * adminTaxRate;
-        fundoReserva = creditoAcessadoContemplacao * reserveFundRate;
+        // Meses seguintes após contemplação: ZERAR taxa admin e fundo reserva
+        taxaAdmin = 0;
+        fundoReserva = 0;
       }
       
-                // Para o mês da contemplação, garantir que estamos usando os valores corretos
-          if (month === contemplationMonth) {
-            const creditoAcessadoContemplacaoTemp = calculateCreditoAcessado(contemplationMonth, baseCredit);
-            taxaAdmin = creditoAcessadoContemplacaoTemp * adminTaxRate;
-            fundoReserva = creditoAcessadoContemplacaoTemp * reserveFundRate;
-            creditoAcessadoContemplacao = creditoAcessadoContemplacaoTemp; // Atualizar o valor global
-          }
-      
-      // Calcular o saldo devedor
-      if (month === 1) {
-        // Primeiro mês: soma de Crédito + Taxa de Administração + Fundo de Reserva
-        valorBaseInicial = credito + taxaAdmin + fundoReserva;
-        saldoDevedorAcumulado = valorBaseInicial;
-      } else if (month <= contemplationMonth) {
-        // Antes da contemplação: (Crédito + Taxa + Fundo Reserva) - soma das parcelas anteriores
-        const valorBase = credito + taxaAdmin + fundoReserva;
-        const somaParcelasAnteriores = data.slice(0, month - 1).reduce((sum, row) => sum + row.valorParcela, 0);
-        saldoDevedorAcumulado = valorBase - somaParcelasAnteriores;
-      } else {
-        // Após a contemplação: nova lógica baseada no crédito acessado
-        if (month === contemplationMonth) {
-          // Mês da contemplação: saldo baseado no crédito acessado
-          // Usar os valores corretos do mês da contemplação
-          const creditoAcessadoContemplacaoTemp = calculateCreditoAcessado(contemplationMonth, baseCredit);
-          
-          // SEMPRE calcular taxa admin e fundo reserva sobre o crédito original (não sobre o crédito acessado)
-          const taxaAdminContemplacao = credito * adminTaxRate;
-          const fundoReservaContemplacao = credito * reserveFundRate;
-          
-          const valorBasePosContemplacao = creditoAcessadoContemplacaoTemp + taxaAdminContemplacao + fundoReservaContemplacao;
-          const somaParcelasAteContemplacao = data.slice(0, contemplationMonth - 1).reduce((sum, row) => sum + row.valorParcela, 0);
-          
-          // Cálculo correto: Saldo devedor = Valor base - Parcelas pagas até o mês anterior
-          let saldoDevedorPosContemplacao = valorBasePosContemplacao - somaParcelasAteContemplacao;
-          
-          // Aplicar a regra correta do embutido: Saldo devedor - (Crédito acessado × Embutido)
-          if (embutido === 'com') {
-            const embutidoPercentual = administrator.maxEmbeddedPercentage ?? 25; // Usar o valor da administradora (mesmo se for 0)
-            const reducaoEmbutido = creditoAcessadoContemplacaoTemp * (embutidoPercentual / 100);
-            saldoDevedorPosContemplacao = saldoDevedorPosContemplacao - reducaoEmbutido;
-          }
-          
-          saldoDevedorAcumulado = saldoDevedorPosContemplacao;
-          
-          // Logs removidos para melhorar performance
-        } else if (month === contemplationMonth + 1) {
-          // Primeiro mês após contemplação: usar saldo da contemplação menos parcela da contemplação
-          const saldoContemplacao = data[contemplationMonth - 1]?.saldoDevedor || 0;
-          const parcelaContemplacao = data[contemplationMonth - 1]?.valorParcela || 0;
-          saldoDevedorAcumulado = saldoContemplacao - parcelaContemplacao;
-          
-          // Logs removidos para melhorar performance
-        } else {
-          // Meses seguintes após contemplação
-          const saldoAnterior = data[month - 2]?.saldoDevedor || 0;
-          const parcelaAnterior = data[month - 2]?.valorParcela || 0;
-          
-          // Verificar se é um mês de atualização anual após contemplação
-          const isAnnualUpdateAfterContemplation = (month - 1) % 12 === 0 && month > contemplationMonth;
-          
-          if (isAnnualUpdateAfterContemplation) {
-            // Atualização anual sobre o próprio saldo devedor
-            // Usar valor customizado se disponível, senão usar o valor padrão
-            const annualUpdateRate = customAnnualUpdateRate !== undefined ? customAnnualUpdateRate : (administrator.inccRate || 6);
-            saldoDevedorAcumulado = saldoAnterior + (saldoAnterior * annualUpdateRate / 100) - parcelaAnterior;
-          } else {
-            // Mês normal após contemplação: saldo anterior menos parcela
-            saldoDevedorAcumulado = saldoAnterior - parcelaAnterior;
-          }
-        }
+      // Para o mês da contemplação, garantir que estamos usando os valores corretos
+      if (month === contemplationMonth) {
+        const creditoAcessadoContemplacaoTemp = calculateCreditoAcessado(contemplationMonth, baseCredit);
+        // SEMPRE calcular sobre o crédito original (não sobre o crédito acessado)
+        taxaAdmin = credito * adminTaxRate;
+        fundoReserva = credito * reserveFundRate;
+        creditoAcessadoContemplacao = creditoAcessadoContemplacaoTemp; // Atualizar o valor global
       }
+      
+
       
       // Calcular valor da parcela conforme as regras especificadas
       let valorParcela;
@@ -404,7 +340,9 @@ export const DetailTable = ({
         
         if (month === contemplationMonth + 1) {
           // Primeiro mês após contemplação: calcular parcela fixa baseada no saldo devedor
-          valorParcela = saldoDevedorAcumulado / prazoRestante;
+          // Precisamos usar o saldo devedor do mês de contemplação, não o atual
+          const saldoDevedorContemplacao = saldoDevedorAcumulado; // Este é o saldo do mês de contemplação
+          valorParcela = saldoDevedorContemplacao / prazoRestante;
           valorParcelaFixo = valorParcela; // Fixar o valor para os próximos meses
         } else {
           // Meses seguintes: usar o valor fixo até próxima atualização
@@ -420,6 +358,90 @@ export const DetailTable = ({
             // REGRA IGUAL PARA AMBOS OS TIPOS: saldo devedor / prazo restante
             valorParcela = saldoDevedorAcumulado / prazoRestanteAtualizado;
             valorParcelaFixo = valorParcela; // Atualizar valor fixo
+          }
+        }
+      }
+
+      // Calcular o saldo devedor
+      if (month === 1) {
+        // Primeiro mês: soma de Crédito + Taxa de Administração + Fundo de Reserva
+        valorBaseInicial = credito + taxaAdmin + fundoReserva;
+        saldoDevedorAcumulado = valorBaseInicial;
+      } else if (month <= contemplationMonth) {
+        // Antes da contemplação: (Crédito + Taxa + Fundo Reserva) - soma das parcelas anteriores
+        const valorBase = credito + taxaAdmin + fundoReserva;
+        const somaParcelasAnteriores = data.slice(0, month - 1).reduce((sum, row) => sum + row.valorParcela, 0);
+        saldoDevedorAcumulado = valorBase - somaParcelasAnteriores;
+      } else {
+        // Após a contemplação: nova lógica baseada no crédito acessado
+        if (month === contemplationMonth) {
+          // Mês da contemplação: saldo baseado no crédito acessado + taxa admin + fundo reserva - parcelas pagas
+          const creditoAcessadoContemplacaoTemp = calculateCreditoAcessado(contemplationMonth, baseCredit);
+          
+          // SEMPRE calcular taxa admin e fundo reserva sobre o crédito original (não sobre o crédito acessado)
+          const taxaAdminContemplacao = credito * adminTaxRate;
+          const fundoReservaContemplacao = credito * reserveFundRate;
+          
+          // Cálculo correto: (Crédito acessado + Taxa admin + Fundo reserva) - Parcelas pagas até o mês anterior
+          const valorBasePosContemplacao = creditoAcessadoContemplacaoTemp + taxaAdminContemplacao + fundoReservaContemplacao;
+          const somaParcelasAteContemplacao = data.slice(0, contemplationMonth - 1).reduce((sum, row) => sum + row.valorParcela, 0);
+          
+          let saldoDevedorPosContemplacao = valorBasePosContemplacao - somaParcelasAteContemplacao;
+          
+          // Aplicar redução do embutido no saldo devedor: Saldo devedor - (Crédito acessado × Embutido)
+          if (embutido === 'com') {
+            const embutidoPercentual = administrator.maxEmbeddedPercentage ?? 25;
+            const reducaoEmbutido = creditoAcessadoContemplacaoTemp * (embutidoPercentual / 100);
+            saldoDevedorPosContemplacao = saldoDevedorPosContemplacao - reducaoEmbutido;
+          }
+          
+          saldoDevedorAcumulado = saldoDevedorPosContemplacao;
+          
+          // Debug temporário para verificar valores
+          if (month === contemplationMonth) {
+            console.log('=== DEBUG MÊS CONTEMPLAÇÃO ===');
+            console.log('Credito acessado:', creditoAcessadoContemplacaoTemp);
+            console.log('Taxa admin:', taxaAdminContemplacao);
+            console.log('Fundo reserva:', fundoReservaContemplacao);
+            console.log('Valor base:', valorBasePosContemplacao);
+            console.log('Soma parcelas até contemplação:', somaParcelasAteContemplacao);
+            console.log('Saldo devedor antes embutido:', valorBasePosContemplacao - somaParcelasAteContemplacao);
+            if (embutido === 'com') {
+              console.log('Redução embutido:', reducaoEmbutido);
+              console.log('Saldo devedor final:', saldoDevedorPosContemplacao);
+            }
+            console.log('==============================');
+          }
+        } else if (month === contemplationMonth + 1) {
+          // Primeiro mês após contemplação: usar saldo da contemplação menos parcela da contemplação
+          // O problema é que data[contemplationMonth] ainda não existe porque estamos no loop
+          // Vamos usar o saldoDevedorAcumulado que foi calculado para o mês de contemplação
+          const saldoContemplacao = saldoDevedorAcumulado; // Usar o valor já calculado
+          const parcelaContemplacao = valorParcela; // Usar o valor da parcela do mês de contemplação
+          saldoDevedorAcumulado = saldoContemplacao - parcelaContemplacao;
+          
+          // Debug temporário para verificar valores
+          console.log('=== DEBUG MÊS 31 ===');
+          console.log('Saldo contemplação:', saldoContemplacao);
+          console.log('Parcela contemplação:', parcelaContemplacao);
+          console.log('Saldo devedor mês 31:', saldoDevedorAcumulado);
+          console.log('========================');
+        } else {
+          // Meses seguintes após contemplação
+          const saldoAnterior = data[month - 2]?.saldoDevedor || 0;
+          const parcelaAnterior = data[month - 2]?.valorParcela || 0;
+          
+          // Verificar se é um mês de atualização anual após contemplação
+          const isAnnualUpdateAfterContemplation = (month - 1) % 12 === 0 && month > contemplationMonth;
+          
+          if (isAnnualUpdateAfterContemplation) {
+            // Atualização anual sobre o próprio saldo devedor
+            // Usar valor customizado se disponível, senão usar o valor padrão
+            const annualUpdateRate = customAnnualUpdateRate !== undefined ? customAnnualUpdateRate : (administrator.inccRate || 6);
+            saldoDevedorAcumulado = saldoAnterior + (saldoAnterior * annualUpdateRate / 100) - parcelaAnterior;
+          } else {
+            // Mês normal após contemplação: saldo anterior menos parcela
+            saldoDevedorAcumulado = saldoAnterior - parcelaAnterior;
           }
         }
       }

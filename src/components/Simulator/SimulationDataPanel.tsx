@@ -54,12 +54,13 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
 
   useEffect(() => {
     const fetchReductions = async () => {
-      if (!data.term || !data.administrator) {
+      if (!data.term || !data.administrator || data.administrator.trim() === '') {
+        console.log('Dados insuficientes para buscar reduções:', { term: data.term, administrator: data.administrator });
         setReductionOptions([]);
         return;
       }
-      // Buscar o installment_type correspondente
-      if (!data.administrator || data.administrator.trim() === '') return;
+      
+      console.log('Buscando reduções para:', { administrator: data.administrator, term: data.term });
       
       const { data: installmentTypes } = await supabase
         .from('installment_types')
@@ -95,7 +96,13 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
 
   useEffect(() => {
     const fetchInstallmentTypeDetails = async () => {
-      if (!data.term || !data.administrator || data.administrator.trim() === '') return;
+      if (!data.term || !data.administrator || data.administrator.trim() === '') {
+        console.log('Dados insuficientes para buscar detalhes do installment type:', { term: data.term, administrator: data.administrator });
+        return;
+      }
+      
+      console.log('Buscando detalhes do installment type para:', { administrator: data.administrator, term: data.term });
+      
       const { data: installmentTypes } = await supabase
         .from('installment_types')
         .select('*')
@@ -115,6 +122,8 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
 
   const fetchAdministrators = async () => {
     try {
+      console.log('Buscando administradoras para company_id:', selectedCompanyId);
+      
       const { data: adminData, error } = await supabase
         .from('administrators')
         .select('id, name')
@@ -124,7 +133,16 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
       
       if (error) throw error;
       setAdministrators(adminData || []);
+      
+      console.log('Administradoras encontradas:', adminData?.length || 0);
+      
+      // Se não há administradora selecionada e há administradoras disponíveis, selecionar a primeira
+      if (!data.administrator && adminData && adminData.length > 0) {
+        console.log('Selecionando primeira administradora:', adminData[0].id);
+        handleChange('administrator', adminData[0].id);
+      }
     } catch (error) {
+      console.error('Erro ao buscar administradoras:', error);
     }
   };
 
