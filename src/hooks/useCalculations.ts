@@ -9,8 +9,8 @@ export const useCalculations = (data: SimulatorData) => {
   const [isCalculating, setIsCalculating] = useState(false);
   const [calculationError, setCalculationError] = useState<string | null>(null);
 
-  // Debouncing para otimizar cálculos pesados
-  const debouncedData = useDebounce(data, 300);
+  // Debouncing para otimizar cálculos pesados - aumentado para reduzir lentidão
+  const debouncedData = useDebounce(data, 800);
 
   // Cálculos avançados com taxas - memoizados e com debouncing
   const advancedConsortiumData = useMemo((): AdvancedCalculationResult | null => {

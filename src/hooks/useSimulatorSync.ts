@@ -34,8 +34,8 @@ export const useSimulatorSync = () => {
     });
   };
 
-  // Debouncing para otimizar performance
-  const debouncedSimulationData = useDebounce(simulationData, 300);
+  // Debouncing para otimizar performance - aumentado para reduzir lentidão
+  const debouncedSimulationData = useDebounce(simulationData, 800);
   
   // Referência para evitar loops infinitos
   const isUpdatingRef = useRef(false);

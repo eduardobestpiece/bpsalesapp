@@ -63,7 +63,7 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const fetchCrmUser = useCallback(async (email: string) => {
-    console.log('🔍 Buscando usuário CRM:', email);
+    // Removed console log for performance
     
     try {
       // Persistir IDs no localStorage para manter consistência durante a sessão
@@ -88,11 +88,11 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
         status: 'active'
       };
       
-      console.log('✅ Usuário CRM criado:', mockUser);
+      // Removed console log for performance
       saveCrmUserCache(email, mockUser);
       return mockUser;
     } catch (err) {
-      console.error('❌ Erro ao buscar usuário CRM:', err);
+      // Removed console log for performance
       return null;
     }
   }, []);
@@ -104,7 +104,7 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
     // Setup auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        console.log('🔄 Auth state change:', event, newSession?.user?.email);
+        // Removed console log for performance
         
         if (!mounted) return;
         
@@ -112,12 +112,12 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
         setUser(newSession?.user ?? null);
         
         if (newSession?.user?.email) {
-          console.log('🎯 Iniciando busca do usuário CRM...');
+          // Removed console log for performance
           
           // Primeiro verifica cache
           const cached = getCrmUserCache(newSession.user.email);
           if (cached) {
-            console.log('📦 Usando cache para usuário CRM');
+            // Removed console log for performance
             setCrmUser(cached);
             setUserRole(cached.role ?? null);
             setCompanyId(cached.company_id ?? null);
@@ -125,7 +125,7 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
             return;
           }
           
-          console.log('🔄 Cache não encontrado, buscando na base...');
+          // Removed console log for performance
           
           // Se não tem cache, busca do banco
           try {
@@ -137,7 +137,7 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
               setLoading(false);
             }
           } catch (error) {
-            console.error('❌ Erro ao buscar usuário CRM:', error);
+            // Removed console log for performance
             if (mounted) {
               setLoading(false);
             }

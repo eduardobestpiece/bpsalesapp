@@ -412,14 +412,11 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
           });
         }
 
-        console.log('🔍 [CÁLCULO CRÉDITO] Parcela de referência (100k):', parcelaReferencia);
+        // Removed console logs for performance
 
         // Calcular fator e crédito sugerido
         const fator = 100000 / parcelaReferencia;
         const creditoSugerido = Math.ceil((valorAporte * fator) / 10000) * 10000;
-
-        console.log('🔍 [CÁLCULO CRÉDITO] Fator calculado:', fator);
-        console.log('🔍 [CÁLCULO CRÉDITO] Crédito sugerido:', creditoSugerido);
 
         // Calcular parcela real para o crédito sugerido
         let parcelaReal = 0;
@@ -465,7 +462,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
           optional_insurance: !!installmentCandidato.optional_insurance
         };
 
-        console.log('🔍 [CÁLCULO CRÉDITO] Parâmetros da parcela (dinâmico):', installmentParams);
+        // Removed console log for performance
 
         // Calcular parcela para 100k como referência
         let parcelaReferencia = 0;
@@ -483,14 +480,11 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
           });
         }
 
-        console.log('🔍 [CÁLCULO CRÉDITO] Parcela de referência (100k) - dinâmico:', parcelaReferencia);
+        // Removed console logs for performance
 
         // Calcular fator e crédito sugerido
         const fator = 100000 / parcelaReferencia;
         const creditoSugerido = Math.ceil((valorAporte * fator) / 10000) * 10000;
-
-        console.log('🔍 [CÁLCULO CRÉDITO] Fator calculado (dinâmico):', fator);
-        console.log('🔍 [CÁLCULO CRÉDITO] Crédito sugerido (dinâmico):', creditoSugerido);
 
         // Calcular parcela real para o crédito sugerido
         let parcelaReal = 0;
@@ -508,8 +502,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
           });
         }
 
-        console.log('🔍 [CÁLCULO CRÉDITO] Parcela real calculada (dinâmico):', parcelaReal);
-        console.log('🔍 [CÁLCULO CRÉDITO] Diferença do valor desejado (dinâmico):', Math.abs(parcelaReal - valorAporte));
+        // Removed console logs for performance
 
         // Gerar múltiplas opções de crédito baseadas no valor sugerido
         const opcoesCredito = [
@@ -520,7 +513,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
           creditoSugerido - 20000
         ].filter(valor => valor > 0);
 
-        console.log('🔍 [CÁLCULO CRÉDITO] Opções de crédito geradas:', opcoesCredito);
+        // Removed console log for performance
 
         for (let i = 0; i < opcoesCredito.length; i++) {
           const credito = opcoesCredito[i];
@@ -541,7 +534,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
             });
           }
 
-          console.log(`🔍 [CÁLCULO CRÉDITO] Opção ${i + 1}: Crédito ${credito} -> Parcela ${parcela}`);
+          // Removed console log for performance
 
           creditosSugeridos.push({
             id: `generated-${i}`,
@@ -567,11 +560,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     // Selecionar o primeiro (mais próximo)
     if (creditosSugeridos.length > 0) {
       creditosSugeridos[0].selected = true;
-      console.log('🔍 [CÁLCULO CRÉDITO] Melhor opção selecionada:', {
-        creditoAcessado: creditosSugeridos[0].creditValue,
-        valorParcela: creditosSugeridos[0].installmentValue,
-        diferenca: Math.abs(creditosSugeridos[0].installmentValue - valorAporte)
-      });
+      // Removed console log for performance
     }
 
     // Debug removido para performance
@@ -1085,11 +1074,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
             const novoValorParcela = calcularParcelaPorFormula(novoCreditoAcessado, installmentParams, reducaoParcela, data.installmentType);
             setValorParcela(novoValorParcela);
             
-            console.log('🔍 [CÁLCULO APORTE ESPECIAL] Nova fórmula aplicada:', {
-              valorAporte,
-              novoCreditoAcessado,
-              novoValorParcela
-            });
+            // Removed console log for performance
             setParcelaReduzida(novoValorParcela);
             setPercentualUsado(novoValorParcela / novoCreditoAcessado);
             const novaParcelaCheia = calcularParcelasProduto({
@@ -1110,11 +1095,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
             const novoValorParcela = calcularParcelaPorFormula(novoCreditoAcessado, installmentParams, reducaoParcela, data.installmentType);
             setValorParcela(novoValorParcela);
             
-            console.log('🔍 [CÁLCULO APORTE CHEIA] Nova fórmula aplicada:', {
-              valorAporte,
-              novoCreditoAcessado,
-              novoValorParcela
-            });
+            // Removed console log for performance
             setParcelaCheia(novoValorParcela);
             const novaParcelaReduzida = regraParcelaEspecial({
               credit: novoCreditoAcessado,
@@ -1142,22 +1123,12 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
           const taxaAnualCalculada = (taxaTotal / data.term) * 12;
           setTaxaAnual(taxaAnualCalculada);
           
-          console.log('🔍 [CÁLCULO TAXA ANUAL] Valores:', {
-            customAdminTax,
-            customReserveFund,
-            taxaTotal,
-            prazo: data.term,
-            taxaAnualCalculada
-          });
+          // Removed console log for performance
           
           // Usar valor customizado se disponível, senão usar o valor padrão
           const customAnnualUpdateRate = data.annualUpdateRate !== undefined ? data.annualUpdateRate : data.updateRate;
           
-          console.log('🔍 [CÁLCULO ATUALIZAÇÃO ANUAL] Valores:', {
-            dataAnnualUpdateRate: data.annualUpdateRate,
-            dataUpdateRate: data.updateRate,
-            customAnnualUpdateRate
-          });
+          // Removed console log for performance
           
           if (data.consortiumType === 'property') {
             setAtualizacaoAnual('INCC ' + (customAnnualUpdateRate ? customAnnualUpdateRate.toFixed(2) + '%' : '6.00%'));
@@ -1199,11 +1170,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
         const novoValorParcela = calcularParcelaPorFormula(novoCreditoAcessado, installmentParams, reducaoParcela, data.installmentType);
         setValorParcela(novoValorParcela);
         
-        console.log('🔍 [CÁLCULO APORTE ESPECIAL] Nova fórmula aplicada:', {
-          valorAporte,
-          novoCreditoAcessado,
-          novoValorParcela
-        });
+        // Removed console log for performance
         setParcelaReduzida(novoValorParcela);
         setPercentualUsado(novoValorParcela / novoCreditoAcessado);
         const novaParcelaCheia = calcularParcelasProduto({
@@ -1245,11 +1212,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
         const novoValorParcela = calcularParcelaPorFormula(novoCreditoAcessado, installmentParams, reducaoParcela, data.installmentType);
         setValorParcela(novoValorParcela);
         
-        console.log('🔍 [CÁLCULO APORTE CHEIA] Nova fórmula aplicada:', {
-          valorAporte,
-          novoCreditoAcessado,
-          novoValorParcela
-        });
+        // Removed console log for performance
         setParcelaCheia(novoValorParcela);
         const novaParcelaReduzida = regraParcelaEspecial({
           credit: novoCreditoAcessado,
@@ -1284,22 +1247,12 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     const taxaAnualCalculada = (taxaTotal / data.term) * 12;
     setTaxaAnual(taxaAnualCalculada);
     
-    console.log('🔍 [CÁLCULO TAXA ANUAL - CRÉDITO] Valores:', {
-      customAdminTax,
-      customReserveFund,
-      taxaTotal,
-      prazo: data.term,
-      taxaAnualCalculada
-    });
+    // Removed console log for performance
     
     // Usar valor customizado se disponível, senão usar o valor padrão
     const customAnnualUpdateRate = data.annualUpdateRate !== undefined ? data.annualUpdateRate : data.updateRate;
     
-    console.log('🔍 [CÁLCULO ATUALIZAÇÃO ANUAL - CRÉDITO] Valores:', {
-      dataAnnualUpdateRate: data.annualUpdateRate,
-      dataUpdateRate: data.updateRate,
-      customAnnualUpdateRate
-    });
+    // Removed console log for performance
     
     if (data.consortiumType === 'property') {
       setAtualizacaoAnual('INCC ' + (customAnnualUpdateRate ? customAnnualUpdateRate.toFixed(2) + '%' : '6.00%'));
@@ -1487,14 +1440,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
       parcela = calcularParcelasProduto({ credit: produto.credit_value, installment, reduction: reducaoParaCalculo }).special;
     }
     
-    console.log('🔍 [ADICIONAR PRODUTO]', {
-      produto: produto.name,
-      credit_value: produto.credit_value,
-      parcela,
-      quantidade: addQuantidade,
-      installmentType: data.installmentType,
-      temReducao: !!reducaoParaCalculo
-    });
+    // Removed console log for performance
     
     setCotas(prev => [
       ...prev,
@@ -1574,14 +1520,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
       parcela = calcularParcelasProduto({ credit: produto.credit_value, installment, reduction: reducaoParaCalculo }).special;
     }
     
-    console.log('🔍 [REDEFINIR SELEÇÕES]', {
-      produto: produto.name,
-      credit_value: produto.credit_value,
-      parcela,
-      quantidade: redefinirQuantidade,
-      installmentType: data.installmentType,
-      temReducao: !!reducaoParaCalculo
-    });
+    // Removed console log for performance
     
     setCotas(prev => {
       const novas = prev.filter((_, i) => !selectedCotas.includes(i));
@@ -1603,16 +1542,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
   // 6. Calcular total das cotas
   const totalCotas = cotas.reduce((sum, c) => sum + c.valor * c.quantidade, 0);
   
-  console.log('🔍 [COTAS INDIVIDUAIS] Detalhes das cotas:', cotas.map(c => ({
-    valor: c.valor,
-    quantidade: c.quantidade,
-    parcela: c.parcela,
-    total: c.valor * c.quantidade,
-    parcelaTotal: c.parcela * c.quantidade
-  })));
-  
-  console.log('🔍 [COTAS INDIVIDUAIS] Soma das parcelas individuais:', cotas.reduce((sum, c) => sum + c.parcela * c.quantidade, 0));
-  console.log('🔍 [COTAS INDIVIDUAIS] Total do crédito:', totalCotas);
+  // Removed console logs for performance
   
   // Calcular total da parcela baseado no total do crédito, não na soma das parcelas individuais
   const [totalParcela, setTotalParcela] = useState(0);
@@ -1625,11 +1555,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
         let installment = null;
         
         // Buscar diretamente da tabela installment_types da administradora selecionada
-        console.log('🔍 [TOTAL DA PARCELA] Debug data.administrator:', {
-          administrator: data.administrator,
-          term: data.term,
-          totalCotas
-        });
+        // Removed console log for performance
         
         if (data.administrator) {
           try {
@@ -1643,23 +1569,15 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
             
             if (installmentTypes && installmentTypes.length > 0) {
               installment = installmentTypes[0];
-              console.log('🔍 [TOTAL DA PARCELA] Installment encontrado da administradora:', {
-                administrator: data.administrator,
-                installment_count: installment.installment_count,
-                admin_tax_percent: installment.admin_tax_percent,
-                reserve_fund_percent: installment.reserve_fund_percent
-              });
+              // Removed console log for performance
             } else {
-              console.log('🔍 [TOTAL DA PARCELA] Nenhum installment encontrado para:', {
-                administrator: data.administrator,
-                term: data.term
-              });
+              // Removed console log for performance
             }
           } catch (error) {
             console.error('Erro ao buscar installment_types da administradora:', error);
           }
         } else {
-          console.log('🔍 [TOTAL DA PARCELA] data.administrator está vazio!');
+          // Removed console log for performance
         }
         
         // Se não encontrou installment_type, buscar dos produtos como fallback
@@ -1681,12 +1599,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
                   const real = it.installment_types || it;
                   if (real.installment_count === data.term) {
                     installment = real;
-                    console.log('🔍 [TOTAL DA PARCELA] Installment encontrado dos produtos:', {
-                      administrator: data.administrator,
-                      installment_count: installment.installment_count,
-                      admin_tax_percent: installment.admin_tax_percent,
-                      reserve_fund_percent: installment.reserve_fund_percent
-                    });
+                    // Removed console log for performance
                     break;
                   }
                 }
@@ -1706,7 +1619,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
             insurance_percent: 0,
             optional_insurance: false
           };
-          console.log('🔍 [TOTAL DA PARCELA] Usando valores padrão para installment');
+          // Removed console log for performance
         }
         
         // Buscar redução de parcela se necessário
@@ -1728,39 +1641,20 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
         }
         
         // Calcular parcela baseada no tipo selecionado para o total
-        console.log('🔍 [TOTAL DA PARCELA] Iniciando cálculo:', {
-          totalCotas,
-          installmentType: data.installmentType,
-          installment,
-          reducaoParaCalculo
-        });
-        
-        // Debug detalhado do installment
-        console.log('🔍 [TOTAL DA PARCELA] Debug do installment:', {
-          installment_count: installment?.installment_count,
-          admin_tax_percent: installment?.admin_tax_percent,
-          reserve_fund_percent: installment?.reserve_fund_percent,
-          insurance_percent: installment?.insurance_percent,
-          optional_insurance: installment?.optional_insurance
-        });
+        // Removed console logs for performance
         
         let novoTotalParcela = 0;
         if (data.installmentType === 'full') {
           novoTotalParcela = calcularParcelasProduto({ credit: totalCotas, installment, reduction: null }).full;
-          console.log('🔍 [TOTAL DA PARCELA] Parcela cheia calculada:', novoTotalParcela);
+          // Removed console log for performance
         } else {
           novoTotalParcela = calcularParcelasProduto({ credit: totalCotas, installment, reduction: reducaoParaCalculo }).special;
-          console.log('🔍 [TOTAL DA PARCELA] Parcela especial calculada:', novoTotalParcela);
+          // Removed console log for performance
         }
         
         setTotalParcela(novoTotalParcela);
         
-        console.log('🔍 [TOTAL DA PARCELA] Resultado final:', {
-          totalCotas,
-          totalParcela: novoTotalParcela,
-          installmentType: data.installmentType,
-          temReducao: !!reducaoParaCalculo
-        });
+        // Removed console log for performance
       } else {
         setTotalParcela(0);
       }
