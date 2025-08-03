@@ -1222,6 +1222,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_crm_user_by_email: {
+        Args: { user_email: string }
+        Returns: {
+          id: string
+          email: string
+          first_name: string
+          last_name: string
+          role: Database["public"]["Enums"]["user_role"]
+          company_id: string
+          status: Database["public"]["Enums"]["entity_status"]
+          phone: string
+          avatar_url: string
+          bio: string
+          birth_date: string
+          leader_id: string
+          team_id: string
+          funnels: string[]
+          created_at: string
+          updated_at: string
+        }[]
+      }
       get_user_role: {
         Args: { user_email: string }
         Returns: Database["public"]["Enums"]["user_role"]

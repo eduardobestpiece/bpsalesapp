@@ -91,7 +91,7 @@ export const InstallmentsChart = ({ data, showLegend = true }: InstallmentsChart
             dataKey="mes"
             label={{ value: 'Ano', position: 'insideBottom', offset: -10, fill: '#444444' }}
             tick={{ fill: '#444444', fontWeight: 700, fontSize: 14 }}
-            tickFormatter={(mes) => Math.ceil(mes / 12)}
+            tickFormatter={(mes: number) => String(Math.ceil(mes / 12))}
             interval={11}
           />
           <YAxis label={{ value: 'R$', angle: -90, position: 'insideLeft' }} tick={{ fill: '#444444' }} tickFormatter={v => `R$ ${v.toLocaleString('pt-BR')}`} />

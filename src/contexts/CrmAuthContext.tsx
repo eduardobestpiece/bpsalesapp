@@ -93,8 +93,8 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
       
       saveCrmUserCache(email, syncedUser);
       return syncedUser;
-      
     } catch (err) {
+      console.error('❌ Erro geral ao buscar usuário CRM:', err);
       return null;
     }
   }, []);
