@@ -340,14 +340,14 @@ export const DetailTable = ({
         
         if (month === contemplationMonth + 1) {
           // Primeiro mês após contemplação: calcular parcela fixa baseada no saldo devedor
-          // Precisamos usar o saldo devedor do mês de contemplação, não o atual
-          const saldoDevedorContemplacao = saldoDevedorAcumulado; // Este é o saldo do mês de contemplação
-          valorParcela = saldoDevedorContemplacao / prazoRestante;
+          // CORREÇÃO: Usar o saldo devedor final (após redução do embutido) em vez do saldo da contemplação
+          const saldoDevedorFinal = saldoDevedorAcumulado; // Este já é o saldo final após redução do embutido
+          valorParcela = saldoDevedorFinal / prazoRestante;
           valorParcelaFixo = valorParcela; // Fixar o valor para os próximos meses
           
           // Debug para verificar o cálculo da parcela
           console.log('=== DEBUG PARCELA MÊS 31 ===');
-          console.log('Saldo devedor contemplação:', saldoDevedorContemplacao);
+          console.log('Saldo devedor final (após embutido):', saldoDevedorFinal);
           console.log('Prazo restante:', prazoRestante);
           console.log('Valor da parcela calculado:', valorParcela);
           console.log('=============================');

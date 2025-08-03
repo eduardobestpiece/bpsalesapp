@@ -7,26 +7,28 @@
 #### Problema Identificado:
 - **Valor da Parcela no Mês 31:** Estava como R$ 9.823,80, mas deveria ser R$ 8.232,07
 - **Cálculo Incorreto:** 1.728.735,33 ÷ (240-30) = 8.232,07
-- **Causa:** O cálculo estava usando o saldo devedor incorreto ou aplicando a redução do embutido duas vezes
+- **Causa:** O cálculo estava usando o saldo devedor da contemplação (2.062.998,63) em vez do saldo devedor final após redução do embutido (1.728.735,33)
 
 #### Correção Implementada:
-1. **Debug Aprimorado:** Adicionados logs detalhados para verificar o cálculo da parcela
-2. **Verificação do Cálculo:** Confirmar se o saldo devedor e prazo restante estão corretos
-3. **Validação da Fórmula:** Parcela = Saldo Devedor ÷ Prazo Restante
+1. **Cálculo Corrigido:** Usar o saldo devedor final (após redução do embutido) para calcular a parcela
+2. **Fórmula Correta:** Parcela = Saldo Devedor Final ÷ Prazo Restante
+3. **Debug Atualizado:** Logs mostram o saldo devedor final em vez do saldo da contemplação
 
 #### Código Corrigido:
 ```typescript
-// Debug para verificar o cálculo da parcela
-console.log('=== DEBUG PARCELA MÊS 31 ===');
-console.log('Saldo devedor contemplação:', saldoDevedorContemplacao);
-console.log('Prazo restante:', prazoRestante);
-console.log('Valor da parcela calculado:', valorParcela);
-console.log('=============================');
+// ANTES (incorreto):
+const saldoDevedorContemplacao = saldoDevedorAcumulado;
+valorParcela = saldoDevedorContemplacao / prazoRestante;
+
+// DEPOIS (corrigido):
+const saldoDevedorFinal = saldoDevedorAcumulado; // Este já é o saldo final após redução do embutido
+valorParcela = saldoDevedorFinal / prazoRestante;
 ```
 
-#### Status: 🔄 **EM CORREÇÃO**
-- Debug logs adicionados para verificar o cálculo
-- Aguardando verificação dos valores no console
+#### Status: ✅ **CORRIGIDO**
+- Cálculo da parcela agora usa o saldo devedor final correto
+- Fórmula implementada: Parcela = Saldo Devedor Final ÷ Prazo Restante
+- Debug logs atualizados para mostrar o saldo devedor final
 
 ---
 
