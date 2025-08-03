@@ -3,19 +3,23 @@ import { useState, useCallback, useMemo } from 'react';
 import { SimulatorData } from '@/types/simulator';
 import { calculateConsortium, calculateAirbnb, calculateCommercialProperty, calculatePatrimonialEvolution } from '@/utils/calculations';
 import { calculateAdvancedConsortium, calculateHalfInstallment, AdvancedCalculationResult } from '@/utils/advancedCalculations';
+import { useDebounce } from './useDebounce';
 
 export const useCalculations = (data: SimulatorData) => {
   const [isCalculating, setIsCalculating] = useState(false);
   const [calculationError, setCalculationError] = useState<string | null>(null);
 
-  // Cálculos avançados com taxas
+  // Debouncing para otimizar cálculos pesados
+  const debouncedData = useDebounce(data, 300);
+
+  // Cálculos avançados com taxas - memoizados e com debouncing
   const advancedConsortiumData = useMemo((): AdvancedCalculationResult | null => {
     try {
-      return calculateAdvancedConsortium(data);
+      return calculateAdvancedConsortium(debouncedData);
     } catch (error) {
       return null;
     }
-  }, [data]);
+  }, [debouncedData]);
 
   const halfInstallmentData = useMemo((): AdvancedCalculationResult | null => {
     if (!advancedConsortiumData) return null;

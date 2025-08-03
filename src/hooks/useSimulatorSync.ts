@@ -1,6 +1,7 @@
 
-import { useEffect } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useSimulator } from '@/contexts/SimulatorContext';
+import { useDebounce } from './useDebounce';
 
 /**
  * Hook personalizado para sincronizar dados entre componentes do simulador
@@ -33,8 +34,16 @@ export const useSimulatorSync = () => {
     });
   };
 
-  // Função para atualizar o valor do aporte ou crédito
-  const updateSimulationValue = (value: number) => {
+  // Debouncing para otimizar performance
+  const debouncedSimulationData = useDebounce(simulationData, 300);
+  
+  // Referência para evitar loops infinitos
+  const isUpdatingRef = useRef(false);
+
+  // Função para atualizar o valor do aporte ou crédito com debouncing
+  const updateSimulationValue = useCallback((value: number) => {
+    if (isUpdatingRef.current) return;
+    
     setSimulationData({
       ...simulationData,
       value
@@ -47,10 +56,12 @@ export const useSimulatorSync = () => {
         nominalCreditValue: value
       });
     }
-  };
+  }, [simulationData, product, setSimulationData, setProduct]);
 
-  // Função para atualizar o número de parcelas
-  const updateInstallments = (installments: number) => {
+  // Função para atualizar o número de parcelas com debouncing
+  const updateInstallments = useCallback((installments: number) => {
+    if (isUpdatingRef.current) return;
+    
     setSimulationData({
       ...simulationData,
       installments
@@ -61,7 +72,7 @@ export const useSimulatorSync = () => {
       ...product,
       termMonths: installments
     });
-  };
+  }, [simulationData, product, setSimulationData, setProduct]);
 
   // Função para atualizar o tipo de parcela
   const updateInstallmentType = (type: 'full' | 'half' | 'reduced') => {
@@ -74,22 +85,34 @@ export const useSimulatorSync = () => {
     setInstallmentType(type);
   };
 
-  // Sincroniza o valor do imóvel com o valor do crédito quando apropriado
+  // Sincronização otimizada com debouncing para evitar loops infinitos
   useEffect(() => {
-    if (property.initialValue !== product.nominalCreditValue) {
-      setProperty({
-        ...property,
-        initialValue: product.nominalCreditValue
-      });
-    }
-  }, [product.nominalCreditValue]);
+    if (isUpdatingRef.current) return;
+    
+    isUpdatingRef.current = true;
+    
+    // Timeout para permitir que outras atualizações terminem
+    const timeoutId = setTimeout(() => {
+      if (property.initialValue !== product.nominalCreditValue) {
+        setProperty({
+          ...property,
+          initialValue: product.nominalCreditValue
+        });
+      }
+      isUpdatingRef.current = false;
+    }, 100);
+    
+    return () => {
+      clearTimeout(timeoutId);
+      isUpdatingRef.current = false;
+    };
+  }, [debouncedSimulationData, product.nominalCreditValue]);
 
-  // Efeito para garantir consistência entre administradora e produto
+  // Efeito simplificado para sincronização
   useEffect(() => {
-    if (administrator && product) {
-      // Sincronização ativa entre administradora e produto
-    }
-  }, [administrator, product, contemplationMonth, installmentType]);
+    if (isUpdatingRef.current) return;
+    // Sincronização básica sem operações pesadas
+  }, [administrator?.id, product?.id, contemplationMonth, installmentType]);
 
   return {
     // Dados do contexto

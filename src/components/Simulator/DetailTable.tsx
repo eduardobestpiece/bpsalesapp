@@ -356,32 +356,14 @@ export const DetailTable = ({
           
           saldoDevedorAcumulado = saldoDevedorPosContemplacao;
           
-          // Debug temporário para verificar valores da contemplação
-          console.log('=== DEBUG MÊS CONTEMPLAÇÃO ===');
-          console.log('Mês:', month);
-          console.log('Crédito acessado:', creditoAcessadoContemplacaoTemp);
-          console.log('Taxa admin:', taxaAdminContemplacao);
-          console.log('Fundo reserva:', fundoReservaContemplacao);
-          console.log('Valor base:', valorBasePosContemplacao);
-          console.log('Soma parcelas até contemplação:', somaParcelasAteContemplacao);
-          console.log('Saldo devedor antes embutido:', valorBasePosContemplacao - somaParcelasAteContemplacao);
-          console.log('Embutido percentual:', administrator.maxEmbeddedPercentage ?? 25);
-          console.log('Redução embutido:', embutido === 'com' ? creditoAcessadoContemplacaoTemp * ((administrator.maxEmbeddedPercentage ?? 25) / 100) : 0);
-          console.log('Saldo devedor final:', saldoDevedorAcumulado);
-          console.log('==============================');
+          // Logs removidos para melhorar performance
         } else if (month === contemplationMonth + 1) {
           // Primeiro mês após contemplação: usar saldo da contemplação menos parcela da contemplação
           const saldoContemplacao = data[contemplationMonth - 1]?.saldoDevedor || 0;
           const parcelaContemplacao = data[contemplationMonth - 1]?.valorParcela || 0;
           saldoDevedorAcumulado = saldoContemplacao - parcelaContemplacao;
           
-          // Debug temporário para verificar valores
-          console.log('=== DEBUG MÊS 31 ===');
-          console.log('Mês:', month);
-          console.log('Saldo contemplação:', saldoContemplacao);
-          console.log('Parcela contemplação:', parcelaContemplacao);
-          console.log('Saldo devedor final:', saldoDevedorAcumulado);
-          console.log('========================');
+          // Logs removidos para melhorar performance
         } else {
           // Meses seguintes após contemplação
           const saldoAnterior = data[month - 2]?.saldoDevedor || 0;

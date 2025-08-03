@@ -369,7 +369,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
 
     // Se há produtos suficientes, usar a lógica original
     if (produtosAdministradora.length >= 3) {
-      console.log('🔍 [CÁLCULO CRÉDITO] Usando lógica original - produtos suficientes');
+      // Debug log removido para performance
       
       for (const produto of produtosAdministradora) {
         // Buscar installment type compatível
@@ -395,7 +395,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
           optional_insurance: !!installmentCandidato.optional_insurance
         };
 
-        console.log('🔍 [CÁLCULO CRÉDITO] Parâmetros da parcela:', installmentParams);
+        // Debug log removido para performance
 
         let parcelaReferencia = 0;
         if (installmentType === 'full') {
@@ -437,8 +437,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
           });
         }
 
-        console.log('🔍 [CÁLCULO CRÉDITO] Parcela real calculada:', parcelaReal);
-        console.log('🔍 [CÁLCULO CRÉDITO] Diferença do valor desejado:', Math.abs(parcelaReal - valorAporte));
+        // Debug logs removidos para performance
 
         creditosSugeridos.push({
           id: produto.id,
@@ -452,7 +451,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
         });
       }
     } else {
-      console.log('🔍 [CÁLCULO CRÉDITO] Usando lógica dinâmica - poucos produtos');
+      // Debug removido para performance
       
       // Lógica para gerar créditos dinamicamente quando há poucos produtos
       if (installmentTypes.length > 0) {
@@ -575,7 +574,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
       });
     }
 
-    console.log('🔍 [CÁLCULO CRÉDITO] Total de créditos sugeridos:', creditosSugeridos.length);
+    // Debug removido para performance
     return creditosSugeridos;
   };
 
