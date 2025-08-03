@@ -344,6 +344,13 @@ export const DetailTable = ({
           const saldoDevedorContemplacao = saldoDevedorAcumulado; // Este é o saldo do mês de contemplação
           valorParcela = saldoDevedorContemplacao / prazoRestante;
           valorParcelaFixo = valorParcela; // Fixar o valor para os próximos meses
+          
+          // Debug para verificar o cálculo da parcela
+          console.log('=== DEBUG PARCELA MÊS 31 ===');
+          console.log('Saldo devedor contemplação:', saldoDevedorContemplacao);
+          console.log('Prazo restante:', prazoRestante);
+          console.log('Valor da parcela calculado:', valorParcela);
+          console.log('=============================');
         } else {
           // Meses seguintes: usar o valor fixo até próxima atualização
           valorParcela = valorParcelaFixo;
