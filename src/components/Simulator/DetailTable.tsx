@@ -418,12 +418,34 @@ export const DetailTable = ({
           // Vamos usar o saldoDevedorAcumulado que foi calculado para o mês de contemplação
           const saldoContemplacao = saldoDevedorAcumulado; // Usar o valor já calculado
           const parcelaContemplacao = valorParcela; // Usar o valor da parcela do mês de contemplação
-          saldoDevedorAcumulado = saldoContemplacao - parcelaContemplacao;
+          
+          // CORREÇÃO: Aplicar a fórmula correta do saldo devedor pós contemplação
+          // Saldo devedor pós contemplação = Saldo devedor na contemplação - (Crédito acessado na contemplação * Embutido da administradora selecionada)
+          let saldoDevedorPosContemplacao = saldoContemplacao - parcelaContemplacao;
+          
+          if (embutido === 'com') {
+            const embutidoPercentual = administrator.maxEmbeddedPercentage ?? 25;
+            const creditoAcessadoContemplacao = calculateCreditoAcessado(contemplationMonth, baseCredit);
+            const reducaoEmbutido = creditoAcessadoContemplacao * (embutidoPercentual / 100);
+            saldoDevedorPosContemplacao = saldoDevedorPosContemplacao - reducaoEmbutido;
+          }
+          
+          saldoDevedorAcumulado = saldoDevedorPosContemplacao;
           
           // Debug temporário para verificar valores
           console.log('=== DEBUG MÊS 31 ===');
           console.log('Saldo contemplação:', saldoContemplacao);
           console.log('Parcela contemplação:', parcelaContemplacao);
+          console.log('Saldo devedor após parcela:', saldoContemplacao - parcelaContemplacao);
+          if (embutido === 'com') {
+            const embutidoPercentual = administrator.maxEmbeddedPercentage ?? 25;
+            const creditoAcessadoContemplacao = calculateCreditoAcessado(contemplationMonth, baseCredit);
+            const reducaoEmbutido = creditoAcessadoContemplacao * (embutidoPercentual / 100);
+            console.log('Crédito acessado contemplação:', creditoAcessadoContemplacao);
+            console.log('Embutido percentual:', embutidoPercentual);
+            console.log('Redução embutido:', reducaoEmbutido);
+            console.log('Saldo devedor final:', saldoDevedorPosContemplacao);
+          }
           console.log('Saldo devedor mês 31:', saldoDevedorAcumulado);
           console.log('========================');
         } else {
