@@ -62,6 +62,11 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
     localStorage.removeItem('crmUserCache');
   };
 
+  // Função para limpar o cache do companyId e forçar regeneração
+  const clearCompanyIdCache = () => {
+    localStorage.removeItem('mockCompanyId');
+  };
+
   const fetchCrmUser = useCallback(async (email: string) => {
     // Removed console log for performance
     
@@ -69,12 +74,27 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // Persistir IDs no localStorage para manter consistência durante a sessão
       let mockUserId = localStorage.getItem('mockUserId');
       let mockCompanyId = localStorage.getItem('mockCompanyId');
+      
       if (!mockUserId) {
         mockUserId = crypto.randomUUID();
         localStorage.setItem('mockUserId', mockUserId);
       }
+      
+      // Para usuário master, usar uma empresa existente do banco
       if (!mockCompanyId) {
-        mockCompanyId = crypto.randomUUID();
+        // Buscar uma empresa existente para o master
+        const { data: companies } = await supabase
+          .from('companies')
+          .select('id')
+          .eq('status', 'active')
+          .limit(1);
+        
+        if (companies && companies.length > 0) {
+          mockCompanyId = companies[0].id;
+        } else {
+          // Fallback: gerar um ID aleatório se não houver empresas
+          mockCompanyId = crypto.randomUUID();
+        }
         localStorage.setItem('mockCompanyId', mockCompanyId);
       }
       
@@ -149,6 +169,7 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
             setUserRole(null);
             setCompanyId(null);
             clearCrmUserCache();
+            clearCompanyIdCache();
             setLoading(false);
           }
         }
@@ -204,6 +225,8 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    clearCrmUserCache();
+    clearCompanyIdCache();
   };
 
   const hasPermission = (requiredRole: UserRole): boolean => {

@@ -311,7 +311,7 @@ export const DetailTable = ({
       
       // Para o mês da contemplação, garantir que estamos usando os valores corretos
       if (month === contemplationMonth) {
-        const creditoAcessadoContemplacaoTemp = calculateCreditoAcessado(contemplationMonth, baseCredit);
+          const creditoAcessadoContemplacaoTemp = calculateCreditoAcessado(contemplationMonth, baseCredit);
         // SEMPRE calcular sobre o crédito original (não sobre o crédito acessado)
         taxaAdmin = credito * adminTaxRate;
         fundoReserva = credito * reserveFundRate;
@@ -338,37 +338,22 @@ export const DetailTable = ({
         const parcelasPagas = contemplationMonth;
         const prazoRestante = (product.termMonths || 240) - parcelasPagas;
         
-        if (month === contemplationMonth + 1) {
-          // Primeiro mês após contemplação: calcular parcela fixa baseada no saldo devedor
-          // CORREÇÃO: Usar o saldo devedor final (após redução do embutido) em vez do saldo da contemplação
-          const saldoDevedorFinal = saldoDevedorAcumulado; // Este já é o saldo final após redução do embutido
-          valorParcela = saldoDevedorFinal / prazoRestante;
-          valorParcelaFixo = valorParcela; // Fixar o valor para os próximos meses
+        // Meses seguintes: usar o valor fixo até próxima atualização
+        valorParcela = valorParcelaFixo;
+        
+        // Verificar se é mês de atualização anual
+        const isAnnualUpdate = (month - 1) % 12 === 0 && month > contemplationMonth;
+        if (isAnnualUpdate) {
+          // Recalcular parcela com saldo devedor atualizado
+          const parcelasPagasAteAgora = month - 1;
+          const prazoRestanteAtualizado = (product.termMonths || 240) - parcelasPagasAteAgora;
           
-          // Debug para verificar o cálculo da parcela
-          console.log('=== DEBUG PARCELA MÊS 31 ===');
-          console.log('Saldo devedor final (após embutido):', saldoDevedorFinal);
-          console.log('Prazo restante:', prazoRestante);
-          console.log('Valor da parcela calculado:', valorParcela);
-          console.log('=============================');
-        } else {
-          // Meses seguintes: usar o valor fixo até próxima atualização
-          valorParcela = valorParcelaFixo;
-          
-          // Verificar se é mês de atualização anual
-          const isAnnualUpdate = (month - 1) % 12 === 0 && month > contemplationMonth;
-          if (isAnnualUpdate) {
-            // Recalcular parcela com saldo devedor atualizado
-            const parcelasPagasAteAgora = month - 1;
-            const prazoRestanteAtualizado = (product.termMonths || 240) - parcelasPagasAteAgora;
-            
-            // REGRA IGUAL PARA AMBOS OS TIPOS: saldo devedor / prazo restante
-            valorParcela = saldoDevedorAcumulado / prazoRestanteAtualizado;
-            valorParcelaFixo = valorParcela; // Atualizar valor fixo
-          }
+          // REGRA IGUAL PARA AMBOS OS TIPOS: saldo devedor / prazo restante
+          valorParcela = saldoDevedorAcumulado / prazoRestanteAtualizado;
+          valorParcelaFixo = valorParcela; // Atualizar valor fixo
         }
       }
-
+      
       // Calcular o saldo devedor
       if (month === 1) {
         // Primeiro mês: soma de Crédito + Taxa de Administração + Fundo de Reserva
@@ -473,6 +458,24 @@ export const DetailTable = ({
             saldoDevedorAcumulado = saldoAnterior - parcelaAnterior;
           }
         }
+      }
+      
+      // AGORA calcular a parcela pós contemplação usando o saldo devedor final
+      if (month === contemplationMonth + 1) {
+        // Primeiro mês após contemplação: calcular parcela fixa baseada no saldo devedor final
+        const parcelasPagas = contemplationMonth;
+        const prazoRestante = (product.termMonths || 240) - parcelasPagas;
+        
+        // Usar o saldo devedor final que já foi calculado com a redução do embutido
+          valorParcela = saldoDevedorAcumulado / prazoRestante;
+          valorParcelaFixo = valorParcela; // Fixar o valor para os próximos meses
+        
+        // Debug para verificar o cálculo da parcela
+        console.log('=== DEBUG PARCELA MÊS 31 ===');
+        console.log('Saldo devedor final (após embutido):', saldoDevedorAcumulado);
+        console.log('Prazo restante:', prazoRestante);
+        console.log('Valor da parcela calculado:', valorParcela);
+        console.log('=============================');
       }
       
       // Ágio = creditoAcessado (da linha) * (agioPercent / 100)

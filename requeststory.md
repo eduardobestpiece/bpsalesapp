@@ -2,43 +2,50 @@
 
 ## Última Atualização: 2025-01-27
 
-### Requisição Atual: Correção do Cálculo da Parcela Pós Contemplação
+### Requisição Atual: Remoção de Percentuais Zerados no Gráfico do Funil
 
 #### Problema Identificado:
-- **Valor da Parcela no Mês 31:** Estava como R$ 9.823,80, mas deveria ser R$ 8.232,07
-- **Cálculo Incorreto:** 1.728.735,33 ÷ (240-30) = 8.232,07
-- **Causa:** O cálculo estava usando o saldo devedor da contemplação (2.062.998,63) em vez do saldo devedor final após redução do embutido (1.728.735,33)
+- **Problema:** No gráfico do funil "Resultados do Funil Consultores Externos" na página de performance, existem percentuais zerados sem utilidade à esquerda do funil
+- **Causa:** Elemento de comparação que exibe "0%" quando não há dados de comparação
+- **Resultado:** Interface poluída com informações desnecessárias
 
 #### Correção Implementada:
-1. **Cálculo Corrigido:** Usar o saldo devedor final (após redução do embutido) para calcular a parcela
-2. **Fórmula Correta:** Parcela = Saldo Devedor Final ÷ Prazo Restante
-3. **Debug Atualizado:** Logs mostram o saldo devedor final em vez do saldo da contemplação
+1. **Remoção do Elemento de Comparação:** Removido o div que exibia percentuais zerados à esquerda do funil
+2. **Limpeza da Interface:** Mantido apenas o gráfico do funil com as informações relevantes
+3. **Preservação da Funcionalidade:** Mantidas as informações importantes dentro das faixas do funil
 
-#### Código Corrigido:
+#### Código Removido:
 ```typescript
-// ANTES (incorreto):
-const saldoDevedorContemplacao = saldoDevedorAcumulado;
-valorParcela = saldoDevedorContemplacao / prazoRestante;
-
-// DEPOIS (corrigido):
-const saldoDevedorFinal = saldoDevedorAcumulado; // Este já é o saldo final após redução do embutido
-valorParcela = saldoDevedorFinal / prazoRestante;
+{/* Comparativo fora da faixa à esquerda */}
+<div className="flex items-center justify-center w-14 mr-2">
+  {typeof stage.compareValue === 'undefined' ? (
+    <span className="text-xs text-muted-foreground">0%</span>
+  ) : diff !== 0 ? (
+    <span className={`flex items-center font-bold text-xs ${isUp ? 'text-green-600' : 'text-red-600'}`}> 
+      {isUp && <ArrowUp className="w-4 h-4 mr-1" />} 
+      {isDown && <ArrowDown className="w-4 h-4 mr-1" />} 
+      {diff > 0 ? `+${diff}` : diff}
+    </span>
+  ) : (
+    <span className="text-xs text-muted-foreground">0%</span>
+  )}
+</div>
 ```
 
 #### Status: ✅ **CORRIGIDO**
-- Cálculo da parcela agora usa o saldo devedor final correto
-- Fórmula implementada: Parcela = Saldo Devedor Final ÷ Prazo Restante
-- Debug logs atualizados para mostrar o saldo devedor final
+- Percentuais zerados removidos da interface
+- Gráfico do funil mais limpo e focado
+- Informações relevantes mantidas dentro das faixas
 
 ---
 
 ### Histórico de Requisições:
 
-#### Requisição Anterior: Correção da Fórmula do Saldo Devedor Pós Contemplação
+#### Requisição Anterior: Correção de Permissões no Módulo CRM
 
 **Problemas Resolvidos:**
-1. ✅ Fórmula correta implementada: Saldo devedor pós contemplação = Saldo devedor na contemplação - (Crédito acessado na contemplação * Embutido da administradora selecionada)
-2. ✅ Redução do embutido aplicada corretamente
-3. ✅ Debug logs detalhados para verificação
+1. ✅ Associação do usuário master a empresa existente no banco
+2. ✅ Sistema de cache melhorado para manter consistência
+3. ✅ Permissões verificadas corretamente usando companyId da empresa
 
 **Status**: ✅ Todas as funcionalidades implementadas e funcionando 

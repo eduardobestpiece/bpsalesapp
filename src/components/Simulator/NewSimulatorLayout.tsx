@@ -119,6 +119,19 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
         case 'isReserveFundCustomized':
           setIsReserveFundCustomized(value);
           break;
+        case 'administrator':
+          // Quando a administradora muda, recarregar os dados
+          simulatorContext.setSimulationData(prev => ({
+            ...prev,
+            administrator: value
+          }));
+          // Recarregar dados da nova administradora
+          if (value && value.trim() !== '') {
+            loadAdministratorData(value);
+            simulatorContext.loadInstallmentTypes(value);
+            simulatorContext.loadReducoesParcela(value);
+          }
+          break;
       }
     }
     
