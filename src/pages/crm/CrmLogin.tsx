@@ -20,9 +20,17 @@ const CrmLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showForgotModal, setShowForgotModal] = useState(false);
+  const [notFoundNotified, setNotFoundNotified] = useState(false);
   
-  const { signIn } = useCrmAuth();
+  const { signIn, user, crmUser, loading } = useCrmAuth();
   const navigate = useNavigate();
+
+  React.useEffect(() => {
+    if (!loading && user && !crmUser && !notFoundNotified) {
+      toast.error('Usuário autenticado, mas não encontrado no CRM. Contate o administrador.');
+      setNotFoundNotified(true);
+    }
+  }, [user, crmUser, loading, notFoundNotified]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

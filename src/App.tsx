@@ -27,7 +27,6 @@ import { Loader2 } from "lucide-react";
 import SettingsSimulator from "./pages/settings/SettingsSimulator";
 import SettingsCrm from "./pages/settings/SettingsCrm";
 import SettingsUsers from "./pages/settings/SettingsUsers";
-import SettingsCompanies from "./pages/settings/SettingsCompanies";
 import SettingsMaster from "./pages/settings/SettingsMaster";
 import SettingsEmpresa from "./pages/settings/SettingsEmpresa";
 
@@ -48,17 +47,6 @@ function AppContent() {
     );
   }
 
-  // Fallback global para usuário autenticado mas não encontrado no CRM
-  if (user && !crmUser && !loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-bold text-destructive mb-2">Usuário não encontrado no CRM</h2>
-          <p className="text-secondary/60">Seu usuário está autenticado, mas não foi localizado na base de usuários do CRM. Contate o administrador do sistema.</p>
-        </div>
-      </div>
-    );
-  }
 
   // Fallback global para usuário sem empresa associada
   if (user && crmUser && !companyId && !loading) {
@@ -73,12 +61,12 @@ function AppContent() {
   }
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <main>
         <Routes>
           {/* Public routes */}
           <Route path="/crm/login" element={
-            user ? <Navigate to="/home" replace /> : <CrmLogin />
+            user && crmUser ? <Navigate to="/home" replace /> : <CrmLogin />
           } />
           <Route path="/crm/redefinir-senha-convite" element={<CrmResetPasswordInvite />} />
           <Route path="/crm/redefinir-senha" element={<CrmResetPassword />} />
