@@ -1,5 +1,5 @@
 
-import { Calculator, Settings, Users, LogOut, ChevronDown } from 'lucide-react';
+import { Settings, SlidersHorizontal, Users, Building2, Shield, ChevronDown, LogOut } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useEffect, useState } from 'react';
@@ -27,14 +27,13 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Logo } from '@/components/ui/Logo';
 
-export const SimulatorSidebar = () => {
+export const SettingsSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { userRole, companyId, crmUser, signOut } = useCrmAuth();
-  const [pagePermissions, setPagePermissions] = useState<any>({});
   const { selectedCompanyId, setSelectedCompanyId } = useCompany();
+  const [pagePermissions, setPagePermissions] = useState<any>({});
 
-  // Buscar empresas (apenas para master)
   const { data: companies = [], isLoading: companiesLoading } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
@@ -47,21 +46,6 @@ export const SimulatorSidebar = () => {
       return data;
     },
     enabled: userRole === 'master',
-  });
-
-  // Branding
-  const currentCompanyId = selectedCompanyId || companyId;
-  const { data: branding } = useQuery({
-    queryKey: ['company_branding', currentCompanyId],
-    enabled: !!currentCompanyId,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('company_branding')
-        .select('logo_horizontal_url, logo_horizontal_dark_url')
-        .eq('company_id', currentCompanyId)
-        .maybeSingle();
-      return data as { logo_horizontal_url?: string; logo_horizontal_dark_url?: string } | null;
-    },
   });
 
   useEffect(() => {
@@ -88,44 +72,25 @@ export const SimulatorSidebar = () => {
 
   const isActivePath = (path: string) => location.pathname === path;
 
-  const handleGoToCrm = () => {
-    navigate('/crm/indicadores');
-  };
-
-  const handleAvatarClick = () => {
-    window.location.href = '/crm/perfil';
-  };
-
   const handleLogout = async () => {
     await signOut();
-    // Redireciona para a página de login do CRM após logout
     window.location.href = '/crm/login';
   };
 
-  const handleStayInSimulator = () => {
-    navigate('/simulador');
+  const handleLogoClick = () => {
+    navigate('/configuracoes/simulador');
   };
 
-  const handleLogoClick = () => {
-    navigate('/simulador');
-  };
+  const goToSimulator = () => navigate('/simulador');
+  const goToCrm = () => navigate('/crm/indicadores');
+  const goToSettings = () => navigate('/configuracoes/simulador');
 
   return (
     <Sidebar className="border-r border-border">
       <SidebarHeader className="p-4">
         <div className="flex flex-col items-start">
-          {branding?.logo_horizontal_url ? (
-            <img
-              src={document?.documentElement?.classList?.contains('dark') && branding.logo_horizontal_dark_url ? branding.logo_horizontal_dark_url : branding.logo_horizontal_url}
-              onClick={handleLogoClick}
-              className="h-10 w-auto max-w-[140px] mb-2 cursor-pointer object-contain"
-              alt="Logo"
-            />
-          ) : (
-            <Logo onClick={handleLogoClick} className="h-10 w-auto max-w-[140px] mb-2" />
-          )}
-          <span className="font-bold text-lg text-foreground tracking-wide mb-4">Simulador</span>
-          {/* Seletor de empresa para Master */}
+          <Logo onClick={handleLogoClick} className="h-10 w-auto max-w-[140px] mb-2" />
+          <span className="font-bold text-lg text-foreground tracking-wide mb-4">Configurações</span>
           {userRole === 'master' && (
             <div className="w-full mb-4">
               <label className="block text-xs font-medium text-muted-foreground mb-1">Empresa</label>
@@ -141,7 +106,7 @@ export const SimulatorSidebar = () => {
               </select>
             </div>
           )}
-          {/* Dropdown de módulo */}
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className="flex items-center justify-between w-full p-2 text-sm bg-muted rounded-md hover:bg-muted/80 transition-colors text-foreground">
@@ -149,47 +114,77 @@ export const SimulatorSidebar = () => {
                 <ChevronDown className="h-4 w-4" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-40">
-              <DropdownMenuItem onClick={handleStayInSimulator}>
-                Simulador
-              </DropdownMenuItem>
-              {pagePermissions['indicadores'] !== false && (
-                <DropdownMenuItem onClick={handleGoToCrm}>
-                  CRM
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem onClick={() => navigate('/configuracoes/simulador')}>
-                Configurações
-              </DropdownMenuItem>
+            <DropdownMenuContent align="start" className="w-44">
+              <DropdownMenuItem onClick={goToSimulator}>Simulador</DropdownMenuItem>
+              <DropdownMenuItem onClick={goToCrm}>CRM</DropdownMenuItem>
+              <DropdownMenuItem onClick={goToSettings}>Configurações</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </SidebarHeader>
-      
+
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
+          <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {pagePermissions['simulator'] !== false && (
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/simulador')}>
+                  <Link to="/configuracoes/simulador">
+                    <SlidersHorizontal className="h-4 w-4" />
+                    <span>Simulador</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              {(userRole === 'admin' || userRole === 'master') && (pagePermissions['crm_config'] !== false) && (
                 <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActivePath('/simulador')}>
-                    <Link to="/simulador">
-                      <Calculator className="h-4 w-4" />
-                      <span>Simulador</span>
+                  <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/crm')}>
+                    <Link to="/configuracoes/crm">
+                      <Settings className="h-4 w-4" />
+                      <span>CRM</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
-              
+              {(userRole === 'admin' || userRole === 'master') && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/usuarios')}>
+                    <Link to="/configuracoes/usuarios">
+                      <Users className="h-4 w-4" />
+                      <span>Usuários</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+              {(userRole === 'admin' || userRole === 'master') && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/empresa')}>
+                    <Link to="/configuracoes/empresa">
+                      <Building2 className="h-4 w-4" />
+                      <span>Empresa</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+
+              {userRole === 'master' && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/master')}>
+                    <Link to="/configuracoes/master">
+                      <Shield className="h-4 w-4" />
+                      <span>Master Config</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      
+
       <SidebarFooter className="p-4">
         <div className="flex items-center gap-3">
-          <div className="cursor-pointer" onClick={handleAvatarClick}>
+          <div>
             <Avatar>
               <AvatarImage src={crmUser?.avatar_url || undefined} alt={crmUser?.first_name || 'Usuário'} />
               <AvatarFallback>{(crmUser?.first_name?.[0] || 'U')}{(crmUser?.last_name?.[0] || '')}</AvatarFallback>
@@ -206,4 +201,4 @@ export const SimulatorSidebar = () => {
       </SidebarFooter>
     </Sidebar>
   );
-};
+}; 

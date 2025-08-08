@@ -8,6 +8,7 @@ import type { Database } from '@/integrations/supabase/types';
 import { useCompany } from '@/contexts/CompanyContext';
 import { toast } from '../ui/use-toast';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { useSimulatorContext } from '@/components/Layout/SimulatorLayout';
 
 interface SimulatorConfigModalProps {
   open: boolean;
@@ -57,8 +58,9 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   administratorId,
   setAdministratorId,
 }) => {
-  const { user, companyId } = useCrmAuth();
+  const { user, crmUser, companyId } = useCrmAuth();
   const { selectedCompanyId } = useCompany();
+  const simCtx = useSimulatorContext();
   
   // Estados locais para os campos
   const [localSearchType, setLocalSearchType] = useState(searchType);
@@ -299,6 +301,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
 
   // Função para aplicar mudanças
   const handleApply = () => {
+    console.debug('[Sim/ConfigModal] Aplicar acionado');
     
     setSearchType(localSearchType);
     
@@ -315,32 +318,26 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
     setAgioPercent(localAgioPercent);
     setAdministratorId(selectedAdministratorId || '');
     
-    // Atualizar o contexto global do simulador, se disponível
-    if (typeof window !== 'undefined' && (window as any).simulatorContext && (window as any).simulatorContext.setSimulationData) {
-      (window as any).simulatorContext.setSimulationData((prev: any) => ({
-        ...prev,
-        mode: localSearchType === 'contribution' ? 'aporte' : 'credito',
-        value: localValue,
-        installments: localTerm,
-        installmentType: localInstallmentType,
-        contemplationMonth: localContemplationMonth,
-        administrator: selectedAdministratorId,
-      }));
-    }
+    // Aplicar no contexto global do simulador diretamente
+    simCtx.setSimulationData((prev: any) => ({
+      ...prev,
+      searchType: localSearchType,
+      value: localValue,
+      term: localTerm,
+      installmentType: localInstallmentType,
+      contemplationMonth: localContemplationMonth,
+    }));
+
     toast({ title: 'Configurações aplicadas!' });
     onApply();
   };
 
   // Função para salvar e aplicar
   const handleSaveAndApply = async () => {
+    console.debug('[Sim/ConfigModal] Salvar e Aplicar acionado');
     try {
       
-      const { data: { user: crmUser } } = await supabase.auth.getUser();
-      if (!crmUser || !companyId) {
-        toast({ title: 'Erro: Usuário não autenticado!', variant: 'destructive' });
-        return;
-      }
-      
+      // Montar snapshot de configuração
       const config = {
         searchType: localSearchType,
         value: localValue,
@@ -361,106 +358,68 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
         creditTypeLabel: selectedCreditType ? translateCreditType(selectedCreditType) : '',
         installmentTypeLabel: localInstallmentType === 'full' ? 'Parcela Cheia' : reducoesParcela.find(r => r.id === localInstallmentType)?.name || '',
         aporteValue: localValue, // Valor do aporte
-      };
-      
-      
-      // Salvar no banco de dados
-      try {
-        
-        // Verificar se temos os dados necessários
-        if (!crmUser?.id) {
-          return;
-        }
-        
-        if (!companyId) {
-          return;
-        }
-        
-        const { error: insertError } = await supabase
-          .from('simulator_configurations')
-          .insert({
-            user_id: crmUser.id,
-            company_id: companyId,
-            configuration: config
-          });
-        
-        if (insertError) {
-          
-          // Se erro de conflito, tentar update
-          const { error: updateError } = await supabase
+        // Inclusões: embutido e leverageConfig completos
+        embutido: simCtx.embutido,
+        leverageConfig: simCtx.leverageConfig || null,
+      } as any;
+
+      console.debug('[Sim/ConfigModal] snapshot ->', config);
+
+      // APICAR IMEDIATAMENTE NA UI E FECHAR MODAL
+      setSearchType(config.searchType);
+      setValue(config.value);
+      setTerm(config.term);
+      setInstallmentType(config.installmentType);
+      if (setContemplationMonth) setContemplationMonth(config.contemplationMonth);
+      setAgioPercent(localAgioPercent);
+      setAdministratorId(selectedAdministratorId || '');
+
+      // Atualizar o contexto global do simulador diretamente
+      simCtx.setSimulationData((prev: any) => ({
+        ...prev,
+        searchType: config.searchType,
+        value: config.value,
+        term: config.term,
+        installmentType: config.installmentType,
+        contemplationMonth: config.contemplationMonth,
+      }));
+      if (simCtx.setLeverageConfig) simCtx.setLeverageConfig(config.leverageConfig || undefined);
+      if (simCtx.setEmbutido) simCtx.setEmbutido(config.embutido || 'com');
+
+      // Chamar o callback do pai (fecha o modal)
+      if (onSaveAndApply) {
+        onSaveAndApply(config);
+      }
+
+      // SALVAR EM SEGUNDO PLANO (sem travar UI)
+      const effectiveCompanyId = companyId;
+      if (!effectiveCompanyId) {
+        console.warn('[SimulatorConfigModal] companyId ausente ao salvar');
+      } else {
+        // Usar SEMPRE o crmUser.id, pois o FK referencia crm_users.id
+        const uid = crmUser?.id;
+        if (!uid) {
+          console.warn('[SimulatorConfigModal] uid (crmUser.id) ausente ao salvar');
+        } else {
+          console.log('[SimulatorConfigModal] Salvando snapshot (async):', { uid, companyId: effectiveCompanyId, config });
+          const { error: upsertError } = await supabase
             .from('simulator_configurations')
-            .update({
-              configuration: config,
-              updated_at: new Date().toISOString(),
-            })
-            .eq('user_id', crmUser.id)
-            .eq('company_id', companyId);
-          
-          if (updateError) {
-            return;
+            .upsert(
+              [{ user_id: uid, company_id: effectiveCompanyId, configuration: config }],
+              { onConflict: 'user_id,company_id' }
+            );
+          if (upsertError) {
+            console.error('[SimulatorConfigModal] Erro no upsert:', upsertError);
+            toast({ title: 'Erro ao salvar configurações', variant: 'destructive' });
+          } else {
+            console.log('[SimulatorConfigModal] Snapshot salvo com sucesso');
+            toast({ title: 'Configurações salvas!' });
           }
         }
-        
-        
-        // Aplicar mudanças ao header
-        
-        // Verificar se as funções estão disponíveis
-        
-        // Aplicar mudanças
-        
-        // Atualizar valores no contexto global
-        if (setSearchType) {
-          setSearchType(config.searchType);
-        }
-        
-        if (setValue) {
-          setValue(config.value);
-        }
-        
-        if (setTerm) {
-          setTerm(config.term);
-        }
-        
-        if (setInstallmentType) {
-          setInstallmentType(config.installmentType);
-        }
-        
-        if (setContemplationMonth) {
-          setContemplationMonth(config.contemplationMonth);
-        }
-
-        if (typeof window !== 'undefined') {
-          (window as any).globalAgioPercent = localAgioPercent;
-        }
-        
-        // Aplicar mudanças adicionais
-        setAgioPercent(localAgioPercent);
-        setAdministratorId(selectedAdministratorId || '');
-        
-        // Atualizar o contexto global do simulador
-        if (typeof window !== 'undefined' && (window as any).simulatorContext && (window as any).simulatorContext.setSimulationData) {
-          (window as any).simulatorContext.setSimulationData((prev: any) => ({
-            ...prev,
-            mode: localSearchType === 'contribution' ? 'aporte' : 'credito',
-            value: localValue,
-            installments: localTerm,
-            installmentType: localInstallmentType,
-            contemplationMonth: localContemplationMonth,
-            administrator: selectedAdministratorId,
-          }));
-        }
-        
-        // Atualizar valores customizados
-        
-        // Chamar o callback para propagar as alterações e fechar o modal
-        if (onSaveAndApply) {
-          onSaveAndApply(config);
-        }
-      } catch (error) {
-        // Erro ao salvar configuração
       }
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
+      console.error('[SimulatorConfigModal] Exceção ao salvar/aplicar:', errorMessage);
       toast({ title: 'Erro inesperado!', description: errorMessage, variant: 'destructive' });
     }
   };
@@ -476,6 +435,19 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
     onReset();
   };
 
+  // Handlers com debug para inputs do modal
+  const onChangeSearchType = (v: string) => { console.debug('[Sim/ConfigModal] searchType ->', v); setLocalSearchType(v); };
+  const onChangeValue = (e: React.ChangeEvent<HTMLInputElement>) => { const val = Number(e.target.value); console.debug('[Sim/ConfigModal] value ->', val); setLocalValue(val); };
+  const onChangeTerm = (v: string) => { const num = Number(v); console.debug('[Sim/ConfigModal] term ->', num); setLocalTerm(num); };
+  const onChangeInstallmentType = (v: string) => { console.debug('[Sim/ConfigModal] installmentType ->', v); setLocalInstallmentType(v); };
+  const onChangeContemplationMonth = (e: React.ChangeEvent<HTMLInputElement>) => { const num = Number(e.target.value); console.debug('[Sim/ConfigModal] contemplationMonth ->', num); setLocalContemplationMonth(num); };
+  const onChangeAgio = (e: React.ChangeEvent<HTMLInputElement>) => { const num = Number(e.target.value); console.debug('[Sim/ConfigModal] agioPercent ->', num); setLocalAgioPercent(num); };
+  const onChangeAdministrator = (v: string) => { console.debug('[Sim/ConfigModal] administratorId ->', v); setSelectedAdministratorIdLocal(v); };
+  const onChangeCreditType = (v: string) => { console.debug('[Sim/ConfigModal] creditType ->', v); setSelectedCreditType(v); };
+  const onChangeAdminTax = (e: React.ChangeEvent<HTMLInputElement>) => { const num = Number(e.target.value); console.debug('[Sim/ConfigModal] adminTaxPercent ->', num); setLocalAdminTaxPercent(num); setIsAdminTaxCustomized(true); };
+  const onChangeReserveFund = (e: React.ChangeEvent<HTMLInputElement>) => { const num = Number(e.target.value); console.debug('[Sim/ConfigModal] reserveFundPercent ->', num); setLocalReserveFundPercent(num); setIsReserveFundCustomized(true); };
+  const onChangeAnnualUpdate = (e: React.ChangeEvent<HTMLInputElement>) => { const num = Number(e.target.value); console.debug('[Sim/ConfigModal] annualUpdateRate ->', num); setLocalAnnualUpdateRate(num); setIsAnnualUpdateCustomized(true); };
+
   return (
     <FullScreenModal
       isOpen={open}
@@ -484,12 +456,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
       hasChanges={hasChanges}
       actions={
         <>
-          <Button variant="outline" onClick={handleReset}>
-            Redefinir
-          </Button>
-          <Button variant="secondary" onClick={handleApply}>
-            Aplicar
-          </Button>
+          {/* Removido botão Redefinir e Aplicar */}
           <Button onClick={handleSaveAndApply}>
             Salvar e Aplicar
           </Button>
@@ -502,7 +469,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
           <label className="block text-sm font-medium text-white">Administradora</label>
             <Select
               value={selectedAdministratorId || ''}
-              onValueChange={setSelectedAdministratorIdLocal}
+              onValueChange={onChangeAdministrator}
             >
             <SelectTrigger className="w-full bg-[#2A2A2A] border-gray-600 text-white hover:bg-[#3A3A3A] focus:ring-2 focus:ring-blue-500">
                 <SelectValue placeholder="Selecione uma administradora..." />
@@ -522,7 +489,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
           <label className="block text-sm font-medium text-white">Tipo de Crédito</label>
             <Select
               value={selectedCreditType || ''}
-              onValueChange={setSelectedCreditType}
+              onValueChange={onChangeCreditType}
             >
             <SelectTrigger className="w-full bg-[#2A2A2A] border-gray-600 text-white hover:bg-[#3A3A3A] focus:ring-2 focus:ring-blue-500">
               <SelectValue placeholder="Selecione um tipo de crédito..." />
@@ -542,7 +509,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
           <label className="block text-sm font-medium text-white">Tipo de Parcela</label>
             <Select
             value={localInstallmentType}
-            onValueChange={setLocalInstallmentType}
+            onValueChange={onChangeInstallmentType}
             >
             <SelectTrigger className="w-full bg-[#2A2A2A] border-gray-600 text-white hover:bg-[#3A3A3A] focus:ring-2 focus:ring-blue-500">
               <SelectValue placeholder="Selecione o tipo de parcela..." />
@@ -567,7 +534,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
             <label className="block text-sm font-medium text-white">Número de parcelas</label>
             <Select
               value={localTerm.toString()}
-              onValueChange={(value) => setLocalTerm(Number(value))}
+              onValueChange={onChangeTerm}
             >
               <SelectTrigger className="w-full bg-[#2A2A2A] border-gray-600 text-white hover:bg-[#3A3A3A] focus:ring-2 focus:ring-blue-500">
                 <SelectValue placeholder="Selecione o número de parcelas..." />
@@ -588,7 +555,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
             <Input
               type="number"
               value={localContemplationMonth}
-              onChange={(e) => setLocalContemplationMonth(Number(e.target.value))}
+              onChange={onChangeContemplationMonth}
               placeholder="6"
               min={1}
               className="w-full bg-[#2A2A2A] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
@@ -601,7 +568,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
             <Input
               type="number"
               value={localAgioPercent}
-              onChange={(e) => setLocalAgioPercent(Number(e.target.value))}
+              onChange={onChangeAgio}
               placeholder="17"
               min={0}
               max={100}
@@ -618,7 +585,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
             <label className="block text-sm font-medium text-white">Modalidade</label>
             <Select
               value={localSearchType}
-              onValueChange={setLocalSearchType}
+              onValueChange={onChangeSearchType}
             >
               <SelectTrigger className="w-full bg-[#2A2A2A] border-gray-600 text-white hover:bg-[#3A3A3A] focus:ring-2 focus:ring-blue-500">
                 <SelectValue placeholder="Selecione a modalidade..." />
@@ -640,7 +607,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
             <Input
               type="number"
               value={localValue}
-              onChange={(e) => setLocalValue(Number(e.target.value))}
+              onChange={onChangeValue}
               placeholder="0,00"
               className="w-full bg-[#2A2A2A] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
             />
@@ -655,7 +622,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
             <Input
               type="number"
               value={localAdminTaxPercent}
-              onChange={(e) => setLocalAdminTaxPercent(Number(e.target.value))}
+              onChange={onChangeAdminTax}
               placeholder="0,00"
               className="w-full bg-[#2A2A2A] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
             />
@@ -667,7 +634,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
             <Input
               type="number"
               value={localReserveFundPercent}
-              onChange={(e) => setLocalReserveFundPercent(Number(e.target.value))}
+              onChange={onChangeReserveFund}
               placeholder="0,00"
               className="w-full bg-[#2A2A2A] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
             />
@@ -679,7 +646,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
             <Input
               type="number"
               value={localAnnualUpdateRate}
-              onChange={(e) => setLocalAnnualUpdateRate(Number(e.target.value))}
+              onChange={onChangeAnnualUpdate}
               placeholder="6,00"
               className="w-full bg-[#2A2A2A] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
             />

@@ -13,8 +13,20 @@ import { Settings } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useLocation } from 'react-router-dom';
 import { SimulatorMenu } from '@/components/Simulator/SimulatorMenu';
+import { useEffect } from 'react';
 
 // Contexto para compartilhar dados do simulador
+type LeverageConfig = {
+  selectedLeverageId?: string;
+  leverageValue?: string; // valor formatado (ex.: "R$ 500.000,00")
+  leverageType?: 'simples' | 'escalonada';
+  purchasePeriodMonths?: number;
+  dailyPercentage?: number;
+  managementPercentage?: number;
+  occupancyRate?: number;
+  totalExpenses?: number;
+};
+
 interface SimulatorContextType {
   simulationData: {
     searchType: 'contribution' | 'credit';
@@ -33,6 +45,9 @@ interface SimulatorContextType {
   // Funções para carregar dados
   loadInstallmentTypes: (administratorId: string) => Promise<void>;
   loadReducoesParcela: (administratorId: string) => Promise<void>;
+  // NOVO: Configurações de Alavancagem
+  leverageConfig?: LeverageConfig;
+  setLeverageConfig: (cfg: LeverageConfig | undefined) => void;
 }
 
 const SimulatorContext = createContext<SimulatorContextType | null>(null);
@@ -87,7 +102,7 @@ const SimulatorHeader = () => {
             <label className="text-xs font-medium text-muted-foreground truncate">Modalidade</label>
             <Select 
               value={simulatorContext.simulationData.searchType} 
-              onValueChange={v => handleFieldChange('searchType', v === 'contribution' ? 'contribution' : 'credit')}
+              onValueChange={v => { console.debug('[Sim/Header] searchType ->', v); handleFieldChange('searchType', v === 'contribution' ? 'contribution' : 'credit'); }}
             >
               <SelectTrigger className="h-8 text-xs min-w-0">
                 <SelectValue />
@@ -106,7 +121,7 @@ const SimulatorHeader = () => {
             <Input
               type="number"
               value={simulatorContext.simulationData.value || ''}
-              onChange={e => handleFieldChange('value', e.target.value ? Number(e.target.value) : 0)}
+              onChange={e => { const val = e.target.value ? Number(e.target.value) : 0; console.debug('[Sim/Header] value ->', val); handleFieldChange('value', val); }}
               placeholder="0,00"
               className="h-8 text-xs min-w-0"
             />
@@ -116,7 +131,7 @@ const SimulatorHeader = () => {
             <label className="text-xs font-medium text-muted-foreground truncate">Número de parcelas</label>
             <Select
               value={simulatorContext.simulationData.term.toString()}
-              onValueChange={v => handleTermChange(Number(v))}
+              onValueChange={v => { const num = Number(v); console.debug('[Sim/Header] term ->', num); handleTermChange(num); }}
             >
               <SelectTrigger className="h-8 text-xs min-w-0">
                 <SelectValue placeholder="Selecione" />
@@ -136,6 +151,7 @@ const SimulatorHeader = () => {
             <Select 
               value={simulatorContext.simulationData.installmentType} 
               onValueChange={v => {
+                console.debug('[Sim/Header] installmentType ->', v);
                 handleFieldChange('installmentType', v);
                 // Sincronizar com o modal de configurações
                 simulatorContext.setSimulationData((prev: any) => ({ 
@@ -161,7 +177,7 @@ const SimulatorHeader = () => {
             <Input
               type="number"
               value={simulatorContext.simulationData.contemplationMonth || ''}
-              onChange={e => handleFieldChange('contemplationMonth', e.target.value ? Number(e.target.value) : 6)}
+              onChange={e => { const val = e.target.value ? Number(e.target.value) : 6; console.debug('[Sim/Header] contemplationMonth ->', val); handleFieldChange('contemplationMonth', val); }}
               placeholder="6"
               min={1}
               className="h-8 text-xs min-w-0"
@@ -197,7 +213,7 @@ const SimulatorHeader = () => {
 };
 
 export const SimulatorLayout = ({ children }: SimulatorLayoutProps) => {
-  const { companyId } = useCrmAuth();
+  const { companyId, crmUser } = useCrmAuth();
   
   // Estado do contexto do simulador com funções reais
   const [simulatorContextValue, setSimulatorContextValue] = useState<SimulatorContextType>({
@@ -228,6 +244,14 @@ export const SimulatorLayout = ({ children }: SimulatorLayoutProps) => {
       setSimulatorContextValue(prev => ({
         ...prev,
         embutido
+      }));
+    },
+    // NOVO: estado e setter de configurações de alavancagem
+    leverageConfig: undefined,
+    setLeverageConfig: (cfg) => {
+      setSimulatorContextValue(prev => ({
+        ...prev,
+        leverageConfig: cfg ? { ...cfg } : undefined,
       }));
     },
 
@@ -261,6 +285,49 @@ export const SimulatorLayout = ({ children }: SimulatorLayoutProps) => {
       }));
     }
   });
+
+  // NOVO: garantir inicialização com dados salvos antes de renderizar children
+  const [isInitialized, setIsInitialized] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    async function initFromSavedConfig() {
+      if (!companyId) {
+        setIsInitialized(true);
+        return;
+      }
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      const uid = authUser?.id;
+      if (!uid) {
+        setIsInitialized(true);
+        return;
+      }
+      const { data: configs } = await supabase
+        .from('simulator_configurations')
+        .select('*')
+        .eq('user_id', uid)
+        .eq('company_id', companyId)
+        .limit(1);
+      if (cancelled) return;
+      if (configs && configs.length > 0) {
+        const conf: any = configs[0].configuration || {};
+        setSimulatorContextValue(prev => ({
+          ...prev,
+          simulationData: {
+            searchType: conf.searchType || prev.simulationData.searchType,
+            value: conf.value ?? prev.simulationData.value,
+            term: conf.term ?? prev.simulationData.term,
+            installmentType: conf.installmentType || prev.simulationData.installmentType,
+            contemplationMonth: conf.contemplationMonth ?? prev.simulationData.contemplationMonth,
+          },
+          embutido: conf.embutido || prev.embutido,
+          leverageConfig: conf.leverageConfig || prev.leverageConfig,
+        }));
+      }
+      setIsInitialized(true);
+    }
+    initFromSavedConfig();
+    return () => { cancelled = true; };
+  }, [crmUser?.id, companyId]);
   
   return (
     <CompanyProvider defaultCompanyId={companyId || ''}>
@@ -268,24 +335,31 @@ export const SimulatorLayout = ({ children }: SimulatorLayoutProps) => {
         <SidebarProvider>
           <div className="min-h-screen flex w-full bg-background dark:bg-[#131313]">
             <SimulatorSidebar />
-            <SidebarInset className="flex-1 overflow-x-hidden">
-              <SimulatorHeader />
-              <main className="flex-1 p-6 bg-background dark:bg-[#131313] max-w-full">
-                {children}
-              </main>
+            <SidebarInset className="flex-1 overflow-x-hidden pt-12">{/* reduzido o topo; laterais e inferior permanecem pelo padding do main */}
+              {isInitialized ? (
+                <>
+                  <SimulatorHeader />
+                  <main className="flex-1 p-6 bg-background dark:bg-[#131313] max-w-full">
+                    {children}
+                  </main>
 
-              {/* Menu lateral */}
-              <SimulatorMenu 
-                onNavigate={(section) => {
-                  // Implementar navegação se necessário
-                }}
-                onToggleSection={(section) => {
-                  // Implementar toggle de seções se necessário
-                }}
-                embutido={simulatorContextValue.embutido}
-                setEmbutido={simulatorContextValue.setEmbutido}
-              />
-
+                  {/* Menu lateral */}
+                  <SimulatorMenu 
+                    onNavigate={(section) => {
+                      // Implementar navegação se necessário
+                    }}
+                    onToggleSection={(section) => {
+                      // Implementar toggle de seções se necessário
+                    }}
+                    embutido={simulatorContextValue.embutido}
+                    setEmbutido={simulatorContextValue.setEmbutido}
+                  />
+                </>
+              ) : (
+                <main className="flex-1 p-6 flex items-center justify-center">
+                  <div className="text-muted-foreground">Carregando configurações do simulador...</div>
+                </main>
+              )}
             </SidebarInset>
           </div>
         </SidebarProvider>

@@ -16,6 +16,7 @@ import { useSimulatorContext } from '@/components/Layout/SimulatorLayout';
 import { CapitalGainSection } from './CapitalGainSection';
 import { NovaAlavancagemPatrimonial } from './NovaAlavancagemPatrimonial';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
 
 export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   const { 
@@ -375,17 +376,18 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   // Estado para o Ágio (%) global
   const [agioPercent, setAgioPercent] = useState(17);
 
-  const { user, companyId } = useCrmAuth();
+  const { crmUser, companyId } = useCrmAuth();
 
   // Carregar configurações salvas do usuário ao abrir o simulador
   useEffect(() => {
     async function loadUserSimulatorConfig() {
-      if (!user?.id || !companyId) return;
+      const effectiveCompanyId = companyId;
+      if (!crmUser?.id || !effectiveCompanyId) return;
       const { data: configs } = await supabase
         .from('simulator_configurations')
         .select('*')
-        .eq('user_id', user.id)
-        .eq('company_id', companyId)
+        .eq('user_id', crmUser.id)
+        .eq('company_id', effectiveCompanyId)
         .limit(1);
       if (configs && configs.length > 0) {
         const conf = configs[0].configuration || {};
@@ -408,30 +410,24 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
         if (conf.isAnnualUpdateCustomized !== undefined) setIsAnnualUpdateCustomized(conf.isAnnualUpdateCustomized);
         if (conf.agioPercent !== undefined) setAgioPercent(conf.agioPercent);
         if (conf.embutido !== undefined) setEmbutido(conf.embutido);
-        
-        // Atualizar o contexto global do simulador
-        if (typeof window !== 'undefined' && (window as any).simulatorContext && (window as any).simulatorContext.setSimulationData) {
-          (window as any).simulatorContext.setSimulationData((prev: any) => ({
-            ...prev,
-            mode: conf.searchType === 'contribution' ? 'aporte' : 'credito',
-            value: conf.value || prev.value,
-            installments: conf.term || prev.installments,
-            installmentType: conf.installmentType || prev.installmentType,
-            contemplationMonth: conf.contemplationMonth || prev.contemplationMonth,
-            administrator: conf.administratorId || prev.administrator,
-            consortiumType: conf.creditType || prev.consortiumType,
-            bidType: conf.bidType || prev.bidType,
-          }));
+        if (conf.leverageConfig && simulatorContext.setLeverageConfig) {
+          simulatorContext.setLeverageConfig(conf.leverageConfig);
         }
-        
-        // Carregar dados da administradora se houver administratorId
+        simulatorContext.setSimulationData((prev: any) => ({
+          ...prev,
+          searchType: conf.searchType || prev.searchType,
+          value: conf.value ?? prev.value,
+          term: conf.term ?? prev.term,
+          installmentType: conf.installmentType || prev.installmentType,
+          contemplationMonth: conf.contemplationMonth ?? prev.contemplationMonth,
+        }));
         if (conf.administratorId) {
           await loadAdministratorData(conf.administratorId);
         }
       }
     }
     loadUserSimulatorConfig();
-  }, [user?.id, companyId]);
+  }, [crmUser?.id, companyId]);
 
   // Função para carregar dados da administradora do banco
   const loadAdministratorData = async (administratorId: string) => {

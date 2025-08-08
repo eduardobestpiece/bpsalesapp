@@ -1,6 +1,6 @@
 
 import { useNavigate } from 'react-router-dom';
-import { Calculator, BarChart2 } from 'lucide-react';
+import { Calculator, BarChart2, Settings } from 'lucide-react';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,6 +41,13 @@ export default function Home() {
     );
   }
 
+  const canAccessSettings = (
+    pagePermissions['simulator_config'] !== false ||
+    pagePermissions['crm_config'] !== false ||
+    userRole === 'admin' ||
+    userRole === 'master'
+  );
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary-50/80 via-white to-primary-100 dark:from-[#131313] dark:via-[#1E1E1E] dark:to-[#161616] p-4">
       {/* Botão de alternância de tema */}
@@ -51,7 +58,7 @@ export default function Home() {
       <h1 className="text-3xl md:text-4xl font-bold mb-8 text-primary-900 dark:text-white text-center drop-shadow">
         Bem-vindo à Plataforma Monteo
       </h1>
-      <div className="flex flex-col md:flex-row gap-8 w-full max-w-2xl justify-center">
+      <div className="flex flex-col md:flex-row gap-8 w-full max-w-3xl justify-center">
         {/* Botão Simulador */}
         {pagePermissions['simulator'] !== false && (
           <button
@@ -73,6 +80,18 @@ export default function Home() {
             <BarChart2 className="h-14 w-14 text-secondary-600 dark:text-[#A86F57] mb-4 group-hover:scale-110 transition" />
             <span className="text-2xl font-semibold text-secondary-700 dark:text-white mb-2">CRM</span>
             <span className="text-secondary-500 dark:text-gray-300 text-center">Acesse o CRM e veja os indicadores de vendas.</span>
+          </button>
+        )}
+
+        {/* Botão Configurações */}
+        {canAccessSettings && (
+          <button
+            onClick={() => navigate('/configuracoes/simulador')}
+            className="flex-1 bg-white dark:bg-[#1F1F1F] rounded-3xl shadow-xl p-10 flex flex-col items-center hover:bg-muted/40 dark:hover:bg-[#161616] transition border border-muted-100 dark:border-[#A86F57]/20 group focus:outline-none focus:ring-2 focus:ring-muted-300 dark:focus:ring-[#A86F57]/50"
+          >
+            <Settings className="h-14 w-14 text-gray-700 dark:text-[#A86F57] mb-4 group-hover:scale-110 transition" />
+            <span className="text-2xl font-semibold text-gray-800 dark:text-white mb-2">Configurações</span>
+            <span className="text-gray-500 dark:text-gray-300 text-center">Gerencie o Simulador, CRM e permissões.</span>
           </button>
         )}
       </div>

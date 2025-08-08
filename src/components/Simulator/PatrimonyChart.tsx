@@ -325,15 +325,16 @@ export const PatrimonyChart = ({
   };
 
   return (
-    <div className="w-full h-96 relative">
+    <div className="w-full relative overflow-x-auto lg:overflow-x-visible">
+      <div className="min-w-[980px] h-96">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart
           data={synchronizedData}
           margin={{
-            top: 20,
-            right: 30,
-            left: 20,
-            bottom: 20,
+            top: 16,
+            right: 40,
+            left: 100,
+            bottom: 50,
           }}
           onClick={handleClick}
         >
@@ -342,8 +343,9 @@ export const PatrimonyChart = ({
             dataKey="month" 
             tickFormatter={formatXAxis}
             interval="preserveStartEnd"
+            tickMargin={10}
           />
-          <YAxis tickFormatter={formatYAxis} />
+          <YAxis tickFormatter={formatYAxis} tickMargin={12} />
           <Tooltip 
             content={<CustomTooltip />} 
             active={tooltipVisible}
@@ -359,6 +361,7 @@ export const PatrimonyChart = ({
           />
         </LineChart>
       </ResponsiveContainer>
+      </div>
     </div>
   );
 };

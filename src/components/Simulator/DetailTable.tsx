@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -70,7 +70,7 @@ export const DetailTable = ({
   // Refs para colunas do cabeçalho e corpo
   const thRefs = useRef<(HTMLTableCellElement | null)[]>([]);
   const tdRefs = useRef<(HTMLTableCellElement | null)[]>([]);
-  const [colWidths, setColWidths] = useState<number[]>([]);
+  // const [colWidths, setColWidths] = useState<number[]>([]); // REMOVIDO
 
   // Ref para a linha de contemplação e última linha
   const contemplationRowRef = useRef<HTMLTableRowElement>(null);
@@ -99,23 +99,6 @@ export const DetailTable = ({
       body.removeEventListener('scroll', onBodyScroll);
     };
   }, []);
-
-  // Medir larguras das colunas após renderização
-  useLayoutEffect(() => {
-    // Resetar larguras antes de medir
-    setColWidths([]);
-    // Usar setTimeout para garantir que o DOM está atualizado
-    setTimeout(() => {
-      const ths = thRefs.current;
-      const tds = tdRefs.current;
-      const widths = ths.map((th, i) => {
-        const thWidth = th ? th.offsetWidth : 0;
-        const tdWidth = tds[i] ? tds[i].offsetWidth : 0;
-        return Math.max(thWidth, tdWidth, 80); // 80px mínimo
-      });
-      setColWidths(widths);
-    }, 0);
-  }, [tableData, visibleColumns]); // garantir dependência de visibleColumns
 
   // Função para calcular quando o crédito deve ser atualizado
   const shouldUpdateCredit = (month: number) => {
@@ -575,8 +558,60 @@ export const DetailTable = ({
     }));
   };
 
-  // Gerar lista de colunas visíveis para indexação
+  // Gerar lista de colunas visíveis para indexação - MOVIDO PARA ANTES DO RETURN
   const visibleKeys = Object.keys(visibleColumns).filter((key) => visibleColumns[key as keyof typeof visibleColumns]);
+
+  // Estado para armazenar larguras das colunas
+  const [columnWidths, setColumnWidths] = useState<{[key: string]: number}>({});
+
+  // Refs para medir larguras das células do cabeçalho e corpo
+  const headerCellRefs = useRef<{[key: string]: HTMLTableCellElement | null}>({});
+  const bodyCellRefs = useRef<{[key: string]: HTMLTableCellElement | null}>({});
+
+  // Função para medir e sincronizar larguras das colunas
+  const measureAndSyncColumnWidths = useCallback(() => {
+    // FUNÇÃO SIMPLIFICADA: Não fazer nada por enquanto
+  }, [visibleKeys]);
+
+  // Medir larguras após renderização
+  useEffect(() => {
+    const timer = setTimeout(measureAndSyncColumnWidths, 100);
+    return () => clearTimeout(timer);
+  }, [measureAndSyncColumnWidths, tableData, visibleKeys]);
+
+  // Forçar medição quando dados mudarem
+  useEffect(() => {
+    if (tableData.length > 0) {
+      const timer = setTimeout(measureAndSyncColumnWidths, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [tableData, measureAndSyncColumnWidths]);
+
+  // Função para forçar alinhamento após renderização completa
+  const forceAlignment = useCallback(() => {
+    // FUNÇÃO SIMPLIFICADA: Não fazer nada por enquanto
+  }, [visibleKeys, columnWidths]);
+
+  // Aplicar alinhamento quando larguras estiverem disponíveis
+  useEffect(() => {
+    if (Object.keys(columnWidths).length > 0) {
+      const timer = setTimeout(forceAlignment, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [columnWidths, forceAlignment]);
+
+  // Função para forçar medição completa quando necessário
+  const forceCompleteMeasurement = useCallback(() => {
+    // FUNÇÃO SIMPLIFICADA: Não fazer nada por enquanto
+  }, [measureAndSyncColumnWidths, forceAlignment]);
+
+  // Forçar medição completa quando dados mudarem
+  useEffect(() => {
+    if (tableData.length > 0 && visibleKeys.length > 0) {
+      const timer = setTimeout(forceCompleteMeasurement, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [tableData, visibleKeys, forceCompleteMeasurement]);
 
   return (
     <Card id="detalhamento-consorcio" className="w-full">
@@ -654,82 +689,88 @@ export const DetailTable = ({
       )}
 
       <CardContent>
-        <div className="w-full overflow-x-auto border rounded-lg table-scrollbar" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-          <Table className="min-w-max">
-            <thead className="bg-[#131313] border-b border-gray-700 shadow-sm sticky top-0 z-10">
-              <tr>
-                {visibleKeys.map((key) => (
-                  <th
-                    key={key}
-                    className="bg-[#131313] text-white font-semibold px-4 py-2 text-left"
-                    style={{whiteSpace: 'nowrap', minWidth: 80}}
-                  >
-                    {key === 'mes' && 'Mês'}
-                    {key === 'credito' && 'Crédito'}
-                    {key === 'creditoAcessado' && 'Crédito Acessado'}
-                    {key === 'taxaAdministracao' && 'Taxa de Administração'}
-                    {key === 'fundoReserva' && 'Fundo de Reserva'}
-                    {key === 'valorParcela' && 'Valor da Parcela'}
-                    {key === 'saldoDevedor' && 'Saldo Devedor'}
-                    {key === 'agio' && 'Ágio'}
-                    {key === 'lucro' && 'Lucro'}
-                    {key === 'roi' && 'ROI'}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
+        <div className="w-full border rounded-lg">
+          {/* Scroll horizontal no mobile/tablet vertical */}
+          <div className="overflow-x-auto lg:overflow-x-visible overflow-y-auto" style={{ maxHeight: '400px' }}>
+            <table className="w-full border-collapse">
+              <thead className="bg-[#131313] border-b border-gray-700 shadow-sm sticky top-0 z-10">
                 <tr>
-                  <td colSpan={visibleKeys.length} className="text-center py-8">
-                    <p>Carregando dados...</p>
-                  </td>
+                  {visibleKeys.map((key, index) => (
+                    <th
+                      key={key}
+                      className="bg-[#131313] text-white font-semibold px-4 py-2 text-left"
+                      style={{
+                        whiteSpace: 'nowrap',
+                        borderRadius: index === 0 ? '8px 0 0 0' : index === visibleKeys.length - 1 ? '0 8px 0 0' : '0'
+                      }}
+                    >
+                      {key === 'mes' && 'Mês'}
+                      {key === 'credito' && 'Crédito'}
+                      {key === 'creditoAcessado' && 'Crédito Acessado'}
+                      {key === 'taxaAdministracao' && 'Taxa de Administração'}
+                      {key === 'fundoReserva' && 'Fundo de Reserva'}
+                      {key === 'valorParcela' && 'Valor da Parcela'}
+                      {key === 'saldoDevedor' && 'Saldo Devedor'}
+                      {key === 'agio' && 'Ágio'}
+                      {key === 'lucro' && 'Lucro'}
+                      {key === 'roi' && 'ROI'}
+                    </th>
+                  ))}
                 </tr>
-              ) : tableData.length === 0 ? (
-                <tr>
-                  <td colSpan={visibleKeys.length} className="text-center py-8">
-                    <p>Nenhum dado disponível para exibir.</p>
-                  </td>
-                </tr>
-              ) : (
-                tableData.map((row, rowIdx) => (
-                  <tr
-                    key={row.mes}
-                    ref={
-                      row.isContemplationMonth ? contemplationRowRef :
-                      rowIdx === tableData.length - 1 ? lastRowRef : undefined
-                    }
-                    className={
-                      row.isContemplationMonth && highlightContemplation
-                        ? "bg-yellow-200 dark:bg-yellow-900 animate-pulse"
-                        : row.isContemplationMonth
-                          ? "bg-green-100 dark:bg-green-900"
-                          : ""
-                    }
-                  >
-                    {visibleKeys.map((key) => (
-                      <td
-                        key={key}
-                        className="px-4 py-2 text-left"
-                        style={{whiteSpace: 'nowrap', minWidth: 80}}
-                      >
-                        {key === 'mes' && row.mes}
-                        {key === 'credito' && formatCurrency(row.credito)}
-                        {key === 'creditoAcessado' && formatCurrency(row.creditoAcessado)}
-                        {key === 'taxaAdministracao' && formatCurrency(row.taxaAdministracao)}
-                        {key === 'fundoReserva' && formatCurrency(row.fundoReserva)}
-                        {key === 'valorParcela' && formatCurrency(row.valorParcela)}
-                        {key === 'saldoDevedor' && formatCurrency(row.saldoDevedor)}
-                        {key === 'agio' && formatCurrency(row.agio)}
-                        {key === 'lucro' && formatCurrency(row.lucro)}
-                        {key === 'roi' && `${(row.roi * 100).toFixed(2)}%`}
-                      </td>
-                    ))}
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={visibleKeys.length} className="text-center py-8">
+                      <p>Carregando dados...</p>
+                    </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </Table>
+                ) : tableData.length === 0 ? (
+                  <tr>
+                    <td colSpan={visibleKeys.length} className="text-center py-8">
+                      <p>Nenhum dado disponível para exibir.</p>
+                    </td>
+                  </tr>
+                ) : (
+                  tableData.map((row, rowIdx) => (
+                    <tr
+                      key={row.mes}
+                      ref={
+                        row.isContemplationMonth ? contemplationRowRef :
+                        rowIdx === tableData.length - 1 ? lastRowRef : undefined
+                      }
+                      className={
+                        row.isContemplationMonth && highlightContemplation
+                          ? "bg-yellow-200 dark:bg-yellow-900 animate-pulse"
+                          : row.isContemplationMonth
+                            ? "bg-green-100 dark:bg-green-900"
+                            : ""
+                      }
+                    >
+                      {visibleKeys.map((key) => (
+                        <td
+                          key={key}
+                          className="px-4 py-2 text-left"
+                          style={{ whiteSpace: 'nowrap' }}
+                        >
+                          {key === 'mes' && row.mes}
+                          {key === 'credito' && formatCurrency(row.credito)}
+                          {key === 'creditoAcessado' && formatCurrency(row.creditoAcessado)}
+                          {key === 'taxaAdministracao' && formatCurrency(row.taxaAdministracao)}
+                          {key === 'fundoReserva' && formatCurrency(row.fundoReserva)}
+                          {key === 'valorParcela' && formatCurrency(row.valorParcela)}
+                          {key === 'saldoDevedor' && formatCurrency(row.saldoDevedor)}
+                          {key === 'agio' && formatCurrency(row.agio)}
+                          {key === 'lucro' && formatCurrency(row.lucro)}
+                          {key === 'roi' && `${(row.roi * 100).toFixed(2)}%`}
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </CardContent>
     </Card>

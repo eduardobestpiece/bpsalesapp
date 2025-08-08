@@ -373,7 +373,7 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
             <Input
               type="number"
               value={pendingAgio}
-              onChange={e => setPendingAgio(Number(e.target.value))}
+              onChange={e => { const num = Number(e.target.value); console.debug('[Sim/Financeira] agioPercent ->', num); setPendingAgio(num); }}
               min={0}
               max={100}
               step={0.1}
@@ -383,7 +383,7 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
               type="button"
               className="ml-2 underline cursor-pointer"
               style={{ color: '#A86E57' }}
-              onClick={() => setAgioPercent(pendingAgio)}
+              onClick={() => { console.debug('[Sim/Financeira] aplicar agioPercent ->', pendingAgio); setAgioPercent(pendingAgio); }}
             >
               Aplicar
             </button>
@@ -393,30 +393,30 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
         {/* Cards com os dados */}
         {capitalGainData && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="space-y-2 p-4 bg-gradient-to-r from-green-50 to-green-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-green-200 dark:border-[#A86F57]/40">
-              <Label className="text-sm text-green-700 dark:text-[#A86F57] font-medium">Valor do Ágio</Label>
-              <div className="text-2xl font-bold text-green-900 dark:text-white">
+            <div className="space-y-2 p-4 rounded-lg border border-[#A86F57]/30 bg-[#1F1F1F]">
+              <Label className="text-sm text-[#A86F57] font-medium">Valor do Ágio</Label>
+              <div className="text-2xl font-bold text-white">
                 {formatCurrency(capitalGainData.valorAgio)}
               </div>
             </div>
 
-            <div className="space-y-2 p-4 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-blue-200 dark:border-[#A86F57]/40">
-              <Label className="text-sm text-blue-700 dark:text-[#A86F57] font-medium">Soma das Parcelas Pagas</Label>
-              <div className="text-2xl font-bold text-blue-900 dark:text-white">
+            <div className="space-y-2 p-4 rounded-lg border border-[#A86F57]/30 bg-[#1F1F1F]">
+              <Label className="text-sm text-[#A86F57] font-medium">Soma das Parcelas Pagas</Label>
+              <div className="text-2xl font-bold text-white">
                 {formatCurrency(capitalGainData.somaParcelasPagas)}
               </div>
             </div>
 
-            <div className="space-y-2 p-4 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-orange-200 dark:border-[#A86F57]/40">
-              <Label className="text-sm text-orange-700 dark:text-[#A86F57] font-medium">Valor do Lucro</Label>
-              <div className="text-2xl font-bold text-orange-900 dark:text-white">
+            <div className="space-y-2 p-4 rounded-lg border border-[#A86F57]/30 bg-[#1F1F1F]">
+              <Label className="text-sm text-[#A86F57] font-medium">Valor do Lucro</Label>
+              <div className="text-2xl font-bold text-white">
                 {formatCurrency(capitalGainData.valorLucro)}
               </div>
             </div>
 
-            <div className="space-y-2 p-4 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-purple-200 dark:border-[#A86F57]/40">
-              <Label className="text-sm text-purple-700 dark:text-[#A86F57] font-medium">ROI da Operação</Label>
-              <div className="text-2xl font-bold text-purple-900 dark:text-white">
+            <div className="space-y-2 p-4 rounded-lg border border-[#A86F57]/30 bg-[#1F1F1F]">
+              <Label className="text-sm text-[#A86F57] font-medium">ROI da Operação</Label>
+              <div className="text-2xl font-bold text-white">
                 {capitalGainData.roiOperacao.toFixed(2)}%
               </div>
             </div>
@@ -427,24 +427,37 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
         {capitalGainData && capitalGainData.chartData.length > 0 && (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Evolução do Lucro por Mês</h3>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={capitalGainData.chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis 
-                    dataKey="mes" 
-                    label={{ value: 'Mês', position: 'insideBottom', offset: -5 }}
-                  />
-                  <YAxis 
-                    label={{ value: 'Lucro (R$)', angle: -90, position: 'insideLeft' }}
-                    tickFormatter={(value) => formatCurrency(value)}
-                  />
-                  <Tooltip 
-                    content={<CustomTooltip />}
-                  />
-                  <Bar dataKey="lucro" fill="#A86E57" />
-                </BarChart>
-              </ResponsiveContainer>
+            <div className="overflow-x-auto lg:overflow-x-visible">
+              <div className="min-w-[980px] h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={capitalGainData.chartData} margin={{ top: 16, right: 40, left: 24, bottom: 50 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" stroke="rgba(200, 200, 200, 0.3)" />
+                    <XAxis
+                      dataKey="mes"
+                      tick={{ fill: '#9CA3AF' }}
+                      tickMargin={10}
+                    />
+                    {(() => {
+                      const maxLucro = Math.max(...capitalGainData.chartData.map((d: any) => Number(d.lucro) || 0));
+                      const upper = Math.ceil(maxLucro * 1.1 / 1000) * 1000;
+                      return (
+                        <YAxis
+                          width={130}
+                          tick={{ fill: '#9CA3AF', textAnchor: 'end' }}
+                          tickFormatter={(value) => formatCurrency(Number(value))}
+                          tickMargin={10}
+                          domain={[0, upper]}
+                          allowDecimals={false}
+                        />
+                      );
+                    })()}
+                    <Tooltip 
+                      content={<CustomTooltip />}
+                    />
+                    <Bar dataKey="lucro" fill="#A86F57" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </div>
         )}

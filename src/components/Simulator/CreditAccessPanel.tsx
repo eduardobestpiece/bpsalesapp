@@ -175,7 +175,8 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
   const [taxaAnual, setTaxaAnual] = useState(0);
   const [atualizacaoAnual, setAtualizacaoAnual] = useState('-');
 
-
+  // Controle de visibilidade da seção Montagem de Cotas
+  const [showMontagemCotas, setShowMontagemCotas] = useState(false);
 
   // Carregar montagem salva ao abrir
   useEffect(() => {
@@ -189,6 +190,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
         .limit(1);
       if (configs && configs.length > 0) {
         const conf = configs[0].configuration as any || {};
+        console.debug('[Sim/Montagem] loadSaved ->', conf);
         setCotas(conf.cotas || []);
         setTipoParcela(conf.tipoParcela || 'full');
         setParcelaDesejada(conf.parcelaDesejada || 0);
@@ -246,6 +248,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
       // Filtros do modal de configurações (se existirem)
       ...((data as any).configFilters || {})
     };
+    console.debug('[Sim/Montagem] salvarMontagem payload ->', { userId: crmUser.id, companyId, conf });
     // Verifica se já existe
     const { data: configs } = await supabase
       .from('simulator_configurations')
@@ -254,14 +257,14 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
       .eq('company_id', companyId)
       .limit(1);
     if (configs && configs.length > 0) {
-      // Update
-      await supabase
+      const { error } = await supabase
         .from('simulator_configurations')
         .update({ configuration: conf, updated_at: new Date().toISOString() })
         .eq('id', configs[0].id);
+      if (error) console.debug('[Sim/Montagem] update erro ->', error);
+      else console.debug('[Sim/Montagem] update ok');
     } else {
-      // Insert
-      await supabase
+      const { error } = await supabase
         .from('simulator_configurations')
         .insert({
           user_id: crmUser.id,
@@ -270,22 +273,27 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });
+      if (error) console.debug('[Sim/Montagem] insert erro ->', error);
+      else console.debug('[Sim/Montagem] insert ok');
     }
     setSaving(false);
   };
 
   // Função para redefinir montagem
   const redefinirMontagem = async () => {
+    console.debug('[Sim/Montagem] redefinirMontagem acionado');
     setCotas([]);
     setTipoParcela('full');
     setParcelaDesejada(0);
     // Apagar do Supabase
     if (crmUser?.id && companyId) {
-      await supabase
+      const { error } = await supabase
         .from('simulator_configurations')
         .delete()
         .eq('user_id', crmUser.id)
         .eq('company_id', companyId);
+      if (error) console.debug('[Sim/Montagem] delete erro ->', error);
+      else console.debug('[Sim/Montagem] delete ok');
     }
   };
 
@@ -773,6 +781,96 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     return creditosSugeridos;
   };
 
+  // Função para calcular créditos baseado na modalidade "Crédito"
+  const calcularCreditosPorModalidade = async (valorCredito: number, administratorId: string, term: number, installmentType: string) => {
+    // Verificar se administratorId é válido
+    if (!administratorId || administratorId.trim() === '') {
+      console.log('AdministratorId inválido:', administratorId);
+      return [];
+    }
+    
+    // Buscar installment types da administradora
+    let installmentTypes = [];
+    try {
+      const { data: types } = await supabase
+        .from('installment_types')
+        .select('*')
+        .eq('administrator_id', administratorId)
+        .eq('installment_count', term)
+        .eq('is_archived', false);
+      
+      if (types && types.length > 0) {
+        installmentTypes = types;
+      }
+    } catch (error) {
+      console.error('Erro ao buscar installment types:', error);
+    }
+
+    if (installmentTypes.length === 0) {
+      return [];
+    }
+
+    // Buscar redução de parcela se necessário
+    let reducaoParcela = null;
+    if (installmentType !== 'full') {
+      try {
+        const { data: reducoes } = await supabase
+          .from('installment_reductions')
+          .select('*')
+          .eq('is_archived', false)
+          .eq('id', installmentType);
+        
+        if (reducoes && reducoes.length > 0) {
+          reducaoParcela = reducoes[0];
+        }
+      } catch (error) {
+        console.error('Erro ao buscar redução de parcela:', error);
+      }
+    }
+
+    const installmentCandidato = installmentTypes[0];
+    const installmentParams = {
+      installment_count: installmentCandidato.installment_count,
+      admin_tax_percent: installmentCandidato.admin_tax_percent || 0,
+      reserve_fund_percent: installmentCandidato.reserve_fund_percent || 0,
+      insurance_percent: installmentCandidato.insurance_percent || 0,
+      optional_insurance: !!installmentCandidato.optional_insurance
+    };
+
+    // Para modalidade "Crédito", arredondar o valor para múltiplos de 10.000
+    const creditoArredondado = Math.ceil(valorCredito / 10000) * 10000;
+    
+    // Calcular parcela real para o crédito informado
+    let parcelaReal = 0;
+    if (installmentType === 'full') {
+      parcelaReal = calcularParcelasProduto({
+        credit: creditoArredondado,
+        installment: installmentParams,
+        reduction: null
+      }).full;
+    } else {
+      parcelaReal = regraParcelaEspecial({
+        credit: creditoArredondado,
+        installment: installmentParams,
+        reduction: reducaoParcela
+      });
+    }
+
+    // Criar crédito único com o valor informado pelo usuário
+    const calculatedCredits = [{
+      id: `credit-${creditoArredondado}`,
+      name: `R$ ${(creditoArredondado / 1000).toFixed(0)}.000,00 (Imóvel)`,
+      creditValue: creditoArredondado,
+      installmentValue: parcelaReal,
+      selected: true,
+      productId: null,
+      administratorId: administratorId,
+      type: 'property'
+    }];
+
+    return calculatedCredits;
+  };
+
   // Atualizar para usar a função de múltiplos créditos
   useEffect(() => {
     if (data.administrator && data.value > 0 && selectedCompanyId) {
@@ -832,9 +930,9 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
               
               setCredits(calculatedCredits);
             }
-          } else {
-            // Para modalidade "Crédito", usar a busca dinâmica
-            const calculatedCredits = await sugerirCreditosDinamico(
+          } else if (data.searchType === 'credit') {
+            // Para modalidade "Crédito", usar a nova função específica
+            const calculatedCredits = await calcularCreditosPorModalidade(
               data.value,
               data.administrator,
               data.term,
@@ -1029,246 +1127,154 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     fetchReducao();
   }, [produtoCandidato, installmentCandidato, data.installmentType]);
 
-  // Para modalidade "Aporte", buscar installment types diretamente
-  if (data.searchType === 'contribution') {
-    // Função assíncrona para calcular valores para modalidade "Aporte"
-    const calcularValoresAporte = async () => {
-      try {
-        // Buscar installment types da administradora
-        const { data: types } = await supabase
-          .from('installment_types')
-          .select('*')
-          .eq('administrator_id', data.administrator)
-          .eq('installment_count', data.term)
-          .eq('is_archived', false);
-        
-        if (types && types.length > 0) {
-          const installmentCandidato = types[0];
+  // useEffect para calcular valores baseados na modalidade
+  useEffect(() => {
+    if (data.administrator && data.value > 0 && selectedCompanyId) {
+      (async () => {
+        try {
+          // Buscar installment types da administradora
+          const { data: types } = await supabase
+            .from('installment_types')
+            .select('*')
+            .eq('administrator_id', data.administrator)
+            .eq('installment_count', data.term)
+            .eq('is_archived', false);
           
-          // Usar valores customizados se disponíveis, senão usar os valores da parcela
-          const customAdminTax = (data as any).adminTaxPercent !== undefined ? (data as any).adminTaxPercent : installmentCandidato.admin_tax_percent || 0;
-          const customReserveFund = (data as any).reserveFundPercent !== undefined ? (data as any).reserveFundPercent : installmentCandidato.reserve_fund_percent || 0;
-          
-          const installmentParams = {
-            installment_count: installmentCandidato.installment_count,
-            admin_tax_percent: customAdminTax,
-            reserve_fund_percent: customReserveFund,
-            insurance_percent: installmentCandidato.insurance_percent || 0,
-            optional_insurance: !!installmentCandidato.optional_insurance
-          };
-
-          // Buscar redução de parcela se necessário
-          let reducaoParcela = null;
-          if (data.installmentType !== 'full') {
-            const { data: reducoes } = await supabase
-              .from('installment_reductions')
-              .select('*')
-              .eq('is_archived', false)
-              .eq('id', data.installmentType);
+          if (types && types.length > 0) {
+            const installmentCandidato = types[0];
             
-            if (reducoes && reducoes.length > 0) {
-              reducaoParcela = reducoes[0];
+            // Usar valores customizados se disponíveis, senão usar os valores da parcela
+            const customAdminTax = (data as any).adminTaxPercent !== undefined ? (data as any).adminTaxPercent : installmentCandidato.admin_tax_percent || 0;
+            const customReserveFund = (data as any).reserveFundPercent !== undefined ? (data as any).reserveFundPercent : installmentCandidato.reserve_fund_percent || 0;
+            
+            const installmentParams = {
+              installment_count: installmentCandidato.installment_count,
+              admin_tax_percent: customAdminTax,
+              reserve_fund_percent: customReserveFund,
+              insurance_percent: installmentCandidato.insurance_percent || 0,
+              optional_insurance: !!installmentCandidato.optional_insurance
+            };
+
+            // Buscar redução de parcela se necessário
+            let reducaoParcela = null;
+            if (data.installmentType !== 'full') {
+              const { data: reducoes } = await supabase
+                .from('installment_reductions')
+                .select('*')
+                .eq('is_archived', false)
+                .eq('id', data.installmentType);
+              
+              if (reducoes && reducoes.length > 0) {
+                reducaoParcela = reducoes[0];
+              }
+            }
+
+            if (data.searchType === 'contribution') {
+              // Modalidade "Aporte"
+              if (data.installmentType !== 'full') {
+                // Cálculo baseado em Parcela (Aporte) com parcela especial
+                const valorAporte = data.value;
+                
+                // Calcular crédito usando a fórmula
+                const novoCreditoAcessado = calcularCreditoPorFormula(valorAporte, installmentParams, reducaoParcela, data.installmentType);
+                setCreditoAcessado(novoCreditoAcessado);
+                
+                // Calcular parcela real usando a fórmula
+                const novoValorParcela = calcularParcelaPorFormula(novoCreditoAcessado, installmentParams, reducaoParcela, data.installmentType);
+                setValorParcela(novoValorParcela);
+                
+                setParcelaReduzida(novoValorParcela);
+                setPercentualUsado(novoValorParcela / novoCreditoAcessado);
+                const novaParcelaCheia = calcularParcelasProduto({
+                  credit: novoCreditoAcessado,
+                  installment: installmentParams,
+                  reduction: null
+                }).full;
+                setParcelaCheia(novaParcelaCheia);
+              } else {
+                // Cálculo baseado em Parcela (Aporte) com parcela cheia
+                const valorAporte = data.value;
+                
+                // Calcular crédito usando a fórmula
+                const novoCreditoAcessado = calcularCreditoPorFormula(valorAporte, installmentParams, null, 'full');
+                setCreditoAcessado(novoCreditoAcessado);
+                
+                // Calcular parcela real usando a fórmula
+                const novoValorParcela = calcularParcelaPorFormula(novoCreditoAcessado, installmentParams, reducaoParcela, data.installmentType);
+                setValorParcela(novoValorParcela);
+                
+                setParcelaCheia(novoValorParcela);
+                const novaParcelaReduzida = regraParcelaEspecial({
+                  credit: novoCreditoAcessado,
+                  installment: installmentParams,
+                  reduction: reducaoParcela
+                });
+                setParcelaReduzida(novaParcelaReduzida);
+                setPercentualUsado(novoValorParcela / novoCreditoAcessado);
+              }
+            } else if (data.searchType === 'credit') {
+              // Modalidade "Crédito"
+              if (data.installmentType !== 'full') {
+                // Cálculo baseado em Crédito com parcela especial
+                const novoCreditoAcessado = Math.ceil(data.value / 10000) * 10000;
+                setCreditoAcessado(novoCreditoAcessado);
+                const novoValorParcela = regraParcelaEspecial({
+                  credit: novoCreditoAcessado,
+                  installment: installmentParams,
+                  reduction: reducaoParcela
+                });
+                setValorParcela(novoValorParcela);
+                setParcelaReduzida(novoValorParcela);
+                setPercentualUsado(novoValorParcela / novoCreditoAcessado);
+                const novaParcelaCheia = calcularParcelasProduto({
+                  credit: novoCreditoAcessado,
+                  installment: installmentParams,
+                  reduction: null
+                }).full;
+                setParcelaCheia(novaParcelaCheia);
+              } else {
+                // Cálculo baseado em Crédito com parcela cheia
+                const novoCreditoAcessado = Math.ceil(data.value / 10000) * 10000;
+                setCreditoAcessado(novoCreditoAcessado);
+                const novoValorParcela = calcularParcelasProduto({
+                  credit: novoCreditoAcessado,
+                  installment: installmentParams,
+                  reduction: null
+                }).full;
+                setValorParcela(novoValorParcela);
+                setParcelaCheia(novoValorParcela);
+                const novaParcelaReduzida = regraParcelaEspecial({
+                  credit: novoCreditoAcessado,
+                  installment: installmentParams,
+                  reduction: reducaoParcela
+                });
+                setParcelaReduzida(novaParcelaReduzida);
+                setPercentualUsado(novoValorParcela / novoCreditoAcessado);
+              }
+            }
+
+            // Calcular taxas e valores auxiliares (comum para ambas as modalidades)
+            setTaxaAdministracao(customAdminTax);
+            const taxaTotal = customAdminTax + customReserveFund;
+            const taxaAnualCalculada = (taxaTotal / data.term) * 12;
+            setTaxaAnual(taxaAnualCalculada);
+            
+            const customAnnualUpdateRate = data.annualUpdateRate !== undefined ? data.annualUpdateRate : data.updateRate;
+            
+            if (data.consortiumType === 'property') {
+              setAtualizacaoAnual('INCC ' + (customAnnualUpdateRate ? customAnnualUpdateRate.toFixed(2) + '%' : '6.00%'));
+            } else if (data.consortiumType === 'vehicle') {
+              setAtualizacaoAnual('IPCA ' + (customAnnualUpdateRate ? customAnnualUpdateRate.toFixed(2) + '%' : '6.00%'));
             }
           }
-
-          if (data.installmentType !== 'full') {
-            // Cálculo baseado em Parcela (Aporte) com parcela especial - usando a nova fórmula
-            const valorAporte = data.value;
-            
-            // Calcular crédito usando a nova fórmula
-            const novoCreditoAcessado = calcularCreditoPorFormula(valorAporte, installmentParams, reducaoParcela, data.installmentType);
-            setCreditoAcessado(novoCreditoAcessado);
-            
-            // Calcular parcela real usando a nova fórmula
-            const novoValorParcela = calcularParcelaPorFormula(novoCreditoAcessado, installmentParams, reducaoParcela, data.installmentType);
-            setValorParcela(novoValorParcela);
-            
-            // Removed console log for performance
-            setParcelaReduzida(novoValorParcela);
-            setPercentualUsado(novoValorParcela / novoCreditoAcessado);
-            const novaParcelaCheia = calcularParcelasProduto({
-              credit: novoCreditoAcessado,
-              installment: installmentParams,
-              reduction: null
-            }).full;
-            setParcelaCheia(novaParcelaCheia);
-          } else {
-            // Cálculo baseado em Parcela (Aporte) com parcela cheia - usando a nova fórmula
-            const valorAporte = data.value;
-            
-            // Calcular crédito usando a nova fórmula
-            const novoCreditoAcessado = calcularCreditoPorFormula(valorAporte, installmentParams, null, 'full');
-            setCreditoAcessado(novoCreditoAcessado);
-            
-            // Calcular parcela real usando a nova fórmula
-            const novoValorParcela = calcularParcelaPorFormula(novoCreditoAcessado, installmentParams, reducaoParcela, data.installmentType);
-            setValorParcela(novoValorParcela);
-            
-            // Removed console log for performance
-            setParcelaCheia(novoValorParcela);
-            const novaParcelaReduzida = regraParcelaEspecial({
-              credit: novoCreditoAcessado,
-              installment: installmentParams,
-              reduction: reducaoParcela
-            });
-            setParcelaReduzida(novaParcelaReduzida);
-            setPercentualUsado(novoValorParcela / novoCreditoAcessado);
-          }
-
-          // Calcular percentuais e valores auxiliares
-          // Remover as linhas que referenciam variáveis fora do escopo
-          // setParcelaReduzida(novoValorParcela);
-          // setPercentualUsado(novoValorParcela / novoCreditoAcessado);
-          // const novaParcelaCheiaCalculada = calcularParcelasProduto({
-          //   credit: novoCreditoAcessado,
-          //   installment: installmentParams,
-          //   reduction: null
-          // }).full;
-          // setParcelaCheia(novaParcelaCheiaCalculada);
-          
-          setTaxaAdministracao(customAdminTax);
-          // Calcular taxa anual incluindo taxa de administração + fundo de reserva
-          const taxaTotal = customAdminTax + customReserveFund;
-          const taxaAnualCalculada = (taxaTotal / data.term) * 12;
-          setTaxaAnual(taxaAnualCalculada);
-          
-          // Removed console log for performance
-          
-          // Usar valor customizado se disponível, senão usar o valor padrão
-          const customAnnualUpdateRate = data.annualUpdateRate !== undefined ? data.annualUpdateRate : data.updateRate;
-          
-          // Removed console log for performance
-          
-          if (data.consortiumType === 'property') {
-            setAtualizacaoAnual('INCC ' + (customAnnualUpdateRate ? customAnnualUpdateRate.toFixed(2) + '%' : '6.00%'));
-          } else if (data.consortiumType === 'vehicle') {
-            setAtualizacaoAnual('IPCA ' + (customAnnualUpdateRate ? customAnnualUpdateRate.toFixed(2) + '%' : '6.00%'));
-          }
+        } catch (error) {
+          console.error('Erro ao calcular valores:', error);
         }
-      } catch (error) {
-        console.error('Erro ao calcular valores para modalidade "Aporte":', error);
-      }
-    };
+      })();
+    }
+  }, [data.administrator, data.value, data.term, data.installmentType, data.searchType, selectedCompanyId, data.consortiumType, data.annualUpdateRate, data.updateRate, data.adminTaxPercent, data.reserveFundPercent]);
 
-    // Executar a função assíncrona
-    calcularValoresAporte();
-  } else if (produtoCandidato && installmentCandidato) {
-    // Para modalidade "Crédito", usar a lógica existente
-    // Usar valores customizados se disponíveis, senão usar os valores da parcela
-    const customAdminTax = (data as any).adminTaxPercent !== undefined ? (data as any).adminTaxPercent : installmentCandidato.admin_tax_percent || 0;
-    const customReserveFund = (data as any).reserveFundPercent !== undefined ? (data as any).reserveFundPercent : installmentCandidato.reserve_fund_percent || 0;
-    
-    const installmentParams = {
-      installment_count: installmentCandidato.installment_count,
-      admin_tax_percent: customAdminTax,
-      reserve_fund_percent: customReserveFund,
-      insurance_percent: installmentCandidato.insurance_percent || 0,
-      optional_insurance: !!installmentCandidato.optional_insurance
-    };
-    
-    if (data.installmentType !== 'full') {
-      if (data.searchType === 'contribution') {
-        // Cálculo baseado em Parcela (Aporte) com parcela especial - usando a nova fórmula
-        const valorAporte = data.value;
-        
-        // Calcular crédito usando a nova fórmula
-        const novoCreditoAcessado = calcularCreditoPorFormula(valorAporte, installmentParams, reducaoParcela, data.installmentType);
-        setCreditoAcessado(novoCreditoAcessado);
-        
-        // Calcular parcela real usando a nova fórmula
-        const novoValorParcela = calcularParcelaPorFormula(novoCreditoAcessado, installmentParams, reducaoParcela, data.installmentType);
-        setValorParcela(novoValorParcela);
-        
-        // Removed console log for performance
-        setParcelaReduzida(novoValorParcela);
-        setPercentualUsado(novoValorParcela / novoCreditoAcessado);
-        const novaParcelaCheia = calcularParcelasProduto({
-          credit: novoCreditoAcessado,
-          installment: installmentParams,
-          reduction: null
-        }).full;
-        setParcelaCheia(novaParcelaCheia);
-      } else if (data.searchType === 'credit') {
-        // Problema 2: Cálculo baseado em Crédito com parcela especial - arredondar para múltiplos de 10.000
-        const novoCreditoAcessado = Math.ceil(data.value / 10000) * 10000;
-        setCreditoAcessado(novoCreditoAcessado);
-        const novoValorParcela = regraParcelaEspecial({
-          credit: novoCreditoAcessado,
-          installment: installmentParams,
-          reduction: reducaoParcela
-        });
-        setValorParcela(novoValorParcela);
-        setParcelaReduzida(novoValorParcela);
-        setPercentualUsado(novoValorParcela / novoCreditoAcessado);
-        const novaParcelaCheia = calcularParcelasProduto({
-          credit: novoCreditoAcessado,
-          installment: installmentParams,
-          reduction: null
-        }).full;
-        setParcelaCheia(novaParcelaCheia);
-      }
-    } else {
-      // Lógica para parcela cheia
-      if (data.searchType === 'contribution') {
-        // Cálculo baseado em Parcela (Aporte) com parcela cheia - usando a fórmula correta
-        const valorAporte = data.value;
-        
-        // Calcular crédito usando a nova fórmula
-        const novoCreditoAcessado = calcularCreditoPorFormula(valorAporte, installmentParams, null, 'full');
-        setCreditoAcessado(novoCreditoAcessado);
-        
-        // Calcular parcela real usando a nova fórmula
-        const novoValorParcela = calcularParcelaPorFormula(novoCreditoAcessado, installmentParams, reducaoParcela, data.installmentType);
-        setValorParcela(novoValorParcela);
-        
-        // Removed console log for performance
-        setParcelaCheia(novoValorParcela);
-        const novaParcelaReduzida = regraParcelaEspecial({
-          credit: novoCreditoAcessado,
-          installment: installmentParams,
-          reduction: reducaoParcela
-        });
-        setParcelaReduzida(novaParcelaReduzida);
-        setPercentualUsado(novoValorParcela / novoCreditoAcessado);
-      } else if (data.searchType === 'credit') {
-        // Problema 3: Busca por Crédito com Parcela Cheia - arredondar crédito para múltiplos de 10.000
-        const novoCreditoAcessado = Math.ceil(data.value / 10000) * 10000;
-        setCreditoAcessado(novoCreditoAcessado);
-        const novoValorParcela = calcularParcelasProduto({
-          credit: novoCreditoAcessado,
-          installment: installmentParams,
-          reduction: null
-        }).full;
-        setValorParcela(novoValorParcela);
-        setParcelaCheia(novoValorParcela);
-        const novaParcelaReduzida = regraParcelaEspecial({
-          credit: novoCreditoAcessado,
-          installment: installmentParams,
-          reduction: reducaoParcela
-        });
-        setParcelaReduzida(novaParcelaReduzida);
-        setPercentualUsado(novoValorParcela / novoCreditoAcessado);
-      }
-    }
-    setTaxaAdministracao(customAdminTax);
-    // Calcular taxa anual incluindo taxa de administração + fundo de reserva
-    const taxaTotal = customAdminTax + customReserveFund;
-    const taxaAnualCalculada = (taxaTotal / data.term) * 12;
-    setTaxaAnual(taxaAnualCalculada);
-    
-    // Removed console log for performance
-    
-    // Usar valor customizado se disponível, senão usar o valor padrão
-    const customAnnualUpdateRate = data.annualUpdateRate !== undefined ? data.annualUpdateRate : data.updateRate;
-    
-    // Removed console log for performance
-    
-    if (data.consortiumType === 'property') {
-      setAtualizacaoAnual('INCC ' + (customAnnualUpdateRate ? customAnnualUpdateRate.toFixed(2) + '%' : '6.00%'));
-    } else if (data.consortiumType === 'vehicle') {
-      setAtualizacaoAnual('IPCA ' + (customAnnualUpdateRate ? customAnnualUpdateRate.toFixed(2) + '%' : '6.00%'));
-    }
-  }
+  // Código legado removido - agora controlado pelo useEffect acima
 
   // Atualizar o valor de crédito acessado no parent sempre que mudar
   useEffect(() => {
@@ -1394,7 +1400,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
   // 5. Funções para adicionar/remover cotas
   const adicionarProduto = async () => {
     if (!selectedProduct || addQuantidade < 1) return;
-    
+    console.debug('[Sim/Montagem] adicionarProduto ->', { selectedProduct, addQuantidade });
     const produto = availableProducts.find(p => p.id === selectedProduct);
     if (!produto) return;
     
@@ -1465,25 +1471,31 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     setSelectedProduct('');
     setShowAddProduct(false);
     setAddQuantidade(1);
+    console.debug('[Sim/Montagem] produto adicionado');
   };
   
   const removerCota = (index: number) => {
+    console.debug('[Sim/Montagem] removerCota idx ->', index);
     setCotas(prev => prev.filter((_, i) => i !== index));
   };
 
   // Seleção em massa
   const toggleCotaSelecionada = (idx: number) => {
+    console.debug('[Sim/Montagem] toggleCotaSelecionada idx ->', idx);
     setSelectedCotas(prev => prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]);
   };
   const selecionarTodas = () => {
+    console.debug('[Sim/Montagem] selecionarTodas');
     if (selectedCotas.length === cotas.length) setSelectedCotas([]);
     else setSelectedCotas(cotas.map((_, i) => i));
   };
   const excluirSelecionadas = () => {
+    console.debug('[Sim/Montagem] excluirSelecionadas ->', selectedCotas);
     setCotas(prev => prev.filter((_, i) => !selectedCotas.includes(i)));
     setSelectedCotas([]);
   };
   const abrirRedefinir = () => {
+    console.debug('[Sim/Montagem] abrirRedefinir');
     setShowRedefinirModal(true);
     setRedefinirProdutoId('');
     setRedefinirQuantidade(1);
@@ -1685,7 +1697,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
       {/* Painel de resumo */}
       {/* Cards de resumo acima da montagem de cotas */}
       {/* Primeira linha de cards de resumo */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">{/* reduzido de mb-6 para mb-4 */}
         <ResumoCard 
           titulo="Crédito Acessado" 
           valor={formatCurrency(
@@ -1708,132 +1720,155 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
 
       {/* Segunda linha de cards de resumo, só aparece se houver pelo menos um produto selecionado */}
       {cotas.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">{/* reduzido de mb-6 para mb-4 */}
           <ResumoCard titulo="Total do Crédito" valor={formatCurrency(totalCotas)} destaquePositivo={totalCotas >= creditoAcessado} destaqueNegativo={totalCotas < creditoAcessado} />
           <ResumoCard titulo="Total da Parcela" valor={formatCurrency(totalParcela)} destaquePositivo={totalCotas >= creditoAcessado} destaqueNegativo={totalCotas < creditoAcessado} />
           <ResumoCard titulo="Acréscimo no Aporte" valor={formatCurrency(acrescimoAporte)} destaquePositivo={totalCotas >= creditoAcessado} destaqueNegativo={totalCotas < creditoAcessado} />
           <ResumoCard titulo="Acréscimo no Crédito" valor={formatCurrency(acrescimoCredito)} destaquePositivo={totalCotas >= creditoAcessado} destaqueNegativo={totalCotas < creditoAcessado} />
         </div>
       )}
+      {/* Botão para abrir Montagem de Cotas quando estiver oculta */}
+      {!showMontagemCotas && (
+        <div className="w-full">
+          <Button
+            onClick={() => { console.debug('[Sim/Montagem] abrir seção Montagem de cotas'); setShowMontagemCotas(true); }}
+            className="w-full bg-black text-white hover:bg-neutral-800 border-none"
+          >
+            Montar cotas
+          </Button>
+        </div>
+      )}
+
       {/* Seção de Montagem de Cotas */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Montagem de Cotas</CardTitle>
-        </CardHeader>
-        <CardContent>
-      <div className="space-y-4">
-            {/* Barra de seleção em massa */}
-            {selectedCotas.length > 0 && (
-              <div className="flex gap-2 mb-2 items-center">
-                <span className="text-sm font-medium">{selectedCotas.length} selecionada(s)</span>
-                <Button size="sm" variant="destructive" onClick={excluirSelecionadas}>Excluir</Button>
-                <Button size="sm" variant="outline" onClick={abrirRedefinir}>Redefinir</Button>
-                <Button size="sm" variant="ghost" onClick={() => setSelectedCotas([])}>Cancelar</Button>
-                  </div>
-            )}
-            {/* Lista de cotas adicionadas */}
-            {cotas.length === 0 && (
-              <div className="text-muted-foreground dark:text-gray-300 text-center py-4">
-                Nenhuma cota adicionada. Clique em "Adicionar Produto" para começar.
-                    </div>
-            )}
-            {cotas.map((cota, idx) => (
-              <div key={idx} className={`flex items-center justify-between p-3 border border-border dark:border-[#A86F57]/20 rounded-lg bg-card dark:bg-[#1F1F1F] ${selectedCotas.includes(idx) ? 'bg-accent/20 dark:bg-[#A86F57]/10 border-accent dark:border-[#A86F57]' : ''}`}>
-                <Checkbox checked={selectedCotas.includes(idx)} onCheckedChange={() => toggleCotaSelecionada(idx)} className="dark:border-[#A86F57]/30" />
-                <div className="flex-1 ml-2">
-                  <div className="font-medium text-foreground dark:text-white">{cota.nome}</div>
-                  <div className="text-sm text-muted-foreground dark:text-gray-300">
-                    Crédito: {formatCurrency(cota.valor)} | Parcela: {formatCurrency(cota.parcela)}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary" className="bg-muted dark:bg-[#161616] text-foreground dark:text-white">Qtd: {cota.quantidade}</Badge>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removerCota(idx)}
-                    className="text-red-600 hover:text-red-700 border-border dark:border-[#A86F57]/30 hover:bg-muted dark:hover:bg-[#161616]"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-            {/* Botão principal de adicionar produto */}
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setShowAddProduct(true)}
-                className="flex-1 bg-black text-white hover:bg-neutral-800 border-none"
-              >
-                {/* Apenas um símbolo de +, maior */}
-                <span className="text-2xl font-bold mr-2">+</span>
-                Selecionar Crédito
+      {showMontagemCotas && (
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>Montagem de Cotas</CardTitle>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { console.debug('[Sim/Montagem] fechar seção Montagem de cotas'); setShowMontagemCotas(false); }}
+              className="text-foreground dark:text-white"
+              title="Recolher"
+            >
+              ▲
             </Button>
-              </div>
-            {/* Modal para adicionar produto */}
-            {showAddProduct && (
-              <Dialog open={showAddProduct} onOpenChange={setShowAddProduct}>
-                <DialogContent className="bg-background dark:bg-[#1E1E1E] border-border dark:border-[#A86F57]/20">
-                  <DialogHeader>
-                    <DialogTitle className="text-foreground dark:text-white">Selecionar crédito</DialogTitle>
-                  </DialogHeader>
-                  <div className="flex gap-2 items-end mb-4">
-                    <div className="flex-1">
-                      <select value={selectedProduct} onChange={e => setSelectedProduct(e.target.value)} className="w-full rounded-lg border border-border dark:border-[#A86F57]/30 p-2 bg-background dark:bg-[#131313] text-foreground dark:text-white focus:ring-2 focus:ring-[#A86F57] focus:border-[#A86F57] transition-all">
-                        <option value="">Selecione o crédito</option>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {/* Barra de seleção em massa */}
+              {selectedCotas.length > 0 && (
+                <div className="flex gap-2 mb-2 items-center">
+                  <span className="text-sm font-medium">{selectedCotas.length} selecionada(s)</span>
+                  <Button size="sm" variant="destructive" onClick={excluirSelecionadas}>Excluir</Button>
+                  <Button size="sm" variant="outline" onClick={abrirRedefinir}>Redefinir</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setSelectedCotas([])}>Cancelar</Button>
+                    </div>
+              )}
+              {/* Lista de cotas adicionadas */}
+              {cotas.length === 0 && (
+                <div className="text-muted-foreground dark:text-gray-300 text-center py-4">
+                  Nenhuma cota adicionada. Clique em "Adicionar Produto" para começar.
+                      </div>
+              )}
+              {cotas.map((cota, idx) => (
+                <div key={idx} className={`flex items-center justify-between p-3 border border-border dark:border-[#A86F57]/20 rounded-lg bg-card dark:bg-[#1F1F1F] ${selectedCotas.includes(idx) ? 'bg-accent/20 dark:bg-[#A86F57]/10 border-accent dark:border-[#A86F57]' : ''}`}>
+                  <Checkbox checked={selectedCotas.includes(idx)} onCheckedChange={() => toggleCotaSelecionada(idx)} className="dark:border-[#A86F57]/30" />
+                  <div className="flex-1 ml-2">
+                    <div className="font-medium text-foreground dark:text-white">{cota.nome}</div>
+                    <div className="text-sm text-muted-foreground dark:text-gray-300">
+                      Crédito: {formatCurrency(cota.valor)} | Parcela: {formatCurrency(cota.parcela)}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="bg-muted dark:bg-[#161616] text-foreground dark:text-white">Qtd: {cota.quantidade}</Badge>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => removerCota(idx)}
+                      className="text-red-600 hover:text-red-700 border-border dark:border-[#A86F57]/30 hover:bg-muted dark:hover:bg-[#161616]"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              {/* Botão principal de adicionar produto */}
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAddProduct(true)}
+                  className="flex-1 bg-black text-white hover:bg-neutral-800 border-none"
+                >
+                  {/* Apenas um símbolo de +, maior */}
+                  <span className="text-2xl font-bold mr-2">+</span>
+                  Selecionar Crédito
+              </Button>
+                </div>
+              {/* Modal para adicionar produto */}
+              {showAddProduct && (
+                <Dialog open={showAddProduct} onOpenChange={setShowAddProduct}>
+                  <DialogContent className="bg-background dark:bg-[#1E1E1E] border-border dark:border-[#A86F57]/20">
+                    <DialogHeader>
+                      <DialogTitle className="text-foreground dark:text-white">Selecionar crédito</DialogTitle>
+                    </DialogHeader>
+                    <div className="flex gap-2 items-end mb-4">
+                      <div className="flex-1">
+                        <select value={selectedProduct} onChange={e => { console.debug('[Sim/Montagem] selecionar produto ->', e.target.value); setSelectedProduct(e.target.value); }} className="w-full rounded-lg border border-border dark:border-[#A86F57]/30 p-2 bg-background dark:bg-[#131313] text-foreground dark:text-white focus:ring-2 focus:ring-[#A86F57] focus:border-[#A86F57] transition-all">
+                          <option value="">Selecione o crédito</option>
+                          {availableProducts.map(p => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="w-32">
+                        <Input type="number" min={1} value={addQuantidade} onChange={e => { const num = Number(e.target.value); console.debug('[Sim/Montagem] quantidade ->', num); setAddQuantidade(num); }} className="rounded-lg border-border dark:border-[#A86F57]/30 bg-background dark:bg-[#131313] text-foreground dark:text-white focus:ring-2 focus:ring-[#A86F57] focus:border-[#A86F57] transition-all" placeholder="Qtd" />
+                </div>
+                    </div>
+                    <div className="flex gap-2 justify-end">
+                      <Button variant="outline" onClick={() => setShowAddProduct(false)} className="flex-1">Cancelar</Button>
+                      <Button onClick={adicionarProduto} className="flex-1 bg-[#AA705A] text-white hover:bg-[#AA705A]/80 border-none">Adicionar</Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
+              {/* Modal para redefinir cotas selecionadas */}
+              {showRedefinirModal && (
+                <Dialog open={showRedefinirModal} onOpenChange={setShowRedefinirModal}>
+                  <DialogContent className="bg-background dark:bg-[#1E1E1E] border-border dark:border-[#A86F57]/20">
+                    <DialogHeader>
+                      <DialogTitle className="text-foreground dark:text-white">Redefinir Cotas Selecionadas</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <select value={redefinirProdutoId} onChange={e => setRedefinirProdutoId(e.target.value)} className="w-full border border-border dark:border-[#A86F57]/30 rounded p-2 bg-background dark:bg-[#131313] text-foreground dark:text-white">
+                        <option value="">Selecione o novo produto</option>
                         {availableProducts.map(p => (
                           <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
                       </select>
+                      <Input type="number" min={1} value={redefinirQuantidade} onChange={e => setRedefinirQuantidade(Number(e.target.value))} className="w-full bg-background dark:bg-[#131313] border-border dark:border-[#A86F57]/30 text-foreground dark:text-white" placeholder="Quantidade" />
+                      <div className="flex gap-2">
+                        <Button variant="outline" onClick={() => setShowRedefinirModal(false)} className="flex-1 border-border dark:border-[#A86F57]/30 text-foreground dark:text-white hover:bg-muted dark:hover:bg-[#161616]">Cancelar</Button>
+                        <Button onClick={redefinirSelecionadas} className="flex-1 bg-[#A86F57] text-white hover:bg-[#A86F57]/80 border-none">Trocar</Button>
                     </div>
-                    <div className="w-32">
-                      <Input type="number" min={1} value={addQuantidade} onChange={e => setAddQuantidade(Number(e.target.value))} className="rounded-lg border-border dark:border-[#A86F57]/30 bg-background dark:bg-[#131313] text-foreground dark:text-white focus:ring-2 focus:ring-[#A86F57] focus:border-[#A86F57] transition-all" placeholder="Qtd" />
-              </div>
-                  </div>
-                  <div className="flex gap-2 justify-end">
-                    <Button variant="outline" onClick={() => setShowAddProduct(false)} className="flex-1">Cancelar</Button>
-                    <Button onClick={adicionarProduto} className="flex-1 bg-[#AA705A] text-white hover:bg-[#AA705A]/80 border-none">Adicionar</Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            )}
-            {/* Modal para redefinir cotas selecionadas */}
-            {showRedefinirModal && (
-              <Dialog open={showRedefinirModal} onOpenChange={setShowRedefinirModal}>
-                <DialogContent className="bg-background dark:bg-[#1E1E1E] border-border dark:border-[#A86F57]/20">
-                  <DialogHeader>
-                    <DialogTitle className="text-foreground dark:text-white">Redefinir Cotas Selecionadas</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <select value={redefinirProdutoId} onChange={e => setRedefinirProdutoId(e.target.value)} className="w-full border border-border dark:border-[#A86F57]/30 rounded p-2 bg-background dark:bg-[#131313] text-foreground dark:text-white">
-                      <option value="">Selecione o novo produto</option>
-                      {availableProducts.map(p => (
-                        <option key={p.id} value={p.id}>{p.name}</option>
-                      ))}
-                    </select>
-                    <Input type="number" min={1} value={redefinirQuantidade} onChange={e => setRedefinirQuantidade(Number(e.target.value))} className="w-full bg-background dark:bg-[#131313] border-border dark:border-[#A86F57]/30 text-foreground dark:text-white" placeholder="Quantidade" />
-                    <div className="flex gap-2">
-                      <Button variant="outline" onClick={() => setShowRedefinirModal(false)} className="flex-1 border-border dark:border-[#A86F57]/30 text-foreground dark:text-white hover:bg-muted dark:hover:bg-[#161616]">Cancelar</Button>
-                      <Button onClick={redefinirSelecionadas} className="flex-1 bg-[#A86F57] text-white hover:bg-[#A86F57]/80 border-none">Trocar</Button>
-                  </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            )}
-            
-            {/* Botões de ação embaixo da montagem de cotas */}
-            <div className="flex flex-col md:flex-row gap-2 mt-6">
-              {/* Botão Gerar proposta só aparece se houver cotas e não estiver salvando */}
-              {cotas.length > 0 && !saving && (
-                <Button onClick={() => setShowComingSoon(true)} className="flex-1 bg-green-600 hover:bg-green-700 text-white">Gerar proposta</Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               )}
-              <Button onClick={redefinirMontagem} variant="outline" className="flex-1">Redefinir</Button>
-              <Button onClick={salvarMontagem} disabled={saving} className="flex-1 bg-[#AA715A] text-white hover:bg-[#AA715A]/80 border-none">{saving ? 'Salvando...' : 'Salvar'}</Button>
+              
+              {/* Botões de ação embaixo da montagem de cotas */}
+              <div className="flex flex-col md:flex-row gap-2 mt-6">
+                {/* Botão Gerar proposta só aparece se houver cotas e não estiver salvando */}
+                {cotas.length > 0 && !saving && (
+                  <Button onClick={() => setShowComingSoon(true)} className="flex-1 bg-green-600 hover:bg-green-700 text-white">Gerar proposta</Button>
+                )}
+                <Button onClick={redefinirMontagem} variant="outline" className="flex-1">Redefinir</Button>
+                <Button onClick={salvarMontagem} disabled={saving} className="flex-1 bg-[#AA715A] text-white hover:bg-[#AA715A]/80 border-none">{saving ? 'Salvando...' : 'Salvar'}</Button>
+              </div>
             </div>
-      </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
       {/* Modal "Em breve" */}
       <Dialog open={showComingSoon} onOpenChange={setShowComingSoon}>
         <DialogContent>

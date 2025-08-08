@@ -50,6 +50,21 @@ export const CrmSidebar = () => {
     enabled: userRole === 'master',
   });
 
+  // Branding da empresa atual/selecionada
+  const currentCompanyId = selectedCompanyId || companyId;
+  const { data: branding } = useQuery({
+    queryKey: ['company_branding', currentCompanyId],
+    enabled: !!currentCompanyId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('company_branding')
+        .select('logo_horizontal_url, logo_horizontal_dark_url')
+        .eq('company_id', currentCompanyId)
+        .maybeSingle();
+      return data as { logo_horizontal_url?: string; logo_horizontal_dark_url?: string } | null;
+    },
+  });
+
   useEffect(() => {
     if (!companyId || !userRole) return;
     supabase
@@ -100,7 +115,16 @@ export const CrmSidebar = () => {
     <Sidebar className="border-r border-border">
       <SidebarHeader className="p-4">
         <div className="flex flex-col items-start">
-          <Logo onClick={handleLogoClick} className="h-10 w-auto max-w-[140px] mb-2" />
+          {branding?.logo_horizontal_url ? (
+            <img
+              src={document?.documentElement?.classList?.contains('dark') && branding.logo_horizontal_dark_url ? branding.logo_horizontal_dark_url : branding.logo_horizontal_url}
+              onClick={handleLogoClick}
+              className="h-10 w-auto max-w-[140px] mb-2 cursor-pointer object-contain"
+              alt="Logo"
+            />
+          ) : (
+            <Logo onClick={handleLogoClick} className="h-10 w-auto max-w-[140px] mb-2" />
+          )}
           <span className="font-bold text-lg text-foreground tracking-wide mb-4">CRM</span>
           {/* Seletor de empresa para Master */}
           {userRole === 'master' && (
@@ -135,6 +159,9 @@ export const CrmSidebar = () => {
               <DropdownMenuItem onClick={handleGoToIndicators}>
                 CRM
               </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/configuracoes/simulador')}>
+                Configurações
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -165,26 +192,9 @@ export const CrmSidebar = () => {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
-              {(userRole === 'admin' || userRole === 'master') && pagePermissions['crm_config'] !== false && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActivePath('/crm/configuracoes')}>
-                    <Link to="/crm/configuracoes">
-                      <Settings className="h-4 w-4" />
-                      <span>Configurações</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-              {userRole === 'master' && pagePermissions['crm_master'] !== false && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActivePath('/crm/master')}>
-                    <Link to="/crm/master">
-                      <Shield className="h-4 w-4" />
-                      <span>Master Config</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
+              
+              
+              
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -198,7 +208,7 @@ export const CrmSidebar = () => {
               <AvatarFallback>{(crmUser?.first_name?.[0] || 'U')}{(crmUser?.last_name?.[0] || '')}</AvatarFallback>
             </Avatar>
           </div>
-          <div className="flex flex-col flex-1 min-w-0">
+          <div className="flex col flex-1 min-w-0">
             <span className="font-medium text-sm truncate">{crmUser?.first_name || 'Usuário'} {crmUser?.last_name || ''}</span>
             <span className="text-xs text-muted-foreground truncate">{crmUser?.email || 'sem-email'}</span>
           </div>

@@ -1,13 +1,14 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-type Module = 'simulator' | 'crm';
+type Module = 'simulator' | 'crm' | 'settings';
 
 interface ModuleContextType {
   currentModule: Module;
   setModule: (module: Module) => void;
   isSimulatorModule: boolean;
   isCrmModule: boolean;
+  isSettingsModule: boolean;
 }
 
 const ModuleContext = createContext<ModuleContextType | undefined>(undefined);
@@ -36,6 +37,7 @@ export const ModuleProvider = ({ children }: ModuleProviderProps) => {
     setModule,
     isSimulatorModule: currentModule === 'simulator',
     isCrmModule: currentModule === 'crm',
+    isSettingsModule: currentModule === 'settings',
   };
 
   return (

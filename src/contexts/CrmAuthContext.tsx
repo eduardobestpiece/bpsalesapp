@@ -35,19 +35,16 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [companyId, setCompanyId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Função para salvar no cache local
   const saveCrmUserCache = (email: string, data: any) => {
     if (!email || !data) return;
     localStorage.setItem('crmUserCache', JSON.stringify({ email, data, ts: Date.now() }));
   };
 
-  // Função para ler do cache local
   const getCrmUserCache = (email: string) => {
     try {
       const raw = localStorage.getItem('crmUserCache');
       if (!raw) return null;
       const cache = JSON.parse(raw);
-      // Cache válido por 24h e para o mesmo email
       if (cache.email === email && Date.now() - cache.ts < 24 * 60 * 60 * 1000) {
         return cache.data;
       }
@@ -57,130 +54,109 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
     }
   };
 
-  // Função para limpar o cache
   const clearCrmUserCache = () => {
     localStorage.removeItem('crmUserCache');
   };
 
-  // Função para limpar o cache do companyId e forçar regeneração
-  const clearCompanyIdCache = () => {
-    localStorage.removeItem('mockCompanyId');
-  };
+  const ensureCrmUser = useCallback(async (authUser: User): Promise<CrmUser | null> => {
+    // Tenta buscar o usuário pelo auth.uid()
+    const { data: existing } = await supabase
+      .from('crm_users')
+      .select('*')
+      .eq('id', authUser.id)
+      .maybeSingle();
 
-  const fetchCrmUser = useCallback(async (email: string) => {
-    // Removed console log for performance
-    
-    try {
-      // Persistir IDs no localStorage para manter consistência durante a sessão
-      let mockUserId = localStorage.getItem('mockUserId');
-      let mockCompanyId = localStorage.getItem('mockCompanyId');
-      
-      if (!mockUserId) {
-        mockUserId = crypto.randomUUID();
-        localStorage.setItem('mockUserId', mockUserId);
-      }
-      
-      // Para usuário master, usar uma empresa existente do banco
-      if (!mockCompanyId) {
-        // Buscar uma empresa existente para o master
-        const { data: companies } = await supabase
-          .from('companies')
-          .select('id')
-          .eq('status', 'active')
-          .limit(1);
-        
-        if (companies && companies.length > 0) {
-          mockCompanyId = companies[0].id;
-        } else {
-          // Fallback: gerar um ID aleatório se não houver empresas
-          mockCompanyId = crypto.randomUUID();
-        }
-        localStorage.setItem('mockCompanyId', mockCompanyId);
-      }
-      
-      const mockUser: CrmUser = {
-        id: mockUserId,
-        email: email,
-        first_name: 'Eduardo',
-        last_name: 'Costa',
-        role: 'master',
-        company_id: mockCompanyId,
-        status: 'active'
-      };
-      
-      // Removed console log for performance
-      saveCrmUserCache(email, mockUser);
-      return mockUser;
-    } catch (err) {
-      // Removed console log for performance
+    if (existing) {
+      return existing as any;
+    }
+
+    // Pegar uma empresa ativa
+    const { data: companies } = await supabase
+      .from('companies')
+      .select('id')
+      .eq('status', 'active')
+      .limit(1);
+
+    const fallbackCompanyId = companies && companies.length > 0 ? companies[0].id : null;
+
+    // Criar crm_user mínimo vinculado ao auth.uid()
+    const firstName = authUser.email?.split('@')[0] || 'Usuário';
+    const payload = {
+      id: authUser.id,
+      email: authUser.email,
+      first_name: firstName,
+      last_name: '',
+      role: 'admin' as UserRole,
+      company_id: fallbackCompanyId,
+      status: 'active',
+    } as any;
+
+    const { data: inserted, error } = await supabase
+      .from('crm_users')
+      .insert(payload)
+      .select('*')
+      .maybeSingle();
+
+    if (error) {
       return null;
     }
+
+    return inserted as any;
   }, []);
 
+  const fetchCrmUser = useCallback(async (authUser: User) => {
+    try {
+      // Primeiro tenta cache por email
+      if (authUser.email) {
+        const cached = getCrmUserCache(authUser.email);
+        if (cached) {
+          return cached;
+        }
+      }
+
+      const ensured = await ensureCrmUser(authUser);
+      if (ensured && authUser.email) {
+        saveCrmUserCache(authUser.email, ensured);
+      }
+      return ensured;
+    } catch {
+      return null;
+    }
+  }, [ensureCrmUser]);
 
   useEffect(() => {
     let mounted = true;
-    
-    // Setup auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
-        // Removed console log for performance
-        
+
+    const applySession = async (sess: Session | null) => {
+      if (!mounted) return;
+      setSession(sess);
+      setUser(sess?.user ?? null);
+
+      if (sess?.user) {
+        const authUser = sess.user;
+        const crm = await fetchCrmUser(authUser);
         if (!mounted) return;
-        
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
-        
-        if (newSession?.user?.email) {
-          // Removed console log for performance
-          
-          // Primeiro verifica cache
-          const cached = getCrmUserCache(newSession.user.email);
-          if (cached) {
-            // Removed console log for performance
-            setCrmUser(cached);
-            setUserRole(cached.role ?? null);
-            setCompanyId(cached.company_id ?? null);
-            setLoading(false);
-            return;
-          }
-          
-          // Removed console log for performance
-          
-          // Se não tem cache, busca do banco
-          try {
-            const crmUserData = await fetchCrmUser(newSession.user.email);
-            if (mounted) {
-              setCrmUser(crmUserData);
-              setUserRole(crmUserData?.role ?? null);
-              setCompanyId(crmUserData?.company_id ?? null);
-              setLoading(false);
-            }
-          } catch (error) {
-            // Removed console log for performance
-            if (mounted) {
-              setLoading(false);
-            }
-          }
-        } else {
-          // Sem usuário autenticado
-          if (mounted) {
-            setCrmUser(null);
-            setUserRole(null);
-            setCompanyId(null);
-            clearCrmUserCache();
-            clearCompanyIdCache();
-            setLoading(false);
-          }
-        }
+        setCrmUser(crm);
+        setUserRole((crm?.role as UserRole) ?? null);
+        setCompanyId(crm?.company_id ?? null);
+        setLoading(false);
+      } else {
+        setCrmUser(null);
+        setUserRole(null);
+        setCompanyId(null);
+        clearCrmUserCache();
+        setLoading(false);
+      }
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, newSession) => {
+        await applySession(newSession);
       }
     );
 
-    // Get initial session
     supabase.auth.getSession().then(({ data: { session: initialSession } }) => {
-      if (mounted && !initialSession) {
-        setLoading(false);
-      }
+      applySession(initialSession);
     });
 
     return () => {
@@ -190,51 +166,29 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
   }, [fetchCrmUser]);
 
   const signIn = async (email: string, password: string) => {
-    
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-
-    if (error) {
-      return { error };
-    }
-
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
     return { error };
   };
 
   const signUp = async (email: string, password: string, userData: any) => {
-    
     const redirectUrl = `${window.location.origin}/home`;
-    
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: userData,
-      },
+      options: { emailRedirectTo: redirectUrl, data: userData },
     });
-
-    if (error) {
-      return { error };
-    }
-
     return { error };
   };
 
   const signOut = async () => {
     await supabase.auth.signOut();
     clearCrmUserCache();
-    clearCompanyIdCache();
   };
 
   const hasPermission = (requiredRole: UserRole): boolean => {
     if (!userRole) return false;
-    
     const currentRoleLevel = roleHierarchy[userRole];
     const requiredRoleLevel = roleHierarchy[requiredRole];
-    
     return currentRoleLevel >= requiredRoleLevel;
   };
 

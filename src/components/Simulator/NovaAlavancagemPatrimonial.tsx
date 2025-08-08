@@ -13,6 +13,7 @@ import { InstallmentsChart } from './InstallmentsChart';
 import { Label } from '@/components/ui/label';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { FullScreenModal } from '../ui/FullScreenModal';
+import { useSimulatorContext } from '@/components/Layout/SimulatorLayout';
 
 type Leverage = Database['public']['Tables']['leverages']['Row'];
 
@@ -68,6 +69,7 @@ export const NovaAlavancagemPatrimonial = ({
   prazoTotal: number,
   periodoCompra?: number // NOVO: período de compra em meses
 }) => {
+  const simCtx = useSimulatorContext();
   // Estados dos filtros
   const [alavancas, setAlavancas] = useState<Leverage[]>([]);
   const [alavancaSelecionada, setAlavancaSelecionada] = useState<string>('');
@@ -99,6 +101,20 @@ export const NovaAlavancagemPatrimonial = ({
       setLocalTotalExpenses(currentAlavanca.total_expenses || 0);
     }
   }, [alavancaSelecionada, alavancas]);
+
+  // Carregar configurações do contexto ao montar (se houver)
+  useEffect(() => {
+    if (simCtx.leverageConfig) {
+      setAlavancaSelecionada(simCtx.leverageConfig.selectedLeverageId || '');
+      if (simCtx.leverageConfig.leverageValue) setValorAlavanca(simCtx.leverageConfig.leverageValue);
+      if (simCtx.leverageConfig.leverageType) setTipoAlavancagem(simCtx.leverageConfig.leverageType);
+      if (typeof simCtx.leverageConfig.purchasePeriodMonths === 'number') setPeriodoCompraLocal(simCtx.leverageConfig.purchasePeriodMonths);
+      if (typeof simCtx.leverageConfig.dailyPercentage === 'number') setLocalDailyPercentage(simCtx.leverageConfig.dailyPercentage);
+      if (typeof simCtx.leverageConfig.managementPercentage === 'number') setLocalManagementPercentage(simCtx.leverageConfig.managementPercentage);
+      if (typeof simCtx.leverageConfig.occupancyRate === 'number') setLocalOccupancyRate(simCtx.leverageConfig.occupancyRate);
+      if (typeof simCtx.leverageConfig.totalExpenses === 'number') setLocalTotalExpenses(simCtx.leverageConfig.totalExpenses);
+    }
+  }, []);
 
   // Buscar alavancas do Supabase ao montar
   useEffect(() => {
@@ -393,7 +409,9 @@ export const NovaAlavancagemPatrimonial = ({
   function handleValorAlavancaChange(e: React.ChangeEvent<HTMLInputElement>) {
     let v = e.target.value.replace(/\D/g, '');
     if (v.length < 3) v = v.padStart(3, '0');
-    setValorAlavanca(formatCurrency(v));
+    const formatted = formatCurrency(v);
+    console.debug('[Sim/Leverage] leverageValue ->', formatted);
+    setValorAlavanca(formatted);
   }
 
   // Função para calcular parcela com atualização anual (mesma lógica da tabela)
@@ -577,13 +595,27 @@ export const NovaAlavancagemPatrimonial = ({
     setInstallmentsChartData([]);
   }, [localDailyPercentage, localManagementPercentage, localOccupancyRate, localTotalExpenses]);
 
+  // Função utilitária para salvar no contexto
+  const persistInContext = () => {
+    simCtx.setLeverageConfig({
+      selectedLeverageId: alavancaSelecionada,
+      leverageValue: valorAlavanca,
+      leverageType: tipoAlavancagem as 'simples' | 'escalonada',
+      purchasePeriodMonths: periodoCompraLocal,
+      dailyPercentage: localDailyPercentage,
+      managementPercentage: localManagementPercentage,
+      occupancyRate: localOccupancyRate,
+      totalExpenses: localTotalExpenses,
+    });
+  };
+
   return (
     <div className="space-y-8">
       {/* Seção unificada - Alavancagem patrimonial */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Alavancagem patrimonial</CardTitle>
-          <Button variant="ghost" size="icon" title="Configurações de alavancagem" onClick={() => setShowAlavancagemModal(true)}>
+          <Button variant="ghost" size="icon" title="Configurações de alavancagem" onClick={() => { console.debug('[Sim/Leverage] abrir modal alavancagem'); setShowAlavancagemModal(true); }}>
             <Settings size={20} />
           </Button>
         </CardHeader>
@@ -592,7 +624,7 @@ export const NovaAlavancagemPatrimonial = ({
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm font-medium mb-1">Selecione a alavancagem</label>
-            <Select value={alavancaSelecionada} onValueChange={setAlavancaSelecionada} disabled={loading || alavancas.length === 0}>
+            <Select value={alavancaSelecionada} onValueChange={(val) => { console.debug('[Sim/Leverage] selectedLeverageId ->', val); setAlavancaSelecionada(val); }} disabled={loading || alavancas.length === 0}>
               <SelectTrigger>
                 <SelectValue placeholder={loading ? 'Carregando...' : 'Escolha uma alavanca'} />
               </SelectTrigger>
@@ -609,7 +641,7 @@ export const NovaAlavancagemPatrimonial = ({
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Tipo de alavancagem</label>
-            <Select value={tipoAlavancagem} onValueChange={setTipoAlavancagem}>
+            <Select value={tipoAlavancagem} onValueChange={(val) => { console.debug('[Sim/Leverage] leverageType ->', val); setTipoAlavancagem(val); }}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecione o tipo de alavancagem" />
               </SelectTrigger>
@@ -625,7 +657,7 @@ export const NovaAlavancagemPatrimonial = ({
               type="number"
               min={1}
               value={periodoCompraLocal}
-              onChange={e => setPeriodoCompraLocal(Number(e.target.value))}
+              onChange={e => { const num = Number(e.target.value); console.debug('[Sim/Leverage] purchasePeriodMonths ->', num); setPeriodoCompraLocal(num); }}
               className="w-full"
             />
             {tipoAlavancagem === 'escalonada' && (
@@ -722,8 +754,10 @@ export const NovaAlavancagemPatrimonial = ({
             </div>
           </div>
           {/* Gráfico Evolução Patrimonial */}
-          <div className="mt-6 h-96">
-            <InstallmentsChart data={installmentsChartData} showLegend={true} />
+          <div className="mt-6 overflow-x-auto lg:overflow-x-visible">
+            <div className="min-w-[980px] h-96">
+              <InstallmentsChart data={installmentsChartData} showLegend={true} />
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -916,6 +950,9 @@ export const NovaAlavancagemPatrimonial = ({
               alavanca.occupancy_rate = localOccupancyRate;
               alavanca.total_expenses = localTotalExpenses;
             }
+            console.debug('[Sim/Leverage/Modal] salvar ->', { alavancaSelecionada, valorAlavanca, tipoAlavancagem, periodoCompraLocal, localDailyPercentage, localManagementPercentage, localOccupancyRate, localTotalExpenses });
+            // Persistir no contexto global
+            persistInContext();
             setShowAlavancagemModal(false);
           }}>
             Salvar
@@ -925,7 +962,7 @@ export const NovaAlavancagemPatrimonial = ({
         <div className="space-y-6">
           <div>
             <label className="block text-sm font-medium mb-1">Selecione a alavancagem</label>
-            <Select value={alavancaSelecionada} onValueChange={setAlavancaSelecionada} disabled={loading || alavancas.length === 0}>
+            <Select value={alavancaSelecionada} onValueChange={(val) => { console.debug('[Sim/Leverage/Modal] selectedLeverageId ->', val); setAlavancaSelecionada(val); }} disabled={loading || alavancas.length === 0}>
               <SelectTrigger>
                 <SelectValue placeholder={loading ? 'Carregando...' : 'Escolha uma alavanca'} />
               </SelectTrigger>
@@ -942,7 +979,7 @@ export const NovaAlavancagemPatrimonial = ({
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Tipo de alavancagem</label>
-            <Select value={tipoAlavancagem} onValueChange={setTipoAlavancagem}>
+            <Select value={tipoAlavancagem} onValueChange={(val) => { console.debug('[Sim/Leverage/Modal] leverageType ->', val); setTipoAlavancagem(val); }}>
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecione o tipo de alavancagem" />
               </SelectTrigger>
@@ -958,7 +995,7 @@ export const NovaAlavancagemPatrimonial = ({
               type="number"
               min={1}
               value={periodoCompraLocal}
-              onChange={e => setPeriodoCompraLocal(Number(e.target.value))}
+              onChange={e => { const num = Number(e.target.value); console.debug('[Sim/Leverage/Modal] purchasePeriodMonths ->', num); setPeriodoCompraLocal(num); }}
               className="w-full"
             />
           </div>
@@ -970,7 +1007,7 @@ export const NovaAlavancagemPatrimonial = ({
               <Input
                 type="number"
                 value={localDailyPercentage}
-                onChange={(e) => setLocalDailyPercentage(Number(e.target.value))}
+                onChange={(e) => { const num = Number(e.target.value); console.debug('[Sim/Leverage/Modal] dailyPercentage ->', num); setLocalDailyPercentage(num); }}
                 placeholder="0,00"
                 min={0}
                 max={100}
@@ -983,7 +1020,7 @@ export const NovaAlavancagemPatrimonial = ({
               <Input
                 type="number"
                 value={localManagementPercentage}
-                onChange={(e) => setLocalManagementPercentage(Number(e.target.value))}
+                onChange={(e) => { const num = Number(e.target.value); console.debug('[Sim/Leverage/Modal] managementPercentage ->', num); setLocalManagementPercentage(num); }}
                 placeholder="0,00"
                 min={0}
                 max={100}
@@ -996,7 +1033,7 @@ export const NovaAlavancagemPatrimonial = ({
               <Input
                 type="number"
                 value={localOccupancyRate}
-                onChange={(e) => setLocalOccupancyRate(Number(e.target.value))}
+                onChange={(e) => { const num = Number(e.target.value); console.debug('[Sim/Leverage/Modal] occupancyRate ->', num); setLocalOccupancyRate(num); }}
                 placeholder="0,00"
                 min={0}
                 max={100}
@@ -1009,7 +1046,7 @@ export const NovaAlavancagemPatrimonial = ({
               <Input
                 type="number"
                 value={localTotalExpenses}
-                onChange={(e) => setLocalTotalExpenses(Number(e.target.value))}
+                onChange={(e) => { const num = Number(e.target.value); console.debug('[Sim/Leverage/Modal] totalExpenses ->', num); setLocalTotalExpenses(num); }}
                 placeholder="0,00"
                 min={0}
                 max={100}

@@ -10,18 +10,26 @@ import { CrmLayout } from "@/components/Layout/CrmLayout";
 import { SimulatorLayout } from "@/components/Layout/SimulatorLayout";
 import Index from "./pages/Index";
 import Simulador from "./pages/Simulador";
-import Configuracoes from "./pages/Configuracoes";
+// import Configuracoes from "./pages/Configuracoes"; // removido: agora em módulo próprio
 import CrmLogin from "./pages/crm/CrmLogin";
 import CrmDashboard from "./pages/crm/CrmDashboard";
-import CrmConfiguracoes from "./pages/crm/CrmConfiguracoes";
+// import CrmConfiguracoes from "./pages/crm/CrmConfiguracoes"; // removido: agora em módulo próprio
 import CrmIndicadores from "./pages/crm/CrmIndicadores";
 import CrmPerfil from "./pages/crm/CrmPerfil";
-import CrmMasterConfig from "./pages/crm/CrmMasterConfig";
+// import CrmMasterConfig from "./pages/crm/CrmMasterConfig"; // acessado apenas via módulo Configurações
 import NotFound from "./pages/NotFound";
 import CrmResetPasswordInvite from "./pages/crm/CrmResetPasswordInvite";
 import CrmResetPassword from "./pages/crm/CrmResetPassword";
 import Home from "./pages/Home";
 import { Loader2 } from "lucide-react";
+
+// Novas páginas do módulo Configurações
+import SettingsSimulator from "./pages/settings/SettingsSimulator";
+import SettingsCrm from "./pages/settings/SettingsCrm";
+import SettingsUsers from "./pages/settings/SettingsUsers";
+import SettingsCompanies from "./pages/settings/SettingsCompanies";
+import SettingsMaster from "./pages/settings/SettingsMaster";
+import SettingsEmpresa from "./pages/settings/SettingsEmpresa";
 
 const queryClient = new QueryClient();
 
@@ -85,15 +93,36 @@ function AppContent() {
           <Route path="/simulador" element={
             user ? <Simulador /> : <Navigate to="/crm/login" replace />
           } />
-          <Route path="/configuracoes" element={
-            user ? <Configuracoes /> : <Navigate to="/crm/login" replace />
+
+          {/* Novo módulo: Configurações */}
+          <Route path="/configuracoes/simulador" element={
+            user ? <SettingsSimulator /> : <Navigate to="/crm/login" replace />
           } />
-          <Route path="/simulador/master" element={
+          <Route path="/configuracoes/crm" element={
+            user ? (
+              <ProtectedRoute requiredRole="admin">
+                <SettingsCrm />
+              </ProtectedRoute>
+            ) : <Navigate to="/crm/login" replace />
+          } />
+          <Route path="/configuracoes/usuarios" element={
+            user ? (
+              <ProtectedRoute requiredRole="admin">
+                <SettingsUsers />
+              </ProtectedRoute>
+            ) : <Navigate to="/crm/login" replace />
+          } />
+          <Route path="/configuracoes/empresa" element={
+            user ? (
+              <ProtectedRoute requiredRole="admin">
+                <SettingsEmpresa />
+              </ProtectedRoute>
+            ) : <Navigate to="/crm/login" replace />
+          } />
+          <Route path="/configuracoes/master" element={
             user ? (
               <ProtectedRoute requiredRole="master">
-                <SimulatorLayout>
-                  <CrmMasterConfig />
-                </SimulatorLayout>
+                <SettingsMaster />
               </ProtectedRoute>
             ) : <Navigate to="/crm/login" replace />
           } />
@@ -106,15 +135,7 @@ function AppContent() {
               </CrmLayout>
             ) : <Navigate to="/crm/login" replace />
           } />
-          <Route path="/crm/configuracoes" element={
-            user ? (
-              <ProtectedRoute requiredRole="admin">
-                <CrmLayout>
-                  <CrmConfiguracoes />
-                </CrmLayout>
-              </ProtectedRoute>
-            ) : <Navigate to="/crm/login" replace />
-          } />
+          {/* Antigas rotas de configurações e master do CRM foram removidas */}
           <Route path="/crm/indicadores" element={
             user ? (
               <CrmLayout>
@@ -127,15 +148,6 @@ function AppContent() {
               <CrmLayout>
                 <CrmPerfil />
               </CrmLayout>
-            ) : <Navigate to="/crm/login" replace />
-          } />
-          <Route path="/crm/master" element={
-            user ? (
-              <ProtectedRoute requiredRole="master">
-                <CrmLayout>
-                  <CrmMasterConfig />
-                </CrmLayout>
-              </ProtectedRoute>
             ) : <Navigate to="/crm/login" replace />
           } />
           
