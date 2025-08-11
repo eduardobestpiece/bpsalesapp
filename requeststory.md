@@ -2,6 +2,30 @@
 
 ## Última Atualização: 2025-08-11
 
+### Requisição Atual: Corrigir permissões das abas em `CRM > Indicadores`
+
+#### Contexto
+- Usuário com acesso restrito à página de indicadores está visualizando as duas abas: "Performance" e "Registro de Indicadores".
+
+#### Causa Provável
+- Página `CrmIndicadores.tsx` usava `allowedTabs` fixo `['performance','registro']` sem consultar `role_page_permissions`.
+
+#### Ações planejadas
+- Ler permissões em `role_page_permissions` por `company_id` e `role`.
+- Mapear chaves `indicadores_performance` e `indicadores_registro` (seed em `app_pages`).
+- Renderizar apenas as abas permitidas e definir `defaultTab` dinamicamente.
+- Estados de loading/erro e fallback quando nenhuma aba estiver liberada.
+
+#### Checklist
+- [x] Implementar checagem dinâmica de abas em `CrmIndicadores.tsx`
+- [x] Build local ok
+- [ ] Deploy
+- [ ] Validar visualização conforme papel do usuário
+
+#### Status: 🔄 Aguardando deploy/validação
+
+---
+
 ### Requisição Atual: Deploy da aplicação (Vercel/GitHub)
 
 #### Ações planejadas:

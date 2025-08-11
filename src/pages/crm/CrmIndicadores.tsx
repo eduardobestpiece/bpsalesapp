@@ -52,9 +52,9 @@ const CrmIndicadores = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedIndicator, setSelectedIndicator] = useState<any>(null);
   const [showOnlyMine, setShowOnlyMine] = useState(false);
-  const { crmUser, loading: authLoading } = useCrmAuth();
+  const { crmUser, loading: authLoading, userRole, companyId: authCompanyId } = useCrmAuth();
   const { selectedCompanyId } = useCompany();
-  const companyId = selectedCompanyId || crmUser?.company_id || '';
+  const effectiveCompanyId = selectedCompanyId || crmUser?.company_id || authCompanyId || '';
 
   // Buscar indicadores conforme perfil - memoizado para evitar mudanças desnecessárias
   const userIdForIndicators = useMemo(() => {
@@ -66,8 +66,8 @@ const CrmIndicadores = () => {
   }, [crmUser]);
 
   // Hooks de dados com memoização
-  const { data: indicators, isLoading: isIndicatorsLoading, error: indicatorsError } = useIndicators(companyId, userIdForIndicators);
-  const { data: funnels, isLoading: isFunnelsLoading, error: funnelsError } = useFunnels(companyId, 'active');
+  const { data: indicators, isLoading: isIndicatorsLoading, error: indicatorsError } = useIndicators(effectiveCompanyId, userIdForIndicators);
+  const { data: funnels, isLoading: isFunnelsLoading, error: funnelsError } = useFunnels(effectiveCompanyId, 'active');
   const { data: teams = [], isLoading: isTeamsLoading } = useTeams();
   const { data: crmUsers = [], isLoading: isUsersLoading } = useCrmUsers();
 
@@ -83,9 +83,47 @@ const CrmIndicadores = () => {
     userId: ''
   });
 
-  // Permissões de abas
-  const [allowedTabs] = useState<string[]>(['performance', 'registro']);
-  const [defaultTab] = useState<string>('performance');
+  // Permissões de abas (dinâmicas via role_page_permissions/app_pages)
+  const [allowedTabs, setAllowedTabs] = useState<string[]>([]);
+  const [defaultTab, setDefaultTab] = useState<string>('performance');
+  const [tabsLoading, setTabsLoading] = useState<boolean>(true);
+  const [tabsError, setTabsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const cid = effectiveCompanyId;
+    if (!cid || !userRole) return;
+
+    // Master tem acesso total às abas
+    if (userRole === 'master') {
+      setAllowedTabs(['performance', 'registro']);
+      setDefaultTab('performance');
+      setTabsLoading(false);
+      setTabsError(null);
+      return;
+    }
+
+    setTabsLoading(true);
+    setTabsError(null);
+    supabase
+      .from('role_page_permissions')
+      .select('page, allowed')
+      .eq('company_id', cid)
+      .eq('role', userRole)
+      .then(({ data, error }) => {
+        if (error) {
+          setTabsError('Erro ao carregar permissões das abas.');
+          setTabsLoading(false);
+          return;
+        }
+        const tabs: string[] = [];
+        // chaves conforme seeds em app_pages: indicadores_performance, indicadores_registro
+        if (data?.find((p: any) => p.page === 'indicadores_performance' && p.allowed !== false)) tabs.push('performance');
+        if (data?.find((p: any) => p.page === 'indicadores_registro' && p.allowed !== false)) tabs.push('registro');
+        setAllowedTabs(tabs);
+        setDefaultTab(tabs[0] || 'performance');
+        setTabsLoading(false);
+      });
+  }, [effectiveCompanyId, selectedCompanyId, crmUser?.company_id, userRole]);
 
   // Seleção automática do primeiro funil
   useEffect(() => {
@@ -246,11 +284,27 @@ const CrmIndicadores = () => {
     return isUser ? funnels.filter(f => crmUser.funnels?.includes(f.id)) : funnels;
   }, [funnels, crmUser]);
 
-  // Loading states
-  if (authLoading || isIndicatorsLoading || isFunnelsLoading) {
+  // Loading states (inclui carregamento de permissões de abas)
+  if (authLoading || isIndicatorsLoading || isFunnelsLoading || tabsLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <span>Carregando dados...</span>
+      </div>
+    );
+  }
+
+  if (tabsError) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px] text-red-500">
+        {tabsError}
+      </div>
+    );
+  }
+
+  if (allowedTabs.length === 0) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px] text-muted-foreground">
+        Você não tem permissão para acessar as abas desta página.
       </div>
     );
   }
@@ -433,7 +487,7 @@ const CrmIndicadores = () => {
                                       </td>
                                     </tr>
                                   );
-                                }).filter(Boolean) // Remove any null entries
+                                }).filter(Boolean)
                               )}
                             </tbody>
                           </table>
@@ -451,7 +505,7 @@ const CrmIndicadores = () => {
       <IndicatorModal
         isOpen={showModal}
         onClose={handleCloseModal}
-        companyId={companyId}
+        companyId={effectiveCompanyId}
         indicator={selectedIndicator}
       />
 
