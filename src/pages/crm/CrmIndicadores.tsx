@@ -117,8 +117,11 @@ const CrmIndicadores = () => {
         }
         const tabs: string[] = [];
         // chaves conforme seeds em app_pages: indicadores_performance, indicadores_registro
-        if (data?.find((p: any) => p.page === 'indicadores_performance' && p.allowed !== false)) tabs.push('performance');
-        if (data?.find((p: any) => p.page === 'indicadores_registro' && p.allowed !== false)) tabs.push('registro');
+        const pages = new Map((data || []).map((p: any) => [p.page, p.allowed]));
+        const perfAllowed = pages.has('indicadores_performance') ? pages.get('indicadores_performance') !== false : true;
+        const regAllowed  = pages.has('indicadores_registro') ? pages.get('indicadores_registro') !== false : true;
+        if (perfAllowed) tabs.push('performance');
+        if (regAllowed) tabs.push('registro');
         setAllowedTabs(tabs);
         setDefaultTab(tabs[0] || 'performance');
         setTabsLoading(false);

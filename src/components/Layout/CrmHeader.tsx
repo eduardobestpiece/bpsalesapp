@@ -22,6 +22,9 @@ export const CrmHeader = () => {
       .eq('role', userRole as 'master' | 'admin' | 'leader' | 'user')
       .then(({ data }) => {
         const perms: any = {};
+        // Default: permitido, e sobrescreve apenas quando existir registro com allowed=false
+        // Popular com true para chaves conhecidas
+        ['comercial', 'indicadores'].forEach(k => { perms[k] = true; });
         data?.forEach((row: any) => {
           perms[row.page] = row.allowed;
         });

@@ -2,6 +2,30 @@
 
 ## Última Atualização: 2025-08-11
 
+### Requisição Atual: Permissões para Líder e Administrador não aplicando regras
+
+#### Problema
+- Regras de abas funcionavam para `Usuário`, mas para `Líder` e `Administrador` estavam sendo bloqueadas quando não havia registro explícito em `role_page_permissions`.
+
+#### Solução
+- Definido fallback permissivo: se não existir registro para a página/aba, considera `allowed = true`.
+- Aplicado em:
+  - `CrmIndicadores.tsx` (abas performance/registro)
+  - `CrmDashboard.tsx` (abas leads/vendas)
+  - `CrmHeader.tsx` (links de navegação Comercial/Indicadores com default `true`).
+
+#### Checklist
+- [x] Ajustar fallback em `CrmIndicadores.tsx`
+- [x] Ajustar fallback em `CrmDashboard.tsx`
+- [x] Ajustar fallback em `CrmHeader.tsx`
+- [x] Build local ok
+- [ ] Deploy
+- [ ] Testar com perfis `leader` e `admin`
+
+#### Status: 🔄 Aguardando deploy/validação
+
+---
+
 ### Requisição Atual: Corrigir permissões das abas em `CRM > Indicadores`
 
 #### Contexto

@@ -39,8 +39,11 @@ const CrmDashboard = () => {
           return;
         }
         const tabs: string[] = [];
-        if (data?.find((p: any) => p.page === 'comercial_leads' && p.allowed !== false)) tabs.push('leads');
-        if (data?.find((p: any) => p.page === 'comercial_sales' && p.allowed !== false)) tabs.push('sales');
+        const pages = new Map((data || []).map((p: any) => [p.page, p.allowed]));
+        const leadsAllowed = pages.has('comercial_leads') ? pages.get('comercial_leads') !== false : true;
+        const salesAllowed = pages.has('comercial_sales') ? pages.get('comercial_sales') !== false : true;
+        if (leadsAllowed) tabs.push('leads');
+        if (salesAllowed) tabs.push('sales');
         setAllowedTabs(tabs);
         setDefaultTab(tabs[0] || 'leads');
         setTabsLoading(false);
