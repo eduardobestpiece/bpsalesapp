@@ -41,32 +41,13 @@ export const CopyAdministratorsModal: React.FC<CopyAdministratorsModalProps> = (
   const [progress, setProgress] = useState<number>(0);
   const [progressText, setProgressText] = useState<string>('');
 
-  // Helpers de mapeamento anti-duplicação
-  const getMappedTargetId = async (sourceTable: string, sourceId: string, targetCompanyId: string): Promise<string | null> => {
-    try {
-      const { data, error } = await supabase
-        .from('simulator_copy_map')
-        .select('target_id')
-        .eq('source_table', sourceTable)
-        .eq('source_id', sourceId)
-        .eq('target_company_id', targetCompanyId)
-        .maybeSingle();
-      if (error) return null;
-      return (data?.target_id as string) || null;
-    } catch {
-      return null; // tabela pode não existir
-    }
+  // Helpers de mapeamento anti-duplicação (desativados temporariamente)
+  const getMappedTargetId = async (_sourceTable: string, _sourceId: string, _targetCompanyId: string): Promise<string | null> => {
+    return null; // recurso de mapeamento desativado
   };
 
-  const upsertMapping = async (sourceTable: string, sourceId: string, targetCompanyId: string, targetId: string): Promise<void> => {
-    try {
-      await supabase
-        .from('simulator_copy_map')
-        .upsert({ source_table: sourceTable, source_id: sourceId, target_company_id: targetCompanyId, target_id: targetId },
-          { onConflict: 'source_table,source_id,target_company_id', ignoreDuplicates: false });
-    } catch {
-      // Se a tabela não existir, ignorar silenciosamente
-    }
+  const upsertMapping = async (_sourceTable: string, _sourceId: string, _targetCompanyId: string, _targetId: string): Promise<void> => {
+    // no-op: recurso de mapeamento desativado
   };
 
   // Buscar administradoras e empresas

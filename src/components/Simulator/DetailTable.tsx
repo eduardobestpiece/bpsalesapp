@@ -383,7 +383,7 @@ export const DetailTable = ({
             simInfoLog('Soma parcelas até contemplação:', somaParcelasAteContemplacao);
             simInfoLog('Saldo devedor antes embutido:', valorBasePosContemplacao - somaParcelasAteContemplacao);
             if (embutido === 'com') {
-              simInfoLog('Redução embutido:', reducaoEmbutido);
+              simInfoLog('Redução embutido:', creditoAcessadoContemplacaoTemp * ((administrator.maxEmbeddedPercentage ?? 25) / 100));
               simInfoLog('Saldo devedor final:', saldoDevedorPosContemplacao);
             }
             simInfoLog('==============================');

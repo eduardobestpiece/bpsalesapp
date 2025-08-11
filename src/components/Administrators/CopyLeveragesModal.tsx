@@ -78,27 +78,14 @@ export const CopyLeveragesModal: React.FC<CopyLeveragesModalProps> = ({ open, on
     setSelectedLeverages(prev => prev.includes(levId) ? prev.filter(id => id !== levId) : [...prev, levId])
   }
 
-  const getMappedTargetId = async (sourceId: string, targetCompanyId: string): Promise<string | null> => {
-    try {
-      const { data } = await supabase
-        .from('simulator_copy_map')
-        .select('target_id')
-        .eq('source_table', 'leverages')
-        .eq('source_id', sourceId)
-        .eq('target_company_id', targetCompanyId)
-        .maybeSingle()
-      return (data?.target_id as string) || null
-    } catch { return null }
-  }
+  // Mapeamento desativado temporariamente (evita dependência de tabela ausente)
+  const getMappedTargetId = async (_sourceId: string, _targetCompanyId: string): Promise<string | null> => {
+    return null;
+  };
 
-  const upsertMapping = async (sourceId: string, targetCompanyId: string, targetId: string) => {
-    try {
-      await supabase
-        .from('simulator_copy_map')
-        .upsert({ source_table: 'leverages', source_id: sourceId, target_company_id: targetCompanyId, target_id: targetId },
-          { onConflict: 'source_table,source_id,target_company_id', ignoreDuplicates: false })
-    } catch {}
-  }
+  const upsertMapping = async (_sourceId: string, _targetCompanyId: string, _targetId: string) => {
+    // no-op
+  };
 
   const ensureLeverageInTarget = async (companyId: string, lev: Leverage): Promise<string> => {
     const mapped = await getMappedTargetId(lev.id, companyId)

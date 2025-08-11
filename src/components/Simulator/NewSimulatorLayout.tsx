@@ -391,7 +391,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
         .eq('company_id', effectiveCompanyId)
         .limit(1);
       if (configs && configs.length > 0) {
-        const conf = configs[0].configuration || {};
+        const conf: any = configs[0].configuration || {};
         setLocalSimulationData(prev => ({
           ...prev,
           searchType: conf.searchType || prev.searchType,

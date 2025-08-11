@@ -273,14 +273,14 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         period_end: periodEnd,
         month_reference: formData.month_reference,
         year_reference: formData.year_reference,
-        sales_value: salesValue ? parseMonetaryValue(salesValue).toString() : '0',
+        sales_value: salesValue ? parseMonetaryValue(salesValue) : 0,
         recommendations_count: recommendationsCount,
         is_delayed: isDelayed,
         user_id: crmUser?.id || 'd0390379-4c55-4838-a659-b76e595486a6' // Usar o ID do usuário atual sincronizado
-      };
+      } as any;
 
       if (isEditing) {
-        updateIndicator({ id: indicator.id, ...indicatorData });
+        (updateIndicator as any)({ id: indicator.id, indicator: indicatorData, values: [] });
         toast.success('Indicador atualizado com sucesso!');
       } else {
         
@@ -290,9 +290,9 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
           value: Number(value)
         }));
         
-        const createData = { indicator: indicatorData, values: valuesArray };
+        const createData = { indicator: indicatorData, values: valuesArray } as any;
         
-        createIndicator(createData);
+        (createIndicator as any)(createData);
         toast.success('Indicador criado com sucesso!');
       }
 

@@ -47,7 +47,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         .from('role_page_permissions')
         .select('page, allowed')
         .eq('company_id', effectiveCompanyId)
-        .eq('role', userRole)
+        .eq('role', userRole as any)
         .eq('page', requiredPageKey)
         .maybeSingle();
       if (cancelled) return;
@@ -79,7 +79,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/crm/login" replace />;
   }
 
-  if (requiredRole && !hasPermission(requiredRole)) {
+  if (requiredRole && !hasPermission(requiredRole as any)) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">

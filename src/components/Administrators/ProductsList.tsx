@@ -123,10 +123,9 @@ export const ProductsList: React.FC<ProductsListProps> = ({
 
   // Removido: duplicação
 
-  // Função para abrir modal de duplicação
-  const handleDuplicate = (product: Product) => {
-    setDuplicateData({ ...product, administrator_id: '' }); // Limpa administradora
-    setShowDuplicateModal(true);
+  // Função de duplicação desativada
+  const handleDuplicate = (_product: Product) => {
+    // recurso desativado
   };
 
   // Função para buscar installment_types ao editar
