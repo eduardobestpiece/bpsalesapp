@@ -107,11 +107,12 @@ export const CrmSidebar = () => {
   }, [branding?.primary_color]);
 
   useEffect(() => {
-    if (!companyId || !userRole) return;
+    const cid = currentCompanyId || companyId;
+    if (!cid || !userRole) return;
     supabase
       .from('role_page_permissions')
       .select('*')
-      .eq('company_id', companyId)
+      .eq('company_id', cid)
       .eq('role', userRole as any)
       .then(({ data }) => {
         const perms: any = {};
@@ -120,7 +121,7 @@ export const CrmSidebar = () => {
         });
         setPagePermissions(perms);
       });
-  }, [companyId, userRole]);
+  }, [currentCompanyId, companyId, userRole]);
 
   useEffect(() => {
     if (visibleCompanies.length > 0) {

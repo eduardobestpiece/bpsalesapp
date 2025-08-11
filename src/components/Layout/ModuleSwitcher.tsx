@@ -11,16 +11,22 @@ interface ModuleSwitcherProps {
 
 export const ModuleSwitcher = ({ current }: ModuleSwitcherProps) => {
   const navigate = useNavigate();
-  const { userRole, companyId } = useCrmAuth();
+  const { userRole, companyId, crmUser } = useCrmAuth();
+
+  const effectiveCompanyId =
+    (typeof window !== 'undefined' ? localStorage.getItem('selectedCompanyId') : null) ||
+    companyId ||
+    crmUser?.company_id ||
+    null;
 
   const { data: perms = {} } = useQuery({
-    queryKey: ['role_page_permissions', companyId, userRole],
-    enabled: !!companyId && !!userRole,
+    queryKey: ['role_page_permissions', effectiveCompanyId, userRole],
+    enabled: !!effectiveCompanyId && !!userRole,
     queryFn: async () => {
       const { data } = await supabase
         .from('role_page_permissions')
         .select('*')
-        .eq('company_id', companyId as string)
+        .eq('company_id', effectiveCompanyId as string)
         .eq('role', userRole as any);
       const map: Record<string, boolean> = {};
       data?.forEach((r: any) => { map[r.page] = r.allowed; });
@@ -42,16 +48,13 @@ export const ModuleSwitcher = ({ current }: ModuleSwitcherProps) => {
 
   const computeSettingsPath = (): string => {
     const allowed = (key: string) => perms[key] !== false;
-    // Ordem de prioridade
     if (allowed('settings_profile') || allowed('settings_profile_info') || allowed('settings_profile_security')) return '/configuracoes/perfil';
     if (allowed('simulator_config') || allowed('simulator_config_administrators') || allowed('simulator_config_reductions') || allowed('simulator_config_installments') || allowed('simulator_config_products') || allowed('simulator_config_leverages')) return '/configuracoes/simulador';
     if (allowed('crm_config') || allowed('crm_config_funnels') || allowed('crm_config_sources') || allowed('crm_config_teams')) return '/configuracoes/crm';
     if (allowed('settings_users') || allowed('settings_users_list')) return '/configuracoes/usuarios';
     if (allowed('settings_company') || allowed('settings_company_data') || allowed('settings_company_branding')) return '/configuracoes/empresa';
     if (userRole === 'master') return '/configuracoes/master';
-    // fallback: se alguma página de settings está permitida, redireciona para perfil
     if (settingsPageKeys.some(k => allowed(k))) return '/configuracoes/perfil';
-    // fallback final
     return '/configuracoes/perfil';
   };
 
@@ -69,9 +72,10 @@ export const ModuleSwitcher = ({ current }: ModuleSwitcherProps) => {
 
     const list: { key: 'simulator'|'crm'|'settings'; label: string; path: string; allowed: boolean }[] = [
       { key: 'simulator', label: 'Simulador', path: '/simulador', allowed: perms['simulator'] !== false },
-      { key: 'crm', label: 'CRM', path: computeCrmPath(), allowed: perms['indicadores'] !== false || perms['comercial'] !== false },
+      { key: 'crm', label: 'CRM', path: computeCrmPath(), allowed: (perms['indicadores'] !== false) || (perms['comercial'] !== false) },
       { key: 'settings', label: 'Configurações', path: computeSettingsPath(), allowed: allowedSettings },
     ];
+
     return list.filter(m => m.allowed);
   }, [perms, userRole, settingsPageKeys]);
 
