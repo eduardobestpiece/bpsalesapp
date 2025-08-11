@@ -5,18 +5,23 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Plus, Edit, Users, Search } from 'lucide-react';
-import { useCrmUsers } from '@/hooks/useCrmData';
+import { useCrmUsersByCompany } from '@/hooks/useCrmUsers';
 import { useTeams, useDeleteTeam } from '@/hooks/useTeams';
 import { TeamModal } from './TeamModal';
 import { toast } from 'sonner';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
+import { useQueryClient } from '@tanstack/react-query';
 
 export const TeamsList = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const { companyId } = useCrmAuth();
-  const { data: users = [], isLoading: usersLoading } = useCrmUsers();
+  const { selectedCompanyId } = useCompany();
+  const queryClient = useQueryClient();
+  const effectiveCompanyId = selectedCompanyId || companyId;
+  const { data: users = [], isLoading: usersLoading } = useCrmUsersByCompany(effectiveCompanyId);
   const { data: teams = [], isLoading: teamsLoading } = useTeams();
   const deleteTeamMutation = useDeleteTeam();
 
@@ -28,12 +33,16 @@ export const TeamsList = () => {
   const handleCloseModal = () => {
     setShowModal(false);
     setSelectedTeam(null);
+    // Invalida listagens para refletir mudanças ao sair do modal
+    queryClient.invalidateQueries({ queryKey: ['crm-users', effectiveCompanyId] });
+    queryClient.invalidateQueries({ queryKey: ['teams', selectedCompanyId] });
   };
 
   const handleArchive = async (teamId: string) => {
     try {
       await deleteTeamMutation.mutateAsync(teamId);
       toast.success('Time arquivado com sucesso!');
+      queryClient.invalidateQueries({ queryKey: ['teams', selectedCompanyId] });
     } catch (error: any) {
       toast.error(error.message || 'Erro ao arquivar time');
     }
