@@ -36,18 +36,14 @@ export const useCreateTeam = () => {
 
   return useMutation({
     mutationFn: async (team: TeamInsert) => {
-      
       const { data, error } = await supabase
         .from('teams')
         .insert([team])
         .select()
         .single();
-
       if (error) {
         throw error;
       }
-
-      
       return data;
     },
     onSuccess: () => {
@@ -62,20 +58,14 @@ export const useUpdateTeam = () => {
 
   return useMutation({
     mutationFn: async ({ id, ...team }: TeamUpdate & { id: string }) => {
-      
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('teams')
         .update(team)
-        .eq('id', id)
-        .select()
-        .single();
-
+        .eq('id', id);
       if (error) {
         throw error;
       }
-
-      
-      return data;
+      return { id, ...team } as any;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teams', selectedCompanyId] });
@@ -89,17 +79,13 @@ export const useDeleteTeam = () => {
 
   return useMutation({
     mutationFn: async (id: string) => {
-      
       const { error } = await supabase
         .from('teams')
         .update({ status: 'archived' })
         .eq('id', id);
-
       if (error) {
         throw error;
       }
-
-      
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teams', selectedCompanyId] });

@@ -101,8 +101,17 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
           status: 'active'
         } as any;
         console.debug('[TEAM/MODAL] updateTeam payload', payload);
-        const result = await updateTeamMutation.mutateAsync(payload);
-        console.debug('[TEAM/MODAL] updateTeam result', result);
+        const { data: updTeamData, error: updTeamErr, status: updTeamStatus } = await supabase
+          .from('teams')
+          .update({
+            name: payload.name,
+            leader_id: payload.leader_id,
+            company_id: payload.company_id,
+            status: payload.status,
+          })
+          .eq('id', team.id);
+        console.debug('[TEAM/MODAL] updateTeam direct result', { status: updTeamStatus, error: updTeamErr, data: updTeamData });
+        if (updTeamErr) throw updTeamErr;
         teamId = team.id;
       } else {
         const payload = {
