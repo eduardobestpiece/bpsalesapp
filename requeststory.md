@@ -12,10 +12,10 @@
 #### Checklist
 - [x] Branch atual `main` e remoto `origin` configurado
 - [x] Porta 8080 confirmada em `vite.config.ts` e `package.json`
-- [ ] Push para `origin/main`
+- [x] Push para `origin/main`
 - [ ] Validar deploy automático (GitHub/Vercel)
 
-#### Status: 🔄 Aguardando sua confirmação para executar o push
+#### Status: 🚀 Push realizado. Aguardando confirmação do deploy automático
 
 ---
 
