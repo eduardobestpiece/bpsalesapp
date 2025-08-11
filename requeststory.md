@@ -19,6 +19,40 @@
 
 ---
 
+### Requisição Atual: Integrações > Google – provider não habilitado
+
+#### Problema
+- Ao conectar Google na aba Integrações: `{"code":400,"error_code":"validation_failed","msg":"Unsupported provider: provider is not enabled"}`.
+
+#### Causa
+- Provedor Google OAuth não está habilitado no Supabase Auth ou faltam Client ID/Secret.
+
+#### Plano
+1) Habilitar Google em Supabase Auth > Providers (informar Client ID/Secret do Google).
+2) Ajustar Auth Settings do Supabase:
+   - Site URL: URL de produção (ex.: https://consorcio-patrimonio-simulador-....vercel.app) e também de dev (http://localhost:8080) quando aplicável.
+   - Additional Redirect URLs:
+     - http://localhost:8080/configuracoes/perfil
+     - https://SEU-DOMINIO/configuracoes/perfil
+3) No Google Cloud Console (OAuth):
+   - Configurar tela de consentimento (scopes: openid, email, profile; e os extras de Calendar e Gmail, se necessários).
+   - Criar credencial OAuth Client (Web):
+     - Authorized redirect URIs: https://jbhocghbieqxjwsdstgm.supabase.co/auth/v1/callback
+     - Authorized JavaScript origins: http://localhost:8080 e https://SEU-DOMINIO
+   - Copiar Client ID/Secret para o Supabase.
+4) Testar o fluxo pelo botão “Conectar Google”.
+
+#### Checklist
+- [ ] Habilitar Google no Supabase (Providers)
+- [ ] Inserir Client ID/Secret do Google
+- [ ] Configurar Auth Settings (Site URL e Redirect URLs)
+- [ ] Configurar OAuth no Google Cloud (redirect e origins)
+- [ ] Testar login OAuth na aba Integrações
+
+#### Status: 🔄 Aguardando configuração no Supabase/Google
+
+---
+
 ### Requisição Atual: Visualização e permissões do Líder nos Indicadores (CRM)
 
 #### Objetivo
