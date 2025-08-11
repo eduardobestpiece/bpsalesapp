@@ -2,18 +2,25 @@
 
 ## Última Atualização: 2025-08-11
 
-### Requisição Atual: Bloquear acesso ao Simulador conforme permissões (admin/leader)
+### Requisição Atual: Lider/Admin sem permissão continuam vendo Simulador
 
-#### Implementação
-- `ProtectedRoute`: adicionada prop `requiredPageKey` para checar `role_page_permissions` (bypass para master; fallback permissivo quando não há registro, mas dependemos das regras definidas na tela de Acessos).
-- `App.tsx`: rota `/simulador` agora usa `<ProtectedRoute requiredPageKey="simulator">`.
+#### Diagnóstico
+- Banco (Supabase) possui linhas permitindo o simulador para `admin` na empresa Monteo Investimentos:
+  - `role_page_permissions`: `('admin','simulator', allowed=true)` e `('admin','simulator_config', allowed=true)`.
+- Isso sobrescreve a UI de Acessos, mantendo acesso mesmo desmarcando localmente se o save não refletir em banco.
+
+#### Ações
+- Ajustado gate do `ProtectedRoute` para fail-closed: sem registro para a página requerida, acesso NEGADO.
+- Mantido uso da empresa efetiva (localStorage `selectedCompanyId` ou `companyId` do auth).
+
+#### Recomendação de dados
+- Remover entradas permissivas antigas para `admin`/`leader` no `role_page_permissions` da empresa atual ou re-salvar pela tela de Acessos (que reescreve todas as páginas da empresa).
 
 #### Checklist
-- [x] Atualizar `ProtectedRoute` com gate por página
-- [x] Proteger rota `/simulador` com `requiredPageKey="simulator"`
+- [x] Gate fail-closed no `ProtectedRoute`
 - [x] Build local ok
 - [ ] Deploy
-- [ ] Validar com `leader` e `admin` sem permissão marcada para `simulator`
+- [ ] Validar bloqueio com `admin`/`leader`
 
 #### Status: 🔄 Aguardando deploy/validação
 

@@ -57,8 +57,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         return;
       }
       if (!data) {
-        // Sem registro específico: fallback permissivo
-        setPageAllowed(true);
+        // Sem registro específico: negar por segurança
+        setPageAllowed(false);
         return;
       }
       setPageAllowed(data.allowed !== false);
