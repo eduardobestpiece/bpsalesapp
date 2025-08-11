@@ -133,8 +133,8 @@ export const SimulatorSidebar = () => {
     navigate('/crm/indicadores');
   };
 
-  const handleAvatarClick = () => {
-    window.location.href = '/crm/perfil';
+  const handleUserFooterClick = () => {
+    navigate('/configuracoes/perfil');
   };
 
   const handleLogout = async () => {
@@ -222,13 +222,13 @@ export const SimulatorSidebar = () => {
       
       <SidebarFooter className="p-4">
         <div className="flex items-center gap-3">
-          <div className="cursor-pointer" onClick={handleAvatarClick}>
+          <div className="cursor-pointer" onClick={handleUserFooterClick} title="Meu Perfil">
             <Avatar>
               <AvatarImage src={crmUser?.avatar_url || undefined} alt={crmUser?.first_name || 'Usuário'} />
               <AvatarFallback>{(crmUser?.first_name?.[0] || 'U')}{(crmUser?.last_name?.[0] || '')}</AvatarFallback>
             </Avatar>
           </div>
-          <div className="flex flex-col flex-1 min-w-0">
+          <div className="flex flex-col flex-1 min-w-0 cursor-pointer" onClick={handleUserFooterClick} title="Meu Perfil">
             <span className="font-medium text-sm truncate">{crmUser?.first_name || 'Usuário'} {crmUser?.last_name || ''}</span>
             <span className="text-xs text-muted-foreground truncate">{crmUser?.email || 'sem-email'}</span>
           </div>

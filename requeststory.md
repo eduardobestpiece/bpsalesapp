@@ -270,3 +270,22 @@ Impacto: branding por empresa centralizado, personalização visual (logo/cor) e
 #### Status: ✅ Concluído
 
 --- 
+
+### Requisição Atual: Rodapé do usuário nas sidebars deve abrir `Configurações > Meu Perfil`
+
+#### Escopo
+- `CRM`, `Simulador` e `Configurações`: clique no avatar, nome ou e-mail no rodapé da sidebar redireciona para `/configuracoes/perfil`.
+
+#### Implementação
+- `CrmSidebar.tsx`: novo handler `handleUserFooterClick` usando `navigate('/configuracoes/perfil')`; tornou nome/e-mail clicáveis.
+- `SimulatorSidebar.tsx`: mesmo ajuste do CRM.
+- Rotas já existentes em `App.tsx` para `/configuracoes/perfil` (componente `SettingsPerfil`).
+
+#### Checklist
+- [x] Aplicar mudança no `CrmSidebar.tsx`
+- [x] Aplicar mudança no `SimulatorSidebar.tsx`
+- [x] Build local ok
+- [ ] Deploy
+- [ ] Validar navegação em todos os módulos
+
+#### Status: 🔄 Aguardando deploy/validação 
