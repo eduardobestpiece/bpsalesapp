@@ -2,6 +2,23 @@
 
 ## Última Atualização: 2025-08-11
 
+### Requisição Atual: Deploy para GitHub
+
+#### Ações planejadas
+- Verificar branch atual e remoto
+- Registrar requisição e checklist
+- Executar push para `origin/main` (após sua confirmação)
+
+#### Checklist
+- [x] Branch atual `main` e remoto `origin` configurado
+- [x] Porta 8080 confirmada em `vite.config.ts` e `package.json`
+- [ ] Push para `origin/main`
+- [ ] Validar deploy automático (GitHub/Vercel)
+
+#### Status: 🔄 Aguardando sua confirmação para executar o push
+
+---
+
 ### Requisição Atual: Lider/Admin sem permissão continuam vendo Simulador
 
 #### Diagnóstico
