@@ -30,18 +30,18 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
   const { selectedCompanyId } = useCompany();
   const effectiveCompanyId = selectedCompanyId || companyId;
   const { data: users = [] } = useCrmUsers();
-  // Filtrar usuários pela empresa selecionada
   const filteredUsers = users.filter(u => u.company_id === effectiveCompanyId);
-  // Se um líder for escolhido, removê-lo da lista de membros
   const availableMembers = filteredUsers.filter(u => u.id !== formData.leader_id && u.first_name && u.last_name);
   const createTeamMutation = useCreateTeam();
   const updateTeamMutation = useUpdateTeam();
 
-  // Todos os usuários da empresa
   const allUsers = users;
 
-  // Estado para membros do time (apenas na edição)
   const [members, setMembers] = useState<string[]>([]);
+
+  useEffect(() => {
+    console.debug('[TEAM/MODAL] open:', { isOpen, teamId: team?.id, effectiveCompanyId });
+  }, [isOpen]);
 
   useEffect(() => {
     if (team) {
@@ -49,26 +49,23 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
         name: team.name,
         leader_id: team.leader_id,
       });
-      // Buscar todos os usuários da empresa e filtrar os que pertencem ao time
       (async () => {
-        const { data: allUsersDb } = await supabase
+        console.debug('[TEAM/MODAL] load members start', { effectiveCompanyId, teamId: team.id });
+        const { data: allUsersDb, error } = await supabase
           .from('crm_users')
-          .select('id, team_id')
+          .select('id, team_id, email, role')
           .eq('company_id', effectiveCompanyId);
-        // Corrigir: garantir que todos os usuários com team_id igual ao do time estejam marcados
+        console.debug('[TEAM/MODAL] load members result', { count: allUsersDb?.length, error });
         const memberIds = (allUsersDb || []).filter(u => u.team_id === team.id).map(u => u.id);
+        console.debug('[TEAM/MODAL] current memberIds', memberIds);
         setMembers(memberIds);
       })();
     } else {
-      setFormData({
-        name: '',
-        leader_id: '',
-      });
+      setFormData({ name: '', leader_id: '' });
       setMembers([]);
     }
-  }, [team, companyId, selectedCompanyId]);
+  }, [team, effectiveCompanyId]);
 
-  // Corrigir: garantir que todos os membros estejam nas opções do MultiSelect
   const allAvailableMembers = [
     ...availableMembers,
     ...users.filter(u => members.includes(u.id) && !availableMembers.some(a => a.id === u.id))
@@ -76,17 +73,15 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.name.trim()) {
       toast.error('Nome do time é obrigatório');
       return;
     }
-
     if (!formData.leader_id) {
       toast.error('Líder do time é obrigatório');
       return;
     }
-
     if (!effectiveCompanyId) {
       toast.error('Erro: Empresa não identificada');
       return;
@@ -95,60 +90,71 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
     setIsLoading(true);
 
     try {
+      console.debug('[TEAM/MODAL] submit start', { teamId: team?.id, formData, selectedMembers: members, effectiveCompanyId });
       let teamId = team?.id;
       if (team) {
-        // Editar time existente (NÃO enviar user_ids)
-        await updateTeamMutation.mutateAsync({
+        const payload = {
           id: team.id,
           name: formData.name.trim(),
           leader_id: formData.leader_id,
           company_id: effectiveCompanyId,
           status: 'active'
-        });
+        } as any;
+        console.debug('[TEAM/MODAL] updateTeam payload', payload);
+        const result = await updateTeamMutation.mutateAsync(payload);
+        console.debug('[TEAM/MODAL] updateTeam result', result);
         teamId = team.id;
       } else {
-        // Criar novo time (NÃO enviar user_ids)
-        const result = await createTeamMutation.mutateAsync({
+        const payload = {
           name: formData.name.trim(),
           leader_id: formData.leader_id,
           company_id: effectiveCompanyId,
           status: 'active'
-        });
+        } as any;
+        console.debug('[TEAM/MODAL] createTeam payload', payload);
+        const result = await createTeamMutation.mutateAsync(payload);
+        console.debug('[TEAM/MODAL] createTeam result', result);
         teamId = result?.id;
       }
 
-      // Atualizar membros do time: setar team_id nos usuários selecionados, remover dos não selecionados
       if (teamId) {
-        // Buscar todos usuários da empresa
-        const { data: allUsersDb } = await supabase
+        console.debug('[TEAM/MODAL] update members start', { teamId, effectiveCompanyId });
+        const { data: allUsersDb, error: allUsersErr } = await supabase
           .from('crm_users')
-          .select('id, team_id')
+          .select('id, team_id, email')
           .eq('company_id', effectiveCompanyId);
+        console.debug('[TEAM/MODAL] load all users for company', { count: allUsersDb?.length, error: allUsersErr });
+
         const allUserIds = (allUsersDb || []).map(u => u.id);
-        // Usuários que devem estar no time
         const selectedUserIds = members;
-        // Atualizar: setar team_id = teamId nos selecionados
+        console.debug('[TEAM/MODAL] selectedUserIds', selectedUserIds);
+
         if (selectedUserIds.length > 0) {
-          await supabase
+          const { data: updSelData, error: updSelErr } = await supabase
             .from('crm_users')
             .update({ team_id: teamId })
-            .in('id', selectedUserIds);
-        }
-        // Remover: setar team_id = null nos que não estão mais no time
-        const toRemove = allUserIds.filter(uid => !selectedUserIds.includes(uid) && allUsersDb.find(u => u.id === uid)?.team_id === teamId);
-        if (toRemove.length > 0) {
-          await supabase
-            .from('crm_users')
-            .update({ team_id: null })
-            .in('id', toRemove);
+            .in('id', selectedUserIds)
+            .select('id, team_id');
+          console.debug('[TEAM/MODAL] set team_id for selected', { count: updSelData?.length, error: updSelErr });
         }
 
-        // Recarregar snapshot de membros imediatamente para refletir na UI
-        const { data: refreshedUsers } = await supabase
+        const toRemove = allUserIds.filter(uid => !selectedUserIds.includes(uid) && allUsersDb?.find(u => u.id === uid)?.team_id === teamId);
+        console.debug('[TEAM/MODAL] toRemove', toRemove);
+        if (toRemove.length > 0) {
+          const { data: updRemData, error: updRemErr } = await supabase
+            .from('crm_users')
+            .update({ team_id: null })
+            .in('id', toRemove)
+            .select('id, team_id');
+          console.debug('[TEAM/MODAL] unset team_id for removed', { count: updRemData?.length, error: updRemErr });
+        }
+
+        const { data: refreshedUsers, error: refreshErr } = await supabase
           .from('crm_users')
-          .select('id, team_id')
+          .select('id, team_id, email')
           .eq('company_id', effectiveCompanyId);
         const refreshedMemberIds = (refreshedUsers || []).filter(u => u.team_id === teamId).map(u => u.id);
+        console.debug('[TEAM/MODAL] refreshed members', { count: refreshedMemberIds.length, error: refreshErr, refreshedMemberIds });
         setMembers(refreshedMemberIds);
       }
 
@@ -157,9 +163,11 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
       setFormData({ name: '', leader_id: '' });
       setMembers([]);
     } catch (error: any) {
+      console.error('[TEAM/MODAL] submit error', error);
       toast.error(error.message || 'Erro ao salvar time');
     } finally {
       setIsLoading(false);
+      console.debug('[TEAM/MODAL] submit end');
     }
   };
 
@@ -204,14 +212,13 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
             </Select>
           </div>
 
-          {/* Campo de membros do time (sempre visível na edição e criação) */}
           <div>
             <Label htmlFor="members">Usuários do Time</Label>
             <MultiSelect
               key={team?.id + '-' + members.join(',')}
               options={allAvailableMembers.map(u => ({ value: u.id, label: `${u.first_name} ${u.last_name} (${u.role})` }))}
               value={members}
-              onChange={setMembers}
+              onChange={(vals) => { console.debug('[TEAM/MODAL] members change', vals); setMembers(vals); }}
             />
           </div>
 
