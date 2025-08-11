@@ -5,7 +5,6 @@ import { Loader2 } from 'lucide-react';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import type { UserRole } from '@/types/crm';
-import { useCompany } from '@/contexts/CompanyContext';
 
 interface ProtectedRouteProps {
   children?: React.ReactNode;
@@ -19,7 +18,6 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredPageKey
 }) => {
   const { user, crmUser, loading, hasPermission, userRole, companyId } = useCrmAuth();
-  const { selectedCompanyId } = useCompany();
   const [pageAllowed, setPageAllowed] = useState<boolean | null>(null);
 
   // Gate por página (opcional)
@@ -30,7 +28,11 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         setPageAllowed(true);
         return;
       }
-      const effectiveCompanyId = selectedCompanyId || companyId || crmUser?.company_id || null;
+      let selectedCompanyIdLocal: string | null = null;
+      try {
+        selectedCompanyIdLocal = localStorage.getItem('selectedCompanyId');
+      } catch {}
+      const effectiveCompanyId = selectedCompanyIdLocal || companyId || crmUser?.company_id || null;
       if (!effectiveCompanyId || !userRole) {
         // sem contexto suficiente, negar até resolver
         setPageAllowed(false);
@@ -63,7 +65,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
     checkPage();
     return () => { cancelled = true; };
-  }, [requiredPageKey, companyId, selectedCompanyId, crmUser?.company_id, userRole]);
+  }, [requiredPageKey, companyId, crmUser?.company_id, userRole]);
 
   if (loading || pageAllowed === null) {
     return (
