@@ -41,12 +41,23 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
   const { data: teams = [] } = useTeams();
   const { data: users = [] } = useCrmUsers();
 
+  // Funis permitidos para o usuário atual
+  const allowedFunnels = (() => {
+    if (!crmUser) return funnels;
+    const isUser = crmUser.role === 'user';
+    const isLeader = crmUser.role === 'leader';
+    if ((isUser || isLeader) && Array.isArray(crmUser.funnels) && crmUser.funnels.length > 0) {
+      return funnels.filter(f => crmUser.funnels!.includes(f.id));
+    }
+    return funnels;
+  })();
+
   // Seleção automática do primeiro funil permitido
   useEffect(() => {
-    if (funnels.length > 0 && !selectedFunnel) {
-      setSelectedFunnel(funnels[0].id);
+    if (allowedFunnels.length > 0 && !selectedFunnel) {
+      setSelectedFunnel(allowedFunnels[0].id);
     }
-  }, [funnels]);
+  }, [allowedFunnels]);
 
   // Resetar funil selecionado e allowedFunnels ao trocar de empresa
   useEffect(() => {
@@ -55,11 +66,11 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
 
   // 1. Selecionar automaticamente o primeiro funil disponível ao abrir a página e aplicar o filtro
   useEffect(() => {
-    if (funnels.length > 0 && !selectedFunnel) {
-      setSelectedFunnel(funnels[0].id);
+    if (allowedFunnels.length > 0 && !selectedFunnel) {
+      setSelectedFunnel(allowedFunnels[0].id);
       // Aplicar filtro automaticamente ao selecionar o primeiro funil
       onFiltersChange({
-        funnelId: funnels[0].id,
+        funnelId: allowedFunnels[0].id,
         teamId: undefined,
         userId: undefined,
         period: 'custom',
@@ -67,7 +78,7 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [funnels]);
+  }, [allowedFunnels]);
 
   // Função para saber se é admin/master/submaster
   const isAdmin = crmUser?.role === 'admin' || crmUser?.role === 'master' || crmUser?.role === 'submaster';
@@ -172,7 +183,7 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
                 <SelectValue placeholder="Selecione o funil" />
               </SelectTrigger>
               <SelectContent>
-                {funnels.map(funnel => (
+                {allowedFunnels.map(funnel => (
                   <SelectItem key={funnel.id} value={funnel.id} className="dropdown-item-brand">
                     {funnel.name}
                   </SelectItem>

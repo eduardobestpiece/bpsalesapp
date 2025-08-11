@@ -19,6 +19,39 @@
 
 ---
 
+### Requisição Atual: Visualização e permissões do Líder nos Indicadores (CRM)
+
+#### Objetivo
+- Ajustar escopo para o papel Líder:
+  - Funil: apenas funis permitidos ao usuário (via `crmUser.funnels`).
+  - Equipe: somente os times que ele lidera.
+  - Usuário: apenas usuários do(s) time(s) que lidera + ele mesmo.
+- Registro de Indicadores: Líder vê indicadores do time, mas só edita os próprios. Pode ver nomes das pessoas e usar o filtro "Eu".
+
+#### Implementação (Frontend)
+- `src/pages/crm/CrmIndicadores.tsx`: 
+  - Corrigido filtro de Equipe (filtrar por membros do time ao invés de comparar `user_id` com `teamId`).
+  - Restringido botão Editar: admin/master editam todos; líder apenas os próprios.
+  - `allowedFunnels` considera `crmUser.funnels` para `user` e `leader`.
+  - Modal de filtros: Equipe/Usuário limitados ao(s) time(s) do líder.
+- `src/components/CRM/Performance/PerformanceFilters.tsx`:
+  - Filtro de Funil usa `allowedFunnels` (respeitando `crmUser.funnels` para `user/leader`).
+  - Seleção inicial do funil baseada em `allowedFunnels`.
+- `src/components/CRM/IndicatorModal.tsx`:
+  - `canEdit`: líder só edita próprio; admin/master editam todos.
+  - `allowedFunnels` respeita `crmUser.funnels` para `user/leader`.
+
+#### Checklist
+- [x] Ajustar filtros e escopos para Líder
+- [x] Bloquear edição de terceiros para Líder
+- [x] Build local OK
+- [ ] Deploy (push para GitHub)
+- [ ] Validar com usuário Líder em produção
+
+#### Status: 🔄 Aguardando deploy
+
+---
+
 ### Requisição Atual: Lider/Admin sem permissão continuam vendo Simulador
 
 #### Diagnóstico

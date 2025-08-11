@@ -46,6 +46,9 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   const isEditing = !!indicator;
 
   const { crmUser } = useCrmAuth();
+  const isAdmin = crmUser?.role === 'admin' || crmUser?.role === 'master';
+  const isOwner = !isEditing || indicator?.user_id === crmUser?.id;
+  const canEdit = !!crmUser && (isOwner || isAdmin);
   const effectiveCompanyId = companyId || crmUser?.company_id || '';
   const { data: funnels, isLoading: isFunnelsLoading, error: funnelsError } = useFunnels(effectiveCompanyId, 'active');
   const { mutate: createIndicator } = useCreateIndicator();
@@ -53,7 +56,10 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
   const { data: indicators } = useIndicators(effectiveCompanyId);
 
   const isUser = crmUser?.role === 'user';
-  const allowedFunnels = isUser ? (funnels || []).filter(f => crmUser.funnels?.includes(f.id)) : (funnels || []);
+  const isLeader = crmUser?.role === 'leader';
+  const allowedFunnels = (isUser || isLeader)
+    ? (funnels || []).filter(f => (crmUser.funnels || []).includes(f.id))
+    : (funnels || []);
 
   // Logar o array de indicadores ao abrir o modal
   useEffect(() => {
@@ -201,8 +207,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     setYearOptions(years);
   }, []);
 
-  // Permitir edição para todos os usuários autenticados
-  const canEdit = !!crmUser;
+  // canEdit já calcula permissões acima
 
   function parseMonetaryValue(value: string) {
     return parseFloat(value.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
@@ -247,6 +252,10 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
     
     e.preventDefault();
     
+    if (!canEdit) {
+      toast.error('Você não tem permissão para editar este registro.');
+      return;
+    }
     
     if (!formData.funnel_id || !formData.period_date) {
       toast.error('Por favor, preencha todos os campos obrigatórios.');

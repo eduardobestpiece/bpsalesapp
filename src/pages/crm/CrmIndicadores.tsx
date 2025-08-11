@@ -278,10 +278,14 @@ const CrmIndicadores = () => {
         return false;
       }
       
-      // Filtros por equipe e usuário
-      if (filters.teamId && indicator.user_id !== filters.teamId) {
-        return false;
+      // Filtro por equipe: manter apenas indicadores de usuários que pertencem ao teamId selecionado
+      if (filters.teamId) {
+        const teamMemberIds = crmUsers.filter(u => u.team_id === filters.teamId).map(u => u.id);
+        if (!teamMemberIds.includes(indicator.user_id)) {
+          return false;
+        }
       }
+      // Filtro por usuário
       if (filters.userId && indicator.user_id !== filters.userId) {
         return false;
       }
@@ -299,7 +303,7 @@ const CrmIndicadores = () => {
     
     simInfoLog('[INDICADORES] filtrados', { antes: accessibleIndicators.length, depois: result.length, filtros: filters, showOnlyMine });
     return result;
-  }, [accessibleIndicators, selectedFunnelId, filters, showOnlyMine, crmUser, archivedIndicatorIds]);
+  }, [accessibleIndicators, selectedFunnelId, filters, showOnlyMine, crmUser, archivedIndicatorIds, crmUsers]);
 
   // Dados do funil selecionado - memoizado
   const funnelData = useMemo(() => {
@@ -316,8 +320,16 @@ const CrmIndicadores = () => {
   const allowedFunnels = useMemo(() => {
     if (!funnels || !crmUser) return [];
     const isUser = crmUser.role === 'user';
-    return isUser ? funnels.filter(f => crmUser.funnels?.includes(f.id)) : funnels;
-  }, [funnels, crmUser]);
+    const isLeader = crmUser.role === 'leader' || teams.some(t => t.leader_id === crmUser.id);
+    if (isUser || isLeader) {
+      const assigned = crmUser.funnels || [];
+      if (Array.isArray(assigned) && assigned.length > 0) {
+        return funnels.filter(f => assigned.includes(f.id));
+      }
+      return funnels;
+    }
+    return funnels;
+  }, [funnels, crmUser, teams]);
 
   // Loading states (inclui carregamento de permissões de abas)
   if (authLoading || isIndicatorsLoading || isFunnelsLoading || tabsLoading) {
@@ -512,12 +524,22 @@ const CrmIndicadores = () => {
                                       )}
                                       <td className="px-2 py-2 text-center">
                                         <div className="flex gap-2 justify-center">
-                                          <Button variant="outline" size="sm" className="brand-radius hover:bg-[var(--brand-secondary)] active:bg-[var(--brand-secondary)] focus:bg-[var(--brand-secondary)]" onClick={() => handleEdit(indicator)}>
-                                            <Edit className="w-4 h-4" />
-                                          </Button>
-                                          <Button variant="outline" size="sm" className="brand-radius hover:bg-[var(--brand-secondary)] active:bg-[var(--brand-secondary)] focus:bg-[var(--brand-secondary)]" onClick={() => handleArchive(indicator)}>
-                                            <Archive className="w-4 h-4" />
-                                          </Button>
+                                          {(() => {
+                                            const isAdmin = crmUser?.role === 'admin' || crmUser?.role === 'master';
+                                            const canEditIndicator = isAdmin || indicator.user_id === crmUser?.id;
+                                            return (
+                                              <>
+                                                {canEditIndicator && (
+                                                  <Button variant="outline" size="sm" className="brand-radius hover:bg-[var(--brand-secondary)] active:bg-[var(--brand-secondary)] focus:bg-[var(--brand-secondary)]" onClick={() => handleEdit(indicator)}>
+                                                    <Edit className="w-4 h-4" />
+                                                  </Button>
+                                                )}
+                                                <Button variant="outline" size="sm" className="brand-radius hover:bg-[var(--brand-secondary)] active:bg-[var(--brand-secondary)] focus:bg-[var(--brand-secondary)]" onClick={() => handleArchive(indicator)}>
+                                                  <Archive className="w-4 h-4" />
+                                                </Button>
+                                              </>
+                                            );
+                                          })()}
                                         </div>
                                       </td>
                                     </tr>
@@ -588,13 +610,13 @@ const CrmIndicadores = () => {
                   ))}
                 </select>
               </div>
-              {(crmUser?.role === 'admin' || crmUser?.role === 'master') && (
+              {(crmUser?.role === 'admin' || crmUser?.role === 'master' || crmUser?.role === 'leader') && (
                 <>
                   <div>
                     <label className="block text-sm font-medium mb-1">Equipe</label>
                     <select value={filters.teamId} onChange={e => setFilters(f => ({ ...f, teamId: e.target.value }))} className="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 brand-radius field-secondary-focus no-ring-focus">
                       <option value="">Todas</option>
-                      {teams.map(team => (
+                      {(crmUser?.role === 'leader' ? teams.filter(t => t.leader_id === crmUser?.id) : teams).map(team => (
                         <option key={team.id} value={team.id}>{team.name}</option>
                       ))}
                     </select>
@@ -603,7 +625,10 @@ const CrmIndicadores = () => {
                     <label className="block text-sm font-medium mb-1">Usuário</label>
                     <select value={filters.userId} onChange={e => setFilters(f => ({ ...f, userId: e.target.value }))} className="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 brand-radius field-secondary-focus no-ring-focus">
                       <option value="">Todos</option>
-                      {crmUsers.map(user => (
+                      {(crmUser?.role === 'leader'
+                        ? crmUsers.filter(u => teams.filter(t => t.leader_id === crmUser?.id).map(t => t.id).includes(u.team_id || '') || u.id === crmUser?.id)
+                        : crmUsers
+                      ).map(user => (
                         <option key={user.id} value={user.id}>{user.first_name} {user.last_name}</option>
                       ))}
                     </select>
