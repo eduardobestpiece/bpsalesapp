@@ -28,9 +28,10 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
 
   const { companyId } = useCrmAuth();
   const { selectedCompanyId } = useCompany();
+  const effectiveCompanyId = selectedCompanyId || companyId;
   const { data: users = [] } = useCrmUsers();
   // Filtrar usuários pela empresa selecionada
-  const filteredUsers = users.filter(u => u.company_id === (selectedCompanyId || companyId));
+  const filteredUsers = users.filter(u => u.company_id === effectiveCompanyId);
   // Se um líder for escolhido, removê-lo da lista de membros
   const availableMembers = filteredUsers.filter(u => u.id !== formData.leader_id && u.first_name && u.last_name);
   const createTeamMutation = useCreateTeam();
@@ -50,11 +51,10 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
       });
       // Buscar todos os usuários da empresa e filtrar os que pertencem ao time
       (async () => {
-        const empresaId = selectedCompanyId || companyId;
         const { data: allUsersDb } = await supabase
           .from('crm_users')
           .select('id, team_id')
-          .eq('company_id', empresaId);
+          .eq('company_id', effectiveCompanyId);
         // Corrigir: garantir que todos os usuários com team_id igual ao do time estejam marcados
         const memberIds = (allUsersDb || []).filter(u => u.team_id === team.id).map(u => u.id);
         setMembers(memberIds);
@@ -87,7 +87,7 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
       return;
     }
 
-    if (!companyId) {
+    if (!effectiveCompanyId) {
       toast.error('Erro: Empresa não identificada');
       return;
     }
@@ -102,7 +102,7 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
           id: team.id,
           name: formData.name.trim(),
           leader_id: formData.leader_id,
-          company_id: selectedCompanyId || companyId,
+          company_id: effectiveCompanyId,
           status: 'active'
         });
         teamId = team.id;
@@ -111,7 +111,7 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
         const result = await createTeamMutation.mutateAsync({
           name: formData.name.trim(),
           leader_id: formData.leader_id,
-          company_id: selectedCompanyId || companyId,
+          company_id: effectiveCompanyId,
           status: 'active'
         });
         teamId = result?.id;
@@ -123,7 +123,7 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
         const { data: allUsersDb } = await supabase
           .from('crm_users')
           .select('id, team_id')
-          .eq('company_id', companyId);
+          .eq('company_id', effectiveCompanyId);
         const allUserIds = (allUsersDb || []).map(u => u.id);
         // Usuários que devem estar no time
         const selectedUserIds = members;
@@ -142,6 +142,14 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
             .update({ team_id: null })
             .in('id', toRemove);
         }
+
+        // Recarregar snapshot de membros imediatamente para refletir na UI
+        const { data: refreshedUsers } = await supabase
+          .from('crm_users')
+          .select('id, team_id')
+          .eq('company_id', effectiveCompanyId);
+        const refreshedMemberIds = (refreshedUsers || []).filter(u => u.team_id === teamId).map(u => u.id);
+        setMembers(refreshedMemberIds);
       }
 
       toast.success(team ? 'Time atualizado com sucesso!' : 'Time criado com sucesso!');

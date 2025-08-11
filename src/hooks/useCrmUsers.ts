@@ -26,6 +26,30 @@ export const useCrmUsers = () => {
   });
 };
 
+export const useCrmUsersByCompany = (companyId?: string | null) => {
+  return useQuery({
+    queryKey: ['crm-users', companyId],
+    enabled: !!companyId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('crm_users')
+        .select('*')
+        .eq('status', 'active')
+        .eq('company_id', companyId as string)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        if (error.code === 'PGRST301' || error.message.includes('RLS')) {
+          return [] as CrmUser[];
+        }
+        throw error;
+      }
+
+      return data as CrmUser[];
+    }
+  });
+};
+
 export const useCreateCrmUser = () => {
   const queryClient = useQueryClient();
 
