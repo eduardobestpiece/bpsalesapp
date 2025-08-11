@@ -83,7 +83,11 @@ function AppContent() {
             user ? <Home /> : <Navigate to="/crm/login" replace />
           } />
           <Route path="/simulador" element={
-            user ? <Simulador /> : <Navigate to="/crm/login" replace />
+            user ? (
+              <ProtectedRoute requiredPageKey="simulator">
+                <Simulador />
+              </ProtectedRoute>
+            ) : <Navigate to="/crm/login" replace />
           } />
 
           {/* Novo módulo: Configurações */}

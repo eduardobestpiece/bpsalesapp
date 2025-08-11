@@ -2,6 +2,23 @@
 
 ## Última Atualização: 2025-08-11
 
+### Requisição Atual: Bloquear acesso ao Simulador conforme permissões (admin/leader)
+
+#### Implementação
+- `ProtectedRoute`: adicionada prop `requiredPageKey` para checar `role_page_permissions` (bypass para master; fallback permissivo quando não há registro, mas dependemos das regras definidas na tela de Acessos).
+- `App.tsx`: rota `/simulador` agora usa `<ProtectedRoute requiredPageKey="simulator">`.
+
+#### Checklist
+- [x] Atualizar `ProtectedRoute` com gate por página
+- [x] Proteger rota `/simulador` com `requiredPageKey="simulator"`
+- [x] Build local ok
+- [ ] Deploy
+- [ ] Validar com `leader` e `admin` sem permissão marcada para `simulator`
+
+#### Status: 🔄 Aguardando deploy/validação
+
+---
+
 ### Requisição Atual: Permissões para Líder e Administrador não aplicando regras
 
 #### Problema
