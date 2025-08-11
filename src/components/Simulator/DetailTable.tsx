@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Settings, ChevronDown, ChevronUp, Target } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { simInfoLog } from '@/lib/devlog';
 
 interface DetailTableProps {
   product: any;
@@ -374,18 +375,18 @@ export const DetailTable = ({
           
           // Debug temporário para verificar valores
           if (month === contemplationMonth) {
-            console.log('=== DEBUG MÊS CONTEMPLAÇÃO ===');
-            console.log('Credito acessado:', creditoAcessadoContemplacaoTemp);
-            console.log('Taxa admin:', taxaAdminContemplacao);
-            console.log('Fundo reserva:', fundoReservaContemplacao);
-            console.log('Valor base:', valorBasePosContemplacao);
-            console.log('Soma parcelas até contemplação:', somaParcelasAteContemplacao);
-            console.log('Saldo devedor antes embutido:', valorBasePosContemplacao - somaParcelasAteContemplacao);
+            simInfoLog('=== DEBUG MÊS CONTEMPLAÇÃO ===');
+            simInfoLog('Credito acessado:', creditoAcessadoContemplacaoTemp);
+            simInfoLog('Taxa admin:', taxaAdminContemplacao);
+            simInfoLog('Fundo reserva:', fundoReservaContemplacao);
+            simInfoLog('Valor base:', valorBasePosContemplacao);
+            simInfoLog('Soma parcelas até contemplação:', somaParcelasAteContemplacao);
+            simInfoLog('Saldo devedor antes embutido:', valorBasePosContemplacao - somaParcelasAteContemplacao);
             if (embutido === 'com') {
-              console.log('Redução embutido:', reducaoEmbutido);
-              console.log('Saldo devedor final:', saldoDevedorPosContemplacao);
+              simInfoLog('Redução embutido:', reducaoEmbutido);
+              simInfoLog('Saldo devedor final:', saldoDevedorPosContemplacao);
             }
-            console.log('==============================');
+            simInfoLog('==============================');
           }
         } else if (month === contemplationMonth + 1) {
           // Primeiro mês após contemplação: usar saldo da contemplação menos parcela da contemplação
@@ -408,21 +409,21 @@ export const DetailTable = ({
           saldoDevedorAcumulado = saldoDevedorPosContemplacao;
           
           // Debug temporário para verificar valores
-          console.log('=== DEBUG MÊS 31 ===');
-          console.log('Saldo contemplação:', saldoContemplacao);
-          console.log('Parcela contemplação:', parcelaContemplacao);
-          console.log('Saldo devedor após parcela:', saldoContemplacao - parcelaContemplacao);
+          simInfoLog('=== DEBUG MÊS 31 ===');
+          simInfoLog('Saldo contemplação:', saldoContemplacao);
+          simInfoLog('Parcela contemplação:', parcelaContemplacao);
+          simInfoLog('Saldo devedor após parcela:', saldoContemplacao - parcelaContemplacao);
           if (embutido === 'com') {
             const embutidoPercentual = administrator.maxEmbeddedPercentage ?? 25;
             const creditoAcessadoContemplacao = calculateCreditoAcessado(contemplationMonth, baseCredit);
             const reducaoEmbutido = creditoAcessadoContemplacao * (embutidoPercentual / 100);
-            console.log('Crédito acessado contemplação:', creditoAcessadoContemplacao);
-            console.log('Embutido percentual:', embutidoPercentual);
-            console.log('Redução embutido:', reducaoEmbutido);
-            console.log('Saldo devedor final:', saldoDevedorPosContemplacao);
+            simInfoLog('Crédito acessado contemplação:', creditoAcessadoContemplacao);
+            simInfoLog('Embutido percentual:', embutidoPercentual);
+            simInfoLog('Redução embutido:', reducaoEmbutido);
+            simInfoLog('Saldo devedor final:', saldoDevedorPosContemplacao);
           }
-          console.log('Saldo devedor mês 31:', saldoDevedorAcumulado);
-          console.log('========================');
+          simInfoLog('Saldo devedor mês 31:', saldoDevedorAcumulado);
+          simInfoLog('========================');
         } else {
           // Meses seguintes após contemplação
           const saldoAnterior = data[month - 2]?.saldoDevedor || 0;
@@ -454,11 +455,11 @@ export const DetailTable = ({
           valorParcelaFixo = valorParcela; // Fixar o valor para os próximos meses
         
         // Debug para verificar o cálculo da parcela
-        console.log('=== DEBUG PARCELA MÊS 31 ===');
-        console.log('Saldo devedor final (após embutido):', saldoDevedorAcumulado);
-        console.log('Prazo restante:', prazoRestante);
-        console.log('Valor da parcela calculado:', valorParcela);
-        console.log('=============================');
+        simInfoLog('=== DEBUG PARCELA MÊS 31 ===');
+        simInfoLog('Saldo devedor final (após embutido):', saldoDevedorAcumulado);
+        simInfoLog('Prazo restante:', prazoRestante);
+        simInfoLog('Valor da parcela calculado:', valorParcela);
+        simInfoLog('=============================');
       }
       
       // Ágio = creditoAcessado (da linha) * (agioPercent / 100)
@@ -667,7 +668,8 @@ export const DetailTable = ({
                   <Badge
                     key={key}
                     variant={visible ? "default" : "secondary"}
-                    className="cursor-pointer"
+                    className={`cursor-pointer brand-radius ${visible ? 'text-white' : ''}`}
+                    style={visible ? { backgroundColor: 'var(--brand-primary)', borderColor: 'var(--brand-primary)' } : undefined}
                     onClick={() => toggleColumn(key)}
                   >
                     {key === 'mes' && 'Mês'}
@@ -739,13 +741,8 @@ export const DetailTable = ({
                         row.isContemplationMonth ? contemplationRowRef :
                         rowIdx === tableData.length - 1 ? lastRowRef : undefined
                       }
-                      className={
-                        row.isContemplationMonth && highlightContemplation
-                          ? "bg-yellow-200 dark:bg-yellow-900 animate-pulse"
-                          : row.isContemplationMonth
-                            ? "bg-green-100 dark:bg-green-900"
-                            : ""
-                      }
+                      className={row.isContemplationMonth ? (highlightContemplation ? "animate-pulse" : "bg-green-100 dark:bg-green-900") : ""}
+                      style={row.isContemplationMonth && highlightContemplation ? { backgroundColor: 'rgba(var(--brand-secondary-rgb), 0.25)' } : undefined}
                     >
                       {visibleKeys.map((key) => (
                         <td

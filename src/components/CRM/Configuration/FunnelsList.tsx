@@ -68,7 +68,7 @@ export const FunnelsList = () => {
                 Gerencie os funis de vendas da empresa
               </CardDescription>
             </div>
-            <Button onClick={() => setShowModal(true)}>
+            <Button onClick={() => setShowModal(true)} variant="brandPrimaryToSecondary" className="brand-radius">
               <Plus className="w-4 h-4 mr-2" />
               Novo Funil
             </Button>
@@ -79,7 +79,7 @@ export const FunnelsList = () => {
               placeholder="Pesquisar por nome..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 field-secondary-focus no-ring-focus brand-radius"
             />
           </div>
         </CardHeader>
@@ -93,13 +93,13 @@ export const FunnelsList = () => {
               filteredFunnels.map((funnel) => (
                 <div
                   key={funnel.id}
-                  className="flex items-center justify-between p-4 border border-border dark:border-[#A86F57]/20 rounded-lg bg-card dark:bg-[#1F1F1F]"
+                  className="flex items-center justify-between p-4 border rounded-lg bg-card dark:bg-[#1F1F1F] border-[#333333]"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-medium text-foreground dark:text-white">{funnel.name}</h3>
-                      <Badge variant={funnel.status === 'active' ? 'default' : 'secondary'} className="dark:bg-[#A86F57] dark:text-white">
-                        {funnel.status === 'active' ? 'Ativo' : 'Arquivado'}
+                      <Badge className="text-white brand-radius" style={{ backgroundColor: 'var(--brand-primary, #A86F57)' }}>
+                        {funnel.status === 'active' ? 'Ativo' : 'Inativo'}
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground dark:text-gray-300">
@@ -112,19 +112,19 @@ export const FunnelsList = () => {
                   </div>
                   <div className="flex gap-2">
                     <Button
-                      variant="outline"
+                      variant="brandOutlineSecondaryHover"
                       size="sm"
                       onClick={() => handleEdit(funnel)}
-                      className="border-border dark:border-[#A86F57]/30 text-foreground dark:text-white hover:bg-muted dark:hover:bg-[#161616]"
+                      className="brand-radius"
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
                     {funnel.status === 'active' && (
                       <Button
-                        variant="outline"
+                        variant="brandOutlineSecondaryHover"
                         size="sm"
                         onClick={() => handleArchive(funnel.id)}
-                        className="border-border dark:border-[#A86F57]/30 text-foreground dark:text-white hover:bg-muted dark:hover:bg-[#161616]"
+                        className="brand-radius"
                       >
                         <Archive className="w-4 h-4" />
                       </Button>

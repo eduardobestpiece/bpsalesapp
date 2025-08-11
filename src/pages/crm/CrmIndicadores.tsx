@@ -10,10 +10,10 @@ import { useFunnels } from '@/hooks/useFunnels';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import CrmPerformance from './CrmPerformance';
 import { supabase } from '@/integrations/supabase/client';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useTeams } from '@/hooks/useTeams';
 import { useCrmUsers } from '@/hooks/useCrmUsers';
 import { useCompany } from '@/contexts/CompanyContext';
+import { FullScreenModal } from '@/components/ui/FullScreenModal';
 
 // Função utilitária para status visual do prazo
 function getPrazoStatus(indicator: any, funnel: any) {
@@ -294,11 +294,22 @@ const CrmIndicadores = () => {
                             <div className="flex items-center gap-4">
                               {isGestor && (
                                 <Button
-                                  variant={showOnlyMine ? 'default' : 'outline'}
+                                  variant={showOnlyMine ? 'brandOutlineSecondaryHover' : 'outline'}
                                   size="icon"
-                                  className="mr-2"
+                                  className="mr-2 brand-radius hover:bg-[var(--brand-secondary)] active:bg-[var(--brand-secondary)] focus:bg-[var(--brand-secondary)]"
                                   title="Meus Indicadores"
-                                  onClick={() => setShowOnlyMine(v => !v)}
+                                  onClick={() => {
+                                    setShowOnlyMine((prev) => {
+                                      const next = !prev;
+                                      // Sincronizar filtro de usuário para evitar conflitos com outros filtros
+                                      if (next) {
+                                        setFilters((f) => ({ ...f, userId: crmUser?.id || '' }));
+                                      } else {
+                                        setFilters((f) => ({ ...f, userId: '' }));
+                                      }
+                                      return next;
+                                    });
+                                  }}
                                 >
                                   <UserIcon className="w-5 h-5" />
                                 </Button>
@@ -317,11 +328,11 @@ const CrmIndicadores = () => {
                                   </select>
                                 </div>
                               )}
-                              <Button variant="outline" onClick={() => setShowFiltersModal(true)}>
+                              <Button variant="outline" className="brand-radius hover:bg-[var(--brand-secondary)] active:bg-[var(--brand-secondary)] focus:bg-[var(--brand-secondary)]" onClick={() => setShowFiltersModal(true)}>
                                 <Filter className="w-4 h-4 mr-2" />
                                 Filtros
                               </Button>
-                              <Button onClick={() => setShowModal(true)}>
+                              <Button onClick={() => setShowModal(true)} variant="brandPrimaryToSecondary" className="brand-radius">
                                 <Plus className="w-4 h-4 mr-2" />
                                 Registrar Indicador
                               </Button>
@@ -412,10 +423,10 @@ const CrmIndicadores = () => {
                                       )}
                                       <td className="px-2 py-2 text-center">
                                         <div className="flex gap-2 justify-center">
-                                          <Button variant="outline" size="sm" onClick={() => handleEdit(indicator)}>
+                                          <Button variant="outline" size="sm" className="brand-radius hover:bg-[var(--brand-secondary)] active:bg-[var(--brand-secondary)] focus:bg-[var(--brand-secondary)]" onClick={() => handleEdit(indicator)}>
                                             <Edit className="w-4 h-4" />
                                           </Button>
-                                          <Button variant="outline" size="sm" onClick={() => handleArchive(indicator)}>
+                                          <Button variant="outline" size="sm" className="brand-radius hover:bg-[var(--brand-secondary)] active:bg-[var(--brand-secondary)] focus:bg-[var(--brand-secondary)]" onClick={() => handleArchive(indicator)}>
                                             <Archive className="w-4 h-4" />
                                           </Button>
                                         </div>
@@ -445,73 +456,74 @@ const CrmIndicadores = () => {
       />
 
       {showFiltersModal && (
-        <Dialog open={showFiltersModal} onOpenChange={setShowFiltersModal}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Filtros de indicadores</DialogTitle>
-            </DialogHeader>
-            <form className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Data início</label>
-                  <input type="date" value={filters.periodStart} onChange={e => setFilters(f => ({ ...f, periodStart: e.target.value }))} className="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 focus:ring-2 focus:ring-ring focus:ring-offset-2" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Data fim</label>
-                  <input type="date" value={filters.periodEnd} onChange={e => setFilters(f => ({ ...f, periodEnd: e.target.value }))} className="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 focus:ring-2 focus:ring-ring focus:ring-offset-2" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Mês</label>
-                  <select value={filters.month} onChange={e => setFilters(f => ({ ...f, month: e.target.value }))} className="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 focus:ring-2 focus:ring-ring focus:ring-offset-2">
-                    <option value="">Todos</option>
-                    {[...Array(12)].map((_, i) => (
-                      <option key={i+1} value={i+1}>{new Date(2000, i, 1).toLocaleString('pt-BR', { month: 'long' })}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Ano</label>
-                  <select value={filters.year} onChange={e => setFilters(f => ({ ...f, year: e.target.value }))} className="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 focus:ring-2 focus:ring-ring focus:ring-offset-2">
-                    <option value="">Todos</option>
-                    {Array.from({length: 5}, (_, i) => new Date().getFullYear() - i).map(y => (
-                      <option key={y} value={y}>{y}</option>
-                    ))}
-                  </select>
-                </div>
-                {(crmUser?.role === 'admin' || crmUser?.role === 'master') && (
-                  <>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Equipe</label>
-                      <select value={filters.teamId} onChange={e => setFilters(f => ({ ...f, teamId: e.target.value }))} className="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 focus:ring-2 focus:ring-ring focus:ring-offset-2">
-                        <option value="">Todas</option>
-                        {teams.map(team => (
-                          <option key={team.id} value={team.id}>{team.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-1">Usuário</label>
-                      <select value={filters.userId} onChange={e => setFilters(f => ({ ...f, userId: e.target.value }))} className="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 focus:ring-2 focus:ring-ring focus:ring-offset-2">
-                        <option value="">Todos</option>
-                        {crmUsers.map(user => (
-                          <option key={user.id} value={user.id}>{user.first_name} {user.last_name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </>
-                )}
+        <FullScreenModal
+          isOpen={showFiltersModal}
+          onClose={() => setShowFiltersModal(false)}
+          title="Selecionar Período"
+          actions={
+            <>
+              <Button type="button" variant="outline" className="brand-radius" onClick={() => setFilters({ periodStart: '', periodEnd: '', month: '', year: '', teamId: '', userId: '' })}>
+                Limpar filtros
+              </Button>
+              <Button type="button" className="brand-radius" variant="brandPrimaryToSecondary" onClick={() => setShowFiltersModal(false)}>
+                Aplicar
+              </Button>
+            </>
+          }
+        >
+          <form className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">Data início</label>
+                <input type="date" value={filters.periodStart} onChange={e => setFilters(f => ({ ...f, periodStart: e.target.value }))} className="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 brand-radius field-secondary-focus no-ring-focus" />
               </div>
-              <div className="flex gap-2 justify-end pt-2">
-                <Button type="button" variant="outline" onClick={() => setFilters({ periodStart: '', periodEnd: '', month: '', year: '', teamId: '', userId: '' })}>
-                  Limpar filtros
-                </Button>
-                <Button type="button" onClick={() => setShowFiltersModal(false)}>
-                  Aplicar
-                </Button>
+              <div>
+                <label className="block text-sm font-medium mb-1">Data fim</label>
+                <input type="date" value={filters.periodEnd} onChange={e => setFilters(f => ({ ...f, periodEnd: e.target.value }))} className="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 brand-radius field-secondary-focus no-ring-focus" />
               </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+              <div>
+                <label className="block text-sm font-medium mb-1">Mês</label>
+                <select value={filters.month} onChange={e => setFilters(f => ({ ...f, month: e.target.value }))} className="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 brand-radius field-secondary-focus no-ring-focus">
+                  <option value="">Todos</option>
+                  {[...Array(12)].map((_, i) => (
+                    <option key={i+1} value={i+1}>{new Date(2000, i, 1).toLocaleString('pt-BR', { month: 'long' })}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Ano</label>
+                <select value={filters.year} onChange={e => setFilters(f => ({ ...f, year: e.target.value }))} className="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 brand-radius field-secondary-focus no-ring-focus">
+                  <option value="">Todos</option>
+                  {Array.from({length: 5}, (_, i) => new Date().getFullYear() - i).map(y => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </div>
+              {(crmUser?.role === 'admin' || crmUser?.role === 'master') && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Equipe</label>
+                    <select value={filters.teamId} onChange={e => setFilters(f => ({ ...f, teamId: e.target.value }))} className="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 brand-radius field-secondary-focus no-ring-focus">
+                      <option value="">Todas</option>
+                      {teams.map(team => (
+                        <option key={team.id} value={team.id}>{team.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Usuário</label>
+                    <select value={filters.userId} onChange={e => setFilters(f => ({ ...f, userId: e.target.value }))} className="w-full border border-input bg-background text-foreground rounded-lg px-3 py-2 brand-radius field-secondary-focus no-ring-focus">
+                      <option value="">Todos</option>
+                      {crmUsers.map(user => (
+                        <option key={user.id} value={user.id}>{user.first_name} {user.last_name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </>
+              )}
+            </div>
+          </form>
+        </FullScreenModal>
       )}
     </div>
   );

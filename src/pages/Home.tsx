@@ -5,12 +5,25 @@ import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
+import { useQuery } from '@tanstack/react-query';
 
 export default function Home() {
   const navigate = useNavigate();
   const { userRole, companyId } = useCrmAuth();
   const [pagePermissions, setPagePermissions] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
+
+  // Buscar keys de páginas do módulo Configurações
+  const { data: settingsKeys = [] } = useQuery({
+    queryKey: ['app_pages_settings_keys_home'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('app_pages')
+        .select('key')
+        .eq('module', 'settings');
+      return (data || []).map((r: any) => r.key as string);
+    }
+  });
 
   useEffect(() => {
     if (!companyId || !userRole) {
@@ -42,10 +55,8 @@ export default function Home() {
   }
 
   const canAccessSettings = (
-    pagePermissions['simulator_config'] !== false ||
-    pagePermissions['crm_config'] !== false ||
-    userRole === 'admin' ||
-    userRole === 'master'
+    (settingsKeys.length > 0 && settingsKeys.some(k => pagePermissions[k] !== false)) ||
+    userRole === 'admin' || userRole === 'master'
   );
 
   return (
@@ -65,7 +76,7 @@ export default function Home() {
             onClick={() => navigate('/simulador')}
             className="flex-1 bg-white dark:bg-[#1F1F1F] rounded-3xl shadow-xl p-10 flex flex-col items-center hover:bg-primary-50 dark:hover:bg-[#161616] transition border border-primary-100 dark:border-[#A86F57]/20 group focus:outline-none focus:ring-2 focus:ring-primary-300 dark:focus:ring-[#A86F57]/50"
           >
-            <Calculator className="h-14 w-14 text-primary-600 dark:text-[#A86F57] mb-4 group-hover:scale-110 transition" />
+            <Calculator className="h-14 w-14 mb-4 group-hover:scale-110 transition" style={{ color: 'var(--brand-primary, #A86F57)' }} />
             <span className="text-2xl font-semibold text-primary-700 dark:text-white mb-2">Simulador</span>
             <span className="text-primary-500 dark:text-gray-300 text-center">Acesse o simulador de propostas.</span>
           </button>
@@ -77,7 +88,7 @@ export default function Home() {
             onClick={() => navigate('/crm/indicadores')}
             className="flex-1 bg-white dark:bg-[#1F1F1F] rounded-3xl shadow-xl p-10 flex flex-col items-center hover:bg-secondary-50 dark:hover:bg-[#161616] transition border border-secondary-100 dark:border-[#A86F57]/20 group focus:outline-none focus:ring-2 focus:ring-secondary-300 dark:focus:ring-[#A86F57]/50"
           >
-            <BarChart2 className="h-14 w-14 text-secondary-600 dark:text-[#A86F57] mb-4 group-hover:scale-110 transition" />
+            <BarChart2 className="h-14 w-14 mb-4 group-hover:scale-110 transition" style={{ color: 'var(--brand-primary, #A86F57)' }} />
             <span className="text-2xl font-semibold text-secondary-700 dark:text-white mb-2">CRM</span>
             <span className="text-secondary-500 dark:text-gray-300 text-center">Acesse o CRM e veja os indicadores de vendas.</span>
           </button>
@@ -89,7 +100,7 @@ export default function Home() {
             onClick={() => navigate('/configuracoes/simulador')}
             className="flex-1 bg-white dark:bg-[#1F1F1F] rounded-3xl shadow-xl p-10 flex flex-col items-center hover:bg-muted/40 dark:hover:bg-[#161616] transition border border-muted-100 dark:border-[#A86F57]/20 group focus:outline-none focus:ring-2 focus:ring-muted-300 dark:focus:ring-[#A86F57]/50"
           >
-            <Settings className="h-14 w-14 text-gray-700 dark:text-[#A86F57] mb-4 group-hover:scale-110 transition" />
+            <Settings className="h-14 w-14 mb-4 group-hover:scale-110 transition" style={{ color: 'var(--brand-primary, #A86F57)' }} />
             <span className="text-2xl font-semibold text-gray-800 dark:text-white mb-2">Configurações</span>
             <span className="text-gray-500 dark:text-gray-300 text-center">Gerencie o Simulador, CRM e permissões.</span>
           </button>

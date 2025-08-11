@@ -76,6 +76,7 @@ export const InstallmentReductionsList: React.FC<InstallmentReductionsListProps>
 
   const fetchReductions = async () => {
     setLoading(true);
+    if (!selectedCompanyId) { setReductions([]); setLoading(false); return; }
     let query = supabase
       .from('installment_reductions')
       .select(`*, administrators:administrator_id (name)`) // join para nome da administradora
@@ -160,23 +161,27 @@ export const InstallmentReductionsList: React.FC<InstallmentReductionsListProps>
                 <TableCell>{reduction.reduction_percent}%</TableCell>
                 <TableCell>{getApplicationsCount(reduction)}</TableCell>
                 <TableCell>
-                  <Badge variant={reduction.is_archived ? 'secondary' : 'default'}>
-                    {reduction.is_archived ? 'Arquivado' : 'Ativo'}
-                  </Badge>
+                  {reduction.is_archived ? (
+                    <Badge variant="destructive" className="brand-radius">Arquivado</Badge>
+                  ) : (
+                    <Badge className="brand-radius text-white" style={{ backgroundColor: 'var(--brand-primary, #A86F57)' }}>Ativo</Badge>
+                  )}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex gap-2 justify-end">
                     <Button
-                      variant="outline"
+                      variant="brandOutlineSecondaryHover"
                       size="sm"
                       onClick={() => onEdit(reduction)}
+                      className="brand-radius"
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
                     <Button
-                      variant="outline"
+                      variant="brandOutlineSecondaryHover"
                       size="sm"
                       onClick={() => handleArchive(reduction)}
+                      className="brand-radius"
                     >
                       {reduction.is_archived ? <RotateCcw className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
                     </Button>

@@ -29,6 +29,7 @@ import SettingsCrm from "./pages/settings/SettingsCrm";
 import SettingsUsers from "./pages/settings/SettingsUsers";
 import SettingsMaster from "./pages/settings/SettingsMaster";
 import SettingsEmpresa from "./pages/settings/SettingsEmpresa";
+import SettingsPerfil from "./pages/settings/SettingsPerfil";
 
 const queryClient = new QueryClient();
 
@@ -47,7 +48,10 @@ function AppContent() {
     );
   }
 
-
+  
+  // Removido: tela bloqueante de "Usuário não encontrado no CRM"
+  // O caso de usuário autenticado mas sem crmUser será tratado na tela de login
+  
   // Fallback global para usuário sem empresa associada
   if (user && crmUser && !companyId && !loading) {
     return (
@@ -66,7 +70,7 @@ function AppContent() {
         <Routes>
           {/* Public routes */}
           <Route path="/crm/login" element={
-            user && crmUser ? <Navigate to="/home" replace /> : <CrmLogin />
+            user ? (crmUser ? <Navigate to="/home" replace /> : <CrmLogin />) : <CrmLogin />
           } />
           <Route path="/crm/redefinir-senha-convite" element={<CrmResetPasswordInvite />} />
           <Route path="/crm/redefinir-senha" element={<CrmResetPassword />} />
@@ -88,23 +92,17 @@ function AppContent() {
           } />
           <Route path="/configuracoes/crm" element={
             user ? (
-              <ProtectedRoute requiredRole="admin">
-                <SettingsCrm />
-              </ProtectedRoute>
+              <SettingsCrm />
             ) : <Navigate to="/crm/login" replace />
           } />
           <Route path="/configuracoes/usuarios" element={
             user ? (
-              <ProtectedRoute requiredRole="admin">
-                <SettingsUsers />
-              </ProtectedRoute>
+              <SettingsUsers />
             ) : <Navigate to="/crm/login" replace />
           } />
           <Route path="/configuracoes/empresa" element={
             user ? (
-              <ProtectedRoute requiredRole="admin">
-                <SettingsEmpresa />
-              </ProtectedRoute>
+              <SettingsEmpresa />
             ) : <Navigate to="/crm/login" replace />
           } />
           <Route path="/configuracoes/master" element={
@@ -112,6 +110,11 @@ function AppContent() {
               <ProtectedRoute requiredRole="master">
                 <SettingsMaster />
               </ProtectedRoute>
+            ) : <Navigate to="/crm/login" replace />
+          } />
+          <Route path="/configuracoes/perfil" element={
+            user ? (
+              <SettingsPerfil />
             ) : <Navigate to="/crm/login" replace />
           } />
           

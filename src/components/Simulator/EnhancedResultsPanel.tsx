@@ -53,7 +53,7 @@ export const EnhancedResultsPanel = ({ data, showResults }: EnhancedResultsPanel
   // Dados para o gráfico de pizza dos custos
   const costBreakdown = consortiumData ? [
     { name: 'Principal', value: consortiumData.creditValue - (consortiumData.creditValue * (consortiumData.administrationTax + consortiumData.insurance + consortiumData.reserveFund) / 100), color: '#A86F57' },
-    { name: 'Taxa Admin', value: consortiumData.creditValue * consortiumData.administrationTax / 100, color: '#f59e0b' },
+    { name: 'Taxa Admin', value: consortiumData.creditValue * consortiumData.administrationTax / 100, color: 'var(--brand-primary)' },
     { name: 'Seguro', value: consortiumData.creditValue * consortiumData.insurance / 100, color: '#fbbf24' },
     { name: 'Fundo Reserva', value: consortiumData.creditValue * consortiumData.reserveFund / 100, color: '#fcd34d' }
   ] : [];
@@ -247,9 +247,9 @@ export const EnhancedResultsPanel = ({ data, showResults }: EnhancedResultsPanel
                       <Line 
                         type="monotone" 
                         dataKey="properties" 
-                        stroke="#A86F57" 
+                        stroke="var(--brand-primary)" 
                         strokeWidth={3}
-                        dot={{ fill: '#A86F57', strokeWidth: 2, r: 6 }}
+                        dot={{ fill: 'var(--brand-primary)', strokeWidth: 2, r: 6 }}
                         name="properties"
                       />
                     </LineChart>
@@ -288,7 +288,7 @@ export const EnhancedResultsPanel = ({ data, showResults }: EnhancedResultsPanel
                       />
                       <Bar 
                         dataKey="passiveIncome" 
-                        fill="#A86F57"
+                        fill="var(--brand-primary)"
                         radius={[2, 2, 0, 0]}
                       />
                     </BarChart>

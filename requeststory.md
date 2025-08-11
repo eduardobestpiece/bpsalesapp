@@ -1,6 +1,35 @@
 # Request Story - Projeto Monteo
 
-## Última Atualização: 2025-08-08
+## Última Atualização: 2025-08-11
+
+### Requisição Atual: Deploy da aplicação (Vercel/GitHub)
+
+#### Ações planejadas:
+- Construir o projeto com `npm run build`
+- Tentar publicar via Vercel CLI (`vercel deploy --prod`)
+- Caso o Vercel CLI peça autenticação/vinculação: oferecer disparo via push no GitHub para acionar deploy automático
+- Garantir que a porta `8080` está configurada no `vite.config.ts`
+
+#### Checklist
+- [x] Build em produção finalizado sem erros
+- [x] Deploy publicado (Vercel) ou push realizado para GitHub para acionar deploy
+- [x] Verificação de funcionamento
+- **URL Produção:** https://consorcio-patrimonio-simulador-l72j2mifo.vercel.app
+
+#### Status: ✅ Concluído
+
+---
+
+### Requisição Atual: Aplicar cor secundária em bordas e dropdowns (Configurações do Simulador)
+
+#### Ações executadas:
+- Ajustar campo "Buscar administradoras..." para usar cor secundária nas bordas quando focado
+- Ajustar seletor de status (ativas/arquivadas) para usar cor secundária nas bordas quando aberto/focado
+- Ajustar itens do dropdown de status para usar cor secundária em hover e item selecionado
+
+#### Status: 🔄 Em progresso
+
+---
 
 ### Requisição Atual: Reinício do servidor na porta 8080
 
@@ -193,3 +222,27 @@
 - Mantidos redirecionamentos das rotas antigas para as novas.
 
 Impacto: branding por empresa centralizado, personalização visual (logo/cor) e governança por perfil. 
+
+### Requisição Atual: Redesign da página de Acessos (Permissões)
+
+#### Ações executadas:
+- Modernizado layout da tabela de permissões em `CrmMasterConfig` (aba Acessos)
+- Cabeçalho sticky com blur e tipografia mais forte
+- Linhas listradas e bordas #333333 com `brand-radius`
+- Substituídos checkboxes nativos por `Checkbox` do UI com cores dinâmicas
+- Botão "Salvar Permissões" usando `variant="brandPrimaryToSecondary"` e `brand-radius`
+
+#### Status: ✅ Concluído
+
+--- 
+
+### Requisição Atual: Redesign da página de Itens arquivados
+
+#### Ações executadas:
+- Filtros com `Select` estilizado e `Input` com `brand-radius`
+- Tabela com cabeçalho sticky, listras, borda `#333333` e `brand-radius`
+- Botões "Recuperar" (variant `brandOutlineSecondaryHover`) e "Excluir" (variant `destructive`) com `brand-radius`
+
+#### Status: ✅ Concluído
+
+--- 

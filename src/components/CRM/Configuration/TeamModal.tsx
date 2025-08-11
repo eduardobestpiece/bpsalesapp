@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FullScreenModal } from '@/components/ui/FullScreenModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -156,15 +156,13 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] bg-background dark:bg-[#1E1E1E] border-border dark:border-[#A86F57]/20">
-        <DialogHeader>
-          <DialogTitle className="text-foreground dark:text-white">
-            {team ? 'Editar Time' : 'Novo Time'}
-          </DialogTitle>
-        </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <FullScreenModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={team ? 'Editar Time' : 'Novo Time'}
+      actions={<Button type="submit" form="team-form" variant="brandPrimaryToSecondary" className="brand-radius">{isLoading ? 'Salvando...' : (team ? 'Atualizar' : 'Criar')}</Button>}
+    >
+        <form id="team-form" onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="name">Nome do Time *</Label>
             <Input
@@ -174,6 +172,7 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
               placeholder="Ex: Equipe Vendas"
               required
               disabled={isLoading}
+              className="campo-brand brand-radius"
             />
           </div>
 
@@ -184,12 +183,12 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
               onValueChange={(value) => setFormData(prev => ({ ...prev, leader_id: value }))}
               disabled={isLoading}
             >
-              <SelectTrigger>
+              <SelectTrigger className="select-trigger-brand brand-radius">
                 <SelectValue placeholder="Selecione o líder" />
               </SelectTrigger>
               <SelectContent>
                 {filteredUsers.map(user => (
-                  <SelectItem key={user.id} value={user.id}>
+                  <SelectItem key={user.id} value={user.id} className="dropdown-item-brand">
                     {user.first_name} {user.last_name} ({user.role})
                   </SelectItem>
                 ))}
@@ -208,16 +207,8 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
             />
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Salvando...' : (team ? 'Atualizar' : 'Criar Time')}
-            </Button>
-          </div>
+          <div className="flex justify-end space-x-2 pt-4"></div>
         </form>
-      </DialogContent>
-    </Dialog>
+    </FullScreenModal>
   );
 };

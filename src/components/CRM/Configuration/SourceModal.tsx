@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FullScreenModal } from '@/components/ui/FullScreenModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -83,15 +83,13 @@ export const SourceModal = ({ isOpen, onClose, source }: SourceModalProps) => {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[400px]">
-        <DialogHeader>
-          <DialogTitle>
-            {source ? 'Editar Origem' : 'Nova Origem'}
-          </DialogTitle>
-        </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <FullScreenModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={source ? 'Editar Origem' : 'Nova Origem'}
+      actions={<Button type="submit" form="source-form" variant="brandPrimaryToSecondary" className="brand-radius">{isLoading ? 'Salvando...' : (source ? 'Atualizar' : 'Criar')}</Button>}
+    >
+        <form id="source-form" onSubmit={handleSubmit} className="space-y-4">
           <div>
             <Label htmlFor="name">Nome da Origem *</Label>
             <Input
@@ -101,19 +99,12 @@ export const SourceModal = ({ isOpen, onClose, source }: SourceModalProps) => {
               placeholder="Ex: Site, Indicação, Redes Sociais"
               required
               disabled={isLoading}
+              className="campo-brand brand-radius"
             />
           </div>
-
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Salvando...' : (source ? 'Atualizar' : 'Criar Origem')}
-            </Button>
-          </div>
+ 
+          <div className="flex justify-end space-x-2 pt-4"></div>
         </form>
-      </DialogContent>
-    </Dialog>
+    </FullScreenModal>
   );
 };

@@ -69,7 +69,7 @@ export const TeamsList = () => {
                 Gerencie os times da empresa
               </CardDescription>
             </div>
-            <Button onClick={() => setShowModal(true)}>
+            <Button onClick={() => setShowModal(true)} variant="brandPrimaryToSecondary" className="brand-radius">
               <Plus className="w-4 h-4 mr-2" />
               Novo Time
             </Button>
@@ -80,7 +80,7 @@ export const TeamsList = () => {
               placeholder="Pesquisar por nome ou líder..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 field-secondary-focus no-ring-focus brand-radius"
             />
           </div>
         </CardHeader>
@@ -96,7 +96,7 @@ export const TeamsList = () => {
               filteredTeams.map((team) => (
                 <div
                   key={team.id}
-                  className="p-4 border rounded-lg hover:shadow-md transition-shadow"
+                  className="p-4 border rounded-lg hover:shadow-md transition-shadow brand-radius"
                 >
                   <div className="flex justify-between items-start mb-2">
                     <div>
@@ -105,8 +105,8 @@ export const TeamsList = () => {
                         Líder: {getLeaderName(team.leader_id)}
                       </p>
                     </div>
-                    <Badge variant={team.status === 'active' ? 'default' : 'secondary'}>
-                      {team.status === 'active' ? 'Ativo' : 'Arquivado'}
+                    <Badge className="text-white brand-radius" style={{ backgroundColor: 'var(--brand-primary, #A86F57)' }}>
+                      {team.status === 'active' ? 'Ativo' : 'Inativo'}
                     </Badge>
                   </div>
                   
@@ -119,17 +119,19 @@ export const TeamsList = () => {
                   
                   <div className="flex gap-2">
                     <Button
-                      variant="outline"
+                      variant="brandOutlineSecondaryHover"
                       size="sm"
                       onClick={() => handleEdit(team)}
+                      className="brand-radius"
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
                     {team.status === 'active' && (
                       <Button
-                        variant="outline"
+                        variant="brandOutlineSecondaryHover"
                         size="sm"
                         onClick={() => handleArchive(team.id)}
+                        className="brand-radius"
                       >
                         Arquivar
                       </Button>

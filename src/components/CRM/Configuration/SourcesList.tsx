@@ -56,7 +56,7 @@ export const SourcesList = () => {
                 Gerencie as origens de onde vêm os leads
               </CardDescription>
             </div>
-            <Button onClick={() => setShowModal(true)}>
+            <Button onClick={() => setShowModal(true)} variant="brandPrimaryToSecondary" className="brand-radius">
               <Plus className="w-4 h-4 mr-2" />
               Nova Origem
             </Button>
@@ -67,7 +67,7 @@ export const SourcesList = () => {
               placeholder="Pesquisar por nome..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 field-secondary-focus no-ring-focus brand-radius"
             />
           </div>
         </CardHeader>
@@ -83,27 +83,29 @@ export const SourcesList = () => {
               filteredSources.map((source) => (
                 <div
                   key={source.id}
-                  className="p-4 border rounded-lg hover:shadow-md transition-shadow"
+                  className="p-4 border rounded-lg hover:shadow-md transition-shadow brand-radius"
                 >
                   <div className="flex justify-between items-start mb-2">
                     <h3 className="font-medium">{source.name}</h3>
-                    <Badge variant={source.status === 'active' ? 'default' : 'secondary'}>
-                      {source.status === 'active' ? 'Ativo' : 'Arquivado'}
+                    <Badge className="text-white brand-radius" style={{ backgroundColor: 'var(--brand-primary, #A86F57)' }}>
+                      {source.status === 'active' ? 'Ativo' : 'Inativo'}
                     </Badge>
                   </div>
                   <div className="flex gap-2 mt-3">
                     <Button
-                      variant="outline"
+                      variant="brandOutlineSecondaryHover"
                       size="sm"
                       onClick={() => handleEdit(source)}
+                      className="brand-radius"
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
                     {source.status === 'active' && (
                       <Button
-                        variant="outline"
+                        variant="brandOutlineSecondaryHover"
                         size="sm"
                         onClick={() => handleArchive(source.id)}
+                        className="brand-radius"
                       >
                         Arquivar
                       </Button>

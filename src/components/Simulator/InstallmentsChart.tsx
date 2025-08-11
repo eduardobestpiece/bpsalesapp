@@ -11,7 +11,7 @@ const gray1 = '#ededed';
 const gray2 = '#e5e5e5';
 const grayLine = '#444444';
 const fundo = '#131313';
-const marrom = '#A86E57';
+const marrom = getComputedStyle(document.documentElement).getPropertyValue('--brand-primary') || 'var(--brand-primary)';
 const gridColor = '#2E2E2E';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -44,7 +44,7 @@ const CasaDot = (props: any) => {
   if (!payload || !payload.patrimonio || payload.mes !==  payload.pontoCasaMes) return null;
   return (
     <g>
-      <circle cx={cx} cy={cy} r={12} fill="#A86E57" />
+      <circle cx={cx} cy={cy} r={12} fill={marrom.trim() || 'var(--brand-primary)'} />
       <foreignObject x={cx - 8} y={cy - 8} width={16} height={16} style={{ pointerEvents: 'none' }}>
         <Home size={16} color="white" style={{ display: 'block', margin: 0 }} />
       </foreignObject>

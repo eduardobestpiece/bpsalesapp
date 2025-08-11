@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { FullScreenModal } from '@/components/ui/FullScreenModal';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -67,51 +68,51 @@ function ResumoCard({ titulo, valor, destaquePositivo, destaqueNegativo }: { tit
     if (tituloLower.includes('crédito') || tituloLower.includes('credit')) {
       return {
         bg: 'from-blue-50 to-blue-100 dark:from-[#1F1F1F] dark:to-[#161616]',
-        border: 'border-blue-200 dark:border-[#A86F57]/40',
-        label: 'text-blue-700 dark:text-[#A86F57]',
+        border: 'border',
+        label: 'font-medium',
         value: 'text-blue-900 dark:text-white'
       };
     } else if (tituloLower.includes('parcela') || tituloLower.includes('installment')) {
       return {
         bg: 'from-green-50 to-green-100 dark:from-[#1F1F1F] dark:to-[#161616]',
-        border: 'border-green-200 dark:border-[#A86F57]/40',
-        label: 'text-green-700 dark:text-[#A86F57]',
+        border: 'border',
+        label: 'font-medium',
         value: 'text-green-900 dark:text-white'
       };
     } else if (tituloLower.includes('taxa') || tituloLower.includes('rate')) {
       return {
         bg: 'from-purple-50 to-purple-100 dark:from-[#1F1F1F] dark:to-[#161616]',
-        border: 'border-purple-200 dark:border-[#A86F57]/40',
-        label: 'text-purple-700 dark:text-[#A86F57]',
+        border: 'border',
+        label: 'font-medium',
         value: 'text-purple-900 dark:text-white'
       };
     } else if (tituloLower.includes('atualização') || tituloLower.includes('update')) {
       return {
         bg: 'from-orange-50 to-orange-100 dark:from-[#1F1F1F] dark:to-[#161616]',
-        border: 'border-orange-200 dark:border-[#A86F57]/40',
-        label: 'text-orange-700 dark:text-[#A86F57]',
+        border: 'border',
+        label: 'font-medium',
         value: 'text-orange-900 dark:text-white'
       };
     } else if (tituloLower.includes('total')) {
       return {
         bg: 'from-indigo-50 to-indigo-100 dark:from-[#1F1F1F] dark:to-[#161616]',
-        border: 'border-indigo-200 dark:border-[#A86F57]/40',
-        label: 'text-indigo-700 dark:text-[#A86F57]',
+        border: 'border',
+        label: 'font-medium',
         value: 'text-indigo-900 dark:text-white'
       };
     } else if (tituloLower.includes('acréscimo') || tituloLower.includes('increment')) {
       return {
         bg: 'from-teal-50 to-teal-100 dark:from-[#1F1F1F] dark:to-[#161616]',
-        border: 'border-teal-200 dark:border-[#A86F57]/40',
-        label: 'text-teal-700 dark:text-[#A86F57]',
+        border: 'border',
+        label: 'font-medium',
         value: 'text-teal-900 dark:text-white'
       };
     } else {
       // Cor padrão
       return {
         bg: 'from-gray-50 to-gray-100 dark:from-[#1F1F1F] dark:to-[#161616]',
-        border: 'border-gray-200 dark:border-[#A86F57]/40',
-        label: 'text-gray-700 dark:text-[#A86F57]',
+        border: 'border',
+        label: 'font-medium',
         value: 'text-gray-900 dark:text-white'
       };
     }
@@ -124,9 +125,15 @@ function ResumoCard({ titulo, valor, destaquePositivo, destaqueNegativo }: { tit
                          destaqueNegativo ? 'text-red-600 dark:text-red-400' : 
                          colors.value;
 
+  const labelColor = destaquePositivo
+    ? 'rgb(22 163 74)'
+    : destaqueNegativo
+      ? 'rgb(220 38 38)'
+      : 'var(--brand-primary)';
+
   return (
-    <div className={`space-y-2 p-4 bg-gradient-to-r ${colors.bg} rounded-lg border ${colors.border}`}>
-      <Label className={`text-sm ${colors.label} font-medium`}>{titulo}</Label>
+    <div className={`space-y-2 p-4 bg-gradient-to-r ${colors.bg} rounded-lg border brand-radius`} style={{ borderColor: destaqueNegativo ? '#333333' : 'var(--brand-secondary)' }}>
+      <Label className={`text-sm ${colors.label}`} style={{ color: labelColor }}>{titulo}</Label>
       <div className={`text-2xl font-bold ${finalValueClass}`}>{valor}</div>
     </div>
   );
@@ -1721,10 +1728,14 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
       {/* Segunda linha de cards de resumo, só aparece se houver pelo menos um produto selecionado */}
       {cotas.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">{/* reduzido de mb-6 para mb-4 */}
-          <ResumoCard titulo="Total do Crédito" valor={formatCurrency(totalCotas)} destaquePositivo={totalCotas >= creditoAcessado} destaqueNegativo={totalCotas < creditoAcessado} />
-          <ResumoCard titulo="Total da Parcela" valor={formatCurrency(totalParcela)} destaquePositivo={totalCotas >= creditoAcessado} destaqueNegativo={totalCotas < creditoAcessado} />
-          <ResumoCard titulo="Acréscimo no Aporte" valor={formatCurrency(acrescimoAporte)} destaquePositivo={totalCotas >= creditoAcessado} destaqueNegativo={totalCotas < creditoAcessado} />
-          <ResumoCard titulo="Acréscimo no Crédito" valor={formatCurrency(acrescimoCredito)} destaquePositivo={totalCotas >= creditoAcessado} destaqueNegativo={totalCotas < creditoAcessado} />
+          {(() => { const atingiuParcela = valorParcela > 0 && totalParcela >= valorParcela; return (
+            <>
+              <ResumoCard titulo="Total do Crédito" valor={formatCurrency(totalCotas)} destaquePositivo={atingiuParcela} destaqueNegativo={!atingiuParcela} />
+              <ResumoCard titulo="Total da Parcela" valor={formatCurrency(totalParcela)} destaquePositivo={atingiuParcela} destaqueNegativo={!atingiuParcela} />
+              <ResumoCard titulo="Acréscimo no Aporte" valor={formatCurrency(acrescimoAporte)} destaquePositivo={atingiuParcela} destaqueNegativo={!atingiuParcela} />
+              <ResumoCard titulo="Acréscimo no Crédito" valor={formatCurrency(acrescimoCredito)} destaquePositivo={atingiuParcela} destaqueNegativo={!atingiuParcela} />
+            </>
+          ); })()}
         </div>
       )}
       {/* Botão para abrir Montagem de Cotas quando estiver oculta */}
@@ -1732,7 +1743,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
         <div className="w-full">
           <Button
             onClick={() => { console.debug('[Sim/Montagem] abrir seção Montagem de cotas'); setShowMontagemCotas(true); }}
-            className="w-full bg-black text-white hover:bg-neutral-800 border-none"
+            className="w-full bg-black text-white hover:bg-neutral-800 border-none brand-radius"
           >
             Montar cotas
           </Button>
@@ -1760,10 +1771,10 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
               {selectedCotas.length > 0 && (
                 <div className="flex gap-2 mb-2 items-center">
                   <span className="text-sm font-medium">{selectedCotas.length} selecionada(s)</span>
-                  <Button size="sm" variant="destructive" onClick={excluirSelecionadas}>Excluir</Button>
-                  <Button size="sm" variant="outline" onClick={abrirRedefinir}>Redefinir</Button>
-                  <Button size="sm" variant="ghost" onClick={() => setSelectedCotas([])}>Cancelar</Button>
-                    </div>
+                  <Button size="sm" variant="destructive" onClick={excluirSelecionadas} className="brand-radius">Excluir</Button>
+                  <Button size="sm" variant="outline" onClick={abrirRedefinir} className="brand-radius">Redefinir</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setSelectedCotas([])} className="brand-radius">Cancelar</Button>
+                </div>
               )}
               {/* Lista de cotas adicionadas */}
               {cotas.length === 0 && (
@@ -1772,7 +1783,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
                       </div>
               )}
               {cotas.map((cota, idx) => (
-                <div key={idx} className={`flex items-center justify-between p-3 border border-border dark:border-[#A86F57]/20 rounded-lg bg-card dark:bg-[#1F1F1F] ${selectedCotas.includes(idx) ? 'bg-accent/20 dark:bg-[#A86F57]/10 border-accent dark:border-[#A86F57]' : ''}`}>
+                <div key={idx} className={`flex items-center justify-between p-3 border border-border brand-radius bg-card dark:bg-[#1F1F1F] ${selectedCotas.includes(idx) ? 'bg-accent/20' : ''}`} style={selectedCotas.includes(idx) ? { borderColor: '#333333' } : { borderColor: 'var(--brand-secondary)' }}>
                   <Checkbox checked={selectedCotas.includes(idx)} onCheckedChange={() => toggleCotaSelecionada(idx)} className="dark:border-[#A86F57]/30" />
                   <div className="flex-1 ml-2">
                     <div className="font-medium text-foreground dark:text-white">{cota.nome}</div>
@@ -1786,7 +1797,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
                       variant="outline"
                       size="sm"
                       onClick={() => removerCota(idx)}
-                      className="text-red-600 hover:text-red-700 border-border dark:border-[#A86F57]/30 hover:bg-muted dark:hover:bg-[#161616]"
+                      className="text-red-600 hover:text-red-700 border-border hover:bg-muted dark:hover:bg-[#161616]"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
@@ -1798,7 +1809,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
                 <Button
                   variant="outline"
                   onClick={() => setShowAddProduct(true)}
-                  className="flex-1 bg-black text-white hover:bg-neutral-800 border-none"
+                  className="flex-1 bg-black text-white hover:bg-neutral-800 border-none brand-radius"
                 >
                   {/* Apenas um símbolo de +, maior */}
                   <span className="text-2xl font-bold mr-2">+</span>
@@ -1807,63 +1818,87 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
                 </div>
               {/* Modal para adicionar produto */}
               {showAddProduct && (
-                <Dialog open={showAddProduct} onOpenChange={setShowAddProduct}>
-                  <DialogContent className="bg-background dark:bg-[#1E1E1E] border-border dark:border-[#A86F57]/20">
-                    <DialogHeader>
-                      <DialogTitle className="text-foreground dark:text-white">Selecionar crédito</DialogTitle>
-                    </DialogHeader>
-                    <div className="flex gap-2 items-end mb-4">
-                      <div className="flex-1">
-                        <select value={selectedProduct} onChange={e => { console.debug('[Sim/Montagem] selecionar produto ->', e.target.value); setSelectedProduct(e.target.value); }} className="w-full rounded-lg border border-border dark:border-[#A86F57]/30 p-2 bg-background dark:bg-[#131313] text-foreground dark:text-white focus:ring-2 focus:ring-[#A86F57] focus:border-[#A86F57] transition-all">
-                          <option value="">Selecione o crédito</option>
-                          {availableProducts.map(p => (
-                            <option key={p.id} value={p.id}>{p.name}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="w-32">
-                        <Input type="number" min={1} value={addQuantidade} onChange={e => { const num = Number(e.target.value); console.debug('[Sim/Montagem] quantidade ->', num); setAddQuantidade(num); }} className="rounded-lg border-border dark:border-[#A86F57]/30 bg-background dark:bg-[#131313] text-foreground dark:text-white focus:ring-2 focus:ring-[#A86F57] focus:border-[#A86F57] transition-all" placeholder="Qtd" />
-                </div>
-                    </div>
-                    <div className="flex gap-2 justify-end">
-                      <Button variant="outline" onClick={() => setShowAddProduct(false)} className="flex-1">Cancelar</Button>
-                      <Button onClick={adicionarProduto} className="flex-1 bg-[#AA705A] text-white hover:bg-[#AA705A]/80 border-none">Adicionar</Button>
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              )}
-              {/* Modal para redefinir cotas selecionadas */}
-              {showRedefinirModal && (
-                <Dialog open={showRedefinirModal} onOpenChange={setShowRedefinirModal}>
-                  <DialogContent className="bg-background dark:bg-[#1E1E1E] border-border dark:border-[#A86F57]/20">
-                    <DialogHeader>
-                      <DialogTitle className="text-foreground dark:text-white">Redefinir Cotas Selecionadas</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <select value={redefinirProdutoId} onChange={e => setRedefinirProdutoId(e.target.value)} className="w-full border border-border dark:border-[#A86F57]/30 rounded p-2 bg-background dark:bg-[#131313] text-foreground dark:text-white">
-                        <option value="">Selecione o novo produto</option>
+                <FullScreenModal
+                  isOpen={showAddProduct}
+                  onClose={() => setShowAddProduct(false)}
+                  title="Selecionar crédito"
+                  actions={
+                    <>
+                      <Button variant="outline" onClick={() => setShowAddProduct(false)} className="brand-radius">Cancelar</Button>
+                      <Button onClick={adicionarProduto} variant="brandPrimaryToSecondary" className="brand-radius">Adicionar</Button>
+                    </>
+                  }
+                >
+                  <div className="flex flex-col gap-4">
+                    <div className="flex-1">
+                      <select
+                        value={selectedProduct}
+                        onChange={e => { const num = e.target.value; console.debug('[Sim/Montagem] selecionar produto ->', num); setSelectedProduct(e.target.value); }}
+                        className="w-full border p-2 bg-background dark:bg-[#131313] text-foreground dark:text-white brand-radius field-secondary-focus no-ring-focus"
+                      >
+                        <option value="">Selecione o crédito</option>
                         {availableProducts.map(p => (
                           <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
                       </select>
-                      <Input type="number" min={1} value={redefinirQuantidade} onChange={e => setRedefinirQuantidade(Number(e.target.value))} className="w-full bg-background dark:bg-[#131313] border-border dark:border-[#A86F57]/30 text-foreground dark:text-white" placeholder="Quantidade" />
-                      <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => setShowRedefinirModal(false)} className="flex-1 border-border dark:border-[#A86F57]/30 text-foreground dark:text-white hover:bg-muted dark:hover:bg-[#161616]">Cancelar</Button>
-                        <Button onClick={redefinirSelecionadas} className="flex-1 bg-[#A86F57] text-white hover:bg-[#A86F57]/80 border-none">Trocar</Button>
                     </div>
+                    <div className="w-40">
+                      <Input
+                        type="number"
+                        min={1}
+                        value={addQuantidade}
+                        onChange={e => { const num = Number(e.target.value); console.debug('[Sim/Montagem] quantidade ->', num); setAddQuantidade(num); }}
+                        className="bg-background dark:bg-[#131313] border-border text-foreground dark:text-white brand-radius field-secondary-focus no-ring-focus"
+                        placeholder="Quantidade"
+                      />
                     </div>
-                  </DialogContent>
-                </Dialog>
+                  </div>
+                </FullScreenModal>
+              )}
+              {/* Modal para redefinir cotas selecionadas */}
+              {showRedefinirModal && (
+                <FullScreenModal
+                  isOpen={showRedefinirModal}
+                  onClose={() => setShowRedefinirModal(false)}
+                  title="Redefinir Cotas Selecionadas"
+                  actions={
+                    <>
+                      <Button variant="outline" onClick={() => setShowRedefinirModal(false)} className="brand-radius">Cancelar</Button>
+                      <Button onClick={redefinirSelecionadas} variant="brandPrimaryToSecondary" className="brand-radius">Trocar</Button>
+                    </>
+                  }
+                >
+                  <div className="space-y-4">
+                    <select
+                      value={redefinirProdutoId}
+                      onChange={e => setRedefinirProdutoId(e.target.value)}
+                      className="w-full border p-2 bg-background dark:bg-[#131313] text-foreground dark:text-white brand-radius field-secondary-focus no-ring-focus"
+                    >
+                      <option value="">Selecione o novo produto</option>
+                      {availableProducts.map(p => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={redefinirQuantidade}
+                      onChange={e => setRedefinirQuantidade(Number(e.target.value))}
+                      className="w-full bg-background dark:bg-[#131313] border-border text-foreground dark:text-white brand-radius field-secondary-focus no-ring-focus"
+                      placeholder="Quantidade"
+                    />
+                  </div>
+                </FullScreenModal>
               )}
               
               {/* Botões de ação embaixo da montagem de cotas */}
               <div className="flex flex-col md:flex-row gap-2 mt-6">
                 {/* Botão Gerar proposta só aparece se houver cotas e não estiver salvando */}
                 {cotas.length > 0 && !saving && (
-                  <Button onClick={() => setShowComingSoon(true)} className="flex-1 bg-green-600 hover:bg-green-700 text-white">Gerar proposta</Button>
+                  <Button onClick={() => setShowComingSoon(true)} className="flex-1 bg-green-600 hover:bg-green-700 text-white brand-radius">Gerar proposta</Button>
                 )}
-                <Button onClick={redefinirMontagem} variant="outline" className="flex-1">Redefinir</Button>
-                <Button onClick={salvarMontagem} disabled={saving} className="flex-1 bg-[#AA715A] text-white hover:bg-[#AA715A]/80 border-none">{saving ? 'Salvando...' : 'Salvar'}</Button>
+                <Button onClick={redefinirMontagem} variant="outline" className="flex-1 brand-radius">Redefinir</Button>
+                <Button onClick={salvarMontagem} disabled={saving} variant="brandPrimaryToSecondary" className="flex-1 brand-radius">{saving ? 'Salvando...' : 'Salvar'}</Button>
               </div>
             </div>
           </CardContent>

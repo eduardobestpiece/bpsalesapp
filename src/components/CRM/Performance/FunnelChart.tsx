@@ -48,14 +48,13 @@ interface FunnelComparisonChartProps {
 }
 
 export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filterType?: 'user' | 'team', filterId?: string, users?: any[], teams?: any[], onCompare?: (compareId: string) => void, compareData?: any, compareStages?: any[] }> = ({ stages, weeklyStages, numWeeks, vendasPeriodo, vendasSemanal, ticketMedioPeriodo, ticketMedioSemanal, recomendacoesPeriodo, recomendacoesSemanal, etapaRecomendacoesPeriodo, etapaRecomendacoesSemanal, mediaRecomendacoesPeriodo, mediaRecomendacoesSemanal, somaPrimeiraEtapaPeriodo, somaUltimaEtapaPeriodo, somaPrimeiraEtapaSemanal, somaUltimaEtapaSemanal, numIndicadores, comparativo, filterType, filterId, users = [], teams = [], onCompare, compareData, periodoLabel, compareStages = [], funnelName }) => {
-  // Função para calcular largura relativa das etapas (cada faixa menor que a anterior)
+  // Largura relativa das etapas com redução uniforme (linear) do topo até a base
   const getWidth = (idx: number) => {
-    // Se a última faixa tiver nome grande, aumentar largura de todas proporcionalmente
-    const lastNameLength = stages[stages.length - 1]?.name.length || 0;
-    const extra = lastNameLength > 18 ? 20 : lastNameLength > 12 ? 10 : 0;
-    const base = 100 + extra;
-    const step = 12;
-    return `${base - idx * step}%`;
+    const minPercent = 55; // largura mínima da última faixa
+    const total = Math.max(stages.length, 2);
+    const step = (100 - minPercent) / (total - 1);
+    const width = 100 - (idx * step);
+    return `${width}%`;
   };
 
   // Todas as faixas com a mesma altura
@@ -80,7 +79,7 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
   // Função auxiliar para card de métrica com fontes menores
   function MetricCard({ label, value, cardClass }: { label: string; value: string | number; cardClass?: string }) {
     return (
-      <div className={`rounded-2xl border border-border bg-card px-4 py-3 flex flex-col items-center shadow-sm mb-2 ${cardClass || ''}`}>
+      <div className={`border bg-card px-4 py-3 flex flex-col items-center shadow-sm mb-2 brand-radius ${cardClass || ''}`} style={{ borderColor: '#333333' }}>
         <span className="text-xs text-muted-foreground mb-1 font-medium">{label}</span>
         <span className="text-lg font-bold tracking-tight">{value}</span>
       </div>
@@ -94,11 +93,11 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
         {/* Esquerda: Dados semanais */}
         <div className="md:basis-1/5 w-full md:w-1/5 flex flex-col gap-2 min-w-[140px] items-start">
           <span className="text-xs text-muted-foreground font-semibold mb-0.5">Dados semanais</span>
-          <MetricCard label="Conversão do funil (semana)" value={`${((somaUltimaEtapaPeriodo / somaPrimeiraEtapaPeriodo) / numWeeks * 100 || 0).toFixed(1)}%`} cardClass="w-full min-w-[160px]" />
-          <MetricCard label="Valor das vendas (semana)" value={vendasSemanal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} cardClass="w-full min-w-[160px]" />
-          <MetricCard label="Ticket Médio (semana)" value={ticketMedioSemanal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} cardClass="w-full min-w-[160px]" />
-          <MetricCard label="Média de Recomendações (semana)" value={etapaRecomendacoesSemanal > 0 ? (recomendacoesSemanal / etapaRecomendacoesSemanal).toFixed(2) : '0'} cardClass="w-full min-w-[160px]" />
-          <MetricCard label="Recomendações (semana)" value={recomendacoesSemanal.toFixed(0)} cardClass="w-full min-w-[160px]" />
+          <MetricCard label="Conversão do funil (semana)" value={`${((somaUltimaEtapaPeriodo / somaPrimeiraEtapaPeriodo) / numWeeks * 100 || 0).toFixed(1)}%`} cardClass="w-full" />
+          <MetricCard label="Valor das vendas (semana)" value={vendasSemanal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} cardClass="w-full" />
+          <MetricCard label="Ticket Médio (semana)" value={ticketMedioSemanal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} cardClass="w-full" />
+          <MetricCard label="Média de Recomendações (semana)" value={etapaRecomendacoesSemanal > 0 ? (recomendacoesSemanal / etapaRecomendacoesSemanal).toFixed(2) : '0'} cardClass="w-full" />
+          <MetricCard label="Recomendações (semana)" value={recomendacoesSemanal.toFixed(0)} cardClass="w-full" />
         </div>
         {/* Centro: Título + Gráfico do funil */}
         <div className="md:basis-3/5 w-full md:w-3/5 flex flex-col items-center justify-start flex-1">
@@ -121,14 +120,17 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
                     >
                       {/* Faixa do funil */}
                       <div
-                        className={`transition-all duration-300 bg-gradient-to-r ${idx === stages.length - 1 ? 'from-[#21C55E] to-[#0dad48]' : funnelColors[idx % funnelColors.length]} shadow-lg flex items-center justify-between px-6`}
+                        className={`transition-all duration-300 shadow-lg flex items-center justify-between px-6`}
                         style={{
                           width: getWidth(idx),
                           height: fixedHeight,
                           maxWidth: '100%',
                           marginBottom: idx < stages.length - 1 ? 4 : 0,
-                          borderRadius: idx === 0 ? '1rem 1rem 0.5rem 0.5rem' : idx === stages.length - 1 ? '0 0 1rem 1rem' : '0.5rem',
+                          borderRadius: 'var(--brand-radius)',
                           boxShadow: '0 4px 16px 0 rgba(0,0,0,0.08)',
+                          background: idx === stages.length - 1
+                            ? 'linear-gradient(90deg, #21C55E, #0dad48)'
+                            : 'linear-gradient(90deg, var(--brand-primary), var(--brand-secondary))',
                         }}
                       >
                         {/* Esquerda dentro da faixa: valor semanal da etapa */}
@@ -150,11 +152,11 @@ export const FunnelComparisonChart: React.FC<FunnelComparisonChartProps & { filt
         {/* Direita: Dados do Período */}
         <div className="md:basis-1/5 w-full md:w-1/5 flex flex-col gap-2 min-w-[140px] items-end">
           <span className="text-xs text-muted-foreground font-semibold mb-0.5">Dados do Período</span>
-          <MetricCard label="Conversão do funil (período)" value={`${(somaUltimaEtapaPeriodo / somaPrimeiraEtapaPeriodo * 100 || 0).toFixed(1)}%`} cardClass="w-full min-w-[160px]" />
-          <MetricCard label="Valor das vendas (período)" value={vendasPeriodo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} cardClass="w-full min-w-[160px]" />
-          <MetricCard label="Ticket Médio (período)" value={ticketMedioPeriodo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} cardClass="w-full min-w-[160px]" />
-          <MetricCard label="Média de Recomendações (período)" value={etapaRecomendacoesPeriodo > 0 ? (recomendacoesPeriodo / etapaRecomendacoesPeriodo).toFixed(2) : '0'} cardClass="w-full min-w-[160px]" />
-          <MetricCard label="Recomendações (período)" value={recomendacoesPeriodo.toFixed(0)} cardClass="w-full min-w-[160px]" />
+          <MetricCard label="Conversão do funil (período)" value={`${(somaUltimaEtapaPeriodo / somaPrimeiraEtapaPeriodo * 100 || 0).toFixed(1)}%`} cardClass="w-full" />
+          <MetricCard label="Valor das vendas (período)" value={vendasPeriodo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} cardClass="w-full" />
+          <MetricCard label="Ticket Médio (período)" value={ticketMedioPeriodo.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })} cardClass="w-full" />
+          <MetricCard label="Média de Recomendações (período)" value={etapaRecomendacoesPeriodo > 0 ? (recomendacoesPeriodo / etapaRecomendacoesPeriodo).toFixed(2) : '0'} cardClass="w-full" />
+          <MetricCard label="Recomendações (período)" value={recomendacoesPeriodo.toFixed(0)} cardClass="w-full" />
         </div>
       </div>
     </div>

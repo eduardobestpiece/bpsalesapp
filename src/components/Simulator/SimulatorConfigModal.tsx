@@ -456,8 +456,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
       hasChanges={hasChanges}
       actions={
         <>
-          {/* Removido botão Redefinir e Aplicar */}
-          <Button onClick={handleSaveAndApply}>
+          <Button onClick={handleSaveAndApply} variant="brandPrimaryToSecondary" className="brand-radius">
             Salvar e Aplicar
           </Button>
         </>
@@ -471,12 +470,12 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
               value={selectedAdministratorId || ''}
               onValueChange={onChangeAdministrator}
             >
-            <SelectTrigger className="w-full bg-[#2A2A2A] border-gray-600 text-white hover:bg-[#3A3A3A] focus:ring-2 focus:ring-blue-500">
+            <SelectTrigger className="w-full brand-radius select-trigger-brand">
                 <SelectValue placeholder="Selecione uma administradora..." />
               </SelectTrigger>
-            <SelectContent className="bg-[#2A2A2A] border-gray-600">
+            <SelectContent>
                 {administrators.map((admin) => (
-                <SelectItem key={admin.id} value={admin.id} className="text-white hover:bg-[#3A3A3A]">
+                <SelectItem key={admin.id} value={admin.id} className="dropdown-item-brand">
                   {admin.name}
                 </SelectItem>
                 ))}
@@ -491,12 +490,12 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
               value={selectedCreditType || ''}
               onValueChange={onChangeCreditType}
             >
-            <SelectTrigger className="w-full bg-[#2A2A2A] border-gray-600 text-white hover:bg-[#3A3A3A] focus:ring-2 focus:ring-blue-500">
+            <SelectTrigger className="w-full brand-radius select-trigger-brand">
               <SelectValue placeholder="Selecione um tipo de crédito..." />
               </SelectTrigger>
-            <SelectContent className="bg-[#2A2A2A] border-gray-600">
+            <SelectContent>
                 {creditTypes.map((type) => (
-                <SelectItem key={type} value={type} className="text-white hover:bg-[#3A3A3A]">
+                <SelectItem key={type} value={type} className="dropdown-item-brand">
                     {translateCreditType(type)}
                   </SelectItem>
                 ))}
@@ -511,15 +510,15 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
             value={localInstallmentType}
             onValueChange={onChangeInstallmentType}
             >
-            <SelectTrigger className="w-full bg-[#2A2A2A] border-gray-600 text-white hover:bg-[#3A3A3A] focus:ring-2 focus:ring-blue-500">
+            <SelectTrigger className="w-full brand-radius select-trigger-brand">
               <SelectValue placeholder="Selecione o tipo de parcela..." />
               </SelectTrigger>
-            <SelectContent className="bg-[#2A2A2A] border-gray-600">
-              <SelectItem value="full" className="text-white hover:bg-[#3A3A3A]">
+            <SelectContent>
+              <SelectItem value="full" className="dropdown-item-brand">
                 Parcela Cheia
               </SelectItem>
               {reducoesParcela.map((reducao) => (
-                <SelectItem key={reducao.id} value={reducao.id} className="text-white hover:bg-[#3A3A3A]">
+                <SelectItem key={reducao.id} value={reducao.id} className="dropdown-item-brand">
                   {reducao.name}
                 </SelectItem>
               ))}
@@ -536,12 +535,12 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
               value={localTerm.toString()}
               onValueChange={onChangeTerm}
             >
-              <SelectTrigger className="w-full bg-[#2A2A2A] border-gray-600 text-white hover:bg-[#3A3A3A] focus:ring-2 focus:ring-blue-500">
+              <SelectTrigger className="w-full brand-radius select-trigger-brand">
                 <SelectValue placeholder="Selecione o número de parcelas..." />
               </SelectTrigger>
-              <SelectContent className="bg-[#2A2A2A] border-gray-600">
+              <SelectContent>
                 {installmentTypes.map((type) => (
-                  <SelectItem key={type.id} value={type.installment_count.toString()} className="text-white hover:bg-[#3A3A3A]">
+                  <SelectItem key={type.id} value={type.installment_count.toString()} className="dropdown-item-brand">
                     {type.installment_count}
                   </SelectItem>
                 ))}
@@ -558,7 +557,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
               onChange={onChangeContemplationMonth}
               placeholder="6"
               min={1}
-              className="w-full bg-[#2A2A2A] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
+              className="w-full brand-radius field-secondary-focus no-ring-focus"
             />
           </div>
 
@@ -573,7 +572,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
               min={0}
               max={100}
               step={0.1}
-              className="w-full bg-[#2A2A2A] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
+              className="w-full brand-radius field-secondary-focus no-ring-focus"
             />
           </div>
         </div>
@@ -587,14 +586,14 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
               value={localSearchType}
               onValueChange={onChangeSearchType}
             >
-              <SelectTrigger className="w-full bg-[#2A2A2A] border-gray-600 text-white hover:bg-[#3A3A3A] focus:ring-2 focus:ring-blue-500">
+              <SelectTrigger className="w-full brand-radius select-trigger-brand">
                 <SelectValue placeholder="Selecione a modalidade..." />
               </SelectTrigger>
-              <SelectContent className="bg-[#2A2A2A] border-gray-600">
-                <SelectItem value="contribution" className="text-white hover:bg-[#3A3A3A]">
+              <SelectContent>
+                <SelectItem value="contribution" className="dropdown-item-brand">
                   Aporte
                 </SelectItem>
-                <SelectItem value="credit" className="text-white hover:bg-[#3A3A3A]">
+                <SelectItem value="credit" className="dropdown-item-brand">
                   Crédito
                 </SelectItem>
               </SelectContent>
@@ -609,7 +608,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
               value={localValue}
               onChange={onChangeValue}
               placeholder="0,00"
-              className="w-full bg-[#2A2A2A] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
+              className="w-full brand-radius field-secondary-focus no-ring-focus"
             />
           </div>
         </div>
@@ -624,7 +623,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
               value={localAdminTaxPercent}
               onChange={onChangeAdminTax}
               placeholder="0,00"
-              className="w-full bg-[#2A2A2A] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
+              className="w-full brand-radius field-secondary-focus no-ring-focus"
             />
           </div>
 
@@ -636,7 +635,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
               value={localReserveFundPercent}
               onChange={onChangeReserveFund}
               placeholder="0,00"
-              className="w-full bg-[#2A2A2A] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
+              className="w-full brand-radius field-secondary-focus no-ring-focus"
             />
           </div>
 
@@ -648,7 +647,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
               value={localAnnualUpdateRate}
               onChange={onChangeAnnualUpdate}
               placeholder="6,00"
-              className="w-full bg-[#2A2A2A] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
+              className="w-full brand-radius field-secondary-focus no-ring-focus"
             />
           </div>
         </div>

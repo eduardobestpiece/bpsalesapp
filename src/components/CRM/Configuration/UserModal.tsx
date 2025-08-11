@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FullScreenModal } from '@/components/ui/FullScreenModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -161,15 +162,13 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>
-            {user ? 'Editar Usuário' : 'Novo Usuário'}
-          </DialogTitle>
-        </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <FullScreenModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={user ? 'Editar Usuário' : 'Novo Usuário'}
+      actions={<Button type="submit" form="user-form" variant="brandPrimaryToSecondary" className="brand-radius">{isLoading ? 'Salvando...' : (user ? 'Atualizar' : 'Convidar')}</Button>}
+    >
+        <form id="user-form" onSubmit={handleSubmit} className="space-y-4">
           {/* Seleção de empresa */}
           {crmUser?.role === 'master' && (
             <div>
@@ -180,7 +179,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
                 disabled={isLoading || companiesLoading}
                 required
               >
-                <SelectTrigger>
+                <SelectTrigger className="select-trigger-brand brand-radius">
                   <SelectValue placeholder="Selecione a empresa" />
                 </SelectTrigger>
                 <SelectContent>
@@ -188,7 +187,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
                     <div className="px-4 py-2 text-muted-foreground text-sm">Carregando empresas...</div>
                   ) : companies.length > 0 ? (
                     companies.map((c: any) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                      <SelectItem key={c.id} value={c.id} className="dropdown-item-brand">{c.name}</SelectItem>
                     ))
                   ) : (
                     <div className="px-4 py-2 text-muted-foreground text-sm">Nenhuma empresa encontrada</div>
@@ -207,6 +206,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
                   onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
                   required
                   disabled={isLoading}
+                  className="campo-brand brand-radius"
                 />
               </div>
               <div>
@@ -217,6 +217,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
                   onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
                   required
                   disabled={isLoading}
+                  className="campo-brand brand-radius"
                 />
               </div>
             </div>
@@ -230,6 +231,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
               onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
               required
               disabled={isLoading || !!user}
+              className="campo-brand brand-radius"
             />
             {user && (
               <p className="text-xs text-muted-foreground mt-1">
@@ -246,6 +248,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
                 onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
                 placeholder="(11) 99999-9999"
                 disabled={isLoading}
+                className="campo-brand brand-radius"
               />
             </div>
           )}
@@ -258,14 +261,14 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
               disabled={isLoading}
               required
             >
-              <SelectTrigger>
+              <SelectTrigger className="select-trigger-brand brand-radius">
                 <SelectValue placeholder="Selecione o papel" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="user">Usuário</SelectItem>
-                {canCreateAdmin && <SelectItem value="admin">Administrador</SelectItem>}
-                {canCreateSubMaster && <SelectItem value="submaster">SubMaster (visualização total, sem edição)</SelectItem>}
-                {crmUser?.role === 'master' && <SelectItem value="master">Master</SelectItem>}
+                <SelectItem value="user" className="dropdown-item-brand">Usuário</SelectItem>
+                {canCreateAdmin && <SelectItem value="admin" className="dropdown-item-brand">Administrador</SelectItem>}
+                {canCreateSubMaster && <SelectItem value="submaster" className="dropdown-item-brand">SubMaster (visualização total, sem edição)</SelectItem>}
+                {crmUser?.role === 'master' && <SelectItem value="master" className="dropdown-item-brand">Master</SelectItem>}
                 {/* Remover opção de líder do modal de usuário */}
               </SelectContent>
             </Select>
@@ -280,13 +283,13 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
                 disabled={isLoading}
                 required
               >
-                <SelectTrigger>
+                <SelectTrigger className="select-trigger-brand brand-radius">
                   <SelectValue placeholder="Selecione os funis" />
                 </SelectTrigger>
                 <SelectContent>
                   {funnels.length > 0 ? (
                     funnels.map((f: any) => (
-                      <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>
+                      <SelectItem key={f.id} value={f.id} className="dropdown-item-brand">{f.name}</SelectItem>
                     ))
                   ) : (
                     <div className="px-4 py-2 text-muted-foreground text-sm">Nenhum funil encontrado</div>
@@ -295,16 +298,8 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
               </Select>
             </div>
           )}
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Salvando...' : (user ? 'Atualizar' : 'Convidar Usuário')}
-            </Button>
-          </div>
+          <div className="flex justify-end space-x-2 pt-4"></div>
         </form>
-      </DialogContent>
-    </Dialog>
+    </FullScreenModal>
   );
 };

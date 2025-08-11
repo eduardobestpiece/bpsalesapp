@@ -10,7 +10,7 @@ import { useCrmUsers } from '@/hooks/useCrmUsers';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
 import { Calendar } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FullScreenModal } from '@/components/ui/FullScreenModal';
 
 interface PerformanceFiltersProps {
   onFiltersChange: (filters: {
@@ -30,10 +30,12 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
   const { crmUser, hasPermission } = useCrmAuth();
   const { selectedCompanyId } = useCompany();
   const [selectedFunnel, setSelectedFunnel] = useState('');
+  const [funnelTouched, setFunnelTouched] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState('');
   const [selectedUser, setSelectedUser] = useState('');
   const [showPeriodModal, setShowPeriodModal] = useState(false);
   const [customPeriod, setCustomPeriod] = useState({ start: '', end: '', month: '', year: '' });
+  const hasPeriodSelection = !!(customPeriod.start || customPeriod.end || customPeriod.month || customPeriod.year);
 
   const { data: funnels = [] } = useFunnels(selectedCompanyId);
   const { data: teams = [] } = useTeams();
@@ -165,13 +167,13 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div>
             <Label htmlFor="funnel">Funil *</Label>
-            <Select value={selectedFunnel} onValueChange={setSelectedFunnel}>
-              <SelectTrigger>
+            <Select value={selectedFunnel} onValueChange={(val) => { setSelectedFunnel(val); setFunnelTouched(true); }}>
+              <SelectTrigger className="brand-radius select-trigger-brand field-secondary-focus no-ring-focus" style={{ borderColor: funnelTouched ? 'var(--brand-secondary)' : undefined }}>
                 <SelectValue placeholder="Selecione o funil" />
               </SelectTrigger>
               <SelectContent>
                 {funnels.map(funnel => (
-                  <SelectItem key={funnel.id} value={funnel.id}>
+                  <SelectItem key={funnel.id} value={funnel.id} className="dropdown-item-brand">
                     {funnel.name}
                   </SelectItem>
                 ))}
@@ -184,18 +186,18 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
             <div>
               <Label htmlFor="team">Equipe</Label>
               <Select value={selectedTeam} onValueChange={setSelectedTeam}>
-                <SelectTrigger>
+                <SelectTrigger className="brand-radius select-trigger-brand field-secondary-focus no-ring-focus" style={{ borderColor: selectedTeam ? 'var(--brand-secondary)' : undefined }}>
                   <SelectValue placeholder="Selecione a equipe" />
                 </SelectTrigger>
                 <SelectContent>
                   {/* Opção "Todas as equipes" só aparece se o usuário tem acesso a mais de uma equipe */}
                   {availableTeams().length > 1 && (
-                    <SelectItem value="all">
+                    <SelectItem value="all" className="dropdown-item-brand">
                       Todas as equipes
                     </SelectItem>
                   )}
                   {availableTeams().map(team => (
-                    <SelectItem key={team.id} value={team.id}>
+                    <SelectItem key={team.id} value={team.id} className="dropdown-item-brand">
                       {team.name}
                     </SelectItem>
                   ))}
@@ -209,13 +211,13 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
             <div>
               <Label htmlFor="user">Usuário</Label>
               <Select value={selectedUser} onValueChange={setSelectedUser}>
-                <SelectTrigger>
+                <SelectTrigger className="brand-radius select-trigger-brand field-secondary-focus no-ring-focus" style={{ borderColor: selectedUser ? 'var(--brand-secondary)' : undefined }}>
                   <SelectValue placeholder="Selecione o usuário" />
                 </SelectTrigger>
                 <SelectContent>
                   {/* Opção "Todos os usuários" baseada no contexto */}
                   {getUserOptions().length > 1 && (
-                    <SelectItem value="all">
+                    <SelectItem value="all" className="dropdown-item-brand">
                       <div className="flex items-center justify-between w-full">
                         <span>Todos os usuários</span>
                         <span className="text-muted-foreground text-xs ml-2">
@@ -225,7 +227,7 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
                     </SelectItem>
                   )}
                   {getUserOptions().map(user => (
-                    <SelectItem key={user.id} value={user.id}>
+                    <SelectItem key={user.id} value={user.id} className="dropdown-item-brand">
                       <div className="flex items-center justify-between w-full">
                         <span>{user.first_name} {user.last_name}</span>
                         <span className="text-muted-foreground text-xs ml-2">
@@ -240,9 +242,17 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
           )}
 
           {/* Substituir select de período por ícone de calendário */}
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-1 mt-1">
             <Label>Período</Label>
-            <Button id="period" name="period" variant="outline" type="button" onClick={() => setShowPeriodModal(true)} className="flex items-center gap-2">
+            <Button
+              id="period"
+              name="period"
+              variant="outline"
+              type="button"
+              onClick={() => setShowPeriodModal(true)}
+              className="w-full h-10 text-sm flex items-center gap-2 brand-radius field-secondary-focus no-ring-focus hover:bg-[var(--brand-secondary)] active:bg-[var(--brand-secondary)] focus:bg-[var(--brand-secondary)]"
+              style={{ borderColor: (hasPeriodSelection || showPeriodModal) ? 'var(--brand-secondary)' : undefined, backgroundColor: showPeriodModal ? 'var(--brand-secondary)' : undefined }}
+            >
               <Calendar className="w-4 h-4" />
               <span>Selecionar período</span>
             </Button>
@@ -255,49 +265,52 @@ export const PerformanceFilters = ({ onFiltersChange }: PerformanceFiltersProps)
           <Button 
             onClick={handleApplyFilters}
             disabled={!selectedFunnel || selectedFunnel === ''}
+            className="brand-radius"
+            variant="brandPrimaryToSecondary"
           >
             Aplicar Filtros
           </Button>
         </div>
 
         {/* Modal customizado de período */}
-        <Dialog open={showPeriodModal} onOpenChange={setShowPeriodModal}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Selecionar Período</DialogTitle>
-            </DialogHeader>
-            <form className="space-y-4">
-              <div className="flex flex-col gap-2">
-                <label htmlFor="startDate">Data início</label>
-                <input type="date" id="startDate" name="startDate" value={customPeriod.start} onChange={e => setCustomPeriod(p => ({ ...p, start: e.target.value }))} className="border border-input bg-background text-foreground rounded px-2 py-1 focus:ring-2 focus:ring-ring focus:ring-offset-2" />
-                <label htmlFor="endDate">Data fim</label>
-                <input type="date" id="endDate" name="endDate" value={customPeriod.end} onChange={e => setCustomPeriod(p => ({ ...p, end: e.target.value }))} className="border border-input bg-background text-foreground rounded px-2 py-1 focus:ring-2 focus:ring-ring focus:ring-offset-2" />
-                <label htmlFor="monthSelect">Mês</label>
-                <select id="monthSelect" name="monthSelect" value={customPeriod.month} onChange={e => setCustomPeriod(p => ({ ...p, month: e.target.value }))} className="border border-input bg-background text-foreground rounded px-2 py-1 focus:ring-2 focus:ring-ring focus:ring-offset-2">
-                  <option value="">Todos</option>
-                  {[...Array(12)].map((_, i) => (
-                    <option key={i+1} value={i+1}>{new Date(2000, i, 1).toLocaleString('pt-BR', { month: 'long' })}</option>
-                  ))}
-                </select>
-                <label htmlFor="yearSelect">Ano</label>
-                <select id="yearSelect" name="yearSelect" value={customPeriod.year} onChange={e => setCustomPeriod(p => ({ ...p, year: e.target.value }))} className="border border-input bg-background text-foreground rounded px-2 py-1 focus:ring-2 focus:ring-ring focus:ring-offset-2">
-                  <option value="">Todos</option>
-                  {Array.from({length: 5}, (_, i) => new Date().getFullYear() - i).map(y => (
-                    <option key={y} value={y}>{y}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex gap-2 justify-end pt-2">
-                <Button type="button" variant="outline" onClick={() => setCustomPeriod({ start: '', end: '', month: '', year: '' })}>
-                  Limpar
-                </Button>
-                <Button type="button" onClick={() => setShowPeriodModal(false)}>
-                  Confirmar
-                </Button>
-              </div>
-            </form>
-          </DialogContent>
-        </Dialog>
+        <FullScreenModal
+          isOpen={showPeriodModal}
+          onClose={() => setShowPeriodModal(false)}
+          title="Selecionar Período"
+          actions={
+            <>
+              <Button type="button" variant="outline" className="brand-radius" onClick={() => setCustomPeriod({ start: '', end: '', month: '', year: '' })}>
+                Limpar
+              </Button>
+              <Button type="button" className="brand-radius" variant="brandPrimaryToSecondary" onClick={() => setShowPeriodModal(false)}>
+                Confirmar
+              </Button>
+            </>
+          }
+        >
+          <form className="space-y-4">
+            <div className="flex flex-col gap-2">
+              <label htmlFor="startDate">Data início</label>
+              <input type="date" id="startDate" name="startDate" value={customPeriod.start} onChange={e => setCustomPeriod(p => ({ ...p, start: e.target.value }))} className="border border-input bg-background text-foreground rounded px-2 py-1 brand-radius field-secondary-focus no-ring-focus" />
+              <label htmlFor="endDate">Data fim</label>
+              <input type="date" id="endDate" name="endDate" value={customPeriod.end} onChange={e => setCustomPeriod(p => ({ ...p, end: e.target.value }))} className="border border-input bg-background text-foreground rounded px-2 py-1 brand-radius field-secondary-focus no-ring-focus" />
+              <label htmlFor="monthSelect">Mês</label>
+              <select id="monthSelect" name="monthSelect" value={customPeriod.month} onChange={e => setCustomPeriod(p => ({ ...p, month: e.target.value }))} className="border border-input bg-background text-foreground rounded px-2 py-1 brand-radius field-secondary-focus no-ring-focus">
+                <option value="">Todos</option>
+                {[...Array(12)].map((_, i) => (
+                  <option key={i+1} value={i+1}>{new Date(2000, i, 1).toLocaleString('pt-BR', { month: 'long' })}</option>
+                ))}
+              </select>
+              <label htmlFor="yearSelect">Ano</label>
+              <select id="yearSelect" name="yearSelect" value={customPeriod.year} onChange={e => setCustomPeriod(p => ({ ...p, year: e.target.value }))} className="border border-input bg-background text-foreground rounded px-2 py-1 brand-radius field-secondary-focus no-ring-focus">
+                <option value="">Todos</option>
+                {Array.from({length: 5}, (_, i) => new Date().getFullYear() - i).map(y => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+            </div>
+          </form>
+        </FullScreenModal>
       </CardContent>
     </Card>
   );

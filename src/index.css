@@ -145,3 +145,150 @@ All colors MUST be HSL.
     background-clip: text;
   }
 }
+
+@layer components {
+  /* Utilitários reutilizáveis de branding */
+  .brand-radius {
+    border-radius: var(--brand-radius, 8px) !important;
+  }
+
+  /* Botão com fundo primário que muda para secundário em hover/active/focus */
+  .btn-primary-to-secondary {
+    background-color: var(--brand-primary, #A86F57);
+    color: #fff;
+    border-radius: var(--brand-radius, 8px);
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  .btn-primary-to-secondary:hover,
+  .btn-primary-to-secondary:active,
+  .btn-primary-to-secondary:focus {
+    background-color: var(--brand-secondary, #6B7280);
+    color: #fff;
+  }
+
+  /* Botão outline que aplica secundária no hover/active/focus */
+  .btn-outline-secondary-hover {
+    border-radius: var(--brand-radius, 8px);
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+  .btn-outline-secondary-hover:hover,
+  .btn-outline-secondary-hover:active,
+  .btn-outline-secondary-hover:focus {
+    background-color: var(--brand-secondary, #6B7280);
+    border-color: var(--brand-secondary, #6B7280);
+    color: #fff;
+  }
+
+  /* Campos com foco na cor secundária, sem ring duplicado */
+  .field-secondary-focus {
+    border-radius: var(--brand-radius, 8px);
+  }
+  .field-secondary-focus:focus,
+  .field-secondary-focus:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: var(--brand-secondary) !important;
+  }
+
+  .no-ring-focus:focus,
+  .no-ring-focus:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Trigger de Select com foco/aberto na cor secundária */
+  .select-trigger-secondary {
+    border-radius: var(--brand-radius, 8px);
+  }
+  .select-trigger-secondary:focus,
+  .select-trigger-secondary:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: var(--brand-secondary) !important;
+  }
+  .select-trigger-secondary[data-state='open'] {
+    border-color: var(--brand-secondary) !important;
+  }
+
+  /* Itens do dropdown com secundária em destaque/selecionado */
+  .dropdown-item-secondary[data-highlighted],
+  .dropdown-item-secondary[data-state='checked'] {
+    background-color: var(--brand-secondary) !important;
+    color: #fff !important;
+  }
+
+  /* ===== Modelos de estilo (Português) ===== */
+  /* Botão primário */
+  .btn-primario {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 2.5rem; /* mesma altura */
+    min-height: 2.5rem;
+    padding: 0 1rem;
+    background-color: var(--brand-primary, #A86F57);
+    color: #fff;
+    border: 1px solid transparent;
+    border-radius: var(--brand-radius, 8px);
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+  .btn-primario:hover,
+  .btn-primario:active,
+  .btn-primario:focus {
+    background-color: var(--brand-secondary, #6B7280);
+    color: #fff;
+    border-color: var(--brand-secondary, #6B7280);
+  }
+
+  /* Outros botões */
+  .btn-outros {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 2.5rem; /* mesma altura */
+    min-height: 2.5rem;
+    padding: 0 1rem;
+    background-color: transparent;
+    color: inherit;
+    border: 1px solid var(--border);
+    border-radius: var(--brand-radius, 8px);
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  }
+  .btn-outros:hover,
+  .btn-outros:active,
+  .btn-outros:focus {
+    background-color: var(--brand-secondary, #6B7280);
+    color: #fff;
+    border-color: var(--brand-secondary, #6B7280);
+  }
+
+  /* Campos */
+  .campo-brand {
+    border-radius: var(--brand-radius, 8px);
+  }
+  .campo-brand:focus,
+  .campo-brand:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: var(--brand-secondary) !important;
+  }
+  .select-trigger-brand {
+    border-radius: var(--brand-radius, 8px);
+  }
+  .select-trigger-brand:focus,
+  .select-trigger-brand:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: var(--brand-secondary) !important;
+  }
+  .select-trigger-brand[data-state='open'] {
+    border-color: var(--brand-secondary) !important;
+  }
+  .dropdown-item-brand[data-highlighted],
+  .dropdown-item-brand[data-state='checked'] {
+    background-color: var(--brand-secondary) !important;
+    color: #fff !important;
+  }
+}

@@ -1,4 +1,5 @@
 {
+  "name": "consorcio-patrimonio-simulador",
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
   ]

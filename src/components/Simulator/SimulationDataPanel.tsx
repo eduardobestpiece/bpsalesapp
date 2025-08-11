@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { BidTypeSelector } from './BidTypeSelector';
 import { DollarSign, Target, TrendingUp, Settings } from 'lucide-react';
 import { useCompany } from '@/contexts/CompanyContext';
+import { simInfoLog } from '@/lib/devlog';
 
 interface SimulationData {
   administrator: string;
@@ -55,12 +56,12 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
   useEffect(() => {
     const fetchReductions = async () => {
       if (!data.term || !data.administrator || data.administrator.trim() === '') {
-        console.log('Dados insuficientes para buscar reduções:', { term: data.term, administrator: data.administrator });
+        simInfoLog('Dados insuficientes para buscar reduções:', { term: data.term, administrator: data.administrator });
         setReductionOptions([]);
         return;
       }
       
-      console.log('Buscando reduções para:', { administrator: data.administrator, term: data.term });
+      simInfoLog('Buscando reduções para:', { administrator: data.administrator, term: data.term });
       
       const { data: installmentTypes } = await supabase
         .from('installment_types')
@@ -97,11 +98,11 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
   useEffect(() => {
     const fetchInstallmentTypeDetails = async () => {
       if (!data.term || !data.administrator || data.administrator.trim() === '') {
-        console.log('Dados insuficientes para buscar detalhes do installment type:', { term: data.term, administrator: data.administrator });
+        simInfoLog('Dados insuficientes para buscar detalhes do installment type:', { term: data.term, administrator: data.administrator });
         return;
       }
       
-      console.log('Buscando detalhes do installment type para:', { administrator: data.administrator, term: data.term });
+      simInfoLog('Buscando detalhes do installment type para:', { administrator: data.administrator, term: data.term });
       
       const { data: installmentTypes } = await supabase
         .from('installment_types')
@@ -122,7 +123,7 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
 
   const fetchAdministrators = async () => {
     try {
-      console.log('Buscando administradoras para company_id:', selectedCompanyId);
+      simInfoLog('Buscando administradoras para company_id:', selectedCompanyId);
       
       const { data: adminData, error } = await supabase
         .from('administrators')
@@ -134,11 +135,11 @@ export const SimulationDataPanel = ({ data, onChange }: SimulationDataPanelProps
       if (error) throw error;
       setAdministrators(adminData || []);
       
-      console.log('Administradoras encontradas:', adminData?.length || 0);
+      simInfoLog('Administradoras encontradas:', adminData?.length || 0);
       
       // Se não há administradora selecionada e há administradoras disponíveis, selecionar a primeira
       if (!data.administrator && adminData && adminData.length > 0) {
-        console.log('Selecionando primeira administradora:', adminData[0].id);
+        simInfoLog('Selecionando primeira administradora:', adminData[0].id);
         handleChange('administrator', adminData[0].id);
       }
     } catch (error) {

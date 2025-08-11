@@ -25,7 +25,7 @@ interface CapitalGainSectionProps {
 const gray1 = '#ededed';
 const gray2 = '#e5e5e5';
 const fundo = '#131313';
-const marrom = '#A86E57';
+const marrom = getComputedStyle(document.documentElement).getPropertyValue('--brand-primary') || 'var(--brand-primary)';
 
 // CustomTooltip para o gráfico de barras
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -377,12 +377,12 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
               min={0}
               max={100}
               step={0.1}
-              className="w-24"
+              className="w-24 brand-radius field-secondary-focus no-ring-focus"
             />
             <button
               type="button"
               className="ml-2 underline cursor-pointer"
-              style={{ color: '#A86E57' }}
+              style={{ color: 'var(--brand-primary)' }}
               onClick={() => { console.debug('[Sim/Financeira] aplicar agioPercent ->', pendingAgio); setAgioPercent(pendingAgio); }}
             >
               Aplicar
@@ -393,29 +393,29 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
         {/* Cards com os dados */}
         {capitalGainData && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="space-y-2 p-4 rounded-lg border border-[#A86F57]/30 bg-[#1F1F1F]">
-              <Label className="text-sm text-[#A86F57] font-medium">Valor do Ágio</Label>
+            <div className="space-y-2 p-4 rounded-lg border bg-[#1F1F1F] brand-radius" style={{ borderColor: 'var(--brand-secondary)' }}>
+              <Label className="text-sm font-medium" style={{ color: 'var(--brand-primary)' }}>Valor do Ágio</Label>
               <div className="text-2xl font-bold text-white">
                 {formatCurrency(capitalGainData.valorAgio)}
               </div>
             </div>
 
-            <div className="space-y-2 p-4 rounded-lg border border-[#A86F57]/30 bg-[#1F1F1F]">
-              <Label className="text-sm text-[#A86F57] font-medium">Soma das Parcelas Pagas</Label>
+            <div className="space-y-2 p-4 rounded-lg border bg-[#1F1F1F] brand-radius" style={{ borderColor: 'var(--brand-secondary)' }}>
+              <Label className="text-sm font-medium" style={{ color: 'var(--brand-primary)' }}>Soma das Parcelas Pagas</Label>
               <div className="text-2xl font-bold text-white">
                 {formatCurrency(capitalGainData.somaParcelasPagas)}
               </div>
             </div>
 
-            <div className="space-y-2 p-4 rounded-lg border border-[#A86F57]/30 bg-[#1F1F1F]">
-              <Label className="text-sm text-[#A86F57] font-medium">Valor do Lucro</Label>
+            <div className="space-y-2 p-4 rounded-lg border bg-[#1F1F1F] brand-radius" style={{ borderColor: 'var(--brand-secondary)' }}>
+              <Label className="text-sm font-medium" style={{ color: 'var(--brand-primary)' }}>Valor do Lucro</Label>
               <div className="text-2xl font-bold text-white">
                 {formatCurrency(capitalGainData.valorLucro)}
               </div>
             </div>
 
-            <div className="space-y-2 p-4 rounded-lg border border-[#A86F57]/30 bg-[#1F1F1F]">
-              <Label className="text-sm text-[#A86F57] font-medium">ROI da Operação</Label>
+            <div className="space-y-2 p-4 rounded-lg border bg-[#1F1F1F] brand-radius" style={{ borderColor: 'var(--brand-secondary)' }}>
+              <Label className="text-sm font-medium" style={{ color: 'var(--brand-primary)' }}>ROI da Operação</Label>
               <div className="text-2xl font-bold text-white">
                 {capitalGainData.roiOperacao.toFixed(2)}%
               </div>
@@ -431,6 +431,12 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
               <div className="min-w-[980px] h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={capitalGainData.chartData} margin={{ top: 16, right: 40, left: 24, bottom: 50 }}>
+                    <defs>
+                      <linearGradient id="lucroGradient" x1="0" y1="0" x2="1" y2="0">
+                        <stop offset="0%" stopColor="var(--brand-primary)" />
+                        <stop offset="100%" stopColor="var(--brand-secondary)" />
+                      </linearGradient>
+                    </defs>
                     <CartesianGrid strokeDasharray="3 3" className="opacity-30" stroke="rgba(200, 200, 200, 0.3)" />
                     <XAxis
                       dataKey="mes"
@@ -454,7 +460,7 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
                     <Tooltip 
                       content={<CustomTooltip />}
                     />
-                    <Bar dataKey="lucro" fill="#A86F57" />
+                    <Bar dataKey="lucro" fill="url(#lucroGradient)" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>

@@ -173,7 +173,7 @@ export const AdvancedResultsPanel = ({
                           <Line
                             type="monotone"
                             dataKey="postContemplationInstallment"
-                            stroke="#A86F57"
+                            stroke="var(--brand-primary)"
                             strokeWidth={2}
                             name="Parcela Pós-Contemplação"
                           />
@@ -245,7 +245,7 @@ export const AdvancedResultsPanel = ({
                           <XAxis dataKey="month" />
                           <YAxis />
                           <Tooltip formatter={(value) => formatCurrency(Number(value))} />
-                          <Bar dataKey="cashFlow" fill="#A86F57" name="Fluxo de Caixa" />
+                          <Bar dataKey="cashFlow" fill="var(--brand-primary)" name="Fluxo de Caixa" />
                         </BarChart>
                       </ResponsiveContainer>
                     </div>

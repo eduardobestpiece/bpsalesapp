@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useCompany } from '@/contexts/CompanyContext';
+import { FullScreenModal } from '@/components/ui/FullScreenModal';
 const MONTHS = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
@@ -93,14 +94,18 @@ export const CreateAdministratorModal: React.FC<{
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Nova Administradora</DialogTitle>
-          <DialogDescription />
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+    <FullScreenModal
+      isOpen={open}
+      onClose={() => onOpenChange(false)}
+      title="Nova Administradora"
+      actions={
+        <Button type="submit" form="create-admin-form" variant="brandPrimaryToSecondary">
+          Cadastrar
+        </Button>
+      }
+    >
+      <Form {...form}>
+        <form id="create-admin-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="name"
@@ -108,7 +113,7 @@ export const CreateAdministratorModal: React.FC<{
                 <FormItem>
                   <FormLabel>Nome *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Nome da administradora" {...field} />
+                    <Input placeholder="Nome da administradora" {...field} className="brand-radius campo-brand" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -122,13 +127,13 @@ export const CreateAdministratorModal: React.FC<{
                     <FormLabel>Tipo de Atualização *</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="brand-radius select-trigger-brand">
                           <SelectValue placeholder="Selecione o tipo" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                      <SelectItem value="specific_month">Mês específico</SelectItem>
-                      <SelectItem value="after_12_installments">Após 12 parcelas</SelectItem>
+                      <SelectItem value="specific_month" className="dropdown-item-brand">Mês específico</SelectItem>
+                      <SelectItem value="after_12_installments" className="dropdown-item-brand">Após 12 parcelas</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -145,13 +150,13 @@ export const CreateAdministratorModal: React.FC<{
                     <FormLabel>Mês de Atualização</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="brand-radius select-trigger-brand">
                           <SelectValue placeholder="Selecione o mês" />
                         </SelectTrigger>
                     </FormControl>
                       <SelectContent>
                         {MONTHS.map((month) => (
-                          <SelectItem key={month} value={month}>{month}</SelectItem>
+                          <SelectItem key={month} value={month} className="dropdown-item-brand">{month}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -168,7 +173,7 @@ export const CreateAdministratorModal: React.FC<{
                   <FormItem>
                     <FormLabel>Carência (em dias)</FormLabel>
                     <FormControl>
-                      <Input type="number" min="0" step="1" placeholder="0" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} value={field.value || ''} />
+                      <Input type="number" min="0" step="1" placeholder="0" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} value={field.value || ''} className="brand-radius campo-brand" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -182,7 +187,7 @@ export const CreateAdministratorModal: React.FC<{
                   <FormItem>
                   <FormLabel>Máximo embutido (%)</FormLabel>
                   <FormControl>
-                    <Input type="number" min="0" max="100" step="0.01" placeholder="0.00" {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} value={field.value || ''} />
+                    <Input type="number" min="0" max="100" step="0.01" placeholder="0.00" {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} value={field.value || ''} className="brand-radius campo-brand" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -195,7 +200,7 @@ export const CreateAdministratorModal: React.FC<{
                 <FormItem>
                   <FormLabel>Ajuste pós contemplação (mensal) (%)</FormLabel>
                   <FormControl>
-                    <Input type="number" min="0" max="100" step="0.01" placeholder="0.00" {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} value={field.value || ''} />
+                    <Input type="number" min="0" max="100" step="0.01" placeholder="0.00" {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} value={field.value || ''} className="brand-radius campo-brand" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -209,14 +214,14 @@ export const CreateAdministratorModal: React.FC<{
                   <FormLabel>Tipo de Entrada Especial</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value || 'none'}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="brand-radius select-trigger-brand">
                         <SelectValue placeholder="Selecione o tipo" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="none">Nenhuma</SelectItem>
-                      <SelectItem value="percentage">Percentual</SelectItem>
-                      <SelectItem value="fixed_value">Valor Fixo</SelectItem>
+                      <SelectItem value="none" className="dropdown-item-brand">Nenhuma</SelectItem>
+                      <SelectItem value="percentage" className="dropdown-item-brand">Percentual</SelectItem>
+                      <SelectItem value="fixed_value" className="dropdown-item-brand">Valor Fixo</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -241,6 +246,7 @@ export const CreateAdministratorModal: React.FC<{
                         {...field}
                         onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                         value={field.value || ''}
+                        className="brand-radius campo-brand"
                       />
                     </FormControl>
                     <FormMessage />
@@ -261,6 +267,7 @@ export const CreateAdministratorModal: React.FC<{
                           {...field}
                           onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                           value={field.value || ''}
+                          className="brand-radius campo-brand"
                         />
                       </FormControl>
                       <FormMessage />
@@ -286,6 +293,7 @@ export const CreateAdministratorModal: React.FC<{
                           {...field}
                           onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                           value={field.value || ''}
+                          className="brand-radius campo-brand"
                         />
                       </FormControl>
                       <FormMessage />
@@ -306,6 +314,7 @@ export const CreateAdministratorModal: React.FC<{
                           {...field}
                           onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                           value={field.value || ''}
+                          className="brand-radius campo-brand"
                         />
                       </FormControl>
                       <FormMessage />
@@ -314,12 +323,9 @@ export const CreateAdministratorModal: React.FC<{
                 />
               </div>
             )}
-            {/* Botão de ação */}
-            <Button type="submit">Cadastrar</Button>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+        </form>
+      </Form>
+    </FullScreenModal>
   );
 };
 
@@ -349,22 +355,33 @@ export const EditAdministratorModal: React.FC<{
   });
 
   useEffect(() => {
-    if (administrator && open) {
+    const loadLatest = async () => {
+      if (!open || !administrator?.id) return;
+      // Buscar a versão mais recente no banco para evitar dados defasados
+      const { data: fresh, error } = await supabase
+        .from('administrators')
+        .select('*')
+        .eq('id', administrator.id)
+        .maybeSingle();
+      const src = !error && fresh ? fresh : administrator;
       form.reset({
-        name: administrator.name || '',
-        update_type: administrator.update_type || 'specific_month',
-        update_month: administrator.update_month ? MONTHS[administrator.update_month - 1] : undefined,
-        grace_period_days: administrator.grace_period_days || undefined,
-        max_embedded_percentage: administrator.max_embedded_percentage || undefined,
-        special_entry_type: administrator.special_entry_type || 'none',
-        special_entry_percentage: administrator.special_entry_percentage || undefined,
-        special_entry_fixed_value: administrator.special_entry_fixed_value || undefined,
-        special_entry_installments: administrator.special_entry_installments || undefined,
-        post_contemplation_adjustment: administrator.post_contemplation_adjustment || undefined,
-        is_default: administrator.is_default || false,
+        name: src?.name || '',
+        // Se vier apenas credit_update_type, mapear para update_type
+        update_type: src?.update_type || (src?.credit_update_type === 'annual' ? 'after_12_installments' : 'specific_month'),
+        update_month: src?.update_month ? MONTHS[src.update_month - 1] : undefined,
+        grace_period_days: src?.grace_period_days || undefined,
+        max_embedded_percentage: src?.max_embedded_percentage || undefined,
+        special_entry_type: src?.special_entry_type || 'none',
+        special_entry_percentage: src?.special_entry_percentage || undefined,
+        special_entry_fixed_value: src?.special_entry_fixed_value || undefined,
+        special_entry_installments: src?.special_entry_installments || undefined,
+        post_contemplation_adjustment: src?.post_contemplation_adjustment || undefined,
+        is_default: src?.is_default || false,
       });
-    }
-  }, [administrator, open, form]);
+    };
+    loadLatest();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [administrator?.id, open]);
 
   const onSubmit = async (data: FormData) => {
     try {
@@ -379,6 +396,8 @@ export const EditAdministratorModal: React.FC<{
         special_entry_fixed_value: data.special_entry_fixed_value ?? null,
         special_entry_installments: data.special_entry_installments ?? null,
         post_contemplation_adjustment: data.post_contemplation_adjustment ?? null,
+        // manter coerência de exibição na lista: mapear credit_update_type também
+        credit_update_type: data.update_type === 'specific_month' ? 'monthly' : 'annual',
         is_default: data.is_default || false,
         company_id: selectedCompanyId,
       };
@@ -396,14 +415,14 @@ export const EditAdministratorModal: React.FC<{
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>Editar Administradora</DialogTitle>
-          <DialogDescription />
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+    <FullScreenModal
+      isOpen={open}
+      onClose={() => onOpenChange(false)}
+      title="Editar Administradora"
+      actions={<Button type="submit" form="edit-admin-form" variant="brandPrimaryToSecondary">Salvar</Button>}
+    >
+      <Form {...form}>
+        <form id="edit-admin-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="name"
@@ -411,7 +430,7 @@ export const EditAdministratorModal: React.FC<{
                 <FormItem>
                   <FormLabel>Nome *</FormLabel>
                   <FormControl>
-                    <Input placeholder="Nome da administradora" {...field} />
+                    <Input placeholder="Nome da administradora" {...field} className="brand-radius campo-brand" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -425,13 +444,13 @@ export const EditAdministratorModal: React.FC<{
                   <FormLabel>Tipo de Atualização *</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="brand-radius select-trigger-brand">
                         <SelectValue placeholder="Selecione o tipo" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="specific_month">Mês específico</SelectItem>
-                      <SelectItem value="after_12_installments">Após 12 parcelas</SelectItem>
+                      <SelectItem value="specific_month" className="dropdown-item-brand">Mês específico</SelectItem>
+                      <SelectItem value="after_12_installments" className="dropdown-item-brand">Após 12 parcelas</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -448,13 +467,13 @@ export const EditAdministratorModal: React.FC<{
                     <FormLabel>Mês de Atualização</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="brand-radius select-trigger-brand">
                           <SelectValue placeholder="Selecione o mês" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {MONTHS.map((month) => (
-                          <SelectItem key={month} value={month}>{month}</SelectItem>
+                          <SelectItem key={month} value={month} className="dropdown-item-brand">{month}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -471,7 +490,7 @@ export const EditAdministratorModal: React.FC<{
                   <FormItem>
                     <FormLabel>Carência (em dias)</FormLabel>
                     <FormControl>
-                      <Input type="number" min="0" step="1" placeholder="0" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} value={field.value || ''} />
+                      <Input type="number" min="0" step="1" placeholder="0" {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)} value={field.value || ''} className="brand-radius campo-brand" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -485,7 +504,7 @@ export const EditAdministratorModal: React.FC<{
                 <FormItem>
                   <FormLabel>Máximo embutido (%)</FormLabel>
                   <FormControl>
-                    <Input type="number" min="0" max="100" step="0.01" placeholder="0.00" {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} value={field.value || ''} />
+                    <Input type="number" min="0" max="100" step="0.01" placeholder="0.00" {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} value={field.value || ''} className="brand-radius campo-brand" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -498,7 +517,7 @@ export const EditAdministratorModal: React.FC<{
                 <FormItem>
                   <FormLabel>Ajuste pós contemplação (mensal) (%)</FormLabel>
                   <FormControl>
-                    <Input type="number" min="0" max="100" step="0.01" placeholder="0.00" {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} value={field.value || ''} />
+                    <Input type="number" min="0" max="100" step="0.01" placeholder="0.00" {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)} value={field.value || ''} className="brand-radius campo-brand" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -512,14 +531,14 @@ export const EditAdministratorModal: React.FC<{
                   <FormLabel>Tipo de Entrada Especial</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value || 'none'}>
                     <FormControl>
-                      <SelectTrigger>
+                      <SelectTrigger className="brand-radius select-trigger-brand">
                         <SelectValue placeholder="Selecione o tipo" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="none">Nenhuma</SelectItem>
-                      <SelectItem value="percentage">Percentual</SelectItem>
-                      <SelectItem value="fixed_value">Valor Fixo</SelectItem>
+                      <SelectItem value="none" className="dropdown-item-brand">Nenhuma</SelectItem>
+                      <SelectItem value="percentage" className="dropdown-item-brand">Percentual</SelectItem>
+                      <SelectItem value="fixed_value" className="dropdown-item-brand">Valor Fixo</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -544,6 +563,7 @@ export const EditAdministratorModal: React.FC<{
                           {...field}
                           onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                           value={field.value || ''}
+                          className="brand-radius campo-brand"
                         />
                       </FormControl>
                       <FormMessage />
@@ -564,6 +584,7 @@ export const EditAdministratorModal: React.FC<{
                           {...field}
                           onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                           value={field.value || ''}
+                          className="brand-radius campo-brand"
                         />
                       </FormControl>
                       <FormMessage />
@@ -589,6 +610,7 @@ export const EditAdministratorModal: React.FC<{
                           {...field}
                           onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                           value={field.value || ''}
+                          className="brand-radius campo-brand"
                         />
                       </FormControl>
                       <FormMessage />
@@ -609,6 +631,7 @@ export const EditAdministratorModal: React.FC<{
                           {...field}
                           onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : undefined)}
                           value={field.value || ''}
+                          className="brand-radius campo-brand"
                         />
                       </FormControl>
                       <FormMessage />
@@ -617,11 +640,8 @@ export const EditAdministratorModal: React.FC<{
                 />
               </div>
             )}
-            {/* Botão de ação */}
-            <Button type="submit">Salvar</Button>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+    </FullScreenModal>
   );
 };

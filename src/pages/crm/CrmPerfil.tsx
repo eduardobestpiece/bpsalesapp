@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 const CrmPerfil = () => {
-  const { crmUser } = useCrmAuth();
+  const { crmUser, updateCrmUserInContext, refreshCrmUser } = useCrmAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
     first_name: crmUser?.first_name || '',
@@ -22,6 +22,24 @@ const CrmPerfil = () => {
     bio: crmUser?.bio || '',
     avatar_url: crmUser?.avatar_url || '',
   });
+
+  useEffect(() => {
+    // Sempre sincroniza dados ao entrar na página para evitar cache antigo
+    refreshCrmUser();
+  }, []);
+
+  useEffect(() => {
+    if (!crmUser) return;
+    setFormData({
+      first_name: crmUser.first_name || '',
+      last_name: crmUser.last_name || '',
+      email: crmUser.email || '',
+      phone: crmUser.phone || '',
+      birth_date: (crmUser as any).birth_date || '',
+      bio: (crmUser as any).bio || '',
+      avatar_url: (crmUser as any).avatar_url || '',
+    });
+  }, [crmUser?.first_name, crmUser?.last_name, crmUser?.email, crmUser?.phone, (crmUser as any)?.birth_date, (crmUser as any)?.bio, (crmUser as any)?.avatar_url]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -38,7 +56,8 @@ const CrmPerfil = () => {
     
     setIsSaving(true);
     try {
-      const { error } = await supabase
+      console.log('[CRM-PERFIL] salvar perfil', { formData, avatarOnly });
+      const { status, error } = await supabase
         .from('crm_users')
         .update({
           first_name: formData.first_name,
@@ -51,15 +70,31 @@ const CrmPerfil = () => {
         })
         .eq('id', crmUser.id);
 
-      if (error) {
+      if (error && status !== 406) {
+        console.error('[CRM-PERFIL] erro ao atualizar crm_users', error);
         toast.error('Erro ao atualizar perfil');
         return;
       }
+      console.log('[CRM-PERFIL] update efetuado', { status, error });
+
+      // Atualiza contexto imediatamente com os valores do formulário
+      updateCrmUserInContext({
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        phone: formData.phone,
+        birth_date: formData.birth_date || null as any,
+        bio: formData.bio,
+        avatar_url: formData.avatar_url || null,
+      });
+      console.log('[CRM-PERFIL] contexto atualizado, disparando refreshCrmUser');
+      // Sincroniza com backend para garantir consistência
+      refreshCrmUser();
 
       if (!avatarOnly) {
         toast.success('Perfil atualizado com sucesso!');
       }
     } catch (error) {
+      console.error('[CRM-PERFIL] erro inesperado', error);
       toast.error('Erro ao atualizar perfil');
     } finally {
       setIsSaving(false);

@@ -3,9 +3,12 @@ import { useEffect, useState } from 'react';
 interface LogoProps {
   className?: string;
   onClick?: () => void;
+  lightUrl?: string | null;
+  darkUrl?: string | null;
+  alt?: string;
 }
 
-export const Logo = ({ className = "h-10 w-auto max-w-[140px]", onClick }: LogoProps) => {
+export const Logo = ({ className = "h-10 w-auto max-w-[140px]", onClick, lightUrl, darkUrl, alt = 'Logo' }: LogoProps) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   
   useEffect(() => {
@@ -31,19 +34,28 @@ export const Logo = ({ className = "h-10 w-auto max-w-[140px]", onClick }: LogoP
     };
   }, []);
 
+  // Fallbacks padrão (logo Monteo)
+  const fallbackLight = "/monteo_policromia_horizontal (1).png";
+  const fallbackDark = "/monteo_dark_logo.png";
+
+  const resolvedLight = lightUrl || fallbackLight;
+  const resolvedDark = darkUrl || fallbackDark;
+
   return (
     <div className="cursor-pointer" onClick={onClick}>
       {/* Logo para modo claro */}
       <img 
-        src="/monteo_policromia_horizontal (1).png" 
-        alt="Logo Monteo" 
+        src={resolvedLight} 
+        alt={alt} 
         className={`${className} ${isDarkMode ? 'hidden' : 'block'}`} 
+        style={{ height: '40px', width: 'auto', maxWidth: '140px', objectFit: 'contain' }}
       />
       {/* Logo para modo escuro */}
       <img 
-        src="/monteo_dark_logo.png" 
-        alt="Logo Monteo" 
+        src={resolvedDark} 
+        alt={alt} 
         className={`${className} ${isDarkMode ? 'block' : 'hidden'}`} 
+        style={{ height: '40px', width: 'auto', maxWidth: '140px', objectFit: 'contain' }}
       />
     </div>
   );

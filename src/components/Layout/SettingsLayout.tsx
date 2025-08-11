@@ -5,6 +5,7 @@ import { SettingsSidebar } from './SettingsSidebar';
 import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
 import { CompanyProvider } from '@/contexts/CompanyContext';
 import { useModule } from '@/contexts/ModuleContext';
+import { ModuleSwitcher } from './ModuleSwitcher';
 
 interface SettingsLayoutProps {
   children: ReactNode;
@@ -20,9 +21,7 @@ const SettingsHeader = () => {
     >
       <SidebarTrigger className="-ml-1 text-foreground dark:text-white" />
       <ThemeSwitch />
-      <div className="flex items-center space-x-2 text-sm text-muted-foreground dark:text-gray-300 bg-muted/50 dark:bg-[#A86F57]/10 px-3 py-1.5 rounded-full">
-        <span className="font-medium">Gerencie as configurações</span>
-      </div>
+      <ModuleSwitcher current="settings" />
     </header>
   );
 };

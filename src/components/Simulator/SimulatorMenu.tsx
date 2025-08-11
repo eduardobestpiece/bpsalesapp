@@ -119,14 +119,14 @@ export const SimulatorMenu = ({ onNavigate, onToggleSection, embutido, setEmbuti
     if (isDoubleClicked) {
       // Duplo clique ativo
       return {
-        backgroundColor: '#A86E57',
+        backgroundColor: 'var(--brand-primary)',
         color: '#131313'
       };
     } else if (isActive) {
       // Clique único ativo
       return {
         backgroundColor: '#131313',
-        color: '#A86E57'
+        color: 'var(--brand-primary)'
       };
     } else {
       // Estado padrão
@@ -144,7 +144,7 @@ export const SimulatorMenu = ({ onNavigate, onToggleSection, embutido, setEmbuti
       // Ativo
       return {
         backgroundColor: '#131313',
-        color: '#A86E57'
+        color: 'var(--brand-primary)'
       };
     } else {
       // Estado padrão

@@ -111,12 +111,12 @@ const CustomDot = (props: any) => {
           cy={cy} 
           r={12} 
           fill="#fff" 
-          stroke="#A86F57" 
+          stroke="var(--brand-primary)" 
           strokeWidth={3}
         />
         <foreignObject x={cx - 10} y={cy - 10} width={20} height={20}>
           <div className="flex items-center justify-center w-full h-full">
-            <House className="w-5 h-5" style={{ color: "#A86F57" }} />
+            <House className="w-5 h-5" style={{ color: "var(--brand-primary)" }} />
           </div>
         </foreignObject>
       </g>
@@ -354,10 +354,10 @@ export const PatrimonyChart = ({
           <Line 
             type="monotone" 
             dataKey="patrimony" 
-            stroke="#A86F57" 
+            stroke="var(--brand-primary)" 
             strokeWidth={3}
             dot={<CustomDot />}
-            activeDot={{ r: 8, fill: "#A86F57" }}
+            activeDot={{ r: 8, fill: "var(--brand-primary)" }}
           />
         </LineChart>
       </ResponsiveContainer>

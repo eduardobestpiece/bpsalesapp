@@ -15,6 +15,16 @@ const CrmDashboard = () => {
 
   useEffect(() => {
     if (!companyId || !userRole) return;
+
+    // Master tem acesso total
+    if (userRole === 'master') {
+      setAllowedTabs(['leads', 'sales']);
+      setDefaultTab('leads');
+      setTabsLoading(false);
+      setTabsError(null);
+      return;
+    }
+
     setTabsLoading(true);
     setTabsError(null);
     supabase
@@ -28,7 +38,7 @@ const CrmDashboard = () => {
           setTabsLoading(false);
           return;
         }
-        const tabs = [];
+        const tabs: string[] = [];
         if (data?.find((p: any) => p.page === 'comercial_leads' && p.allowed !== false)) tabs.push('leads');
         if (data?.find((p: any) => p.page === 'comercial_sales' && p.allowed !== false)) tabs.push('sales');
         setAllowedTabs(tabs);

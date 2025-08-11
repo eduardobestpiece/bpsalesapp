@@ -13,6 +13,9 @@ import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useModule } from '@/contexts/ModuleContext';
 import { useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
+import { FullScreenModal } from '@/components/ui/FullScreenModal';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 
 interface Company {
   id: string;
@@ -39,6 +42,39 @@ const CrmMasterConfig = () => {
   const queryClient = useQueryClient();
   const [newCompanyName, setNewCompanyName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
+  // Campos adicionais do cadastro rápido
+  const [newCnpj, setNewCnpj] = useState('');
+  const [newNiche, setNewNiche] = useState('');
+  const [newCep, setNewCep] = useState('');
+  const [newStreet, setNewStreet] = useState('');
+  const [newNumber, setNewNumber] = useState('');
+  const [newNeighborhood, setNewNeighborhood] = useState('');
+  const [newCity, setNewCity] = useState('');
+  const [newStateUF, setNewStateUF] = useState('');
+  const [newCountry, setNewCountry] = useState('');
+  const [newTimezone, setNewTimezone] = useState('America/Sao_Paulo');
+
+  // CEP -> auto preencher endereço
+  const handleNewCepChange = useCallback(async (value: string) => {
+    const onlyDigits = (value || '').replace(/\D/g, '').slice(0, 8);
+    setNewCep(onlyDigits);
+    if (onlyDigits.length === 8) {
+      try {
+        const res = await fetch(`https://viacep.com.br/ws/${onlyDigits}/json/`);
+        const data = await res.json();
+        if (data?.erro) {
+          toast.error('CEP não encontrado');
+          return;
+        }
+        setNewStreet(data?.logradouro || '');
+        setNewNeighborhood(data?.bairro || '');
+        setNewCity(data?.localidade || '');
+        setNewStateUF(data?.uf || '');
+      } catch (e) {
+        toast.error('Erro ao buscar CEP');
+      }
+    }
+  }, []);
 
   // Permissões de abas - usando useMemo para evitar re-renders
   const allowedTabs = useMemo(() => {
@@ -105,12 +141,28 @@ const CrmMasterConfig = () => {
       if (error) {
         throw error;
       }
-
+      // Opcional: criar perfil da empresa com dados básicos se fornecidos
+      try {
+        await supabase.from('company_profiles').insert({
+          company_id: data.id,
+          cnpj: newCnpj || null,
+          niche: newNiche || null,
+          cep: newCep || null,
+          address: newStreet || null,
+          number: newNumber || null,
+          neighborhood: newNeighborhood || null,
+          city: newCity || null,
+          state: newStateUF || null,
+          country: newCountry || null,
+          timezone: newTimezone || 'America/Sao_Paulo'
+        });
+      } catch {}
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['companies'] });
       setNewCompanyName('');
+      setNewCnpj(''); setNewNiche(''); setNewCep(''); setNewStreet(''); setNewNumber(''); setNewNeighborhood(''); setNewCity(''); setNewStateUF(''); setNewCountry(''); setNewTimezone('America/Sao_Paulo');
       setIsCreating(false);
       toast.success('Empresa criada com sucesso!');
     },
@@ -291,8 +343,8 @@ const CrmMasterConfig = () => {
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
             <h3 className="font-medium">{company.name}</h3>
-            <Badge variant={company.status === 'active' ? 'default' : 'secondary'}>
-              {company.status === 'active' ? 'Ativa' : 'Arquivada'}
+            <Badge className="brand-radius" style={{ backgroundColor: 'var(--brand-primary)' }}>
+              {company.status === 'active' ? 'Ativa' : 'Inativa'}
             </Badge>
           </div>
           <p className="text-sm text-muted-foreground">
@@ -306,6 +358,7 @@ const CrmMasterConfig = () => {
               size="sm"
               onClick={() => handleArchiveCompany(company.id)}
               disabled={archiveCompanyMutation.isPending}
+              className="brand-radius hover:bg-[var(--brand-secondary)] active:bg-[var(--brand-secondary)] focus:bg-[var(--brand-secondary)]"
             >
               <Trash2 className="w-4 h-4" />
             </Button>
@@ -358,7 +411,7 @@ const CrmMasterConfig = () => {
                                 Gerencie todas as empresas do sistema
                               </CardDescription>
                             </div>
-                            <Button onClick={() => setIsCreating(true)}>
+                            <Button onClick={() => setIsCreating(true)} variant="brandPrimaryToSecondary" className="brand-radius">
                               <Plus className="w-4 h-4 mr-2" />
                               Nova Empresa
                             </Button>
@@ -366,35 +419,77 @@ const CrmMasterConfig = () => {
                         </CardHeader>
                         <CardContent>
                           {isCreating && (
-                            <form onSubmit={handleCreateCompany} className="mb-6 p-4 border rounded-lg bg-muted/50">
-                              <div className="flex gap-4">
-                                <div className="flex-1">
-                                  <Label htmlFor="company-name">Nome da Empresa</Label>
-                                  <Input
-                                    id="company-name"
-                                    value={newCompanyName}
-                                    onChange={(e) => setNewCompanyName(e.target.value)}
-                                    placeholder="Digite o nome da empresa"
-                                    required
-                                  />
-                                </div>
-                                <div className="flex items-end gap-2">
-                                  <Button type="submit" disabled={createCompanyMutation.isPending}>
+                            <FullScreenModal
+                              isOpen={isCreating}
+                              onClose={() => setIsCreating(false)}
+                              title="Criar nova empresa"
+                              actions={
+                                <>
+                                  <Button type="button" variant="outline" className="brand-radius" onClick={() => setIsCreating(false)}>Cancelar</Button>
+                                  <Button type="button" onClick={handleCreateCompany as any} disabled={createCompanyMutation.isPending} variant="brandPrimaryToSecondary" className="brand-radius">
                                     {createCompanyMutation.isPending ? 'Criando...' : 'Criar'}
                                   </Button>
-                                  <Button 
-                                    type="button" 
-                                    variant="outline" 
-                                    onClick={() => {
-                                      setIsCreating(false);
-                                      setNewCompanyName('');
-                                    }}
-                                  >
-                                    Cancelar
-                                  </Button>
+                                </>
+                              }
+                            >
+                              <form onSubmit={handleCreateCompany} className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                  <div className="space-y-1 md:col-span-2">
+                                    <Label>Nome da empresa *</Label>
+                                    <Input value={newCompanyName} onChange={(e) => setNewCompanyName(e.target.value)} required className="brand-radius field-secondary-focus no-ring-focus" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label>CNPJ</Label>
+                                    <Input value={newCnpj} onChange={(e) => setNewCnpj(e.target.value)} className="brand-radius field-secondary-focus no-ring-focus" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label>Nicho</Label>
+                                    <Input value={newNiche} onChange={(e) => setNewNiche(e.target.value)} className="brand-radius field-secondary-focus no-ring-focus" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label>CEP</Label>
+                                    <Input value={newCep} onChange={(e) => handleNewCepChange(e.target.value)} placeholder="Somente números" className="brand-radius field-secondary-focus no-ring-focus" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label>Endereço</Label>
+                                    <Input value={newStreet} onChange={(e) => setNewStreet(e.target.value)} className="brand-radius field-secondary-focus no-ring-focus" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label>Número</Label>
+                                    <Input value={newNumber} onChange={(e) => setNewNumber(e.target.value)} className="brand-radius field-secondary-focus no-ring-focus" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label>Bairro</Label>
+                                    <Input value={newNeighborhood} onChange={(e) => setNewNeighborhood(e.target.value)} className="brand-radius field-secondary-focus no-ring-focus" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label>Cidade</Label>
+                                    <Input value={newCity} onChange={(e) => setNewCity(e.target.value)} className="brand-radius field-secondary-focus no-ring-focus" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label>Estado</Label>
+                                    <Input value={newStateUF} onChange={(e) => setNewStateUF(e.target.value)} className="brand-radius field-secondary-focus no-ring-focus" />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <Label>País</Label>
+                                    <Input value={newCountry} onChange={(e) => setNewCountry(e.target.value)} className="brand-radius field-secondary-focus no-ring-focus" />
+                                  </div>
+                                  <div className="space-y-1 md:col-span-2">
+                                    <Label>Fuso horário</Label>
+                                    <Select value={newTimezone} onValueChange={setNewTimezone}>
+                                      <SelectTrigger className="brand-radius select-trigger-brand"><SelectValue placeholder="Selecione" /></SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="America/Sao_Paulo">America/Sao_Paulo</SelectItem>
+                                        <SelectItem value="America/Bahia">America/Bahia</SelectItem>
+                                        <SelectItem value="America/Fortaleza">America/Fortaleza</SelectItem>
+                                        <SelectItem value="America/Manaus">America/Manaus</SelectItem>
+                                        <SelectItem value="America/Belem">America/Belem</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
                                 </div>
-                              </div>
-                            </form>
+                              </form>
+                            </FullScreenModal>
                           )}
 
                           <div className="space-y-4">
@@ -422,52 +517,59 @@ const CrmMasterConfig = () => {
                         <CardContent>
                           {/* Filtros */}
                           <div className="flex gap-4 mb-4">
-                            <div>
-                              <Label htmlFor="filter-type" className="text-foreground dark:text-white">Tipo</Label>
-                              <select id="filter-type" className="block w-full border border-border dark:border-[#A86F57]/30 rounded px-2 py-1 bg-background dark:bg-[#131313] text-foreground dark:text-white" value={archivedType} onChange={e => setArchivedType(e.target.value)}>
-                                <option value="">Todos</option>
-                                <option value="indicator">Indicador</option>
-                                <option value="lead">Lead</option>
-                                <option value="sale">Venda</option>
-                                <option value="administrator">Administradora</option>
-                              </select>
+                            <div className="min-w-[180px]">
+                              <Label className="mb-1 block">Tipo</Label>
+                              <Select value={archivedType || 'all'} onValueChange={(v) => setArchivedType(v === 'all' ? '' : v)}>
+                                <SelectTrigger className="brand-radius select-trigger-brand">
+                                  <SelectValue placeholder="Selecione" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="all" className="dropdown-item-brand">Todos</SelectItem>
+                                  <SelectItem value="indicator" className="dropdown-item-brand">Indicador</SelectItem>
+                                  <SelectItem value="lead" className="dropdown-item-brand">Lead</SelectItem>
+                                  <SelectItem value="sale" className="dropdown-item-brand">Venda</SelectItem>
+                                  <SelectItem value="administrator" className="dropdown-item-brand">Administradora</SelectItem>
+                                </SelectContent>
+                              </Select>
                             </div>
                             <div>
-                              <Label htmlFor="filter-date" className="text-foreground dark:text-white">Data</Label>
-                              <Input id="filter-date" type="date" className="block w-full bg-background dark:bg-[#131313] border-border dark:border-[#A86F57]/30 text-foreground dark:text-white" value={archivedDate} onChange={e => setArchivedDate(e.target.value)} />
+                              <Label className="mb-1 block">Data</Label>
+                              <Input id="filter-date" type="date" value={archivedDate} onChange={e => setArchivedDate(e.target.value)} className="brand-radius field-secondary-focus no-ring-focus" />
                             </div>
                           </div>
                           {/* Lista de itens arquivados */}
-                          <div className="overflow-x-auto">
-                            <table className="min-w-full border-separate border-spacing-y-1">
-                              <thead>
-                                <tr className="bg-muted dark:bg-[#1F1F1F]">
-                                  <th className="px-2 py-1 text-left font-semibold text-foreground dark:text-white">Data arquivamento</th>
-                                  <th className="px-2 py-1 text-left font-semibold text-foreground dark:text-white">Tipo</th>
-                                  <th className="px-2 py-1 text-left font-semibold text-foreground dark:text-white">Descrição</th>
-                                  <th className="px-2 py-1 text-center font-semibold text-foreground dark:text-white">Ações</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {isLoadingArchived ? (
-                                  <tr><td colSpan={4} className="text-center py-4 text-foreground dark:text-white">Carregando...</td></tr>
-                                ) : filteredArchived.length === 0 ? (
-                                  <tr><td colSpan={4} className="text-center py-4 text-foreground dark:text-white">Nenhum item arquivado encontrado.</td></tr>
-                                ) : filteredArchived.map(item => (
-                                  <tr key={item.type + '-' + item.id} className="bg-card dark:bg-[#161616]">
-                                    <td className="px-2 py-1 text-foreground dark:text-white">{item.archived_at ? new Date(item.archived_at).toLocaleDateString('pt-BR') : '-'}</td>
-                                    <td className="px-2 py-1 text-foreground dark:text-white">{item.type === 'indicator' ? 'Indicador' : item.type === 'lead' ? 'Lead' : item.type === 'sale' ? 'Venda' : item.type === 'administrator' ? 'Administradora' : ''}</td>
-                                    <td className="px-2 py-1 text-foreground dark:text-white">{item.description}</td>
-                                    <td className="px-2 py-1 text-center">
-                                      <div className="flex gap-2 justify-center">
-                                        <Button variant="outline" size="sm" onClick={() => handleRecover(item)} className="border-border dark:border-[#A86F57]/30 text-foreground dark:text-white hover:bg-muted dark:hover:bg-[#1F1F1F]">Recuperar</Button>
-                                        <Button variant="destructive" size="sm" onClick={() => handleDelete(item)} className="bg-red-600 dark:bg-red-700 hover:bg-red-700 dark:hover:bg-red-800">Excluir</Button>
-                                      </div>
-                                    </td>
+                          <div className="rounded-md overflow-hidden border" style={{ borderColor: '#333333', borderRadius: 'var(--brand-radius)' }}>
+                            <div className="overflow-x-auto max-w-full">
+                              <table className="min-w-full text-sm">
+                                <thead className="sticky top-0 z-10 bg-muted/60 backdrop-blur">
+                                  <tr>
+                                    <th className="px-3 py-2 text-left font-semibold">Data arquivamento</th>
+                                    <th className="px-3 py-2 text-left font-semibold">Tipo</th>
+                                    <th className="px-3 py-2 text-left font-semibold">Descrição</th>
+                                    <th className="px-3 py-2 text-center font-semibold">Ações</th>
                                   </tr>
-                                ))}
-                              </tbody>
-                            </table>
+                                </thead>
+                                <tbody>
+                                  {isLoadingArchived ? (
+                                    <tr><td colSpan={4} className="text-center py-4">Carregando...</td></tr>
+                                  ) : filteredArchived.length === 0 ? (
+                                    <tr><td colSpan={4} className="text-center py-4">Nenhum item arquivado encontrado.</td></tr>
+                                  ) : filteredArchived.map((item, idx) => (
+                                    <tr key={item.type + '-' + item.id} className={idx % 2 === 0 ? 'bg-background' : 'bg-muted/30'}>
+                                      <td className="px-3 py-2">{item.archived_at ? new Date(item.archived_at).toLocaleDateString('pt-BR') : '-'}</td>
+                                      <td className="px-3 py-2">{item.type === 'indicator' ? 'Indicador' : item.type === 'lead' ? 'Lead' : item.type === 'sale' ? 'Venda' : item.type === 'administrator' ? 'Administradora' : ''}</td>
+                                      <td className="px-3 py-2">{item.description}</td>
+                                      <td className="px-3 py-2 text-center">
+                                        <div className="flex gap-2 justify-center">
+                                          <Button variant="brandOutlineSecondaryHover" size="sm" onClick={() => handleRecover(item)} className="brand-radius">Recuperar</Button>
+                                          <Button variant="destructive" size="sm" onClick={() => handleDelete(item)} className="brand-radius">Excluir</Button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
                           </div>
                         </CardContent>
                       </Card>
@@ -506,26 +608,76 @@ function AccessPermissionsTable() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const pages = [
-    { key: 'simulator', label: 'Simulador' },
-    { key: 'simulator_config', label: 'Configurações do Simulador', indent: true },
-    { key: 'comercial', label: 'Comercial' },
-    { key: 'comercial_leads', label: 'Leads', indent: true },
-    { key: 'comercial_sales', label: 'Vendas', indent: true },
-    { key: 'indicadores', label: 'Indicadores' },
-    { key: 'indicadores_performance', label: 'Performance', indent: true },
-    { key: 'indicadores_registro', label: 'Registro de Indicadores', indent: true },
-    { key: 'crm_config', label: 'Configurações CRM' },
-    { key: 'crm_config_funnels', label: 'Funis', indent: true },
-    { key: 'crm_config_sources', label: 'Origens', indent: true },
-    { key: 'crm_config_teams', label: 'Times', indent: true },
-    { key: 'crm_config_users', label: 'Usuários', indent: true },
-  ];
+  const [pages, setPages] = useState<{ key: string; label: string; type: 'module' | 'page' | 'tab'; indent?: boolean }[]>([]);
+  const [rawPages, setRawPages] = useState<any[]>([]);
+  useEffect(() => {
+    const loadPages = async () => {
+      const { data, error } = await supabase
+        .from('app_pages')
+        .select('key,label,parent_key,module,display_order,is_active')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+      if (error) {
+        toast.error('Erro ao carregar páginas: ' + error.message);
+        return;
+      }
+      const parents = (data || []).filter(p => !p.parent_key);
+      const children = (data || []).filter(p => !!p.parent_key);
+      setRawPages(data || []);
+
+      // Agrupar por módulo e ordenar por display_order
+      const moduleToParents: Record<string, any[]> = {};
+      parents.forEach(p => {
+        const mod = p.module || 'outros';
+        if (!moduleToParents[mod]) moduleToParents[mod] = [];
+        moduleToParents[mod].push(p);
+      });
+      const moduleOrder = Object.entries(moduleToParents)
+        .map(([mod, arr]) => [mod, Math.min(...arr.map((x: any) => x.display_order || 0))] as const)
+        .sort((a, b) => a[1] - b[1])
+        .map(([mod]) => mod);
+
+      const moduleLabel = (m: string) => m === 'simulator' ? 'Simulador' : m === 'settings' ? 'Configurações' : m === 'crm' ? 'CRM' : (m.charAt(0).toUpperCase() + m.slice(1));
+
+      const list: { key: string; label: string; type: 'module' | 'page' | 'tab'; indent?: boolean }[] = [];
+      moduleOrder.forEach(mod => {
+        list.push({ key: `__module__:${mod}`, label: moduleLabel(mod), type: 'module' });
+        const modParents = (moduleToParents[mod] || []).sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+        modParents.forEach(p => {
+          list.push({ key: p.key, label: p.label, type: 'page' });
+          children
+            .filter(c => c.parent_key === p.key)
+            .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+            .forEach(c => {
+              list.push({ key: c.key, label: c.label, type: 'tab', indent: true });
+            });
+        });
+      });
+      setPages(list);
+    };
+    loadPages();
+  }, []);
   const roles = [
     { key: 'admin', label: 'Administrador' },
     { key: 'leader', label: 'Líder' },
     { key: 'user', label: 'Usuário' },
   ];
+
+  // Mapa de hierarquia: parent -> [children] e child -> parent
+  const hierarchy = useMemo(() => {
+    const parentToChildren: Record<string, string[]> = {};
+    const childToParent: Record<string, string> = {};
+    (rawPages || []).forEach((row: any) => {
+      if (!row.parent_key) {
+        if (!parentToChildren[row.key]) parentToChildren[row.key] = [];
+      } else {
+        if (!parentToChildren[row.parent_key]) parentToChildren[row.parent_key] = [];
+        parentToChildren[row.parent_key].push(row.key);
+        childToParent[row.key] = row.parent_key;
+      }
+    });
+    return { parentToChildren, childToParent };
+  }, [rawPages]);
 
   useEffect(() => {
     if (!companyId) return;
@@ -540,7 +692,6 @@ function AccessPermissionsTable() {
           setLoading(false);
           return;
         }
-        // Montar objeto: permissions[role][page] = allowed
         const perms: any = {};
         roles.forEach(r => { perms[r.key] = {}; });
         data?.forEach((row: any) => {
@@ -552,20 +703,46 @@ function AccessPermissionsTable() {
       });
   }, [companyId]);
 
-  const handleChange = (role: string, page: string, value: boolean) => {
-    setPermissions((prev: any) => ({
-      ...prev,
-      [role]: { ...prev[role], [page]: value }
-    }));
+  const handleChange = (role: string, itemKey: string, value: boolean) => {
+    const isChild = !!hierarchy.childToParent[itemKey];
+    const parentKey = isChild ? hierarchy.childToParent[itemKey] : itemKey;
+    const children = hierarchy.parentToChildren[parentKey] || [];
+
+    setPermissions((prev: any) => {
+      const next = { ...prev };
+      const rolePerms = { ...(next[role] || {}) };
+
+      if (!isChild) {
+        // Mudou uma página (pai): marcar/desmarcar todos os filhos
+        rolePerms[parentKey] = value;
+        for (const child of children) {
+          rolePerms[child] = value;
+        }
+      } else {
+        // Mudou uma aba (filho)
+        rolePerms[itemKey] = value;
+        if (value) {
+          // Se marcar uma aba, marca o pai automaticamente
+          rolePerms[parentKey] = true;
+        } else {
+          // Se desmarcar, verifica se ainda existe alguma aba marcada; se nenhuma, desmarca o pai
+          const anyChildChecked = children.some((c) => (c === itemKey ? false : !!rolePerms[c]));
+          rolePerms[parentKey] = anyChildChecked;
+        }
+      }
+
+      next[role] = rolePerms;
+      return next;
+    });
   };
 
   const handleSave = async () => {
     if (!companyId) return;
     setSaving(true);
-    // Montar lista de permissões para salvar
     const rows = [];
+    const itemsToSave = pages.filter(p => p.type !== 'module');
     for (const role of roles) {
-      for (const page of pages) {
+      for (const page of itemsToSave) {
         rows.push({
           role: role.key,
           page: page.key,
@@ -574,7 +751,6 @@ function AccessPermissionsTable() {
         });
       }
     }
-    // Deletar todas as permissões da empresa e inserir as novas (simples)
     const { error: delError } = await supabase
       .from('role_page_permissions')
       .delete()
@@ -596,7 +772,6 @@ function AccessPermissionsTable() {
     setSaving(false);
   };
 
-  // No AccessPermissionsTable, garantir que permissions é sempre objeto
   const safePermissions = permissions && typeof permissions === 'object' ? permissions : {};
 
   if (loading) {
@@ -604,44 +779,51 @@ function AccessPermissionsTable() {
   }
 
   return (
-    <div>
-      <table className="min-w-full border-separate border-spacing-y-1">
-        <thead>
-          <tr className="bg-muted dark:bg-[#1F1F1F]">
-            <th className="px-2 py-1 text-left font-semibold text-foreground dark:text-white">Página / Aba</th>
-            {roles.map(role => (
-              <th key={role.key} className="px-2 py-1 text-center font-semibold text-foreground dark:text-white">{role.label}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {pages.map(item => (
-            <tr key={item.key} className="bg-card dark:bg-[#161616]">
-              <td className={`px-2 py-1 font-medium text-foreground dark:text-white${item.indent ? ' pl-8' : ''}`}>{item.label}</td>
-              {roles.map(role => (
-                <td key={role.key} className="px-2 py-1 text-center">
-                  <input
-                    type="checkbox"
-                    checked={safePermissions?.[role.key]?.[item.key] ?? true}
-                    onChange={e => handleChange(role.key, item.key, e.target.checked)}
-                  />
-                </td>
+    <div className="space-y-3">
+      <div className="rounded-md overflow-hidden border" style={{ borderColor: '#333333', borderRadius: 'var(--brand-radius)' }}>
+        <div className="overflow-x-auto max-w-full">
+          <table className="min-w-full text-sm">
+            <thead className="sticky top-0 z-10 bg-muted/60 backdrop-blur">
+              <tr>
+                <th className="px-3 py-2 text-left font-semibold">Módulo / Página / Abas</th>
+                {roles.map(role => (
+                  <th key={role.key} className="px-3 py-2 text-center font-semibold">{role.label}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {pages.map((item, idx) => (
+                <tr key={item.key} className={idx % 2 === 0 ? 'bg-background' : 'bg-muted/30'}>
+                  <td className={`px-3 py-2 ${item.type === 'module' ? 'font-semibold' : 'font-medium'}${item.type === 'page' ? ' pl-6' : ''}${item.type === 'tab' ? ' pl-12' : ''}`}>{item.label}</td>
+                  {roles.map(role => (
+                    <td key={role.key} className="px-3 py-2 text-center">
+                      {item.type !== 'module' ? (
+                        <div className="inline-flex items-center justify-center">
+                          <Checkbox
+                            checked={safePermissions?.[role.key]?.[item.key] ?? true}
+                            onCheckedChange={(v) => handleChange(role.key, item.key, Boolean(v))}
+                            className="h-5 w-5"
+                          />
+                        </div>
+                      ) : null}
+                    </td>
+                  ))}
+                </tr>
               ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      <div className="flex justify-end mt-4">
-        <button
-          className="bg-primary text-white px-6 py-2 rounded-lg shadow hover:bg-primary-700 disabled:opacity-60"
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div className="flex items-center justify-between">
+        <div className="text-xs text-muted-foreground">* Apenas usuários Master podem editar essas permissões.</div>
+        <Button
+          variant="brandPrimaryToSecondary"
+          className="brand-radius"
           onClick={handleSave}
           disabled={saving}
         >
           {saving ? 'Salvando...' : 'Salvar Permissões'}
-        </button>
-      </div>
-      <div className="text-xs text-muted-foreground mt-4">
-        * Apenas usuários Master podem editar essas permissões.
+        </Button>
       </div>
     </div>
   );

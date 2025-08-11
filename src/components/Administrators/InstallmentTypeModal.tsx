@@ -3,12 +3,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { FullScreenModal } from '@/components/ui/FullScreenModal';
 import {
   Form,
   FormControl,
@@ -104,12 +99,14 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
         });
       }
     }
-  }, [open, installmentType]);
+  }, [open, installmentType, selectedCompanyId]);
 
   const fetchAdministrators = async () => {
+    if (!selectedCompanyId) { setAdministrators([]); return; }
     const { data, error } = await supabase
       .from('administrators')
       .select('id, name')
+      .eq('company_id', selectedCompanyId)
       .eq('is_archived', false)
       .order('name');
     if (!error) setAdministrators(data || []);
@@ -126,6 +123,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
       .from('installment_reductions')
       .select('id, name')
       .eq('administrator_id', administratorId)
+      .eq('company_id', selectedCompanyId)
       .eq('is_archived', false);
     if (!error) setReductions(data || []);
     setReductionsLoading(false);
@@ -225,13 +223,14 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{installmentType ? 'Editar Parcela' : 'Nova Parcela'}</DialogTitle>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+    <FullScreenModal
+      isOpen={open}
+      onClose={() => onOpenChange(false)}
+      title={installmentType ? 'Editar Parcela' : 'Nova Parcela'}
+      actions={<Button type="submit" form="installment-type-form" variant="brandPrimaryToSecondary">{installmentType ? 'Salvar' : 'Cadastrar'}</Button>}
+    >
+      <Form {...form}>
+        <form id="installment-type-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="administrator_id"
@@ -241,20 +240,20 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
                   <div className="flex gap-2 items-center">
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="brand-radius select-trigger-brand">
                           <SelectValue placeholder="Selecione uma administradora" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {administrators.map((admin) => (
-                          <SelectItem key={admin.id} value={admin.id}>{admin.name}</SelectItem>
+                          <SelectItem key={admin.id} value={admin.id} className="dropdown-item-brand">{admin.name}</SelectItem>
                         ))}
-                        <SelectItem value="add_admin" onClick={() => setShowCreateAdminModal(true)}>
+                        <SelectItem value="add_admin" onClick={() => setShowCreateAdminModal(true)} className="dropdown-item-brand">
                           + Adicionar administradora
                         </SelectItem>
                       </SelectContent>
                     </Select>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setShowCreateAdminModal(true)}>
+                    <Button type="button" variant="brandOutlineSecondaryHover" size="sm" className="brand-radius" onClick={() => setShowCreateAdminModal(true)}>
                       +
                     </Button>
                   </div>
@@ -269,7 +268,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
                 <FormItem>
                   <FormLabel>Número de parcelas</FormLabel>
                   <FormControl>
-                    <Input type="number" min={1} {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : 1)} value={field.value || ''} />
+                    <Input type="number" min={1} {...field} onChange={e => field.onChange(e.target.value ? parseInt(e.target.value) : 1)} value={field.value || ''} className="brand-radius campo-brand" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -282,7 +281,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
                 <FormItem>
                   <FormLabel>Taxa de administração (%)</FormLabel>
                   <FormControl>
-                    <Input type="number" min={0} max={100} step={0.01} {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)} value={field.value || ''} />
+                    <Input type="number" min={0} max={100} step={0.01} {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)} value={field.value || ''} className="brand-radius campo-brand" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -295,7 +294,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
                 <FormItem>
                   <FormLabel>Fundo de reserva (%)</FormLabel>
                   <FormControl>
-                    <Input type="number" min={0} max={100} step={0.01} {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)} value={field.value || ''} />
+                    <Input type="number" min={0} max={100} step={0.01} {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)} value={field.value || ''} className="brand-radius campo-brand" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -308,7 +307,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
                 <FormItem>
                   <FormLabel>Seguro (%)</FormLabel>
                   <FormControl>
-                    <Input type="number" min={0} max={100} step={0.01} {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)} value={field.value || ''} />
+                    <Input type="number" min={0} max={100} step={0.01} {...field} onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)} value={field.value || ''} className="brand-radius campo-brand" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -322,12 +321,12 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
                   <FormLabel>Seguro opcional</FormLabel>
                   <FormControl>
                     <Select onValueChange={v => field.onChange(v === 'true')} value={field.value ? 'true' : 'false'}>
-                      <SelectTrigger>
+                      <SelectTrigger className="brand-radius select-trigger-brand">
                         <SelectValue placeholder="Selecione" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="true">Sim</SelectItem>
-                        <SelectItem value="false">Não</SelectItem>
+                        <SelectItem value="true" className="dropdown-item-brand">Sim</SelectItem>
+                        <SelectItem value="false" className="dropdown-item-brand">Não</SelectItem>
                       </SelectContent>
                     </Select>
                   </FormControl>
@@ -372,22 +371,13 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
                 </FormItem>
               )}
             />
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit">
-                {installmentType ? 'Salvar' : 'Cadastrar'}
-              </Button>
-            </div>
-          </form>
-        </Form>
+        </form>
+      </Form>
         <CreateAdministratorModal
           open={showCreateAdminModal}
           onOpenChange={setShowCreateAdminModal}
           onSuccess={fetchAdministrators}
         />
-      </DialogContent>
-    </Dialog>
+    </FullScreenModal>
   );
 };

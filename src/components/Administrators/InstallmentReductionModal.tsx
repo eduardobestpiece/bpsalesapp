@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FullScreenModal } from '@/components/ui/FullScreenModal';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -85,12 +86,14 @@ export const InstallmentReductionModal: React.FC<InstallmentReductionModalProps>
       }
     }
     // eslint-disable-next-line
-  }, [open, reduction, isCopy]);
+  }, [open, reduction, isCopy, selectedCompanyId]);
 
   const fetchAdministrators = async () => {
+    if (!selectedCompanyId) { setAdministrators([]); return; }
     const { data, error } = await supabase
       .from('administrators')
       .select('id, name')
+      .eq('company_id', selectedCompanyId)
       .eq('is_archived', false)
       .order('name');
     if (!error) setAdministrators(data || []);
@@ -129,13 +132,14 @@ export const InstallmentReductionModal: React.FC<InstallmentReductionModalProps>
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>{reduction && !isCopy ? 'Editar Redução de Parcela' : isCopy ? 'Copiar Redução de Parcela' : 'Nova Redução de Parcela'}</DialogTitle>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+    <FullScreenModal
+      isOpen={open}
+      onClose={() => onOpenChange(false)}
+      title={reduction && !isCopy ? 'Editar Redução de Parcela' : isCopy ? 'Copiar Redução de Parcela' : 'Nova Redução de Parcela'}
+      actions={<Button type="submit" form="reduction-form" variant="brandPrimaryToSecondary">{reduction && !isCopy ? 'Salvar' : isCopy ? 'Copiar' : 'Cadastrar'}</Button>}
+    >
+      <Form {...form}>
+        <form id="reduction-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="name"
@@ -143,7 +147,7 @@ export const InstallmentReductionModal: React.FC<InstallmentReductionModalProps>
                 <FormItem>
                   <FormLabel>Nome</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ex: Redução Especial 20%" {...field} />
+                    <Input placeholder="Ex: Redução Especial 20%" {...field} className="brand-radius campo-brand" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -158,17 +162,17 @@ export const InstallmentReductionModal: React.FC<InstallmentReductionModalProps>
                   <div className="flex gap-2 items-center">
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="brand-radius select-trigger-brand">
                           <SelectValue placeholder="Selecione uma administradora" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {administrators.map((admin) => (
-                          <SelectItem key={admin.id} value={admin.id}>{admin.name}</SelectItem>
+                          <SelectItem key={admin.id} value={admin.id} className="dropdown-item-brand">{admin.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <Button type="button" variant="outline" size="sm" onClick={() => setShowCreateAdminModal(true)}>
+                    <Button type="button" variant="brandOutlineSecondaryHover" size="sm" className="brand-radius" onClick={() => setShowCreateAdminModal(true)}>
                       +
                     </Button>
                   </div>
@@ -191,6 +195,7 @@ export const InstallmentReductionModal: React.FC<InstallmentReductionModalProps>
                       {...field}
                       onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)}
                       value={field.value || ''}
+                      className="brand-radius campo-brand"
                     />
                   </FormControl>
                   <FormMessage />
@@ -215,13 +220,8 @@ export const InstallmentReductionModal: React.FC<InstallmentReductionModalProps>
                 </FormItem>
               )}
             />
-            <div className="flex justify-end">
-              <Button type="submit">
-                {reduction && !isCopy ? 'Salvar' : isCopy ? 'Copiar' : 'Cadastrar'}
-              </Button>
-            </div>
-          </form>
-        </Form>
+        </form>
+      </Form>
         <CreateAdministratorModal
           open={showCreateAdminModal}
           onOpenChange={(open) => setShowCreateAdminModal(open)}
@@ -230,7 +230,6 @@ export const InstallmentReductionModal: React.FC<InstallmentReductionModalProps>
             fetchAdministrators();
           }}
         />
-      </DialogContent>
-    </Dialog>
+    </FullScreenModal>
   );
 }; 

@@ -77,7 +77,7 @@ export const CrmHeader = () => {
           <ThemeSwitch />
           <div className="hidden md:flex items-center space-x-2 text-sm text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full">
             <Users className="h-4 w-4 text-primary" />
-            <span className="font-medium">Gerencie seus leads</span>
+            <span className="font-medium">CRM</span>
           </div>
           <CrmUserMenu pagePermissions={pagePermissions} />
         </div>

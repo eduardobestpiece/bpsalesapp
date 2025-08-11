@@ -17,6 +17,7 @@ import { CapitalGainSection } from './CapitalGainSection';
 import { NovaAlavancagemPatrimonial } from './NovaAlavancagemPatrimonial';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
+import { simInfoLog } from '@/lib/devlog';
 
 export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
   const { 
@@ -156,7 +157,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
       
       // Se não há administradora selecionada, buscar uma automaticamente
       if (!adminId || adminId.trim() === '') {
-        console.log('Nenhuma administradora selecionada, buscando automaticamente...');
+        simInfoLog('Nenhuma administradora selecionada, buscando automaticamente...');
         
         // Buscar administradora padrão
         const { data: admins } = await supabase
@@ -173,15 +174,15 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
             .eq('is_archived', false)
             .limit(1);
           adminId = allAdmins?.[0]?.id || '';
-          console.log('Administradora encontrada (primeira disponível):', adminId);
+          simInfoLog('Administradora encontrada (primeira disponível):', adminId);
         } else {
           adminId = admins[0].id;
-          console.log('Administradora padrão encontrada:', adminId);
+          simInfoLog('Administradora padrão encontrada:', adminId);
         }
         
         // Forçar a atualização do estado se encontrou uma administradora
         if (adminId && adminId.trim() !== '') {
-          console.log('Atualizando administradora para:', adminId);
+          simInfoLog('Atualizando administradora para:', adminId);
           setLocalSimulationData((prev) => ({ ...prev, administrator: adminId }));
           setAdministratorInitialized(true);
           return; // Sair aqui para evitar execução dupla
@@ -189,7 +190,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
       }
       
       if (adminId && adminId.trim() !== '') {
-        console.log('Carregando dados da administradora:', adminId);
+        simInfoLog('Carregando dados da administradora:', adminId);
         // Usar as funções do contexto para carregar dados
         await simulatorContext.loadInstallmentTypes(adminId);
         await simulatorContext.loadReducoesParcela(adminId);
@@ -518,8 +519,8 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
 
 
 
-      {/* Seção de Ganho de Capital */}
-      {(visibleSections.capital && (roiOperacao === null || roiOperacao >= 10)) && (
+      {/* Seção de Ganho de Capital (sempre visível quando a seção estiver ativada) */}
+      {visibleSections.capital && (
         <div ref={capitalSectionRef} id="ganho-capital" className="w-full">
           <CapitalGainSection 
             creditoAcessado={creditoAcessado}
@@ -653,7 +654,26 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
           }
           simulatorContext.setShowConfigModal(false);
         }}
-        onReset={() => {}}
+        onReset={() => {
+          // Valores padrão do simulador
+          handleFieldChange('searchType', 'contribution');
+          handleFieldChange('value', 0);
+          handleTermChange(120);
+          handleFieldChange('installmentType', 'full');
+          handleFieldChange('contemplationMonth', 6);
+          handleFieldChange('administrator', '');
+          setAgioPercent(0);
+          // Resetar taxas e flags de customização
+          setAdminTaxPercent(0);
+          setReserveFundPercent(0);
+          setAnnualUpdateRate(6);
+          setIsAdminTaxCustomized(false);
+          setIsReserveFundCustomized(false);
+          setIsAnnualUpdateCustomized(false);
+          setShouldRecalculateCredit(true);
+          // Fechar modal
+          simulatorContext.setShowConfigModal(false);
+        }}
         // Props para sincronização de filtros principais
         searchType={localSimulationData.searchType}
         setSearchType={v => handleFieldChange('searchType', v)}

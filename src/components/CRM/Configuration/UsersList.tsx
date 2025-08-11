@@ -104,10 +104,10 @@ export const UsersList = () => {
               placeholder="Buscar usuário..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="max-w-xs"
+              className="max-w-xs field-secondary-focus no-ring-focus brand-radius"
               disabled={isSubMaster}
             />
-            <Button onClick={() => setShowModal(true)} disabled={isSubMaster}>
+            <Button onClick={() => setShowModal(true)} disabled={isSubMaster} variant="brandPrimaryToSecondary" className="brand-radius">
               <Plus className="w-4 h-4 mr-2" /> Novo Usuário
             </Button>
           </div>
@@ -116,27 +116,29 @@ export const UsersList = () => {
               <div>Carregando...</div>
             ) : (
               filteredUsers.map((user) => (
-                <div key={user.id} className="flex items-center justify-between border rounded p-3">
+                <div key={user.id} className="flex items-center justify-between border rounded p-3 brand-radius">
                   <div className="flex items-center gap-3">
-                    <User className="w-5 h-5 text-primary" />
+                    <User className="w-5 h-5" style={{ color: 'var(--brand-primary, #A86F57)' }} />
                     <span className="font-medium">{user.first_name} {user.last_name}</span>
                     <Badge variant="outline">{getRoleLabel(user.role)}</Badge>
                   </div>
                   <div className="flex gap-2">
                     <Button
-                      variant="outline"
+                      variant="brandOutlineSecondaryHover"
                       size="sm"
                       onClick={() => handleEdit(user)}
                       disabled={isSubMaster}
+                      className="brand-radius"
                     >
                       <Edit className="w-4 h-4" />
                     </Button>
                     {(userRole === 'admin' || userRole === 'master') && user.status === 'active' && user.role !== 'master' && user.email !== 'master@master.com' && (
                       <Button
-                        variant="outline"
+                        variant="brandOutlineSecondaryHover"
                         size="sm"
                         onClick={() => handleDeactivate(user.id)}
                         disabled={isSubMaster}
+                        className="brand-radius"
                       >
                         Desativar
                       </Button>

@@ -302,7 +302,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
       title={isEditing ? 'Editar Indicador' : 'Registrar Indicador'}
       actions={
         <>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" className="brand-radius" onClick={onClose}>
             Cancelar
           </Button>
         </>
@@ -318,10 +318,10 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
               onValueChange={(value) => setFormData(prev => ({ ...prev, funnel_id: value }))}
               disabled={isLoading || !canEdit}
             >
-              <SelectTrigger className="w-full bg-[#2A2A2A] border-gray-600 text-white hover:bg-[#3A3A3A] focus:ring-2 focus:ring-blue-500">
+              <SelectTrigger className="w-full brand-radius select-trigger-brand">
                 <SelectValue placeholder="Selecione um funil" />
               </SelectTrigger>
-              <SelectContent className="bg-[#2A2A2A] border-gray-600">
+              <SelectContent>
                 {funnelsError ? (
                   <div className="px-4 py-2 text-red-500 text-sm">
                     Erro ao carregar funis: {funnelsError.message || 'Erro desconhecido'}
@@ -332,7 +332,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                   </div>
                 ) : allowedFunnels.length > 0 ? (
                   allowedFunnels.map((funnel) => (
-                    <SelectItem key={funnel.id} value={funnel.id} className="text-white hover:bg-[#3A3A3A]">
+                    <SelectItem key={funnel.id} value={funnel.id} className="dropdown-item-brand">
                       {funnel.name}
                     </SelectItem>
                   ))
@@ -357,64 +357,45 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                 const { start, end } = extractPeriodDates(value);
                 setPeriodStart(start);
                 setPeriodEnd(end);
-                
-                // Definir automaticamente mês e ano baseado no período selecionado
+                // Definições de mês/ano
                 if (start && end) {
                   try {
                     const startDate = new Date(start);
                     const endDate = new Date(end);
-                    
-                    // Usar a data de FIM para determinar mês e ano padrão
-                    const monthFinal = endDate.getMonth() + 1; // getMonth() retorna 0-11
+                    const monthFinal = endDate.getMonth() + 1;
                     const yearFinal = endDate.getFullYear();
-                    
-                    // Verificar se há diferença entre início e fim
                     const monthInicial = startDate.getMonth() + 1;
                     const yearInicial = startDate.getFullYear();
-                    
-                    // Definir mês e ano padrão (período final)
                     setMonthReference(monthFinal);
                     setYearReference(yearFinal);
-                    
-                    // Atualizar também o formData
                     setFormData(prev => ({
                       ...prev,
                       month_reference: monthFinal,
                       year_reference: yearFinal
                     }));
-                    
-                    // Se há diferença entre início e fim, atualizar as opções para incluir ambos
                     if (monthInicial !== monthFinal || yearInicial !== yearFinal) {
-                      
-                      // Atualizar opções de mês para incluir ambos os meses
                       const mesesUnicos = [...new Set([monthInicial, monthFinal])].sort((a, b) => a - b);
                       setMonthOptions(mesesUnicos);
-                      
-                      // Atualizar opções de ano para incluir ambos os anos
                       const anosUnicos = [...new Set([yearInicial, yearFinal])].sort((a, b) => a - b);
                       setYearOptions(anosUnicos);
                     } else {
-                      // Se não há diferença, usar opções padrão
                       const currentDate = new Date();
                       const months = Array.from({ length: 12 }, (_, i) => i + 1);
                       const years = Array.from({ length: 5 }, (_, i) => currentDate.getFullYear() - 2 + i);
-                      
                       setMonthOptions(months);
                       setYearOptions(years);
                     }
                   } catch (error) {
                     console.error('Erro ao extrair mês/ano do período:', error);
                   }
-                } else {
-                  
                 }
               }}
               disabled={isLoading || !formData.funnel_id || !canEdit}
             >
-              <SelectTrigger className="w-full bg-[#2A2A2A] border-gray-600 text-white hover:bg-[#3A3A3A] focus:ring-2 focus:ring-blue-500">
+              <SelectTrigger className="w-full brand-radius select-trigger-brand">
                 <SelectValue placeholder="Selecione o período" />
               </SelectTrigger>
-              <SelectContent className="bg-[#2A2A2A] border-gray-600">
+              <SelectContent>
                 {periodOptions.length === 0 ? (
                   <div className="px-4 py-2 text-muted-foreground text-sm">
                     Selecione um funil primeiro
@@ -425,7 +406,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                       key={opt.value}
                       value={opt.value}
                       disabled={opt.preenchido}
-                      className={opt.preenchido ? 'text-gray-400 cursor-not-allowed' : 'text-white hover:bg-[#3A3A3A]'}
+                      className={opt.preenchido ? 'text-gray-400 cursor-not-allowed' : 'dropdown-item-brand'}
                     >
                       <span>{opt.label}</span>
                       {opt.preenchido && <span className="ml-2 text-xs text-gray-400">(já preenchido)</span>}
@@ -453,12 +434,12 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                   onValueChange={(value) => setMonthReference(Number(value))}
                   disabled={!canEdit}
                 >
-                  <SelectTrigger className="w-full bg-[#2A2A2A] border-gray-600 text-white hover:bg-[#3A3A3A] focus:ring-2 focus:ring-blue-500">
+                  <SelectTrigger className="w-full brand-radius select-trigger-brand">
                     <SelectValue placeholder="Selecione o mês" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#2A2A2A] border-gray-600">
+                  <SelectContent>
                     {monthOptions.map(m => (
-                      <SelectItem key={m} value={m.toString()} className="text-white hover:bg-[#3A3A3A]">
+                      <SelectItem key={m} value={m.toString()} className="dropdown-item-brand">
                         {new Date(2000, m - 1, 1).toLocaleString('pt-BR', { month: 'long' })}
                       </SelectItem>
                     ))}
@@ -480,12 +461,12 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                   onValueChange={(value) => setYearReference(Number(value))}
                   disabled={!canEdit}
                 >
-                  <SelectTrigger className="w-full bg-[#2A2A2A] border-gray-600 text-white hover:bg-[#3A3A3A] focus:ring-2 focus:ring-blue-500">
+                  <SelectTrigger className="w-full brand-radius select-trigger-brand">
                     <SelectValue placeholder="Selecione o ano" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#2A2A2A] border-gray-600">
+                  <SelectContent>
                     {yearOptions.map(y => (
-                      <SelectItem key={y} value={y.toString()} className="text-white hover:bg-[#3A3A3A]">
+                      <SelectItem key={y} value={y.toString()} className="dropdown-item-brand">
                         {y}
                       </SelectItem>
                     ))}
@@ -519,7 +500,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                 onChange={e => setSalesValue(e.target.value)} 
                 placeholder="0,00" 
                 disabled={!canEdit}
-                className="w-full bg-[#2A2A2A] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
+                className="w-full brand-radius field-secondary-focus no-ring-focus"
               />
             </div>
 
@@ -532,7 +513,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                 value={recommendationsCount} 
                 onChange={e => setRecommendationsCount(Number(e.target.value))} 
                 disabled={!canEdit}
-                className="w-full bg-[#2A2A2A] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
+                className="w-full brand-radius field-secondary-focus no-ring-focus"
               />
             </div>
           </div>
@@ -551,9 +532,8 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                     const meta = stage.target_value || 0;
                     const percentual = meta > 0 ? Math.round((valor / meta) * 100) : 0;
                     const atingiu = valor >= meta && meta > 0;
-                    
                     return (
-                      <div key={stage.id} className="flex flex-col md:flex-row md:items-center gap-4 p-4 border border-gray-600 rounded-lg bg-[#2A2A2A]">
+                      <div key={stage.id} className="flex flex-col md:flex-row md:items-center gap-4 p-4 border brand-radius bg-[#2A2A2A]" style={{ borderColor: 'var(--brand-secondary)' }}>
                         <div className="flex-1">
                           <label className="block text-sm font-medium text-white mb-2">
                             {stage.name}
@@ -569,7 +549,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
                             onChange={(e) => handleStageValueChange(stage.id, parseInt(e.target.value) || 0)}
                             placeholder="Digite o resultado"
                             disabled={!canEdit}
-                            className="w-full bg-[#1F1F1F] border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500"
+                            className="w-full brand-radius field-secondary-focus no-ring-focus"
                           />
                         </div>
                         <div className="flex flex-col items-start md:items-end min-w-[180px]">
@@ -595,7 +575,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         {/* Botão Salvar */}
         {canEdit && (
           <div className="flex justify-end pt-6">
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading} variant="brandPrimaryToSecondary" className="brand-radius">
               {isLoading ? 'Salvando...' : 'Salvar'}
             </Button>
           </div>

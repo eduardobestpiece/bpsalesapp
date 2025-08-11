@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useLocation } from 'react-router-dom';
 import { SimulatorMenu } from '@/components/Simulator/SimulatorMenu';
 import { useEffect } from 'react';
+import { ModuleSwitcher } from './ModuleSwitcher';
 
 // Contexto para compartilhar dados do simulador
 type LeverageConfig = {
@@ -89,11 +90,9 @@ const SimulatorHeader = () => {
         transition: 'left 0.2s ease-linear'
       }}
     >
-      <SidebarTrigger className="-ml-1 text-foreground dark:text-white" />
+      <SidebarTrigger className="-ml-1 text-foreground dark:text-white brand-radius hover:bg-[var(--brand-secondary)] active:bg-[var(--brand-secondary)] focus:bg-[var(--brand-secondary)] transition-colors" />
       <ThemeSwitch />
-      <div className="flex items-center space-x-2 text-sm text-muted-foreground dark:text-gray-300 bg-muted/50 dark:bg-[#A86F57]/10 px-3 py-1.5 rounded-full">
-        <span className="font-medium">Faça a sua simulação</span>
-      </div>
+      <ModuleSwitcher current="simulator" />
       
       {/* Campos de configuração - Layout responsivo melhorado */}
       {isSimulatorPage && (
@@ -104,12 +103,12 @@ const SimulatorHeader = () => {
               value={simulatorContext.simulationData.searchType} 
               onValueChange={v => { console.debug('[Sim/Header] searchType ->', v); handleFieldChange('searchType', v === 'contribution' ? 'contribution' : 'credit'); }}
             >
-              <SelectTrigger className="h-8 text-xs min-w-0">
+              <SelectTrigger className="h-8 text-xs min-w-0 brand-radius select-trigger-brand">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="contribution">Aporte</SelectItem>
-                <SelectItem value="credit">Crédito</SelectItem>
+                <SelectItem value="contribution" className="dropdown-item-brand">Aporte</SelectItem>
+                <SelectItem value="credit" className="dropdown-item-brand">Crédito</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -123,7 +122,7 @@ const SimulatorHeader = () => {
               value={simulatorContext.simulationData.value || ''}
               onChange={e => { const val = e.target.value ? Number(e.target.value) : 0; console.debug('[Sim/Header] value ->', val); handleFieldChange('value', val); }}
               placeholder="0,00"
-              className="h-8 text-xs min-w-0"
+              className="h-8 text-xs min-w-0 brand-radius field-secondary-focus no-ring-focus"
             />
           </div>
           
@@ -133,12 +132,12 @@ const SimulatorHeader = () => {
               value={simulatorContext.simulationData.term.toString()}
               onValueChange={v => { const num = Number(v); console.debug('[Sim/Header] term ->', num); handleTermChange(num); }}
             >
-              <SelectTrigger className="h-8 text-xs min-w-0">
+              <SelectTrigger className="h-8 text-xs min-w-0 brand-radius select-trigger-brand">
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
                 {simulatorContext.installmentTypes.map((it: any) => (
-                  <SelectItem key={it.id} value={it.installment_count.toString()}>
+                  <SelectItem key={it.id} value={it.installment_count.toString()} className="dropdown-item-brand">
                     {it.installment_count}
                   </SelectItem>
                 ))}
@@ -160,13 +159,13 @@ const SimulatorHeader = () => {
                 }));
               }}
             >
-              <SelectTrigger className="h-8 text-xs min-w-0">
+              <SelectTrigger className="h-8 text-xs min-w-0 brand-radius select-trigger-brand">
                 <SelectValue placeholder="Selecione" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="full">Parcela Cheia</SelectItem>
+                <SelectItem value="full" className="dropdown-item-brand">Parcela Cheia</SelectItem>
                 {simulatorContext.reducoesParcela.map((red: any) => (
-                  <SelectItem key={red.id} value={red.id}>{red.name}</SelectItem>
+                  <SelectItem key={red.id} value={red.id} className="dropdown-item-brand">{red.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -180,7 +179,7 @@ const SimulatorHeader = () => {
               onChange={e => { const val = e.target.value ? Number(e.target.value) : 6; console.debug('[Sim/Header] contemplationMonth ->', val); handleFieldChange('contemplationMonth', val); }}
               placeholder="6"
               min={1}
-              className="h-8 text-xs min-w-0"
+              className="h-8 text-xs min-w-0 brand-radius field-secondary-focus no-ring-focus"
             />
           </div>
           

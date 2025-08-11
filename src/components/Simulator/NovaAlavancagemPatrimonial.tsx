@@ -625,28 +625,28 @@ export const NovaAlavancagemPatrimonial = ({
           <div>
             <label className="block text-sm font-medium mb-1">Selecione a alavancagem</label>
             <Select value={alavancaSelecionada} onValueChange={(val) => { console.debug('[Sim/Leverage] selectedLeverageId ->', val); setAlavancaSelecionada(val); }} disabled={loading || alavancas.length === 0}>
-              <SelectTrigger>
+              <SelectTrigger className="brand-radius select-trigger-brand">
                 <SelectValue placeholder={loading ? 'Carregando...' : 'Escolha uma alavanca'} />
               </SelectTrigger>
               <SelectContent>
                 {alavancas.map(opt => (
-                  <SelectItem key={opt.id} value={opt.id}>{opt.name}</SelectItem>
+                  <SelectItem key={opt.id} value={opt.id} className="dropdown-item-brand">{opt.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Valor da alavanca</label>
-            <Input type="text" value={valorAlavanca} onChange={handleValorAlavancaChange} placeholder="R$ 0,00" inputMode="numeric" />
+            <Input type="text" value={valorAlavanca} onChange={handleValorAlavancaChange} placeholder="R$ 0,00" inputMode="numeric" className="brand-radius field-secondary-focus no-ring-focus" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Tipo de alavancagem</label>
             <Select value={tipoAlavancagem} onValueChange={(val) => { console.debug('[Sim/Leverage] leverageType ->', val); setTipoAlavancagem(val); }}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full brand-radius select-trigger-brand">
                 <SelectValue placeholder="Selecione o tipo de alavancagem" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="simples">Alavancagem simples</SelectItem>
+                <SelectItem value="simples" className="dropdown-item-brand">Alavancagem simples</SelectItem>
                 <SelectItem value="escalonada" disabled className="text-gray-400 cursor-not-allowed">Alavancagem escalonada (em breve)</SelectItem>
               </SelectContent>
             </Select>
@@ -658,7 +658,7 @@ export const NovaAlavancagemPatrimonial = ({
               min={1}
               value={periodoCompraLocal}
               onChange={e => { const num = Number(e.target.value); console.debug('[Sim/Leverage] purchasePeriodMonths ->', num); setPeriodoCompraLocal(num); }}
-              className="w-full"
+              className="w-full brand-radius field-secondary-focus no-ring-focus"
             />
             {tipoAlavancagem === 'escalonada' && (
               <div className="text-xs text-gray-500 mt-1">
@@ -682,43 +682,43 @@ export const NovaAlavancagemPatrimonial = ({
           <div>
             <h3 className="text-lg font-semibold mb-4">Resultados</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="space-y-2 p-4 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-blue-200 dark:border-[#A86F57]/40">
-                <Label className="text-sm text-blue-700 dark:text-[#A86F57] font-medium">Patrimônio na Contemplação</Label>
+              <div className="space-y-2 p-4 bg-gradient-to-r from-blue-50 to-blue-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border brand-radius" style={{ borderColor: 'var(--brand-secondary)' }}>
+                <Label className="text-sm font-medium" style={{ color: 'var(--brand-primary)' }}>Patrimônio na Contemplação</Label>
                 <div className="text-2xl font-bold text-blue-900 dark:text-white">
                   {patrimonioNaContemplacao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </div>
               </div>
               
-              <div className="space-y-2 p-4 bg-gradient-to-r from-green-50 to-green-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-green-200 dark:border-[#A86F57]/40">
-                <Label className="text-sm text-green-700 dark:text-[#A86F57] font-medium">Parcela Pós-Contemplação</Label>
+              <div className="space-y-2 p-4 bg-gradient-to-r from-green-50 to-green-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border brand-radius" style={{ borderColor: 'var(--brand-secondary)' }}>
+                <Label className="text-sm font-medium" style={{ color: 'var(--brand-primary)' }}>Parcela Pós-Contemplação</Label>
                 <div className="text-2xl font-bold text-green-900 dark:text-white">
                   {parcelaPosContemplacao.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </div>
               </div>
               
-              <div className="space-y-2 p-4 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-purple-200 dark:border-[#A86F57]/40">
-                <Label className="text-sm text-purple-700 dark:text-[#A86F57] font-medium">Ganhos Mensais</Label>
+              <div className="space-y-2 p-4 bg-gradient-to-r from-purple-50 to-purple-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border brand-radius" style={{ borderColor: 'var(--brand-secondary)' }}>
+                <Label className="text-sm font-medium" style={{ color: 'var(--brand-primary)' }}>Ganhos Mensais</Label>
                 <div className="text-2xl font-bold text-purple-900 dark:text-white">
                   {rendimentosUltimoMes.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </div>
               </div>
               
-              <div className="space-y-2 p-4 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-orange-200 dark:border-[#A86F57]/40">
-                <Label className="text-sm text-orange-700 dark:text-[#A86F57] font-medium">Fluxo de Caixa</Label>
+              <div className="space-y-2 p-4 bg-gradient-to-r from-orange-50 to-orange-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border brand-radius" style={{ borderColor: 'var(--brand-secondary)' }}>
+                <Label className="text-sm font-medium" style={{ color: 'var(--brand-primary)' }}>Fluxo de Caixa</Label>
                 <div className="text-2xl font-bold text-orange-900 dark:text-white">
                   {fluxoCaixaAntes.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </div>
               </div>
               
-              <div className="space-y-2 p-4 bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-indigo-200 dark:border-[#A86F57]/40">
-                <Label className="text-sm text-indigo-700 dark:text-[#A86F57] font-medium">Patrimônio final</Label>
+              <div className="space-y-2 p-4 bg-gradient-to-r from-indigo-50 to-indigo-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border brand-radius" style={{ borderColor: 'var(--brand-secondary)' }}>
+                <Label className="text-sm font-medium" style={{ color: 'var(--brand-primary)' }}>Patrimônio final</Label>
                 <div className="text-2xl font-bold text-indigo-900 dark:text-white">
                   {patrimonioFinal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 })}
                 </div>
               </div>
               
-              <div className="space-y-2 p-4 bg-gradient-to-r from-teal-50 to-teal-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-teal-200 dark:border-[#A86F57]/40">
-                <Label className="text-sm text-teal-700 dark:text-[#A86F57] font-medium">Renda passiva</Label>
+              <div className="space-y-2 p-4 bg-gradient-to-r from-teal-50 to-teal-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border brand-radius" style={{ borderColor: 'var(--brand-secondary)' }}>
+                <Label className="text-sm font-medium" style={{ color: 'var(--brand-primary)' }}>Renda passiva</Label>
                 <div className="text-2xl font-bold text-teal-900 dark:text-white">
                   {rendaPassiva.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                 </div>
@@ -726,8 +726,8 @@ export const NovaAlavancagemPatrimonial = ({
               
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="space-y-2 p-4 bg-gradient-to-r from-pink-50 to-pink-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-pink-200 dark:border-[#A86F57]/40">
-                    <Label className="text-sm text-pink-700 dark:text-[#A86F57] font-medium">Investimento</Label>
+                  <div className="space-y-2 p-4 bg-gradient-to-r from-pink-50 to-pink-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border brand-radius" style={{ borderColor: 'var(--brand-secondary)' }}>
+                    <Label className="text-sm font-medium" style={{ color: 'var(--brand-primary)' }}>Investimento</Label>
                     <div className="text-2xl font-bold text-pink-900 dark:text-white">
                       {(investimento * 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%
                     </div>
@@ -740,8 +740,8 @@ export const NovaAlavancagemPatrimonial = ({
               
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <div className="space-y-2 p-4 bg-gradient-to-r from-amber-50 to-amber-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border border-amber-200 dark:border-[#A86F57]/40">
-                    <Label className="text-sm text-amber-700 dark:text-[#A86F57] font-medium">Pago pelo inquilino</Label>
+                  <div className="space-y-2 p-4 bg-gradient-to-r from-amber-50 to-amber-100 dark:from-[#1F1F1F] dark:to-[#161616] rounded-lg border brand-radius" style={{ borderColor: 'var(--brand-secondary)' }}>
+                    <Label className="text-sm font-medium" style={{ color: 'var(--brand-primary)' }}>Pago pelo inquilino</Label>
                     <div className="text-2xl font-bold text-amber-900 dark:text-white">
                       {(pagoPeloInquilino * 100).toLocaleString('pt-BR', { maximumFractionDigits: 2 })}%
                     </div>
@@ -954,7 +954,7 @@ export const NovaAlavancagemPatrimonial = ({
             // Persistir no contexto global
             persistInContext();
             setShowAlavancagemModal(false);
-          }}>
+          }} variant="brandPrimaryToSecondary" className="brand-radius">
             Salvar
           </Button>
         }
@@ -963,29 +963,29 @@ export const NovaAlavancagemPatrimonial = ({
           <div>
             <label className="block text-sm font-medium mb-1">Selecione a alavancagem</label>
             <Select value={alavancaSelecionada} onValueChange={(val) => { console.debug('[Sim/Leverage/Modal] selectedLeverageId ->', val); setAlavancaSelecionada(val); }} disabled={loading || alavancas.length === 0}>
-              <SelectTrigger>
+              <SelectTrigger className="brand-radius select-trigger-brand">
                 <SelectValue placeholder={loading ? 'Carregando...' : 'Escolha uma alavanca'} />
               </SelectTrigger>
               <SelectContent>
                 {alavancas.map(opt => (
-                  <SelectItem key={opt.id} value={opt.id}>{opt.name}</SelectItem>
+                  <SelectItem key={opt.id} value={opt.id} className="dropdown-item-brand">{opt.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Valor da alavanca</label>
-            <Input type="text" value={valorAlavanca} onChange={handleValorAlavancaChange} placeholder="R$ 0,00" inputMode="numeric" />
+            <Input type="text" value={valorAlavanca} onChange={handleValorAlavancaChange} placeholder="R$ 0,00" inputMode="numeric" className="brand-radius field-secondary-focus no-ring-focus" />
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">Tipo de alavancagem</label>
             <Select value={tipoAlavancagem} onValueChange={(val) => { console.debug('[Sim/Leverage/Modal] leverageType ->', val); setTipoAlavancagem(val); }}>
-              <SelectTrigger className="w-full">
+              <SelectTrigger className="w-full brand-radius select-trigger-brand">
                 <SelectValue placeholder="Selecione o tipo de alavancagem" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="simples">Alavancagem simples</SelectItem>
-                <SelectItem value="escalonada">Alavancagem escalonada</SelectItem>
+                <SelectItem value="simples" className="dropdown-item-brand">Alavancagem simples</SelectItem>
+                <SelectItem value="escalonada" className="dropdown-item-brand">Alavancagem escalonada</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -996,7 +996,7 @@ export const NovaAlavancagemPatrimonial = ({
               min={1}
               value={periodoCompraLocal}
               onChange={e => { const num = Number(e.target.value); console.debug('[Sim/Leverage/Modal] purchasePeriodMonths ->', num); setPeriodoCompraLocal(num); }}
-              className="w-full"
+              className="w-full brand-radius field-secondary-focus no-ring-focus"
             />
           </div>
           
@@ -1012,7 +1012,7 @@ export const NovaAlavancagemPatrimonial = ({
                 min={0}
                 max={100}
                 step={0.01}
-                className="w-full"
+                className="w-full brand-radius field-secondary-focus no-ring-focus"
               />
             </div>
             <div>
@@ -1025,7 +1025,7 @@ export const NovaAlavancagemPatrimonial = ({
                 min={0}
                 max={100}
                 step={0.01}
-                className="w-full"
+                className="w-full brand-radius field-secondary-focus no-ring-focus"
               />
             </div>
             <div>
@@ -1038,7 +1038,7 @@ export const NovaAlavancagemPatrimonial = ({
                 min={0}
                 max={100}
                 step={0.01}
-                className="w-full"
+                className="w-full brand-radius field-secondary-focus no-ring-focus"
               />
             </div>
             <div>
@@ -1051,7 +1051,7 @@ export const NovaAlavancagemPatrimonial = ({
                 min={0}
                 max={100}
                 step={0.01}
-                className="w-full"
+                className="w-full brand-radius field-secondary-focus no-ring-focus"
               />
             </div>
           </div>

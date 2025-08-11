@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import ForgotPasswordModal from '@/components/Auth/ForgotPasswordModal';
 import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
 import { Logo } from '@/components/ui/Logo';
+import { supabase } from '@/integrations/supabase/client';
 
 const CrmLogin = () => {
   const [email, setEmail] = useState('');
@@ -20,17 +21,36 @@ const CrmLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showForgotModal, setShowForgotModal] = useState(false);
-  const [notFoundNotified, setNotFoundNotified] = useState(false);
+  const [brandingLight, setBrandingLight] = useState<string | null>(null);
+  const [brandingDark, setBrandingDark] = useState<string | null>(null);
   
-  const { signIn, user, crmUser, loading } = useCrmAuth();
+  const { signIn, user, crmUser } = useCrmAuth();
   const navigate = useNavigate();
 
-  React.useEffect(() => {
-    if (!loading && user && !crmUser && !notFoundNotified) {
-      toast.error('Usuário autenticado, mas não encontrado no CRM. Contate o administrador.');
-      setNotFoundNotified(true);
-    }
-  }, [user, crmUser, loading, notFoundNotified]);
+  // Carregar branding da empresa BP Sales para a tela de login
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const { data: company } = await supabase
+          .from('companies')
+          .select('id, name')
+          .ilike('name', 'BP Sales')
+          .maybeSingle();
+        const companyId = company?.id;
+        if (!companyId) return;
+        const { data: branding } = await supabase
+          .from('company_branding')
+          .select('logo_horizontal_url, logo_horizontal_dark_url')
+          .eq('company_id', companyId)
+          .maybeSingle();
+        if (!mounted) return;
+        setBrandingLight(branding?.logo_horizontal_url || null);
+        setBrandingDark(branding?.logo_horizontal_dark_url || branding?.logo_horizontal_url || null);
+      } catch {}
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,10 +88,10 @@ const CrmLogin = () => {
       
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Logo className="h-24 mx-auto mb-2" />
+          <Logo className="h-24 mx-auto mb-2" lightUrl={brandingLight || undefined as any} darkUrl={brandingDark || undefined as any} />
         </div>
 
-        <Card className="shadow-lg border-0 bg-background dark:bg-[#1F1F1F] border-border dark:border-[#A86F57]/20">
+        <Card className="shadow-lg border-0 bg-background dark:bg-[#1F1F1F] border-border" style={{ borderColor: 'rgba(var(--brand-rgb, 168,110,87), 0.20)' }}>
           <CardHeader className="text-center">
             <CardTitle className="text-2xl text-foreground dark:text-white">Entrar no Sistema</CardTitle>
             <CardDescription className="text-muted-foreground dark:text-gray-300">
@@ -87,6 +107,14 @@ const CrmLogin = () => {
                 </Alert>
               )}
 
+              {user && !crmUser && (
+                <Alert>
+                  <AlertDescription>
+                    Sua conta foi autenticada, mas ainda não há perfil no CRM. Aguarde alguns instantes e tente entrar novamente. Se o aviso persistir, contate o administrador.
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <div className="space-y-2">
                 <Label htmlFor="email" className="text-foreground dark:text-white">Email</Label>
                 <Input
@@ -97,7 +125,8 @@ const CrmLogin = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={isLoading}
-                  className="bg-background dark:bg-[#131313] border-border dark:border-[#A86F57]/30 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-gray-400"
+                  className="bg-background dark:bg-[#131313] border-border text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-gray-400"
+                  style={{ borderColor: 'rgba(var(--brand-rgb, 168,110,87), 0.30)' }}
                 />
               </div>
 
@@ -112,7 +141,8 @@ const CrmLogin = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={isLoading}
-                    className="bg-background dark:bg-[#131313] border-border dark:border-[#A86F57]/30 text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-gray-400"
+                    className="bg-background dark:bg-[#131313] border-border text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-gray-400"
+                    style={{ borderColor: 'rgba(var(--brand-rgb, 168,110,87), 0.30)' }}
                   />
                   <Button
                     type="button"
@@ -135,7 +165,8 @@ const CrmLogin = () => {
             <CardFooter className="flex flex-col space-y-4">
               <Button
                 type="submit"
-                className="w-full bg-[#A86F57] hover:bg-[#A86F57]/80 text-white"
+                className="w-full text-white"
+                style={{ backgroundColor: 'var(--brand-primary, #A86F57)' }}
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -152,7 +183,8 @@ const CrmLogin = () => {
                 <button
                   type="button"
                   onClick={() => setShowForgotModal(true)}
-                  className="text-[#A86F57] hover:underline dark:text-[#A86F57]"
+                  className="hover:underline"
+                  style={{ color: 'var(--brand-primary, #A86F57)' }}
                   disabled={isLoading}
                 >
                   Esqueci a senha

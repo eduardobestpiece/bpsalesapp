@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FullScreenModal } from '@/components/ui/FullScreenModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -148,15 +148,13 @@ export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageMod
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {leverage ? 'Editar Alavanca' : 'Adicionar Alavanca'}
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-6">
+    <FullScreenModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={leverage ? 'Editar Alavanca' : 'Adicionar Alavanca'}
+      actions={<Button onClick={handleSave} disabled={loading} variant="brandPrimaryToSecondary">{loading ? 'Salvando...' : leverage ? 'Atualizar' : 'Criar'}</Button>}
+    >
+      <div className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="name">Nome da Alavanca *</Label>
             <Input
@@ -164,18 +162,19 @@ export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageMod
               value={formData.name}
               onChange={(e) => handleChange('name', e.target.value)}
               placeholder="Ex: Airbnb Rio de Janeiro"
+              className="brand-radius campo-brand"
             />
           </div>
 
           <div className="space-y-2">
             <Label>Tipo de Alavanca *</Label>
             <Select value={formData.type} onValueChange={(value) => handleChange('type', value)}>
-              <SelectTrigger>
+              <SelectTrigger className="brand-radius select-trigger-brand">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="real_estate">Alavanca Imobiliária</SelectItem>
-                <SelectItem value="vehicle">Alavanca Veicular</SelectItem>
+                <SelectItem value="real_estate" className="dropdown-item-brand">Alavanca Imobiliária</SelectItem>
+                <SelectItem value="vehicle" className="dropdown-item-brand">Alavanca Veicular</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -185,12 +184,12 @@ export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageMod
               <div className="space-y-2">
                 <Label>Subtipo *</Label>
                 <Select value={formData.subtype} onValueChange={(value) => handleChange('subtype', value)}>
-                  <SelectTrigger>
+                  <SelectTrigger className="brand-radius select-trigger-brand">
                     <SelectValue placeholder="Selecione o subtipo" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="short_stay">Short Stay</SelectItem>
-                    <SelectItem value="commercial_residential">Comercial ou Residencial</SelectItem>
+                    <SelectItem value="short_stay" className="dropdown-item-brand">Short Stay</SelectItem>
+                    <SelectItem value="commercial_residential" className="dropdown-item-brand">Comercial ou Residencial</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -215,6 +214,7 @@ export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageMod
                         value={formData.fixed_property_value || ''}
                         onChange={(e) => handleChange('fixed_property_value', Number(e.target.value))}
                         placeholder="Ex: 500000"
+                        className="brand-radius campo-brand"
                       />
                     </div>
                   )}
@@ -230,6 +230,7 @@ export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageMod
                           value={formData.daily_percentage || ''}
                           onChange={(e) => handleChange('daily_percentage', Number(e.target.value))}
                           placeholder="Ex: 0.5"
+                          className="brand-radius campo-brand"
                         />
                         <p className="text-sm text-muted-foreground">
                           Percentual sobre o valor do imóvel para definir o valor da diária
@@ -245,6 +246,7 @@ export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageMod
                           value={formData.management_percentage || ''}
                           onChange={(e) => handleChange('management_percentage', Number(e.target.value))}
                           placeholder="Ex: 20"
+                          className="brand-radius campo-brand"
                         />
                         <p className="text-sm text-muted-foreground">
                           Percentual calculado sobre o valor das diárias
@@ -260,6 +262,7 @@ export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageMod
                           value={formData.occupancy_rate || ''}
                           onChange={(e) => handleChange('occupancy_rate', Number(e.target.value))}
                           placeholder="Ex: 70"
+                          className="brand-radius campo-brand"
                         />
                         <p className="text-sm text-muted-foreground">
                           Taxa calculada em 30 dias × percentual
@@ -279,6 +282,7 @@ export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageMod
                           value={formData.rental_percentage || ''}
                           onChange={(e) => handleChange('rental_percentage', Number(e.target.value))}
                           placeholder="Ex: 1.5"
+                          className="brand-radius campo-brand"
                         />
                         <p className="text-sm text-muted-foreground">
                           Percentual sobre o valor do imóvel para definir o aluguel
@@ -294,6 +298,7 @@ export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageMod
                           value={formData.real_estate_percentage || ''}
                           onChange={(e) => handleChange('real_estate_percentage', Number(e.target.value))}
                           placeholder="Ex: 8"
+                          className="brand-radius campo-brand"
                         />
                         <p className="text-sm text-muted-foreground">
                           Percentual calculado sobre o valor do aluguel
@@ -316,6 +321,7 @@ export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageMod
                         value={formData.total_expenses || ''}
                         onChange={(e) => handleChange('total_expenses', Number(e.target.value))}
                         placeholder={formData.has_fixed_property_value ? 'Ex: 800' : 'Ex: 10'}
+                        className="brand-radius campo-brand"
                       />
                       {!formData.has_fixed_property_value && <span className="text-muted-foreground">%</span>}
                     </div>
@@ -331,16 +337,7 @@ export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageMod
             </div>
           )}
 
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button variant="outline" onClick={onClose} disabled={loading}>
-              Cancelar
-            </Button>
-            <Button onClick={handleSave} disabled={loading}>
-              {loading ? 'Salvando...' : leverage ? 'Atualizar' : 'Criar'}
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </FullScreenModal>
   );
 };

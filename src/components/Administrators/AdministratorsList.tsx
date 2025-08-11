@@ -50,10 +50,12 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
 
   const fetchAdministrators = async () => {
     try {
+      if (!selectedCompanyId) { setAdministrators([]); setLoading(false); return; }
       let query = supabase
         .from('administrators')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .eq('company_id', selectedCompanyId);
 
       if (statusFilter !== 'all') {
         query = query.eq('is_archived', statusFilter === 'archived');
@@ -157,7 +159,7 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
 
   useEffect(() => {
     fetchAdministrators();
-  }, [searchTerm, statusFilter]);
+  }, [searchTerm, statusFilter, selectedCompanyId]);
 
   // Buscar qual é a administradora padrão ao carregar
   useEffect(() => {
@@ -200,32 +202,43 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
               </TableCell>
               <TableCell className="font-medium">{admin.name}</TableCell>
               <TableCell>
-                <Badge variant={admin.credit_update_type === 'monthly' ? 'default' : 'secondary'}>
+                <Badge variant="outline" className="brand-radius">
                   {admin.credit_update_type === 'monthly' ? 'Mensal' : 'Anual'}
                 </Badge>
               </TableCell>
               <TableCell>{admin.update_month || '-'}</TableCell>
               <TableCell>{admin.max_embedded_percentage ? `${admin.max_embedded_percentage}%` : '-'}</TableCell>
               <TableCell>
-                <Badge variant={admin.is_archived ? 'destructive' : 'default'}>
-                  {admin.is_archived ? 'Arquivado' : 'Ativo'}
-                </Badge>
+                {admin.is_archived ? (
+                  <Badge variant="destructive" style={{ borderRadius: 'var(--brand-radius, 8px)' }}>
+                    Arquivado
+                  </Badge>
+                ) : (
+                  <Badge
+                    className="text-white"
+                    style={{ backgroundColor: 'var(--brand-primary, #A86F57)', borderRadius: 'var(--brand-radius, 8px)' }}
+                  >
+                    Ativo
+                  </Badge>
+                )}
               </TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end space-x-2">
                   <Button
-                    variant="ghost"
+                    variant="brandOutlineSecondaryHover"
                     size="sm"
                     onClick={() => onEdit(admin)}
                     disabled={isSubMaster}
+                    className="brand-radius"
                   >
                     <Edit className="w-4 h-4" />
                   </Button>
                   <Button
-                    variant="ghost"
+                    variant="brandOutlineSecondaryHover"
                     size="sm"
                     onClick={() => handleArchive(admin.id, admin.is_archived)}
                     disabled={isSubMaster}
+                    className="brand-radius"
                   >
                     <Archive className="w-4 h-4" />
                   </Button>

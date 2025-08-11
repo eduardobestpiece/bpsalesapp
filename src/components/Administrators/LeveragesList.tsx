@@ -9,7 +9,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useQuery } from '@tanstack/react-query';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface LeveragesListProps {
@@ -28,72 +27,20 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
   const canCopy = isMaster || isSubMaster;
   const { selectedCompanyId } = useCompany();
 
-  // Modal de cópia
-  const [copyModalOpen, setCopyModalOpen] = useState(false);
-  const [originCompanyId, setOriginCompanyId] = useState<string>('');
-  const [copyLoading, setCopyLoading] = useState(false);
+  // Removido: cópia de alavancas
 
-  // Buscar empresas para seleção
-  const { data: companies = [], isLoading: companiesLoading } = useQuery({
-    queryKey: ['companies'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('companies')
-        .select('id, name, status')
-        .eq('status', 'active')
-        .order('name');
-      if (error) throw error;
-      return data;
-    },
-    enabled: canCopy,
-  });
+  // Removido: busca de empresas para cópia
 
-  // Função de cópia de alavancas
-  const handleCopyLeverages = async () => {
-    if (!originCompanyId || !selectedCompanyId) {
-      toast({ title: 'Erro', description: 'Selecione a empresa de origem e destino.', variant: 'destructive' });
-      return;
-    }
-    setCopyLoading(true);
-    try {
-      // Buscar alavancas da empresa de origem
-      const { data: leveragesToCopy, error } = await supabase
-        .from('leverages')
-        .select('*')
-        .eq('company_id', originCompanyId)
-        .eq('is_archived', false);
-      if (error) throw error;
-      if (!leveragesToCopy || leveragesToCopy.length === 0) {
-        toast({ title: 'Erro', description: 'Nenhuma alavanca encontrada na empresa de origem.', variant: 'destructive' });
-        setCopyLoading(false);
-        return;
-      }
-      // Remover campos que não devem ser copiados
-      const leveragesInsert = leveragesToCopy.map((lev: any) => {
-        const { id, created_at, updated_at, ...rest } = lev;
-        return { ...rest, company_id: selectedCompanyId };
-      });
-      // Inserir na empresa de destino
-      const { error: insertError } = await supabase
-        .from('leverages')
-        .insert(leveragesInsert);
-      if (insertError) throw insertError;
-      toast({ title: 'Sucesso', description: 'Alavancas copiadas com sucesso!' });
-      setCopyModalOpen(false);
-      // Refetch leverages - assuming there's a refetch function or state update
-    } catch (err: any) {
-      toast({ title: 'Erro', description: 'Erro ao copiar alavancas: ' + (err.message || ''), variant: 'destructive' });
-    } finally {
-      setCopyLoading(false);
-    }
-  };
+  // Removido: função de cópia
 
   const loadLeverages = async () => {
     try {
+      if (!selectedCompanyId) { setLeverages([]); setLoading(false); return; }
       let query = supabase
         .from('leverages')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .eq('company_id', selectedCompanyId);
 
       if (statusFilter === 'active') {
         query = query.eq('is_archived', false);
@@ -125,7 +72,7 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
 
   useEffect(() => {
     loadLeverages();
-  }, [searchTerm, statusFilter]);
+  }, [searchTerm, statusFilter, selectedCompanyId]);
 
   const handleArchiveToggle = async (leverage: any) => {
     try {
@@ -193,42 +140,7 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
 
   return (
     <div className="space-y-4">
-      {/* Botão de cópia de alavancas */}
-      {canCopy && (
-        <div className="flex justify-end">
-          <Button variant="outline" onClick={() => setCopyModalOpen(true)}>
-            Copiar alavancas de outra empresa
-          </Button>
-        </div>
-      )}
-      {/* Modal de cópia */}
-      <Dialog open={copyModalOpen} onOpenChange={setCopyModalOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Copiar alavancas de outra empresa</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Empresa de origem</label>
-              <Select value={originCompanyId} onValueChange={setOriginCompanyId} disabled={companiesLoading}>
-                <SelectTrigger>
-                  <SelectValue placeholder={companiesLoading ? 'Carregando...' : 'Selecione a empresa'} />
-                </SelectTrigger>
-                <SelectContent>
-                  {companies
-                    .filter((c: any) => c.id !== selectedCompanyId)
-                    .map((c: any) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button onClick={handleCopyLeverages} disabled={!originCompanyId || copyLoading}>
-              {copyLoading ? 'Copiando...' : 'Copiar'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Removidos: botão e modal de cópia de alavancas */}
       {leverages.map((leverage) => (
         <Card key={leverage.id} className="hover:shadow-md transition-shadow">
           <CardContent className="p-4">
@@ -236,14 +148,16 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
               <div className="flex-1">
                 <div className="flex items-center gap-2 mb-2">
                   <h3 className="font-semibold text-lg">{leverage.name}</h3>
-                  <Badge variant={leverage.is_archived ? 'secondary' : 'default'}>
-                    {leverage.is_archived ? 'Arquivada' : 'Ativa'}
-                  </Badge>
-                  <Badge variant="outline">
+                  {leverage.is_archived ? (
+                    <Badge variant="destructive" className="brand-radius">Arquivada</Badge>
+                  ) : (
+                    <Badge className="brand-radius text-white" style={{ backgroundColor: 'var(--brand-primary, #A86F57)' }}>Ativa</Badge>
+                  )}
+                  <Badge variant="outline" className="brand-radius">
                     {getTypeLabel(leverage.type)}
                   </Badge>
                   {leverage.subtype && (
-                    <Badge variant="outline">
+                    <Badge variant="outline" className="brand-radius">
                       {getSubtypeLabel(leverage.subtype)}
                     </Badge>
                   )}
@@ -275,23 +189,20 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
               
               <div className="flex gap-2">
                 <Button
-                  variant="outline"
+                  variant="brandOutlineSecondaryHover"
                   size="sm"
                   onClick={() => onEdit(leverage)}
-                  className="hover:bg-primary/10 hover:border-primary/20"
+                  className="brand-radius"
                   disabled={isSubMaster}
                 >
                   <Edit className="w-4 h-4" />
                 </Button>
                 {isMaster && (
                   <Button
-                    variant="outline"
+                    variant="brandOutlineSecondaryHover"
                     size="sm"
                     onClick={() => handleArchiveToggle(leverage)}
-                    className={leverage.is_archived ? 
-                      "hover:bg-success/10 hover:border-success/20" : 
-                      "hover:bg-destructive/10 hover:border-destructive/20"
-                    }
+                    className="brand-radius"
                   >
                     {leverage.is_archived ? (
                       <RotateCcw className="w-4 h-4" />

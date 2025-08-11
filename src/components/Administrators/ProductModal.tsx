@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FullScreenModal } from '@/components/ui/FullScreenModal';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -13,6 +13,7 @@ import { X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useCompany } from '@/contexts/CompanyContext';
 
 const formSchema = z.object({
   type: z.enum(['property', 'car', 'service']),
@@ -45,6 +46,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   const [reducaoParcela, setReducaoParcela] = useState<any>(null);
   // Adicionar estado para mensagem de redução
   const [mensagemReducao, setMensagemReducao] = useState<string | null>(null);
+  const { selectedCompanyId } = useCompany();
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -58,9 +60,11 @@ export const ProductModal: React.FC<ProductModalProps> = ({
 
   const fetchAdministrators = async () => {
     try {
+      if (!selectedCompanyId) { setAdministrators([]); return; }
       const { data, error } = await supabase
         .from('administrators')
         .select('id, name')
+        .eq('company_id', selectedCompanyId)
         .eq('is_archived', false)
         .order('name');
       
@@ -70,16 +74,20 @@ export const ProductModal: React.FC<ProductModalProps> = ({
     }
   };
 
-  const fetchInstallmentTypes = async () => {
+  const fetchInstallmentTypes = async (adminId?: string) => {
     try {
+      if (!adminId) { setInstallmentTypes([]); return; }
       const { data, error } = await supabase
         .from('installment_types')
         .select('id, name, administrator_id, installment_count, admin_tax_percent, reserve_fund_percent, insurance_percent, optional_insurance, reduction_percentage')
-        .order('name');
+        .eq('administrator_id', adminId)
+        .eq('is_archived', false)
+        .order('installment_count');
       
       if (error) throw error;
       setInstallmentTypes(data || []);
     } catch (error) {
+      setInstallmentTypes([]);
     }
   };
 
@@ -94,6 +102,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         type: data.type,
         administrator_id: data.administrator_id || null,
         credit_value: data.credit_value,
+        company_id: selectedCompanyId,
         // NÃO incluir installment_types aqui
       };
 
@@ -135,9 +144,15 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         // Update
         const { error } = await supabase
           .from('products')
-          .update(cleanedData)
+          .update({
+            name: nomeAuto,
+            type: data.type,
+            administrator_id: data.administrator_id || null,
+            credit_value: data.credit_value,
+          })
           .eq('id', product.id);
         if (error) throw error;
+        console.log('[Products] Updated', { id: product.id, administrator_id: data.administrator_id, company_id: selectedCompanyId });
       } else {
         // Create
         const { data: created, error } = await supabase
@@ -147,6 +162,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
           .maybeSingle();
         if (error) throw error;
         productId = created?.id;
+        console.log('[Products] Created', { id: productId, administrator_id: data.administrator_id, company_id: selectedCompanyId });
       }
 
       // Atualizar relação product_installment_types
@@ -178,9 +194,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   useEffect(() => {
     if (open) {
       fetchAdministrators();
-      fetchInstallmentTypes();
     }
-  }, [open, product]);
+  }, [open, product, selectedCompanyId]);
 
   useEffect(() => {
     const adminId = form.watch('administrator_id');
@@ -188,21 +203,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       setInstallmentTypes([]);
       return;
     }
-    const fetchInstallments = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('installment_types')
-          .select('*')
-          .eq('administrator_id', adminId)
-          .eq('is_archived', false)
-          .order('installment_count');
-        if (error) throw error;
-        setInstallmentTypes(data || []);
-      } catch (err) {
-        setInstallmentTypes([]);
-      }
-    };
-    fetchInstallments();
+    fetchInstallmentTypes(adminId);
   }, [form.watch('administrator_id')]);
 
   useEffect(() => {
@@ -296,16 +297,14 @@ export const ProductModal: React.FC<ProductModalProps> = ({
   }, [form.watch('credit_value'), form.watch('installment_types'), installmentTypes, parcelaPadraoId, reducaoParcela]);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>
-            {product ? 'Editar Produto' : 'Novo Produto'}
-          </DialogTitle>
-        </DialogHeader>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+    <FullScreenModal
+      isOpen={open}
+      onClose={() => onOpenChange(false)}
+      title={product ? 'Editar Produto' : 'Novo Produto'}
+      actions={<Button type="submit" form="product-form" variant="brandPrimaryToSecondary">{product ? 'Atualizar' : 'Criar'}</Button>}
+    >
+      <Form {...form}>
+        <form id="product-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
@@ -315,14 +314,14 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                     <FormLabel>Tipo *</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="brand-radius select-trigger-brand">
                           <SelectValue placeholder="Selecione o tipo" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="property">Imóvel</SelectItem>
-                        <SelectItem value="car">Veículo</SelectItem>
-                        <SelectItem value="service">Serviço</SelectItem>
+                        <SelectItem value="property" className="dropdown-item-brand">Imóvel</SelectItem>
+                        <SelectItem value="car" className="dropdown-item-brand">Veículo</SelectItem>
+                        <SelectItem value="service" className="dropdown-item-brand">Serviço</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -338,13 +337,13 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                     <FormLabel>Administradora</FormLabel>
                     <Select onValueChange={field.onChange} value={field.value || ''}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="brand-radius select-trigger-brand">
                           <SelectValue placeholder="Selecione a administradora" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
                         {administrators.map((admin) => (
-                          <SelectItem key={admin.id} value={admin.id}>
+                          <SelectItem key={admin.id} value={admin.id} className="dropdown-item-brand">
                             {admin.name}
                           </SelectItem>
                         ))}
@@ -370,6 +369,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                       placeholder="0.00"
                       {...field}
                       onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)}
+                      className="brand-radius campo-brand"
                     />
                   </FormControl>
                   <FormMessage />
@@ -377,41 +377,45 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="installment_types"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Parcelas *</FormLabel>
-                  <div className="flex flex-col gap-2">
-                    {installmentTypes.map((it) => (
-                      <div key={it.id} className="flex items-center gap-2">
-                        <Checkbox
-                          checked={field.value.includes(it.id)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              field.onChange([...field.value, it.id]);
-                            } else {
-                              field.onChange(field.value.filter((v: string) => v !== it.id));
-                              if (parcelaPadraoId === it.id) setParcelaPadraoId(null);
-                            }
-                          }}
-                        />
-                        <input
-                          type="radio"
-                          name="parcelaPadrao"
-                          checked={parcelaPadraoId === it.id}
-                          disabled={!field.value.includes(it.id)}
-                          onChange={() => setParcelaPadraoId(it.id)}
-                        />
-                        <span>{it.name || `${it.installment_count} meses`}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {form.watch('administrator_id') && (
+              <FormField
+                control={form.control}
+                name="installment_types"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Parcelas *</FormLabel>
+                    <div className="flex flex-col gap-2">
+                      {installmentTypes.map((it) => (
+                        <div key={it.id} className="flex items-center gap-2">
+                          <Checkbox
+                            checked={field.value.includes(it.id)}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                field.onChange([...field.value, it.id]);
+                              } else {
+                                field.onChange(field.value.filter((v: string) => v !== it.id));
+                                if (parcelaPadraoId === it.id) setParcelaPadraoId(null);
+                              }
+                            }}
+                            className="data-[state=checked]:bg-[var(--brand-primary)] data-[state=checked]:border-[var(--brand-primary)]"
+                          />
+                          <input
+                            type="radio"
+                            name="parcelaPadrao"
+                            checked={parcelaPadraoId === it.id}
+                            disabled={!field.value.includes(it.id)}
+                            onChange={() => setParcelaPadraoId(it.id)}
+                            className="appearance-none h-4 w-4 rounded-full border outline-none ring-0 focus:ring-0 focus:outline-none border-[var(--brand-secondary)] checked:border-[var(--brand-primary)] checked:bg-[var(--brand-primary)]"
+                          />
+                          <span>{it.name || `${it.installment_count} meses`}</span>
+                        </div>
+                      ))}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div>
@@ -427,17 +431,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               </div>
             </div>
 
-            <div className="flex justify-end space-x-2 pt-4">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancelar
-              </Button>
-              <Button type="submit">
-                {product ? 'Atualizar' : 'Criar'}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+        </form>
+      </Form>
+    </FullScreenModal>
   );
 };

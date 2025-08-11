@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { FullScreenModal } from '@/components/ui/FullScreenModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -278,15 +279,13 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>
-            {funnel ? 'Editar Funil' : 'Novo Funil'}
-          </DialogTitle>
-        </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-6">
+    <FullScreenModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={funnel ? 'Editar Funil' : 'Novo Funil'}
+      actions={<Button type="submit" form="funnel-form" variant="brandPrimaryToSecondary" className="brand-radius">{isLoading ? 'Salvando...' : (funnel ? 'Atualizar' : 'Criar')}</Button>}
+    >
+        <form id="funnel-form" onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label htmlFor="name">Nome do Funil *</Label>
@@ -297,6 +296,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                 placeholder="Ex: Funil de Vendas Online"
                 required
                 disabled={isLoading}
+                className="campo-brand brand-radius"
               />
             </div>
 
@@ -313,13 +313,13 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                 }
                 disabled={isLoading}
               >
-                <SelectTrigger>
+                <SelectTrigger className="select-trigger-brand brand-radius">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="daily">Diário</SelectItem>
-                  <SelectItem value="weekly">Semanal</SelectItem>
-                  <SelectItem value="monthly">Mensal</SelectItem>
+                  <SelectItem value="daily" className="dropdown-item-brand">Diário</SelectItem>
+                  <SelectItem value="weekly" className="dropdown-item-brand">Semanal</SelectItem>
+                  <SelectItem value="monthly" className="dropdown-item-brand">Mensal</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -334,12 +334,12 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                     onValueChange={(value: 'manual' | 'sistema') => setFormData(prev => ({ ...prev, sales_value_mode: value }))}
                     disabled={isLoading}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="select-trigger-brand brand-radius">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="manual">Manual</SelectItem>
-                      <SelectItem value="sistema">Sistema</SelectItem>
+                      <SelectItem value="manual" className="dropdown-item-brand">Manual</SelectItem>
+                      <SelectItem value="sistema" className="dropdown-item-brand">Sistema</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -350,12 +350,12 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                     onValueChange={(value: 'manual' | 'sistema') => setFormData(prev => ({ ...prev, recommendations_mode: value }))}
                     disabled={isLoading}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="select-trigger-brand brand-radius">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="manual">Manual</SelectItem>
-                      <SelectItem value="sistema">Sistema</SelectItem>
+                      <SelectItem value="manual" className="dropdown-item-brand">Manual</SelectItem>
+                      <SelectItem value="sistema" className="dropdown-item-brand">Sistema</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -375,12 +375,12 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                   }))}
                   disabled={isLoading}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="select-trigger-brand brand-radius">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     {getVerificationDayOptions().map(option => (
-                      <SelectItem key={option.value} value={option.value.toString()}>
+                      <SelectItem key={option.value} value={option.value.toString()} className="dropdown-item-brand">
                         {option.label}
                       </SelectItem>
                     ))}
@@ -399,6 +399,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                 onChange={e => setFormData(prev => ({ ...prev, indicator_deadline_hours: Math.max(0, Math.floor(Number(e.target.value) || 0)) }))}
                 disabled={isLoading}
                 required
+                className="campo-brand brand-radius"
               />
               <div className="text-xs text-muted-foreground mt-1">
                 0 = até a data fim do período, 24 = 1 dia após, 48 = 2 dias após, etc.
@@ -410,7 +411,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle>Etapas do Funil</CardTitle>
-                <Button type="button" onClick={addStage} size="sm" disabled={isLoading}>
+                <Button type="button" onClick={addStage} size="sm" disabled={isLoading} variant="brandOutlineSecondaryHover" className="brand-radius">
                   <Plus className="w-4 h-4 mr-2" />
                   Adicionar Etapa
                 </Button>
@@ -423,7 +424,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                 className="space-y-4"
               >
                 {stages.map((stage, index) => (
-                  <div key={index} className="p-4 border rounded-lg flex items-start gap-4">
+                  <div key={index} className="p-4 border rounded-lg flex items-start gap-4 brand-radius">
                     <RadioGroupItem
                       value={stage.id || ''}
                       id={`recommendation-radio-${index}`}
@@ -437,10 +438,11 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                         {stages.length > 1 && (
                           <Button
                             type="button"
-                            variant="outline"
+                            variant="brandOutlineSecondaryHover"
                             size="sm"
                             onClick={() => removeStage(index)}
                             disabled={isLoading}
+                            className="brand-radius"
                           >
                             <X className="w-4 h-4" />
                           </Button>
@@ -455,6 +457,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                             placeholder="Ex: Prospecção"
                             required
                             disabled={isLoading}
+                            className="campo-brand brand-radius"
                           />
                         </div>
                         {index > 0 && (
@@ -469,6 +472,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                               onChange={(e) => updateStage(index, 'target_percentage', parseFloat(e.target.value) || 0)}
                               placeholder="0"
                               disabled={isLoading}
+                              className="campo-brand brand-radius"
                             />
                           </div>
                         )}
@@ -481,6 +485,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
                             onChange={(e) => updateStage(index, 'target_value', parseInt(e.target.value) || 0)}
                             placeholder="0"
                             disabled={isLoading}
+                            className="campo-brand brand-radius"
                           />
                         </div>
                       </div>
@@ -491,16 +496,7 @@ export const FunnelModal = ({ isOpen, onClose, funnel }: FunnelModalProps) => {
             </CardContent>
           </Card>
 
-          <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Salvando...' : (funnel ? 'Atualizar' : 'Criar')} Funil
-            </Button>
-          </div>
         </form>
-      </DialogContent>
-    </Dialog>
+    </FullScreenModal>
   );
 };

@@ -27,7 +27,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { InstallmentTypeModal } from './InstallmentTypeModal';
 import { Input } from '@/components/ui/input';
@@ -49,18 +48,9 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
   const { userRole } = useCrmAuth();
   const isSubMaster = userRole === 'submaster';
   const isMaster = userRole === 'master';
-  const canCopy = isMaster || isSubMaster;
   const { selectedCompanyId } = useCompany();
 
-  // Modal de cópia
-  const [copyModalOpen, setCopyModalOpen] = useState(false);
-  const [originCompanyId, setOriginCompanyId] = useState<string>('');
-  const [copyLoading, setCopyLoading] = useState(false);
-
-  // Modal de duplicação
-  const [showDuplicateModal, setShowDuplicateModal] = useState(false);
-  const [duplicateData, setDuplicateData] = useState<any>(null);
-
+  // Removidos: cópia e duplicação
   // Modal de criação
   const [showCreateModal, setShowCreateModal] = useState(false);
   // Modal de edição
@@ -70,6 +60,7 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
   const { data: installmentTypes, isLoading, refetch } = useQuery({
     queryKey: ['installment-types', searchTerm, statusFilter, selectedAdministrator],
     queryFn: async () => {
+      if (!selectedCompanyId) return [];
       let query = supabase
         .from('installment_types')
         .select(`
@@ -78,7 +69,8 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
             name
           )
         `)
-        .order('name');
+        .order('name')
+        .eq('company_id', selectedCompanyId);
 
       if (searchTerm) {
         query = query.ilike('name', `%${searchTerm}%`);
@@ -101,20 +93,7 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
     },
   });
 
-  // Buscar empresas para seleção
-  const { data: companies = [], isLoading: companiesLoading } = useQuery({
-    queryKey: ['companies'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('companies')
-        .select('id, name, status')
-        .eq('status', 'active')
-        .order('name');
-      if (error) throw error;
-      return data;
-    },
-    enabled: canCopy,
-  });
+  // Removido: busca de empresas para cópia
 
   const [reductionsMap, setReductionsMap] = useState<Record<string, boolean>>({});
 
@@ -134,56 +113,7 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
     fetchReductionsMap();
   }, [installmentTypes]);
 
-  // Função de cópia de tipos de parcelas
-  const handleCopyInstallmentTypes = async () => {
-    if (!originCompanyId || !selectedCompanyId) {
-      toast({
-        title: 'Selecione a empresa de origem e destino.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    setCopyLoading(true);
-    try {
-      // Buscar tipos de parcelas da empresa de origem
-      const { data: typesToCopy, error } = await supabase
-        .from('installment_types')
-        .select('*')
-        .eq('company_id', originCompanyId)
-        .eq('is_archived', false);
-      if (error) throw error;
-      if (!typesToCopy || typesToCopy.length === 0) {
-        toast({
-          title: 'Nenhum tipo de parcela encontrado na empresa de origem.',
-          variant: 'destructive',
-        });
-        setCopyLoading(false);
-        return;
-      }
-      // Remover campos que não devem ser copiados
-      const typesInsert = typesToCopy.map((type: any) => {
-        const { id, created_at, updated_at, ...rest } = type;
-        return { ...rest, company_id: selectedCompanyId };
-      });
-      // Inserir na empresa de destino
-      const { error: insertError } = await supabase
-        .from('installment_types')
-        .insert(typesInsert);
-      if (insertError) throw insertError;
-      toast({
-        title: 'Tipos de parcelas copiados com sucesso!',
-      });
-      setCopyModalOpen(false);
-      refetch();
-    } catch (err: any) {
-      toast({
-        title: 'Erro ao copiar tipos de parcelas: ' + (err.message || ''),
-        variant: 'destructive',
-      });
-    } finally {
-      setCopyLoading(false);
-    }
-  };
+  // Removido: função de cópia
 
   const handleArchiveToggle = async (installmentType: any) => {
     try {
@@ -242,24 +172,19 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
     return <div className="text-center py-8">Carregando tipos de parcela...</div>;
   }
 
-  // Botão de adicionar sempre visível
-  const addButton = (
-    <div className="flex justify-end mb-4">
-      <Button
-        variant="outline"
-        size="sm"
-        className="bg-gradient-primary text-white"
-        onClick={() => setShowCreateModal(true)}
-      >
-        + Adicionar Tipo de Parcela
-      </Button>
-    </div>
-  );
+  // Removido: bloco separado do botão de adicionar
 
   if (!installmentTypes?.length) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        {addButton}
+        <div className="flex justify-center mb-4">
+          <Button
+            variant="brandPrimaryToSecondary"
+            onClick={() => setShowCreateModal(true)}
+          >
+            + Adicionar Tipo de Parcela
+          </Button>
+        </div>
         Nenhum tipo de parcela encontrado.
         {showCreateModal && (
           <InstallmentTypeModal
@@ -278,22 +203,18 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
 
   return (
     <div className="space-y-4">
-      {addButton}
-      {/* Botão de cópia de tipos de parcelas */}
-      {canCopy && (
-        <div className="flex justify-end">
-          <Button variant="outline" onClick={() => setCopyModalOpen(true)}>
-            Copiar tipos de parcelas de outra empresa
-          </Button>
-        </div>
-      )}
-      {/* Botão de criação de tipos de parcelas */}
+      {/* Título e botão de criação na mesma linha */}
       <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
         <div>
           <h2 className="text-2xl font-semibold text-foreground">Tipos de Parcela</h2>
           <p className="text-muted-foreground mt-1">Gerencie os tipos de parcela</p>
         </div>
-        {/* Botão de criação de tipos de parcelas */}
+        <Button
+          variant="brandPrimaryToSecondary"
+          onClick={() => setShowCreateModal(true)}
+        >
+          + Adicionar Tipo de Parcela
+        </Button>
       </div>
       <div className="flex flex-col sm:flex-row gap-4 mt-4 mb-2">
         <div className="relative flex-1">
@@ -302,60 +223,32 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
             placeholder="Buscar tipos de parcela..."
             value={searchTerm}
             onChange={e => {/* implementar filtro se necessário */}}
-            className="pl-10"
+            className="pl-10 field-secondary-focus no-ring-focus brand-radius"
           />
         </div>
         <Select value={statusFilter} onValueChange={v => {/* implementar filtro se necessário */}}>
-          <SelectTrigger className="w-full sm:w-48">
+          <SelectTrigger className="w-full sm:w-48 select-trigger-secondary no-ring-focus brand-radius">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Todos</SelectItem>
-            <SelectItem value="active">Ativos</SelectItem>
-            <SelectItem value="archived">Arquivados</SelectItem>
+            <SelectItem value="all" className="dropdown-item-secondary">Todos</SelectItem>
+            <SelectItem value="active" className="dropdown-item-secondary">Ativos</SelectItem>
+            <SelectItem value="archived" className="dropdown-item-secondary">Arquivados</SelectItem>
           </SelectContent>
         </Select>
       </div>
-      {/* Modal de cópia */}
-      <Dialog open={copyModalOpen} onOpenChange={setCopyModalOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Copiar tipos de parcelas de outra empresa</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-1">Empresa de origem</label>
-              <Select value={originCompanyId} onValueChange={setOriginCompanyId} disabled={companiesLoading}>
-                <SelectTrigger>
-                  <SelectValue placeholder={companiesLoading ? 'Carregando...' : 'Selecione a empresa'} />
-                </SelectTrigger>
-                <SelectContent>
-                  {companies
-                    .filter((c: any) => c.id !== selectedCompanyId)
-                    .map((c: any) => (
-                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button onClick={handleCopyInstallmentTypes} disabled={!originCompanyId || copyLoading}>
-              {copyLoading ? 'Copiando...' : 'Copiar'}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-      {showDuplicateModal && (
-        <InstallmentTypeModal
-          open={showDuplicateModal}
-          onOpenChange={setShowDuplicateModal}
-          installmentType={duplicateData}
-          onSuccess={() => {
-            setShowDuplicateModal(false);
-            setDuplicateData(null);
-            refetch();
-          }}
-        />
-      )}
+      {/* Removido: Modal de cópia */}
+      {/* Removido: showDuplicateModal && ( */}
+      {/* Removido: <InstallmentTypeModal */}
+      {/* Removido: open={showDuplicateModal} */}
+      {/* Removido: onOpenChange={setShowDuplicateModal} */}
+      {/* Removido: installmentType={duplicateData} */}
+      {/* Removido: onSuccess={() => { */}
+      {/* Removido: setShowDuplicateModal(false); */}
+      {/* Removido: setDuplicateData(null); */}
+      {/* Removido: refetch(); */}
+      {/* Removido: }} */}
+      {/* Removido: /> */}
       {showCreateModal && (
         <InstallmentTypeModal
           open={showCreateModal}
@@ -406,18 +299,19 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
               <TableCell>
                 <div className="flex space-x-2">
                   <Button
-                    variant="outline"
+                    variant="brandOutlineSecondaryHover"
                     size="sm"
                     onClick={() => handleEdit(installmentType)}
+                    className="brand-radius"
                   >
                     <Edit className="w-4 h-4" />
                   </Button>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button
-                        variant="outline"
+                        variant="brandOutlineSecondaryHover"
                         size="sm"
-                        className={installmentType.is_archived ? 'text-green-600' : 'text-red-600'}
+                        className="brand-radius"
                       >
                         {installmentType.is_archived ? (
                           <RotateCcw className="w-4 h-4" />
@@ -445,17 +339,6 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setDuplicateData({ ...installmentType, administrator_id: '' });
-                      setShowDuplicateModal(true);
-                    }}
-                    disabled={installmentType.is_archived}
-                  >
-                    Duplicar
-                  </Button>
                 </div>
               </TableCell>
             </TableRow>
