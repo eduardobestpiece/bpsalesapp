@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Indicator, IndicatorValue } from '@/types/crm';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useMemo } from 'react';
+import { simInfoLog } from '@/lib/devlog';
 
 interface IndicatorWithValues extends Omit<Indicator, 'archived_at'> {
   values: IndicatorValue[];
@@ -40,7 +41,9 @@ export const useIndicators = (companyId?: string, userId?: string) => {
           query = query.eq('user_id', userId);
         }
         
+        simInfoLog('[IND-QUERY] fetching indicators', { effectiveCompanyId, userId });
         const { data, error } = await query;
+        simInfoLog('[IND-QUERY] result', { count: data?.length ?? 0, error });
         
         if (error) {
           if (error.code === 'PGRST301' || error.message.includes('RLS')) {
@@ -95,9 +98,11 @@ export const useIndicators = (companyId?: string, userId?: string) => {
           }
         }
         
+        simInfoLog('[IND-QUERY] valid after sanitation', { count: validData.length });
 
         return validData;
       } catch (err) {
+        simInfoLog('[IND-QUERY] unexpected error', err);
         return [] as IndicatorWithValues[];
       }
     },

@@ -337,3 +337,12 @@ Impacto: branding por empresa centralizado, personalização visual (logo/cor) e
 - [ ] Validar navegação em todos os módulos
 
 #### Status: 🔄 Aguardando deploy/validação 
+
+## 2025-08-11 – Indicadores: Líder não vê dados do time
+- Solicitação: líder (`marketing@monteo.com.br`) precisa ver indicadores de membros do(s) time(s) que lidera.
+- Diagnóstico inicial: políticas RLS de `indicators/indicator_values` usam `crm_users.team_id` do líder, enquanto a liderança é definida por `teams.leader_id`. Se `team_id` do líder for null, ele não enxerga o time.
+- Plano:
+  1) Instrumentar front (logs) em `CrmIndicadores.tsx`, `useIndicators`, `useTeams`, `useCrmUsersByCompany`.
+  2) Ajustar RLS para permitir leitura por `teams.leader_id` (sem depender de `crm_users.team_id`).
+  3) Validar com líder e membro (Produção) e revisar filtros.
+- Status: 1) aplicado; 2) aguardando execução de SQL no Supabase; 3) pendente. 

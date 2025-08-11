@@ -54,7 +54,7 @@ export default function SettingsPerfil() {
     if (!crmUser) return;
     setIsSaving(true);
     try {
-      console.log('[PERFIL] salvar perfil', { formData, avatarOnly });
+      
       const { error, status } = await supabase
         .from('crm_users')
         .update({
@@ -68,11 +68,11 @@ export default function SettingsPerfil() {
         })
         .eq('id', crmUser.id);
       if (error && status !== 406) {
-        console.error('[PERFIL] erro ao atualizar crm_users', error);
+        
         toast.error('Erro ao atualizar perfil');
         return;
       }
-      console.log('[PERFIL] update efetuado', { status, error });
+      
 
       const { error: authErr } = await supabase.auth.updateUser({
         data: {
@@ -82,7 +82,7 @@ export default function SettingsPerfil() {
         }
       });
       if (authErr) {
-        console.warn('[PERFIL] auth.updateUser erro (ignorado)', authErr);
+        
       }
 
       // Atualiza contexto e cache imediatamente com os valores do formulário
@@ -94,11 +94,11 @@ export default function SettingsPerfil() {
         bio: formData.bio,
         avatar_url: formData.avatar_url || null,
       });
-      console.log('[PERFIL] contexto atualizado, disparando refreshCrmUser');
+      
       await refreshCrmUser();
       if (!avatarOnly) toast.success('Perfil atualizado com sucesso!');
     } catch (e) {
-      console.error('[PERFIL] erro inesperado', e);
+      
       toast.error('Erro ao atualizar perfil');
     } finally {
       setIsSaving(false);

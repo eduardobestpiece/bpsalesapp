@@ -11,9 +11,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import CrmPerformance from './CrmPerformance';
 import { supabase } from '@/integrations/supabase/client';
 import { useTeams } from '@/hooks/useTeams';
-import { useCrmUsers } from '@/hooks/useCrmUsers';
+import { useCrmUsersByCompany } from '@/hooks/useCrmUsers';
 import { useCompany } from '@/contexts/CompanyContext';
 import { FullScreenModal } from '@/components/ui/FullScreenModal';
+import { simInfoLog } from '@/lib/devlog';
 
 // Função utilitária para status visual do prazo
 function getPrazoStatus(indicator: any, funnel: any) {
@@ -56,20 +57,44 @@ const CrmIndicadores = () => {
   const { selectedCompanyId } = useCompany();
   const effectiveCompanyId = selectedCompanyId || crmUser?.company_id || authCompanyId || '';
 
+  // DEBUG: montagem e contexto
+  useEffect(() => {
+    simInfoLog('[INDICADORES] mounted');
+  }, []);
+  simInfoLog('[INDICADORES] contexto', { effectiveCompanyId, userRole, crmUser });
+  
+  // Carregar times e usuários ANTES de calcular o escopo (usa teams no useMemo abaixo)
+  const { data: teams = [], isLoading: isTeamsLoading } = useTeams();
+  const { data: crmUsers = [], isLoading: isUsersLoading } = useCrmUsersByCompany(effectiveCompanyId);
+
   // Buscar indicadores conforme perfil - memoizado para evitar mudanças desnecessárias
   const userIdForIndicators = useMemo(() => {
     if (!crmUser) return undefined;
-    if (crmUser.role === 'user') return crmUser.id;
-    if (crmUser.role === 'leader') return undefined; // pega todos da equipe via filtragem abaixo
-    if (crmUser.role === 'admin' || crmUser.role === 'master') return undefined; // pega todos da empresa
+    const leaderByOwnership = teams.some(t => t.leader_id === crmUser.id);
+    // Se for usuário comum E não lidera nenhum time, busca apenas seus próprios
+    if (crmUser.role === 'user' && !leaderByOwnership) {
+      simInfoLog('[INDICADORES] scope=user-only', { userId: crmUser.id });
+      return crmUser.id;
+    }
+    // Para admin, master, leader ou líder por posse: busca nível empresa
+    simInfoLog('[INDICADORES] scope=company', { role: crmUser.role, leaderByOwnership });
     return undefined;
-  }, [crmUser]);
+  }, [crmUser, teams]);
 
-  // Hooks de dados com memoização
+  // Buscar indicadores conforme escopo calculado (após termos teams)
   const { data: indicators, isLoading: isIndicatorsLoading, error: indicatorsError } = useIndicators(effectiveCompanyId, userIdForIndicators);
   const { data: funnels, isLoading: isFunnelsLoading, error: funnelsError } = useFunnels(effectiveCompanyId, 'active');
-  const { data: teams = [], isLoading: isTeamsLoading } = useTeams();
-  const { data: crmUsers = [], isLoading: isUsersLoading } = useCrmUsers();
+
+  // DEBUG: dados carregados
+  useEffect(() => {
+    console.log('[INDICADORES] carregados', {
+      indicatorsCount: indicators?.length,
+      teamsCount: teams?.length,
+      usersCount: crmUsers?.length,
+      isIndicatorsLoading,
+      indicatorsError
+    });
+  }, [indicators, teams, crmUsers, isIndicatorsLoading, indicatorsError]);
 
   // Estados simplificados com memoização
   const [selectedFunnelId, setSelectedFunnelId] = useState<string>('');
@@ -188,6 +213,7 @@ const CrmIndicadores = () => {
   const accessibleIndicators = useMemo(() => {
     
     if (!indicators || !Array.isArray(indicators) || !crmUser) {
+      simInfoLog('[INDICADORES] accessibleIndicators early-exit', { hasIndicators: !!indicators, hasCrmUser: !!crmUser });
       return [];
     }
     
@@ -198,15 +224,20 @@ const CrmIndicadores = () => {
       }
       return true;
     });
+
+    const isLeaderByOwnership = teams.some(t => t.leader_id === crmUser.id);
+    const isAdmin = crmUser.role === 'admin' || crmUser.role === 'master';
+    const isLeader = crmUser.role === 'leader' || isLeaderByOwnership;
+    const leaderTeams = teams.filter(t => t.leader_id === crmUser.id).map(t => t.id);
+    const teamMembers = crmUsers.filter(u => leaderTeams.includes(u.team_id || '')).map(u => u.id);
+    simInfoLog('[INDICADORES] perfil', { isAdmin, isLeader, isLeaderByOwnership, leaderTeams, teamMembersCount: teamMembers.length });
     
-    
-    if (crmUser.role === 'master' || crmUser.role === 'admin') {
+    if (isAdmin) {
       return validIndicators; // vê todos da empresa
-    } else if (crmUser.role === 'leader') {
-      // Corrigir: buscar todos os times onde o usuário é leader_id
-      const leaderTeams = teams.filter(t => t.leader_id === crmUser.id).map(t => t.id);
-      const teamMembers = crmUsers.filter(u => leaderTeams.includes(u.team_id)).map(u => u.id);
-      return validIndicators.filter(ind => teamMembers.includes(ind.user_id) || ind.user_id === crmUser.id);
+    } else if (isLeader) {
+      const result = validIndicators.filter(ind => teamMembers.includes(ind.user_id) || ind.user_id === crmUser.id);
+      simInfoLog('[INDICADORES] resultado líder', { total: validIndicators.length, visiveis: result.length });
+      return result;
     } else if (crmUser.role === 'user') {
       return validIndicators.filter(ind => ind.user_id === crmUser.id);
     }
@@ -266,6 +297,7 @@ const CrmIndicadores = () => {
     // Validação final - garantir que nenhum indicator null passe
     result = result.filter(isValidIndicator);
     
+    simInfoLog('[INDICADORES] filtrados', { antes: accessibleIndicators.length, depois: result.length, filtros: filters, showOnlyMine });
     return result;
   }, [accessibleIndicators, selectedFunnelId, filters, showOnlyMine, crmUser, archivedIndicatorIds]);
 

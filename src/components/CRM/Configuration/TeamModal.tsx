@@ -12,6 +12,7 @@ import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface TeamModalProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
 
   const { companyId } = useCrmAuth();
   const { selectedCompanyId } = useCompany();
+  const queryClient = useQueryClient();
   const effectiveCompanyId = selectedCompanyId || companyId;
   const { data: users = [] } = useCrmUsers();
   const filteredUsers = users.filter(u => u.company_id === effectiveCompanyId);
@@ -40,7 +42,7 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
   const [members, setMembers] = useState<string[]>([]);
 
   useEffect(() => {
-    console.debug('[TEAM/MODAL] open:', { isOpen, teamId: team?.id, effectiveCompanyId });
+    console.log('[TEAM/MODAL] open:', { isOpen, teamId: team?.id, effectiveCompanyId });
   }, [isOpen]);
 
   useEffect(() => {
@@ -50,14 +52,14 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
         leader_id: team.leader_id,
       });
       (async () => {
-        console.debug('[TEAM/MODAL] load members start', { effectiveCompanyId, teamId: team.id });
+        console.log('[TEAM/MODAL] load members start', { effectiveCompanyId, teamId: team.id });
         const { data: allUsersDb, error } = await supabase
           .from('crm_users')
           .select('id, team_id, email, role')
           .eq('company_id', effectiveCompanyId);
-        console.debug('[TEAM/MODAL] load members result', { count: allUsersDb?.length, error });
+        console.log('[TEAM/MODAL] load members result', { count: allUsersDb?.length, error, sample: (allUsersDb||[]).slice(0,5) });
         const memberIds = (allUsersDb || []).filter(u => u.team_id === team.id).map(u => u.id);
-        console.debug('[TEAM/MODAL] current memberIds', memberIds);
+        console.log('[TEAM/MODAL] current memberIds', memberIds);
         setMembers(memberIds);
       })();
     } else {
@@ -90,7 +92,7 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
     setIsLoading(true);
 
     try {
-      console.debug('[TEAM/MODAL] submit start', { teamId: team?.id, formData, selectedMembers: members, effectiveCompanyId });
+      console.log('[TEAM/MODAL] submit start', { teamId: team?.id, formData, selectedMembers: members, effectiveCompanyId });
       let teamId = team?.id;
       if (team) {
         const payload = {
@@ -100,7 +102,7 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
           company_id: effectiveCompanyId,
           status: 'active'
         } as any;
-        console.debug('[TEAM/MODAL] updateTeam payload', payload);
+        console.log('[TEAM/MODAL] updateTeam payload', payload);
         const { data: updTeamData, error: updTeamErr, status: updTeamStatus } = await supabase
           .from('teams')
           .update({
@@ -110,7 +112,7 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
             status: payload.status,
           })
           .eq('id', team.id);
-        console.debug('[TEAM/MODAL] updateTeam direct result', { status: updTeamStatus, error: updTeamErr, data: updTeamData });
+        console.log('[TEAM/MODAL] updateTeam direct result', { status: updTeamStatus, error: updTeamErr, data: updTeamData });
         if (updTeamErr) throw updTeamErr;
         teamId = team.id;
       } else {
@@ -120,23 +122,24 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
           company_id: effectiveCompanyId,
           status: 'active'
         } as any;
-        console.debug('[TEAM/MODAL] createTeam payload', payload);
+        console.log('[TEAM/MODAL] createTeam payload', payload);
         const result = await createTeamMutation.mutateAsync(payload);
-        console.debug('[TEAM/MODAL] createTeam result', result);
+        console.log('[TEAM/MODAL] createTeam result', result);
         teamId = result?.id;
       }
 
+      let refreshedMemberIds: string[] = [];
       if (teamId) {
-        console.debug('[TEAM/MODAL] update members start', { teamId, effectiveCompanyId });
+        console.log('[TEAM/MODAL] update members start', { teamId, effectiveCompanyId });
         const { data: allUsersDb, error: allUsersErr } = await supabase
           .from('crm_users')
           .select('id, team_id, email')
           .eq('company_id', effectiveCompanyId);
-        console.debug('[TEAM/MODAL] load all users for company', { count: allUsersDb?.length, error: allUsersErr });
+        console.log('[TEAM/MODAL] load all users for company', { count: allUsersDb?.length, error: allUsersErr, sample: (allUsersDb||[]).slice(0,5) });
 
         const allUserIds = (allUsersDb || []).map(u => u.id);
         const selectedUserIds = members;
-        console.debug('[TEAM/MODAL] selectedUserIds', selectedUserIds);
+        console.log('[TEAM/MODAL] selectedUserIds', selectedUserIds);
 
         if (selectedUserIds.length > 0) {
           const { data: updSelData, error: updSelErr } = await supabase
@@ -144,39 +147,45 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
             .update({ team_id: teamId })
             .in('id', selectedUserIds)
             .select('id, team_id');
-          console.debug('[TEAM/MODAL] set team_id for selected', { count: updSelData?.length, error: updSelErr });
+          console.log('[TEAM/MODAL] set team_id for selected', { count: updSelData?.length, error: updSelErr, data: updSelData });
+          if (updSelErr) throw updSelErr;
         }
 
         const toRemove = allUserIds.filter(uid => !selectedUserIds.includes(uid) && allUsersDb?.find(u => u.id === uid)?.team_id === teamId);
-        console.debug('[TEAM/MODAL] toRemove', toRemove);
+        console.log('[TEAM/MODAL] toRemove', toRemove);
         if (toRemove.length > 0) {
           const { data: updRemData, error: updRemErr } = await supabase
             .from('crm_users')
             .update({ team_id: null })
             .in('id', toRemove)
             .select('id, team_id');
-          console.debug('[TEAM/MODAL] unset team_id for removed', { count: updRemData?.length, error: updRemErr });
+          console.log('[TEAM/MODAL] unset team_id for removed', { count: updRemData?.length, error: updRemErr, data: updRemData });
+          if (updRemErr) throw updRemErr;
         }
 
         const { data: refreshedUsers, error: refreshErr } = await supabase
           .from('crm_users')
           .select('id, team_id, email')
           .eq('company_id', effectiveCompanyId);
-        const refreshedMemberIds = (refreshedUsers || []).filter(u => u.team_id === teamId).map(u => u.id);
-        console.debug('[TEAM/MODAL] refreshed members', { count: refreshedMemberIds.length, error: refreshErr, refreshedMemberIds });
+        refreshedMemberIds = (refreshedUsers || []).filter(u => u.team_id === teamId).map(u => u.id);
+        console.log('[TEAM/MODAL] refreshed members', { count: refreshedMemberIds.length, error: refreshErr, refreshedMemberIds, sample: (refreshedUsers||[]).slice(0,5) });
         setMembers(refreshedMemberIds);
       }
 
-      toast.success(team ? 'Time atualizado com sucesso!' : 'Time criado com sucesso!');
+      // Invalida caches para refletir na lista
+      queryClient.invalidateQueries({ queryKey: ['crm-users', effectiveCompanyId] });
+      queryClient.invalidateQueries({ queryKey: ['teams', selectedCompanyId] });
+
+      toast.success(`${team ? 'Time atualizado' : 'Time criado'} com sucesso! (${refreshedMemberIds.length} membro(s))`);
       onClose();
       setFormData({ name: '', leader_id: '' });
       setMembers([]);
     } catch (error: any) {
-      console.error('[TEAM/MODAL] submit error', error);
+      console.log('[TEAM/MODAL] submit error', error);
       toast.error(error.message || 'Erro ao salvar time');
     } finally {
       setIsLoading(false);
-      console.debug('[TEAM/MODAL] submit end');
+      console.log('[TEAM/MODAL] submit end');
     }
   };
 
@@ -227,7 +236,7 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
               key={team?.id + '-' + members.join(',')}
               options={allAvailableMembers.map(u => ({ value: u.id, label: `${u.first_name} ${u.last_name} (${u.role})` }))}
               value={members}
-              onChange={(vals) => { console.debug('[TEAM/MODAL] members change', vals); setMembers(vals); }}
+              onChange={(vals) => { console.log('[TEAM/MODAL] members change', vals); setMembers(vals); }}
             />
           </div>
 

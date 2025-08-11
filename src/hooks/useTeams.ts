@@ -4,6 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
 import { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
+import { simInfoLog } from '@/lib/devlog';
 
 type Team = Tables<'teams'>;
 type TeamInsert = TablesInsert<'teams'>;
@@ -17,12 +18,14 @@ export const useTeams = () => {
       if (!selectedCompanyId) {
         return [];
       }
+      simInfoLog('[TEAMS-QUERY] fetching', { selectedCompanyId });
       const { data, error } = await supabase
         .from('teams')
         .select('*')
         .eq('company_id', selectedCompanyId)
         .eq('status', 'active')
         .order('name');
+      simInfoLog('[TEAMS-QUERY] result', { count: data?.length ?? 0, error });
       if (error) throw error;
       return data as Team[];
     },

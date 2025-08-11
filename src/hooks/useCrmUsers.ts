@@ -2,6 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { CrmUser } from '@/types/crm';
+import { simInfoLog } from '@/lib/devlog';
 
 export const useCrmUsers = () => {
   return useQuery({
@@ -31,6 +32,7 @@ export const useCrmUsersByCompany = (companyId?: string | null) => {
     queryKey: ['crm-users', companyId],
     enabled: !!companyId,
     queryFn: async () => {
+      simInfoLog('[USERS-QUERY] fetching by company', { companyId });
       const { data, error } = await supabase
         .from('crm_users')
         .select('*')
@@ -38,6 +40,7 @@ export const useCrmUsersByCompany = (companyId?: string | null) => {
         .eq('company_id', companyId as string)
         .order('created_at', { ascending: false });
 
+      simInfoLog('[USERS-QUERY] result', { count: data?.length ?? 0, error });
       if (error) {
         if (error.code === 'PGRST301' || error.message.includes('RLS')) {
           return [] as CrmUser[];
