@@ -5,6 +5,7 @@ import { Loader2 } from 'lucide-react';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import type { UserRole } from '@/types/crm';
+import { useCompany } from '@/contexts/CompanyContext';
 
 interface ProtectedRouteProps {
   children?: React.ReactNode;
@@ -18,6 +19,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   requiredPageKey
 }) => {
   const { user, crmUser, loading, hasPermission, userRole, companyId } = useCrmAuth();
+  const { selectedCompanyId } = useCompany();
   const [pageAllowed, setPageAllowed] = useState<boolean | null>(null);
 
   // Gate por página (opcional)
@@ -28,7 +30,8 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         setPageAllowed(true);
         return;
       }
-      if (!companyId || !userRole) {
+      const effectiveCompanyId = selectedCompanyId || companyId || crmUser?.company_id || null;
+      if (!effectiveCompanyId || !userRole) {
         // sem contexto suficiente, negar até resolver
         setPageAllowed(false);
         return;
@@ -41,7 +44,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       const { data, error } = await supabase
         .from('role_page_permissions')
         .select('page, allowed')
-        .eq('company_id', companyId)
+        .eq('company_id', effectiveCompanyId)
         .eq('role', userRole)
         .eq('page', requiredPageKey)
         .maybeSingle();
@@ -60,7 +63,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
     checkPage();
     return () => { cancelled = true; };
-  }, [requiredPageKey, companyId, userRole]);
+  }, [requiredPageKey, companyId, selectedCompanyId, crmUser?.company_id, userRole]);
 
   if (loading || pageAllowed === null) {
     return (

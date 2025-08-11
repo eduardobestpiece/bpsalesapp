@@ -163,6 +163,7 @@ export const SimulatorSidebar = () => {
     }
   });
   const canSeeSettingsModule = (settingsPageKeys.length > 0 && settingsPageKeys.some(k => pagePermissions[k] !== false)) || userRole === 'admin' || userRole === 'master';
+  const canSeeSimulator = pagePermissions['simulator'] !== false || userRole === 'master';
 
   return (
     <Sidebar className="border-r border-border">
@@ -204,7 +205,7 @@ export const SimulatorSidebar = () => {
           <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {pagePermissions['simulator'] !== false && (
+              {canSeeSimulator && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActivePath('/simulador')}>
                     <Link to="/simulador">
