@@ -9,6 +9,9 @@ import { AvatarUpload } from '@/components/CRM/AvatarUpload';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PersonalDataTab } from '@/components/CRM/Profile/PersonalDataTab';
+import { IntegrationsTab } from '@/components/CRM/Profile/IntegrationsTab';
 
 export default function SettingsPerfil() {
   const { crmUser, updateCrmUserInContext, refreshCrmUser } = useCrmAuth();
@@ -130,68 +133,26 @@ export default function SettingsPerfil() {
             <p className="text-muted-foreground">Gerencie suas informações pessoais e configurações</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-foreground">Foto do Perfil</CardTitle>
-              </CardHeader>
-              <CardContent className="flex justify-center">
-                <AvatarUpload
-                  currentAvatar={formData.avatar_url}
-                  onAvatarChange={handleAvatarChange}
-                  userId={crmUser?.id || ''}
-                  userInitials={userInitials}
-                />
-              </CardContent>
-            </Card>
-
-            <div className="lg:col-span-2">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-foreground">Informações Pessoais</CardTitle>
-                    <Button onClick={() => handleSave()} disabled={isSaving} className="brand-radius" variant="brandPrimaryToSecondary">
-                      {isSaving ? 'Salvando...' : 'Salvar'}
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="first_name">Nome</Label>
-                      <Input id="first_name" value={formData.first_name} onChange={(e) => handleInputChange('first_name', e.target.value)} className="brand-radius field-secondary-focus no-ring-focus" />
-                    </div>
-                    <div>
-                      <Label htmlFor="last_name">Sobrenome</Label>
-                      <Input id="last_name" value={formData.last_name} onChange={(e) => handleInputChange('last_name', e.target.value)} className="brand-radius field-secondary-focus no-ring-focus" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input id="email" type="email" value={formData.email} disabled className="brand-radius bg-muted text-foreground disabled:opacity-75" />
-                    <p className="text-xs text-muted-foreground mt-1">O email não pode ser alterado</p>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label htmlFor="phone">Telefone</Label>
-                      <Input id="phone" value={formData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} placeholder="(11) 99999-9999" className="brand-radius field-secondary-focus no-ring-focus" />
-                    </div>
-                    <div>
-                      <Label htmlFor="birth_date">Data de Nascimento</Label>
-                      <Input id="birth_date" type="date" value={formData.birth_date} onChange={(e) => handleInputChange('birth_date', e.target.value)} className="brand-radius field-secondary-focus no-ring-focus" />
-                    </div>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="bio">Bio</Label>
-                    <Textarea id="bio" rows={4} value={formData.bio} onChange={(e) => handleInputChange('bio', e.target.value)} className="brand-radius field-secondary-focus no-ring-focus" />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
+          <Tabs defaultValue="dados" className="space-y-6">
+            <TabsList className="grid grid-cols-2 w-full max-w-md">
+              <TabsTrigger value="dados">Dados pessoais</TabsTrigger>
+              <TabsTrigger value="integracoes">Integrações</TabsTrigger>
+            </TabsList>
+            <TabsContent value="dados">
+              <PersonalDataTab
+                formData={formData}
+                isSaving={isSaving}
+                userInitials={userInitials}
+                userId={crmUser?.id || ''}
+                onInputChange={handleInputChange}
+                onSave={() => handleSave()}
+                onAvatarChange={handleAvatarChange}
+              />
+            </TabsContent>
+            <TabsContent value="integracoes">
+              <IntegrationsTab />
+            </TabsContent>
+          </Tabs>
 
           <Card>
             <CardHeader>

@@ -482,6 +482,42 @@ export type Database = {
           },
         ]
       }
+      evolution_connections: {
+        Row: {
+          base_url: string
+          created_at: string
+          id: string
+          instance_key: string
+          instance_name: string
+          is_active: boolean
+          name: string
+          owner_email: string
+          updated_at: string
+        }
+        Insert: {
+          base_url: string
+          created_at?: string
+          id?: string
+          instance_key: string
+          instance_name: string
+          is_active?: boolean
+          name: string
+          owner_email: string
+          updated_at?: string
+        }
+        Update: {
+          base_url?: string
+          created_at?: string
+          id?: string
+          instance_key?: string
+          instance_name?: string
+          is_active?: boolean
+          name?: string
+          owner_email?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       funnel_column_settings: {
         Row: {
           columns: Json
