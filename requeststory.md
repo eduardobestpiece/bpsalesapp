@@ -430,3 +430,36 @@ Impacto: branding por empresa centralizado, personalização visual (logo/cor) e
   2) Ajustar RLS para permitir leitura por `teams.leader_id` (sem depender de `crm_users.team_id`).
   3) Validar com líder e membro (Produção) e revisar filtros.
 - Status: 1) aplicado; 2) aguardando execução de SQL no Supabase; 3) pendente. 
+
+### Requisição Atual: Configuração do Agendamento
+
+#### Escopo
+- Página em Configurações para cada usuário definir:
+  - Disponibilidade semanal (janelas de atendimento por dia).
+  - Tipos de evento padrão (nome, duração, descrição, intervalo mínimo, formulário futuro).
+  - Integração de calendário (Google) com opção de sincronização bidirecional.
+- Ao agendar pela plataforma, criar evento no Google Calendar quando sincronização ativa.
+- Bloqueios no Google refletem indisponibilidade local; com bidirecional ativo, bloqueios criados aqui refletem no Google.
+
+#### Implementação
+- Frontend:
+  - `SettingsAgendamento.tsx` com abas: Disponibilidade, Tipos de Evento, Integração de Calendário.
+  - Rota `GET /configuracoes/agendamento` e item na sidebar.
+- Banco (Supabase):
+  - Migração `20250811010100-create-scheduling-tables.sql` com tabelas:
+    - `scheduling_availability`, `scheduling_event_types`, `scheduling_calendar_settings`, `scheduling_events` + RLS por `owner_user_id`.
+
+#### Próximos
+- Webhook/Edge Function para criar/atualizar/excluir eventos no Google (quando conectado) e refletir bloqueios.
+- Formulário de agendamento público (link por usuário) com buffer e validação de slots.
+
+#### Checklist
+- [x] Página e rota base (`/configuracoes/agendamento`)
+- [x] UI de disponibilidade e tipos de evento (persistência Supabase)
+- [x] Configurações de calendário (persistência Supabase)
+- [x] Migração SQL criada
+- [ ] Deploy (push GitHub)
+- [ ] Criar Edge Function de sync Google Calendar
+- [ ] Validar fluxo end-to-end
+
+#### Status: 🔄 Em progresso 

@@ -30,6 +30,7 @@ import SettingsUsers from "./pages/settings/SettingsUsers";
 import SettingsMaster from "./pages/settings/SettingsMaster";
 import SettingsEmpresa from "./pages/settings/SettingsEmpresa";
 import SettingsPerfil from "./pages/settings/SettingsPerfil";
+import SettingsAgendamento from "./pages/settings/SettingsAgendamento";
 
 const queryClient = new QueryClient();
 
@@ -119,6 +120,11 @@ function AppContent() {
           <Route path="/configuracoes/perfil" element={
             user ? (
               <SettingsPerfil />
+            ) : <Navigate to="/crm/login" replace />
+          } />
+          <Route path="/configuracoes/agendamento" element={
+            user ? (
+              <SettingsAgendamento />
             ) : <Navigate to="/crm/login" replace />
           } />
           
