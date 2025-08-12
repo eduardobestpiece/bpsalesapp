@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LeadsList } from '@/components/CRM/LeadsList';
 import { SalesList } from '@/components/CRM/SalesList';
+import { AgendaScheduler } from '@/components/CRM/AgendaScheduler';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -18,8 +19,8 @@ const CrmDashboard = () => {
 
     // Master tem acesso total
     if (userRole === 'master') {
-      setAllowedTabs(['leads', 'sales']);
-      setDefaultTab('leads');
+      setAllowedTabs(['leads', 'sales', 'agenda']);
+      setDefaultTab('agenda');
       setTabsLoading(false);
       setTabsError(null);
       return;
@@ -42,10 +43,12 @@ const CrmDashboard = () => {
         const pages = new Map((data || []).map((p: any) => [p.page, p.allowed]));
         const leadsAllowed = pages.has('comercial_leads') ? pages.get('comercial_leads') !== false : true;
         const salesAllowed = pages.has('comercial_sales') ? pages.get('comercial_sales') !== false : true;
+        const agendaAllowed = pages.has('comercial_agenda') ? pages.get('comercial_agenda') !== false : true;
         if (leadsAllowed) tabs.push('leads');
         if (salesAllowed) tabs.push('sales');
+        if (agendaAllowed) tabs.push('agenda');
         setAllowedTabs(tabs);
-        setDefaultTab(tabs[0] || 'leads');
+        setDefaultTab(tabs.includes('agenda') ? 'agenda' : (tabs[0] || 'leads'));
         setTabsLoading(false);
       });
   }, [companyId, userRole]);
@@ -89,12 +92,15 @@ const CrmDashboard = () => {
 
               {allowedTabs.length > 0 && (
                 <Tabs defaultValue={defaultTab} className="w-full">
-                  <TabsList className={`grid w-full grid-cols-${allowedTabs.length}`}>
+                  <TabsList className="mb-2 flex w-full gap-2">
                     {allowedTabs.includes('leads') && (
-                      <TabsTrigger value="leads">Leads</TabsTrigger>
+                      <TabsTrigger className="flex-1 brand-radius" value="leads">Leads</TabsTrigger>
                     )}
                     {allowedTabs.includes('sales') && (
-                      <TabsTrigger value="sales">Vendas</TabsTrigger>
+                      <TabsTrigger className="flex-1 brand-radius" value="sales">Vendas</TabsTrigger>
+                    )}
+                    {allowedTabs.includes('agenda') && (
+                      <TabsTrigger className="flex-1 brand-radius" value="agenda">Agenda</TabsTrigger>
                     )}
                   </TabsList>
                   {allowedTabs.includes('leads') && (
@@ -105,6 +111,11 @@ const CrmDashboard = () => {
                   {allowedTabs.includes('sales') && (
                     <TabsContent value="sales" className="mt-6">
                       <SalesList companyId={companyId} />
+                    </TabsContent>
+                  )}
+                  {allowedTabs.includes('agenda') && (
+                    <TabsContent value="agenda" className="mt-6">
+                      <AgendaScheduler companyId={companyId!} />
                     </TabsContent>
                   )}
                 </Tabs>

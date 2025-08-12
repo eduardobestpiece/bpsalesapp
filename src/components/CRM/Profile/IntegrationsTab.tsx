@@ -27,6 +27,30 @@ export function IntegrationsTab() {
       const hasGoogle = identities.some((i: any) => i.provider === 'google');
       setGoogleConnected(!!hasGoogle);
     }).catch(() => {});
+
+    // Se retornou do OAuth (?google_callback=1), tentar capturar o provider_token
+    const url = new URL(window.location.href);
+    const cb = url.searchParams.get('google_callback');
+    if (cb) {
+      supabase.auth.getSession().then(({ data }) => {
+        const token = (data?.session as any)?.provider_token;
+        if (token) {
+          try { localStorage.setItem('google_provider_token', token); } catch {}
+        }
+      }).finally(() => {
+        // limpar o query param
+        url.searchParams.delete('google_callback');
+        window.history.replaceState({}, '', url.toString());
+      });
+    } else {
+      // Atualizar token se disponível na sessão
+      supabase.auth.getSession().then(({ data }) => {
+        const token = (data?.session as any)?.provider_token;
+        if (token) {
+          try { localStorage.setItem('google_provider_token', token); } catch {}
+        }
+      });
+    }
     return () => { mounted = false; };
   }, [user?.id]);
 
@@ -56,8 +80,8 @@ export function IntegrationsTab() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          scopes: 'openid email profile https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.modify',
-          queryParams: { access_type: 'offline', prompt: 'consent' },
+          scopes: 'openid email profile https://www.googleapis.com/auth/calendar.readonly https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/gmail.modify',
+          queryParams: { access_type: 'offline', prompt: 'consent', include_granted_scopes: 'true' },
           redirectTo: `${window.location.origin}/configuracoes/perfil?google_callback=1`,
         },
       } as any);
@@ -65,7 +89,7 @@ export function IntegrationsTab() {
         toast.error('Erro ao iniciar conexão com Google');
         return;
       }
-      // O fluxo redirecionará; ao voltar, detectaremos identities e atualizaremos o status
+      // O fluxo redirecionará; ao voltar, persistiremos o token em localStorage
     } catch (e) {
       toast.error('Erro ao iniciar conexão com Google');
     }
