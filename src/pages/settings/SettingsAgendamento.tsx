@@ -446,6 +446,10 @@ export default function SettingsAgendamento() {
       }
       const json = await resp.json();
       const items = (json.items || []).map((it: any) => ({ id: it.id, summary: it.summary }));
+      // Adiciona opção explícita do calendário primário
+      if (!items.some((i: any) => i.id === 'primary')) {
+        items.unshift({ id: 'primary', summary: 'Calendário primário' } as any);
+      }
       setCalendarItems(items);
       setCalendarSelection(items.find((c: any) => c.id === googleCalendarId)?.id || '');
     } catch (e) {
