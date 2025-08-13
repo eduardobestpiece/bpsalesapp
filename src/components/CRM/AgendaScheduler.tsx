@@ -133,12 +133,6 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
 
       const { data: sess } = await supabase.auth.getSession();
       const authUserId = (await supabase.auth.getUser()).data.user?.id;
-<<<<<<< HEAD
-      const providerToken = (sess?.session as any)?.provider_token || (typeof window !== 'undefined' ? localStorage.getItem('google_provider_token') : '');
-      
-      // Buscar configurações do calendário do agendamento
-      const { data: settingsRow } = await (supabase as any)
-=======
       let providerToken = (sess?.session as any)?.provider_token;
       if (!providerToken && typeof window !== 'undefined') {
         providerToken = localStorage.getItem('google_provider_token');
@@ -151,7 +145,6 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
         return;
       }
       const { data: settingsRow } = await supabase
->>>>>>> 998dd9a (CRM Agenda: sincronizar com calendários selecionados + cfg + primary; normalizar chave de dia; slots em estado com weekReady; evitar render intermediária; logs aprimorados)
         .from('scheduling_calendar_settings')
         .select('google_calendar_id, sync_enabled')
         .eq('company_id', companyId)
@@ -307,20 +300,12 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
     const loadAvailability = async () => {
       const authUser = (await supabase.auth.getUser()).data.user?.id;
       if (!authUser || !companyId) return;
-<<<<<<< HEAD
-      const { data: avls } = await (supabase as any)
-=======
       let { data: avls } = await supabase
->>>>>>> 998dd9a (CRM Agenda: sincronizar com calendários selecionados + cfg + primary; normalizar chave de dia; slots em estado com weekReady; evitar render intermediária; logs aprimorados)
         .from('scheduling_availability')
         .select('weekday, start_time, end_time, is_active, company_id')
         .eq('owner_user_id', authUser)
         .eq('company_id', companyId);
-<<<<<<< HEAD
-      const { data: ints } = await (supabase as any)
-=======
       let { data: ints } = await supabase
->>>>>>> 998dd9a (CRM Agenda: sincronizar com calendários selecionados + cfg + primary; normalizar chave de dia; slots em estado com weekReady; evitar render intermediária; logs aprimorados)
         .from('scheduling_day_intervals')
         .select('weekday, start_time, end_time, company_id')
         .eq('owner_user_id', authUser)
