@@ -1,6 +1,31 @@
 # Request Story - Projeto Monteo
 
-## Última Atualização: 2025-08-11
+## Última Atualização: 2025-08-13
+
+### Requisição Atual: Deploy (finalizar rebase, build e publicar)
+
+#### Contexto
+- Rebase pendente foi finalizado com sucesso.
+- Build de produção executado com sucesso após resolver conflitos em `src/components/CRM/AgendaScheduler.tsx`.
+- Porta 8080 confirmada em `vite.config.ts` e `package.json`.
+
+#### Plano
+1. Finalizar rebase e garantir branch limpa
+2. Rodar build de produção e corrigir erros se houver
+3. Comitar correções
+4. Perguntar autorização para push para `origin/main` (aciona deploy automático na Vercel)
+5. Validar URL de produção
+
+#### Checklist
+- [x] Rebase finalizado (branch `main` à frente do `origin/main`)
+- [x] Build de produção OK
+- [x] Commit das correções de conflito
+- [ ] Push para `origin/main` (aguardando sua confirmação)
+- [ ] Verificar deploy automático e funcionamento em produção
+
+#### Status: 🔄 Pronto para push e deploy automático, aguardando sua confirmação
+
+---
 
 ### Requisição Atual: Deploy para GitHub
 
