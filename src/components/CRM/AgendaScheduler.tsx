@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Calendar } from '@/components/ui/calendar';
-import ptBR from 'date-fns/locale/pt-BR';
+import { ptBR } from 'date-fns/locale/pt-BR';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
@@ -92,7 +92,7 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
 
   // Carrega tipos de evento
   const loadEventTypes = async () => {
-    const { data, error } = await supabase
+    const { data, error } = await (supabase as any)
       .from('scheduling_event_types')
       .select('id, name, duration_minutes, scope, team_id, status, owner_user_id')
       .eq('company_id', companyId)
@@ -110,7 +110,7 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
       const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Sao_Paulo';
       dbg('loadEvents range/tz', { fromISO, toISO, tz, weekStart: range.from, weekEnd: range.to });
 
-      const { data: plat, error: perr } = await supabase
+      const { data: plat, error: perr } = await (supabase as any)
         .from('scheduling_events')
         .select('id, title, description, start_at, end_at, google_event_id')
         .eq('company_id', companyId)
@@ -124,14 +124,36 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
       const { data: sess } = await supabase.auth.getSession();
       const authUserId = (await supabase.auth.getUser()).data.user?.id;
       const providerToken = (sess?.session as any)?.provider_token || (typeof window !== 'undefined' ? localStorage.getItem('google_provider_token') : '');
-      const { data: settingsRow } = await supabase
+      
+      // Buscar configurações do calendário do agendamento
+      const { data: settingsRow } = await (supabase as any)
         .from('scheduling_calendar_settings')
         .select('google_calendar_id, sync_enabled')
         .eq('company_id', companyId)
         .eq('owner_user_id', authUserId || '')
         .maybeSingle();
-      const selectedCalendarId = settingsRow?.google_calendar_id || 'primary';
-      const syncEnabled = settingsRow?.sync_enabled ?? true;
+      
+      // Se não há configuração de agendamento, buscar das integrações do perfil
+      let selectedCalendarId = settingsRow?.google_calendar_id || 'primary';
+      let syncEnabled = settingsRow?.sync_enabled ?? true;
+      
+      // Se syncEnabled = false ou não há provider_token, tenta buscar das integrações do perfil
+      if (!syncEnabled || !providerToken) {
+        const { data: user } = await supabase.auth.getUser();
+        if (user?.user?.email) {
+          // Verifica se há integração Google configurada
+          const { data: identities } = await supabase.auth.getUser();
+          const hasGoogle = (identities?.user as any)?.identities?.some((i: any) => i.provider === 'google') || false;
+          
+          if (hasGoogle) {
+            syncEnabled = true;
+            const token = (typeof window !== 'undefined' ? localStorage.getItem('google_provider_token') : '') || providerToken;
+            if (token && selectedCalendarId === 'primary') {
+              selectedCalendarId = 'primary';
+            }
+          }
+        }
+      }
       dbg('calendar settings', { selected: selectedCalendarId, sync: syncEnabled, hasToken: !!providerToken, rowFound: !!settingsRow });
       if (providerToken && syncEnabled) {
         const headers = { Authorization: `Bearer ${providerToken}` } as any;
@@ -236,12 +258,12 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
     const loadAvailability = async () => {
       const authUser = (await supabase.auth.getUser()).data.user?.id;
       if (!authUser || !companyId) return;
-      const { data: avls } = await supabase
+      const { data: avls } = await (supabase as any)
         .from('scheduling_availability')
         .select('weekday, start_time, end_time, is_active')
         .eq('owner_user_id', authUser)
         .eq('company_id', companyId);
-      const { data: ints } = await supabase
+      const { data: ints } = await (supabase as any)
         .from('scheduling_day_intervals')
         .select('weekday, start_time, end_time')
         .eq('owner_user_id', authUser)
@@ -386,7 +408,7 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
 
       // Inserir na plataforma
       const authUser = (await supabase.auth.getUser()).data.user?.id;
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('scheduling_events')
         .insert({
           title,
@@ -404,7 +426,7 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
       // Google opcional
       const { data: sess } = await supabase.auth.getSession();
       const providerToken = (sess?.session as any)?.provider_token || (typeof window !== 'undefined' ? localStorage.getItem('google_provider_token') : '');
-      const { data: settings } = await supabase
+      const { data: settings } = await (supabase as any)
         .from('scheduling_calendar_settings')
         .select('google_calendar_id, sync_enabled')
         .eq('company_id', companyId)
@@ -423,7 +445,7 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
         }).then(async (resp) => {
           if (resp.ok) {
             const gj = await resp.json();
-            await supabase.from('scheduling_events').update({ google_event_id: gj.id }).eq('id', data.id);
+            await (supabase as any).from('scheduling_events').update({ google_event_id: gj.id }).eq('id', data.id);
           }
         });
       }
@@ -489,7 +511,7 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
               onMonthChange={setVisibleMonth}
               ISOWeek
               captionLayout="buttons"
-              locale={ptBR as any}
+              locale={ptBR}
               disabled={{ before: startOfDay(new Date()) }}
               modifiers={{
                 available: (date: Date) => {
