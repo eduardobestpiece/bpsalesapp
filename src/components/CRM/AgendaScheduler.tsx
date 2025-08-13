@@ -49,6 +49,9 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
   const [events, setEvents] = useState<PlatformEvent[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
   const [availabilityByWeekday, setAvailabilityByWeekday] = useState<Record<number, { is_active: boolean; start: string; end: string; intervals: { start: string; end: string }[] }>>({});
+  const [busyRanges, setBusyRanges] = useState<{ start: number; end: number }[]>([]);
+  const [slotsByDay, setSlotsByDay] = useState<Record<string, { start: Date; end: Date }[]>>({});
+  const [weekReady, setWeekReady] = useState<boolean>(false);
 
   // Helpers de data
   const startOfDay = (d: Date) => { const x = new Date(d); x.setHours(0,0,0,0); return x; };
@@ -63,6 +66,12 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
   const endOfWeek = (d: Date) => addDays(startOfWeek(d), 6);
   const startOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth(), 1);
   const endOfMonth = (d: Date) => new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
+  const dateKey = (d: Date) => {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${dd}`;
+  };
 
   // Range carregado (semana da data selecionada)
   const range = useMemo(() => ({ from: startOfWeek(selectedDate), to: endOfWeek(selectedDate) }), [selectedDate]);
@@ -120,13 +129,29 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
       if (perr) throw perr;
       let all: PlatformEvent[] = (plat || []) as any;
       dbg('platform events count', all.length);
+      let fbBusy: { start: number; end: number }[] = [];
 
       const { data: sess } = await supabase.auth.getSession();
       const authUserId = (await supabase.auth.getUser()).data.user?.id;
+<<<<<<< HEAD
       const providerToken = (sess?.session as any)?.provider_token || (typeof window !== 'undefined' ? localStorage.getItem('google_provider_token') : '');
       
       // Buscar configurações do calendário do agendamento
       const { data: settingsRow } = await (supabase as any)
+=======
+      let providerToken = (sess?.session as any)?.provider_token;
+      if (!providerToken && typeof window !== 'undefined') {
+        providerToken = localStorage.getItem('google_provider_token');
+      }
+      if (!providerToken) {
+        dbg('no provider token', { hasSession: !!sess?.session, hasLocalStorage: !!(typeof window !== 'undefined' && localStorage.getItem('google_provider_token')) });
+        setEvents(all);
+        setBusyRanges([]);
+        dbg('total merged events (no Google)', all.length, all.slice(0, 3));
+        return;
+      }
+      const { data: settingsRow } = await supabase
+>>>>>>> 998dd9a (CRM Agenda: sincronizar com calendários selecionados + cfg + primary; normalizar chave de dia; slots em estado com weekReady; evitar render intermediária; logs aprimorados)
         .from('scheduling_calendar_settings')
         .select('google_calendar_id, sync_enabled')
         .eq('company_id', companyId)
@@ -155,15 +180,25 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
         }
       }
       dbg('calendar settings', { selected: selectedCalendarId, sync: syncEnabled, hasToken: !!providerToken, rowFound: !!settingsRow });
-      if (providerToken && syncEnabled) {
+      if (syncEnabled) {
         const headers = { Authorization: `Bearer ${providerToken}` } as any;
-        // Usar somente o calendário selecionado (ou primário)
+        // Usar calendários "selecionados" no Google + o configurado + primary
         let calendarIds: string[] = [];
-        if (selectedCalendarId && selectedCalendarId !== 'primary') {
-          calendarIds = [selectedCalendarId];
-        } else {
-          calendarIds = ['primary'];
-        }
+        try {
+          const listResp = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList?minAccessRole=reader', { headers });
+          if (listResp.ok) {
+            const listJson = await listResp.json();
+            const selectedFromGoogle = (listJson.items || [])
+              .filter((it: any) => it?.selected)
+              .map((it: any) => it.id as string)
+              .filter((id: string) => id && !/classroom|holiday|contacts|resource\.calendar\.google\.com/i.test(id));
+            calendarIds = selectedFromGoogle;
+          }
+        } catch {}
+        const cfgId = selectedCalendarId === 'primary' || !selectedCalendarId ? 'primary' : selectedCalendarId;
+        calendarIds.push(cfgId);
+        if (!calendarIds.includes('primary')) calendarIds.push('primary');
+        calendarIds = Array.from(new Set(calendarIds));
         dbg('calendarIds used', calendarIds);
 
         const params = new URLSearchParams({
@@ -208,7 +243,18 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
               });
               gcount += gEvents.length;
               all = [...all, ...gEvents];
+              // Adicionar aos busyRanges também
+              for (const ge of gEvents) {
+                const sMs = new Date(ge.start_at).getTime();
+                const eMs = new Date(ge.end_at).getTime();
+                fbBusy.push({ start: sMs, end: eMs });
+              }
             } catch {}
+          } else if (r.status === 'fulfilled') {
+            dbg('Google API error', { status: r.value.status, statusText: r.value.statusText });
+            if (r.value.status === 401) {
+              dbg('Token expired - need to reconnect Google');
+            }
           }
         }
         dbg('google events count', gcount);
@@ -232,7 +278,9 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
             for (const c of cals) {
               for (const b of (c.busy || [])) {
                 fbCount++;
-                all.push({ id: `fb_${b.start}_${b.end}`, title: 'busy', start_at: b.start, end_at: b.end, description: null, google_event_id: undefined } as any);
+                const sMs = new Date(b.start).getTime();
+                const eMs = new Date(b.end).getTime();
+                fbBusy.push({ start: sMs, end: eMs });
               }
             }
             dbg('freeBusy blocks', fbCount);
@@ -243,6 +291,7 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
       }
 
       setEvents(all);
+      setBusyRanges(fbBusy);
       dbg('total merged events', all.length, all.slice(0, 3));
     } catch (e) {
       toast.error('Falha ao carregar eventos');
@@ -258,16 +307,40 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
     const loadAvailability = async () => {
       const authUser = (await supabase.auth.getUser()).data.user?.id;
       if (!authUser || !companyId) return;
+<<<<<<< HEAD
       const { data: avls } = await (supabase as any)
+=======
+      let { data: avls } = await supabase
+>>>>>>> 998dd9a (CRM Agenda: sincronizar com calendários selecionados + cfg + primary; normalizar chave de dia; slots em estado com weekReady; evitar render intermediária; logs aprimorados)
         .from('scheduling_availability')
-        .select('weekday, start_time, end_time, is_active')
+        .select('weekday, start_time, end_time, is_active, company_id')
         .eq('owner_user_id', authUser)
         .eq('company_id', companyId);
+<<<<<<< HEAD
       const { data: ints } = await (supabase as any)
+=======
+      let { data: ints } = await supabase
+>>>>>>> 998dd9a (CRM Agenda: sincronizar com calendários selecionados + cfg + primary; normalizar chave de dia; slots em estado com weekReady; evitar render intermediária; logs aprimorados)
         .from('scheduling_day_intervals')
-        .select('weekday, start_time, end_time')
+        .select('weekday, start_time, end_time, company_id')
         .eq('owner_user_id', authUser)
         .eq('company_id', companyId);
+      // Fallback: buscar por owner em qualquer empresa se nada encontrado para a empresa atual
+      if ((!avls || avls.length === 0) && (!ints || ints.length === 0)) {
+        const anyAv = await supabase
+          .from('scheduling_availability')
+          .select('weekday, start_time, end_time, is_active, company_id')
+          .eq('owner_user_id', authUser);
+        avls = anyAv.data || [];
+        const anyInt = await supabase
+          .from('scheduling_day_intervals')
+          .select('weekday, start_time, end_time, company_id')
+          .eq('owner_user_id', authUser);
+        ints = anyInt.data || [];
+        dbg('availability fallback (any company)', { avCount: avls.length, intCount: (ints || []).length });
+      } else {
+        dbg('availability company match', { avCount: (avls || []).length, intCount: (ints || []).length });
+      }
       const map: Record<number, { is_active: boolean; start: string; end: string; intervals: { start: string; end: string }[] }> = {};
       (avls || []).forEach((r: any) => {
         map[r.weekday] = { is_active: !!r.is_active, start: r.start_time, end: r.end_time, intervals: [] };
@@ -278,6 +351,7 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
         map[w].intervals.push({ start: r.start_time, end: r.end_time });
       });
       setAvailabilityByWeekday(map);
+      dbg('availability loaded', { mapKeys: Object.keys(map), sample: map[1] || map[2] || map[3] });
     };
     loadAvailability();
   }, [companyId]);
@@ -287,6 +361,10 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
     const sMs = s.getTime();
     const eMs = e.getTime();
     const margin = 60 * 1000; // 1 min
+    // 1) FreeBusy do Google
+    const fbHit = busyRanges.some(b => sMs < (b.end + margin) && eMs > (b.start - margin));
+    if (fbHit) return true;
+    // 2) Eventos da plataforma
     const hit = events.some(ev => {
       const evS = new Date(ev.start_at).getTime() - margin;
       const evE = new Date(ev.end_at).getTime() + margin;
@@ -303,6 +381,129 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
     return h * 60 + (m || 0);
   };
 
+  // Utilitários para janelas/segmentos (em minutos do dia)
+  const mergeSegments = (segs: { start: number; end: number }[]) => {
+    if (segs.length === 0) return [] as { start: number; end: number }[];
+    const sorted = [...segs].sort((a, b) => a.start - b.start);
+    const merged: { start: number; end: number }[] = [];
+    let cur = { ...sorted[0] };
+    for (let i = 1; i < sorted.length; i++) {
+      const s = sorted[i];
+      if (s.start <= cur.end) {
+        cur.end = Math.max(cur.end, s.end);
+      } else {
+        merged.push(cur); cur = { ...s };
+      }
+    }
+    merged.push(cur);
+    return merged;
+  };
+
+  const subtractSegmentList = (base: { start: number; end: number }[], remove: { start: number; end: number }[]) => {
+    let out = [...base];
+    const rem = mergeSegments(remove);
+    for (const r of rem) {
+      const next: { start: number; end: number }[] = [];
+      for (const b of out) {
+        if (r.end <= b.start || r.start >= b.end) {
+          next.push(b);
+        } else {
+          if (r.start > b.start) next.push({ start: b.start, end: Math.max(b.start, r.start) });
+          if (r.end < b.end) next.push({ start: Math.min(b.end, r.end), end: b.end });
+        }
+      }
+      out = next;
+    }
+    return out.filter(s => s.end - s.start > 0);
+  };
+
+  const clampToDay = (startMs: number, endMs: number, day: Date) => {
+    const d0 = startOfDay(day).getTime();
+    const d1 = endOfDay(day).getTime();
+    const s = Math.max(startMs, d0);
+    const e = Math.min(endMs, d1);
+    if (e <= s) return null as null | { start: number; end: number };
+    // Converter para minutos do dia
+    const sDate = new Date(s);
+    const eDate = new Date(e);
+    const sMin = sDate.getHours() * 60 + sDate.getMinutes();
+    const eMin = eDate.getHours() * 60 + eDate.getMinutes();
+    return { start: sMin, end: eMin };
+  };
+
+  const getAvailabilityWindowsForDay = (date: Date) => {
+    const weekday = date.getDay();
+    let av = availabilityByWeekday[weekday];
+    const invalid = !av || !av.start || !av.end || av.start === av.end || (av.start === '00:00' && av.end === '00:00');
+    if (invalid) { dbg('avail invalid', { day: date.toISOString().slice(0,10), weekday, av }); return [] as { start: number; end: number }[]; }
+    if (av && !av.is_active) { dbg('avail inactive', { day: date.toISOString().slice(0,10), weekday, av }); return [] as { start: number; end: number }[]; }
+    const base = [{ start: hhmmToMinutes(av.start), end: hhmmToMinutes(av.end) }];
+    const blocks = (av.intervals || []).map(it => ({ start: hhmmToMinutes(it.start), end: hhmmToMinutes(it.end) }));
+    dbg('avail windows', { day: date.toISOString().slice(0,10), base, blocks });
+    return subtractSegmentList(base, blocks);
+  };
+
+  const buildFreeSlotsForDay = (date: Date) => {
+    const today = startOfDay(new Date());
+    if (startOfDay(date) < today) return [] as { start: Date; end: Date }[];
+    // Aguardar availability estar carregado
+    if (Object.keys(availabilityByWeekday).length === 0) {
+      dbg('availability not loaded yet', { day: date.toISOString().slice(0,10) });
+      return [] as { start: Date; end: Date }[];
+    }
+    const slotMinutes = 30;
+    const allowed = getAvailabilityWindowsForDay(date);
+    if (allowed.length === 0) return [] as { start: Date; end: Date }[];
+    // Ocupados do Google (freeBusy) + plataforma + eventos Google normalizados
+    const dayBusySegs: { start: number; end: number }[] = [];
+    for (const b of busyRanges) {
+      const seg = clampToDay(b.start, b.end, date);
+      if (seg) dayBusySegs.push(seg);
+    }
+    for (const ev of events) {
+      const seg = clampToDay(new Date(ev.start_at).getTime(), new Date(ev.end_at).getTime(), date);
+      if (seg) dayBusySegs.push(seg);
+    }
+    const busy = mergeSegments(dayBusySegs);
+    const free = subtractSegmentList(allowed, busy);
+    dbg('busy/free', { day: date.toISOString().slice(0,10), busy, allowed, freeCount: free.length });
+    // Gerar slots
+    const res: { start: Date; end: Date }[] = [];
+    for (const f of free) {
+      let cursor = f.start;
+      while (cursor + slotMinutes <= f.end) {
+        const s = new Date(date);
+        s.setHours(Math.floor(cursor / 60), cursor % 60, 0, 0);
+        const e = new Date(s.getTime() + slotMinutes * 60 * 1000);
+        // Bloqueio adicional: se for hoje, remover passados
+        if (!(startOfDay(date).getTime() === today.getTime() && e <= new Date())) {
+          res.push({ start: s, end: e });
+        }
+        cursor += slotMinutes;
+      }
+    }
+    if (AGENDA_DEBUG && res.length > 0) {
+      dbg('slots generated', { day: date.toISOString().slice(0,10), count: res.length, first: res[0]?.start.toTimeString().slice(0,5), last: res[res.length-1]?.start.toTimeString().slice(0,5) });
+    }
+    return res;
+  };
+
+  // Recalcula slots da semana quando availability/events mudarem
+  useEffect(() => {
+    if (Object.keys(availabilityByWeekday).length === 0) { setWeekReady(false); return; }
+    // Evitar recalcular se já estava pronto e nada mudou
+    if (weekReady && Object.keys(slotsByDay).length === 7 && busyRanges.length >= 0) return;
+    const days = Array.from({ length: 7 }, (_, i) => addDays(startOfWeek(selectedDate), i));
+    const next: Record<string, { start: Date; end: Date }[]> = {};
+    for (const d of days) {
+      const key = dateKey(d);
+      next[key] = buildFreeSlotsForDay(d);
+    }
+    setSlotsByDay(next);
+    setWeekReady(true);
+    dbg('week slots ready', { keys: Object.keys(next), counts: Object.fromEntries(Object.entries(next).map(([k,v])=>[k, v.length])) });
+  }, [availabilityByWeekday, events, busyRanges, selectedDate]);
+
   const isAllowedByAvailability = (start: Date, end: Date): boolean => {
     // Bloquear dias passados totalmente
     const today = startOfDay(new Date());
@@ -314,11 +515,9 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
     }
     const weekday = start.getDay();
     let av = availabilityByWeekday[weekday];
-    // Fallback: se não houver configuração, considerar janela padrão 08:00–18:00 ativa
-    if (!av) {
-      av = { is_active: true, start: '08:00', end: '18:00', intervals: [] };
-    }
-    if (!av.is_active) return false;
+    // Sem fallback: apenas dias configurados e ativos
+    const isInvalid = !av || !av.start || !av.end || av.start === av.end || (av.start === '00:00' && av.end === '00:00');
+    if (isInvalid || (av && !av.is_active)) return false;
     const stMin = start.getHours() * 60 + start.getMinutes();
     const enMin = end.getHours() * 60 + end.getMinutes();
     const aStart = hhmmToMinutes(av.start);
@@ -517,9 +716,8 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
                 available: (date: Date) => {
                   const today = startOfDay(new Date());
                   if (date < today) return false;
-                  // Carregar disponibilidade simples com base nos eventos carregados
-                  const slots = generateSlots(date);
-                  return slots.some(s => !isBusy(s.start, s.end));
+                  const slots = buildFreeSlotsForDay(date);
+                  return slots.length > 0;
                 }
               }}
               modifiersClassNames={{
@@ -546,41 +744,38 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
                       </div>
                     ))}
                   </div>
+                  {!weekReady ? (
+                    <div className="space-y-2">
+                      {Array.from({ length: 6 }).map((_, i) => (
+                        <Skeleton key={i} className="h-10 w-full brand-radius" />
+                      ))}
+                    </div>
+                  ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-7 gap-2 items-start">
                     {weekDays.map((day, colIdx) => {
-                      // gerar slots deste dia e filtrar pelo availability
-                      const base = new Date(startOfDay(selectedDate));
-                      base.setHours(8, 0, 0, 0);
-                      const slots = Array.from({ length: 20 }).map((_, i) => {
-                        const s = new Date(day); s.setHours(base.getHours(), base.getMinutes(), 0, 0);
-                        const start = new Date(s.getTime() + i * 30 * 60 * 1000);
-                        const end = new Date(start.getTime() + 30 * 60 * 1000);
-                        return { start, end };
-                      }).filter(({ start, end }) => isAllowedByAvailability(start, end) && !isBusy(start, end));
+                      // slots já pré-calculados
+                      const key = dateKey(day);
+                      const slots = slotsByDay[key] || [];
                       if (AGENDA_DEBUG) {
-                        const dLabel = day.toISOString().slice(0,10);
+                        const dLabel = key;
                         const has1400 = slots.some(s => s.start.getHours() === 14 && s.start.getMinutes() === 0);
                         dbg('day slots', dLabel, { count: slots.length, has1400 });
                       }
                       return (
                         <div key={`col-${colIdx}`} className="flex flex-col gap-2">
                           {slots.length === 0 ? (
-                            <div className="text-xs text-muted-foreground text-center">Sem horários</div>
+                            weekReady ? <div className="text-xs text-muted-foreground text-center">Sem horários</div> : <div className="text-xs text-muted-foreground text-center">Carregando...</div>
                           ) : (
                             slots.map(({ start, end }, i) => {
-                              const busy = isBusy(start, end);
                               if (AGENDA_DEBUG && start.getHours() === 14 && start.getMinutes() === 0) {
-                                dbg('render@14h', { day: start.toISOString().slice(0,10), busy });
+                                dbg('render@14h', { day: start.toISOString().slice(0,10), busy: false });
                               }
                               return (
                                 <button
                                   key={`btn-${colIdx}-${i}`}
-                                  disabled={busy}
-                                  aria-disabled={busy}
-                                  tabIndex={busy ? -1 : 0}
-                                  title={busy ? 'Indisponível' : 'Disponível'}
-                                  onClick={() => !busy && openConfirm({ start, end })}
-                                  className={`w-full text-center px-3 py-2 brand-radius border transition ${busy ? 'cursor-not-allowed opacity-50 bg-muted text-muted-foreground focus:ring-0' : 'hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-secondary)] text-[var(--brand-secondary)]'} border-border`}
+                                  title={'Disponível'}
+                                  onClick={() => openConfirm({ start, end })}
+                                  className={`w-full text-center px-3 py-2 brand-radius border transition hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-secondary)] text-[var(--brand-secondary)] border-border`}
                                 >
                                   {formatTime(start)}
                                 </button>
@@ -591,6 +786,7 @@ export const AgendaScheduler = ({ companyId }: AgendaSchedulerProps) => {
                       );
                     })}
                   </div>
+                  )}
                 </div>
               )}
             </div>

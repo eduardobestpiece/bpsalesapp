@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LeadsList } from '@/components/CRM/LeadsList';
 import { SalesList } from '@/components/CRM/SalesList';
 import { AgendaScheduler } from '@/components/CRM/AgendaScheduler';
+import { AgendaTemp } from '@/components/CRM/AgendaTemp';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -19,7 +20,7 @@ const CrmDashboard = () => {
 
     // Master tem acesso total
     if (userRole === 'master') {
-      setAllowedTabs(['leads', 'sales', 'agenda']);
+      setAllowedTabs(['leads', 'sales', 'agenda', 'agenda_temp']);
       setDefaultTab('agenda');
       setTabsLoading(false);
       setTabsError(null);
@@ -46,7 +47,7 @@ const CrmDashboard = () => {
         const agendaAllowed = pages.has('comercial_agenda') ? pages.get('comercial_agenda') !== false : true;
         if (leadsAllowed) tabs.push('leads');
         if (salesAllowed) tabs.push('sales');
-        if (agendaAllowed) tabs.push('agenda');
+        if (agendaAllowed) { tabs.push('agenda'); tabs.push('agenda_temp'); }
         setAllowedTabs(tabs);
         setDefaultTab(tabs.includes('agenda') ? 'agenda' : (tabs[0] || 'leads'));
         setTabsLoading(false);
@@ -102,6 +103,9 @@ const CrmDashboard = () => {
                     {allowedTabs.includes('agenda') && (
                       <TabsTrigger className="flex-1 brand-radius" value="agenda">Agenda</TabsTrigger>
                     )}
+                    {allowedTabs.includes('agenda_temp') && (
+                      <TabsTrigger className="flex-1 brand-radius" value="agenda_temp">Agenda Temporaria</TabsTrigger>
+                    )}
                   </TabsList>
                   {allowedTabs.includes('leads') && (
                     <TabsContent value="leads" className="mt-6">
@@ -116,6 +120,11 @@ const CrmDashboard = () => {
                   {allowedTabs.includes('agenda') && (
                     <TabsContent value="agenda" className="mt-6">
                       <AgendaScheduler companyId={companyId!} />
+                    </TabsContent>
+                  )}
+                  {allowedTabs.includes('agenda_temp') && (
+                    <TabsContent value="agenda_temp" className="mt-6">
+                      <AgendaTemp companyId={companyId!} />
                     </TabsContent>
                   )}
                 </Tabs>
