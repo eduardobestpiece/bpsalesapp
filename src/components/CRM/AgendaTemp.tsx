@@ -17,7 +17,7 @@ export const AgendaTemp = ({ companyId }: { companyId: string }) => {
 			const { data: sess } = await supabase.auth.getSession();
 			const providerToken = (sess?.session as any)?.provider_token || (typeof window !== 'undefined' ? localStorage.getItem('google_provider_token') : '');
 			const authUserId = (await supabase.auth.getUser()).data.user?.id;
-			const { data: settingsRow } = await supabase
+			const { data: settingsRow } = await (supabase as any)
 				.from('scheduling_calendar_settings')
 				.select('google_calendar_id, sync_enabled')
 				.eq('company_id', companyId)
