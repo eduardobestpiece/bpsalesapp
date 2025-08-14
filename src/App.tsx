@@ -21,6 +21,10 @@ import NotFound from "./pages/NotFound";
 import CrmResetPasswordInvite from "./pages/crm/CrmResetPasswordInvite";
 import CrmResetPassword from "./pages/crm/CrmResetPassword";
 import Home from "./pages/Home";
+import LandingPage from "./pages/LandingPage";
+import VideoPage from "./pages/VideoPage";
+import PaymentSuccess from "./pages/PaymentSuccess";
+import PaymentCancel from "./pages/PaymentCancel";
 import { Loader2 } from "lucide-react";
 
 // Novas páginas do módulo Configurações
@@ -69,6 +73,12 @@ function AppContent() {
     <div className="min-h-screen bg-background">
       <main>
         <Routes>
+          {/* Landing Pages */}
+          <Route path="/landing" element={<LandingPage />} />
+          <Route path="/video" element={<VideoPage />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
+          <Route path="/payment-cancel" element={<PaymentCancel />} />
+          
           {/* Public routes */}
           <Route path="/crm/login" element={
             user ? (crmUser ? <Navigate to="/home" replace /> : <CrmLogin />) : <CrmLogin />
@@ -78,7 +88,7 @@ function AppContent() {
           
           {/* Protected routes */}
           <Route path="/" element={
-            user ? <Navigate to="/home" replace /> : <Navigate to="/crm/login" replace />
+            user ? <Navigate to="/home" replace /> : <Navigate to="/landing" replace />
           } />
           <Route path="/home" element={
             user ? <Home /> : <Navigate to="/crm/login" replace />
