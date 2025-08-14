@@ -1,6 +1,31 @@
 # Request Story - Projeto Monteo
 
-## Última Atualização: 2025-08-13
+## Última Atualização: 2025-08-14
+
+### Requisição Atual: Agenda - Ocultar horários ocupados pelo Google Calendar
+
+#### Contexto
+- Você deseja que horários com eventos existentes no Google Calendar não apareçam como disponíveis na Agenda.
+
+#### O que já existe
+- O componente `src/components/CRM/AgendaScheduler.tsx` já busca eventos do Google (endpoint `events`) e janelas de ocupado (`freeBusy`) quando a conta Google está conectada e um calendário está definido em `scheduling_calendar_settings`.
+- Os períodos ocupados são colocados em `busyRanges` e subtraídos da disponibilidade configurada, removendo os slots conflitantes.
+
+#### Plano
+1) Conectar conta Google na aba `Meu Perfil > Integrações` (OAuth com escopos de Calendar).
+2) Em `Configurações > Agendamento`, escolher o calendário (ex.: "primary") e habilitar a sincronização.
+3) Voltar para `CRM > Comercial > Agenda` e validar se os horários com eventos sumiram.
+4) Se necessário, ajustar permissões/escopos e verificar se o Provider Google está habilitado no Supabase Auth.
+
+#### Checklist
+- [ ] Google conectado (Perfil > Integrações)
+- [ ] Calendário selecionado (Configurações > Agendamento)
+- [ ] Sincronização ativada
+- [ ] Agenda sem exibir slots que conflitam com eventos do Google
+- [ ] Deploy (se houver alteração de código)
+
+#### Status
+- Em orientação: sem alterações de código por enquanto. Aguardando conexão e seleção de calendário para validar.
 
 ### Requisição Atual: Deploy (finalizar rebase, build e publicar)
 
@@ -20,10 +45,10 @@
 - [x] Rebase finalizado (branch `main` à frente do `origin/main`)
 - [x] Build de produção OK
 - [x] Commit das correções de conflito
-- [ ] Push para `origin/main` (aguardando sua confirmação)
+- [x] Push para `origin/main`
 - [ ] Verificar deploy automático e funcionamento em produção
 
-#### Status: 🔄 Pronto para push e deploy automático, aguardando sua confirmação
+#### Status: 🚀 Push realizado para `origin/main`. Aguardando conclusão do deploy automático para validação
 
 ---
 
@@ -40,7 +65,7 @@
 - [x] Push para `origin/main`
 - [ ] Validar deploy automático (GitHub/Vercel)
 
-#### Status: 🚀 Push realizado. Aguardando confirmação do deploy automático
+#### Status: 🚀 Push realizado para `origin/main`. Aguardando conclusão do deploy automático para validação
 
 ---
 

@@ -378,6 +378,7 @@ export default function SettingsAgendamento() {
   const [calendarLoading, setCalendarLoading] = useState(false);
   const [calendarError, setCalendarError] = useState<string | null>(null);
   const [calendarSelection, setCalendarSelection] = useState<string>('');
+  const [calendarMode, setCalendarMode] = useState<'platform' | 'google_only'>('platform');
 
   // Captura e persiste provider_token ao montar/retornar do OAuth nesta página
   useEffect(() => {
@@ -522,6 +523,7 @@ export default function SettingsAgendamento() {
         setSyncEnabled(!!cal.sync_enabled);
         setTwoWaySync(!!cal.two_way_sync);
         setGoogleCalendarId(cal.google_calendar_id || '');
+        setCalendarMode((cal as any).mode === 'google_only' ? 'google_only' : 'platform');
       }
 
       // teams (sem depender de CompanyContext)
@@ -714,6 +716,7 @@ export default function SettingsAgendamento() {
         google_calendar_id: googleCalendarId || null,
         sync_enabled: syncEnabled,
         two_way_sync: twoWaySync,
+        mode: calendarMode,
         updated_at: new Date().toISOString(),
       } as any;
       const { error } = await (supabase as any)
@@ -722,7 +725,7 @@ export default function SettingsAgendamento() {
       if (error) throw error;
       toast.success('Configurações de calendário salvas.');
     } catch (e) {
-      toast.error('Erro ao salvar configurações de calendário.');
+      setCalendarError('Erro ao salvar configurações do calendário.');
     } finally {
       setSavingCalendar(false);
     }
@@ -1262,6 +1265,18 @@ export default function SettingsAgendamento() {
                         <Button onClick={saveCalendarSettings} disabled={savingCalendar} variant="brandPrimaryToSecondary" className="brand-radius">
                           {savingCalendar ? 'Salvando...' : 'Salvar Configurações'}
                         </Button>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Modo de Agenda</Label>
+                        <Select value={calendarMode} onValueChange={(v) => setCalendarMode(v as any)}>
+                          <SelectTrigger className="brand-radius w-[260px]">
+                            <SelectValue placeholder="Escolha o modo" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="platform">Disponibilidade da plataforma + Google como ocupado</SelectItem>
+                            <SelectItem value="google_only">Somente Google (reflete agenda do Google)</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 
