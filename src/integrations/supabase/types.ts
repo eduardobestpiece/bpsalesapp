@@ -7,7 +7,7 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instanciate createClient with right options
+  // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)"
@@ -1742,6 +1742,42 @@ export type Database = {
           },
         ]
       }
+      subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          stripe_customer_id: string | null
+          subscribed: boolean
+          subscription_end: string | null
+          subscription_tier: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          subscription_end?: string | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          stripe_customer_id?: string | null
+          subscribed?: boolean
+          subscription_end?: string | null
+          subscription_tier?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       teams: {
         Row: {
           company_id: string
@@ -1803,21 +1839,21 @@ export type Database = {
       get_crm_user_by_email: {
         Args: { user_email: string }
         Returns: {
-          id: string
-          email: string
-          first_name: string
-          last_name: string
-          role: Database["public"]["Enums"]["user_role"]
-          company_id: string
-          status: Database["public"]["Enums"]["entity_status"]
-          phone: string
           avatar_url: string
           bio: string
           birth_date: string
-          leader_id: string
-          team_id: string
-          funnels: string[]
+          company_id: string
           created_at: string
+          email: string
+          first_name: string
+          funnels: string[]
+          id: string
+          last_name: string
+          leader_id: string
+          phone: string
+          role: Database["public"]["Enums"]["user_role"]
+          status: Database["public"]["Enums"]["entity_status"]
+          team_id: string
           updated_at: string
         }[]
       }
@@ -1826,15 +1862,15 @@ export type Database = {
         Returns: Database["public"]["Enums"]["user_role"]
       }
       set_team_members: {
-        Args: { p_company: string; p_team: string; p_member_ids: string[] }
+        Args: { p_company: string; p_member_ids: string[]; p_team: string }
         Returns: undefined
       }
       set_team_members_master: {
-        Args: { p_company: string; p_team: string; p_member_ids: string[] }
+        Args: { p_company: string; p_member_ids: string[]; p_team: string }
         Returns: undefined
       }
       user_belongs_to_company: {
-        Args: { user_email: string; comp_id: string }
+        Args: { comp_id: string; user_email: string }
         Returns: boolean
       }
     }
