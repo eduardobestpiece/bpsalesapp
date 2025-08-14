@@ -1305,6 +1305,334 @@ export type Database = {
           },
         ]
       }
+      scheduling_availability: {
+        Row: {
+          company_id: string
+          created_at: string
+          end_time: string
+          id: string
+          is_active: boolean
+          owner_user_id: string
+          start_time: string
+          updated_at: string
+          weekday: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          end_time: string
+          id?: string
+          is_active?: boolean
+          owner_user_id: string
+          start_time: string
+          updated_at?: string
+          weekday: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          owner_user_id?: string
+          start_time?: string
+          updated_at?: string
+          weekday?: number
+        }
+        Relationships: []
+      }
+      scheduling_calendar_settings: {
+        Row: {
+          company_id: string
+          created_at: string
+          google_calendar_id: string | null
+          owner_user_id: string
+          sync_enabled: boolean
+          two_way_sync: boolean
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          google_calendar_id?: string | null
+          owner_user_id: string
+          sync_enabled?: boolean
+          two_way_sync?: boolean
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          google_calendar_id?: string | null
+          owner_user_id?: string
+          sync_enabled?: boolean
+          two_way_sync?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      scheduling_day_intervals: {
+        Row: {
+          company_id: string
+          created_at: string
+          end_time: string
+          id: string
+          name: string | null
+          owner_user_id: string
+          start_time: string
+          updated_at: string
+          weekday: number
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          end_time: string
+          id?: string
+          name?: string | null
+          owner_user_id: string
+          start_time: string
+          updated_at?: string
+          weekday: number
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          end_time?: string
+          id?: string
+          name?: string | null
+          owner_user_id?: string
+          start_time?: string
+          updated_at?: string
+          weekday?: number
+        }
+        Relationships: []
+      }
+      scheduling_event_type_forms: {
+        Row: {
+          company_id: string
+          created_at: string
+          event_type_id: string
+          form_id: string
+          id: string
+          owner_user_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          event_type_id: string
+          form_id: string
+          id?: string
+          owner_user_id: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          event_type_id?: string
+          form_id?: string
+          id?: string
+          owner_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduling_event_type_forms_event_type_id_fkey"
+            columns: ["event_type_id"]
+            isOneToOne: false
+            referencedRelation: "scheduling_event_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "scheduling_event_type_forms_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "scheduling_forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scheduling_event_types: {
+        Row: {
+          company_id: string
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          min_gap_minutes: number
+          name: string
+          owner_user_id: string
+          scope: string
+          status: string
+          team_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          description?: string | null
+          duration_minutes: number
+          id?: string
+          min_gap_minutes?: number
+          name: string
+          owner_user_id: string
+          scope?: string
+          status?: string
+          team_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          min_gap_minutes?: number
+          name?: string
+          owner_user_id?: string
+          scope?: string
+          status?: string
+          team_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      scheduling_events: {
+        Row: {
+          attendee_email: string | null
+          company_id: string
+          created_at: string
+          created_by_user_id: string
+          description: string | null
+          end_at: string
+          event_type_id: string | null
+          google_event_id: string | null
+          id: string
+          owner_user_id: string
+          start_at: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          attendee_email?: string | null
+          company_id: string
+          created_at?: string
+          created_by_user_id: string
+          description?: string | null
+          end_at: string
+          event_type_id?: string | null
+          google_event_id?: string | null
+          id?: string
+          owner_user_id: string
+          start_at: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          attendee_email?: string | null
+          company_id?: string
+          created_at?: string
+          created_by_user_id?: string
+          description?: string | null
+          end_at?: string
+          event_type_id?: string | null
+          google_event_id?: string | null
+          id?: string
+          owner_user_id?: string
+          start_at?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduling_events_event_type_id_fkey"
+            columns: ["event_type_id"]
+            isOneToOne: false
+            referencedRelation: "scheduling_event_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scheduling_form_fields: {
+        Row: {
+          allow_comma: boolean
+          created_at: string
+          currency_code: string | null
+          form_id: string
+          id: string
+          label: string
+          options: Json | null
+          required: boolean
+          sort_order: number
+          type: string
+          updated_at: string
+        }
+        Insert: {
+          allow_comma?: boolean
+          created_at?: string
+          currency_code?: string | null
+          form_id: string
+          id?: string
+          label: string
+          options?: Json | null
+          required?: boolean
+          sort_order?: number
+          type: string
+          updated_at?: string
+        }
+        Update: {
+          allow_comma?: boolean
+          created_at?: string
+          currency_code?: string | null
+          form_id?: string
+          id?: string
+          label?: string
+          options?: Json | null
+          required?: boolean
+          sort_order?: number
+          type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scheduling_form_fields_form_id_fkey"
+            columns: ["form_id"]
+            isOneToOne: false
+            referencedRelation: "scheduling_forms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      scheduling_forms: {
+        Row: {
+          company_id: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          owner_user_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          owner_user_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          owner_user_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       simulator_configurations: {
         Row: {
           company_id: string
