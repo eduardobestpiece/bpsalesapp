@@ -6,12 +6,20 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
 import { useQuery } from '@tanstack/react-query';
+import { useDefaultBranding } from '@/hooks/useDefaultBranding';
 
 export default function Home() {
   const navigate = useNavigate();
   const { userRole, companyId } = useCrmAuth();
   const [pagePermissions, setPagePermissions] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
+  const { branding: defaultBranding, isLoading: brandingLoading } = useDefaultBranding();
+
+  // Debug: Log do branding
+  useEffect(() => {
+    console.log('🏠 Home - Branding carregado:', defaultBranding);
+    console.log('🏠 Home - Logo URL:', defaultBranding?.logo_horizontal_url);
+  }, [defaultBranding]);
 
   // Buscar keys de páginas do módulo Configurações
   const { data: settingsKeys = [] } = useQuery({
@@ -48,8 +56,8 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#131313] via-[#1E1E1E] to-[#161616]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: defaultBranding?.primary_color || '#e50f5f' }}></div>
       </div>
     );
   }
@@ -60,25 +68,28 @@ export default function Home() {
   );
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-primary-50/80 via-white to-primary-100 dark:from-[#131313] dark:via-[#1E1E1E] dark:to-[#161616] p-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#131313] via-[#1E1E1E] to-[#161616] p-4">
       {/* Botão de alternância de tema */}
       <div className="absolute top-4 right-4">
         <ThemeSwitch />
       </div>
       
-      <h1 className="text-3xl md:text-4xl font-bold mb-8 text-primary-900 dark:text-white text-center drop-shadow">
-        Bem-vindo à Plataforma Monteo
+      <h1 className="font-bold mb-12 text-white text-center drop-shadow" style={{ fontSize: '42px' }}>
+        Bem-vindo à Plataforma
       </h1>
-      <div className="flex flex-col md:flex-row gap-8 w-full max-w-3xl justify-center">
+      
+      <div className="flex flex-col gap-6 w-full max-w-2xl">
         {/* Botão Simulador */}
         {pagePermissions['simulator'] !== false && (
           <button
             onClick={() => navigate('/simulador')}
-            className="flex-1 bg-white dark:bg-[#1F1F1F] rounded-3xl shadow-xl p-10 flex flex-col items-center hover:bg-primary-50 dark:hover:bg-[#161616] transition border border-primary-100 dark:border-[#A86F57]/20 group focus:outline-none focus:ring-2 focus:ring-primary-300 dark:focus:ring-[#A86F57]/50"
+            className="w-full bg-[#1F1F1F] rounded-2xl shadow-xl p-6 flex items-center hover:bg-[#161616] transition border border-white/10 group focus:outline-none focus:ring-2 focus:ring-[#e50f5f]/50"
           >
-            <Calculator className="h-14 w-14 mb-4 group-hover:scale-110 transition" style={{ color: 'var(--brand-primary, #A86F57)' }} />
-            <span className="text-2xl font-semibold text-primary-700 dark:text-white mb-2">Simulador</span>
-            <span className="text-primary-500 dark:text-gray-300 text-center">Acesse o simulador de propostas.</span>
+            <Calculator className="h-12 w-12 mr-6 group-hover:scale-110 transition" style={{ color: defaultBranding?.primary_color || '#e50f5f' }} />
+            <div className="flex-1 text-left">
+              <span className="text-xl font-semibold text-white block mb-1">Simulador</span>
+              <span className="text-gray-300 text-sm">Acesse o simulador de propostas.</span>
+            </div>
           </button>
         )}
         
@@ -86,11 +97,13 @@ export default function Home() {
         {pagePermissions['indicadores'] !== false && (
           <button
             onClick={() => navigate('/crm/indicadores')}
-            className="flex-1 bg-white dark:bg-[#1F1F1F] rounded-3xl shadow-xl p-10 flex flex-col items-center hover:bg-secondary-50 dark:hover:bg-[#161616] transition border border-secondary-100 dark:border-[#A86F57]/20 group focus:outline-none focus:ring-2 focus:ring-secondary-300 dark:focus:ring-[#A86F57]/50"
+            className="w-full bg-[#1F1F1F] rounded-2xl shadow-xl p-6 flex items-center hover:bg-[#161616] transition border border-white/10 group focus:outline-none focus:ring-2 focus:ring-[#e50f5f]/50"
           >
-            <BarChart2 className="h-14 w-14 mb-4 group-hover:scale-110 transition" style={{ color: 'var(--brand-primary, #A86F57)' }} />
-            <span className="text-2xl font-semibold text-secondary-700 dark:text-white mb-2">CRM</span>
-            <span className="text-secondary-500 dark:text-gray-300 text-center">Acesse o CRM e veja os indicadores de vendas.</span>
+            <BarChart2 className="h-12 w-12 mr-6 group-hover:scale-110 transition" style={{ color: defaultBranding?.primary_color || '#e50f5f' }} />
+            <div className="flex-1 text-left">
+              <span className="text-xl font-semibold text-white block mb-1">CRM</span>
+              <span className="text-gray-300 text-sm">Acesse o CRM e veja os indicadores de vendas.</span>
+            </div>
           </button>
         )}
 
@@ -98,11 +111,13 @@ export default function Home() {
         {canAccessSettings && (
           <button
             onClick={() => navigate('/configuracoes/simulador')}
-            className="flex-1 bg-white dark:bg-[#1F1F1F] rounded-3xl shadow-xl p-10 flex flex-col items-center hover:bg-muted/40 dark:hover:bg-[#161616] transition border border-muted-100 dark:border-[#A86F57]/20 group focus:outline-none focus:ring-2 focus:ring-muted-300 dark:focus:ring-[#A86F57]/50"
+            className="w-full bg-[#1F1F1F] rounded-2xl shadow-xl p-6 flex items-center hover:bg-[#161616] transition border border-white/10 group focus:outline-none focus:ring-2 focus:ring-[#e50f5f]/50"
           >
-            <Settings className="h-14 w-14 mb-4 group-hover:scale-110 transition" style={{ color: 'var(--brand-primary, #A86F57)' }} />
-            <span className="text-2xl font-semibold text-gray-800 dark:text-white mb-2">Configurações</span>
-            <span className="text-gray-500 dark:text-gray-300 text-center">Gerencie o Simulador, CRM e permissões.</span>
+            <Settings className="h-12 w-12 mr-6 group-hover:scale-110 transition" style={{ color: defaultBranding?.primary_color || '#e50f5f' }} />
+            <div className="flex-1 text-left">
+              <span className="text-xl font-semibold text-white block mb-1">Configurações</span>
+              <span className="text-gray-300 text-sm">Gerencie o Simulador, CRM e permissões.</span>
+            </div>
           </button>
         )}
       </div>

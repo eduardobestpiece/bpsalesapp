@@ -89,8 +89,8 @@ export default {
 				sm: 'calc(var(--radius) - 4px)'
 			},
 			fontFamily: {
-				sans: ['Effra', 'system-ui', 'sans-serif'],
-				heading: ['Effra', 'system-ui', 'sans-serif'],
+				sans: ['DM Sans', 'system-ui', 'sans-serif'],
+				heading: ['DM Sans', 'system-ui', 'sans-serif'],
 			},
 			fontSize: {
 				'2xs': ['0.625rem', { lineHeight: '0.75rem' }],

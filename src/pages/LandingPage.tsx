@@ -1,24 +1,121 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Play } from "lucide-react";
+import { Play, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { Logo } from "@/components/ui/Logo";
+import { useDefaultBranding } from "@/hooks/useDefaultBranding";
+import { PhoneInput } from "@/components/ui/PhoneInput";
+import { useUserInfo } from "@/hooks/useUserInfo";
 
 export default function LandingPage() {
   const [formData, setFormData] = useState({
     name: "",
-    email: ""
+    email: "",
+    phone: "",
+    browser: "",
+    device: "",
+    ip: "",
+    fullUrl: "",
+    urlWithoutParams: "",
+    urlParams: "",
+    utm_campaign: "",
+    utm_medium: "",
+    utm_content: "",
+    utm_source: "",
+    utm_term: "",
+    gclid: "",
+    fbclid: "",
+    fbp: "",
+    fbc: ""
   });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
+  const { branding: defaultBranding, isLoading: brandingLoading } = useDefaultBranding();
+  const userInfo = useUserInfo();
+
+  // Debug: Log do branding
+  useEffect(() => {
+    console.log('🎯 Landing - Branding carregado:', defaultBranding);
+    console.log('🎯 Landing - Logo URL:', defaultBranding?.logo_horizontal_url);
+  }, [defaultBranding]);
+
+  // Atualizar formData com as informações do usuário quando disponíveis
+  useEffect(() => {
+    setFormData(prev => ({
+      ...prev,
+      ...userInfo
+    }));
+  }, [userInfo]);
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    // Validação do nome (primeiro nome e sobrenome obrigatórios)
+    if (!formData.name.trim()) {
+      newErrors.name = "Nome é obrigatório";
+    } else {
+      const nameParts = formData.name.trim().split(' ').filter(part => part.length > 0);
+      if (nameParts.length < 2) {
+        newErrors.name = "Digite seu primeiro nome e sobrenome";
+      }
+    }
+
+    // Validação do email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email.trim()) {
+      newErrors.email = "Email é obrigatório";
+    } else if (!emailRegex.test(formData.email.trim())) {
+      newErrors.email = "Digite um email válido";
+    }
+
+    // Validação do telefone
+    const phoneNumbers = formData.phone.replace(/\D/g, '');
+    if (!formData.phone.trim()) {
+      newErrors.phone = "Telefone é obrigatório";
+    } else if (phoneNumbers.length < 10) {
+      newErrors.phone = "Digite um telefone válido";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.email) {
-      toast.error("Por favor, preencha todos os campos");
+    
+    if (!validateForm()) {
+      toast.error("Por favor, corrija os erros no formulário");
       return;
     }
+    
+    // Log das informações capturadas para debug
+    console.log('📊 Informações do Lead:', {
+      dados: {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone
+      },
+      tracking: {
+        browser: formData.browser,
+        device: formData.device,
+        ip: formData.ip,
+        fullUrl: formData.fullUrl,
+        urlWithoutParams: formData.urlWithoutParams,
+        urlParams: formData.urlParams,
+        utm_campaign: formData.utm_campaign,
+        utm_medium: formData.utm_medium,
+        utm_content: formData.utm_content,
+        utm_source: formData.utm_source,
+        utm_term: formData.utm_term,
+        gclid: formData.gclid,
+        fbclid: formData.fbclid,
+        fbp: formData.fbp,
+        fbc: formData.fbc
+      }
+    });
     
     // Salvar dados no localStorage para usar depois do pagamento
     localStorage.setItem("leadData", JSON.stringify(formData));
@@ -28,172 +125,230 @@ export default function LandingPage() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [name]: value
     }));
+    
+    // Limpar erro do campo quando o usuário começar a digitar
+    if (errors[name]) {
+      setErrors(prev => ({
+        ...prev,
+        [name]: ""
+      }));
+    }
+  };
+
+  const handlePhoneChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      phone: value
+    }));
+    
+    // Limpar erro do telefone quando o usuário começar a digitar
+    if (errors.phone) {
+      setErrors(prev => ({
+        ...prev,
+        phone: ""
+      }));
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-primary/5">
+    <div className="min-h-screen bg-gradient-to-br from-[#131313] via-[#1E1E1E] to-[#161616]">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <header className="flex items-center justify-between mb-16">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <div className="w-4 h-4 bg-white rounded-sm transform rotate-45"></div>
-            </div>
-            <span className="text-2xl font-bold text-foreground">BPSales</span>
+            {brandingLoading ? (
+              <div className="h-10 w-32 bg-gray-700 animate-pulse rounded"></div>
+            ) : (
+              <Logo 
+                className="h-10 w-auto max-w-[140px]"
+                lightUrl={defaultBranding?.logo_horizontal_url || null}
+                darkUrl={defaultBranding?.logo_horizontal_dark_url || defaultBranding?.logo_horizontal_url || null}
+                alt="BP Sales"
+              />
+            )}
           </div>
           <Button 
             variant="outline" 
             onClick={() => navigate("/crm/login")}
-            className="border-primary/20 text-primary hover:bg-primary/10"
+            className="transition-all duration-300 shadow-sm"
+            style={{ 
+              backgroundColor: 'transparent',
+              borderColor: defaultBranding?.primary_color || '#e50f5f',
+              color: defaultBranding?.primary_color || '#e50f5f',
+              borderWidth: '2px'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = defaultBranding?.secondary_color || '#7c032e';
+              e.currentTarget.style.borderColor = 'transparent';
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'transparent';
+              e.currentTarget.style.borderColor = defaultBranding?.primary_color || '#e50f5f';
+              e.currentTarget.style.color = defaultBranding?.primary_color || '#e50f5f';
+            }}
+            onMouseDown={(e) => {
+              e.currentTarget.style.backgroundColor = defaultBranding?.secondary_color || '#7c032e';
+              e.currentTarget.style.borderColor = 'transparent';
+              e.currentTarget.style.color = 'white';
+            }}
+            onMouseUp={(e) => {
+              e.currentTarget.style.backgroundColor = defaultBranding?.secondary_color || '#7c032e';
+              e.currentTarget.style.borderColor = 'transparent';
+              e.currentTarget.style.color = 'white';
+            }}
           >
             Entrar
           </Button>
         </header>
 
-        <div className="grid lg:grid-cols-2 gap-12 items-center max-w-7xl mx-auto">
-          {/* Left Column - Content */}
-          <div className="space-y-8">
-            <div className="space-y-6">
-              <h1 className="text-4xl lg:text-5xl font-bold leading-tight text-foreground">
-                Seu cliente vai se sentir maluco de não fechar com você...
-              </h1>
-              
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                Descubra as <strong>2 técnicas de apresentação</strong> io de consórcio que transformam indecisos em compradores imediatos.
-              </p>
+        {/* Main Content - 2 Columns */}
+        <div className="grid lg:grid-cols-10 gap-12 items-center max-w-7xl mx-auto">
+          {/* Left Column - Content (60%) */}
+          <div className="lg:col-span-6 space-y-8">
+            {/* H1 Principal */}
+            <h1 className="font-bold leading-tight text-white" style={{ fontSize: '42px' }}>
+              Seu cliente se sentirá burro em não fechar um consórcio com você!
+            </h1>
+            
+            {/* Imagem do Vídeo */}
+            <div className="relative bg-gradient-to-br from-[#2A2A2A] via-[#1F1F1F] to-[#161616] rounded-2xl aspect-video flex items-center justify-center group cursor-pointer hover:scale-105 transition-all duration-300 shadow-2xl border border-white/10">
+              <div className="absolute inset-0 bg-black/20 rounded-2xl"></div>
+              <div className="relative z-10 w-16 h-16 rounded-full bg-white text-black shadow-2xl transition-all duration-300 hover:scale-110 flex items-center justify-center">
+                <Play className="w-6 h-6 ml-1" />
+              </div>
             </div>
+            
+            {/* Texto Descritivo */}
+            <p className="text-lg text-gray-300 leading-relaxed">
+              Eu vou te entregar em <strong className="text-white">5 minutos</strong> as <strong className="text-white">2 técnicas</strong> e <strong className="text-white">1 Ferramenta</strong> de apresentação de consórcio que transformam pessoas de alta renda em clientes.
+            </p>
+          </div>
 
-            {/* Form */}
-            <Card className="w-full max-w-md bg-white/95 backdrop-blur-sm shadow-xl">
+          {/* Right Column - Form (40%) */}
+          <div className="lg:col-span-4 space-y-6">
+            {/* Título do Formulário */}
+            <div className="text-center">
+              <h2 className="text-2xl font-bold text-white mb-2">
+                Cadastre-se e assista gratuitamente
+              </h2>
+            </div>
+            
+            <Card className="w-full bg-[#1F1F1F]/95 backdrop-blur-sm shadow-xl border-white/10">
               <CardContent className="p-6">
                 <form onSubmit={handleSubmit} className="space-y-4">
-                  <Input
-                    name="name"
-                    placeholder="Nome"
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="h-12 text-base"
-                    required
-                  />
-                  <Input
-                    name="email"
-                    type="email"
-                    placeholder="E-mail"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="h-12 text-base"
-                    required
-                  />
+                  {/* Campos Hidden com Informações do Usuário */}
+                  <input type="hidden" name="browser" value={formData.browser} />
+                  <input type="hidden" name="device" value={formData.device} />
+                  <input type="hidden" name="ip" value={formData.ip} />
+                  <input type="hidden" name="fullUrl" value={formData.fullUrl} />
+                  <input type="hidden" name="urlWithoutParams" value={formData.urlWithoutParams} />
+                  <input type="hidden" name="urlParams" value={formData.urlParams} />
+                  <input type="hidden" name="utm_campaign" value={formData.utm_campaign} />
+                  <input type="hidden" name="utm_medium" value={formData.utm_medium} />
+                  <input type="hidden" name="utm_content" value={formData.utm_content} />
+                  <input type="hidden" name="utm_source" value={formData.utm_source} />
+                  <input type="hidden" name="utm_term" value={formData.utm_term} />
+                  <input type="hidden" name="gclid" value={formData.gclid} />
+                  <input type="hidden" name="fbclid" value={formData.fbclid} />
+                  <input type="hidden" name="fbp" value={formData.fbp} />
+                  <input type="hidden" name="fbc" value={formData.fbc} />
+
+                  {/* Nome e Sobrenome */}
+                  <div className="space-y-2">
+                    <Input
+                      name="name"
+                      placeholder="Nome e sobrenome"
+                      value={formData.name}
+                      onChange={handleChange}
+                      className={`h-12 text-base bg-[#2A2A2A] border-white/20 text-white placeholder:text-gray-400 focus:border-white/40 focus:ring-white/20 ${
+                        errors.name ? 'border-red-500 focus:border-red-500' : ''
+                      }`}
+                    />
+                    {errors.name && (
+                      <p className="text-red-500 text-sm">{errors.name}</p>
+                    )}
+                  </div>
+
+                  {/* Email */}
+                  <div className="space-y-2">
+                    <Input
+                      name="email"
+                      type="email"
+                      placeholder="E-mail"
+                      value={formData.email}
+                      onChange={handleChange}
+                      className={`h-12 text-base bg-[#2A2A2A] border-white/20 text-white placeholder:text-gray-400 focus:border-white/40 focus:ring-white/20 ${
+                        errors.email ? 'border-red-500 focus:border-red-500' : ''
+                      }`}
+                    />
+                    {errors.email && (
+                      <p className="text-red-500 text-sm">{errors.email}</p>
+                    )}
+                  </div>
+
+                  {/* Telefone */}
+                  <div className="space-y-2">
+                    <PhoneInput
+                      value={formData.phone}
+                      onChange={handlePhoneChange}
+                      placeholder="Telefone"
+                      error={errors.phone}
+                    />
+                  </div>
+
+                  {/* Botão de Submit */}
                   <Button 
                     type="submit" 
-                    className="w-full h-12 text-base font-semibold bg-primary hover:bg-primary/90"
+                    className="w-full h-12 text-base font-semibold bg-gradient-to-r from-[#e50f5f] to-[#d40a4f] hover:opacity-90 transition-all duration-300 shadow-lg text-white"
                   >
                     Quero assistir agora
                   </Button>
-                  <p className="text-xs text-center text-muted-foreground mt-2">
-                    Seus dados estão 100% protegidos
-                  </p>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
 
-          {/* Right Column - Video Preview */}
-          <div className="space-y-8">
-            <div className="text-center space-y-6">
-              <h2 className="text-3xl lg:text-4xl font-bold text-foreground">
-                Veja como aumentar sua taxa de fechamento em menos de 7 ias
-              </h2>
-              
-              {/* Video Preview */}
-              <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl aspect-video flex items-center justify-center group cursor-pointer hover:scale-105 transition-transform">
-                <div className="absolute inset-0 bg-black/20 rounded-2xl"></div>
-                <Button
-                  size="lg"
-                  className="relative z-10 w-16 h-16 rounded-full bg-white text-primary hover:bg-white/90 shadow-2xl"
-                  onClick={() => navigate("/video")}
-                >
-                  <Play className="w-6 h-6 ml-1" />
-                </Button>
-              </div>
-
-              <Button 
-                size="lg"
-                className="bg-primary hover:bg-primary/90 text-white font-semibold px-8 py-3"
-                onClick={() => navigate("/video")}
-              >
-                Quero acesso ao simulador agora
-              </Button>
-            </div>
-
-            {/* Features */}
-            <div className="grid grid-cols-2 gap-6 pt-8">
-              <div className="text-center space-y-2">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg mx-auto flex items-center justify-center">
-                  <div className="w-6 h-6 bg-primary rounded-sm"></div>
-                </div>
-                <div>
-                  <p className="font-semibold text-foreground">Proteção</p>
-                  <p className="text-sm text-muted-foreground">patrimonial</p>
-                </div>
-              </div>
-              
-              <div className="text-center space-y-2">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg mx-auto flex items-center justify-center">
-                  <div className="w-6 h-6 bg-primary rounded-sm"></div>
-                </div>
-                <div>
-                  <p className="font-semibold text-foreground">Fluxo de caixa</p>
-                  <p className="text-sm text-muted-foreground">positivo</p>
-                </div>
-              </div>
-              
-              <div className="text-center space-y-2">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg mx-auto flex items-center justify-center">
-                  <div className="w-6 h-6 bg-primary rounded-sm"></div>
-                </div>
-                <div>
-                  <p className="font-semibold text-foreground">As Parágrafos</p>
-                  <p className="text-sm text-muted-foreground">parmilinional</p>
-                </div>
-              </div>
-              
-              <div className="text-center space-y-2">
-                <div className="w-12 h-12 bg-primary/10 rounded-lg mx-auto flex items-center justify-center">
-                  <div className="w-6 h-6 bg-primary rounded-sm"></div>
-                </div>
-                <div>
-                  <p className="font-semibold text-foreground">17+</p>
-                  <p className="text-sm text-muted-foreground">Anos</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Testimonial */}
-            <Card className="bg-white/95 backdrop-blur-sm">
-              <CardContent className="p-6">
-                <div className="flex items-start space-x-4">
-                  <img 
-                    src="/lovable-uploads/956791e6-1ca1-413b-8054-cd43b7715cb8.png" 
-                    alt="Depoimento"
-                    className="w-12 h-12 rounded-full object-cover"
-                  />
-                  <div className="flex-1">
-                    <p className="text-sm text-muted-foreground mb-2">
-                      "Fechei dois negócios grandes em seguência depois de usar técnicas!"
-                    </p>
-                    <p className="font-semibold text-foreground">Ertanuel</p>
+                  {/* Texto de Proteção */}
+                  <div className="flex items-center justify-center space-x-2 text-xs text-gray-400 mt-4">
+                    <Lock className="h-3 w-3" />
+                    <span>Seus dados estão 100% protegidos</span>
                   </div>
-                </div>
+                </form>
               </CardContent>
             </Card>
           </div>
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="bg-[#131313] py-12 mt-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            {/* Logo */}
+            <div className="flex items-center justify-center mb-6">
+              {brandingLoading ? (
+                <div className="h-8 w-32 bg-gray-700 animate-pulse rounded"></div>
+              ) : (
+                <Logo 
+                  className="h-8 w-auto max-w-[120px]"
+                  lightUrl={defaultBranding?.logo_horizontal_url || null}
+                  darkUrl={defaultBranding?.logo_horizontal_dark_url || defaultBranding?.logo_horizontal_url || null}
+                  alt="BP Sales"
+                />
+              )}
+            </div>
+            
+            {/* Texto Descritivo */}
+            <div className="max-w-4xl mx-auto">
+              <p className="text-gray-300 text-sm leading-relaxed">
+                BP Sales é uma empresa de engenharia comercial que ajuda empresas existentes a vender seus produtos e serviços com processos de vendas e automações que substituem trabalhos reptitivos. Não fazemos nenhuma afirmação ou representação de que, ao contratar a BP Sales, você ganhará dinheiro ou receberá seu dinheiro de volta. Embora tenhamos grandes experiências reais, os resultados e a experiência de sua empresa variará com base no esforço, na aplicação dos funcionários e da administração de sua empresa, no modelo de negócios implementado e nas forças de mercado entre outros fatores interferentes.
+              </p>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

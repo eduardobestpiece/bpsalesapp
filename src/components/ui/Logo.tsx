@@ -34,29 +34,44 @@ export const Logo = ({ className = "h-10 w-auto max-w-[140px]", onClick, lightUr
     };
   }, []);
 
-  // Fallbacks padrão (logo Monteo)
-  const fallbackLight = "/monteo_policromia_horizontal (1).png";
-  const fallbackDark = "/monteo_dark_logo.png";
+  // Se não há URLs fornecidas, não mostrar nada
+  if (!lightUrl && !darkUrl) {
+    console.warn('Logo: Nenhuma URL fornecida para a logo');
+    return null;
+  }
 
-  const resolvedLight = lightUrl || fallbackLight;
-  const resolvedDark = darkUrl || fallbackDark;
+  // Usar as URLs fornecidas, sem fallbacks
+  const resolvedLight = lightUrl;
+  const resolvedDark = darkUrl || lightUrl; // Se não há dark, usar light
 
   return (
     <div className="cursor-pointer" onClick={onClick}>
       {/* Logo para modo claro */}
-      <img 
-        src={resolvedLight} 
-        alt={alt} 
-        className={`${className} ${isDarkMode ? 'hidden' : 'block'}`} 
-        style={{ height: '40px', width: 'auto', maxWidth: '140px', objectFit: 'contain' }}
-      />
+      {resolvedLight && (
+        <img 
+          src={resolvedLight} 
+          alt={alt} 
+          className={`${className} ${isDarkMode ? 'hidden' : 'block'}`} 
+          style={{ height: '40px', width: 'auto', maxWidth: '140px', objectFit: 'contain' }}
+          onError={(e) => {
+            console.error('Erro ao carregar logo light:', resolvedLight);
+            e.currentTarget.style.display = 'none';
+          }}
+        />
+      )}
       {/* Logo para modo escuro */}
-      <img 
-        src={resolvedDark} 
-        alt={alt} 
-        className={`${className} ${isDarkMode ? 'block' : 'hidden'}`} 
-        style={{ height: '40px', width: 'auto', maxWidth: '140px', objectFit: 'contain' }}
-      />
+      {resolvedDark && (
+        <img 
+          src={resolvedDark} 
+          alt={alt} 
+          className={`${className} ${isDarkMode ? 'block' : 'hidden'}`} 
+          style={{ height: '40px', width: 'auto', maxWidth: '140px', objectFit: 'contain' }}
+          onError={(e) => {
+            console.error('Erro ao carregar logo dark:', resolvedDark);
+            e.currentTarget.style.display = 'none';
+          }}
+        />
+      )}
     </div>
   );
 };

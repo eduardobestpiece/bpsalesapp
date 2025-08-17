@@ -13,6 +13,7 @@ import ForgotPasswordModal from '@/components/Auth/ForgotPasswordModal';
 import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
 import { Logo } from '@/components/ui/Logo';
 import { supabase } from '@/integrations/supabase/client';
+import { useDefaultBranding } from '@/hooks/useDefaultBranding';
 
 const CrmLogin = () => {
   const [email, setEmail] = useState('');
@@ -21,36 +22,16 @@ const CrmLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showForgotModal, setShowForgotModal] = useState(false);
-  const [brandingLight, setBrandingLight] = useState<string | null>(null);
-  const [brandingDark, setBrandingDark] = useState<string | null>(null);
   
   const { signIn, user, crmUser } = useCrmAuth();
   const navigate = useNavigate();
+  const { branding: defaultBranding, isLoading: brandingLoading } = useDefaultBranding();
 
-  // Carregar branding da empresa BP Sales para a tela de login
+  // Debug: Log do branding
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const { data: company } = await supabase
-          .from('companies')
-          .select('id, name')
-          .ilike('name', 'BP Sales')
-          .maybeSingle();
-        const companyId = company?.id;
-        if (!companyId) return;
-        const { data: branding } = await supabase
-          .from('company_branding')
-          .select('logo_horizontal_url, logo_horizontal_dark_url')
-          .eq('company_id', companyId)
-          .maybeSingle();
-        if (!mounted) return;
-        setBrandingLight(branding?.logo_horizontal_url || null);
-        setBrandingDark(branding?.logo_horizontal_dark_url || branding?.logo_horizontal_url || null);
-      } catch {}
-    })();
-    return () => { mounted = false; };
-  }, []);
+    console.log('🔐 Login - Branding carregado:', defaultBranding);
+    console.log('🔐 Login - Logo URL:', defaultBranding?.logo_horizontal_url);
+  }, [defaultBranding]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -88,14 +69,23 @@ const CrmLogin = () => {
       
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Logo className="h-24 mx-auto mb-2" lightUrl={brandingLight || undefined as any} darkUrl={brandingDark || undefined as any} />
+          {brandingLoading ? (
+            <div className="h-24 w-48 bg-gray-200 animate-pulse rounded mx-auto mb-2"></div>
+          ) : (
+            <Logo 
+              className="h-24 mx-auto mb-2" 
+              lightUrl={defaultBranding?.logo_horizontal_url || null}
+              darkUrl={defaultBranding?.logo_horizontal_dark_url || defaultBranding?.logo_horizontal_url || null}
+              alt="BP Sales"
+            />
+          )}
         </div>
 
         <Card className="shadow-lg border-0 bg-background dark:bg-[#1F1F1F] border-border" style={{ borderColor: 'rgba(var(--brand-rgb, 168,110,87), 0.20)' }}>
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl text-foreground dark:text-white">Entrar no Sistema</CardTitle>
+            <CardTitle className="text-2xl text-foreground dark:text-white">Acessar Plataforma</CardTitle>
             <CardDescription className="text-muted-foreground dark:text-gray-300">
-              Acesse sua conta para gerenciar leads e vendas
+              Preencha os campos para acessar a plataforma
             </CardDescription>
           </CardHeader>
 
@@ -125,8 +115,11 @@ const CrmLogin = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={isLoading}
-                  className="bg-background dark:bg-[#131313] border-border text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-gray-400"
-                  style={{ borderColor: 'rgba(var(--brand-rgb, 168,110,87), 0.30)' }}
+                  className="bg-background dark:bg-[#1F1F1F] border-border text-foreground dark:text-white"
+                  style={{ 
+                    borderColor: defaultBranding?.secondary_color || '#7c032e',
+                    borderWidth: '2px'
+                  }}
                 />
               </div>
 
@@ -141,21 +134,24 @@ const CrmLogin = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={isLoading}
-                    className="bg-background dark:bg-[#131313] border-border text-foreground dark:text-white placeholder:text-muted-foreground dark:placeholder:text-gray-400"
-                    style={{ borderColor: 'rgba(var(--brand-rgb, 168,110,87), 0.30)' }}
+                    className="bg-background dark:bg-[#1F1F1F] border-border text-foreground dark:text-white pr-10"
+                    style={{ 
+                      borderColor: defaultBranding?.secondary_color || '#7c032e',
+                      borderWidth: '2px'
+                    }}
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 text-muted-foreground dark:text-gray-400 hover:text-foreground dark:hover:text-white"
+                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                     onClick={() => setShowPassword(!showPassword)}
                     disabled={isLoading}
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
                     ) : (
-                      <Eye className="h-4 w-4" />
+                      <Eye className="h-4 w-4 text-muted-foreground" />
                     )}
                   </Button>
                 </div>
@@ -165,9 +161,12 @@ const CrmLogin = () => {
             <CardFooter className="flex flex-col space-y-4">
               <Button
                 type="submit"
-                className="w-full text-white"
-                style={{ backgroundColor: 'var(--brand-primary, #A86F57)' }}
+                className="w-full text-white font-semibold"
                 disabled={isLoading}
+                style={{ 
+                  backgroundColor: defaultBranding?.primary_color || '#e50f5f',
+                  borderColor: defaultBranding?.primary_color || '#e50f5f'
+                }}
               >
                 {isLoading ? (
                   <>
@@ -179,16 +178,18 @@ const CrmLogin = () => {
                 )}
               </Button>
 
-              <div className="flex flex-col items-center space-y-2 text-sm">
-                <button
+              <div className="text-center">
+                <Button
                   type="button"
+                  variant="link"
+                  className="text-sm hover:text-foreground"
                   onClick={() => setShowForgotModal(true)}
-                  className="hover:underline"
-                  style={{ color: 'var(--brand-primary, #A86F57)' }}
-                  disabled={isLoading}
+                  style={{ 
+                    color: defaultBranding?.primary_color || '#e50f5f'
+                  }}
                 >
                   Esqueci a senha
-                </button>
+                </Button>
               </div>
             </CardFooter>
           </form>

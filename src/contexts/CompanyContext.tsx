@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface CompanyContextType {
   selectedCompanyId: string;
@@ -16,11 +16,14 @@ export const useCompany = () => {
 };
 
 interface CompanyProviderProps {
-  children: ReactNode;
+  children: React.ReactNode;
   defaultCompanyId?: string;
 }
 
-export const CompanyProvider = ({ children, defaultCompanyId = '' }: CompanyProviderProps) => {
+// ID da empresa Best Piece (BP Sales) como padrão
+const DEFAULT_COMPANY_ID = '334bf60e-ad45-4d1e-a4dc-8f09a8c5a12b';
+
+export const CompanyProvider = ({ children, defaultCompanyId = DEFAULT_COMPANY_ID }: CompanyProviderProps) => {
   const [selectedCompanyId, setSelectedCompanyIdState] = useState<string>(() => {
     return localStorage.getItem('selectedCompanyId') || defaultCompanyId;
   });
