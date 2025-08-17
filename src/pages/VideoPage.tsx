@@ -163,116 +163,227 @@ export default function VideoPage() {
                 </div>
               </div>
 
-              {/* Performance Chart */}
-              <div className="bg-[#2A2A2A] rounded-lg p-6">
-                <h4 className="text-white text-lg font-semibold mb-4">PERFORMANCE POR CONSULTOR</h4>
-                <div className="space-y-3">
-                  {[
-                    { name: "Vendedor 1", value: 95 },
-                    { name: "Vendedor 2", value: 88 },
-                    { name: "Vendedor 3", value: 82 },
-                    { name: "Vendedor 4", value: 75 },
-                    { name: "Vendedor 5", value: 70 },
-                    { name: "Vendedor 6", value: 65 },
-                    { name: "Vendedor 7", value: 60 },
-                    { name: "Vendedor 8", value: 55 },
-                    { name: "Vendedor 9", value: 50 },
-                    { name: "Vendedor 10", value: 45 },
-                    { name: "Vendedor 11", value: 40 },
-                    { name: "Vendedor 12", value: 35 },
-                    { name: "Vendedor 13", value: 30 },
-                    { name: "Vendedor 14", value: 25 },
-                    { name: "Vendedor 15", value: 20 }
-                  ].map((consultant, index) => (
-                    <div key={index} className="flex items-center space-x-4">
-                      <div className="text-white text-sm w-32 truncate">{consultant.name}</div>
-                      <div className="flex-1 bg-[#1A1A1A] rounded-full h-4">
-                        <div 
-                          className="bg-gradient-to-r from-[#e50f5f] to-[#7c032e] h-4 rounded-full transition-all duration-300"
-                          style={{ width: `${consultant.value}%` }}
-                        ></div>
+              {/* Performance Charts Layout */}
+              <div className="grid lg:grid-cols-3 gap-6">
+                {/* Performance by Consultant - Left Column */}
+                <div className="lg:col-span-2 bg-[#2A2A2A] rounded-lg p-6">
+                  <h4 className="text-white text-lg font-semibold mb-4">PERFORMANCE POR CONSULTOR</h4>
+                  <div className="space-y-3">
+                    {[
+                      { name: "Vendedor 1", value: 95 },
+                      { name: "Vendedor 2", value: 88 },
+                      { name: "Vendedor 3", value: 82 },
+                      { name: "Vendedor 4", value: 75 },
+                      { name: "Vendedor 5", value: 70 },
+                      { name: "Vendedor 6", value: 65 },
+                      { name: "Vendedor 7", value: 60 },
+                      { name: "Vendedor 8", value: 55 },
+                      { name: "Vendedor 9", value: 50 },
+                      { name: "Vendedor 10", value: 45 },
+                      { name: "Vendedor 11", value: 40 },
+                      { name: "Vendedor 12", value: 35 },
+                      { name: "Vendedor 13", value: 30 },
+                      { name: "Vendedor 14", value: 25 },
+                      { name: "Vendedor 15", value: 20 }
+                    ].map((consultant, index) => (
+                      <div key={index} className="flex items-center space-x-4">
+                        <div className="text-white text-sm w-32 truncate">{consultant.name}</div>
+                        <div className="flex-1 bg-[#1A1A1A] rounded-full h-4">
+                          <div 
+                            className="bg-gradient-to-r from-[#e50f5f] to-[#7c032e] h-4 rounded-full transition-all duration-300"
+                            style={{ width: `${consultant.value}%` }}
+                          ></div>
+                        </div>
+                        <div className="text-white text-sm font-semibold w-12 text-right">{consultant.value}%</div>
                       </div>
-                      <div className="text-white text-sm font-semibold w-12 text-right">{consultant.value}%</div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Charts Row */}
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Performance by Origin */}
-                <div className="bg-[#2A2A2A] rounded-lg p-6">
-                  <h4 className="text-white text-lg font-semibold mb-4">PERFORMANCE POR ORIGEM</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 bg-amber-600 rounded-full"></div>
-                        <span className="text-white text-sm">Network pessoal</span>
-                      </div>
-                      <span className="text-white text-sm font-semibold">37.6%</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
-                        <span className="text-white text-sm">Marketing Digital</span>
-                      </div>
-                      <span className="text-white text-sm font-semibold">27.7%</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 bg-yellow-600 rounded-full"></div>
-                        <span className="text-white text-sm">Recomendações</span>
-                      </div>
-                      <span className="text-white text-sm font-semibold">15.7%</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 bg-green-600 rounded-full"></div>
-                        <span className="text-white text-sm">Cursos e imersões</span>
-                      </div>
-                      <span className="text-white text-sm font-semibold">12.3%</span>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
-                        <span className="text-white text-sm">Parcerias</span>
-                      </div>
-                      <span className="text-white text-sm font-semibold">6.7%</span>
-                    </div>
+                    ))}
                   </div>
                 </div>
 
-                {/* Performance by Profession */}
-                <div className="bg-[#2A2A2A] rounded-lg p-6">
-                  <h4 className="text-white text-lg font-semibold mb-4">PERFORMANCE POR PROFISSÃO</h4>
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 bg-purple-600 rounded-full"></div>
-                        <span className="text-white text-sm">Empresários</span>
+                {/* Right Column - Donut Charts */}
+                <div className="lg:col-span-1 space-y-6">
+                  {/* Performance by Origin - Donut Chart */}
+                  <div className="bg-[#2A2A2A] rounded-lg p-6">
+                    <h4 className="text-white text-lg font-semibold mb-4 text-center">PERFORMANCE POR ORIGEM</h4>
+                    <div className="flex justify-center mb-4">
+                      <div className="relative w-32 h-32">
+                        <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 36 36">
+                          <path
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="#1A1A1A"
+                            strokeWidth="3"
+                          />
+                          <path
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="#f59e0b"
+                            strokeWidth="3"
+                            strokeDasharray="37.6, 100"
+                            strokeDashoffset="0"
+                          />
+                          <path
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="#f97316"
+                            strokeWidth="3"
+                            strokeDasharray="27.7, 100"
+                            strokeDashoffset="-37.6"
+                          />
+                          <path
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="#eab308"
+                            strokeWidth="3"
+                            strokeDasharray="15.7, 100"
+                            strokeDashoffset="-65.3"
+                          />
+                          <path
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="#16a34a"
+                            strokeWidth="3"
+                            strokeDasharray="12.3, 100"
+                            strokeDashoffset="-81"
+                          />
+                          <path
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="#2563eb"
+                            strokeWidth="3"
+                            strokeDasharray="6.7, 100"
+                            strokeDashoffset="-93.3"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="text-center">
+                            <div className="text-white text-2xl font-bold">R$ 513M</div>
+                            <div className="text-gray-400 text-xs">Total</div>
+                          </div>
+                        </div>
                       </div>
-                      <span className="text-white text-sm font-semibold">45.2%</span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 bg-pink-600 rounded-full"></div>
-                        <span className="text-white text-sm">Profissionais Liberais</span>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 bg-amber-600 rounded-full"></div>
+                          <span className="text-white text-sm">Network pessoal</span>
+                        </div>
+                        <span className="text-white text-sm font-semibold">37.6%</span>
                       </div>
-                      <span className="text-white text-sm font-semibold">28.7%</span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                          <span className="text-white text-sm">Marketing Digital</span>
+                        </div>
+                        <span className="text-white text-sm font-semibold">27.7%</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 bg-yellow-600 rounded-full"></div>
+                          <span className="text-white text-sm">Recomendações</span>
+                        </div>
+                        <span className="text-white text-sm font-semibold">15.7%</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+                          <span className="text-white text-sm">Cursos e imersões</span>
+                        </div>
+                        <span className="text-white text-sm font-semibold">12.3%</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                          <span className="text-white text-sm">Parcerias</span>
+                        </div>
+                        <span className="text-white text-sm font-semibold">6.7%</span>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 bg-indigo-600 rounded-full"></div>
-                        <span className="text-white text-sm">Executivos</span>
+                  </div>
+
+                  {/* Performance by Profession - Donut Chart */}
+                  <div className="bg-[#2A2A2A] rounded-lg p-6">
+                    <h4 className="text-white text-lg font-semibold mb-4 text-center">PERFORMANCE POR PROFISSÃO</h4>
+                    <div className="flex justify-center mb-4">
+                      <div className="relative w-32 h-32">
+                        <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 36 36">
+                          <path
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="#1A1A1A"
+                            strokeWidth="3"
+                          />
+                          <path
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="#9333ea"
+                            strokeWidth="3"
+                            strokeDasharray="45.2, 100"
+                            strokeDashoffset="0"
+                          />
+                          <path
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="#db2777"
+                            strokeWidth="3"
+                            strokeDasharray="28.7, 100"
+                            strokeDashoffset="-45.2"
+                          />
+                          <path
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="#4f46e5"
+                            strokeWidth="3"
+                            strokeDasharray="18.3, 100"
+                            strokeDashoffset="-73.9"
+                          />
+                          <path
+                            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                            fill="none"
+                            stroke="#0d9488"
+                            strokeWidth="3"
+                            strokeDasharray="7.8, 100"
+                            strokeDashoffset="-92.2"
+                          />
+                        </svg>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="text-center">
+                            <div className="text-white text-2xl font-bold">941</div>
+                            <div className="text-gray-400 text-xs">Clientes</div>
+                          </div>
+                        </div>
                       </div>
-                      <span className="text-white text-sm font-semibold">18.3%</span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-3 h-3 bg-teal-600 rounded-full"></div>
-                        <span className="text-white text-sm">Outros</span>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 bg-purple-600 rounded-full"></div>
+                          <span className="text-white text-sm">Empresários</span>
+                        </div>
+                        <span className="text-white text-sm font-semibold">45.2%</span>
                       </div>
-                      <span className="text-white text-sm font-semibold">7.8%</span>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 bg-pink-600 rounded-full"></div>
+                          <span className="text-white text-sm">Profissionais Liberais</span>
+                        </div>
+                        <span className="text-white text-sm font-semibold">28.7%</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 bg-indigo-600 rounded-full"></div>
+                          <span className="text-white text-sm">Executivos</span>
+                        </div>
+                        <span className="text-white text-sm font-semibold">18.3%</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 bg-teal-600 rounded-full"></div>
+                          <span className="text-white text-sm">Outros</span>
+                        </div>
+                        <span className="text-white text-sm font-semibold">7.8%</span>
+                      </div>
                     </div>
                   </div>
                 </div>
