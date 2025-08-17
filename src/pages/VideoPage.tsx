@@ -206,15 +206,15 @@ export default function VideoPage() {
                       </div>
                       
                         <div className="space-y-3">
-                          <div className="flex items-center text-sm text-gray-400">
+                          <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
                             <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                             Seleção múltipla de créditos
                           </div>
-                          <div className="flex items-center text-sm text-gray-400">
+                          <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
                             <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                             Ajuste de quantidades por cota
                         </div>
-                          <div className="flex items-center text-sm text-gray-400">
+                          <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
                             <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                             Geração automática de propostas
                           </div>
@@ -248,15 +248,15 @@ export default function VideoPage() {
                          </div>
                          
                          <div className="space-y-3">
-                        <div className="flex items-center text-sm text-gray-400">
+                        <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
                              <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                              Gráficos de evolução do lucro
                         </div>
-                        <div className="flex items-center text-sm text-gray-400">
+                        <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
                              <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                              Cálculo automático de ROI
                         </div>
-                        <div className="flex items-center text-sm text-gray-400">
+                        <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
                              <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                              Análise de ágio e custos
                            </div>
@@ -454,15 +454,15 @@ export default function VideoPage() {
                         </div>
                         
                         <div className="space-y-3">
-                          <div className="flex items-center text-sm text-gray-400">
+                          <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
                             <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                             Evolução patrimonial visual
                           </div>
-                          <div className="flex items-center text-sm text-gray-400">
+                          <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
                             <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                             Renda passiva acumulada
                           </div>
-                          <div className="flex items-center text-sm text-gray-400">
+                          <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
                             <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                             Fluxo de caixa projetado
                           </div>
@@ -491,15 +491,15 @@ export default function VideoPage() {
                         </div>
                         
                         <div className="space-y-3">
-                          <div className="flex items-center text-sm text-gray-400">
+                          <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
                             <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                             Detalhamento mensal completo
                           </div>
-                          <div className="flex items-center text-sm text-gray-400">
+                          <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
                             <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                             Colunas personalizáveis
                           </div>
-                          <div className="flex items-center text-sm text-gray-400">
+                          <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
                             <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                             Exportação de dados
                           </div>
@@ -734,15 +734,15 @@ export default function VideoPage() {
                         </div>
                         
                         <div className="space-y-3">
-                          <div className="flex items-center text-sm text-gray-400">
+                          <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
                             <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                             Gestão de administradoras
                           </div>
-                          <div className="flex items-center text-sm text-gray-400">
+                          <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
                             <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                             Configuração de produtos
                           </div>
-                          <div className="flex items-center text-sm text-gray-400">
+                          <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
                             <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                             Controle total da estratégia
                           </div>
