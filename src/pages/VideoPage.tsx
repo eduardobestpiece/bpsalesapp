@@ -121,6 +121,166 @@ export default function VideoPage() {
           </Card>
         </div>
 
+        {/* Why is it so persuasive? Section */}
+        <div className="max-w-7xl mx-auto mb-20">
+          <div className="text-center mb-16">
+            <h2 className="text-2xl md:text-[32px] font-bold text-white mb-6">
+              Porque é tão persuasivo?
+            </h2>
+            <p className="text-base md:text-xl text-gray-300 max-w-4xl mx-auto">
+              Simulador feito por quem esteve por 2 anos e 6 meses na linha de frente de uma das maiores operações de consórcios do país, mapeando absolutamente várias objeções, mapeando as oportunidades de mercado e criando processos e estratégias que geraram mais de 200 milhões em vendas nos últimos 2 anos com ticket médio altíssimo.
+            </p>
+          </div>
+
+          {/* Dashboard Image */}
+          <div className="bg-[#1F1F1F] rounded-2xl p-8 border border-white/10">
+            <div className="text-center mb-6">
+              <h3 className="text-xl md:text-[26px] font-bold text-white mb-4">Resultados Reais de Vendas</h3>
+              <p className="text-base md:text-lg text-gray-300 mb-8">
+                Dashboard de performance com mais de R$ 513 milhões em produção
+              </p>
+            </div>
+            
+            {/* Dashboard Mockup */}
+            <div className="bg-[#1A1A1A] rounded-lg p-6 space-y-6">
+              {/* KPIs Row */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="bg-[#2A2A2A] rounded-lg p-4 text-center">
+                  <div className="text-green-400 text-sm font-semibold">PRODUÇÃO</div>
+                  <div className="text-white text-lg font-bold">R$ 513.674.910,28</div>
+                </div>
+                <div className="bg-[#2A2A2A] rounded-lg p-4 text-center">
+                  <div className="text-green-400 text-sm font-semibold">PROPOSTAS</div>
+                  <div className="text-white text-lg font-bold">1.155</div>
+                </div>
+                <div className="bg-[#2A2A2A] rounded-lg p-4 text-center">
+                  <div className="text-green-400 text-sm font-semibold">TICKET MÉDIO</div>
+                  <div className="text-white text-lg font-bold">R$ 444.740,18</div>
+                </div>
+                <div className="bg-[#2A2A2A] rounded-lg p-4 text-center">
+                  <div className="text-green-400 text-sm font-semibold">CLIENTES</div>
+                  <div className="text-white text-lg font-bold">941</div>
+                </div>
+              </div>
+
+              {/* Performance Chart */}
+              <div className="bg-[#2A2A2A] rounded-lg p-6">
+                <h4 className="text-white text-lg font-semibold mb-4">PERFORMANCE POR CONSULTOR</h4>
+                <div className="space-y-3">
+                  {[
+                    { name: "Vendedor 1", value: 95 },
+                    { name: "Vendedor 2", value: 88 },
+                    { name: "Vendedor 3", value: 82 },
+                    { name: "Vendedor 4", value: 75 },
+                    { name: "Vendedor 5", value: 70 },
+                    { name: "Vendedor 6", value: 65 },
+                    { name: "Vendedor 7", value: 60 },
+                    { name: "Vendedor 8", value: 55 },
+                    { name: "Vendedor 9", value: 50 },
+                    { name: "Vendedor 10", value: 45 },
+                    { name: "Vendedor 11", value: 40 },
+                    { name: "Vendedor 12", value: 35 },
+                    { name: "Vendedor 13", value: 30 },
+                    { name: "Vendedor 14", value: 25 },
+                    { name: "Vendedor 15", value: 20 }
+                  ].map((consultant, index) => (
+                    <div key={index} className="flex items-center space-x-4">
+                      <div className="text-white text-sm w-32 truncate">{consultant.name}</div>
+                      <div className="flex-1 bg-[#1A1A1A] rounded-full h-4">
+                        <div 
+                          className="bg-gradient-to-r from-[#e50f5f] to-[#7c032e] h-4 rounded-full transition-all duration-300"
+                          style={{ width: `${consultant.value}%` }}
+                        ></div>
+                      </div>
+                      <div className="text-white text-sm font-semibold w-12 text-right">{consultant.value}%</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Charts Row */}
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Performance by Origin */}
+                <div className="bg-[#2A2A2A] rounded-lg p-6">
+                  <h4 className="text-white text-lg font-semibold mb-4">PERFORMANCE POR ORIGEM</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-amber-600 rounded-full"></div>
+                        <span className="text-white text-sm">Network pessoal</span>
+                      </div>
+                      <span className="text-white text-sm font-semibold">37.6%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                        <span className="text-white text-sm">Marketing Digital</span>
+                      </div>
+                      <span className="text-white text-sm font-semibold">27.7%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-yellow-600 rounded-full"></div>
+                        <span className="text-white text-sm">Recomendações</span>
+                      </div>
+                      <span className="text-white text-sm font-semibold">15.7%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-green-600 rounded-full"></div>
+                        <span className="text-white text-sm">Cursos e imersões</span>
+                      </div>
+                      <span className="text-white text-sm font-semibold">12.3%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
+                        <span className="text-white text-sm">Parcerias</span>
+                      </div>
+                      <span className="text-white text-sm font-semibold">6.7%</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Performance by Profession */}
+                <div className="bg-[#2A2A2A] rounded-lg p-6">
+                  <h4 className="text-white text-lg font-semibold mb-4">PERFORMANCE POR PROFISSÃO</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-purple-600 rounded-full"></div>
+                        <span className="text-white text-sm">Empresários</span>
+                      </div>
+                      <span className="text-white text-sm font-semibold">45.2%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-pink-600 rounded-full"></div>
+                        <span className="text-white text-sm">Profissionais Liberais</span>
+                      </div>
+                      <span className="text-white text-sm font-semibold">28.7%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-indigo-600 rounded-full"></div>
+                        <span className="text-white text-sm">Executivos</span>
+                      </div>
+                      <span className="text-white text-sm font-semibold">18.3%</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-teal-600 rounded-full"></div>
+                        <span className="text-white text-sm">Outros</span>
+                      </div>
+                      <span className="text-white text-sm font-semibold">7.8%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Simulator Features Section */}
         <div className="max-w-7xl mx-auto mb-20">
           <div className="text-center mb-16">
