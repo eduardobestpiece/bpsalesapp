@@ -100,7 +100,7 @@ export default function VideoPage() {
             Veja como tornar sua simulação absurdamente persuasiva
             </h1>
                       <p className="text-base md:text-xl text-gray-300 max-w-3xl mx-auto">
-            De o play no vídeo e veja como uma simples simulação pode deixar seu cliente sem saídas racionais
+                          De o play no vídeo e veja como uma simples simulação pode deixar seu cliente sem saídas, sendo obrigado pela própria racionalidade a fechar com você
           </p>
           </div>
 
