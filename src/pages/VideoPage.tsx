@@ -124,7 +124,7 @@ export default function VideoPage() {
         {/* Simulator Features Section */}
         <div className="max-w-7xl mx-auto mb-20">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6" style={{ fontSize: '32px' }}>
               Funcionalidades com foco em conversão
                 </h2>
             <p className="text-xl text-gray-300 max-w-4xl mx-auto">
@@ -794,7 +794,7 @@ export default function VideoPage() {
           <div id="pricing-section" className="text-center space-y-12">
             {/* Header Section */}
             <div className="space-y-4">
-              <h2 className="text-3xl font-bold text-white">
+              <h2 className="text-3xl font-bold text-white" style={{ fontSize: '32px' }}>
                 Escolha o plano ideal para seu crescimento
               </h2>
               <p className="text-lg text-gray-300">
