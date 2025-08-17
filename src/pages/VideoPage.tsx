@@ -995,20 +995,20 @@ export default function VideoPage() {
 
       {/* Barra Promocional Fixa */}
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-gradient-to-r from-[#e50f5f] to-[#7c032e] border-t border-white/10 backdrop-blur-sm">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="container mx-auto px-3 py-2 sm:px-4 sm:py-3">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
             <div className="text-center sm:text-left">
-              <p className="text-white font-bold text-lg">
+              <p className="text-white font-bold text-sm sm:text-base md:text-lg">
                 🎉 Aproveite a promoção de lançamento com 50% de desconto
               </p>
-              <p className="text-white/80 text-sm">
+              <p className="text-white/80 text-xs sm:text-sm">
                 Oferta limitada - Garante já o seu acesso anual!
               </p>
             </div>
             <Button 
               onClick={handlePayment}
               disabled={loading}
-              className="bg-white text-[#e50f5f] hover:bg-gray-100 font-bold px-8 py-3 rounded-lg shadow-lg transition-all duration-300 whitespace-nowrap"
+              className="bg-white text-[#e50f5f] hover:bg-gray-100 font-bold px-4 py-2 sm:px-6 sm:py-2 md:px-8 md:py-3 rounded-lg shadow-lg transition-all duration-300 whitespace-nowrap text-xs sm:text-sm md:text-base"
             >
               {loading ? "Processando..." : "Assinar Anual"}
             </Button>
