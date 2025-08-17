@@ -96,7 +96,7 @@ export default function VideoPage() {
         </header>
 
         <div className="text-center space-y-6 mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontSize: '32px', '@media (min-width: 768px)': { fontSize: '44px' } }}>
+          <h1 className="text-3xl md:text-[44px] font-bold text-white mb-4">
             Veja como tornar sua simulação absurdamente persuasiva
             </h1>
                       <p className="text-base md:text-xl text-gray-300 max-w-3xl mx-auto">
