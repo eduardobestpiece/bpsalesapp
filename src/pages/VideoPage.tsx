@@ -124,7 +124,7 @@ export default function VideoPage() {
         {/* Simulator Features Section */}
         <div className="max-w-7xl mx-auto mb-20">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-6" style={{ fontSize: '26px', '@media (min-width: 768px)': { fontSize: '32px' } }}>
+                          <h2 className="text-2xl md:text-[32px] font-bold text-white mb-6">
               Funcionalidades com foco em conversão
                 </h2>
             <p className="text-base md:text-xl text-gray-300 max-w-4xl mx-auto">
@@ -199,7 +199,7 @@ export default function VideoPage() {
                     <div className="lg:col-span-2 lg:order-2 order-1 flex flex-col justify-center h-full">
                       <div className="space-y-6">
                       <div>
-                          <h3 className="text-2xl font-bold text-white mb-4" style={{ fontSize: '22px', '@media (min-width: 768px)': { fontSize: '26px' } }}>Montagem de Cotas</h3>
+                          <h3 className="text-xl md:text-[26px] font-bold text-white mb-4">Montagem de Cotas</h3>
                           <p className="text-base md:text-lg text-gray-300 leading-relaxed">
                           Monte facilmente diferentes combinações de crédito para seus clientes. Selecione múltiplas cotas, ajuste quantidades e visualize o impacto total na proposta.
                         </p>
@@ -241,7 +241,7 @@ export default function VideoPage() {
                      <div className="lg:col-span-2 flex flex-col justify-center h-full">
                        <div className="space-y-6">
                          <div>
-                           <h3 className="text-2xl font-bold text-white mb-4" style={{ fontSize: '22px', '@media (min-width: 768px)': { fontSize: '26px' } }}>Alavancagem Financeira</h3>
+                           <h3 className="text-xl md:text-[26px] font-bold text-white mb-4">Alavancagem Financeira</h3>
                            <p className="text-base md:text-lg text-gray-300 leading-relaxed">
                              Visualize o poder da alavancagem financeira com gráficos interativos. Veja como o ágio, lucro e ROI evoluem mês a mês, criando argumentos irresistíveis.
                            </p>
@@ -447,7 +447,7 @@ export default function VideoPage() {
                     <div className="lg:col-span-2 lg:order-2 order-1 flex flex-col justify-center h-full">
                       <div className="space-y-6">
                         <div>
-                          <h3 className="text-2xl font-bold text-white mb-4" style={{ fontSize: '22px', '@media (min-width: 768px)': { fontSize: '26px' } }}>Alavancagem Patrimonial</h3>
+                          <h3 className="text-xl md:text-[26px] font-bold text-white mb-4">Alavancagem Patrimonial</h3>
                           <p className="text-base md:text-lg text-gray-300 leading-relaxed">
                             Demonstre como o patrimônio do cliente cresce exponencialmente. Gráficos de evolução patrimonial mostram o poder de multiplicação dos investimentos.
                           </p>
@@ -484,7 +484,7 @@ export default function VideoPage() {
                     <div className="lg:col-span-2 flex flex-col justify-center h-full">
                       <div className="space-y-6">
                         <div>
-                          <h3 className="text-2xl font-bold text-white mb-4" style={{ fontSize: '22px', '@media (min-width: 768px)': { fontSize: '26px' } }}>Tabela Mês a Mês</h3>
+                          <h3 className="text-xl md:text-[26px] font-bold text-white mb-4">Tabela Mês a Mês</h3>
                           <p className="text-base md:text-lg text-gray-300 leading-relaxed">
                             Detalhamento completo de cada mês da operação. Visualize crédito, parcelas, ágio, lucro e ROI com transparência total para seu cliente.
                           </p>
@@ -727,7 +727,7 @@ export default function VideoPage() {
                     <div className="lg:col-span-2 lg:order-2 order-1 flex flex-col justify-center h-full">
                       <div className="space-y-6">
                         <div>
-                          <h3 className="text-2xl font-bold text-white mb-4" style={{ fontSize: '22px', '@media (min-width: 768px)': { fontSize: '26px' } }}>Configurações do Simulador</h3>
+                          <h3 className="text-xl md:text-[26px] font-bold text-white mb-4">Configurações do Simulador</h3>
                           <p className="text-base md:text-lg text-gray-300 leading-relaxed">
                             Controle total sobre administradoras, produtos, parcelas, alavancas e reduções. Personalize o simulador para sua estratégia de vendas.
                           </p>
@@ -807,7 +807,7 @@ export default function VideoPage() {
               {/* Plano Mensal - Básico (Esquerda) */}
               <div className="bg-[#1F1F1F] rounded-2xl p-8 border border-white/10 hover:border-[#e50f5f]/30 transition-all duration-300">
                 <div className="text-center space-y-4">
-                  <h3 className="text-2xl font-bold text-white" style={{ fontSize: '22px', '@media (min-width: 768px)': { fontSize: '26px' } }}>Mensal</h3>
+                  <h3 className="text-xl md:text-[26px] font-bold text-white">Mensal</h3>
                   <p className="text-base md:text-lg text-gray-300">
                     Perfeito para começar e testar a plataforma
                   </p>
@@ -859,7 +859,7 @@ export default function VideoPage() {
                 </div>
 
                 <div className="text-center space-y-4">
-                  <h3 className="text-2xl font-bold text-white" style={{ fontSize: '22px', '@media (min-width: 768px)': { fontSize: '26px' } }}>Anual</h3>
+                  <h3 className="text-xl md:text-[26px] font-bold text-white">Anual</h3>
                   <p className="text-base md:text-lg text-gray-300">
                     Economia de 50% e suporte premium
                   </p>
@@ -913,7 +913,7 @@ export default function VideoPage() {
               {/* Plano Semestral - Enterprise (Direita) */}
               <div className="bg-[#1F1F1F] rounded-2xl p-8 border border-white/10 hover:border-[#e50f5f]/30 transition-all duration-300">
                 <div className="text-center space-y-4">
-                  <h3 className="text-2xl font-bold text-white" style={{ fontSize: '22px', '@media (min-width: 768px)': { fontSize: '26px' } }}>Semestral</h3>
+                  <h3 className="text-xl md:text-[26px] font-bold text-white">Semestral</h3>
                   <p className="text-base md:text-lg text-gray-300">
                     Economia de 17% e suporte premium
                   </p>
