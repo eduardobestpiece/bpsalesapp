@@ -200,7 +200,7 @@ export default function VideoPage() {
                       <div className="space-y-6">
                       <div>
                           <h3 className="text-2xl font-bold text-white mb-4" style={{ fontSize: '22px', '@media (min-width: 768px)': { fontSize: '26px' } }}>Montagem de Cotas</h3>
-                          <p className="text-gray-300 text-sm leading-relaxed">
+                          <p className="text-gray-300 text-sm leading-relaxed" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
                           Monte facilmente diferentes combinações de crédito para seus clientes. Selecione múltiplas cotas, ajuste quantidades e visualize o impacto total na proposta.
                         </p>
                       </div>
@@ -242,7 +242,7 @@ export default function VideoPage() {
                        <div className="space-y-6">
                          <div>
                            <h3 className="text-2xl font-bold text-white mb-4" style={{ fontSize: '22px', '@media (min-width: 768px)': { fontSize: '26px' } }}>Alavancagem Financeira</h3>
-                           <p className="text-gray-300 text-sm leading-relaxed">
+                           <p className="text-gray-300 text-sm leading-relaxed" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
                              Visualize o poder da alavancagem financeira com gráficos interativos. Veja como o ágio, lucro e ROI evoluem mês a mês, criando argumentos irresistíveis.
                            </p>
                          </div>
@@ -448,7 +448,7 @@ export default function VideoPage() {
                       <div className="space-y-6">
                         <div>
                           <h3 className="text-2xl font-bold text-white mb-4" style={{ fontSize: '22px', '@media (min-width: 768px)': { fontSize: '26px' } }}>Alavancagem Patrimonial</h3>
-                          <p className="text-gray-300 text-sm leading-relaxed">
+                          <p className="text-gray-300 text-sm leading-relaxed" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
                             Demonstre como o patrimônio do cliente cresce exponencialmente. Gráficos de evolução patrimonial mostram o poder de multiplicação dos investimentos.
                           </p>
                         </div>
@@ -485,7 +485,7 @@ export default function VideoPage() {
                       <div className="space-y-6">
                         <div>
                           <h3 className="text-2xl font-bold text-white mb-4" style={{ fontSize: '22px', '@media (min-width: 768px)': { fontSize: '26px' } }}>Tabela Mês a Mês</h3>
-                          <p className="text-gray-300 text-sm leading-relaxed">
+                          <p className="text-gray-300 text-sm leading-relaxed" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
                             Detalhamento completo de cada mês da operação. Visualize crédito, parcelas, ágio, lucro e ROI com transparência total para seu cliente.
                           </p>
                         </div>
@@ -728,7 +728,7 @@ export default function VideoPage() {
                       <div className="space-y-6">
                         <div>
                           <h3 className="text-2xl font-bold text-white mb-4" style={{ fontSize: '22px', '@media (min-width: 768px)': { fontSize: '26px' } }}>Configurações do Simulador</h3>
-                          <p className="text-gray-300 text-sm leading-relaxed">
+                          <p className="text-gray-300 text-sm leading-relaxed" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
                             Controle total sobre administradoras, produtos, parcelas, alavancas e reduções. Personalize o simulador para sua estratégia de vendas.
                           </p>
                         </div>
@@ -808,7 +808,7 @@ export default function VideoPage() {
               <div className="bg-[#1F1F1F] rounded-2xl p-8 border border-white/10 hover:border-[#e50f5f]/30 transition-all duration-300">
                 <div className="text-center space-y-4">
                   <h3 className="text-2xl font-bold text-white" style={{ fontSize: '22px', '@media (min-width: 768px)': { fontSize: '26px' } }}>Mensal</h3>
-                  <p className="text-gray-300 text-sm">
+                  <p className="text-gray-300 text-sm" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
                     Perfeito para começar e testar a plataforma
                   </p>
                   <div className="py-4">
@@ -860,7 +860,7 @@ export default function VideoPage() {
 
                 <div className="text-center space-y-4">
                   <h3 className="text-2xl font-bold text-white" style={{ fontSize: '22px', '@media (min-width: 768px)': { fontSize: '26px' } }}>Anual</h3>
-                  <p className="text-gray-300 text-sm">
+                  <p className="text-gray-300 text-sm" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
                     Economia de 50% e suporte premium
                   </p>
                   <div className="py-4">
@@ -914,7 +914,7 @@ export default function VideoPage() {
               <div className="bg-[#1F1F1F] rounded-2xl p-8 border border-white/10 hover:border-[#e50f5f]/30 transition-all duration-300">
                 <div className="text-center space-y-4">
                   <h3 className="text-2xl font-bold text-white" style={{ fontSize: '22px', '@media (min-width: 768px)': { fontSize: '26px' } }}>Semestral</h3>
-                  <p className="text-gray-300 text-sm">
+                  <p className="text-gray-300 text-sm" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
                     Economia de 17% e suporte premium
                   </p>
                   <div className="py-4">
