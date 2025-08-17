@@ -125,10 +125,10 @@ export default function VideoPage() {
         <div className="max-w-7xl mx-auto mb-20">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Um simulador que revoluciona suas vendas
+              Funcionalidades com foco em conversão
                 </h2>
             <p className="text-xl text-gray-300 max-w-4xl mx-auto">
-              Descubra como cada funcionalidade do simulador BP Sales pode transformar suas apresentações e multiplicar seus fechamentos
+              Cada funcionalidade e informacão do simulador BP Sales foi milimetricamente pensado na experiência do usuário e em gerar cognitivamente na mente do cliente uma sensação de ganhos absolutos
                 </p>
               </div>
 
@@ -1001,9 +1001,9 @@ export default function VideoPage() {
               <p className="text-white font-bold text-sm sm:text-base md:text-lg">
                 🎉 Aproveite a promoção de lançamento com 50% de desconto
               </p>
-              <p className="text-white/80 text-xs sm:text-sm">
-                Oferta limitada - Garante já o seu acesso anual!
-              </p>
+                      <p className="text-white/80 text-xs sm:text-sm hidden sm:block">
+          Oferta limitada - Garante já o seu acesso anual!
+        </p>
             </div>
             <Button 
               onClick={handlePayment}

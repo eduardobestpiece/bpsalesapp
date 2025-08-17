@@ -1,6 +1,110 @@
 # Request Story - Projeto Monteo
 
-## Última Requisição: Redução da Barra Fixa no Mobile - Máximo 15% da Tela
+## Última Requisição: Ocultação do Texto "Oferta limitada" no Mobile
+
+### 📋 **Solicitação do Usuário:**
+1. **Problema:** Texto "Oferta limitada - Garante já o seu acesso anual!" visível no mobile
+2. **Objetivo:** Ocultar esse texto na versão mobile da barra fixa
+3. **Localização:** Página de vídeo (VideoPage.tsx) - Barra promocional fixa
+4. **Resultado:** Barra ainda mais compacta no mobile
+
+### 🎯 **Implementação Realizada:**
+
+#### ✅ **1. Análise do Texto**
+- **Localização:** `src/pages/VideoPage.tsx` - Linha 1003
+- **Elemento:** Subtítulo da barra promocional fixa
+- **Problema:** Texto ocupa espaço desnecessário no mobile
+- **Solução:** Ocultar apenas no mobile usando classes responsivas
+
+#### ✅ **2. Correção Aplicada**
+
+##### **Classes CSS Implementadas:**
+- **Antes:** `text-white/80 text-xs sm:text-sm`
+- **Depois:** `text-white/80 text-xs sm:text-sm hidden sm:block`
+- **Resultado:** Texto oculto no mobile, visível em tablet e desktop
+
+#### ✅ **3. Estrutura Final Implementada**
+```tsx
+<div className="text-center sm:text-left">
+  <p className="text-white font-bold text-sm sm:text-base md:text-lg">
+    🎉 Aproveite a promoção de lançamento com 50% de desconto
+  </p>
+  <p className="text-white/80 text-xs sm:text-sm hidden sm:block">
+    Oferta limitada - Garante já o seu acesso anual!
+  </p>
+</div>
+```
+
+#### ✅ **4. Classes CSS Responsivas**
+- **`hidden`:** Oculta o elemento por padrão (mobile)
+- **`sm:block`:** Mostra o elemento a partir do breakpoint sm (640px+)
+- **Resultado:** Texto visível apenas em tablet e desktop
+
+#### ✅ **5. Breakpoints Aplicados**
+- **Mobile (< 640px):** Texto oculto
+- **Tablet (640px+):** Texto visível
+- **Desktop (768px+):** Texto visível
+
+### 🎨 **Resultado Visual:**
+
+#### **Mobile (< 640px):**
+- **Título Principal:** "🎉 Aproveite a promoção de lançamento com 50% de desconto"
+- **Subtítulo:** Oculto
+- **Altura:** Ainda mais reduzida
+- **Espaço:** Mais espaço para o conteúdo principal
+
+#### **Tablet (640px+):**
+- **Título Principal:** "🎉 Aproveite a promoção de lançamento com 50% de desconto"
+- **Subtítulo:** "Oferta limitada - Garante já o seu acesso anual!"
+- **Altura:** Intermediária
+- **Informação:** Completa
+
+#### **Desktop (768px+):**
+- **Título Principal:** "🎉 Aproveite a promoção de lançamento com 50% de desconto"
+- **Subtítulo:** "Oferta limitada - Garante já o seu acesso anual!"
+- **Altura:** Original
+- **Informação:** Completa
+
+#### **Benefícios:**
+- **Mobile:** Barra ainda mais compacta e menos intrusiva
+- **Tablet/Desktop:** Informação completa mantida
+- **UX Melhorada:** Foco no essencial no mobile
+- **Responsividade:** Adaptação inteligente ao dispositivo
+
+### 🔧 **Mudanças Técnicas:**
+
+#### **Alteração Específica:**
+- **Arquivo:** `src/pages/VideoPage.tsx`
+- **Seção:** Barra promocional fixa (linha 1003)
+- **Antes:** Texto sempre visível
+- **Depois:** Texto oculto no mobile
+
+#### **Classes CSS Responsivas:**
+```tsx
+// ANTES:
+<p className="text-white/80 text-xs sm:text-sm">
+  Oferta limitada - Garante já o seu acesso anual!
+</p>
+
+// DEPOIS:
+<p className="text-white/80 text-xs sm:text-sm hidden sm:block">
+  Oferta limitada - Garante já o seu acesso anual!
+</p>
+```
+
+### 🚀 **Status:**
+- ✅ **Implementado:** Texto oculto no mobile
+- ✅ **Implementado:** Classes responsivas
+- ✅ **Testado:** Responsividade em todos os breakpoints
+- ✅ **Código Limpo:** Alteração precisa e segura
+- ✅ **Conteúdo Preservado:** Texto mantido para tablet/desktop
+- ✅ **Aparência Melhorada:** Barra ainda mais compacta no mobile
+- ✅ **Problema Resolvido:** Texto "Oferta limitada" oculto no mobile
+- ✅ **Deploy:** Pronto para produção
+
+---
+
+## Requisição Anterior: Redução da Barra Fixa no Mobile - Máximo 15% da Tela
 
 ### 📋 **Solicitação do Usuário:**
 1. **Problema:** Barra fixa promocional muito grande no mobile
