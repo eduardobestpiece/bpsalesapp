@@ -99,7 +99,7 @@ export default function VideoPage() {
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-4" style={{ fontSize: '32px', '@media (min-width: 768px)': { fontSize: '44px' } }}>
             Veja como tornar sua simulação absurdamente persuasiva
             </h1>
-                      <p className="text-xl text-gray-300 max-w-3xl mx-auto" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+                      <p className="text-base md:text-xl text-gray-300 max-w-3xl mx-auto">
             De o play no vídeo e veja como uma simples simulação pode deixar seu cliente sem saídas racionais
           </p>
           </div>
@@ -127,7 +127,7 @@ export default function VideoPage() {
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-6" style={{ fontSize: '26px', '@media (min-width: 768px)': { fontSize: '32px' } }}>
               Funcionalidades com foco em conversão
                 </h2>
-            <p className="text-xl text-gray-300 max-w-4xl mx-auto" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+            <p className="text-base md:text-xl text-gray-300 max-w-4xl mx-auto">
               Cada funcionalidade e informacão do simulador BP Sales foi milimetricamente pensado na experiência do usuário e em gerar cognitivamente na mente do cliente uma sensação de ganhos absolutos
                 </p>
               </div>
@@ -200,21 +200,21 @@ export default function VideoPage() {
                       <div className="space-y-6">
                       <div>
                           <h3 className="text-2xl font-bold text-white mb-4" style={{ fontSize: '22px', '@media (min-width: 768px)': { fontSize: '26px' } }}>Montagem de Cotas</h3>
-                          <p className="text-gray-300 text-sm leading-relaxed" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+                          <p className="text-base md:text-lg text-gray-300 leading-relaxed">
                           Monte facilmente diferentes combinações de crédito para seus clientes. Selecione múltiplas cotas, ajuste quantidades e visualize o impacto total na proposta.
                         </p>
                       </div>
                       
                         <div className="space-y-3">
-                          <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+                          <div className="flex items-center text-base md:text-lg text-gray-400">
                             <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                             Seleção múltipla de créditos
                           </div>
-                          <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+                          <div className="flex items-center text-base md:text-lg text-gray-400">
                             <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                             Ajuste de quantidades por cota
                         </div>
-                          <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+                          <div className="flex items-center text-base md:text-lg text-gray-400">
                             <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                             Geração automática de propostas
                           </div>
@@ -242,21 +242,21 @@ export default function VideoPage() {
                        <div className="space-y-6">
                          <div>
                            <h3 className="text-2xl font-bold text-white mb-4" style={{ fontSize: '22px', '@media (min-width: 768px)': { fontSize: '26px' } }}>Alavancagem Financeira</h3>
-                           <p className="text-gray-300 text-sm leading-relaxed" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+                           <p className="text-base md:text-lg text-gray-300 leading-relaxed">
                              Visualize o poder da alavancagem financeira com gráficos interativos. Veja como o ágio, lucro e ROI evoluem mês a mês, criando argumentos irresistíveis.
                            </p>
                          </div>
                          
                          <div className="space-y-3">
-                        <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+                        <div className="flex items-center text-base md:text-lg text-gray-400">
                              <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                              Gráficos de evolução do lucro
                         </div>
-                        <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+                        <div className="flex items-center text-base md:text-lg text-gray-400">
                              <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                              Cálculo automático de ROI
                         </div>
-                        <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+                        <div className="flex items-center text-base md:text-lg text-gray-400">
                              <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                              Análise de ágio e custos
                            </div>
@@ -448,21 +448,21 @@ export default function VideoPage() {
                       <div className="space-y-6">
                         <div>
                           <h3 className="text-2xl font-bold text-white mb-4" style={{ fontSize: '22px', '@media (min-width: 768px)': { fontSize: '26px' } }}>Alavancagem Patrimonial</h3>
-                          <p className="text-gray-300 text-sm leading-relaxed" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+                          <p className="text-base md:text-lg text-gray-300 leading-relaxed">
                             Demonstre como o patrimônio do cliente cresce exponencialmente. Gráficos de evolução patrimonial mostram o poder de multiplicação dos investimentos.
                           </p>
                         </div>
                         
                         <div className="space-y-3">
-                          <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+                          <div className="flex items-center text-base md:text-lg text-gray-400">
                             <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                             Evolução patrimonial visual
                           </div>
-                          <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+                          <div className="flex items-center text-base md:text-lg text-gray-400">
                             <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                             Renda passiva acumulada
                           </div>
-                          <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+                          <div className="flex items-center text-base md:text-lg text-gray-400">
                             <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                             Fluxo de caixa projetado
                           </div>
@@ -485,21 +485,21 @@ export default function VideoPage() {
                       <div className="space-y-6">
                         <div>
                           <h3 className="text-2xl font-bold text-white mb-4" style={{ fontSize: '22px', '@media (min-width: 768px)': { fontSize: '26px' } }}>Tabela Mês a Mês</h3>
-                          <p className="text-gray-300 text-sm leading-relaxed" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+                          <p className="text-base md:text-lg text-gray-300 leading-relaxed">
                             Detalhamento completo de cada mês da operação. Visualize crédito, parcelas, ágio, lucro e ROI com transparência total para seu cliente.
                           </p>
                         </div>
                         
                         <div className="space-y-3">
-                          <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+                          <div className="flex items-center text-base md:text-lg text-gray-400">
                             <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                             Detalhamento mensal completo
                           </div>
-                          <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+                          <div className="flex items-center text-base md:text-lg text-gray-400">
                             <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                             Colunas personalizáveis
                           </div>
-                          <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+                          <div className="flex items-center text-base md:text-lg text-gray-400">
                             <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                             Exportação de dados
                           </div>
@@ -728,21 +728,21 @@ export default function VideoPage() {
                       <div className="space-y-6">
                         <div>
                           <h3 className="text-2xl font-bold text-white mb-4" style={{ fontSize: '22px', '@media (min-width: 768px)': { fontSize: '26px' } }}>Configurações do Simulador</h3>
-                          <p className="text-gray-300 text-sm leading-relaxed" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+                          <p className="text-base md:text-lg text-gray-300 leading-relaxed">
                             Controle total sobre administradoras, produtos, parcelas, alavancas e reduções. Personalize o simulador para sua estratégia de vendas.
                           </p>
                         </div>
                         
                         <div className="space-y-3">
-                          <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+                          <div className="flex items-center text-base md:text-lg text-gray-400">
                             <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                             Gestão de administradoras
                           </div>
-                          <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+                          <div className="flex items-center text-base md:text-lg text-gray-400">
                             <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                             Configuração de produtos
                           </div>
-                          <div className="flex items-center text-sm text-gray-400" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+                          <div className="flex items-center text-base md:text-lg text-gray-400">
                             <span className="mr-3 text-[#e50f5f] text-lg">✓</span>
                             Controle total da estratégia
                           </div>
@@ -761,7 +761,7 @@ export default function VideoPage() {
                               <h3 className="text-3xl font-bold text-white mb-4" style={{ fontSize: '22px', '@media (min-width: 768px)': { fontSize: '26px' } }}>
                 Pronto para revolucionar suas vendas?
               </h3>
-              <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+              <p className="text-base md:text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
                 Junte-se a milhares de consultores que já multiplicaram seus resultados com o simulador BP Sales
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -797,7 +797,7 @@ export default function VideoPage() {
               <h2 className="text-3xl font-bold text-white" style={{ fontSize: '26px', '@media (min-width: 768px)': { fontSize: '32px' } }}>
                 Escolha o plano ideal para seu crescimento
               </h2>
-              <p className="text-lg text-gray-300" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+              <p className="text-base md:text-lg text-gray-300">
                 Do consultor iniciante ao enterprise, temos a solução perfeita para você
               </p>
             </div>
@@ -808,7 +808,7 @@ export default function VideoPage() {
               <div className="bg-[#1F1F1F] rounded-2xl p-8 border border-white/10 hover:border-[#e50f5f]/30 transition-all duration-300">
                 <div className="text-center space-y-4">
                   <h3 className="text-2xl font-bold text-white" style={{ fontSize: '22px', '@media (min-width: 768px)': { fontSize: '26px' } }}>Mensal</h3>
-                  <p className="text-gray-300 text-sm" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+                  <p className="text-base md:text-lg text-gray-300">
                     Perfeito para começar e testar a plataforma
                   </p>
                   <div className="py-4">
@@ -860,7 +860,7 @@ export default function VideoPage() {
 
                 <div className="text-center space-y-4">
                   <h3 className="text-2xl font-bold text-white" style={{ fontSize: '22px', '@media (min-width: 768px)': { fontSize: '26px' } }}>Anual</h3>
-                  <p className="text-gray-300 text-sm" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+                  <p className="text-base md:text-lg text-gray-300">
                     Economia de 50% e suporte premium
                   </p>
                   <div className="py-4">
@@ -914,7 +914,7 @@ export default function VideoPage() {
               <div className="bg-[#1F1F1F] rounded-2xl p-8 border border-white/10 hover:border-[#e50f5f]/30 transition-all duration-300">
                 <div className="text-center space-y-4">
                   <h3 className="text-2xl font-bold text-white" style={{ fontSize: '22px', '@media (min-width: 768px)': { fontSize: '26px' } }}>Semestral</h3>
-                  <p className="text-gray-300 text-sm" style={{ fontSize: '16px', '@media (min-width: 768px)': { fontSize: '20px' } }}>
+                  <p className="text-base md:text-lg text-gray-300">
                     Economia de 17% e suporte premium
                   </p>
                   <div className="py-4">
