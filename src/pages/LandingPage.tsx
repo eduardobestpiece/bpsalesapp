@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Play, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -15,6 +16,8 @@ export default function LandingPage() {
     name: "",
     email: "",
     phone: "",
+    consortiumExperience: "", // String vazia para mostrar placeholder
+    teamSize: "", // String vazia para mostrar placeholder
     browser: "",
     device: "",
     ip: "",
@@ -35,6 +38,41 @@ export default function LandingPage() {
   const navigate = useNavigate();
   const { branding: defaultBranding, isLoading: brandingLoading } = useDefaultBranding();
   const userInfo = useUserInfo();
+
+  // Opções para os dropdowns
+  const consortiumExperienceOptions = [
+    { value: "0", label: "Não trabalho" },
+    { value: "1", label: "1 ano" },
+    { value: "2", label: "2 anos" },
+    { value: "3", label: "3 anos" },
+    { value: "4", label: "4 anos" },
+    { value: "5", label: "5 anos" },
+    { value: "6", label: "6 anos" },
+    { value: "7", label: "7 anos" },
+    { value: "8", label: "8 anos" },
+    { value: "9", label: "9 anos" },
+    { value: "10", label: "10 anos" },
+    { value: "11", label: "10+ anos" }
+  ];
+
+  const teamSizeOptions = [
+    { value: "0", label: "Somente eu" },
+    { value: "1", label: "1 vendedor" },
+    { value: "2", label: "2 vendedores" },
+    { value: "3", label: "3 vendedores" },
+    { value: "4", label: "4 vendedores" },
+    { value: "5", label: "5 vendedores" },
+    { value: "10", label: "10 vendedores" },
+    { value: "15", label: "15 vendedores" },
+    { value: "20", label: "20 vendedores" },
+    { value: "25", label: "25 vendedores" },
+    { value: "30", label: "30 vendedores" },
+    { value: "40", label: "40 vendedores" },
+    { value: "50", label: "50 vendedores" },
+    { value: "75", label: "75 vendedores" },
+    { value: "100", label: "100 vendedores" },
+    { value: "101", label: "100+ vendedores" }
+  ];
 
   // Debug: Log do branding
   useEffect(() => {
@@ -96,7 +134,9 @@ export default function LandingPage() {
       dados: {
         name: formData.name,
         email: formData.email,
-        phone: formData.phone
+        phone: formData.phone,
+        consortiumExperience: formData.consortiumExperience ? consortiumExperienceOptions.find(opt => opt.value === formData.consortiumExperience)?.label || formData.consortiumExperience : "Não informado",
+        teamSize: formData.teamSize ? teamSizeOptions.find(opt => opt.value === formData.teamSize)?.label || formData.teamSize : "Não informado"
       },
       tracking: {
         browser: formData.browser,
@@ -234,7 +274,7 @@ export default function LandingPage() {
           <div className="lg:col-span-4 space-y-6">
             {/* Título do Formulário */}
             <div className="text-center">
-              <h2 className="text-2xl font-bold text-white mb-2">
+              <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
                 Cadastre-se e assista gratuitamente
               </h2>
             </div>
@@ -266,7 +306,7 @@ export default function LandingPage() {
                       placeholder="Nome e sobrenome"
                       value={formData.name}
                       onChange={handleChange}
-                      className={`h-12 text-base bg-[#2A2A2A] border-white/20 text-white placeholder:text-gray-400 focus:border-white/40 focus:ring-white/20 ${
+                      className={`h-12 text-base md:text-lg bg-[#2A2A2A] border-white/20 text-white placeholder:text-gray-400 focus:border-white/40 focus:ring-white/20 ${
                         errors.name ? 'border-red-500 focus:border-red-500' : ''
                       }`}
                     />
@@ -283,7 +323,7 @@ export default function LandingPage() {
                       placeholder="E-mail"
                       value={formData.email}
                       onChange={handleChange}
-                      className={`h-12 text-base bg-[#2A2A2A] border-white/20 text-white placeholder:text-gray-400 focus:border-white/40 focus:ring-white/20 ${
+                      className={`h-12 text-base md:text-lg bg-[#2A2A2A] border-white/20 text-white placeholder:text-gray-400 focus:border-white/40 focus:ring-white/20 ${
                         errors.email ? 'border-red-500 focus:border-red-500' : ''
                       }`}
                     />
@@ -302,10 +342,66 @@ export default function LandingPage() {
                     />
                   </div>
 
+                  {/* Experiência com Consórcio */}
+                  <div className="space-y-2">
+                    <Select
+                      value={formData.consortiumExperience}
+                      onValueChange={(value) => {
+                        setFormData(prev => ({
+                          ...prev,
+                          consortiumExperience: value
+                        }));
+                      }}
+                    >
+                      <SelectTrigger className={`${!formData.consortiumExperience ? 'text-[#9BA3AF]' : 'text-white'} h-12 text-base md:text-lg bg-[#2A2A2A] border-white/20 focus:border-white/40 focus:ring-white/20`}>
+                        <SelectValue placeholder="A quanto tempo trabalha com consórcio?" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#2A2A2A] border-white/20 text-white">
+                        {consortiumExperienceOptions.map((option) => (
+                          <SelectItem 
+                            key={option.value} 
+                            value={option.value} 
+                            className="text-base md:text-lg hover:bg-[#e50f5f] data-[highlighted]:bg-[#e50f5f] data-[highlighted]:text-white data-[state=checked]:bg-[#7c032e] data-[state=checked]:text-white"
+                          >
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Quantidade de Vendedores */}
+                  <div className="space-y-2">
+                    <Select
+                      value={formData.teamSize}
+                      onValueChange={(value) => {
+                        setFormData(prev => ({
+                          ...prev,
+                          teamSize: value
+                        }));
+                      }}
+                    >
+                      <SelectTrigger className={`${!formData.teamSize ? 'text-[#9BA3AF]' : 'text-white'} h-12 text-base md:text-lg bg-[#2A2A2A] border-white/20 focus:border-white/40 focus:ring-white/20`}>
+                        <SelectValue placeholder="Quantos vendedores você tem?" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#2A2A2A] border-white/20 text-white">
+                        {teamSizeOptions.map((option) => (
+                          <SelectItem 
+                            key={option.value} 
+                            value={option.value} 
+                            className="text-base md:text-lg hover:bg-[#e50f5f] data-[highlighted]:bg-[#e50f5f] data-[highlighted]:text-white data-[state=checked]:bg-[#7c032e] data-[state=checked]:text-white"
+                          >
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
                   {/* Botão de Submit */}
                   <Button 
                     type="submit" 
-                    className="w-full h-12 text-base font-semibold bg-gradient-to-r from-[#e50f5f] to-[#d40a4f] hover:opacity-90 transition-all duration-300 shadow-lg text-white"
+                    className="w-full h-12 text-base md:text-lg font-semibold bg-gradient-to-r from-[#e50f5f] to-[#d40a4f] hover:opacity-90 transition-all duration-300 shadow-lg text-white"
                   >
                     Quero assistir agora
                   </Button>

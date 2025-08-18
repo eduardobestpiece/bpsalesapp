@@ -109,7 +109,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
               className="rounded-r-none border-r-0 h-12 px-3 flex items-center space-x-2 bg-[#2A2A2A] border-white/20 text-white hover:bg-[#3A3A3A] hover:border-white/40"
             >
               <span className="text-lg">{selectedCountry.flag}</span>
-              <span className="text-sm font-medium">{selectedCountry.ddi}</span>
+              <span className="text-base md:text-lg font-medium">{selectedCountry.ddi}</span>
               <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -118,7 +118,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
               <DropdownMenuItem
                 key={country.code}
                 onClick={() => handleCountrySelect(country)}
-                className="flex items-center space-x-3 p-3 hover:bg-[#3A3A3A] text-white cursor-pointer"
+                className="flex items-center space-x-3 p-3 hover:bg-[#e50f5f] data-[highlighted]:bg-[#e50f5f] data-[highlighted]:text-white data-[state=checked]:bg-[#7c032e] data-[state=checked]:text-white text-white cursor-pointer"
               >
                 <span className="text-lg">{country.flag}</span>
                 <div className="flex-1">
@@ -135,7 +135,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
           value={value}
           onChange={handlePhoneChange}
           placeholder={placeholder}
-          className={`flex-1 rounded-l-none h-12 bg-[#2A2A2A] border-white/20 text-white placeholder:text-gray-400 focus:border-white/40 focus:ring-white/20 ${
+          className={`flex-1 rounded-l-none h-12 text-base md:text-lg bg-[#2A2A2A] border-white/20 text-white placeholder:text-gray-400 focus:border-white/40 focus:ring-white/20 ${
             !isValid && value ? 'border-red-500 focus:border-red-500' : ''
           }`}
         />
