@@ -1,5 +1,299 @@
 # Request Story - Projeto Monteo
 
+## Última Requisição: Ajuste do Tamanho do H1 na VideoPage
+
+### 📋 **Solicitação do Usuário:**
+1. **Problema:** H1 da página de vídeo precisava ser ajustado para 28px no mobile
+2. **Objetivo:** Alterar o tamanho do H1 principal da VideoPage para 28px no mobile
+3. **Localização:** VideoPage.tsx - H1 principal
+4. **Resultado:** H1 com tamanho otimizado para mobile
+
+### 🎯 **Implementação Realizada:**
+
+#### ✅ **1. Alteração Aplicada**
+- **Arquivo:** `src/pages/VideoPage.tsx` - Linha 150
+- **Antes:** `text-3xl md:text-[44px]` (30px mobile, 44px desktop)
+- **Depois:** `text-[28px] md:text-[44px]` (28px mobile, 44px desktop)
+- **Mudança:** Redução de 2px no mobile (de 30px para 28px)
+
+#### ✅ **2. Estrutura Final Implementada**
+```tsx
+<h1 className="text-[28px] md:text-[44px] font-bold text-white mb-4">
+  Veja como tornar sua simulação absurdamente persuasiva
+</h1>
+```
+
+#### ✅ **3. Classes CSS Aplicadas**
+- **Mobile:** `text-[28px]` (28px)
+- **Desktop:** `md:text-[44px]` (44px)
+- **Peso:** `font-bold` (700)
+- **Cor:** `text-white`
+- **Margem:** `mb-4` (16px)
+
+### 🎨 **Resultado Visual:**
+
+#### **H1 Otimizado:**
+- **Mobile:** 28px (reduzido de 30px)
+- **Desktop:** 44px (mantido)
+- **Responsividade:** Adaptação automática
+- **Legibilidade:** Melhor proporção no mobile
+
+### 🔧 **Mudanças Técnicas:**
+
+#### **Alteração Específica:**
+- **Arquivo:** `src/pages/VideoPage.tsx`
+- **Seção:** H1 principal
+- **Antes:** `text-3xl` (30px mobile)
+- **Depois:** `text-[28px]` (28px mobile)
+
+### 🚀 **Status:**
+- ✅ **Implementado:** H1 com 28px no mobile
+- ✅ **Testado:** Código sem erros de sintaxe
+- ✅ **Código Limpo:** Alteração precisa e segura
+- ✅ **Conteúdo Preservado:** Texto mantido
+- ✅ **Aparência Melhorada:** Tamanho otimizado para mobile
+- ✅ **Problema Resolvido:** H1 com 28px no mobile
+
+---
+
+## Requisição Anterior: Criação de Botões CTA com Foco em Conversão
+
+### 📋 **Solicitação do Usuário:**
+1. **Problema:** Necessidade de botões CTA mais impactantes e focados em conversão
+2. **Objetivo:** Criar botões grandes, com ícone de toque e conectados à seção de planos
+3. **Localização:** VideoPage.tsx - Botões "Liberar meu Simulador" e "Quero ter esses resultados"
+4. **Resultado:** Botões CTA otimizados para conversão
+
+### 🎯 **Implementação Realizada:**
+
+#### ✅ **1. Botão "Liberar meu Simulador" (Abaixo do Vídeo)**
+- **Localização:** `src/pages/VideoPage.tsx` - Linha 177
+- **Estilo Aplicado:**
+  - **Tamanho:** `h-16 md:h-20` (64px mobile, 80px desktop)
+  - **Padding:** `px-8 md:px-12` (32px/48px horizontal)
+  - **Texto:** `text-lg md:text-2xl` (18px/24px)
+  - **Peso:** `font-bold`
+  - **Gradiente:** `from-[#e50f5f] to-[#d40a4f]`
+  - **Hover:** `hover:scale-105` (aumenta 5% no hover)
+  - **Sombra:** `shadow-2xl`
+  - **Borda:** `border-2 border-white/20`
+  - **Transform:** `hover:-translate-y-1` (levanta 4px no hover)
+
+#### ✅ **2. Botão "Quero ter esses resultados" (Após Resultados Reais)**
+- **Localização:** `src/pages/VideoPage.tsx` - Linha 541
+- **Estilo Aplicado:** Mesmo estilo do botão anterior
+- **Funcionalidade:** Scroll suave para seção de planos
+
+#### ✅ **3. Ícone de Toque Adicionado**
+- **SVG Path:** `<path d="M7 2v11h3v9l7-12h-4l4-8z"/>`
+- **Tamanho:** `w-6 h-6 md:w-8 md:h-8` (24px/32px)
+- **Posição:** `mr-3` (margem direita)
+- **Cor:** `fill="currentColor"` (herda cor do texto)
+
+#### ✅ **4. Funcionalidade de Navegação**
+- **Scroll Suave:** `scrollIntoView({ behavior: 'smooth' })`
+- **Destino:** `#pricing-section`
+- **Implementação:** `onClick` handler em ambos os botões
+
+#### ✅ **5. Alteração do Botão Fixo**
+- **Localização:** `src/pages/VideoPage.tsx` - Linha 1662
+- **Antes:** "Assinar Anual"
+- **Depois:** "Liberar meu acesso"
+
+### 🎨 **Resultado Visual:**
+
+#### **Botões CTA Otimizados:**
+- **Tamanho:** 64px mobile, 80px desktop
+- **Impacto Visual:** Gradiente vermelho vibrante
+- **Interatividade:** Hover com escala e elevação
+- **Ícone:** Toque/raio para urgência
+- **Navegação:** Scroll suave para planos
+
+#### **Benefícios:**
+- **Conversão:** Botões mais chamativos e persuasivos
+- **UX:** Navegação intuitiva para planos
+- **Visual:** Design moderno e profissional
+- **Responsividade:** Adaptação perfeita a todos os dispositivos
+
+### 🔧 **Mudanças Técnicas:**
+
+#### **Classes CSS Aplicadas:**
+```tsx
+className="w-full sm:w-auto h-16 md:h-20 px-8 md:px-12 text-lg md:text-2xl font-bold bg-gradient-to-r from-[#e50f5f] to-[#d40a4f] hover:from-[#d40a4f] hover:to-[#b30945] hover:scale-105 transition-all duration-300 shadow-2xl text-white border-2 border-white/20 hover:border-white/40 transform hover:-translate-y-1"
+```
+
+#### **Funcionalidade JavaScript:**
+```tsx
+onClick={() => {
+  const element = document.getElementById('pricing-section');
+  element?.scrollIntoView({ behavior: 'smooth' });
+}}
+```
+
+### 🚀 **Status:**
+- ✅ **Implementado:** Botões CTA grandes e impactantes
+- ✅ **Implementado:** Ícone de toque em ambos os botões
+- ✅ **Implementado:** Navegação para seção de planos
+- ✅ **Implementado:** Alteração do botão fixo
+- ✅ **Testado:** Código sem erros de sintaxe
+- ✅ **Código Limpo:** Alterações precisas e seguras
+- ✅ **Conteúdo Preservado:** Funcionalidade mantida
+- ✅ **Aparência Melhorada:** Foco em conversão
+- ✅ **Problema Resolvido:** Botões CTA otimizados
+
+---
+
+## Requisição Anterior: Alteração do Estilo H1 no Título Principal da Landing Page
+
+### 📋 **Solicitação do Usuário:**
+1. **Problema:** Título "Seu cliente se sentirá burro em não fechar um consórcio com você!" precisava usar o estilo H1 da página de vídeo
+2. **Objetivo:** Aplicar o mesmo estilo H1 usado na VideoPage no título principal da landing page
+3. **Localização:** Página de landing (LandingPage.tsx) - H1 principal
+4. **Resultado:** Título principal com estilo consistente com a página de vídeo
+
+### 🎯 **Implementação Realizada:**
+
+#### ✅ **1. Análise do Estilo H1 da VideoPage**
+- **Localização:** `src/pages/VideoPage.tsx` - Linha 136
+- **Estilo Padrão:** `text-3xl md:text-[44px] font-bold text-white mb-4`
+- **Responsividade:** 30px mobile, 44px desktop
+- **Peso:** font-bold (700)
+- **Margem:** mb-4 (16px)
+
+#### ✅ **2. Alteração Aplicada**
+- **Arquivo:** `src/pages/LandingPage.tsx` - Linha 255
+- **Antes:** `<h1 className="font-bold leading-tight text-white" style={{ fontSize: '42px' }}>`
+- **Depois:** `<h1 className="text-3xl md:text-[44px] font-bold text-white mb-4">`
+- **Mudanças:**
+  - **Removido:** `style={{ fontSize: '42px' }}` (inline style)
+  - **Adicionado:** Classes responsivas `text-3xl md:text-[44px]`
+  - **Adicionado:** `mb-4` para margem inferior
+  - **Consistência:** Mesmo estilo da VideoPage
+
+#### ✅ **3. Estrutura Final Implementada**
+```tsx
+{/* H1 Principal */}
+<h1 className="text-3xl md:text-[44px] font-bold text-white mb-4">
+  Seu cliente se sentirá burro em não fechar um consórcio com você!
+</h1>
+```
+
+#### ✅ **4. Classes CSS Aplicadas**
+- **Mobile:** `text-3xl` (30px)
+- **Desktop:** `md:text-[44px]` (44px)
+- **Peso:** `font-bold` (700)
+- **Cor:** `text-white`
+- **Margem:** `mb-4` (16px)
+
+### 🎨 **Resultado Visual:**
+
+#### **Estilo Consistente:**
+- **Tamanho:** 30px mobile, 44px desktop
+- **Peso:** Negrito (700)
+- **Cor:** Branco
+- **Espaçamento:** Margem inferior de 16px
+- **Responsividade:** Adaptação automática ao tamanho da tela
+
+#### **Benefícios:**
+- **Consistência:** Mesmo estilo usado em toda a plataforma
+- **Hierarquia:** H1 adequado para títulos principais
+- **Responsividade:** Adaptação automática ao tamanho da tela
+- **UX Melhorada:** Visual uniforme entre páginas
+- **Performance:** Remoção de inline styles
+
+### 🔧 **Mudanças Técnicas:**
+
+#### **Alteração Específica:**
+- **Arquivo:** `src/pages/LandingPage.tsx`
+- **Seção:** H1 principal
+- **Antes:** Inline style com 42px fixo
+- **Depois:** Classes responsivas 30px/44px
+
+#### **Classes CSS Responsivas:**
+```tsx
+// ANTES:
+<h1 className="font-bold leading-tight text-white" style={{ fontSize: '42px' }}>
+
+// DEPOIS:
+<h1 className="text-3xl md:text-[44px] font-bold text-white mb-4">
+```
+
+### 🚀 **Status:**
+- ✅ **Implementado:** Estilo H1 da VideoPage aplicado
+- ✅ **Implementado:** Classes responsivas
+- ✅ **Implementado:** Remoção de inline styles
+- ✅ **Testado:** Código sem erros de sintaxe
+- ✅ **Código Limpo:** Alteração precisa e segura
+- ✅ **Conteúdo Preservado:** Texto mantido
+- ✅ **Aparência Melhorada:** Consistência visual
+- ✅ **Problema Resolvido:** Título principal com estilo H1 da VideoPage
+- ✅ **Deploy:** Pronto para produção
+
+---
+
+## Última Requisição: Deploy para GitHub
+
+### 📋 **Solicitação do Usuário:**
+1. **Objetivo:** Fazer deploy do projeto para o GitHub
+2. **Ação:** Push de todas as alterações para o repositório remoto
+3. **Resultado:** Código atualizado disponível no GitHub
+
+### 🎯 **Implementação Realizada:**
+
+#### ✅ **1. Verificação do Status do Git**
+- **Status:** Verificado arquivos modificados e não rastreados
+- **Arquivos Modificados:** 5 arquivos com alterações
+- **Arquivos Novos:** 5 arquivos não rastreados
+- **Total:** 10 arquivos para commit
+
+#### ✅ **2. Adição de Arquivos**
+- **Comando:** `git add .`
+- **Resultado:** Todos os arquivos adicionados ao staging area
+- **Incluídos:** Arquivos modificados e novos arquivos
+
+#### ✅ **3. Commit das Alterações**
+- **Mensagem:** "Deploy para GitHub - Ajustes finais e otimizações"
+- **Arquivos:** 10 arquivos alterados, 1.695 inserções, 164 deleções
+- **Novos Arquivos Criados:**
+  - `public/BP Sales - Garantia.png`
+  - `public/Eduardo destaque do ano.JPG`
+  - `public/Icone trofeu.svg`
+  - `public/vectorized1-fixed.svg`
+  - `public/vectorized2-fixed.svg`
+
+#### ✅ **4. Push para GitHub**
+- **Comando:** `git push origin main`
+- **Resultado:** Deploy realizado com sucesso
+- **Branch:** main
+- **Repositório:** https://github.com/eduardobestpiece/consorcio-patrimonio-simulador.git
+- **Commit:** f88b36b
+
+#### ✅ **5. Reinicialização do Servidor**
+- **Comando:** `npm run dev`
+- **Status:** Servidor rodando na porta 8080
+- **Resultado:** Aplicação disponível em http://localhost:8080/
+
+### 🎨 **Resultado:**
+
+#### **Deploy Concluído:**
+- **GitHub:** Código atualizado no repositório remoto
+- **Servidor:** Aplicação rodando na porta 8080
+- **Status:** Todas as alterações sincronizadas
+
+#### **Benefícios:**
+- **Versionamento:** Código versionado e seguro
+- **Colaboração:** Repositório atualizado para colaboração
+- **Backup:** Código salvo remotamente
+- **Deploy:** Aplicação disponível para acesso
+
+### 🚀 **Status:**
+- ✅ **Deploy:** Realizado com sucesso para o GitHub
+- ✅ **Servidor:** Rodando na porta 8080
+- ✅ **Código:** Sincronizado e atualizado
+- ✅ **Versionamento:** Commit realizado com sucesso
+
+---
+
 ## Última Requisição: Ajuste das Cores dos Dropdowns - Cor Primária da BP Sales
 
 ### 📋 **Solicitação do Usuário:**
@@ -1219,70 +1513,6 @@ className="bg-white text-[#e50f5f] hover:bg-gray-100 font-bold px-4 py-2 sm:px-6
 
 ---
 
-## Requisição Anterior: Deploy para GitHub
-
-### 📋 **Solicitação do Usuário:**
-1. **Objetivo:** Fazer deploy do projeto para o GitHub
-2. **Ação:** Push de todas as alterações para o repositório remoto
-3. **Resultado:** Código atualizado disponível no GitHub
-
-### 🎯 **Implementação Realizada:**
-
-#### ✅ **1. Verificação do Status do Git**
-- **Status:** Verificado arquivos modificados e não rastreados
-- **Arquivos Modificados:** 11 arquivos com alterações
-- **Arquivos Novos:** 6 arquivos não rastreados
-- **Total:** 17 arquivos para commit
-
-#### ✅ **2. Adição de Arquivos**
-- **Comando:** `git add .`
-- **Resultado:** Todos os arquivos adicionados ao staging area
-- **Incluídos:** Arquivos modificados e novos arquivos
-
-#### ✅ **3. Commit das Alterações**
-- **Mensagem:** "Scroll horizontal para toda a div da interface - Implementação Final (Incluindo Alavancagem Financeira)"
-- **Arquivos:** 17 arquivos alterados, 4.304 inserções, 787 deleções
-- **Novos Arquivos Criados:**
-  - `public/evolucao-patrimonial-chart.svg`
-  - `src/components/TestBranding.tsx`
-  - `src/components/ui/PhoneInput.tsx`
-  - `src/hooks/useDefaultBranding.ts`
-  - `src/hooks/useUserInfo.ts`
-  - `src/pages/VideoPage.tsx.backup`
-
-#### ✅ **4. Push para GitHub**
-- **Comando:** `git push origin main`
-- **Resultado:** Deploy realizado com sucesso
-- **Branch:** main
-- **Repositório:** https://github.com/eduardobestpiece/consorcio-patrimonio-simulador.git
-- **Commit:** ad2c210
-
-#### ✅ **5. Reinicialização do Servidor**
-- **Comando:** `npm run dev`
-- **Status:** Servidor rodando na porta 8080
-- **Resultado:** Aplicação disponível em http://localhost:8080/
-
-### 🎨 **Resultado:**
-
-#### **Deploy Concluído:**
-- **GitHub:** Código atualizado no repositório remoto
-- **Servidor:** Aplicação rodando na porta 8080
-- **Status:** Todas as alterações sincronizadas
-
-#### **Benefícios:**
-- **Versionamento:** Código versionado e seguro
-- **Colaboração:** Repositório atualizado para colaboração
-- **Backup:** Código salvo remotamente
-- **Deploy:** Aplicação disponível para acesso
-
-### 🚀 **Status:**
-- ✅ **Deploy:** Realizado com sucesso para o GitHub
-- ✅ **Servidor:** Rodando na porta 8080
-- ✅ **Código:** Sincronizado e atualizado
-- ✅ **Versionamento:** Commit realizado com sucesso
-
----
-
 ## Requisição Anterior: Scroll Horizontal para Toda a Div da Interface - Implementação Final (Incluindo Alavancagem Financeira)
 
 ### 📋 **Solicitação do Usuário:**
@@ -2333,3 +2563,620 @@ Implementação de seção de preços com 3 planos integrados ao Stripe:
 - **Ambiente:** Test (test_)
 - **Método:** window.open() em nova aba
 - **Fallback:** handlePayment() para casos de erro 
+
+---
+
+## Última Requisição: Ajustar parágrafo na Landing Page para estilo da VideoPage
+
+### 📋 **Solicitação do Usuário:**
+1. **Objetivo:** Usar o mesmo estilo de parágrafo da VideoPage no texto descritivo da LandingPage
+2. **Texto:** "Eu vou te entregar em 5 minutos as 2 técnicas e 1 Ferramenta..."
+3. **Localização:** `src/pages/LandingPage.tsx` (abaixo do H1 principal)
+
+### 🎯 **Implementação Realizada:**
+
+#### ✅ **1. Referência do Parágrafo na VideoPage**
+- **Arquivo:** `src/pages/VideoPage.tsx`
+- **Estilo aplicado:** `text-base md:text-xl text-gray-300 max-w-3xl`
+
+#### ✅ **2. Alteração Aplicada na LandingPage**
+- **Arquivo:** `src/pages/LandingPage.tsx`
+- **Antes:** `<p className="text-lg text-gray-300 leading-relaxed">`
+- **Depois:** `<p className="text-base md:text-xl text-gray-300 max-w-3xl">`
+
+#### ✅ **3. Código final do trecho**
+```tsx
+<p className="text-base md:text-xl text-gray-300 max-w-3xl">
+  Eu vou te entregar em <strong className="text-white">5 minutos</strong> as <strong className="text-white">2 técnicas</strong> e <strong className="text-white">1 Ferramenta</strong> de apresentação de consórcio que transformam pessoas de alta renda em clientes.
+</p>
+```
+
+### 🎨 **Resultado:**
+- **Consistência:** Parágrafo com o mesmo estilo visual da VideoPage
+- **Responsividade:** 16px no mobile e 20px no desktop
+- **Legibilidade:** Largura controlada com `max-w-3xl`
+
+### 🚀 **Status:**
+- ✅ **Implementado:** Estilo de parágrafo alinhado com a VideoPage
+- ✅ **Servidor:** Rodando na porta 8080
+- ✅ **Pronto para produção**
+
+---
+
+## Última Requisição: Alteração do Estilo H3 no Título da Landing Page
+
+### 📋 **Solicitação do Usuário:**
+1. **Problema:** Título "Cadastre-se e assista gratuitamente" precisava usar o estilo H3 da página de vídeo
+2. **Objetivo:** Aplicar o mesmo estilo H3 usado na VideoPage no título da landing page
+3. **Localização:** Página de landing (LandingPage.tsx) - Título do formulário
+4. **Resultado:** Título com estilo consistente com a página de vídeo
+
+### 🎯 **Implementação Realizada:**
+
+#### ✅ **1. Análise do Estilo H3 da VideoPage**
+- **Localização:** `src/pages/VideoPage.tsx` - Múltiplos H3 encontrados
+- **Estilo Padrão:** `text-xl md:text-[26px] font-bold text-white`
+- **Responsividade:** 20px mobile, 26px desktop
+- **Peso:** font-bold (700)
+
+#### ✅ **2. Alteração Aplicada**
+- **Arquivo:** `src/pages/LandingPage.tsx` - Linha 277
+- **Antes:** `<h2 className="text-xl md:text-2xl font-bold text-white mb-2">`
+- **Depois:** `<h3 className="text-xl md:text-[26px] font-bold text-white mb-2">`
+- **Mudanças:**
+  - **Tag:** `h2` → `h3`
+  - **Tamanho Desktop:** `text-2xl` → `text-[26px]`
+  - **Consistência:** Mesmo estilo da VideoPage
+
+#### ✅ **3. Estrutura Final Implementada**
+```tsx
+{/* Título do Formulário */}
+<div className="text-center">
+  <h3 className="text-xl md:text-[26px] font-bold text-white mb-2">
+    Cadastre-se e assista gratuitamente
+  </h3>
+</div>
+```
+
+#### ✅ **4. Classes CSS Aplicadas**
+- **Mobile:** `text-xl` (20px)
+- **Desktop:** `md:text-[26px]` (26px)
+- **Peso:** `font-bold` (700)
+- **Cor:** `text-white`
+- **Margem:** `mb-2`
+
+### 🎨 **Resultado Visual:**
+
+#### **Estilo Consistente:**
+- **Tamanho:** 20px mobile, 26px desktop
+- **Peso:** Negrito (700)
+- **Cor:** Branco
+- **Alinhamento:** Centralizado
+- **Espaçamento:** Margem inferior de 8px
+
+#### **Benefícios:**
+- **Consistência:** Mesmo estilo usado em toda a plataforma
+- **Hierarquia:** H3 adequado para títulos de seção
+- **Responsividade:** Adaptação automática ao tamanho da tela
+- **UX Melhorada:** Visual uniforme entre páginas
+
+### 🔧 **Mudanças Técnicas:**
+
+#### **Alteração Específica:**
+- **Arquivo:** `src/pages/LandingPage.tsx`
+- **Seção:** Título do formulário
+- **Antes:** H2 com `text-2xl` no desktop
+- **Depois:** H3 com `text-[26px]` no desktop
+
+#### **Classes CSS Responsivas:**
+```tsx
+// ANTES:
+<h2 className="text-xl md:text-2xl font-bold text-white mb-2">
+
+// DEPOIS:
+<h3 className="text-xl md:text-[26px] font-bold text-white mb-2">
+```
+
+### 🚀 **Status:**
+- ✅ **Implementado:** Estilo H3 da VideoPage aplicado
+- ✅ **Implementado:** Tag H3 correta
+- ✅ **Implementado:** Tamanho responsivo 20px/26px
+- ✅ **Testado:** Código sem erros de sintaxe
+- ✅ **Código Limpo:** Alteração precisa e segura
+- ✅ **Conteúdo Preservado:** Texto mantido
+- ✅ **Aparência Melhorada:** Consistência visual
+- ✅ **Problema Resolvido:** Título com estilo H3 da VideoPage
+- ✅ **Deploy:** Pronto para produção
+
+---
+
+## Última Requisição: Redução da Largura Horizontal da Div na VideoPage
+
+### 📋 **Solicitação do Usuário:**
+1. **Objetivo:** Reduzir o tamanho horizontal da div na linha 797:30 da VideoPage
+2. **Aplicação:** Apenas no desktop (lg:)
+3. **Localização:** `src/pages/VideoPage.tsx` - Tooltip com dados financeiros
+
+### 🎯 **Implementação Realizada:**
+
+#### ✅ **1. Identificação da Div**
+- **Localização:** `src/pages/VideoPage.tsx` - Linha 797
+- **Elemento:** Tooltip com dados financeiros do gráfico de evolução patrimonial
+- **Conteúdo:** Informações detalhadas do "Mês: 120"
+
+#### ✅ **2. Alteração Aplicada**
+- **Antes:** `w-full max-w-none` (largura total)
+- **Depois:** `lg:w-80 max-w-none` (320px no desktop)
+- **Resultado:** Tooltip mais compacto no desktop
+
+#### ✅ **3. Código Final**
+```tsx
+<div className="hidden lg:block absolute -top-2 right-0 bg-[#2A2A2A] rounded-lg p-2 text-xs border border-white/20 shadow-lg z-10 lg:w-80 max-w-none">
+  <div className="text-[#ff0066] font-semibold mb-1">Mês: 120</div>
+  <div className="space-y-0.5">
+    <div className="text-gray-300">Parcela do mês: R$ 12.138,949</div>
+    <div className="text-gray-300">Soma das parcelas: R$ 1.057.190,794</div>
+    <div className="text-gray-300">Receita do Mês: R$ 25.982,731</div>
+    <div className="text-gray-300">Receita - Custos: R$ 15.770,074</div>
+    <div className="text-gray-300">Custos: R$ 10.212,657</div>
+    <div className="text-gray-300">Renda passiva: R$ 3.631,125</div>
+    <div className="text-gray-300">Renda passiva acumulada: R$ 236.253,175</div>
+    <div className="text-gray-300">Fluxo de caixa: R$ 62.304,333</div>
+    <div className="text-gray-300">Patrimônio: R$ 1.830.833,158</div>
+    <div className="text-gray-300">Imóveis: 2</div>
+  </div>
+</div>
+```
+
+### 🎨 **Resultado:**
+- **Desktop:** Tooltip com largura fixa de 320px (lg:w-80)
+- **Mobile:** Comportamento mantido (hidden lg:block)
+- **Layout:** Mais compacto e organizado no desktop
+- **Funcionalidade:** Dados financeiros preservados
+
+### 🚀 **Status:**
+- ✅ **Implementado:** Largura reduzida apenas no desktop
+- ✅ **Servidor:** Rodando na porta 8080
+- ✅ **Pronto para produção**
+
+---
+
+## Última Requisição: Posicionamento do Tooltip no Meio do Gráfico
+
+### 📋 **Solicitação do Usuário:**
+1. **Objetivo:** Posicionar a div do tooltip no meio do gráfico
+2. **Aplicação:** Apenas no desktop (lg:)
+3. **Localização:** `src/pages/VideoPage.tsx` - Tooltip com dados financeiros
+
+### 🎯 **Implementação Realizada:**
+
+#### ✅ **1. Alteração de Posicionamento**
+- **Antes:** `absolute -top-2 lg:-left-4` (canto superior esquerdo)
+- **Depois:** `absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2` (centro)
+- **Resultado:** Tooltip centralizado no gráfico
+
+#### ✅ **2. Código Final**
+```tsx
+<div className="hidden lg:block absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#2A2A2A] rounded-lg p-2 text-xs border border-white/20 shadow-lg z-10 lg:w-64 max-w-none">
+  <div className="text-[#ff0066] font-semibold mb-1">Mês: 120</div>
+  <div className="space-y-0.5">
+    <div className="text-gray-300">Parcela do mês: R$ 12.138,949</div>
+    <div className="text-gray-300">Soma das parcelas: R$ 1.057.190,794</div>
+    <div className="text-gray-300">Receita do Mês: R$ 25.982,731</div>
+    <div className="text-gray-300">Receita - Custos: R$ 15.770,074</div>
+    <div className="text-gray-300">Custos: R$ 10.212,657</div>
+    <div className="text-gray-300">Renda passiva: R$ 3.631,125</div>
+    <div className="text-gray-300">Renda passiva acumulada: R$ 236.253,175</div>
+    <div className="text-gray-300">Fluxo de caixa: R$ 62.304,333</div>
+    <div className="text-gray-300">Patrimônio: R$ 1.830.833,158</div>
+    <div className="text-gray-300">Imóveis: 2</div>
+  </div>
+</div>
+```
+
+### 🎨 **Resultado:**
+- **Desktop:** Tooltip centralizado no meio do gráfico
+- **Mobile:** Comportamento mantido (hidden lg:block)
+- **Layout:** Posicionamento equilibrado e visualmente atrativo
+- **Funcionalidade:** Dados financeiros preservados
+
+### 🚀 **Status:**
+- ✅ **Implementado:** Tooltip centralizado no gráfico
+- ✅ **Servidor:** Rodando na porta 8080
+- ✅ **Pronto para produção**
+
+---
+
+## Última Requisição: Centralização da Seção de Garantia na VideoPage
+
+### 📋 **Solicitação do Usuário:**
+1. **Objetivo:** Centralizar a etapa de garantia na página de vídeo
+2. **Layout:** Imagem da garantia acima, textos abaixo no desktop
+3. **Localização:** `src/pages/VideoPage.tsx` - Seção de Garantia
+
+### 🎯 **Implementação Realizada:**
+
+#### ✅ **1. Reorganização do Layout**
+- **Antes:** Layout horizontal no desktop (lg:flex-row)
+- **Depois:** Layout vertical centralizado (flex-col)
+- **Resultado:** Imagem acima, textos abaixo
+
+#### ✅ **2. Alterações Aplicadas**
+- **Container:** `flex flex-col items-center justify-center gap-8 max-w-4xl mx-auto`
+- **Imagem:** Mantida no topo com `flex-shrink-0`
+- **Textos:** Centralizados abaixo da imagem
+- **Alinhamento:** `text-center` para todos os elementos
+
+#### ✅ **3. Código Final**
+```tsx
+{/* Garantia Section */}
+<div className="text-center">
+  <div className="p-8">
+    <div className="flex flex-col items-center justify-center gap-8 max-w-4xl mx-auto">
+      {/* Shield Visual - Above on Desktop */}
+      <div className="flex-shrink-0">
+        <img 
+          src="/BP Sales - Garantia.png" 
+          alt="BP Sales - Garantia de 7 Dias" 
+          className="w-40 h-48 object-contain"
+        />
+      </div>
+      
+      {/* Text Content - Below on Desktop */}
+      <div className="flex-1 max-w-2xl text-center">
+        <h3 className="text-2xl md:text-[32px] font-bold text-white mb-4">
+          Garantia de 7 Dias
+        </h3>
+        <p className="text-lg md:text-xl text-gray-300 mb-6">
+          Se em até 7 dias você não estiver 100% satisfeito, devolvemos todo seu dinheiro. Sem perguntas, sem burocracia.
+        </p>
+        <div className="flex items-center justify-center space-x-6 text-center">
+          {/* Indicadores de garantia */}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+### 🎨 **Resultado:**
+- **Desktop:** Layout vertical centralizado com imagem acima e textos abaixo
+- **Mobile:** Mantém o layout vertical
+- **Centralização:** Todos os elementos alinhados ao centro
+- **Espaçamento:** Gap de 8 unidades entre imagem e textos
+
+### 🚀 **Status:**
+- ✅ **Implementado:** Seção de garantia centralizada
+- ✅ **Servidor:** Rodando na porta 8080
+- ✅ **Pronto para produção**
+
+---
+
+## Última Requisição: Ajuste do Tamanho do Texto de Proteção na Landing Page
+
+### 📋 **Solicitação do Usuário:**
+1. **Objetivo:** Ajustar o tamanho do texto "Seus dados estão 100% protegidos"
+2. **Tamanhos:** 16px no desktop e 12px no mobile
+3. **Localização:** `src/pages/LandingPage.tsx` - Texto de proteção do formulário
+
+### 🎯 **Implementação Realizada:**
+
+#### ✅ **1. Alteração do Tamanho do Texto**
+- **Antes:** `text-xs` (12px em todas as telas)
+- **Depois:** `text-xs md:text-base` (12px mobile, 16px desktop)
+- **Resultado:** Texto responsivo conforme solicitado
+
+#### ✅ **2. Ajuste do Ícone**
+- **Antes:** `h-3 w-3` (12px em todas as telas)
+- **Depois:** `h-3 w-3 md:h-4 md:w-4` (12px mobile, 16px desktop)
+- **Resultado:** Ícone proporcional ao texto
+
+#### ✅ **3. Código Final**
+```tsx
+{/* Texto de Proteção */}
+<div className="flex items-center justify-center space-x-2 text-xs md:text-base text-gray-400 mt-4">
+  <Lock className="h-3 w-3 md:h-4 md:w-4" />
+  <span>Seus dados estão 100% protegidos</span>
+</div>
+```
+
+### 🎨 **Resultado:**
+- **Mobile:** Texto 12px (text-xs) e ícone 12px (h-3 w-3)
+- **Desktop:** Texto 16px (md:text-base) e ícone 16px (md:h-4 md:w-4)
+- **Responsividade:** Adaptação automática ao tamanho da tela
+- **Proporção:** Ícone sempre proporcional ao texto
+
+### 🚀 **Status:**
+- ✅ **Implementado:** Tamanho do texto ajustado conforme solicitado
+- ✅ **Servidor:** Rodando na porta 8080
+- ✅ **Pronto para produção**
+
+---
+
+## Última Requisição: Aplicação do Estilo da Landing no Modal WhatsApp da VideoPage
+
+### 📋 **Solicitação do Usuário:**
+1. **Objetivo:** Aplicar o mesmo estilo e regras do formulário da Landing Page no modal "Falar no WhatsApp" da VideoPage
+2. **Remoção:** Botão "Cancelar" do modal
+3. **Adição:** Ícone do WhatsApp no botão "Enviar"
+4. **Localização:** `src/pages/VideoPage.tsx` - Modal WhatsApp
+
+### 🎯 **Implementação Realizada:**
+
+#### ✅ **1. Imports Adicionados**
+- **Input:** `import { Input } from "@/components/ui/input"`
+- **PhoneInput:** `import { PhoneInput } from "@/components/ui/PhoneInput"`
+
+#### ✅ **2. Estado de Erros**
+- **Adicionado:** `const [whatsappErrors, setWhatsappErrors] = useState<{ name?: string; phone?: string }>({})`
+- **Funcionalidade:** Validação com mensagens de erro
+
+#### ✅ **3. Validações Implementadas**
+- **Nome:** Exige primeiro nome e sobrenome
+- **Telefone:** Valida mínimo de 10 dígitos
+- **Feedback:** Mensagens de erro específicas
+- **Limpeza:** Erros desaparecem ao corrigir
+
+#### ✅ **4. Componentes Atualizados**
+- **Input Nome:** Trocado para componente `Input` com classes da Landing
+- **Input Telefone:** Trocado para componente `PhoneInput` com validação
+- **Estilo:** `h-12 text-base md:text-lg bg-[#2A2A2A] border-white/20`
+
+#### ✅ **5. Botão Removido e Atualizado**
+- **Removido:** Botão "Cancelar"
+- **Atualizado:** Botão "Enviar" com gradiente da Landing
+- **Adicionado:** Ícone do WhatsApp igual ao botão principal
+- **Estilo:** `bg-gradient-to-r from-[#e50f5f] to-[#d40a4f]`
+
+#### ✅ **6. Código Final do Modal**
+```tsx
+{/* WhatsApp Modal */}
+{showWhatsAppModal && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="bg-[#1F1F1F] rounded-2xl p-6 w-full max-w-md border border-white/10">
+      <div className="text-center mb-6">
+        <h3 className="text-xl font-bold text-white mb-2">Falar no WhatsApp</h3>
+        <p className="text-gray-300 text-sm">Preencha seus dados para iniciar a conversa</p>
+      </div>
+      
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Input
+            name="name"
+            placeholder="Nome e sobrenome"
+            value={whatsappForm.name}
+            onChange={(e) => setWhatsappForm({ ...whatsappForm, name: e.target.value })}
+            className={`h-12 text-base md:text-lg bg-[#2A2A2A] border-white/20 text-white placeholder:text-gray-400 focus:border-white/40 focus:ring-white/20 ${
+              whatsappErrors.name ? 'border-red-500 focus:border-red-500' : ''
+            }`}
+          />
+          {whatsappErrors.name && (
+            <p className="text-red-500 text-sm">{whatsappErrors.name}</p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <PhoneInput
+            value={whatsappForm.phone}
+            onChange={(value) => setWhatsappForm({ ...whatsappForm, phone: value })}
+            placeholder="Telefone"
+            error={whatsappErrors.phone}
+          />
+        </div>
+      </div>
+      
+      <div className="mt-6">
+        <Button
+          onClick={handleWhatsAppSubmit}
+          className="w-full h-12 text-base md:text-lg font-semibold bg-gradient-to-r from-[#e50f5f] to-[#d40a4f] hover:opacity-90 transition-all duration-300 shadow-lg text-white flex items-center justify-center space-x-2"
+        >
+          <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488"/>
+          </svg>
+          <span>Enviar</span>
+        </Button>
+      </div>
+    </div>
+  </div>
+)}
+```
+
+### 🎨 **Resultado:**
+- **Consistência:** Modal com mesmo estilo da Landing Page
+- **Validações:** Regras idênticas ao formulário principal
+- **UX:** Botão único com ícone do WhatsApp
+- **Responsividade:** Funciona em todos os dispositivos
+
+### 🚀 **Status:**
+- ✅ **Implementado:** Estilo da Landing aplicado ao modal WhatsApp
+- ✅ **Implementado:** Botão "Cancelar" removido
+- ✅ **Implementado:** Ícone do WhatsApp adicionado
+- ✅ **Servidor:** Rodando na porta 8080
+- ✅ **Pronto para produção**
+
+---
+
+## Última Requisição: Estilos H3/Parágrafo e Funcionalidade de Fechamento no Modal WhatsApp
+
+### 📋 **Solicitação do Usuário:**
+1. **Objetivo:** Aplicar estilos H3 e parágrafo no modal WhatsApp
+2. **Título:** "Falar no WhatsApp" no estilo H3
+3. **Subtítulo:** "Preencha seus dados..." no estilo parágrafo
+4. **Funcionalidade:** Adicionar "X" discreto e fechar clicando fora
+5. **Localização:** `src/pages/VideoPage.tsx` - Modal WhatsApp
+
+### 🎯 **Implementação Realizada:**
+
+#### ✅ **1. Estilo H3 Aplicado**
+- **Título:** `text-xl md:text-[26px] font-bold text-white mb-4`
+- **Resultado:** Mesmo estilo H3 usado em toda a VideoPage
+- **Responsividade:** 20px mobile, 26px desktop
+
+#### ✅ **2. Estilo Parágrafo Aplicado**
+- **Subtítulo:** `text-base md:text-xl text-gray-300 max-w-3xl`
+- **Resultado:** Mesmo estilo de parágrafo da VideoPage
+- **Responsividade:** 16px mobile, 20px desktop
+
+#### ✅ **3. Botão "X" Adicionado**
+- **Posição:** `absolute top-0 right-0`
+- **Estilo:** `text-gray-400 hover:text-white transition-colors duration-200 text-xl font-light`
+- **Funcionalidade:** Fecha o modal ao clicar
+- **Aparência:** Discreto e elegante
+
+#### ✅ **4. Fechamento por Clique Fora**
+- **Container:** `onClick={() => setShowWhatsAppModal(false)}`
+- **Conteúdo:** `onClick={(e) => e.stopPropagation()}` (evita fechar ao clicar no modal)
+- **UX:** Duas formas de fechar o modal
+
+#### ✅ **5. Código Final do Header**
+```tsx
+<div className="text-center mb-6 relative">
+  {/* X para fechar */}
+  <button
+    onClick={() => setShowWhatsAppModal(false)}
+    className="absolute top-0 right-0 text-gray-400 hover:text-white transition-colors duration-200 text-xl font-light"
+  >
+    ×
+  </button>
+  
+  <h3 className="text-xl md:text-[26px] font-bold text-white mb-4">
+    Falar no WhatsApp
+  </h3>
+  <p className="text-base md:text-xl text-gray-300 max-w-3xl">
+    Preencha seus dados para iniciar a conversa
+  </p>
+</div>
+```
+
+#### ✅ **6. Estrutura do Modal**
+```tsx
+<div 
+  className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+  onClick={() => setShowWhatsAppModal(false)}
+>
+  <div 
+    className="bg-[#1F1F1F] rounded-2xl p-6 w-full max-w-md border border-white/10"
+    onClick={(e) => e.stopPropagation()}
+  >
+    {/* Conteúdo do modal */}
+  </div>
+</div>
+```
+
+### 🎨 **Resultado:**
+- **Título:** Estilo H3 consistente com a VideoPage
+- **Subtítulo:** Estilo parágrafo responsivo
+- **Fechamento:** "X" discreto + clique fora do modal
+- **UX:** Múltiplas formas de interação
+
+### 🚀 **Status:**
+- ✅ **Implementado:** Estilos H3 e parágrafo aplicados
+- ✅ **Implementado:** Botão "X" discreto adicionado
+- ✅ **Implementado:** Fechamento por clique fora
+- ✅ **Servidor:** Rodando na porta 8080
+- ✅ **Pronto para produção**
+
+---
+
+## Última Requisição: Reposicionamento do Texto Descritivo na Landing Page
+
+### 📋 **Solicitação do Usuário:**
+1. **Objetivo:** Mover o texto descritivo para acima da imagem do vídeo
+2. **Texto:** "Eu vou te entregar em 5 minutos as 2 técnicas e 1 Ferramenta..."
+3. **Localização:** `src/pages/LandingPage.tsx` - Coluna esquerda
+4. **Resultado:** Texto entre o H1 e a imagem do vídeo
+
+### 🎯 **Implementação Realizada:**
+
+#### ✅ **1. Reposicionamento do Texto**
+- **Antes:** Texto descritivo abaixo da imagem do vídeo
+- **Depois:** Texto descritivo entre o H1 e a imagem do vídeo
+- **Espaçamento:** Adicionado `mb-8` para separação adequada
+
+#### ✅ **2. Nova Ordem dos Elementos**
+1. **H1 Principal:** "Seu cliente se sentirá burro em não fechar um consórcio com você!"
+2. **Texto Descritivo:** "Eu vou te entregar em 5 minutos as 2 técnicas e 1 Ferramenta..."
+3. **Imagem do Vídeo:** Thumbnail com botão de play
+
+#### ✅ **3. Código Final**
+```tsx
+{/* H1 Principal */}
+<h1 className="text-3xl md:text-[44px] leading-snug font-bold text-white mb-4">
+  Seu cliente se sentirá burro em não fechar um consórcio com você!
+</h1>
+
+{/* Texto Descritivo */}
+<p className="text-base md:text-xl text-gray-300 max-w-3xl mb-8">
+  Eu vou te entregar em <strong className="text-white">5 minutos</strong> as <strong className="text-white">2 técnicas</strong> e <strong className="text-white">1 Ferramenta</strong> de apresentação de consórcio que transformam pessoas de alta renda em clientes.
+</p>
+
+{/* Imagem do Vídeo */}
+<div className="relative bg-gradient-to-br from-[#2A2A2A] via-[#1F1F1F] to-[#161616] rounded-2xl aspect-video flex items-center justify-center group cursor-pointer hover:scale-105 transition-all duration-300 shadow-2xl border border-white/10">
+  {/* Conteúdo da imagem */}
+</div>
+```
+
+### 🎨 **Resultado:**
+- **Fluxo:** H1 → Texto descritivo → Imagem do vídeo
+- **Espaçamento:** Margem inferior de 32px no texto descritivo
+- **Legibilidade:** Texto mais próximo do título principal
+- **UX:** Melhor hierarquia visual
+
+### 🚀 **Status:**
+- ✅ **Implementado:** Texto descritivo reposicionado
+- ✅ **Servidor:** Rodando na porta 8080
+- ✅ **Pronto para produção**
+
+---
+
+## Última Requisição: Exclusão da Seção "Pronto para revolucionar suas vendas?" na VideoPage
+
+### 📋 **Solicitação do Usuário:**
+1. **Objetivo:** Excluir a seção "Pronto para revolucionar suas vendas?" da página de vídeo
+2. **Localização:** `src/pages/VideoPage.tsx` - Seção Call to Action
+3. **Resultado:** Página mais limpa e direta
+
+### 🎯 **Implementação Realizada:**
+
+#### ✅ **1. Seção Identificada**
+- **Localização:** Linha 1187-1215 da VideoPage
+- **Conteúdo:** Call to Action com título, descrição e dois botões
+- **Funcionalidade:** Scroll para seção de preços
+
+#### ✅ **2. Conteúdo Removido**
+- **Título:** "Pronto para revolucionar suas vendas?"
+- **Descrição:** "Junte-se a milhares de consultores que já multiplicaram seus resultados com o simulador BP Sales"
+- **Botões:** "Ver Planos e Preços" e "Solicitar Demonstração"
+- **Container:** Div com gradiente e bordas
+
+#### ✅ **3. Estrutura Removida**
+```tsx
+{/* Call to Action */}
+<div className="text-center mt-16">
+  <div className="bg-gradient-to-r from-[#e50f5f]/10 to-[#7c032e]/10 rounded-2xl p-6 border border-[#e50f5f]/20">
+    <h3 className="text-3xl font-bold text-white mb-4">
+      Pronto para revolucionar suas vendas?
+    </h3>
+    <p className="text-base md:text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
+      Junte-se a milhares de consultores que já multiplicaram seus resultados com o simulador BP Sales
+    </p>
+    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+      <Button>Ver Planos e Preços</Button>
+      <Button>Solicitar Demonstração</Button>
+    </div>
+  </div>
+</div>
+```
+
+### 🎨 **Resultado:**
+- **Página:** Mais limpa e direta
+- **Fluxo:** Transição direta para seção de preços
+- **UX:** Menos elementos de distração
+- **Layout:** Melhor foco no conteúdo principal
+
+### 🚀 **Status:**
+- ✅ **Implementado:** Seção "Pronto para revolucionar suas vendas?" removida
+- ✅ **Servidor:** Rodando na porta 8080
+- ✅ **Pronto para produção**
+
+---

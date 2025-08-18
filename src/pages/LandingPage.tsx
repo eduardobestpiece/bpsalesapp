@@ -252,9 +252,14 @@ export default function LandingPage() {
           {/* Left Column - Content (60%) */}
           <div className="lg:col-span-6 space-y-8">
             {/* H1 Principal */}
-            <h1 className="font-bold leading-tight text-white" style={{ fontSize: '42px' }}>
+            <h1 className="text-3xl md:text-[44px] leading-snug font-bold text-white mb-4">
               Seu cliente se sentirá burro em não fechar um consórcio com você!
             </h1>
+            
+            {/* Texto Descritivo */}
+            <p className="text-base md:text-xl text-gray-300 max-w-3xl mb-8">
+              Eu vou te entregar em <strong className="text-white">5 minutos</strong> as <strong className="text-white">2 técnicas</strong> e <strong className="text-white">1 Ferramenta</strong> de apresentação de consórcio que transformam pessoas de alta renda em clientes.
+            </p>
             
             {/* Imagem do Vídeo */}
             <div className="relative bg-gradient-to-br from-[#2A2A2A] via-[#1F1F1F] to-[#161616] rounded-2xl aspect-video flex items-center justify-center group cursor-pointer hover:scale-105 transition-all duration-300 shadow-2xl border border-white/10">
@@ -263,20 +268,15 @@ export default function LandingPage() {
                 <Play className="w-6 h-6 ml-1" />
               </div>
             </div>
-            
-            {/* Texto Descritivo */}
-            <p className="text-lg text-gray-300 leading-relaxed">
-              Eu vou te entregar em <strong className="text-white">5 minutos</strong> as <strong className="text-white">2 técnicas</strong> e <strong className="text-white">1 Ferramenta</strong> de apresentação de consórcio que transformam pessoas de alta renda em clientes.
-            </p>
           </div>
 
           {/* Right Column - Form (40%) */}
           <div className="lg:col-span-4 space-y-6">
             {/* Título do Formulário */}
             <div className="text-center">
-              <h2 className="text-xl md:text-2xl font-bold text-white mb-2">
+              <h3 className="text-xl md:text-[26px] font-bold text-white mb-2">
                 Cadastre-se e assista gratuitamente
-              </h2>
+              </h3>
             </div>
             
             <Card className="w-full bg-[#1F1F1F]/95 backdrop-blur-sm shadow-xl border-white/10">
@@ -407,8 +407,8 @@ export default function LandingPage() {
                   </Button>
 
                   {/* Texto de Proteção */}
-                  <div className="flex items-center justify-center space-x-2 text-xs text-gray-400 mt-4">
-                    <Lock className="h-3 w-3" />
+                  <div className="flex items-center justify-center space-x-2 text-xs md:text-base text-gray-400 mt-4">
+                    <Lock className="h-3 w-3 md:h-4 md:w-4" />
                     <span>Seus dados estão 100% protegidos</span>
                   </div>
                 </form>
