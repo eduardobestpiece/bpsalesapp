@@ -19,7 +19,6 @@ export const useDefaultBranding = () => {
   const { data: branding, isLoading, error } = useQuery({
     queryKey: ['default_branding', DEFAULT_COMPANY_ID],
     queryFn: async () => {
-      console.log('🔍 Buscando branding da BP Sales...');
       
       try {
         const { data, error } = await supabase
@@ -29,21 +28,15 @@ export const useDefaultBranding = () => {
           .maybeSingle();
         
         if (error) {
-          console.error('❌ Erro ao buscar branding:', error);
-          console.log('🔄 Usando fallback da BP Sales...');
           return FALLBACK_BRANDING;
         }
         
         if (data) {
-          console.log('✅ Branding encontrado:', data);
           return data;
         } else {
-          console.log('🔄 Nenhum dado encontrado, usando fallback da BP Sales...');
           return FALLBACK_BRANDING;
         }
       } catch (err) {
-        console.error('❌ Erro inesperado:', err);
-        console.log('🔄 Usando fallback da BP Sales...');
         return FALLBACK_BRANDING;
       }
     },

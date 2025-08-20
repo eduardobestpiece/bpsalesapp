@@ -29,8 +29,7 @@ const CrmLogin = () => {
 
   // Debug: Log do branding
   useEffect(() => {
-    console.log('🔐 Login - Branding carregado:', defaultBranding);
-    console.log('🔐 Login - Logo URL:', defaultBranding?.logo_horizontal_url);
+    // logs removidos
   }, [defaultBranding]);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -61,7 +60,7 @@ const CrmLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-[#131313] dark:to-[#1E1E1E] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#131313] via-[#1E1E1E] to-[#161616] flex items-center justify-center p-4">
       {/* Botão de alternância de tema */}
       <div className="absolute top-4 right-4">
         <ThemeSwitch />
@@ -81,9 +80,9 @@ const CrmLogin = () => {
           )}
         </div>
 
-        <Card className="shadow-lg border-0 bg-background dark:bg-[#1F1F1F] border-border" style={{ borderColor: 'rgba(var(--brand-rgb, 168,110,87), 0.20)' }}>
+        <Card className="w-full bg-[#1F1F1F]/95 backdrop-blur-sm shadow-xl border-white/10">
           <CardHeader className="text-center">
-            <CardTitle className="text-2xl text-foreground dark:text-white">Acessar Plataforma</CardTitle>
+            <CardTitle className="text-xl md:text-[26px] font-bold text-white mb-4">Acessar Plataforma</CardTitle>
             <CardDescription className="text-muted-foreground dark:text-gray-300">
               Preencha os campos para acessar a plataforma
             </CardDescription>
@@ -106,39 +105,29 @@ const CrmLogin = () => {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-foreground dark:text-white">Email</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="seu@email.com"
+                   placeholder="Digite o seu email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   disabled={isLoading}
-                  className="bg-background dark:bg-[#1F1F1F] border-border text-foreground dark:text-white"
-                  style={{ 
-                    borderColor: defaultBranding?.secondary_color || '#7c032e',
-                    borderWidth: '2px'
-                  }}
+                   className="h-12 text-base md:text-lg bg-[#2A2A2A] border-white/20 text-white placeholder:text-gray-400 focus:border-white/40 focus:ring-white/20"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-foreground dark:text-white">Senha</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="Sua senha"
+                     placeholder="Informe sua senha"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={isLoading}
-                    className="bg-background dark:bg-[#1F1F1F] border-border text-foreground dark:text-white pr-10"
-                    style={{ 
-                      borderColor: defaultBranding?.secondary_color || '#7c032e',
-                      borderWidth: '2px'
-                    }}
+                     className="h-12 text-base md:text-lg bg-[#2A2A2A] border-white/20 text-white placeholder:text-gray-400 focus:border-white/40 focus:ring-white/20 pr-10"
                   />
                   <Button
                     type="button"
@@ -161,12 +150,8 @@ const CrmLogin = () => {
             <CardFooter className="flex flex-col space-y-4">
               <Button
                 type="submit"
-                className="w-full text-white font-semibold"
+                className="w-full h-12 text-base md:text-lg font-semibold bg-gradient-to-r from-[#e50f5f] to-[#d40a4f] hover:opacity-90 transition-all duration-300 shadow-lg text-white"
                 disabled={isLoading}
-                style={{ 
-                  backgroundColor: defaultBranding?.primary_color || '#e50f5f',
-                  borderColor: defaultBranding?.primary_color || '#e50f5f'
-                }}
               >
                 {isLoading ? (
                   <>

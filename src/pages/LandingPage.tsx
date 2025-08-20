@@ -76,8 +76,7 @@ export default function LandingPage() {
 
   // Debug: Log do branding
   useEffect(() => {
-    console.log('🎯 Landing - Branding carregado:', defaultBranding);
-    console.log('🎯 Landing - Logo URL:', defaultBranding?.logo_horizontal_url);
+    // logs removidos
   }, [defaultBranding]);
 
   // Atualizar formData com as informações do usuário quando disponíveis
@@ -129,33 +128,7 @@ export default function LandingPage() {
       return;
     }
     
-    // Log das informações capturadas para debug
-    console.log('📊 Informações do Lead:', {
-      dados: {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        consortiumExperience: formData.consortiumExperience ? consortiumExperienceOptions.find(opt => opt.value === formData.consortiumExperience)?.label || formData.consortiumExperience : "Não informado",
-        teamSize: formData.teamSize ? teamSizeOptions.find(opt => opt.value === formData.teamSize)?.label || formData.teamSize : "Não informado"
-      },
-      tracking: {
-        browser: formData.browser,
-        device: formData.device,
-        ip: formData.ip,
-        fullUrl: formData.fullUrl,
-        urlWithoutParams: formData.urlWithoutParams,
-        urlParams: formData.urlParams,
-        utm_campaign: formData.utm_campaign,
-        utm_medium: formData.utm_medium,
-        utm_content: formData.utm_content,
-        utm_source: formData.utm_source,
-        utm_term: formData.utm_term,
-        gclid: formData.gclid,
-        fbclid: formData.fbclid,
-        fbp: formData.fbp,
-        fbc: formData.fbc
-      }
-    });
+    // log removido (lead info)
     
     // Salvar dados no localStorage para usar depois do pagamento
     localStorage.setItem("leadData", JSON.stringify(formData));

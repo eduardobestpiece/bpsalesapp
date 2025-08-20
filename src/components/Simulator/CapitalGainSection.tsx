@@ -334,8 +334,13 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
 
   // Estado para exibir/ocultar configurações
   const [showConfig, setShowConfig] = useState(false);
-  // Estado local para edição do ágio
-  const [pendingAgio, setPendingAgio] = useState(agioPercent);
+  // Estado local para edição do ágio - inicializar com o valor atual
+  const [pendingAgio, setPendingAgio] = useState<number>(agioPercent);
+
+  // Sincronizar pendingAgio com agioPercent quando ele mudar
+  useEffect(() => {
+    setPendingAgio(agioPercent);
+  }, [agioPercent]);
 
   if (!creditoAcessado) {
     return (
@@ -373,7 +378,7 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
             <Input
               type="number"
               value={pendingAgio}
-              onChange={e => { const num = Number(e.target.value); console.debug('[Sim/Financeira] agioPercent ->', num); setPendingAgio(num); }}
+              onChange={e => { const num = Number(e.target.value); setPendingAgio(num); }}
               min={0}
               max={100}
               step={0.1}
@@ -383,7 +388,7 @@ export const CapitalGainSection: React.FC<CapitalGainSectionProps> = ({
               type="button"
               className="ml-2 underline cursor-pointer"
               style={{ color: 'var(--brand-primary)' }}
-              onClick={() => { console.debug('[Sim/Financeira] aplicar agioPercent ->', pendingAgio); setAgioPercent(pendingAgio); }}
+              onClick={() => { setAgioPercent(pendingAgio); }}
             >
               Aplicar
             </button>

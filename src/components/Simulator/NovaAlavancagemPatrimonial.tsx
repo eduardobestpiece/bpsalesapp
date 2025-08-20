@@ -14,6 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { FullScreenModal } from '../ui/FullScreenModal';
 import { useSimulatorContext } from '@/components/Layout/SimulatorLayout';
+import { useCompany } from '@/contexts/CompanyContext';
 
 type Leverage = Database['public']['Tables']['leverages']['Row'];
 
@@ -70,6 +71,8 @@ export const NovaAlavancagemPatrimonial = ({
   periodoCompra?: number // NOVO: período de compra em meses
 }) => {
   const simCtx = useSimulatorContext();
+  const { selectedCompanyId } = useCompany();
+  
   // Estados dos filtros
   const [alavancas, setAlavancas] = useState<Leverage[]>([]);
   const [alavancaSelecionada, setAlavancaSelecionada] = useState<string>('');
@@ -119,11 +122,18 @@ export const NovaAlavancagemPatrimonial = ({
   // Buscar alavancas do Supabase ao montar
   useEffect(() => {
     const fetchAlavancas = async () => {
+      if (!selectedCompanyId) {
+        setAlavancas([]);
+        return;
+      }
+
       setLoading(true);
       try {
         const { data, error } = await supabase
           .from('leverages')
           .select('*')
+          .eq('company_id', selectedCompanyId)
+          .eq('is_archived', false)
           .order('name');
         
         if (error) {
@@ -142,7 +152,7 @@ export const NovaAlavancagemPatrimonial = ({
     };
 
     fetchAlavancas();
-  }, []);
+  }, [selectedCompanyId]);
 
   // Buscar dados da alavanca selecionada
   const alavanca = useMemo(() => alavancas.find(a => a.id === alavancaSelecionada), [alavancas, alavancaSelecionada]);
@@ -467,7 +477,8 @@ export const NovaAlavancagemPatrimonial = ({
       customAdminTaxPercent,
       customReserveFundPercent,
       customAnnualUpdateRate,
-      maxEmbeddedPercentage
+      maxEmbeddedPercentage,
+      specialEntryEnabled: simCtx.specialEntryEnabled
     });
     for (let mes = 1; mes <= prazoTotal + 1; mes++) {
       let ganhos = 0;
@@ -776,6 +787,7 @@ export const NovaAlavancagemPatrimonial = ({
         agioPercent={agioPercent}
         periodoCompra={periodoCompraLocal}
         valorAlavancaNum={valor}
+        specialEntryEnabled={simCtx.specialEntryEnabled}
         onTableDataGenerated={(tableData) => {
           // Se for alavancagem escalonada, usar os dados calculados pela função escalonada
           if (isAlavancagemEscalonada) {

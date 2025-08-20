@@ -302,4 +302,26 @@ All colors MUST be HSL.
     background-color: var(--brand-secondary) !important;
     color: #fff !important;
   }
+
+  /* Forçar alinhamento à esquerda nos Selects */
+  .select-text-left {
+    text-align: left !important;
+  }
+  .select-text-left [data-radix-select-trigger] {
+    justify-content: flex-start !important;
+  }
+  .select-text-left [data-radix-select-value] {
+    text-align: left !important;
+    justify-content: flex-start !important;
+  }
+
+  /* Override específico para alinhamento à esquerda */
+  .select-trigger-secondary[class*="text-left"] {
+    justify-content: flex-start !important;
+  }
+  .select-trigger-secondary[class*="text-left"] > span {
+    text-align: left !important;
+    justify-content: flex-start !important;
+    width: 100% !important;
+  }
 }

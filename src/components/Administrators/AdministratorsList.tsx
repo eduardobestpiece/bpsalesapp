@@ -21,6 +21,12 @@ interface Administrator {
   grace_period_days: number;
   max_embedded_percentage: number;
   special_entry_type: string;
+  special_entry_percentage: number;
+  special_entry_fixed_value: number;
+  special_entry_installments: number;
+  functioning: string;
+  post_contemplation_adjustment: number;
+  agio_purchase_percentage: number;
   is_archived: boolean;
   created_at: string;
   is_default: boolean;
@@ -31,6 +37,43 @@ interface AdministratorsListProps {
   statusFilter: 'all' | 'active' | 'archived';
   onEdit: (admin: Administrator) => void;
 }
+
+// Função para formatar a entrada especial
+const formatSpecialEntry = (admin: Administrator): string => {
+  if (!admin.special_entry_type || admin.special_entry_type === 'none') {
+    return 'Não';
+  }
+
+  let entryText = '';
+  
+  switch (admin.special_entry_type) {
+    case 'percentage':
+      if (admin.special_entry_percentage) {
+        entryText = `${admin.special_entry_percentage}%`;
+      }
+      break;
+    case 'fixed_value':
+      if (admin.special_entry_fixed_value) {
+        entryText = `R$ ${admin.special_entry_fixed_value.toLocaleString('pt-BR')}`;
+      }
+      break;
+    default:
+      return 'Não';
+  }
+
+  // Adicionar informações de parcelas se aplicável
+  if (admin.special_entry_installments && admin.special_entry_installments > 1) {
+    entryText += ` (${admin.special_entry_installments}x)`;
+  }
+
+  // Adicionar tipo de funcionamento se aplicável
+  if (admin.functioning) {
+    const functioningText = admin.functioning === 'included' ? 'Incluso' : 'Adicional';
+    entryText += ` - ${functioningText}`;
+  }
+
+  return entryText || 'Sim';
+};
 
 export const AdministratorsList: React.FC<AdministratorsListProps> = ({
   searchTerm,
@@ -181,10 +224,11 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
           <TableRow>
             <TableHead></TableHead>
             <TableHead>Nome</TableHead>
-            <TableHead>Tipo de Atualização</TableHead>
-            <TableHead>Mês de Atualização</TableHead>
-            <TableHead>% Máx. Embutido</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead>% Máx. Embutido</TableHead>
+            <TableHead>Entrada especial</TableHead>
+            <TableHead>Ajuste de contemplação</TableHead>
+            <TableHead>Agio de compra</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
@@ -202,13 +246,6 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
               </TableCell>
               <TableCell className="font-medium">{admin.name}</TableCell>
               <TableCell>
-                <Badge variant="outline" className="brand-radius">
-                  {admin.credit_update_type === 'monthly' ? 'Mensal' : 'Anual'}
-                </Badge>
-              </TableCell>
-              <TableCell>{admin.update_month || '-'}</TableCell>
-              <TableCell>{admin.max_embedded_percentage ? `${admin.max_embedded_percentage}%` : '-'}</TableCell>
-              <TableCell>
                 {admin.is_archived ? (
                   <Badge variant="destructive" style={{ borderRadius: 'var(--brand-radius, 8px)' }}>
                     Arquivado
@@ -222,6 +259,10 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
                   </Badge>
                 )}
               </TableCell>
+              <TableCell>{admin.max_embedded_percentage ? `${admin.max_embedded_percentage}%` : '-'}</TableCell>
+              <TableCell>{formatSpecialEntry(admin)}</TableCell>
+              <TableCell>{admin.post_contemplation_adjustment ? `${admin.post_contemplation_adjustment}%` : '-'}</TableCell>
+              <TableCell>{admin.agio_purchase_percentage ? `${admin.agio_purchase_percentage}%` : '-'}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end space-x-2">
                   <Button

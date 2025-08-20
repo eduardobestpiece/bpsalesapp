@@ -17,8 +17,7 @@ export default function Home() {
 
   // Debug: Log do branding
   useEffect(() => {
-    console.log('🏠 Home - Branding carregado:', defaultBranding);
-    console.log('🏠 Home - Logo URL:', defaultBranding?.logo_horizontal_url);
+    // logs removidos
   }, [defaultBranding]);
 
   // Buscar keys de páginas do módulo Configurações
@@ -74,7 +73,7 @@ export default function Home() {
         <ThemeSwitch />
       </div>
       
-      <h1 className="font-bold mb-12 text-white text-center drop-shadow" style={{ fontSize: '42px' }}>
+      <h1 className="text-[28px] md:text-[44px] font-bold text-white mb-4 text-center">
         Bem-vindo à Plataforma
       </h1>
       

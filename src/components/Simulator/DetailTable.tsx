@@ -7,6 +7,7 @@ import { Settings, ChevronDown, ChevronUp, Target } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
 import { simInfoLog } from '@/lib/devlog';
+import { calculateSpecialEntry, calculateSpecialEntryImpact } from '@/utils/consortiumInstallments';
 
 interface DetailTableProps {
   product: any;
@@ -16,12 +17,14 @@ interface DetailTableProps {
   creditoAcessado?: number; // Crédito acessado total
   embutido?: 'com' | 'sem'; // Estado do embutido
   installmentType?: string; // Tipo de parcela: 'full', 'half', 'reduced' ou ID da redução
+  reductionDataProp?: any; // Dados da redução (opcional)
   customAdminTaxPercent?: number; // Taxa de administração customizada
   customReserveFundPercent?: number; // Fundo de reserva customizado
   customAnnualUpdateRate?: number; // Taxa de atualização anual customizada
   agioPercent?: number; // NOVO: percentual de ágio
   periodoCompra?: number; // NOVO: período de compra em meses
   valorAlavancaNum?: number; // NOVO: valor numérico da alavanca
+  specialEntryEnabled?: boolean; // NOVO: se deve considerar entrada especial nos cálculos
   onFirstRowData?: (data: { credit: number, installmentValue: number }) => void; // Callback para expor dados da primeira linha
   onContemplationRowData?: (data: { creditAccessed: number, month: number, parcelaAfter?: number, somaParcelasAteContemplacao?: number, mesContemplacao?: number }) => void; // Callback para expor dados da linha de contemplação
   onTableDataGenerated?: (tableData: any[]) => void; // Callback para sincronizar dados com outros componentes
@@ -35,12 +38,14 @@ export const DetailTable = ({
   creditoAcessado = 0,
   embutido = 'sem',
   installmentType = 'full',
+  reductionDataProp,
   customAdminTaxPercent,
   customReserveFundPercent,
   customAnnualUpdateRate,
   agioPercent = 17, // padrão 17%
   periodoCompra,
   valorAlavancaNum,
+  specialEntryEnabled = true,
   onFirstRowData,
   onContemplationRowData,
   onTableDataGenerated
@@ -61,6 +66,7 @@ export const DetailTable = ({
     agio: false,
     lucro: false,
     roi: false,
+    entradaEspecial: false, // Nova coluna para entrada especial
     // lucroMes: false, // removido
   });
 
@@ -76,7 +82,98 @@ export const DetailTable = ({
   // Ref para a linha de contemplação e última linha
   const contemplationRowRef = useRef<HTMLTableRowElement>(null);
   const lastRowRef = useRef<HTMLTableRowElement>(null);
+  const firstRowRef = useRef<HTMLTableRowElement>(null); // Ref para a primeira linha
   const [highlightContemplation, setHighlightContemplation] = useState(false);
+  const [reductionData, setReductionData] = useState<any>(null);
+  const [reductionCache, setReductionCache] = useState<{[key: string]: any}>({});
+  
+  // Estados para controlar os ícones de navegação
+  const [isTargetAtContemplation, setIsTargetAtContemplation] = useState(true); // true = vai para contemplação, false = vai para primeira linha
+  const [isChevronAtLast, setIsChevronAtLast] = useState(true); // true = vai para última linha, false = vai para primeira linha
+
+  // Funções para lidar com os cliques nos ícones
+  const handleTargetClick = () => {
+    if (isTargetAtContemplation) {
+      // Vai para contemplação
+      if (contemplationRowRef.current) {
+        contemplationRowRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setHighlightContemplation(true);
+        setTimeout(() => setHighlightContemplation(false), 2000);
+      }
+      setIsTargetAtContemplation(false);
+    } else {
+      // Vai para primeira linha
+      if (firstRowRef.current) {
+        firstRowRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      setIsTargetAtContemplation(true);
+    }
+  };
+
+  const handleChevronClick = () => {
+    if (isChevronAtLast) {
+      // Vai para última linha
+      if (lastRowRef.current) {
+        lastRowRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      setIsChevronAtLast(false);
+    } else {
+      // Vai para primeira linha
+      if (firstRowRef.current) {
+        firstRowRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      setIsChevronAtLast(true);
+    }
+  };
+
+  // Buscar dados da redução quando installmentType não for 'full'
+  useEffect(() => {
+    const fetchReductionData = async () => {
+      // Se temos dados da redução via props, usar eles
+      if (reductionDataProp) {
+        setReductionData(reductionDataProp);
+        return;
+      }
+
+      // Só buscar se installmentType não for 'full' e se mudou
+      if (installmentType && installmentType !== 'full') {
+        // Verificar cache primeiro
+        if (reductionCache[installmentType]) {
+          setReductionData(reductionCache[installmentType]);
+          return;
+        }
+
+        try {
+          const { data: reducoes } = await supabase
+            .from('installment_reductions')
+            .select('*')
+            .eq('is_archived', false)
+            .eq('id', installmentType)
+            .limit(1);
+          
+          if (reducoes && reducoes.length > 0) {
+            // Salvar no cache
+            setReductionCache(prev => ({ ...prev, [installmentType]: reducoes[0] }));
+            setReductionData(reducoes[0]);
+          }
+        } catch (error) {
+          // Se não conseguir buscar, usar fallback para administradora "teste"
+          if (administrator.name === 'teste') {
+            const fallbackData = {
+              reduction_percent: 40,
+              applications: ['installment', 'admin_tax']
+            };
+            setReductionCache(prev => ({ ...prev, [installmentType]: fallbackData }));
+            setReductionData(fallbackData);
+          }
+        }
+      } else if (installmentType === 'full') {
+        setReductionData(null);
+      }
+    };
+
+    fetchReductionData();
+  }, [installmentType, administrator.name, reductionDataProp]);
 
   // Sincronizar scroll horizontal
   useEffect(() => {
@@ -209,10 +306,15 @@ export const DetailTable = ({
       return (totalCredit + adminTax + reserveFund) / (product.termMonths || 240);
     }
 
-    // Para parcelas especiais, usar valores padrão se não conseguir buscar do banco
-    // Isso evita problemas de performance e loops infinitos
-    const reductionPercent = 0.5; // 50% de redução padrão
-    const applications = ['installment']; // Aplicar apenas no crédito por padrão
+    // Para parcelas especiais, usar dados da redução passados via props
+    let reductionPercent = 0.5; // 50% de redução padrão como fallback
+    let applications = ['installment']; // Aplicar apenas no crédito por padrão
+
+    // Se temos dados da redução no estado local, usar eles
+    if (reductionData) {
+      reductionPercent = reductionData.reduction_percent / 100;
+      applications = reductionData.applications || ['installment'];
+    }
 
     // Calcular componentes com redução conforme a fórmula especificada
     let principal = credit;
@@ -227,13 +329,20 @@ export const DetailTable = ({
     }
 
     // Aplicar reduções conforme configuração usando a fórmula correta
-    // Fórmula: (Crédito * (1 - redução)) + Taxa de Administração + Fundo de Reserva
+    // Aplicar redução no principal se configurado
     if (applications.includes('installment')) {
       principal = principal * (1 - reductionPercent); // Crédito * (1 - redução)
     }
-    // Taxa de administração e fundo de reserva NÃO são reduzidos
-    // adminTax = adminTax (sem redução)
-    // reserveFund = reserveFund (sem redução)
+    
+    // Aplicar redução na taxa de administração se configurado
+    if (applications.includes('admin_tax')) {
+      adminTax = adminTax * (1 - reductionPercent);
+    }
+    
+    // Aplicar redução no fundo de reserva se configurado
+    if (applications.includes('reserve_fund')) {
+      reserveFund = reserveFund * (1 - reductionPercent);
+    }
 
     const result = (principal + adminTax + reserveFund) / (product.termMonths || 240);
     
@@ -272,6 +381,10 @@ export const DetailTable = ({
       const credito = calculateCreditValue(month, baseCredit);
       const creditoAcessado = calculateCreditoAcessado(month, baseCredit);
       
+      // Calcular entrada especial
+      const specialEntryValue = specialEntryEnabled ? calculateSpecialEntry(administrator, baseCredit, month) : 0;
+      const specialEntryImpact = specialEntryEnabled ? calculateSpecialEntryImpact(administrator, baseCredit, month) : { additionalDebt: 0, includedDebt: 0 };
+      
       // Calcular taxa de administração e fundo de reserva
       let taxaAdmin, fundoReserva;
       
@@ -283,6 +396,16 @@ export const DetailTable = ({
         // Antes da contemplação: calcula sobre o crédito normal
         taxaAdmin = credito * adminTaxRate;
         fundoReserva = credito * reserveFundRate;
+        
+        // Aplicar redução na taxa de administração se for parcela especial
+        if (installmentType !== 'full' && reductionData && reductionData.applications && reductionData.applications.includes('admin_tax')) {
+          taxaAdmin = taxaAdmin * (1 - reductionData.reduction_percent / 100);
+        }
+        
+        // Aplicar redução no fundo de reserva se for parcela especial
+        if (installmentType !== 'full' && reductionData && reductionData.applications && reductionData.applications.includes('reserve_fund')) {
+          fundoReserva = fundoReserva * (1 - reductionData.reduction_percent / 100);
+        }
       } else if (month === contemplationMonth + 1) {
         // Primeiro mês após contemplação: ZERAR taxa admin e fundo reserva
         taxaAdmin = 0;
@@ -310,56 +433,62 @@ export const DetailTable = ({
       if (month <= contemplationMonth) {
         // Antes da contemplação: usar regras da parcela (cheia ou especial)
         if (installmentType === 'full') {
-          // Parcela cheia: (Valor do Crédito + Taxa de Administração + Fundo de Reserva) / Prazo
-          valorParcela = (credito + taxaAdmin + fundoReserva) / (product.termMonths || 240);
+          // Parcela cheia: (Valor do Crédito + Taxa de Administração + Fundo de Reserva + Entrada Especial) / Prazo
+          valorParcela = (credito + taxaAdmin + fundoReserva + specialEntryValue) / (product.termMonths || 240);
         } else {
-          // Parcela especial: aplicar reduções conforme configuração
-          valorParcela = calculateSpecialInstallment(credito, month, false);
+          // Parcela especial: aplicar reduções conforme configuração + entrada especial
+          valorParcela = calculateSpecialInstallment(credito, month, false) + specialEntryValue;
         }
       } else {
         // Após contemplação: REGRA IGUAL PARA AMBOS OS TIPOS
-        // Saldo devedor / (Prazo - número de Parcelas pagas)
+        // Saldo devedor / (Prazo - número de Parcelas pagas) + entrada especial se aplicável
         const parcelasPagas = contemplationMonth;
         const prazoRestante = (product.termMonths || 240) - parcelasPagas;
         
-        // Meses seguintes: usar o valor fixo até próxima atualização
-        valorParcela = valorParcelaFixo;
+        if (month === contemplationMonth + 1) {
+          // Primeiro mês após contemplação: calcular parcela fixa baseada no saldo devedor + entrada especial
+          valorParcela = saldoDevedorAcumulado / prazoRestante + specialEntryValue;
+          valorParcelaFixo = valorParcela; // Fixar o valor para os próximos meses
+        } else {
+          // Meses seguintes: usar o valor fixo até próxima atualização + entrada especial
+          valorParcela = valorParcelaFixo + specialEntryValue;
         
         // Verificar se é mês de atualização anual
         const isAnnualUpdate = (month - 1) % 12 === 0 && month > contemplationMonth;
         if (isAnnualUpdate) {
-          // Recalcular parcela com saldo devedor atualizado
+            // Recalcular parcela com saldo devedor atualizado + entrada especial
           const parcelasPagasAteAgora = month - 1;
           const prazoRestanteAtualizado = (product.termMonths || 240) - parcelasPagasAteAgora;
           
-          // REGRA IGUAL PARA AMBOS OS TIPOS: saldo devedor / prazo restante
-          valorParcela = saldoDevedorAcumulado / prazoRestanteAtualizado;
+            // REGRA IGUAL PARA AMBOS OS TIPOS: saldo devedor / prazo restante + entrada especial
+            valorParcela = saldoDevedorAcumulado / prazoRestanteAtualizado + specialEntryValue;
           valorParcelaFixo = valorParcela; // Atualizar valor fixo
+          }
         }
       }
       
       // Calcular o saldo devedor
       if (month === 1) {
-        // Primeiro mês: soma de Crédito + Taxa de Administração + Fundo de Reserva
-        valorBaseInicial = credito + taxaAdmin + fundoReserva;
+        // Primeiro mês: soma de Crédito + Taxa de Administração + Fundo de Reserva + Entrada Especial Adicional
+        valorBaseInicial = credito + taxaAdmin + fundoReserva + specialEntryImpact.additionalDebt;
         saldoDevedorAcumulado = valorBaseInicial;
       } else if (month <= contemplationMonth) {
-        // Antes da contemplação: (Crédito + Taxa + Fundo Reserva) - soma das parcelas anteriores
-        const valorBase = credito + taxaAdmin + fundoReserva;
+        // Antes da contemplação: (Crédito + Taxa + Fundo Reserva + Entrada Especial Adicional) - soma das parcelas anteriores
+        const valorBase = credito + taxaAdmin + fundoReserva + specialEntryImpact.additionalDebt;
         const somaParcelasAnteriores = data.slice(0, month - 1).reduce((sum, row) => sum + row.valorParcela, 0);
         saldoDevedorAcumulado = valorBase - somaParcelasAnteriores;
       } else {
         // Após a contemplação: nova lógica baseada no crédito acessado
         if (month === contemplationMonth) {
-          // Mês da contemplação: saldo baseado no crédito acessado + taxa admin + fundo reserva - parcelas pagas
+          // Mês da contemplação: saldo baseado no crédito acessado + taxa admin + fundo reserva + entrada especial adicional - parcelas pagas
           const creditoAcessadoContemplacaoTemp = calculateCreditoAcessado(contemplationMonth, baseCredit);
           
           // SEMPRE calcular taxa admin e fundo reserva sobre o crédito original (não sobre o crédito acessado)
           const taxaAdminContemplacao = credito * adminTaxRate;
           const fundoReservaContemplacao = credito * reserveFundRate;
           
-          // Cálculo correto: (Crédito acessado + Taxa admin + Fundo reserva) - Parcelas pagas até o mês anterior
-          const valorBasePosContemplacao = creditoAcessadoContemplacaoTemp + taxaAdminContemplacao + fundoReservaContemplacao;
+          // Cálculo correto: (Crédito acessado + Taxa admin + Fundo reserva + Entrada Especial Adicional) - Parcelas pagas até o mês anterior
+          const valorBasePosContemplacao = creditoAcessadoContemplacaoTemp + taxaAdminContemplacao + fundoReservaContemplacao + specialEntryImpact.additionalDebt;
           const somaParcelasAteContemplacao = data.slice(0, contemplationMonth - 1).reduce((sum, row) => sum + row.valorParcela, 0);
           
           let saldoDevedorPosContemplacao = valorBasePosContemplacao - somaParcelasAteContemplacao;
@@ -502,7 +631,8 @@ export const DetailTable = ({
         lucro,
         roi,
         isContemplationMonth,
-        fluxoCaixa // NOVO campo
+        fluxoCaixa, // NOVO campo
+        entradaEspecial: specialEntryValue // Nova coluna para entrada especial
       });
     }
     
@@ -521,7 +651,7 @@ export const DetailTable = ({
   // Executar cálculo quando as dependências mudarem
   useEffect(() => {
     generateTableData();
-  }, [product, administrator, contemplationMonth, selectedCredits, creditoAcessado, installmentType, customAdminTaxPercent, customReserveFundPercent, customAnnualUpdateRate, agioPercent, periodoCompra, valorAlavancaNum]);
+  }, [product, administrator, contemplationMonth, selectedCredits, creditoAcessado, installmentType, customAdminTaxPercent, customReserveFundPercent, customAnnualUpdateRate, agioPercent, periodoCompra, valorAlavancaNum, specialEntryEnabled]);
 
   // Notificar dados da primeira linha quando disponíveis
   useEffect(() => {
@@ -620,18 +750,16 @@ export const DetailTable = ({
         <div className="flex justify-between items-center">
           <CardTitle>Detalhamento do Consórcio</CardTitle>
           <div className="flex items-center gap-2">
-            <Target size={20} onClick={() => {
-              if (contemplationRowRef.current) {
-                contemplationRowRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                setHighlightContemplation(true);
-                setTimeout(() => setHighlightContemplation(false), 2000);
-              }
-            }} style={{ cursor: 'pointer' }} />
-            <ChevronDown size={20} onClick={() => {
-              if (lastRowRef.current) {
-                lastRowRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              }
-            }} style={{ cursor: 'pointer' }} />
+            {isTargetAtContemplation ? (
+              <Target size={20} onClick={handleTargetClick} style={{ cursor: 'pointer' }} />
+            ) : (
+              <ChevronUp size={20} onClick={handleTargetClick} style={{ cursor: 'pointer' }} />
+            )}
+            {isChevronAtLast ? (
+              <ChevronDown size={20} onClick={handleChevronClick} style={{ cursor: 'pointer' }} />
+            ) : (
+              <ChevronUp size={20} onClick={handleChevronClick} style={{ cursor: 'pointer' }} />
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -682,6 +810,7 @@ export const DetailTable = ({
                     {key === 'agio' && 'Ágio'}
                     {key === 'lucro' && 'Lucro'}
                     {key === 'roi' && 'ROI'}
+                    {key === 'entradaEspecial' && 'Entrada Especial'}
                   </Badge>
                 ))}
               </div>
@@ -716,6 +845,7 @@ export const DetailTable = ({
                       {key === 'agio' && 'Ágio'}
                       {key === 'lucro' && 'Lucro'}
                       {key === 'roi' && 'ROI'}
+                      {key === 'entradaEspecial' && 'Entrada Especial'}
                     </th>
                   ))}
                 </tr>
@@ -738,6 +868,7 @@ export const DetailTable = ({
                     <tr
                       key={row.mes}
                       ref={
+                        rowIdx === 0 ? firstRowRef :
                         row.isContemplationMonth ? contemplationRowRef :
                         rowIdx === tableData.length - 1 ? lastRowRef : undefined
                       }
@@ -760,6 +891,7 @@ export const DetailTable = ({
                           {key === 'agio' && formatCurrency(row.agio)}
                           {key === 'lucro' && formatCurrency(row.lucro)}
                           {key === 'roi' && `${(row.roi * 100).toFixed(2)}%`}
+                          {key === 'entradaEspecial' && formatCurrency(row.entradaEspecial)}
                         </td>
                       ))}
                     </tr>

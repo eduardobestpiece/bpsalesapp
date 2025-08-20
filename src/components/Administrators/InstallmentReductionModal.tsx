@@ -18,7 +18,6 @@ const applicationsOptions = [
   { value: 'installment', label: 'Parcela' },
   { value: 'admin_tax', label: 'Taxa de administração' },
   { value: 'reserve_fund', label: 'Fundo de reserva' },
-  { value: 'insurance', label: 'Seguro' },
 ];
 
 const reductionSchema = z.object({
@@ -48,6 +47,7 @@ export const InstallmentReductionModal: React.FC<InstallmentReductionModalProps>
   const { selectedCompanyId } = useCompany();
   const [administrators, setAdministrators] = React.useState<any[]>([]);
   const [showCreateAdminModal, setShowCreateAdminModal] = React.useState(false);
+  const [selectedAdminId, setSelectedAdminId] = React.useState<string>('');
 
   const form = useForm<ReductionFormData>({
     resolver: zodResolver(reductionSchema),
@@ -62,7 +62,14 @@ export const InstallmentReductionModal: React.FC<InstallmentReductionModalProps>
   useEffect(() => {
     if (open) {
       fetchAdministrators();
+    }
+    // eslint-disable-next-line
+  }, [open, selectedCompanyId]);
+
+  useEffect(() => {
+    if (open && administrators.length > 0) {
       if (reduction && !isCopy) {
+        setSelectedAdminId(reduction.administrator_id);
         form.reset({
           name: reduction.name,
           administrator_id: reduction.administrator_id,
@@ -70,6 +77,7 @@ export const InstallmentReductionModal: React.FC<InstallmentReductionModalProps>
           applications: reduction.applications,
         });
       } else if (reduction && isCopy) {
+        setSelectedAdminId('');
         form.reset({
           name: reduction.name,
           administrator_id: '', // Força seleção de nova administradora
@@ -77,6 +85,7 @@ export const InstallmentReductionModal: React.FC<InstallmentReductionModalProps>
           applications: reduction.applications,
         });
       } else {
+        setSelectedAdminId('');
         form.reset({
           name: '',
           administrator_id: '',
@@ -86,7 +95,7 @@ export const InstallmentReductionModal: React.FC<InstallmentReductionModalProps>
       }
     }
     // eslint-disable-next-line
-  }, [open, reduction, isCopy, selectedCompanyId]);
+  }, [open, reduction, isCopy, administrators]);
 
   const fetchAdministrators = async () => {
     if (!selectedCompanyId) { setAdministrators([]); return; }
@@ -99,127 +108,187 @@ export const InstallmentReductionModal: React.FC<InstallmentReductionModalProps>
     if (!error) setAdministrators(data || []);
   };
 
-  const onSubmit = async (data: ReductionFormData) => {
+  const onSubmit = (data: any) => {
+    // Lógica de salvamento movida para handleSaveClick
+  };
+
+  const handleSaveClick = async () => {
+    // Validar se temos os dados necessários
+    const formValues = form.getValues();
+    const name = formValues.name;
+    const reduction_percent = formValues.reduction_percent;
+    const applications = formValues.applications;
+    
+    if (!selectedAdminId) {
+      toast.error('Selecione uma administradora');
+      return;
+    }
+    
+    if (!name) {
+      toast.error('Nome é obrigatório');
+      return;
+    }
+
     try {
       if (reduction && !isCopy) {
         const { error } = await supabase
           .from('installment_reductions')
           .update({
-            ...data,
-            updated_at: new Date().toISOString(),
+            name: name,
+            administrator_id: selectedAdminId,
+            reduction_percent: reduction_percent,
+            applications: applications,
           })
           .eq('id', reduction.id);
-        if (error) throw error;
-        toast.success('Redução atualizada com sucesso!');
+
+        if (error) {
+          console.error('Update error:', error);
+          toast.error('Erro ao atualizar redução de parcela');
+          return;
+        }
+
+        toast.success('Redução de parcela atualizada com sucesso');
       } else {
         const { error } = await supabase
           .from('installment_reductions')
           .insert({
-            name: data.name || 'Redução padrão',
-            reduction_percent: data.reduction_percent || 0,
-            applications: data.applications || [],
-            administrator_id: data.administrator_id,
             company_id: selectedCompanyId,
+            name: name,
+            administrator_id: selectedAdminId,
+            reduction_percent: reduction_percent,
+            applications: applications,
           });
-        if (error) throw error;
-        toast.success('Redução criada com sucesso!');
+
+        if (error) {
+          console.error('Insert error:', error);
+          toast.error('Erro ao criar redução de parcela');
+          return;
+        }
+
+        toast.success('Redução de parcela criada com sucesso');
       }
-      form.reset();
+
       onSuccess();
+      onOpenChange(false); // Fechar o modal após salvar
     } catch (error) {
-      toast.error('Erro ao salvar redução');
+      console.error('Error in handleSaveClick:', error);
+      toast.error('Erro inesperado');
     }
   };
 
   return (
     <FullScreenModal
-      isOpen={open}
-      onClose={() => onOpenChange(false)}
+      open={open}
+      onOpenChange={onOpenChange}
       title={reduction && !isCopy ? 'Editar Redução de Parcela' : isCopy ? 'Copiar Redução de Parcela' : 'Nova Redução de Parcela'}
-      actions={<Button type="submit" form="reduction-form" variant="brandPrimaryToSecondary">{reduction && !isCopy ? 'Salvar' : isCopy ? 'Copiar' : 'Cadastrar'}</Button>}
+      actions={<Button 
+        type="button" 
+        variant="brandPrimaryToSecondary" 
+        className="brand-radius" 
+        onClick={handleSaveClick}
+      >
+        Salvar
+      </Button>}
     >
       <Form {...form}>
-        <form id="reduction-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Nome</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Ex: Redução Especial 20%" {...field} className="brand-radius campo-brand" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="administrator_id"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Administradora</FormLabel>
-                  <div className="flex gap-2 items-center">
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger className="brand-radius select-trigger-brand">
-                          <SelectValue placeholder="Selecione uma administradora" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {administrators.map((admin) => (
-                          <SelectItem key={admin.id} value={admin.id} className="dropdown-item-brand">{admin.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Button type="button" variant="brandOutlineSecondaryHover" size="sm" className="brand-radius" onClick={() => setShowCreateAdminModal(true)}>
-                      +
-                    </Button>
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="reduction_percent"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Percentual reduzido (%)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      min={0}
-                      max={100}
-                      step={0.01}
-                      {...field}
-                      onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : 0)}
-                      value={field.value || ''}
-                      className="brand-radius campo-brand"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="applications"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Aplicação</FormLabel>
-                  <FormControl>
-                    <MultiSelect
-                      options={applicationsOptions}
-                      value={field.value}
-                      onChange={field.onChange}
-                      placeholder="Selecione as aplicações"
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+        <form id="reduction-form" onSubmit={form.handleSubmit((data) => {
+          onSubmit(data);
+        }, (errors) => {
+          // Erro de validação tratado silenciosamente
+        })} className="space-y-4">
+            <div className="space-y-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nome</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        placeholder="Nome da redução" 
+                        className="campo-brand brand-radius field-secondary-focus no-ring-focus"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="administrator_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Administradora</FormLabel>
+                    <div className="flex gap-2 items-center">
+                      <Select 
+                        onValueChange={(value) => {
+                          setSelectedAdminId(value);
+                          field.onChange(value);
+                        }}
+                        value={selectedAdminId || field.value || ''}
+                      >
+                        <FormControl>
+                          <SelectTrigger className="select-trigger-brand brand-radius">
+                            <SelectValue placeholder="Selecione uma administradora" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {administrators.map((admin) => (
+                            <SelectItem key={admin.id} value={admin.id} className="dropdown-item-brand">{admin.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Button type="button" variant="brandOutlineSecondaryHover" size="sm" className="brand-radius" onClick={() => setShowCreateAdminModal(true)}>
+                        +
+                      </Button>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="reduction_percent"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Percentual de Redução (%)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        {...field} 
+                        type="number" 
+                        placeholder="0" 
+                        className="campo-brand brand-radius field-secondary-focus no-ring-focus"
+                        onChange={(e) => field.onChange(Number(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="applications"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Aplicações</FormLabel>
+                    <FormControl>
+                      <MultiSelect
+                        options={applicationsOptions}
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="Selecione as aplicações"
+                        className="brand-radius"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
         </form>
       </Form>
         <CreateAdministratorModal

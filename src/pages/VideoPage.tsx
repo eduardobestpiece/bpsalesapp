@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
@@ -18,13 +18,18 @@ export default function VideoPage() {
     phone: ''
   });
   const [whatsappErrors, setWhatsappErrors] = useState<{ name?: string; phone?: string }>({});
+  const [showAllContent, setShowAllContent] = useState(true);
+  const [hasInteractedWithVideo, setHasInteractedWithVideo] = useState(false);
+  const [videoProgress, setVideoProgress] = useState(0);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const NATIVE_VIDEO_URL = import.meta.env.VITE_VIDEO_URL as string | undefined;
   const navigate = useNavigate();
   const { branding: defaultBranding, isLoading: brandingLoading } = useDefaultBranding();
 
   // Debug: Log do branding
   useEffect(() => {
-    console.log('🎥 Video - Branding carregado:', defaultBranding);
-    console.log('🎥 Video - Logo URL:', defaultBranding?.logo_horizontal_url);
+    // logs removidos
   }, [defaultBranding]);
 
   useEffect(() => {
@@ -35,6 +40,79 @@ export default function VideoPage() {
 
     return () => clearTimeout(timer);
   }, []);
+
+  // Monitorar progresso do vídeo via postMessage e detecção de interação
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // Verificar se a mensagem vem do iframe do Google Drive
+      if (event.origin !== 'https://drive.google.com') return;
+      
+      try {
+        const data = event.data;
+        // log removido
+        
+        // Detectar diferentes tipos de mensagens do Google Drive
+        if (data && typeof data === 'object') {
+          // Progresso do vídeo (0-100)
+          if (data.progress !== undefined) {
+            const progress = data.progress;
+            setVideoProgress(progress);
+            // log removido
+            
+            // Se atingiu 1% e já interagiu com o vídeo, mostrar conteúdo
+            if (progress >= 1 && hasInteractedWithVideo) {
+              // log removido
+              console.log('🎥 1% atingido! Mostrando conteúdo...');
+              setShowAllContent(true);
+            }
+          }
+          
+          // Tempo atual do vídeo
+          if (data.currentTime !== undefined && data.duration !== undefined) {
+            const progress = (data.currentTime / data.duration) * 100;
+            setVideoProgress(progress);
+            // log removido
+            
+            // Se atingiu 1% e já interagiu com o vídeo, mostrar conteúdo
+            if (progress >= 1 && hasInteractedWithVideo) {
+              // log removido
+              console.log('🎥 1% atingido! Mostrando conteúdo...');
+              setShowAllContent(true);
+            }
+          }
+          
+          // Estado de reprodução
+          if (data.state === 'playing' && !hasInteractedWithVideo) {
+            // log removido
+            console.log('🎥 Vídeo começou a tocar');
+            setHasInteractedWithVideo(true);
+          }
+        }
+      } catch (error) {
+        // log removido
+        console.log('Erro ao processar mensagem do vídeo:', error);
+      }
+    };
+
+    // Adicionar listener para mensagens
+    window.addEventListener('message', handleMessage);
+    
+    return () => {
+      window.removeEventListener('message', handleMessage);
+    };
+  }, [hasInteractedWithVideo]);
+
+  // Função para enviar comandos para o iframe do Google Drive
+  const sendMessageToIframe = (message: any) => {
+    if (iframeRef.current && iframeRef.current.contentWindow) {
+      iframeRef.current.contentWindow.postMessage(message, 'https://drive.google.com');
+    }
+  };
+
+  // Função para solicitar informações do vídeo
+  const requestVideoInfo = () => {
+    sendMessageToIframe({ method: 'getVideoInfo' });
+  };
 
   const handlePayment = async () => {
     setLoading(true);
@@ -93,6 +171,55 @@ export default function VideoPage() {
 
     setShowWhatsAppModal(false);
     setWhatsappForm({ name: '', phone: '' });
+  };
+
+  // Função para detectar quando o usuário clica no vídeo
+  const handleVideoClick = () => {
+    if (!hasInteractedWithVideo) {
+      // log removido
+      console.log('🎥 Usuário clicou no vídeo! Iniciando monitoramento...');
+      setHasInteractedWithVideo(true);
+      
+      // Iniciar monitoramento do progresso real do vídeo
+      startVideoProgressMonitoring();
+    }
+  };
+
+  // Função para monitorar o progresso real do vídeo usando múltiplas estratégias
+  const startVideoProgressMonitoring = () => {
+    let progressCheckInterval: NodeJS.Timeout;
+    let elapsedTime = 0;
+    const totalDuration = 2263; // 37:43 em segundos
+    const targetProgress = 0.01; // 1%
+
+    console.log('🎥 Iniciando monitoramento de progresso...');
+
+    const checkProgress = () => {
+      // Estratégia 1: Tentar postMessage
+      sendMessageToIframe({ method: 'getProgress' });
+      sendMessageToIframe({ method: 'getCurrentTime' });
+      sendMessageToIframe({ method: 'getDuration' });
+      
+      // Estratégia 2: Simular progresso baseado no tempo decorrido
+      elapsedTime += 0.8; // 800ms
+      const simulatedProgress = (elapsedTime / totalDuration) * 100;
+      
+      // logs removidos
+      
+      if (simulatedProgress >= 1 && hasInteractedWithVideo) {
+        // log removido
+        console.log('🎥 1% simulado atingido! Mostrando conteúdo...');
+        setShowAllContent(true);
+        clearInterval(progressCheckInterval);
+      }
+    };
+
+    // Checa a cada 800ms
+    progressCheckInterval = setInterval(checkProgress, 800);
+
+    return () => {
+      clearInterval(progressCheckInterval);
+    };
   };
 
   return (
@@ -161,17 +288,55 @@ export default function VideoPage() {
           <Card className="bg-[#1F1F1F] border-white/10 overflow-hidden">
             <CardContent className="p-0">
               <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+                {NATIVE_VIDEO_URL ? (
+                  <video
+                    ref={videoRef}
+                    src={NATIVE_VIDEO_URL}
+                    className="absolute top-0 left-0 w-full h-full"
+                    controls
+                    preload="metadata"
+                    onPlay={() => setHasInteractedWithVideo(true)}
+                    onTimeUpdate={() => {
+                      const v = videoRef.current;
+                      if (!v) return;
+                      const progress = (v.currentTime / (v.duration || 1)) * 100;
+                      setVideoProgress(progress);
+                      if (progress >= 1 && hasInteractedWithVideo) {
+                        setShowAllContent(true);
+                      }
+                    }}
+                  />
+                ) : (
+                  <>
                 <iframe
+                      ref={iframeRef}
                   src="https://drive.google.com/file/d/1qwoKlEJD_fmw7271zSMf-GZy3RkvpJKS/preview"
                   className="absolute top-0 left-0 w-full h-full"
                   frameBorder="0"
                   allowFullScreen={false}
                   title="Vídeo de Simulação Persuasiva"
                 />
+                    {/* Overlay invisível apenas para bloquear cliques no botão do Drive */}
+                <div 
+                      className="absolute top-0 right-0 w-16 h-16 pointer-events-auto"
+                  style={{
+                        background: 'transparent',
+                        zIndex: 40,
+                        cursor: 'default'
+                  }}
+                      onClick={(e) => e.stopPropagation()}
+                      onMouseDown={(e) => e.stopPropagation()}
+                      onMouseUp={(e) => e.stopPropagation()}
+                    />
+                  </>
+                )}
               </div>
             </CardContent>
           </Card>
         </div>
+
+        {/* Espaço adicional fixo enquanto conteúdo estiver oculto */}
+        {/* {!showAllContent && <div className="h-[100px]"></div>} */}
 
         <div className="max-w-4xl mx-auto -mt-8 mb-16 text-center">
           <Button 
@@ -273,7 +438,7 @@ export default function VideoPage() {
               </p>
               {/* Mobile scroll indicator */}
               <div className="lg:hidden">
-                <p className="text-gray-400 text-xs">(role para os lados para ver)</p>
+                {/* <p className="text-gray-400 text-xs">(role para os lados para ver)</p> */}
               </div>
             </div>
             
@@ -324,7 +489,8 @@ export default function VideoPage() {
                           { name: "Vendedor 12", value: 35, meta: 100 },
                           { name: "Vendedor 13", value: 30, meta: 100 },
                           { name: "Vendedor 14", value: 25, meta: 100 },
-                          { name: "Vendedor 15", value: 20, meta: 100 }
+                          { name: "Vendedor 15", value: 20, meta: 100 },
+                          { name: "Vendedor 16", value: 15, meta: 100 }
                         ].map((consultant, index) => (
                           <div key={index} className="flex items-center space-x-4 h-6">
                             <div className="text-white text-sm w-32 truncate">{consultant.name}</div>
@@ -338,14 +504,19 @@ export default function VideoPage() {
                         ))}
                       </div>
                       
-                      {/* Mobile: Show only first 5 + dots */}
+                      {/* Mobile: Show only first 10 + dots */}
                       <div className="lg:hidden space-y-1">
                         {[
                           { name: "Vendedor 1", value: 95, meta: 100 },
                           { name: "Vendedor 2", value: 88, meta: 100 },
                           { name: "Vendedor 3", value: 82, meta: 100 },
                           { name: "Vendedor 4", value: 75, meta: 100 },
-                          { name: "Vendedor 5", value: 70, meta: 100 }
+                          { name: "Vendedor 5", value: 70, meta: 100 },
+                          { name: "Vendedor 6", value: 65, meta: 100 },
+                          { name: "Vendedor 7", value: 60, meta: 100 },
+                          { name: "Vendedor 8", value: 55, meta: 100 },
+                          { name: "Vendedor 9", value: 50, meta: 100 },
+                          { name: "Vendedor 10", value: 45, meta: 100 }
                         ].map((consultant, index) => (
                           <div key={index} className="flex items-center space-x-1 py-1">
                             <div className="text-white text-sm w-24 truncate">{consultant.name}</div>
@@ -357,9 +528,9 @@ export default function VideoPage() {
                             </div>
                           </div>
                         ))}
-                        {/* Dots indicator */}
+                        {/* Mobile hint */}
                         <div className="flex items-center space-x-1 py-1">
-                          <div className="text-white text-sm w-24 truncate">...</div>
+                          <div className="text-white/80 text-xs w-48 truncate">arraste para a esquerda</div>
                           <div className="flex-1 bg-[#1A1A1A] rounded-full h-4 mx-1">
                             <div className="bg-gray-600 h-4 rounded-full w-full"></div>
                           </div>
@@ -571,8 +742,6 @@ export default function VideoPage() {
               Cada funcionalidade e informacão do simulador BP Sales foi milimetricamente pensado na experiência do usuário e em gerar cognitivamente na mente do cliente uma sensação de ganhos absolutos
                 </p>
               </div>
-
-
 
           {/* Features Grid */}
           <div className="space-y-12">
@@ -1096,12 +1265,12 @@ export default function VideoPage() {
                                 {/* Action Bar */}
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center space-x-3">
-                                    <div className="w-5 h-5 text-gray-400">📋</div>
+                                    <div className="w-5 h-5 text-gray-400"></div>
+                                  </div>
                                     <button className="bg-[#e50f5f] text-white px-3 py-1 rounded text-sm flex items-center space-x-1">
                                       <span>+</span>
                                       <span>Adicionar Administradora</span>
                                     </button>
-                                  </div>
                                 </div>
                                 
                                 {/* Search Bar */}
@@ -1186,7 +1355,7 @@ export default function VideoPage() {
                     <div className="lg:col-span-2 lg:order-2 order-1 flex flex-col justify-center h-full">
                       <div className="space-y-6">
                         <div>
-                          <h3 className="text-xl md:text-[26px] font-bold text-white mb-4">Configurações do Simulador</h3>
+                          <h3 className="text-xl md:text-[26px] font-bold text-white mb-4">Personalize seu simulador</h3>
                           <p className="text-base md:text-lg text-gray-300 leading-relaxed">
                             Controle total sobre administradoras, produtos, parcelas, alavancas e reduções. Personalize o simulador para sua estratégia de vendas.
                           </p>
@@ -1231,6 +1400,7 @@ export default function VideoPage() {
             </div>
 
             {/* Pricing Plans */}
+                <a id="annual-plan" />
             <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
               {/* Plano Mensal - Básico (Esquerda) */}
               <div className="bg-[#1F1F1F] rounded-2xl p-6 border border-white/10 hover:border-[#e50f5f]/30 transition-all duration-300 order-1 md:order-1">
@@ -1637,7 +1807,7 @@ export default function VideoPage() {
             </div>
 
             {/* WhatsApp Section */}
-            <div className="max-w-4xl mx-auto mb-20 text-center">
+            <div className="max-w-4xl mx-auto mb-20">
               <div className="bg-[#1F1F1F] rounded-2xl p-8 border border-white/10">
                 <h3 className="text-xl md:text-[26px] font-bold text-white mb-4">
                   Ainda tem dúvidas? Nos chame no WhatsApp
@@ -1674,7 +1844,17 @@ export default function VideoPage() {
               </p>
             </div>
             <Button 
-              onClick={handlePayment}
+              onClick={() => {
+                const pricing = document.getElementById('pricing-section');
+                if (pricing) {
+                  pricing.scrollIntoView({ behavior: 'smooth' });
+                  // rola até o plano anual após pequeno atraso para garantir renderização
+                  setTimeout(() => {
+                    const annual = document.getElementById('annual-plan');
+                    annual?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }, 300);
+                }
+              }}
               disabled={loading}
               className="bg-white text-[#e50f5f] hover:bg-gray-100 font-bold px-4 py-2 sm:px-6 sm:py-2 md:px-8 md:py-3 rounded-lg shadow-lg transition-all duration-300 whitespace-nowrap text-xs sm:text-sm md:text-base"
             >

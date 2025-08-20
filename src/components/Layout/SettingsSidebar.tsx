@@ -182,16 +182,6 @@ export const SettingsSidebar = () => {
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                {pagePermissions['simulator_config'] !== false && (
-                  <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/simulador')}>
-                    <Link to="/configuracoes/simulador">
-                      <SlidersHorizontal className="h-4 w-4" />
-                      <span>Simulador</span>
-                    </Link>
-                  </SidebarMenuButton>
-                )}
-              </SidebarMenuItem>
               {(((userRole === 'admin' || userRole === 'master') ||
                  (pagePermissions['crm_config'] !== false ||
                   pagePermissions['crm_config_funnels'] !== false ||

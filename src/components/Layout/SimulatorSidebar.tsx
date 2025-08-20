@@ -215,6 +215,14 @@ export const SimulatorSidebar = () => {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActivePath('/simulador/configuracoes')}>
+                  <Link to="/simulador/configuracoes">
+                    <Settings className="h-4 w-4" />
+                    <span>Configurações</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
               
             </SidebarMenu>
           </SidebarGroupContent>

@@ -443,6 +443,10 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
       if (!error && data && data.length > 0) {
         const adminData = data[0];
         
+        // Definir o ágio baseado na administradora (padrão 17% se não houver)
+        const adminAgioPercent = adminData.agio_purchase_percentage || 17;
+        setAgioPercent(adminAgioPercent);
+        
         // Mapear dados do banco para a interface Administrator
         const mappedAdministrator = {
           id: adminData.id,
@@ -455,7 +459,13 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
           administrationRate: (adminData.admin_tax_percent || 0) / 100,
           inccRate: 6, // Taxa INCC padrão
           postContemplationAdjustment: adminData.post_contemplation_adjustment || 0,
-          availableBidTypes: []
+          availableBidTypes: [],
+          // Campos da entrada especial
+          special_entry_type: adminData.special_entry_type,
+          special_entry_percentage: adminData.special_entry_percentage,
+          special_entry_fixed_value: adminData.special_entry_fixed_value,
+          special_entry_installments: adminData.special_entry_installments,
+          functioning: adminData.functioning
         };
         
         setAdministratorData(mappedAdministrator);
@@ -603,6 +613,7 @@ export const NewSimulatorLayout = ({ manualTerm }: { manualTerm?: number }) => {
           customAnnualUpdateRate={annualUpdateRate}
           agioPercent={agioPercent}
           periodoCompra={periodoCompra}
+          specialEntryEnabled={simulatorContext.specialEntryEnabled}
           onFirstRowData={(data) => {
             setFirstRowCredit(data.credit);
             setFirstRowInstallmentValue(data.installmentValue);

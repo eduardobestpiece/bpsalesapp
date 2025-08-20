@@ -101,10 +101,18 @@ function AppContent() {
             ) : <Navigate to="/crm/login" replace />
           } />
 
-          {/* Novo módulo: Configurações */}
-          <Route path="/configuracoes/simulador" element={
-            user ? <SettingsSimulator /> : <Navigate to="/crm/login" replace />
+          {/* Configurações do Simulador agora dentro do módulo Simulador */}
+          <Route path="/simulador/configuracoes" element={
+            user ? (
+              <ProtectedRoute requiredPageKey="simulator_config">
+                <SettingsSimulator />
+              </ProtectedRoute>
+            ) : <Navigate to="/crm/login" replace />
           } />
+
+          {/* Novo módulo: Configurações */}
+          {/* Rota antiga redireciona para o novo local */}
+          <Route path="/configuracoes/simulador" element={<Navigate to="/simulador/configuracoes" replace />} />
           <Route path="/configuracoes/crm" element={
             user ? (
               <SettingsCrm />

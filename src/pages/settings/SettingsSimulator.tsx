@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Plus, Search, Copy } from 'lucide-react';
 
-import { SettingsLayout } from '@/components/Layout/SettingsLayout';
+import { SimulatorLayout } from '@/components/Layout/SimulatorLayout';
 import { CreateAdministratorModal, EditAdministratorModal } from '@/components/Administrators/AdministratorModal';
 import { AdministratorsList } from '@/components/Administrators/AdministratorsList';
 import { CopyAdministratorsModal } from '@/components/Administrators/CopyAdministratorsModal';
@@ -55,7 +55,7 @@ export default function SettingsSimulator() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [productAdminFilter, setProductAdminFilter] = useState<string>('');
   const [installmentAdminFilter, setInstallmentAdminFilter] = useState<string>('');
-  const [reductionAdminFilter, setReductionAdminFilter] = useState<string>('');
+  const [reductionAdminFilter, setReductionAdminFilter] = useState<string>('all');
 
   const { userRole, companyId } = useCrmAuth();
   const isMaster = userRole === 'master';
@@ -97,6 +97,22 @@ export default function SettingsSimulator() {
   const canProducts = perms['simulator_config_products'] !== false;
   const canLeverages = perms['simulator_config_leverages'] !== false;
 
+  // Buscar administradoras para o filtro
+  const { data: administrators = [] } = useQuery({
+    queryKey: ['administrators_for_filter', companyId],
+    enabled: !!companyId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('administrators')
+        .select('id, name')
+        .eq('company_id', companyId as string)
+        .eq('is_archived', false)
+        .order('name');
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
   // Controla a aba ativa: escolhe a primeira permitida
   const allowedOrder: { key: string; allowed: boolean }[] = [
     { key: 'administrators', allowed: canAdmins },
@@ -116,8 +132,7 @@ export default function SettingsSimulator() {
   }, [canAdmins, canReductions, canInstallments, canProducts, canLeverages]);
 
   return (
-    <SettingsLayout>
-      <div className="container mx-auto px-4 py-8 bg-gradient-to-br from-primary-50/20 via-background to-muted/10 dark:from-[#131313] dark:via-[#1E1E1E] dark:to-[#161616] text-foreground">
+    <SimulatorLayout>
         <div className="max-w-6xl mx-auto">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-foreground mb-2">Configurações do Simulador</h1>
@@ -127,15 +142,60 @@ export default function SettingsSimulator() {
           <Card className="shadow-xl border-0 bg-card">
             <CardContent className="p-0">
               <Tabs value={tabValue} onValueChange={setTabValue} className="w-full">
-                <div className="border-b border-border bg-muted/50 px-6 py-4">
-                  <TabsList className="w-full mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2">
-                    {canAdmins && <TabsTrigger value="administrators">Administradoras</TabsTrigger>}
-                    {canReductions && <TabsTrigger value="reductions">Redução de Parcela</TabsTrigger>}
-                    {canInstallments && <TabsTrigger value="installments">Parcelas</TabsTrigger>}
-                    {canProducts && <TabsTrigger value="products">Produtos</TabsTrigger>}
-                    {canLeverages && <TabsTrigger value="leverages">Alavancas</TabsTrigger>}
+                <TabsList className="flex items-end border-b border-border/30 bg-transparent p-0 rounded-none justify-start w-fit">
+                  {canAdmins && (
+                    <>
+                      <TabsTrigger 
+                        value="administrators" 
+                        className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[#e50f5f]"
+                      >
+                        Administradoras
+                      </TabsTrigger>
+                      <div className="w-px h-6 bg-border/30 self-center"></div>
+                    </>
+                  )}
+                  {canReductions && (
+                    <>
+                      <TabsTrigger 
+                        value="reductions" 
+                        className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[#e50f5f]"
+                      >
+                        Redução de Parcela
+                      </TabsTrigger>
+                      <div className="w-px h-6 bg-border/30 self-center"></div>
+                    </>
+                  )}
+                  {canInstallments && (
+                    <>
+                      <TabsTrigger 
+                        value="installments" 
+                        className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[#e50f5f]"
+                      >
+                        Parcelas
+                      </TabsTrigger>
+                      <div className="w-px h-6 bg-border/30 self-center"></div>
+                    </>
+                  )}
+                  {canProducts && (
+                    <>
+                      <TabsTrigger 
+                        value="products" 
+                        className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[#e50f5f]"
+                      >
+                        Produtos
+                      </TabsTrigger>
+                      <div className="w-px h-6 bg-border/30 self-center"></div>
+                    </>
+                  )}
+                  {canLeverages && (
+                    <TabsTrigger 
+                      value="leverages" 
+                      className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[#e50f5f]"
+                    >
+                      Alavancas
+                    </TabsTrigger>
+                  )}
                   </TabsList>
-                </div>
 
                 {canAdmins && (
                 <TabsContent value="administrators" className="p-6">
@@ -295,12 +355,25 @@ export default function SettingsSimulator() {
                           className="pl-10 field-secondary-focus no-ring-focus brand-radius"
                         />
                       </div>
-                      <Select value={reductionStatusFilter} onValueChange={(value: 'all' | 'active' | 'archived') => setReductionStatusFilter(value)}>
-                        <SelectTrigger className="w-full sm:w-48 select-trigger-secondary no-ring-focus brand-radius">
-                          <SelectValue />
+                      <Select value={reductionAdminFilter} onValueChange={(value: string) => setReductionAdminFilter(value)}>
+                        <SelectTrigger className="w-full sm:w-48 select-trigger-secondary no-ring-focus brand-radius text-left justify-start select-text-left">
+                          <SelectValue placeholder="Todas Adms" className="text-left justify-start" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all" className="dropdown-item-secondary">Todas</SelectItem>
+                          <SelectItem value="all" className="dropdown-item-secondary">Todas Adms</SelectItem>
+                          {administrators.map((admin) => (
+                            <SelectItem key={admin.id} value={admin.id} className="dropdown-item-secondary">
+                              {admin.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={reductionStatusFilter} onValueChange={(value: 'all' | 'active' | 'archived') => setReductionStatusFilter(value)}>
+                        <SelectTrigger className="w-full sm:w-48 select-trigger-secondary no-ring-focus brand-radius text-left justify-start select-text-left">
+                          <SelectValue className="text-left justify-start" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all" className="dropdown-item-secondary">Todas Situações</SelectItem>
                           <SelectItem value="active" className="dropdown-item-secondary">Ativas</SelectItem>
                           <SelectItem value="archived" className="dropdown-item-secondary">Arquivadas</SelectItem>
                         </SelectContent>
@@ -310,14 +383,14 @@ export default function SettingsSimulator() {
                       key={refreshKey}
                       searchTerm={reductionSearchTerm}
                       statusFilter={reductionStatusFilter}
-                      selectedAdministrator={reductionAdminFilter || ''}
+                      selectedAdministrator={reductionAdminFilter === 'all' ? '' : reductionAdminFilter}
                       onEdit={(red: any) => { setSelectedReduction(red); setShowReductionModal(true); setIsCopyReduction(false); }}
                     />
                     <InstallmentReductionModal
                       reduction={selectedReduction}
                       open={showReductionModal && !isCopyReduction}
                       onOpenChange={setShowReductionModal}
-                      onClose={closeModals}
+                      onSuccess={closeModals}
                     />
                   </div>
                 </TabsContent>
@@ -364,7 +437,7 @@ export default function SettingsSimulator() {
             administrator={selectedAdministrator}
             open={showEditAdministratorModal}
             onOpenChange={setShowEditAdministratorModal}
-            onClose={closeModals}
+            onSuccess={closeModals}
           />
           <ProductModal
             product={selectedProduct}
@@ -392,10 +465,9 @@ export default function SettingsSimulator() {
             reduction={selectedReduction}
             open={showReductionModal && !isCopyReduction}
             onOpenChange={setShowReductionModal}
-            onClose={closeModals}
+            onSuccess={closeModals}
           />
         </div>
-      </div>
-    </SettingsLayout>
+    </SimulatorLayout>
   );
 } 

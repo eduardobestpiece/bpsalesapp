@@ -183,19 +183,19 @@ export function calcularParcelasProduto({
   // Fórmula correta baseada na configuração da redução
   // A redução pode ser aplicada em diferentes componentes conforme a configuração
   
-  // 1. Parcela: SE(Reduz o Crédito/Parcela=Verdadeiro; Total do Crédito * Percentual de redução; Total do Crédito*1)
-  const parcela = aplicaParcela ? credit * percentualReducao : credit;
+  // 1. Parcela: SE(Reduz o Crédito/Parcela=Verdadeiro; Total do Crédito * (1 - Percentual de redução); Total do Crédito*1)
+  const parcela = aplicaParcela ? credit * (1 - percentualReducao) : credit;
   
-  // 2. Taxa de administração: SE(Reduz Taxa de Administração=Verdadeiro; Total do Crédito * Taxa de administração * Percentual de redução; Total do Crédito * Taxa de administração)
-  const taxaAdmValor = aplicaTaxaAdm ? credit * (taxaAdm / 100) * percentualReducao : credit * (taxaAdm / 100);
+  // 2. Taxa de administração: SE(Reduz Taxa de Administração=Verdadeiro; Total do Crédito * Taxa de administração * (1 - Percentual de redução); Total do Crédito * Taxa de administração)
+  const taxaAdmValor = aplicaTaxaAdm ? credit * (taxaAdm / 100) * (1 - percentualReducao) : credit * (taxaAdm / 100);
   
-  // 3. Fundo de reserva: SE(Reduz Fundo de Reserva=Verdadeiro; Total do Crédito * Fundo de Reserva * Percentual de redução; Total do Crédito * Fundo de Reserva)
-  const fundoReservaValor = aplicaFundoReserva ? credit * (fundoReserva / 100) * percentualReducao : credit * (fundoReserva / 100);
+  // 3. Fundo de reserva: SE(Reduz Fundo de Reserva=Verdadeiro; Total do Crédito * Fundo de Reserva * (1 - Percentual de redução); Total do Crédito * Fundo de Reserva)
+  const fundoReservaValor = aplicaFundoReserva ? credit * (fundoReserva / 100) * (1 - percentualReducao) : credit * (fundoReserva / 100);
   
-  // 4. Seguro (se aplicável): SE(Reduz Seguro=Verdadeiro; Total do Crédito * Seguro * Percentual de redução; Total do Crédito * Seguro)
+  // 4. Seguro (se aplicável): SE(Reduz Seguro=Verdadeiro; Total do Crédito * Seguro * (1 - Percentual de redução); Total do Crédito * Seguro)
   let seguroValor = 0;
   if (!installment.optional_insurance) {
-    seguroValor = aplicaSeguro ? credit * (seguro / 100) * percentualReducao : credit * (seguro / 100);
+    seguroValor = aplicaSeguro ? credit * (seguro / 100) * (1 - percentualReducao) : credit * (seguro / 100);
   }
   
   // 5. Total dividido pelo prazo

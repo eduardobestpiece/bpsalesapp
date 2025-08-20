@@ -89,7 +89,9 @@ export const InstallmentReductionsList: React.FC<InstallmentReductionsListProps>
     if (searchTerm) query = query.ilike('name', `%${searchTerm}%`);
 
     const { data, error } = await query;
-    if (!error) setReductions(data || []);
+    if (!error) {
+      setReductions(data || []);
+    }
     setLoading(false);
   };
 
@@ -114,10 +116,27 @@ export const InstallmentReductionsList: React.FC<InstallmentReductionsListProps>
     }
   };
 
-  // Número de aplicações: pode ser calculado por uso em outras tabelas, mas aqui será sempre 0 (placeholder) até integração futura
+  // Número de aplicações: conta o número de aplicações válidas no array applications
   const getApplicationsCount = (reduction: InstallmentReduction) => {
-    // TODO: integrar com uso real se necessário
-    return 0;
+    if (!reduction.applications || !Array.isArray(reduction.applications)) {
+      return 0;
+    }
+    
+    // Filtrar apenas aplicações válidas e remover duplicatas
+    const validApplications = [
+      'installment',      // Parcela
+      'admin_tax',        // Taxa de administração
+      'reserve_fund'      // Fundo de reserva
+    ];
+    
+    const filteredApplications = reduction.applications.filter(app => 
+      validApplications.includes(app)
+    );
+    
+    // Remover duplicatas
+    const uniqueApplications = [...new Set(filteredApplications)];
+    
+    return uniqueApplications.length;
   };
 
   if (!selectedCompanyId) {

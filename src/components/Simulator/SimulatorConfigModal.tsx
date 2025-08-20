@@ -247,6 +247,19 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
     const fetchInstallmentDetails = async () => {
       if (!selectedAdministratorId || selectedAdministratorId.trim() === '') return;
       
+      // Buscar dados da administradora (incluindo ágio)
+      const { data: adminData, error: adminError } = await supabase
+        .from('administrators')
+        .select('agio_purchase_percentage')
+        .eq('id', selectedAdministratorId)
+        .limit(1);
+      
+      if (!adminError && adminData && adminData.length > 0) {
+        // Definir o ágio baseado na administradora (padrão 17% se não houver)
+        const adminAgioPercent = adminData[0].agio_purchase_percentage || 17;
+        setLocalAgioPercent(adminAgioPercent);
+      }
+      
       const { data, error } = await supabase
         .from('installment_types')
         .select('admin_tax_percent, reserve_fund_percent, annual_update_rate')
@@ -301,7 +314,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
 
   // Função para aplicar mudanças
   const handleApply = () => {
-    console.debug('[Sim/ConfigModal] Aplicar acionado');
+    // logs removidos
     
     setSearchType(localSearchType);
     
@@ -334,7 +347,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
 
   // Função para salvar e aplicar
   const handleSaveAndApply = async () => {
-    console.debug('[Sim/ConfigModal] Salvar e Aplicar acionado');
+    // logs removidos
     try {
       
       // Montar snapshot de configuração
@@ -363,7 +376,7 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
         leverageConfig: simCtx.leverageConfig || null,
       } as any;
 
-      console.debug('[Sim/ConfigModal] snapshot ->', config);
+      // logs removidos
 
       // APICAR IMEDIATAMENTE NA UI E FECHAR MODAL
       setSearchType(config.searchType);
@@ -394,14 +407,14 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
       // SALVAR EM SEGUNDO PLANO (sem travar UI)
       const effectiveCompanyId = companyId;
       if (!effectiveCompanyId) {
-        console.warn('[SimulatorConfigModal] companyId ausente ao salvar');
+        // logs removidos
       } else {
         // Usar SEMPRE o crmUser.id, pois o FK referencia crm_users.id
         const uid = crmUser?.id;
         if (!uid) {
-          console.warn('[SimulatorConfigModal] uid (crmUser.id) ausente ao salvar');
+          // logs removidos
         } else {
-          console.log('[SimulatorConfigModal] Salvando snapshot (async):', { uid, companyId: effectiveCompanyId, config });
+          // logs removidos
           const { error: upsertError } = await supabase
             .from('simulator_configurations')
             .upsert(
@@ -409,17 +422,20 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
               { onConflict: 'user_id,company_id' }
             );
           if (upsertError) {
-            console.error('[SimulatorConfigModal] Erro no upsert:', upsertError);
+            // logs removidos
             toast({ title: 'Erro ao salvar configurações', variant: 'destructive' });
           } else {
-            console.log('[SimulatorConfigModal] Snapshot salvo com sucesso');
             toast({ title: 'Configurações salvas!' });
+            
+            // Disparar evento para notificar outros componentes
+            window.dispatchEvent(new CustomEvent('configSaved', { 
+              detail: { administratorId: selectedAdministratorId } 
+            }));
           }
         }
       }
     } catch (err: unknown) {
-      const errorMessage = err instanceof Error ? err.message : 'Erro desconhecido';
-      console.error('[SimulatorConfigModal] Exceção ao salvar/aplicar:', errorMessage);
+      // logs removidos
       toast({ title: 'Erro inesperado!', description: errorMessage, variant: 'destructive' });
     }
   };
@@ -436,17 +452,17 @@ export const SimulatorConfigModal: React.FC<SimulatorConfigModalProps> = ({
   };
 
   // Handlers com debug para inputs do modal
-  const onChangeSearchType = (v: string) => { console.debug('[Sim/ConfigModal] searchType ->', v); setLocalSearchType(v); };
-  const onChangeValue = (e: React.ChangeEvent<HTMLInputElement>) => { const val = Number(e.target.value); console.debug('[Sim/ConfigModal] value ->', val); setLocalValue(val); };
-  const onChangeTerm = (v: string) => { const num = Number(v); console.debug('[Sim/ConfigModal] term ->', num); setLocalTerm(num); };
-  const onChangeInstallmentType = (v: string) => { console.debug('[Sim/ConfigModal] installmentType ->', v); setLocalInstallmentType(v); };
-  const onChangeContemplationMonth = (e: React.ChangeEvent<HTMLInputElement>) => { const num = Number(e.target.value); console.debug('[Sim/ConfigModal] contemplationMonth ->', num); setLocalContemplationMonth(num); };
-  const onChangeAgio = (e: React.ChangeEvent<HTMLInputElement>) => { const num = Number(e.target.value); console.debug('[Sim/ConfigModal] agioPercent ->', num); setLocalAgioPercent(num); };
-  const onChangeAdministrator = (v: string) => { console.debug('[Sim/ConfigModal] administratorId ->', v); setSelectedAdministratorIdLocal(v); };
-  const onChangeCreditType = (v: string) => { console.debug('[Sim/ConfigModal] creditType ->', v); setSelectedCreditType(v); };
-  const onChangeAdminTax = (e: React.ChangeEvent<HTMLInputElement>) => { const num = Number(e.target.value); console.debug('[Sim/ConfigModal] adminTaxPercent ->', num); setLocalAdminTaxPercent(num); setIsAdminTaxCustomized(true); };
-  const onChangeReserveFund = (e: React.ChangeEvent<HTMLInputElement>) => { const num = Number(e.target.value); console.debug('[Sim/ConfigModal] reserveFundPercent ->', num); setLocalReserveFundPercent(num); setIsReserveFundCustomized(true); };
-  const onChangeAnnualUpdate = (e: React.ChangeEvent<HTMLInputElement>) => { const num = Number(e.target.value); console.debug('[Sim/ConfigModal] annualUpdateRate ->', num); setLocalAnnualUpdateRate(num); setIsAnnualUpdateCustomized(true); };
+  const onChangeSearchType = (v: string) => { setLocalSearchType(v); };
+  const onChangeValue = (e: React.ChangeEvent<HTMLInputElement>) => { const val = Number(e.target.value); setLocalValue(val); };
+  const onChangeTerm = (v: string) => { const num = Number(v); setLocalTerm(num); };
+  const onChangeInstallmentType = (v: string) => { setLocalInstallmentType(v); };
+  const onChangeContemplationMonth = (e: React.ChangeEvent<HTMLInputElement>) => { const num = Number(e.target.value); setLocalContemplationMonth(num); };
+  const onChangeAgio = (e: React.ChangeEvent<HTMLInputElement>) => { const num = Number(e.target.value); setLocalAgioPercent(num); };
+  const onChangeAdministrator = (v: string) => { setSelectedAdministratorIdLocal(v); };
+  const onChangeCreditType = (v: string) => { setSelectedCreditType(v); };
+  const onChangeAdminTax = (e: React.ChangeEvent<HTMLInputElement>) => { const num = Number(e.target.value); setLocalAdminTaxPercent(num); setIsAdminTaxCustomized(true); };
+  const onChangeReserveFund = (e: React.ChangeEvent<HTMLInputElement>) => { const num = Number(e.target.value); setLocalReserveFundPercent(num); setIsReserveFundCustomized(true); };
+  const onChangeAnnualUpdate = (e: React.ChangeEvent<HTMLInputElement>) => { const num = Number(e.target.value); setLocalAnnualUpdateRate(num); setIsAnnualUpdateCustomized(true); };
 
   return (
     <FullScreenModal

@@ -1,4 +1,58 @@
 // Funções utilitárias extraídas de DetailTable.tsx para uso compartilhado
+
+// Nova função para calcular entradas especiais
+export function calculateSpecialEntry(administrator, baseCredit, month) {
+  // Se não há entrada especial configurada, retorna 0
+  if (!administrator.special_entry_type || administrator.special_entry_type === 'none') {
+    return 0;
+  }
+
+  const specialEntryInstallments = typeof administrator.special_entry_installments === 'string' 
+    ? parseInt(administrator.special_entry_installments) 
+    : (administrator.special_entry_installments || 1);
+  
+  // Verificar se estamos dentro do período de cobrança da entrada especial
+  if (month > specialEntryInstallments) {
+    return 0;
+  }
+
+  let specialEntryValue = 0;
+
+  if (administrator.special_entry_type === 'percentage') {
+    // Percentual do crédito - converter para número se for string
+    const percentage = typeof administrator.special_entry_percentage === 'string' 
+      ? parseFloat(administrator.special_entry_percentage) 
+      : (administrator.special_entry_percentage || 0);
+    specialEntryValue = (baseCredit * percentage) / 100;
+  } else if (administrator.special_entry_type === 'fixed_value') {
+    // Valor fixo - converter para número se for string
+    const fixedValue = typeof administrator.special_entry_fixed_value === 'string' 
+      ? parseFloat(administrator.special_entry_fixed_value) 
+      : (administrator.special_entry_fixed_value || 0);
+    specialEntryValue = fixedValue;
+  }
+
+  // Dividir pelo número de parcelas da entrada
+  return specialEntryValue / specialEntryInstallments;
+}
+
+// Função para calcular o impacto da entrada especial no saldo devedor
+export function calculateSpecialEntryImpact(administrator, baseCredit, month) {
+  const specialEntryValue = calculateSpecialEntry(administrator, baseCredit, month);
+  
+  if (specialEntryValue === 0) {
+    return { additionalDebt: 0, includedDebt: 0 };
+  }
+
+  if (administrator.functioning === 'additional') {
+    // Adicional: aumenta o saldo devedor
+    return { additionalDebt: specialEntryValue, includedDebt: 0 };
+  } else {
+    // Incluso: não aumenta o saldo devedor (já está incluso)
+    return { additionalDebt: 0, includedDebt: specialEntryValue };
+  }
+}
+
 export function calculateCreditValue(month, baseCredit, contemplationMonth, administrator, customAnnualUpdateRate) {
   if (baseCredit === 0) return 0;
   let currentCredit = baseCredit;
@@ -53,7 +107,7 @@ export function calculateCreditoAcessado(month, baseCredit, contemplationMonth, 
 }
 
 export function generateConsortiumInstallments(params) {
-  const { product, administrator, contemplationMonth, selectedCredits = [], creditoAcessado = 0, embutido = 'sem', installmentType = 'full', customAdminTaxPercent, customReserveFundPercent, customAnnualUpdateRate, maxEmbeddedPercentage } = params;
+  const { product, administrator, contemplationMonth, selectedCredits = [], creditoAcessado = 0, embutido = 'sem', installmentType = 'full', customAdminTaxPercent, customReserveFundPercent, customAnnualUpdateRate, maxEmbeddedPercentage, specialEntryEnabled = true } = params;
   const data = [];
   const totalMonths = product.termMonths || 240;
   const baseCredit = (product && product.nominalCreditValue !== undefined) ? product.nominalCreditValue : creditoAcessado;
@@ -72,6 +126,10 @@ export function generateConsortiumInstallments(params) {
     // Calcular crédito e crédito acessado
     const credito = baseCredit;
     const creditoAcessadoMes = creditoAcessado;
+    
+    // Calcular entrada especial
+    const specialEntryValue = specialEntryEnabled ? calculateSpecialEntry(administrator, baseCredit, month) : 0;
+    const specialEntryImpact = specialEntryEnabled ? calculateSpecialEntryImpact(administrator, baseCredit, month) : { additionalDebt: 0, includedDebt: 0 };
     
     // Calcular taxa de administração e fundo de reserva
     let taxaAdmin, fundoReserva;
@@ -93,22 +151,22 @@ export function generateConsortiumInstallments(params) {
     
     // Calcular o saldo devedor
     if (month === 1) {
-      // Primeiro mês: soma de Crédito + Taxa de Administração + Fundo de Reserva
-      valorBaseInicial = credito + taxaAdmin + fundoReserva;
+      // Primeiro mês: soma de Crédito + Taxa de Administração + Fundo de Reserva + Entrada Especial Adicional
+      valorBaseInicial = credito + taxaAdmin + fundoReserva + specialEntryImpact.additionalDebt;
       saldoDevedorAcumulado = valorBaseInicial;
     } else if (month < contemplationMonth) {
-      // Antes da contemplação: (Crédito + Taxa + Fundo Reserva) - soma das parcelas anteriores
-      const valorBase = credito + taxaAdmin + fundoReserva;
+      // Antes da contemplação: (Crédito + Taxa + Fundo Reserva + Entrada Especial Adicional) - soma das parcelas anteriores
+      const valorBase = credito + taxaAdmin + fundoReserva + specialEntryImpact.additionalDebt;
       const somaParcelasAnteriores = data.slice(0, month - 1).reduce((sum, row) => sum + row.installmentValue, 0);
       saldoDevedorAcumulado = valorBase - somaParcelasAnteriores;
     } else if (month === contemplationMonth) {
-      // Mês da contemplação: saldo baseado no crédito NORMAL + taxa admin + fundo reserva
+      // Mês da contemplação: saldo baseado no crédito NORMAL + taxa admin + fundo reserva + entrada especial adicional
       // Depois aplicar redução do embutido somente no CRÉDITO ACESSADO
       const somaParcelasAteContemplacao = data.slice(0, contemplationMonth - 1).reduce((sum, row) => sum + row.installmentValue, 0);
       
-      // Saldo devedor = (Crédito acessado + Taxa admin + Fundo reserva) - Parcelas pagas
+      // Saldo devedor = (Crédito acessado + Taxa admin + Fundo reserva + Entrada Especial Adicional) - Parcelas pagas
       // Onde taxa admin e fundo reserva são calculados sobre crédito normal (sem embutido)
-      let saldoDevedorPosContemplacao = creditoAcessadoMes + taxaAdmin + fundoReserva - somaParcelasAteContemplacao;
+      let saldoDevedorPosContemplacao = creditoAcessadoMes + taxaAdmin + fundoReserva + specialEntryImpact.additionalDebt - somaParcelasAteContemplacao;
       
       saldoDevedorAcumulado = saldoDevedorPosContemplacao;
     } else {
@@ -143,37 +201,37 @@ export function generateConsortiumInstallments(params) {
     if (month < contemplationMonth) {
       // Antes da contemplação: usar regras da parcela (cheia ou especial)
       if (installmentType === 'full') {
-        // Parcela cheia: (Valor do Crédito + Taxa de Administração + Fundo de Reserva) / Prazo
-        installmentValue = (credito + taxaAdmin + fundoReserva) / totalMonths;
+        // Parcela cheia: (Valor do Crédito + Taxa de Administração + Fundo de Reserva + Entrada Especial) / Prazo
+        installmentValue = (credito + taxaAdmin + fundoReserva + specialEntryValue) / totalMonths;
       } else {
         // Parcela especial: aplicar reduções conforme configuração
         const reductionPercent = 0.5; // 50% de redução padrão
         const principal = credito * (1 - reductionPercent);
-        installmentValue = (principal + taxaAdmin + fundoReserva) / totalMonths;
+        installmentValue = (principal + taxaAdmin + fundoReserva + specialEntryValue) / totalMonths;
       }
     } else if (month === contemplationMonth) {
-      // Mês da contemplação: usar valor fixo baseado no primeiro mês
+      // Mês da contemplação: usar valor fixo baseado no primeiro mês + entrada especial
       if (installmentType === 'full') {
-        installmentValue = (baseCredit + (baseCredit * adminTaxRate) + (baseCredit * reserveFundRate)) / totalMonths;
+        installmentValue = (baseCredit + (baseCredit * adminTaxRate) + (baseCredit * reserveFundRate) + specialEntryValue) / totalMonths;
       } else {
         const reductionPercent = 0.5;
         const principal = baseCredit * (1 - reductionPercent);
-        installmentValue = (principal + (baseCredit * adminTaxRate) + (baseCredit * reserveFundRate)) / totalMonths;
+        installmentValue = (principal + (baseCredit * adminTaxRate) + (baseCredit * reserveFundRate) + specialEntryValue) / totalMonths;
       }
     } else {
       // Após contemplação: REGRA IGUAL PARA AMBOS OS TIPOS
-      // Saldo devedor / (Prazo - número de Parcelas pagas)
+      // Saldo devedor / (Prazo - número de Parcelas pagas) + entrada especial se aplicável
       const parcelasPagas = contemplationMonth;
       const prazoRestante = totalMonths - parcelasPagas;
       
       if (month === contemplationMonth + 1) {
         // Primeiro mês após contemplação: calcular parcela fixa baseada no saldo devedor
         // O saldo devedor já foi calculado com a redução do embutido aplicada
-        installmentValue = saldoDevedorAcumulado / prazoRestante;
+        installmentValue = saldoDevedorAcumulado / prazoRestante + specialEntryValue;
         valorParcelaFixo = installmentValue; // Fixar o valor para os próximos meses
       } else {
         // Meses seguintes: usar o valor fixo até próxima atualização
-        installmentValue = valorParcelaFixo;
+        installmentValue = valorParcelaFixo + specialEntryValue;
         
         // Verificar se é mês de atualização anual
         const isAnnualUpdate = (month - 1) % 12 === 0 && month > contemplationMonth;
@@ -182,8 +240,8 @@ export function generateConsortiumInstallments(params) {
           const parcelasPagasAteAgora = month - 1;
           const prazoRestanteAtualizado = totalMonths - parcelasPagasAteAgora;
           
-          // REGRA IGUAL PARA AMBOS OS TIPOS: saldo devedor / prazo restante
-          installmentValue = saldoDevedorAcumulado / prazoRestanteAtualizado;
+          // REGRA IGUAL PARA AMBOS OS TIPOS: saldo devedor / prazo restante + entrada especial
+          installmentValue = saldoDevedorAcumulado / prazoRestanteAtualizado + specialEntryValue;
           valorParcelaFixo = installmentValue; // Atualizar valor fixo
         }
       }
@@ -196,7 +254,10 @@ export function generateConsortiumInstallments(params) {
       month,
       credit: credito,
       installmentValue,
-      remainingBalance: saldoDevedorAcumulado
+      remainingBalance: saldoDevedorAcumulado,
+      specialEntryValue,
+      specialEntryType: administrator.special_entry_type,
+      functioning: administrator.functioning
     });
   }
   

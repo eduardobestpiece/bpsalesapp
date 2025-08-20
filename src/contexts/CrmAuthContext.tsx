@@ -40,7 +40,6 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const saveCrmUserCache = (email: string, data: any) => {
     if (!email || !data) return;
     const payload = { email, data, ts: Date.now() };
-    console.log('[CRM-AUTH] saveCrmUserCache', payload);
     localStorage.setItem('crmUserCache', JSON.stringify(payload));
   };
 
@@ -50,10 +49,8 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (!raw) return null;
       const cache = JSON.parse(raw);
       if (cache.email === email && Date.now() - cache.ts < 24 * 60 * 60 * 1000) {
-        console.log('[CRM-AUTH] getCrmUserCache HIT', cache);
         return cache.data;
       }
-      console.log('[CRM-AUTH] getCrmUserCache MISS or STALE');
       return null;
     } catch {
       return null;
@@ -61,7 +58,6 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const clearCrmUserCache = () => {
-    console.log('[CRM-AUTH] clearCrmUserCache');
     localStorage.removeItem('crmUserCache');
   };
 
@@ -82,7 +78,6 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const ensureCrmUser = useCallback(async (authUser: User): Promise<CrmUser | null> => {
-    console.log('[CRM-AUTH] ensureCrmUser start', { email: authUser.email, id: authUser.id });
     // 1) Tenta buscar por email (fonte de verdade) pegando o registro mais recente
     if (authUser.email) {
       const { data: byEmail, error: byEmailError } = await supabase
@@ -92,7 +87,6 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .order('updated_at', { ascending: false })
         .limit(1)
         .maybeSingle();
-      console.log('[CRM-AUTH] ensureCrmUser byEmail', { byEmail, byEmailError });
       if (byEmail && !byEmailError) {
         return byEmail as any;
       }
@@ -104,7 +98,6 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
       .select('*')
       .eq('id', authUser.id)
       .maybeSingle();
-    console.log('[CRM-AUTH] ensureCrmUser byId', { byId });
     if (byId) {
       return byId as any;
     }
@@ -134,7 +127,6 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
       .select('*')
       .maybeSingle();
 
-    console.log('[CRM-AUTH] ensureCrmUser inserted', { inserted, error });
     if (error) {
       return null;
     }
@@ -157,7 +149,6 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
       }
       return ensured;
     } catch (e) {
-      console.log('[CRM-AUTH] fetchCrmUser error', e);
       return null;
     }
   }, [ensureCrmUser]);
@@ -165,7 +156,6 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const refreshCrmUser = useCallback(async () => {
     if (!user) return;
     try {
-      console.log('[CRM-AUTH] refreshCrmUser start', { crmUserId: crmUser?.id, email: user.email });
       let fresh: any = null;
       // Preferir id exato do crmUser quando existir
       if (crmUser?.id) {
@@ -174,7 +164,6 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
           .select('*')
           .eq('id', crmUser.id)
           .maybeSingle();
-        console.log('[CRM-AUTH] refreshCrmUser byId', { data, error });
         if (!error && data) {
           fresh = data;
         }
@@ -182,22 +171,18 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
       // Fallback: garantir via email (registro mais recente)
       if (!fresh) {
         fresh = await ensureCrmUser(user);
-        console.log('[CRM-AUTH] refreshCrmUser fallback ensure', { fresh });
       }
       setCrmUser(fresh);
       setUserRole((fresh?.role as UserRole) ?? null);
       setCompanyId(fresh?.company_id ?? null);
       if (user.email && fresh) saveCrmUserCache(user.email, fresh);
-      console.log('[CRM-AUTH] refreshCrmUser done', { fresh, name: `${fresh?.first_name || ''} ${fresh?.last_name || ''}`.trim() });
     } catch (e) {
-      console.log('[CRM-AUTH] refreshCrmUser error', e);
     }
   }, [crmUser?.id, ensureCrmUser, user]);
 
   const updateCrmUserInContext = useCallback((partial: Partial<CrmUser>) => {
     setCrmUser(prev => {
       const next = { ...(prev || {} as any), ...partial } as CrmUser;
-      console.log('[CRM-AUTH] updateCrmUserInContext', { prev, next });
       if (user?.email) saveCrmUserCache(user.email, next);
       return next;
     });
@@ -208,7 +193,6 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const applySession = async (sess: Session | null) => {
       if (!mounted) return;
-      console.log('[CRM-AUTH] applySession', { hasSession: !!sess, userId: sess?.user?.id });
       setSession(sess);
       setUser(sess?.user ?? null);
       setLoading(false);
@@ -217,7 +201,6 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
         const authUser = sess.user;
         fetchCrmUser(authUser).then((crm) => {
           if (!mounted) return;
-          console.log('[CRM-AUTH] fetched crmUser after session', crm);
           setCrmUser(crm);
           setUserRole((crm?.role as UserRole) ?? null);
           setCompanyId(crm?.company_id ?? null);
@@ -237,7 +220,6 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        console.log('[CRM-AUTH] onAuthStateChange', event);
         await applySession(newSession);
         // Em eventos de atualização de usuário, forçar refresh do crmUser para evitar cache antigo
         if (event === 'USER_UPDATED' || event === 'TOKEN_REFRESHED') {

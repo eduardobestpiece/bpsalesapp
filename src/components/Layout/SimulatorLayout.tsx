@@ -15,6 +15,7 @@ import { useLocation } from 'react-router-dom';
 import { SimulatorMenu } from '@/components/Simulator/SimulatorMenu';
 import { useEffect } from 'react';
 import { ModuleSwitcher } from './ModuleSwitcher';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 // Contexto para compartilhar dados do simulador
 type LeverageConfig = {
@@ -49,6 +50,15 @@ interface SimulatorContextType {
   // NOVO: Configurações de Alavancagem
   leverageConfig?: LeverageConfig;
   setLeverageConfig: (cfg: LeverageConfig | undefined) => void;
+  // NOVO: Controle da entrada especial
+  specialEntryEnabled: boolean;
+  setSpecialEntryEnabled: (enabled: boolean) => void;
+  // NOVO: Controle do zoom das fontes
+  fontZoom: number;
+  setFontZoom: (zoom: number) => void;
+  increaseFontSize: () => void;
+  decreaseFontSize: () => void;
+  resetFontSize: () => void;
 }
 
 const SimulatorContext = createContext<SimulatorContextType | null>(null);
@@ -72,6 +82,7 @@ const SimulatorHeader = () => {
   const simulatorContext = useSimulatorContext();
   const location = useLocation();
   const isSimulatorPage = location.pathname === '/simulador';
+  const isMobile = useIsMobile();
   
   const handleFieldChange = (field: string, value: any) => {
     simulatorContext.setSimulationData((prev: any) => ({ ...prev, [field]: value }));
@@ -83,11 +94,12 @@ const SimulatorHeader = () => {
   
   return (
     <header 
-      className="flex min-h-16 shrink-0 items-center gap-4 border-b border-border dark:border-[#A86F57]/20 px-4 bg-background dark:bg-[#1E1E1E] fixed top-0 z-40"
+      className="flex min-h-16 shrink-0 items-center gap-4 border-b border-border dark:border-[#A86F57]/20 px-4 bg-background dark:bg-[#1E1E1E] fixed top-0 z-40 w-full"
       style={{
-        left: isCollapsed ? '0' : '16rem',
+        left: isMobile ? '0' : (isCollapsed ? '0' : '16rem'),
         right: '0',
-        transition: 'left 0.2s ease-linear'
+        width: isMobile ? '100%' : (isCollapsed ? '100%' : 'calc(100% - 16rem)'),
+        transition: 'left 0.2s ease-linear, width 0.2s ease-linear'
       }}
     >
       <SidebarTrigger className="-ml-1 text-foreground dark:text-white brand-radius hover:bg-[var(--brand-secondary)] active:bg-[var(--brand-secondary)] focus:bg-[var(--brand-secondary)] transition-colors" />
@@ -101,7 +113,7 @@ const SimulatorHeader = () => {
             <label className="text-xs font-medium text-muted-foreground truncate">Modalidade</label>
             <Select 
               value={simulatorContext.simulationData.searchType} 
-              onValueChange={v => { console.debug('[Sim/Header] searchType ->', v); handleFieldChange('searchType', v === 'contribution' ? 'contribution' : 'credit'); }}
+              onValueChange={v => { handleFieldChange('searchType', v === 'contribution' ? 'contribution' : 'credit'); }}
             >
               <SelectTrigger className="h-8 text-xs min-w-0 brand-radius select-trigger-brand">
                 <SelectValue />
@@ -120,7 +132,7 @@ const SimulatorHeader = () => {
             <Input
               type="number"
               value={simulatorContext.simulationData.value || ''}
-              onChange={e => { const val = e.target.value ? Number(e.target.value) : 0; console.debug('[Sim/Header] value ->', val); handleFieldChange('value', val); }}
+              onChange={e => { const val = e.target.value ? Number(e.target.value) : 0; handleFieldChange('value', val); }}
               placeholder="0,00"
               className="h-8 text-xs min-w-0 brand-radius field-secondary-focus no-ring-focus"
             />
@@ -130,7 +142,7 @@ const SimulatorHeader = () => {
             <label className="text-xs font-medium text-muted-foreground truncate">Número de parcelas</label>
             <Select
               value={simulatorContext.simulationData.term.toString()}
-              onValueChange={v => { const num = Number(v); console.debug('[Sim/Header] term ->', num); handleTermChange(num); }}
+              onValueChange={v => { const num = Number(v); handleTermChange(num); }}
             >
               <SelectTrigger className="h-8 text-xs min-w-0 brand-radius select-trigger-brand">
                 <SelectValue placeholder="Selecione" />
@@ -150,7 +162,6 @@ const SimulatorHeader = () => {
             <Select 
               value={simulatorContext.simulationData.installmentType} 
               onValueChange={v => {
-                console.debug('[Sim/Header] installmentType ->', v);
                 handleFieldChange('installmentType', v);
                 // Sincronizar com o modal de configurações
                 simulatorContext.setSimulationData((prev: any) => ({ 
@@ -176,7 +187,7 @@ const SimulatorHeader = () => {
             <Input
               type="number"
               value={simulatorContext.simulationData.contemplationMonth || ''}
-              onChange={e => { const val = e.target.value ? Number(e.target.value) : 6; console.debug('[Sim/Header] contemplationMonth ->', val); handleFieldChange('contemplationMonth', val); }}
+              onChange={e => { const val = e.target.value ? Number(e.target.value) : 6; handleFieldChange('contemplationMonth', val); }}
               placeholder="6"
               min={1}
               className="h-8 text-xs min-w-0 brand-radius field-secondary-focus no-ring-focus"
@@ -253,6 +264,40 @@ export const SimulatorLayout = ({ children }: SimulatorLayoutProps) => {
         leverageConfig: cfg ? { ...cfg } : undefined,
       }));
     },
+    // NOVO: Controle da entrada especial
+    specialEntryEnabled: true, // Por padrão, entrada especial está ativa
+    setSpecialEntryEnabled: (enabled) => {
+      setSimulatorContextValue(prev => ({
+        ...prev,
+        specialEntryEnabled: enabled
+      }));
+    },
+    // NOVO: Controle do zoom das fontes
+    fontZoom: 100, // Por padrão, zoom é 100%
+    setFontZoom: (zoom: number) => {
+      setSimulatorContextValue(prev => ({
+        ...prev,
+        fontZoom: zoom
+      }));
+    },
+    increaseFontSize: () => {
+      setSimulatorContextValue(prev => ({
+        ...prev,
+        fontZoom: Math.min(prev.fontZoom + 10, 200) // Máximo de 200%
+      }));
+    },
+    decreaseFontSize: () => {
+      setSimulatorContextValue(prev => ({
+        ...prev,
+        fontZoom: Math.max(prev.fontZoom - 10, 50) // Mínimo de 50%
+      }));
+    },
+    resetFontSize: () => {
+      setSimulatorContextValue(prev => ({
+        ...prev,
+        fontZoom: 100
+      }));
+    },
 
     loadInstallmentTypes: async (administratorId: string) => {
       if (!administratorId) return;
@@ -320,6 +365,8 @@ export const SimulatorLayout = ({ children }: SimulatorLayoutProps) => {
           },
           embutido: conf.embutido || prev.embutido,
           leverageConfig: conf.leverageConfig || prev.leverageConfig,
+          specialEntryEnabled: conf.specialEntryEnabled || prev.specialEntryEnabled,
+          fontZoom: conf.fontZoom || prev.fontZoom, // Carregar zoom
         }));
       }
       setIsInitialized(true);
@@ -328,17 +375,29 @@ export const SimulatorLayout = ({ children }: SimulatorLayoutProps) => {
     return () => { cancelled = true; };
   }, [crmUser?.id, companyId]);
   
+  // Aplicar zoom das fontes via CSS
+  useEffect(() => {
+    const applyFontZoom = () => {
+      const simulatorElement = document.querySelector('.simulator-layout');
+      if (simulatorElement) {
+        (simulatorElement as HTMLElement).style.fontSize = `${simulatorContextValue.fontZoom}%`;
+      }
+    };
+
+    applyFontZoom();
+  }, [simulatorContextValue.fontZoom]);
+  
   return (
     <CompanyProvider defaultCompanyId={companyId || ''}>
       <SimulatorContext.Provider value={simulatorContextValue}>
         <SidebarProvider>
-          <div className="min-h-screen flex w-full bg-background dark:bg-[#131313]">
+          <div className="simulator-layout min-h-screen flex w-full bg-background dark:bg-[#131313]">
             <SimulatorSidebar />
-            <SidebarInset className="flex-1 overflow-x-hidden pt-12">{/* reduzido o topo; laterais e inferior permanecem pelo padding do main */}
+            <SidebarInset className="flex-1 overflow-x-hidden pt-1 w-full">{/* reduzido o topo; laterais e inferior permanecem pelo padding do main */}
               {isInitialized ? (
                 <>
                   <SimulatorHeader />
-                  <main className="flex-1 p-6 bg-background dark:bg-[#131313] max-w-full">
+                  <main className="flex-1 p-6 bg-background dark:bg-[#131313] max-w-full mt-16">
                     {children}
                   </main>
 
@@ -352,6 +411,7 @@ export const SimulatorLayout = ({ children }: SimulatorLayoutProps) => {
                     }}
                     embutido={simulatorContextValue.embutido}
                     setEmbutido={simulatorContextValue.setEmbutido}
+                    onSpecialEntryChange={simulatorContextValue.setSpecialEntryEnabled}
                   />
                 </>
               ) : (

@@ -52,9 +52,11 @@ export type Database = {
       }
       administrators: {
         Row: {
+          agio_purchase_percentage: number | null
           company_id: string | null
           created_at: string
           credit_update_type: string
+          functioning: string | null
           grace_period_days: number | null
           id: string
           is_archived: boolean | null
@@ -71,9 +73,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          agio_purchase_percentage?: number | null
           company_id?: string | null
           created_at?: string
           credit_update_type: string
+          functioning?: string | null
           grace_period_days?: number | null
           id?: string
           is_archived?: boolean | null
@@ -90,9 +94,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          agio_purchase_percentage?: number | null
           company_id?: string | null
           created_at?: string
           credit_update_type?: string
+          functioning?: string | null
           grace_period_days?: number | null
           id?: string
           is_archived?: boolean | null

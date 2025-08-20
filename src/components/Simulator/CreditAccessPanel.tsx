@@ -16,6 +16,7 @@ import { formatPercentage } from '@/utils/calculationHelpers';
 import { useCompany } from '@/contexts/CompanyContext';
 import { regraParcelaEspecial } from '@/lib/regraParcelaEspecial';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { useSimulatorContext } from '@/components/Layout/SimulatorLayout';
 
 
 
@@ -139,9 +140,170 @@ function ResumoCard({ titulo, valor, destaquePositivo, destaqueNegativo }: { tit
   );
 }
 
+// Componente personalizado para o card "Valor da Parcela" com entrada especial
+function ResumoCardParcelaEspecial({ 
+  titulo, 
+  valor, 
+  destaquePositivo, 
+  destaqueNegativo,
+  specialEntryData,
+  creditoAcessado,
+  firstRowCredit,
+  data
+}: { 
+  titulo: string, 
+  valor: string, 
+  destaquePositivo?: boolean, 
+  destaqueNegativo?: boolean,
+  specialEntryData?: {
+    hasSpecialEntry: boolean;
+    specialEntryType?: string;
+    specialEntryPercent?: number;
+    specialEntryValue?: number;
+    specialEntryInstallments?: number;
+    functioning?: string;
+    baseInstallmentValue?: number;
+  },
+  creditoAcessado?: number,
+  firstRowCredit?: number,
+  data?: any
+}) {
+  // Função formatCurrency local
+  const formatCurrency = (value: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(value);
+  };
+
+  const colors = {
+    bg: 'from-green-50 to-green-100 dark:from-[#1F1F1F] dark:to-[#161616]',
+    border: 'border',
+    label: 'font-medium',
+    value: 'text-green-900 dark:text-white'
+  };
+  
+  const finalValueClass = destaquePositivo ? 'text-green-600 dark:text-green-400' : 
+                         destaqueNegativo ? 'text-red-600 dark:text-red-400' : 
+                         colors.value;
+
+  const labelColor = destaquePositivo
+    ? 'rgb(22 163 74)'
+    : destaqueNegativo
+      ? 'rgb(220 38 38)'
+      : 'var(--brand-primary)';
+
+  const hasSpecialEntry = specialEntryData?.hasSpecialEntry;
+
+  // Função para navegar para a tabela Detalhamento do Consórcio
+  const navigateToTable = () => {
+    const element = document.getElementById('detalhamento-consorcio');
+    if (element) {
+      const elementPosition = element.offsetTop;
+      const offsetPosition = elementPosition - 50; // 50px acima do elemento
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  // Se não tem entrada especial, renderizar como card normal
+  if (!hasSpecialEntry) {
+    return (
+      <div className={`space-y-2 p-4 bg-gradient-to-r ${colors.bg} rounded-lg border brand-radius`} style={{ borderColor: destaqueNegativo ? '#333333' : 'var(--brand-secondary)' }}>
+        <Label className={`text-sm ${colors.label}`} style={{ color: labelColor }}>{titulo}</Label>
+        <div className={`text-2xl font-bold ${finalValueClass}`}>{valor}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`space-y-2 p-4 bg-gradient-to-r ${colors.bg} rounded-lg border brand-radius cursor-pointer`} style={{ borderColor: destaqueNegativo ? '#333333' : 'var(--brand-secondary)' }} onClick={navigateToTable}>
+      <Label className={`text-sm ${colors.label}`} style={{ color: labelColor }}>{titulo}</Label>
+      <div className={`text-2xl font-bold ${finalValueClass} flex items-center gap-2`}>
+        {valor}
+        <Plus className="h-5 w-5 text-green-600 dark:text-green-400" />
+      </div>
+    </div>
+  );
+}
+
+// Componente personalizado para o card "Total da Parcela" com entrada especial
+function ResumoCardTotalParcelaEspecial({ 
+  titulo, 
+  valor, 
+  destaquePositivo, 
+  destaqueNegativo,
+  specialEntryData
+}: { 
+  titulo: string, 
+  valor: string, 
+  destaquePositivo?: boolean, 
+  destaqueNegativo?: boolean,
+  specialEntryData?: {
+    hasSpecialEntry: boolean;
+  }
+}) {
+  const colors = {
+    bg: 'from-indigo-50 to-indigo-100 dark:from-[#1F1F1F] dark:to-[#161616]',
+    border: 'border',
+    label: 'font-medium',
+    value: 'text-indigo-900 dark:text-white'
+  };
+  
+  const finalValueClass = destaquePositivo ? 'text-green-600 dark:text-green-400' : 
+                         destaqueNegativo ? 'text-red-600 dark:text-red-400' : 
+                         colors.value;
+
+  const labelColor = destaquePositivo
+    ? 'rgb(22 163 74)'
+    : destaqueNegativo
+      ? 'rgb(220 38 38)'
+      : 'var(--brand-primary)';
+
+  const hasSpecialEntry = specialEntryData?.hasSpecialEntry;
+
+  // Função para navegar para a tabela Detalhamento do Consórcio
+  const navigateToTable = () => {
+    const element = document.getElementById('detalhamento-consorcio');
+    if (element) {
+      const elementPosition = element.offsetTop;
+      const offsetPosition = elementPosition - 50; // 50px acima do elemento
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  // Se não tem entrada especial, renderizar como card normal
+  if (!hasSpecialEntry) {
+    return (
+      <div className={`space-y-2 p-4 bg-gradient-to-r ${colors.bg} rounded-lg border brand-radius`} style={{ borderColor: destaqueNegativo ? '#333333' : 'var(--brand-secondary)' }}>
+        <Label className={`text-sm ${colors.label}`} style={{ color: labelColor }}>{titulo}</Label>
+        <div className={`text-2xl font-bold ${finalValueClass}`}>{valor}</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`space-y-2 p-4 bg-gradient-to-r ${colors.bg} rounded-lg border brand-radius cursor-pointer`} style={{ borderColor: destaqueNegativo ? '#333333' : 'var(--brand-secondary)' }} onClick={navigateToTable}>
+      <Label className={`text-sm ${colors.label}`} style={{ color: labelColor }}>{titulo}</Label>
+      <div className={`text-2xl font-bold ${finalValueClass} flex items-center gap-2`}>
+        {valor}
+        <Plus className="h-5 w-5 text-green-600 dark:text-green-400" />
+      </div>
+    </div>
+  );
+}
+
 export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsChange, firstRowCredit, firstRowInstallmentValue, shouldRecalculateCredit, embutido, setEmbutido }: CreditAccessPanelProps) => {
   const { selectedCompanyId } = useCompany();
   const { crmUser, companyId } = useCrmAuth();
+  const simulatorContext = useSimulatorContext();
   
 
   const [credits, setCredits] = useState<Credit[]>([]);
@@ -158,6 +320,9 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     debtBalance: true,
   });
 
+  // Estados para entrada especial
+  const [administratorData, setAdministratorData] = useState<any>(null);
+
   // 1. Adicionar estado para valor da parcela digitada e lista de cotas manuais
   const [parcelaDesejada, setParcelaDesejada] = useState<number>(0);
   const [cotas, setCotas] = useState<{produtoId: string, nome: string, valor: number, parcela: number, quantidade: number}[]>([]);
@@ -165,7 +330,6 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
   const [selectedProduct, setSelectedProduct] = useState<string>('');
   const [showAddProduct, setShowAddProduct] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [showComingSoon, setShowComingSoon] = useState(false);
   const [selectedCotas, setSelectedCotas] = useState<number[]>([]);
   const [showRedefinirModal, setShowRedefinirModal] = useState(false);
   const [redefinirProdutoId, setRedefinirProdutoId] = useState('');
@@ -235,6 +399,101 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     
     loadProducts();
   }, [data.administrator]);
+
+  // Função para carregar dados da administradora
+  const loadAdministratorData = async () => {
+    try {
+      if (!crmUser?.id || !selectedCompanyId) return;
+
+      const { data: configs } = await supabase
+        .from('simulator_configurations')
+        .select('*')
+        .eq('company_id', selectedCompanyId)
+        .eq('user_id', crmUser.id)
+        .limit(1);
+
+      if (configs && configs.length > 0) {
+        const config = configs[0].configuration;
+        const administratorId = config?.administratorId;
+        
+        if (administratorId) {
+          const { data: adminData } = await supabase
+            .from('administrators')
+            .select('*')
+            .eq('id', administratorId)
+            .eq('is_archived', false)
+            .limit(1);
+
+          if (adminData && adminData.length > 0) {
+            setAdministratorData(adminData[0]);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao carregar dados da administradora:', error);
+    }
+  };
+
+  // Carregar dados da administradora quando o componente montar
+  useEffect(() => {
+    loadAdministratorData();
+  }, [crmUser?.id, selectedCompanyId]);
+
+  // Recarregar dados da administradora quando a configuração mudar
+  useEffect(() => {
+    const handleConfigSaved = () => {
+      loadAdministratorData();
+    };
+
+    window.addEventListener('configSaved', handleConfigSaved);
+    
+    return () => {
+      window.removeEventListener('configSaved', handleConfigSaved);
+    };
+  }, []);
+
+  // Calcular dados da entrada especial
+  const getSpecialEntryData = () => {
+    // Verificar se a administradora tem entrada especial configurada
+    if (!administratorData) {
+      return {
+        hasSpecialEntry: false
+      };
+    }
+
+    const hasSpecialEntry = administratorData.special_entry_type && 
+                           administratorData.special_entry_type !== 'none' && 
+                           administratorData.special_entry_type !== 'Nenhuma';
+    
+    if (!hasSpecialEntry) {
+      return {
+        hasSpecialEntry: false
+      };
+    }
+
+    // Verificar se a entrada especial está habilitada no contexto
+    if (!simulatorContext.specialEntryEnabled) {
+      return {
+        hasSpecialEntry: false
+      };
+    }
+
+    const baseInstallmentValue = data.searchType === 'contribution' 
+      ? valorParcela 
+      : (firstRowInstallmentValue !== undefined ? firstRowInstallmentValue : valorParcela);
+
+    const result = {
+      hasSpecialEntry: true,
+      specialEntryType: administratorData.special_entry_type,
+      specialEntryPercent: administratorData.special_entry_percentage,
+      specialEntryValue: administratorData.special_entry_fixed_value,
+      specialEntryInstallments: administratorData.special_entry_installments,
+      functioning: administratorData.functioning,
+      baseInstallmentValue
+    };
+
+    return result;
+  };
 
   // Função para salvar montagem
   const salvarMontagem = async () => {
@@ -593,19 +852,19 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     // Calcular parcela base (10000) com redução se aplicável
     let parcelaBase = baseCalculo;
     if (installmentType !== 'full' && reducaoParcela && reducaoParcela.applications && reducaoParcela.applications.includes('installment')) {
-      parcelaBase = baseCalculo * (reducaoParcela.reduction_percent / 100);
+      parcelaBase = baseCalculo * (1 - reducaoParcela.reduction_percent / 100);
     }
     
     // Calcular taxa de administração com redução se aplicável
     let taxaAdm = installmentParams.admin_tax_percent || 0;
     if (installmentType !== 'full' && reducaoParcela && reducaoParcela.applications && reducaoParcela.applications.includes('admin_tax')) {
-      taxaAdm = taxaAdm * (reducaoParcela.reduction_percent / 100);
+      taxaAdm = taxaAdm * (1 - reducaoParcela.reduction_percent / 100);
     }
     
     // Calcular fundo de reserva com redução se aplicável
     let fundoReserva = installmentParams.reserve_fund_percent || 0;
     if (installmentType !== 'full' && reducaoParcela && reducaoParcela.applications && reducaoParcela.applications.includes('reserve_fund')) {
-      fundoReserva = fundoReserva * (reducaoParcela.reduction_percent / 100);
+      fundoReserva = fundoReserva * (1 - reducaoParcela.reduction_percent / 100);
     }
     
     // Aplicar a nova fórmula: Crédito = (Aporte / ((Parcela + TaxaAdm + FundoReserva) / Prazo)) * 10000
@@ -630,19 +889,19 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
     // Calcular parcela base com redução se aplicável
     let parcelaBase = creditoAcessado;
     if (installmentType !== 'full' && reducaoParcela && reducaoParcela.applications && reducaoParcela.applications.includes('installment')) {
-      parcelaBase = creditoAcessado * (reducaoParcela.reduction_percent / 100);
+      parcelaBase = creditoAcessado * (1 - reducaoParcela.reduction_percent / 100);
     }
     
     // Calcular taxa de administração com redução se aplicável
     let taxaAdm = installmentParams.admin_tax_percent || 0;
     if (installmentType !== 'full' && reducaoParcela && reducaoParcela.applications && reducaoParcela.applications.includes('admin_tax')) {
-      taxaAdm = taxaAdm * (reducaoParcela.reduction_percent / 100);
+      taxaAdm = taxaAdm * (1 - reducaoParcela.reduction_percent / 100);
     }
     
     // Calcular fundo de reserva com redução se aplicável
     let fundoReserva = installmentParams.reserve_fund_percent || 0;
     if (installmentType !== 'full' && reducaoParcela && reducaoParcela.applications && reducaoParcela.applications.includes('reserve_fund')) {
-      fundoReserva = fundoReserva * (reducaoParcela.reduction_percent / 100);
+      fundoReserva = fundoReserva * (1 - reducaoParcela.reduction_percent / 100);
     }
     
     // Aplicar a nova fórmula: Parcela = (ParcelaBase + TaxaAdm + FundoReserva) / Prazo
@@ -1704,7 +1963,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
       {/* Painel de resumo */}
       {/* Cards de resumo acima da montagem de cotas */}
       {/* Primeira linha de cards de resumo */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">{/* reduzido de mb-6 para mb-4 */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">{/* ajustado para mobile: 1 coluna no mobile, 2 no tablet, 4 no desktop */}
         <ResumoCard 
           titulo="Crédito Acessado" 
           valor={formatCurrency(
@@ -1713,13 +1972,17 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
               : (firstRowCredit !== undefined ? firstRowCredit : creditoAcessado)
           )} 
         />
-        <ResumoCard 
+        <ResumoCardParcelaEspecial 
           titulo="Valor da Parcela" 
           valor={formatCurrency(
             data.searchType === 'contribution' 
               ? valorParcela 
               : (firstRowInstallmentValue !== undefined ? firstRowInstallmentValue : valorParcela)
           )} 
+          specialEntryData={getSpecialEntryData()}
+          creditoAcessado={creditoAcessado}
+          firstRowCredit={firstRowCredit}
+          data={data}
         />
         <ResumoCard titulo="Taxa anual" valor={formatPercentage(taxaAnual)} />
         <ResumoCard titulo="Atualização anual" valor={atualizacaoAnual} />
@@ -1727,11 +1990,17 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
 
       {/* Segunda linha de cards de resumo, só aparece se houver pelo menos um produto selecionado */}
       {cotas.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">{/* reduzido de mb-6 para mb-4 */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">{/* ajustado para mobile: 1 coluna no mobile, 2 no tablet, 4 no desktop */}
           {(() => { const atingiuParcela = valorParcela > 0 && totalParcela >= valorParcela; return (
             <>
               <ResumoCard titulo="Total do Crédito" valor={formatCurrency(totalCotas)} destaquePositivo={atingiuParcela} destaqueNegativo={!atingiuParcela} />
-              <ResumoCard titulo="Total da Parcela" valor={formatCurrency(totalParcela)} destaquePositivo={atingiuParcela} destaqueNegativo={!atingiuParcela} />
+              <ResumoCardTotalParcelaEspecial 
+                titulo="Total da Parcela" 
+                valor={formatCurrency(totalParcela)} 
+                destaquePositivo={atingiuParcela} 
+                destaqueNegativo={!atingiuParcela}
+                specialEntryData={getSpecialEntryData()}
+              />
               <ResumoCard titulo="Acréscimo no Aporte" valor={formatCurrency(acrescimoAporte)} destaquePositivo={atingiuParcela} destaqueNegativo={!atingiuParcela} />
               <ResumoCard titulo="Acréscimo no Crédito" valor={formatCurrency(acrescimoCredito)} destaquePositivo={atingiuParcela} destaqueNegativo={!atingiuParcela} />
             </>
@@ -1893,28 +2162,23 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
               
               {/* Botões de ação embaixo da montagem de cotas */}
               <div className="flex flex-col md:flex-row gap-2 mt-6">
-                {/* Botão Gerar proposta só aparece se houver cotas e não estiver salvando */}
-                {cotas.length > 0 && !saving && (
-                  <Button onClick={() => setShowComingSoon(true)} className="flex-1 bg-green-600 hover:bg-green-700 text-white brand-radius">Gerar proposta</Button>
-                )}
-                <Button onClick={redefinirMontagem} variant="outline" className="flex-1 brand-radius">Redefinir</Button>
+                <Button 
+                  onClick={redefinirMontagem} 
+                  variant="outline" 
+                  className="flex-1 brand-radius hover:bg-secondary hover:text-secondary-foreground focus:bg-secondary focus:text-secondary-foreground"
+                  style={{
+                    '--tw-ring-color': 'var(--brand-secondary)',
+                    '--tw-ring-offset-color': 'var(--brand-secondary)'
+                  } as React.CSSProperties}
+                >
+                  Redefinir
+                </Button>
                 <Button onClick={salvarMontagem} disabled={saving} variant="brandPrimaryToSecondary" className="flex-1 brand-radius">{saving ? 'Salvando...' : 'Salvar'}</Button>
               </div>
             </div>
           </CardContent>
         </Card>
       )}
-      {/* Modal "Em breve" */}
-      <Dialog open={showComingSoon} onOpenChange={setShowComingSoon}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Em breve</DialogTitle>
-          </DialogHeader>
-          <div className="py-6 text-center text-lg">Funcionalidade de geração de proposta estará disponível em breve!</div>
-        </DialogContent>
-      </Dialog>
-
-
     </div>
   );
 };
