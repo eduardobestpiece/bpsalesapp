@@ -405,7 +405,7 @@ export const SimulatorMenu = ({ onNavigate, onToggleSection, embutido, setEmbuti
                   const isActive = (key === 'with' && simulatorContext.specialEntryEnabled) || (key === 'without' && !simulatorContext.specialEntryEnabled);
                   const style = {
                     backgroundColor: '#131313',
-                    color: isActive ? '#E50F5E' : '#333333'
+                    color: isActive ? 'var(--brand-primary)' : '#333333'
                   };
                   
                   return (
@@ -452,7 +452,7 @@ export const SimulatorMenu = ({ onNavigate, onToggleSection, embutido, setEmbuti
               
               const style = {
                 backgroundColor: '#131313',
-                color: isActive ? '#E50F5E' : '#333333'
+                color: isActive ? 'var(--brand-primary)' : '#333333'
               };
               
               return (

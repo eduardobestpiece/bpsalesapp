@@ -6,6 +6,58 @@
 
 ---
 
+## Requisição Atual: Deploy para GitHub
+
+**Data:** 2025-01-17  
+**Solicitante:** Eduardo Costa  
+**Status:** 🔄 Em Andamento
+
+### Funcionalidade Solicitada
+Realizar deploy das alterações atuais para o repositório GitHub.
+
+### Análise da Estrutura Atual
+**Arquivos modificados:**
+- `requeststory.md` - Atualização do histórico
+- `src/App.tsx` - Alterações na aplicação principal
+- `src/components/CRM/ProtectedRoute.tsx` - Correções de permissões
+- `src/components/Layout/ModuleSwitcher.tsx` - Ajustes no seletor de módulos
+- `src/components/Layout/SettingsSidebar.tsx` - Correções no sidebar de configurações
+- `src/components/Layout/SimulatorSidebar.tsx` - Ajustes no sidebar do simulador
+- `src/components/Simulator/SimulatorMenu.tsx` - Correções no menu do simulador
+- `src/pages/crm/CrmMasterConfig.tsx` - Ajustes na configuração master
+- `src/pages/settings/SettingsPerfil.tsx` - Correções na página de perfil
+- `supabase/migrations/20250115000001-add-user-permission-pages.sql` - Nova migração
+
+**Repositório conectado:**
+- **URL:** https://github.com/eduardobestpiece/consorcio-patrimonio-simulador.git
+- **Branch:** main
+- **Status:** Atualizado com origin/main
+
+### Implementação Realizada
+1. **Verificação do repositório:**
+   - ✅ Repositório GitHub conectado e funcional
+   - ✅ Branch main atualizada
+   - ✅ Arquivos modificados identificados
+
+2. **Preparação do deploy:**
+   - ✅ Análise das alterações pendentes
+   - ✅ Verificação de arquivos não rastreados
+   - ✅ Confirmação do status do git
+
+### Checklist
+- [x] Verificar se projeto está conectado ao GitHub
+- [x] Analisar arquivos modificados
+- [x] Preparar commit com alterações
+- [ ] Executar push para GitHub
+- [ ] Confirmar deploy realizado
+- [ ] Atualizar porta 8080
+- [ ] Verificar se tudo está funcionando corretamente
+
+### Resultado
+🔄 Deploy em andamento...
+
+---
+
 ## Requisição Atual: Ajuste das Colunas da Tabela de Administradoras
 
 **Data:** 2025-01-17  
@@ -336,3 +388,132 @@ Ao tentar editar uma Redução de Parcela e clicar em salvar no modal, a operaç
 ✅ Logs de debug adicionados para monitoramento
 
 ---
+
+### Resultado
+✅ **Filtro funcional:** Permite filtrar reduções por administradora específica
+✅ **Interface consistente:** Alinhamento e estilos padronizados
+✅ **UX melhorada:** Textos concisos e funcionais
+✅ **Código limpo:** Sem logs de debug
+✅ **Deploy realizado:** Alterações enviadas para GitHub (commit 615bd36)
+
+### Deploy Realizado
+- **Data:** 15/01/2025
+- **Commit:** 615bd36
+- **Branch:** main
+- **Arquivos:** 30 arquivos modificados
+- **Status:** ✅ Deploy concluído com sucesso
+
+---
+
+## Requisição Atual: Nova Página de Permissões no Master Config
+
+### Objetivo
+Criar uma nova página de permissões no Master Config para controlar o acesso de usuários normais.
+
+### Requisitos para Usuários Normais
+- ✅ **Simulador:** Acessar e utilizar o simulador
+- ✅ **Meu Perfil:** Acessar e editar próprias informações
+- ❌ **Outras páginas:** Não devem aparecer no menu, headers nem home
+
+### Implementação Realizada
+- **Nova aba:** "Permissões" adicionada ao Master Config
+- **Componente:** AccessPermissionsTable já existente e funcional
+- **Páginas:** Estrutura de páginas já configurada no banco
+- **Interface:** Tabela com checkboxes para controlar permissões por função
+- **Funções:** Admin, Líder e Usuário configuradas
+- **Sincronização:** Botão "Sincronizar Estrutura" para atualizar automaticamente
+
+### Funcionalidade de Sincronização Automática
+- **Detecção automática:** Identifica páginas novas e obsoletas
+- **Permissões inteligentes:** Define permissões padrão baseadas no tipo de página
+- **Configuração padrão:**
+  - `profile`: Todos os usuários podem acessar
+  - `simulator`: Todos os usuários podem acessar
+  - `config/master`: Apenas admin/master podem acessar
+  - Outras páginas: Permitidas por padrão
+- **Interface intuitiva:** Botão com feedback visual durante sincronização
+
+### Sincronização Completa da Estrutura
+- **Estrutura real:** Define toda a estrutura da aplicação no código
+- **Módulos organizados:** CRM, Simulator, Settings, Master, User
+- **Configurações do Simulador:** Movidas para o módulo Simulator
+- **Atualização automática:** Sincroniza estrutura e permissões
+- **Dois tipos de sincronização:**
+  - **Sincronizar Estrutura:** Baseada no banco de dados atual
+  - **Sincronização Completa:** Força atualização da estrutura real
+
+### Varredura Completa de Módulos, Páginas e Abas
+- **Detecção automática:** Identifica todas as páginas e abas da plataforma
+- **Estrutura completa incluindo:**
+  - **CRM:** Dashboard, Comercial (Leads, Vendas), Agenda (Agenda Temporária), Indicadores (Performance, Registro), Relatórios
+  - **Simulador:** Simulador, Configurações (Administradoras, Redução de Parcela, Parcelas, Produtos, Alavancas)
+  - **Configurações:** CRM (Funis, Origens, Times, Usuários), Usuários (Lista), Meu Perfil (Informações Pessoais, **Integrações**, Segurança), Empresa (Dados, Identidade), Agendamento (Disponibilidade, Tipos de Evento, Formulário, Integração de Calendário)
+  - **Master:** Configurações Master (Empresas, Itens arquivados, Acessos, Permissões)
+  - **User:** Meu Perfil
+- **Aba Integrações:** Agora incluída na estrutura de permissões
+- **Sincronização inteligente:** Mantém permissões existentes e adiciona novas automaticamente
+
+### Sistema de Permissões Hierárquico
+- **Ocultação automática:** Se o usuário não tem permissão, o elemento não aparece
+- **Funcionamento:**
+  - **Módulo:** Se não tem permissão, o módulo não aparece no menu
+  - **Página:** Se não tem permissão, a página não aparece no menu nem é acessível
+  - **Aba:** Se não tem permissão, a aba não aparece na interface
+- **Hierarquia de permissões:**
+  - Desmarcar uma página = oculta todas as abas filhas
+  - Marcar uma aba = automaticamente marca a página pai
+  - Desmarcar todas as abas = automaticamente desmarca a página pai
+- **Segurança:** Usuários não conseguem acessar elementos sem permissão, mesmo digitando a URL diretamente
+
+### Correção de Permissões no Menu
+- **Problema identificado:** Menu "Configurações" aparecia mesmo para usuários sem permissão
+- **Causa:** Verificação incorreta de permissões (verificava qualquer página do módulo settings)
+- **Solução:** Verificação específica para `simulator_config` em:
+  - `SimulatorSidebar.tsx`: Menu lateral
+  - `ModuleSwitcher.tsx`: Seletor de módulos no header
+- **Resultado:** Menu "Configurações" agora só aparece para usuários com permissão específica
+
+### Correção de Permissões nas Abas e Menus
+- **Problema 1:** Aba "Integrações" aparecia mesmo com permissão desmarcada
+- **Problema 2:** Menu "Agendamento" aparecia mesmo com permissão desmarcada
+- **Soluções implementadas:**
+  - **SettingsPerfil.tsx:** Verificação de permissões para abas (Dados pessoais, Integrações, Segurança)
+  - **SettingsSidebar.tsx:** Verificação de permissões para menu Agendamento
+- **Resultado:** Abas e menus agora respeitam as permissões configuradas
+
+### Correção de Cores dos Ícones no SimulatorMenu
+- **Problema:** Ícones selecionados usavam cor hardcoded (#E50F5E) em vez da cor primária da empresa
+- **Localização:** `src/components/Simulator/SimulatorMenu.tsx` linhas 410 e 438
+- **Solução:** Substituição de `#E50F5E` por `var(--brand-primary)`
+- **Resultado:** Ícones agora usam a cor primária da empresa selecionada
+
+### Status Atual
+✅ **Página criada:** Nova aba "Permissões" implementada
+✅ **Sincronização automática:** Funcionalidade de sincronização completa implementada
+✅ **Varredura completa:** Todas as páginas e abas da plataforma incluídas
+✅ **Sistema hierárquico:** Permissões funcionando com ocultação automática
+✅ **Segurança:** ProtectedRoute implementado para controle de acesso
+✅ **Interface:** Botões de sincronização e salvamento funcionais
+
+### Implementação Completa
+- **Página de Permissões:** Nova aba no Master Config
+- **Sincronização Completa:** Varredura automática de toda a estrutura
+- **Sistema de Permissões:** Hierárquico com ocultação automática
+- **Segurança:** Controle de acesso em nível de página e aba
+- **Interface:** Intuitiva com feedback visual
+- **Documentação:** Completa no requeststory.md
+
+### Como Usar
+1. Acesse: Master Config → Aba "Permissões"
+2. Clique: "Sincronização Completa" para atualizar estrutura
+3. Configure: Permissões por função (Admin, Líder, Usuário)
+4. Salve: Clique em "Salvar Permissões"
+5. Teste: Verifique se elementos são ocultados automaticamente
+
+### Resultado Final
+Sistema completo de permissões implementado com:
+- ✅ Controle granular de acesso
+- ✅ Ocultação automática de elementos
+- ✅ Sincronização automática da estrutura
+- ✅ Interface intuitiva e responsiva
+- ✅ Segurança em múltiplos níveis

@@ -43,6 +43,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
         setPageAllowed(true);
         return;
       }
+      
+      // Página 'profile' sempre permitida para usuários logados
+      if (requiredPageKey === 'profile') {
+        setPageAllowed(true);
+        return;
+      }
       const { data, error } = await supabase
         .from('role_page_permissions')
         .select('page, allowed')

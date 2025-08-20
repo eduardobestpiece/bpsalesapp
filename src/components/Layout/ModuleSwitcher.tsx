@@ -66,7 +66,7 @@ export const ModuleSwitcher = ({ current }: ModuleSwitcherProps) => {
 
   const modules = useMemo(() => {
     const allowedSettings = (
-      (settingsPageKeys.length > 0 && settingsPageKeys.some(k => perms[k] !== false)) ||
+      perms['simulator_config'] !== false ||
       userRole === 'admin' || userRole === 'master'
     );
 

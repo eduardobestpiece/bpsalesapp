@@ -12,19 +12,40 @@ import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PersonalDataTab } from '@/components/CRM/Profile/PersonalDataTab';
 import { IntegrationsTab } from '@/components/CRM/Profile/IntegrationsTab';
+import { useQuery } from '@tanstack/react-query';
 
 export default function SettingsPerfil() {
-  const { crmUser, updateCrmUserInContext, refreshCrmUser } = useCrmAuth();
+  const { crmUser, updateCrmUserInContext, refreshCrmUser, userRole, companyId } = useCrmAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState({
-    first_name: crmUser?.first_name || '',
-    last_name: crmUser?.last_name || '',
-    email: crmUser?.email || '',
-    phone: crmUser?.phone || '',
-    birth_date: crmUser?.birth_date || '',
-    bio: crmUser?.bio || '',
-    avatar_url: crmUser?.avatar_url || '',
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+    birth_date: '',
+    bio: '',
+    avatar_url: '',
   });
+
+  // Verificar permissões das abas
+  const { data: perms = {} } = useQuery({
+    queryKey: ['role_page_permissions', companyId, userRole],
+    enabled: !!companyId && !!userRole,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('role_page_permissions')
+        .select('*')
+        .eq('company_id', companyId as string)
+        .eq('role', userRole as any);
+      const map: Record<string, boolean> = {};
+      data?.forEach((r: any) => { map[r.page] = r.allowed; });
+      return map;
+    }
+  });
+
+  const canSeePersonalData = perms['settings_profile_info'] !== false;
+  const canSeeIntegrations = perms['settings_profile_integrations'] !== false;
+  const canSeeSecurity = perms['settings_profile_security'] !== false;
 
   useEffect(() => {
     // Sempre sincroniza dados ao entrar na página para evitar cache antigo
@@ -135,39 +156,45 @@ export default function SettingsPerfil() {
 
           <Tabs defaultValue="dados" className="space-y-6">
             <TabsList className="grid grid-cols-2 w-full max-w-md">
-              <TabsTrigger value="dados">Dados pessoais</TabsTrigger>
-              <TabsTrigger value="integracoes">Integrações</TabsTrigger>
+              {canSeePersonalData && <TabsTrigger value="dados">Dados pessoais</TabsTrigger>}
+              {canSeeIntegrations && <TabsTrigger value="integracoes">Integrações</TabsTrigger>}
             </TabsList>
-            <TabsContent value="dados">
-              <PersonalDataTab
-                formData={formData}
-                isSaving={isSaving}
-                userInitials={userInitials}
-                userId={crmUser?.id || ''}
-                onInputChange={handleInputChange}
-                onSave={() => handleSave()}
-                onAvatarChange={handleAvatarChange}
-              />
-            </TabsContent>
-            <TabsContent value="integracoes">
-              <IntegrationsTab />
-            </TabsContent>
+            {canSeePersonalData && (
+              <TabsContent value="dados">
+                <PersonalDataTab
+                  formData={formData}
+                  isSaving={isSaving}
+                  userInitials={userInitials}
+                  userId={crmUser?.id || ''}
+                  onInputChange={handleInputChange}
+                  onSave={() => handleSave()}
+                  onAvatarChange={handleAvatarChange}
+                />
+              </TabsContent>
+            )}
+            {canSeeIntegrations && (
+              <TabsContent value="integracoes">
+                <IntegrationsTab />
+              </TabsContent>
+            )}
           </Tabs>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-foreground">Segurança</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-medium text-foreground">Senha</h4>
-                  <p className="text-sm text-muted-foreground">Redefina sua senha para manter sua conta segura</p>
+          {canSeeSecurity && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-foreground">Segurança</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium text-foreground">Senha</h4>
+                    <p className="text-sm text-muted-foreground">Redefina sua senha para manter sua conta segura</p>
+                  </div>
+                  <Button onClick={handleResetPassword} className="brand-radius" variant="brandOutlineSecondaryHover">Redefinir Senha</Button>
                 </div>
-                <Button onClick={handleResetPassword} className="brand-radius" variant="brandOutlineSecondaryHover">Redefinir Senha</Button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </SettingsLayout>

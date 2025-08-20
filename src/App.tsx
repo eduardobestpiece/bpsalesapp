@@ -137,7 +137,9 @@ function AppContent() {
           } />
           <Route path="/configuracoes/perfil" element={
             user ? (
-              <SettingsPerfil />
+              <ProtectedRoute requiredPageKey="profile">
+                <SettingsPerfil />
+              </ProtectedRoute>
             ) : <Navigate to="/crm/login" replace />
           } />
           <Route path="/configuracoes/agendamento" element={

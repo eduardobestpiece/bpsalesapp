@@ -80,7 +80,7 @@ const CrmMasterConfig = () => {
   const allowedTabs = useMemo(() => {
     // Sempre retornar um array válido para master
     if (userRole === 'master') {
-      return ['companies', 'archived', 'accesses'];
+      return ['companies', 'archived', 'accesses', 'permissions'];
     }
     return [];
   }, [userRole]);
@@ -396,6 +396,9 @@ const CrmMasterConfig = () => {
                     {safeAllowedTabs.includes('accesses') && (
                       <TabsTrigger value="accesses">Acessos</TabsTrigger>
                     )}
+                    {safeAllowedTabs.includes('permissions') && (
+                      <TabsTrigger value="permissions">Permissões</TabsTrigger>
+                    )}
                   </TabsList>
                   {safeAllowedTabs.includes('companies') && (
                     <TabsContent value="companies" className="mt-6">
@@ -590,6 +593,21 @@ const CrmMasterConfig = () => {
                       </Card>
                     </TabsContent>
                   )}
+                  {safeAllowedTabs.includes('permissions') && (
+                    <TabsContent value="permissions" className="mt-6">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Permissões de Acesso</CardTitle>
+                          <CardDescription>
+                            Defina quais páginas e abas cada função pode acessar. Desmarque para ocultar do menu, botões e impedir acesso direto.
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <AccessPermissionsTable />
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                  )}
                 </Tabs>
               )}
             </div>
@@ -607,56 +625,17 @@ function AccessPermissionsTable() {
   const [permissions, setPermissions] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
 
   const [pages, setPages] = useState<{ key: string; label: string; type: 'module' | 'page' | 'tab'; indent?: boolean }[]>([]);
   const [rawPages, setRawPages] = useState<any[]>([]);
   useEffect(() => {
-    const loadPages = async () => {
-      const { data, error } = await supabase
-        .from('app_pages')
-        .select('key,label,parent_key,module,display_order,is_active')
-        .eq('is_active', true)
-        .order('display_order', { ascending: true });
-      if (error) {
-        toast.error('Erro ao carregar páginas: ' + error.message);
-        return;
-      }
-      const parents = (data || []).filter(p => !p.parent_key);
-      const children = (data || []).filter(p => !!p.parent_key);
-      setRawPages(data || []);
-
-      // Agrupar por módulo e ordenar por display_order
-      const moduleToParents: Record<string, any[]> = {};
-      parents.forEach(p => {
-        const mod = p.module || 'outros';
-        if (!moduleToParents[mod]) moduleToParents[mod] = [];
-        moduleToParents[mod].push(p);
-      });
-      const moduleOrder = Object.entries(moduleToParents)
-        .map(([mod, arr]) => [mod, Math.min(...arr.map((x: any) => x.display_order || 0))] as const)
-        .sort((a, b) => a[1] - b[1])
-        .map(([mod]) => mod);
-
-      const moduleLabel = (m: string) => m === 'simulator' ? 'Simulador' : m === 'settings' ? 'Configurações' : m === 'crm' ? 'CRM' : (m.charAt(0).toUpperCase() + m.slice(1));
-
-      const list: { key: string; label: string; type: 'module' | 'page' | 'tab'; indent?: boolean }[] = [];
-      moduleOrder.forEach(mod => {
-        list.push({ key: `__module__:${mod}`, label: moduleLabel(mod), type: 'module' });
-        const modParents = (moduleToParents[mod] || []).sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
-        modParents.forEach(p => {
-          list.push({ key: p.key, label: p.label, type: 'page' });
-          children
-            .filter(c => c.parent_key === p.key)
-            .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
-            .forEach(c => {
-              list.push({ key: c.key, label: c.label, type: 'tab', indent: true });
-            });
-        });
-      });
-      setPages(list);
-    };
     loadPages();
   }, []);
+
+  useEffect(() => {
+    loadPermissions();
+  }, [companyId]);
   const roles = [
     { key: 'admin', label: 'Administrador' },
     { key: 'leader', label: 'Líder' },
@@ -678,30 +657,6 @@ function AccessPermissionsTable() {
     });
     return { parentToChildren, childToParent };
   }, [rawPages]);
-
-  useEffect(() => {
-    if (!companyId) return;
-    setLoading(true);
-    supabase
-      .from('role_page_permissions')
-      .select('*')
-      .eq('company_id', companyId)
-      .then(({ data, error }) => {
-        if (error) {
-          toast.error('Erro ao carregar permissões: ' + error.message);
-          setLoading(false);
-          return;
-        }
-        const perms: any = {};
-        roles.forEach(r => { perms[r.key] = {}; });
-        data?.forEach((row: any) => {
-          if (!perms[row.role]) perms[row.role] = {};
-          perms[row.role][row.page] = row.allowed;
-        });
-        setPermissions(perms);
-        setLoading(false);
-      });
-  }, [companyId]);
 
   const handleChange = (role: string, itemKey: string, value: boolean) => {
     const isChild = !!hierarchy.childToParent[itemKey];
@@ -772,6 +727,373 @@ function AccessPermissionsTable() {
     setSaving(false);
   };
 
+  const handleSyncStructure = async () => {
+    if (!companyId) return;
+    setSyncing(true);
+    
+    try {
+      // 1. Buscar todas as páginas ativas do sistema
+      const { data: activePages, error: pagesError } = await supabase
+        .from('app_pages')
+        .select('key, label, parent_key, module, display_order')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+      
+      if (pagesError) {
+        toast.error('Erro ao buscar páginas: ' + pagesError.message);
+        setSyncing(false);
+        return;
+      }
+
+      // 2. Buscar permissões existentes
+      const { data: existingPermissions, error: permsError } = await supabase
+        .from('role_page_permissions')
+        .select('*')
+        .eq('company_id', companyId);
+      
+      if (permsError) {
+        toast.error('Erro ao buscar permissões: ' + permsError.message);
+        setSyncing(false);
+        return;
+      }
+
+      // 3. Identificar páginas que precisam de permissões
+      const pageKeys = activePages?.map(p => p.key) || [];
+      const existingPageKeys = existingPermissions?.map(p => p.page) || [];
+      
+      const missingPages = pageKeys.filter(key => !existingPageKeys.includes(key));
+      const obsoletePages = existingPageKeys.filter(key => !pageKeys.includes(key));
+
+      // 4. Remover permissões de páginas obsoletas
+      if (obsoletePages.length > 0) {
+        const { error: delError } = await supabase
+          .from('role_page_permissions')
+          .delete()
+          .eq('company_id', companyId)
+          .in('page', obsoletePages);
+        
+        if (delError) {
+          toast.error('Erro ao remover permissões obsoletas: ' + delError.message);
+          setSyncing(false);
+          return;
+        }
+      }
+
+      // 5. Adicionar permissões para páginas que faltam
+      if (missingPages.length > 0) {
+        const newPermissions = [];
+        for (const role of roles) {
+          for (const pageKey of missingPages) {
+            // Definir permissões padrão baseadas no tipo de página
+            let defaultAllowed = true;
+            if (pageKey.includes('config') || pageKey.includes('master')) {
+              defaultAllowed = role.key === 'admin' || role.key === 'master';
+            } else if (pageKey === 'profile') {
+              defaultAllowed = true; // Todos podem acessar perfil
+            } else if (pageKey === 'simulator') {
+              defaultAllowed = true; // Todos podem acessar simulador
+            }
+            
+            newPermissions.push({
+              role: role.key,
+              page: pageKey,
+              allowed: defaultAllowed,
+              company_id: companyId,
+            });
+          }
+        }
+
+        if (newPermissions.length > 0) {
+          const { error: insError } = await supabase
+            .from('role_page_permissions')
+            .insert(newPermissions);
+          
+          if (insError) {
+            toast.error('Erro ao adicionar novas permissões: ' + insError.message);
+            setSyncing(false);
+            return;
+          }
+        }
+      }
+
+      // 6. Recarregar dados
+      await loadPages();
+      await loadPermissions();
+      
+      const changes = [];
+      if (missingPages.length > 0) changes.push(`${missingPages.length} páginas adicionadas`);
+      if (obsoletePages.length > 0) changes.push(`${obsoletePages.length} páginas removidas`);
+      
+      if (changes.length > 0) {
+        toast.success(`Estrutura sincronizada! ${changes.join(', ')}`);
+      } else {
+        toast.success('Estrutura já está atualizada!');
+      }
+      
+    } catch (error) {
+      toast.error('Erro durante sincronização: ' + (error as any).message);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  // Função mais robusta que lê dinamicamente toda a estrutura da plataforma
+  const handleFullStructureSync = async () => {
+    console.log('Iniciando sincronização completa...');
+    if (!companyId) return;
+    setSyncing(true);
+    
+    try {
+      // 1. Definir estrutura real da aplicação
+      const realStructure = [
+        // CRM Module
+        { key: 'dashboard', label: 'Dashboard', module: 'crm', parent_key: null, display_order: 5 },
+        { key: 'comercial', label: 'Comercial', module: 'crm', parent_key: null, display_order: 30 },
+        { key: 'comercial_leads', label: 'Leads', module: 'crm', parent_key: 'comercial', display_order: 31 },
+        { key: 'comercial_sales', label: 'Vendas', module: 'crm', parent_key: 'comercial', display_order: 32 },
+        { key: 'agenda', label: 'Agenda', module: 'crm', parent_key: null, display_order: 35 },
+        { key: 'agenda_temp', label: 'Agenda Temporária', module: 'crm', parent_key: 'agenda', display_order: 36 },
+        { key: 'indicadores', label: 'Indicadores', module: 'crm', parent_key: null, display_order: 40 },
+        { key: 'indicadores_performance', label: 'Performance', module: 'crm', parent_key: 'indicadores', display_order: 41 },
+        { key: 'indicadores_registro', label: 'Registro de Indicadores', module: 'crm', parent_key: 'indicadores', display_order: 42 },
+        { key: 'reports', label: 'Relatórios', module: 'crm', parent_key: null, display_order: 45 },
+        
+        // Simulator Module
+        { key: 'simulator', label: 'Simulador', module: 'simulator', parent_key: null, display_order: 10 },
+        { key: 'simulator_config', label: 'Configurações', module: 'simulator', parent_key: null, display_order: 20 },
+        { key: 'simulator_config_administrators', label: 'Administradoras', module: 'simulator', parent_key: 'simulator_config', display_order: 201 },
+        { key: 'simulator_config_reductions', label: 'Redução de Parcela', module: 'simulator', parent_key: 'simulator_config', display_order: 202 },
+        { key: 'simulator_config_installments', label: 'Parcelas', module: 'simulator', parent_key: 'simulator_config', display_order: 203 },
+        { key: 'simulator_config_products', label: 'Produtos', module: 'simulator', parent_key: 'simulator_config', display_order: 204 },
+        { key: 'simulator_config_leverages', label: 'Alavancas', module: 'simulator', parent_key: 'simulator_config', display_order: 205 },
+        
+        // Settings Module
+        { key: 'crm_config', label: 'Configurações CRM', module: 'settings', parent_key: null, display_order: 50 },
+        { key: 'crm_config_funnels', label: 'Funis', module: 'settings', parent_key: 'crm_config', display_order: 51 },
+        { key: 'crm_config_sources', label: 'Origens', module: 'settings', parent_key: 'crm_config', display_order: 52 },
+        { key: 'crm_config_teams', label: 'Times', module: 'settings', parent_key: 'crm_config', display_order: 53 },
+        { key: 'crm_config_users', label: 'Usuários', module: 'settings', parent_key: 'crm_config', display_order: 54 },
+        { key: 'settings_users', label: 'Usuários', module: 'settings', parent_key: null, display_order: 60 },
+        { key: 'settings_users_list', label: 'Lista de Usuários', module: 'settings', parent_key: 'settings_users', display_order: 601 },
+        { key: 'settings_profile', label: 'Meu Perfil', module: 'settings', parent_key: null, display_order: 70 },
+        { key: 'settings_profile_info', label: 'Informações Pessoais', module: 'settings', parent_key: 'settings_profile', display_order: 701 },
+        { key: 'settings_profile_integrations', label: 'Integrações', module: 'settings', parent_key: 'settings_profile', display_order: 702 },
+        { key: 'settings_profile_security', label: 'Segurança', module: 'settings', parent_key: 'settings_profile', display_order: 703 },
+        { key: 'settings_company', label: 'Empresa', module: 'settings', parent_key: null, display_order: 80 },
+        { key: 'settings_company_data', label: 'Dados da empresa', module: 'settings', parent_key: 'settings_company', display_order: 801 },
+        { key: 'settings_company_branding', label: 'Identidade visual', module: 'settings', parent_key: 'settings_company', display_order: 802 },
+        { key: 'settings_agendamento', label: 'Agendamento', module: 'settings', parent_key: null, display_order: 90 },
+        { key: 'settings_agendamento_availability', label: 'Disponibilidade', module: 'settings', parent_key: 'settings_agendamento', display_order: 901 },
+        { key: 'settings_agendamento_event_types', label: 'Tipos de Evento', module: 'settings', parent_key: 'settings_agendamento', display_order: 902 },
+        { key: 'settings_agendamento_forms', label: 'Formulário', module: 'settings', parent_key: 'settings_agendamento', display_order: 903 },
+        { key: 'settings_agendamento_calendar', label: 'Integração de Calendário', module: 'settings', parent_key: 'settings_agendamento', display_order: 904 },
+        
+        // Master Module
+        { key: 'master_config', label: 'Configurações Master', module: 'master', parent_key: null, display_order: 200 },
+        { key: 'master_config_companies', label: 'Empresas', module: 'master', parent_key: 'master_config', display_order: 201 },
+        { key: 'master_config_archived', label: 'Itens arquivados', module: 'master', parent_key: 'master_config', display_order: 202 },
+        { key: 'master_config_accesses', label: 'Acessos', module: 'master', parent_key: 'master_config', display_order: 203 },
+        { key: 'master_config_permissions', label: 'Permissões', module: 'master', parent_key: 'master_config', display_order: 204 },
+        
+        // User Module
+        { key: 'profile', label: 'Meu Perfil', module: 'user', parent_key: null, display_order: 100 },
+      ];
+
+      console.log('Estrutura real definida:', realStructure);
+
+      // 2. Atualizar estrutura no banco de dados
+      const { error: updateError } = await supabase
+        .from('app_pages')
+        .upsert(realStructure, { onConflict: 'key' });
+      
+      if (updateError) {
+        console.error('Erro ao atualizar estrutura:', updateError);
+        toast.error('Erro ao atualizar estrutura: ' + updateError.message);
+        setSyncing(false);
+        return;
+      }
+
+      console.log('Estrutura atualizada no banco!');
+
+      // 3. Buscar permissões existentes
+      const { data: existingPermissions, error: permsError } = await supabase
+        .from('role_page_permissions')
+        .select('*')
+        .eq('company_id', companyId);
+      
+      if (permsError) {
+        console.error('Erro ao buscar permissões:', permsError);
+        toast.error('Erro ao buscar permissões: ' + permsError.message);
+        setSyncing(false);
+        return;
+      }
+
+      console.log('Permissões existentes:', existingPermissions);
+
+      // 4. Identificar mudanças
+      const realPageKeys = realStructure.map(p => p.key);
+      const existingPageKeys = existingPermissions?.map(p => p.page) || [];
+      
+      const missingPages = realPageKeys.filter(key => !existingPageKeys.includes(key));
+      const obsoletePages = existingPageKeys.filter(key => !realPageKeys.includes(key));
+
+      console.log('Páginas faltando:', missingPages);
+      console.log('Páginas obsoletas:', obsoletePages);
+
+      // 5. Remover permissões obsoletas
+      if (obsoletePages.length > 0) {
+        const { error: delError } = await supabase
+          .from('role_page_permissions')
+          .delete()
+          .eq('company_id', companyId)
+          .in('page', obsoletePages);
+        
+        if (delError) {
+          console.error('Erro ao remover permissões obsoletas:', delError);
+          toast.error('Erro ao remover permissões obsoletas: ' + delError.message);
+          setSyncing(false);
+          return;
+        }
+        console.log('Permissões obsoletas removidas!');
+      }
+
+      // 6. Adicionar permissões para páginas que faltam
+      if (missingPages.length > 0) {
+        const newPermissions = [];
+        for (const role of roles) {
+          for (const pageKey of missingPages) {
+            // Definir permissões padrão baseadas no tipo de página
+            let defaultAllowed = true;
+            if (pageKey.includes('config') || pageKey.includes('master')) {
+              defaultAllowed = role.key === 'admin' || role.key === 'master';
+            } else if (pageKey === 'profile') {
+              defaultAllowed = true; // Todos podem acessar perfil
+            } else if (pageKey === 'simulator') {
+              defaultAllowed = true; // Todos podem acessar simulador
+            }
+            
+            newPermissions.push({
+              role: role.key,
+              page: pageKey,
+              allowed: defaultAllowed,
+              company_id: companyId,
+            });
+          }
+        }
+
+        console.log('Novas permissões a serem inseridas:', newPermissions);
+
+        if (newPermissions.length > 0) {
+          const { error: insError } = await supabase
+            .from('role_page_permissions')
+            .insert(newPermissions);
+          
+          if (insError) {
+            console.error('Erro ao adicionar novas permissões:', insError);
+            toast.error('Erro ao adicionar novas permissões: ' + insError.message);
+            setSyncing(false);
+            return;
+          }
+          console.log('Novas permissões inseridas!');
+        }
+      }
+
+      // 7. Recarregar dados
+      console.log('Recarregando dados...');
+      await loadPages();
+      await loadPermissions();
+      
+      const changes = [];
+      if (missingPages.length > 0) changes.push(`${missingPages.length} páginas adicionadas`);
+      if (obsoletePages.length > 0) changes.push(`${obsoletePages.length} páginas removidas`);
+      
+      if (changes.length > 0) {
+        console.log('Sincronização completa!', changes);
+        toast.success(`Estrutura completa sincronizada! ${changes.join(', ')}`);
+      } else {
+        console.log('Estrutura já estava atualizada!');
+        toast.success('Estrutura já está atualizada!');
+      }
+      
+    } catch (error) {
+      console.error('Erro durante sincronização:', error);
+      toast.error('Erro durante sincronização: ' + (error as any).message);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  // Função para recarregar páginas
+  const loadPages = async () => {
+    const { data, error } = await supabase
+      .from('app_pages')
+      .select('key,label,parent_key,module,display_order,is_active')
+      .eq('is_active', true)
+      .order('display_order', { ascending: true });
+    if (error) {
+      toast.error('Erro ao carregar páginas: ' + error.message);
+      return;
+    }
+    const parents = (data || []).filter(p => !p.parent_key);
+    const children = (data || []).filter(p => !!p.parent_key);
+    setRawPages(data || []);
+
+    // Agrupar por módulo e ordenar por display_order
+    const moduleToParents: Record<string, any[]> = {};
+    parents.forEach(p => {
+      const mod = p.module || 'outros';
+      if (!moduleToParents[mod]) moduleToParents[mod] = [];
+      moduleToParents[mod].push(p);
+    });
+    const moduleOrder = Object.entries(moduleToParents)
+      .map(([mod, arr]) => [mod, Math.min(...arr.map((x: any) => x.display_order || 0))] as const)
+      .sort((a, b) => a[1] - b[1])
+      .map(([mod]) => mod);
+
+    const moduleLabel = (m: string) => m === 'simulator' ? 'Simulador' : m === 'settings' ? 'Configurações' : m === 'crm' ? 'CRM' : (m.charAt(0).toUpperCase() + m.slice(1));
+
+    const list: { key: string; label: string; type: 'module' | 'page' | 'tab'; indent?: boolean }[] = [];
+    moduleOrder.forEach(mod => {
+      list.push({ key: `__module__:${mod}`, label: moduleLabel(mod), type: 'module' });
+      const modParents = (moduleToParents[mod] || []).sort((a, b) => (a.display_order || 0) - (b.display_order || 0));
+      modParents.forEach(p => {
+        list.push({ key: p.key, label: p.label, type: 'page' });
+        children
+          .filter(c => c.parent_key === p.key)
+          .sort((a, b) => (a.display_order || 0) - (b.display_order || 0))
+          .forEach(c => {
+            list.push({ key: c.key, label: c.label, type: 'tab', indent: true });
+          });
+      });
+    });
+    setPages(list);
+  };
+
+  // Função para recarregar permissões
+  const loadPermissions = async () => {
+    if (!companyId) return;
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('role_page_permissions')
+      .select('*')
+      .eq('company_id', companyId);
+    
+    if (error) {
+      toast.error('Erro ao carregar permissões: ' + error.message);
+      setLoading(false);
+      return;
+    }
+    
+    const perms: any = {};
+    roles.forEach(r => { perms[r.key] = {}; });
+    data?.forEach((row: any) => {
+      if (!perms[row.role]) perms[row.role] = {};
+      perms[row.role][row.page] = row.allowed;
+    });
+    setPermissions(perms);
+    setLoading(false);
+  };
+
   const safePermissions = permissions && typeof permissions === 'object' ? permissions : {};
 
   if (loading) {
@@ -816,14 +1138,32 @@ function AccessPermissionsTable() {
       </div>
       <div className="flex items-center justify-between">
         <div className="text-xs text-muted-foreground">* Apenas usuários Master podem editar essas permissões.</div>
-        <Button
-          variant="brandPrimaryToSecondary"
-          className="brand-radius"
-          onClick={handleSave}
-          disabled={saving}
-        >
-          {saving ? 'Salvando...' : 'Salvar Permissões'}
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="brand-radius"
+            onClick={handleSyncStructure}
+            disabled={syncing}
+          >
+            {syncing ? 'Sincronizando...' : 'Sincronizar Estrutura'}
+          </Button>
+          <Button
+            variant="outline"
+            className="brand-radius"
+            onClick={handleFullStructureSync}
+            disabled={syncing}
+          >
+            {syncing ? 'Sincronizando...' : 'Sincronização Completa'}
+          </Button>
+          <Button
+            variant="brandPrimaryToSecondary"
+            className="brand-radius"
+            onClick={handleSave}
+            disabled={saving}
+          >
+            {saving ? 'Salvando...' : 'Salvar Permissões'}
+          </Button>
+        </div>
       </div>
     </div>
   );

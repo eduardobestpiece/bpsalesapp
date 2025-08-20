@@ -162,7 +162,9 @@ export const SimulatorSidebar = () => {
       return (data || []).map((r: any) => r.key as string);
     }
   });
-  const canSeeSettingsModule = (settingsPageKeys.length > 0 && settingsPageKeys.some(k => pagePermissions[k] !== false)) || userRole === 'admin' || userRole === 'master';
+  
+  // Verificar especificamente se tem permissão para simulator_config
+  const canSeeSettingsModule = pagePermissions['simulator_config'] !== false || userRole === 'admin' || userRole === 'master';
   const canSeeSimulator = pagePermissions['simulator'] !== false || userRole === 'master';
 
   return (
@@ -215,14 +217,16 @@ export const SimulatorSidebar = () => {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActivePath('/simulador/configuracoes')}>
-                  <Link to="/simulador/configuracoes">
-                    <Settings className="h-4 w-4" />
-                    <span>Configurações</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {canSeeSettingsModule && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActivePath('/simulador/configuracoes')}>
+                    <Link to="/simulador/configuracoes">
+                      <Settings className="h-4 w-4" />
+                      <span>Configurações</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
               
             </SidebarMenu>
           </SidebarGroupContent>

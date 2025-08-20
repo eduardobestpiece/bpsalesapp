@@ -224,14 +224,16 @@ export const SettingsSidebar = () => {
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/agendamento')}>
-                  <Link to="/configuracoes/agendamento">
-                    <SlidersHorizontal className="h-4 w-4" />
-                    <span>Agendamento</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {pagePermissions['settings_agendamento'] !== false && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/agendamento')}>
+                    <Link to="/configuracoes/agendamento">
+                      <SlidersHorizontal className="h-4 w-4" />
+                      <span>Agendamento</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
               {(userRole === 'admin' || userRole === 'master') && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/empresa')}>
