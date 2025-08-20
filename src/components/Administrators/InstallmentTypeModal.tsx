@@ -300,6 +300,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
                 </FormItem>
               )}
             />
+            {/* Campo Seguro (%) - OCULTO
             <FormField
               control={form.control}
               name="insurance_percent"
@@ -313,6 +314,8 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
                 </FormItem>
               )}
             />
+            */}
+            {/* Campo Seguro opcional - OCULTO
             <FormField
               control={form.control}
               name="optional_insurance"
@@ -334,6 +337,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
                 </FormItem>
               )}
             />
+            */}
             <FormField
               control={form.control}
               name="reduction_ids"

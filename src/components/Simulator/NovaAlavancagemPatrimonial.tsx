@@ -225,10 +225,39 @@ export const NovaAlavancagemPatrimonial = ({
   // Embutido da administradora (usar campo real_estate_percentage se existir, senão mock)
   const embutidoAdmin = (alavanca?.real_estate_percentage ?? 25) / 100;
 
-  const valorDiaria = valor * dailyPct;
-  const ocupacaoDias = 30 * occPct;
-  // Taxa do Airbnb correta: ((Valor do Imóvel * Percentual da Diária) * Ocupação) * Percentual da Administradora
-  const taxaAirbnb = valorDiaria * ocupacaoDias * mgmtPct;
+  // Calcular valor da diária baseado no subtipo da alavanca
+  let valorDiaria;
+  if (alavanca?.subtype === 'commercial_residential') {
+    // Para "Comercial ou Residencial": (Valor da alavanca * Percentual do Aluguel) / 30
+    const rentalPercentage = alavanca?.rental_percentage || 0;
+    valorDiaria = (valor * (rentalPercentage / 100)) / 30;
+  } else {
+    // Para outros subtipos (short_stay): valor * dailyPct (comportamento original)
+    valorDiaria = valor * dailyPct;
+  }
+  // Calcular ocupação baseada no subtipo da alavanca
+  let ocupacaoDias;
+  if (alavanca?.subtype === 'commercial_residential') {
+    // Para "Comercial ou Residencial": ocupação sempre 30 dias
+    ocupacaoDias = 30;
+  } else {
+    // Para outros subtipos (short_stay): 30 * occPct (comportamento original)
+    ocupacaoDias = 30 * occPct;
+  }
+  // Calcular taxa baseada no subtipo da alavanca
+  let taxaAirbnb;
+  let taxaLabel = 'Taxa do Airbnb';
+  
+  if (alavanca?.subtype === 'commercial_residential') {
+    // Para "Comercial ou Residencial": Taxa Imobiliária = (Valor da alavanca * Percentual do Aluguel) * Percentual Imobiliária
+    const rentalPercentage = alavanca?.rental_percentage || 0;
+    const realEstatePercentage = alavanca?.real_estate_percentage || 0;
+    taxaAirbnb = (valor * (rentalPercentage / 100)) * (realEstatePercentage / 100);
+    taxaLabel = 'Taxa Imobiliária';
+  } else {
+    // Para outros subtipos (short_stay): Taxa do Airbnb = valorDiaria * ocupacaoDias * mgmtPct (comportamento original)
+    taxaAirbnb = valorDiaria * ocupacaoDias * mgmtPct;
+  }
   const custosTotais = valor * totalExpPct;
 
   // Número de imóveis corrigido: usar creditoAcessadoCorreto (mês contemplação + período de compra)
@@ -247,8 +276,15 @@ export const NovaAlavancagemPatrimonial = ({
   // Patrimônio ao final (usando valorização mensal equivalente)
   const patrimonioAoFinal = patrimonioNaContemplacao * Math.pow(1 + taxaMensal, prazoTotal - mesContemplacao + 1);
   
-  // Ganhos mensais (fórmula corrigida)
-  const ganhosMensais = ((patrimonioNaContemplacao * dailyPct * ocupacaoDias) - (patrimonioNaContemplacao * totalExpPct + ((patrimonioNaContemplacao * dailyPct * ocupacaoDias) * mgmtPct)));
+  // Calcular ganhos mensais baseado no subtipo da alavanca
+  let ganhosMensais;
+  if (alavanca?.subtype === 'commercial_residential') {
+    // Para "Comercial ou Residencial": Ganhos mensais = Valor da diária * Ocupação
+    ganhosMensais = valorDiaria * ocupacaoDias;
+  } else {
+    // Para outros subtipos (short_stay): fórmula original com custos e taxas
+    ganhosMensais = ((patrimonioNaContemplacao * dailyPct * ocupacaoDias) - (patrimonioNaContemplacao * totalExpPct + ((patrimonioNaContemplacao * dailyPct * ocupacaoDias) * mgmtPct)));
+  }
 
   // Lógica para alavancagem escalonada
   const isAlavancagemEscalonada = tipoAlavancagem === 'escalonada';
@@ -683,7 +719,7 @@ export const NovaAlavancagemPatrimonial = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>Valor da diária: <span className="font-bold">{valorDiaria ? valorDiaria.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</span>{numeroImoveis > 1 && <span className="ml-2 text-xs text-gray-400">({(valorDiaria * numeroImoveis).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})</span>}</div>
           <div>Ocupação: <span className="font-bold">{ocupacaoDias ? `${ocupacaoDias} dias` : '-'}</span></div>
-            <div>Taxa do Airbnb: <span className="font-bold">{taxaAirbnb ? taxaAirbnb.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</span>{numeroImoveis > 1 && <span className="ml-2 text-xs text-gray-400">({(taxaAirbnb * numeroImoveis).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})</span>}</div>
+            <div>{taxaLabel}: <span className="font-bold">{taxaAirbnb ? taxaAirbnb.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</span>{numeroImoveis > 1 && <span className="ml-2 text-xs text-gray-400">({(taxaAirbnb * numeroImoveis).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})</span>}</div>
             <div>Custos totais: <span className="font-bold">{custosTotais ? custosTotais.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</span>{numeroImoveis > 1 && <span className="ml-2 text-xs text-gray-400">({(custosTotais * numeroImoveis).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})</span>}</div>
             <div>Ganhos mensais: <span className="font-bold">{ganhosMensais ? ganhosMensais.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</span>{numeroImoveis > 1 && <span className="ml-2 text-xs text-gray-400">({(ganhosMensais * numeroImoveis).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})</span>}</div>
           <div>Número de imóveis: <span className="font-bold">{numeroImoveis}</span></div>
@@ -854,12 +890,28 @@ export const NovaAlavancagemPatrimonial = ({
             const taxaOcupacao = (localOccupancyRate || alavanca?.occupancy_rate || 0) / 100;
             const despesasTotais = (localTotalExpenses || alavanca?.total_expenses || 0) / 100;
             const percentualAdmin = (localManagementPercentage || alavanca?.management_percentage || 0) / 100;
-            // Receita do mês
-            const receitaMes = patrimonioAnual * percentualDiaria * (30 * taxaOcupacao);
-            // Custos
-            const custos = (patrimonioAnual * despesasTotais) + (patrimonioAnual * percentualDiaria * (30 * taxaOcupacao) * percentualAdmin);
-            // Receita - Custos
-            const receitaMenosCustos = receitaMes - custos;
+            // Receita do mês baseada no subtipo da alavanca
+            let receitaMes;
+            if (alavanca?.subtype === 'commercial_residential') {
+              // Para "Comercial ou Residencial": Receita do mês = Ganhos mensais * Número de imóveis (apenas após aquisição do patrimônio)
+              receitaMes = row.mes >= mesInicioPatrimonio ? ganhosMensais * numeroImoveis : 0;
+            } else {
+              // Para outros subtipos (short_stay): fórmula original
+              receitaMes = patrimonioAnual * percentualDiaria * (30 * taxaOcupacao);
+            }
+            // Custos baseados no subtipo da alavanca
+            let custos;
+            let receitaMenosCustos;
+            if (alavanca?.subtype === 'commercial_residential') {
+              // Para "Comercial ou Residencial": Custos = (Taxa Imobiliária + Custos totais) * Número de imóveis (apenas após aquisição do patrimônio)
+              custos = row.mes >= mesInicioPatrimonio ? (taxaAirbnb + custosTotais) * numeroImoveis : 0;
+              // Para "Comercial ou Residencial": Receita - Custos = (Ganhos mensais - (Taxa Imobiliária + Custos totais)) * Número de imóveis (apenas após aquisição do patrimônio)
+              receitaMenosCustos = row.mes >= mesInicioPatrimonio ? (ganhosMensais - (taxaAirbnb + custosTotais)) * numeroImoveis : 0;
+            } else {
+              // Para outros subtipos (short_stay): fórmula original
+              custos = (patrimonioAnual * despesasTotais) + (patrimonioAnual * percentualDiaria * (30 * taxaOcupacao) * percentualAdmin);
+              receitaMenosCustos = receitaMes - custos;
+            }
             // Renda passiva e acumulada só após aquisição do patrimônio
             let rendaPassiva = 0;
             if (row.mes >= mesInicioPatrimonio) {
@@ -910,12 +962,28 @@ export const NovaAlavancagemPatrimonial = ({
               const taxaOcupacao = (localOccupancyRate || alavanca?.occupancy_rate || 0) / 100;
               const despesasTotais = (localTotalExpenses || alavanca?.total_expenses || 0) / 100;
               const percentualAdmin = (localManagementPercentage || alavanca?.management_percentage || 0) / 100;
-              // Receita do mês
-              const receitaMes = patrimonioAnual * percentualDiaria * (30 * taxaOcupacao);
-              // Custos
-              const custos = (patrimonioAnual * despesasTotais) + (patrimonioAnual * percentualDiaria * (30 * taxaOcupacao) * percentualAdmin);
-              // Receita - Custos
-              const receitaMenosCustos = receitaMes - custos;
+              // Receita do mês baseada no subtipo da alavanca
+              let receitaMes;
+              if (alavanca?.subtype === 'commercial_residential') {
+                // Para "Comercial ou Residencial": Receita do mês = Ganhos mensais * Número de imóveis (apenas após aquisição do patrimônio)
+                receitaMes = m >= mesInicioPatrimonio ? ganhosMensais * numeroImoveis : 0;
+              } else {
+                // Para outros subtipos (short_stay): fórmula original
+                receitaMes = patrimonioAnual * percentualDiaria * (30 * taxaOcupacao);
+              }
+              // Custos baseados no subtipo da alavanca
+              let custos;
+              let receitaMenosCustos;
+              if (alavanca?.subtype === 'commercial_residential') {
+                // Para "Comercial ou Residencial": Custos = (Taxa Imobiliária + Custos totais) * Número de imóveis (apenas após aquisição do patrimônio)
+                custos = m >= mesInicioPatrimonio ? (taxaAirbnb + custosTotais) * numeroImoveis : 0;
+                // Para "Comercial ou Residencial": Receita - Custos = (Ganhos mensais - (Taxa Imobiliária + Custos totais)) * Número de imóveis (apenas após aquisição do patrimônio)
+                receitaMenosCustos = m >= mesInicioPatrimonio ? (ganhosMensais - (taxaAirbnb + custosTotais)) * numeroImoveis : 0;
+              } else {
+                // Para outros subtipos (short_stay): fórmula original
+                custos = (patrimonioAnual * despesasTotais) + (patrimonioAnual * percentualDiaria * (30 * taxaOcupacao) * percentualAdmin);
+                receitaMenosCustos = receitaMes - custos;
+              }
               // Renda passiva e acumulada só após aquisição do patrimônio
               let rendaPassiva = 0;
               if (m >= mesInicioPatrimonio) {

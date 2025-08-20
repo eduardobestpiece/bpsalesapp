@@ -57,6 +57,8 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editData, setEditData] = useState<any>(null);
 
+
+
   const { data: installmentTypes, isLoading, refetch } = useQuery({
     queryKey: ['installment-types', searchTerm, statusFilter, selectedAdministrator],
     queryFn: async () => {
@@ -203,52 +205,7 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Título e botão de criação na mesma linha */}
-      <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold text-foreground">Tipos de Parcela</h2>
-          <p className="text-muted-foreground mt-1">Gerencie os tipos de parcela</p>
-        </div>
-        <Button
-          variant="brandPrimaryToSecondary"
-          onClick={() => setShowCreateModal(true)}
-        >
-          + Adicionar Tipo de Parcela
-        </Button>
-      </div>
-      <div className="flex flex-col sm:flex-row gap-4 mt-4 mb-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-          <Input
-            placeholder="Buscar tipos de parcela..."
-            value={searchTerm}
-            onChange={e => {/* implementar filtro se necessário */}}
-            className="pl-10 field-secondary-focus no-ring-focus brand-radius"
-          />
-        </div>
-        <Select value={statusFilter} onValueChange={v => {/* implementar filtro se necessário */}}>
-          <SelectTrigger className="w-full sm:w-48 select-trigger-secondary no-ring-focus brand-radius">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all" className="dropdown-item-secondary">Todos</SelectItem>
-            <SelectItem value="active" className="dropdown-item-secondary">Ativos</SelectItem>
-            <SelectItem value="archived" className="dropdown-item-secondary">Arquivados</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      {/* Removido: Modal de cópia */}
-      {/* Removido: showDuplicateModal && ( */}
-      {/* Removido: <InstallmentTypeModal */}
-      {/* Removido: open={showDuplicateModal} */}
-      {/* Removido: onOpenChange={setShowDuplicateModal} */}
-      {/* Removido: installmentType={duplicateData} */}
-      {/* Removido: onSuccess={() => { */}
-      {/* Removido: setShowDuplicateModal(false); */}
-      {/* Removido: setDuplicateData(null); */}
-      {/* Removido: refetch(); */}
-      {/* Removido: }} */}
-      {/* Removido: /> */}
+      {/* Título e botão agora são controlados pelo SettingsSimulator */}
       {showCreateModal && (
         <InstallmentTypeModal
           open={showCreateModal}
@@ -276,14 +233,14 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Administradora</TableHead>
-            <TableHead>Nº de parcelas</TableHead>
-            <TableHead>Taxa de administração (%)</TableHead>
-            <TableHead>Fundo de reserva (%)</TableHead>
-            <TableHead>Seguro (%)</TableHead>
-            <TableHead>Seguro opcional</TableHead>
-            <TableHead>Parcela reduzida</TableHead>
-            <TableHead>Ações</TableHead>
+            <TableHead className="text-left">Administradora</TableHead>
+            <TableHead className="text-left">Nº de parcelas</TableHead>
+            <TableHead className="text-left">Taxa de administração (%)</TableHead>
+            <TableHead className="text-left">Fundo de reserva (%)</TableHead>
+            <TableHead className="text-left">Seguro (%)</TableHead>
+            <TableHead className="text-left">Seguro opcional</TableHead>
+            <TableHead className="text-left">Parcela reduzida</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>

@@ -19,6 +19,7 @@ interface LeverageModalProps {
 }
 
 export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageModalProps) => {
+  console.log('[LeverageModal] Renderizado:', { isOpen, leverage });
   const { toast } = useToast();
   const { userRole, companyId } = useCrmAuth();
   const { selectedCompanyId } = useCompany();

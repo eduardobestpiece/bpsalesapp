@@ -178,8 +178,8 @@ export const InstallmentReductionModal: React.FC<InstallmentReductionModalProps>
 
   return (
     <FullScreenModal
-      open={open}
-      onOpenChange={onOpenChange}
+      isOpen={open}
+      onClose={() => onOpenChange(false)}
       title={reduction && !isCopy ? 'Editar Redução de Parcela' : isCopy ? 'Copiar Redução de Parcela' : 'Nova Redução de Parcela'}
       actions={<Button 
         type="button" 

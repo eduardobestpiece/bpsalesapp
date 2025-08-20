@@ -157,11 +157,11 @@ export const InstallmentReductionsList: React.FC<InstallmentReductionsListProps>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Nome</TableHead>
-            <TableHead>Administradora</TableHead>
-            <TableHead>Percentual reduzido</TableHead>
-            <TableHead>Nº de aplicações</TableHead>
-            <TableHead>Status</TableHead>
+            <TableHead className="text-left">Nome</TableHead>
+            <TableHead className="text-left">Administradora</TableHead>
+            <TableHead className="text-left">Percentual reduzido</TableHead>
+            <TableHead className="text-left">Nº de aplicações</TableHead>
+            <TableHead className="text-left">Status</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>

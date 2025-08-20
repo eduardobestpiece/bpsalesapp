@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Edit, Archive, RotateCcw } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -140,82 +140,94 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
 
   return (
     <div className="space-y-4">
-      {/* Removidos: botão e modal de cópia de alavancas */}
-      {leverages.map((leverage) => (
-        <Card key={leverage.id} className="hover:shadow-md transition-shadow">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-2">
-                  <h3 className="font-semibold text-lg">{leverage.name}</h3>
-                  {leverage.is_archived ? (
-                    <Badge variant="destructive" className="brand-radius">Arquivada</Badge>
-                  ) : (
-                    <Badge className="brand-radius text-white" style={{ backgroundColor: 'var(--brand-primary, #A86F57)' }}>Ativa</Badge>
-                  )}
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="text-left">Nome</TableHead>
+            <TableHead className="text-left">Tipo</TableHead>
+            <TableHead className="text-left">Subtipo</TableHead>
+            <TableHead className="text-left">Diária</TableHead>
+            <TableHead className="text-left">Aluguel</TableHead>
+            <TableHead className="text-left">Ocupação</TableHead>
+            <TableHead className="text-left">Administração</TableHead>
+            <TableHead className="text-left">Despesas</TableHead>
+            <TableHead className="text-left">Status</TableHead>
+            <TableHead className="text-right">Ações</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {leverages.length === 0 ? (
+            <TableRow>
+              <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                Nenhuma alavanca encontrada.
+              </TableCell>
+            </TableRow>
+          ) : (
+            leverages.map((leverage) => (
+              <TableRow key={leverage.id}>
+                <TableCell className="font-medium">{leverage.name}</TableCell>
+                <TableCell>
                   <Badge variant="outline" className="brand-radius">
                     {getTypeLabel(leverage.type)}
                   </Badge>
+                </TableCell>
+                <TableCell>
                   {leverage.subtype && (
                     <Badge variant="outline" className="brand-radius">
                       {getSubtypeLabel(leverage.subtype)}
                     </Badge>
                   )}
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-muted-foreground">
-                  {leverage.daily_percentage && (
-                    <div>Diária: {leverage.daily_percentage}%</div>
-                  )}
-                  {leverage.rental_percentage && (
-                    <div>Aluguel: {leverage.rental_percentage}%</div>
-                  )}
-                  {leverage.occupancy_rate && (
-                    <div>Ocupação: {leverage.occupancy_rate}%</div>
-                  )}
-                  {leverage.management_percentage && (
-                    <div>Administração: {leverage.management_percentage}%</div>
-                  )}
-                  {leverage.total_expenses && (
-                    <div>Despesas: {leverage.hasFixedValue ? 
+                </TableCell>
+                <TableCell>{leverage.daily_percentage ? `${leverage.daily_percentage}%` : '-'}</TableCell>
+                <TableCell>{leverage.rental_percentage ? `${leverage.rental_percentage}%` : '-'}</TableCell>
+                <TableCell>{leverage.occupancy_rate ? `${leverage.occupancy_rate}%` : '-'}</TableCell>
+                <TableCell>{leverage.management_percentage ? `${leverage.management_percentage}%` : '-'}</TableCell>
+                <TableCell>
+                  {leverage.total_expenses ? (
+                    leverage.hasFixedValue ? 
                       new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(leverage.total_expenses) : 
-                      `${leverage.total_expenses}%`}</div>
+                      `${leverage.total_expenses}%`
+                  ) : '-'}
+                </TableCell>
+                <TableCell>
+                  {leverage.is_archived ? (
+                    <Badge variant="destructive" className="brand-radius">Arquivada</Badge>
+                  ) : (
+                    <Badge className="brand-radius text-white" style={{ backgroundColor: 'var(--brand-primary, #A86F57)' }}>Ativa</Badge>
                   )}
-                  {leverage.fixed_property_value && (
-                    <div>Valor Fixo: R$ {leverage.fixed_property_value}</div>
-                  )}
-                </div>
-              </div>
-              
-              <div className="flex gap-2">
-                <Button
-                  variant="brandOutlineSecondaryHover"
-                  size="sm"
-                  onClick={() => onEdit(leverage)}
-                  className="brand-radius"
-                  disabled={isSubMaster}
-                >
-                  <Edit className="w-4 h-4" />
-                </Button>
-                {isMaster && (
-                  <Button
-                    variant="brandOutlineSecondaryHover"
-                    size="sm"
-                    onClick={() => handleArchiveToggle(leverage)}
-                    className="brand-radius"
-                  >
-                    {leverage.is_archived ? (
-                      <RotateCcw className="w-4 h-4" />
-                    ) : (
-                      <Archive className="w-4 h-4" />
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex gap-2 justify-end">
+                    <Button
+                      variant="brandOutlineSecondaryHover"
+                      size="sm"
+                      onClick={() => onEdit(leverage)}
+                      className="brand-radius"
+                      disabled={isSubMaster}
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                    {isMaster && (
+                      <Button
+                        variant="brandOutlineSecondaryHover"
+                        size="sm"
+                        onClick={() => handleArchiveToggle(leverage)}
+                        className="brand-radius"
+                      >
+                        {leverage.is_archived ? (
+                          <RotateCcw className="w-4 h-4" />
+                        ) : (
+                          <Archive className="w-4 h-4" />
+                        )}
+                      </Button>
                     )}
-                  </Button>
-                )}
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))
+          )}
+        </TableBody>
+      </Table>
     </div>
   );
 };

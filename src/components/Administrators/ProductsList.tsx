@@ -180,6 +180,19 @@ export const ProductsList: React.FC<ProductsListProps> = ({
     return terms.sort((a, b) => a - b).join(', ') + ' meses';
   };
 
+  const formatProductType = (type: string) => {
+    switch (type.toLowerCase()) {
+      case 'property':
+        return 'Imóvel';
+      case 'car':
+        return 'Veículo';
+      case 'service':
+        return 'Serviço';
+      default:
+        return type;
+    }
+  };
+
   return (
     <>
       {loading ? (
@@ -191,20 +204,16 @@ export const ProductsList: React.FC<ProductsListProps> = ({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Administradora</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead>Valor</TableHead>
-                <TableHead>Valor da Parcela</TableHead>
-                <TableHead>Taxa de Administração (%)</TableHead>
-                <TableHead>Fundo de Reserva (%)</TableHead>
-                <TableHead>Seguro (%)</TableHead>
+                <TableHead className="text-left">Administradora</TableHead>
+                <TableHead className="text-left">Tipo</TableHead>
+                <TableHead className="text-left">Valor</TableHead>
                 <TableHead className="text-right">Ações</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredProducts.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                  <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
                     Nenhum produto encontrado.
                   </TableCell>
                 </TableRow>
@@ -212,14 +221,8 @@ export const ProductsList: React.FC<ProductsListProps> = ({
                 filteredProducts.map((product) => (
                   <TableRow key={product.id}>
                     <TableCell>{product.administrators?.name || 'N/A'}</TableCell>
-                    <TableCell>{product.type}</TableCell>
+                    <TableCell>{formatProductType(product.type)}</TableCell>
                     <TableCell>{formatCurrency(product.credit_value)}</TableCell>
-                    <TableCell>{product.credit_value && product.term_options && product.term_options.length > 0
-                      ? formatCurrency(product.credit_value / Math.max(...product.term_options))
-                      : '-'}</TableCell>
-                    <TableCell>{product.admin_tax_percent ?? '-'}</TableCell>
-                    <TableCell>{product.reserve_fund_percent ?? '-'}</TableCell>
-                    <TableCell>{product.insurance_percent ?? '-'}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-2 justify-end">
                         <Button

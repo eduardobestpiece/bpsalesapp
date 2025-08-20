@@ -377,6 +377,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
               )}
             />
 
+            {/* Campo Parcelas - OCULTO
             {form.watch('administrator_id') && (
               <FormField
                 control={form.control}
@@ -416,7 +417,9 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 )}
               />
             )}
+            */}
 
+            {/* Campos de Valor da Parcela - OCULTOS
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <FormLabel>Valor da parcela cheia</FormLabel>
@@ -430,6 +433,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
                 )}
               </div>
             </div>
+            */}
 
         </form>
       </Form>

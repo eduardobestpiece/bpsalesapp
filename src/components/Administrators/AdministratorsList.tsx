@@ -63,13 +63,13 @@ const formatSpecialEntry = (admin: Administrator): string => {
 
   // Adicionar informações de parcelas se aplicável
   if (admin.special_entry_installments && admin.special_entry_installments > 1) {
-    entryText += ` (${admin.special_entry_installments}x)`;
+    entryText += ` / ${admin.special_entry_installments}x`;
   }
 
   // Adicionar tipo de funcionamento se aplicável
   if (admin.functioning) {
     const functioningText = admin.functioning === 'included' ? 'Incluso' : 'Adicional';
-    entryText += ` - ${functioningText}`;
+    entryText += ` / ${functioningText}`;
   }
 
   return entryText || 'Sim';
@@ -222,13 +222,13 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead></TableHead>
-            <TableHead>Nome</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>% Máx. Embutido</TableHead>
-            <TableHead>Entrada especial</TableHead>
-            <TableHead>Ajuste de contemplação</TableHead>
-            <TableHead>Agio de compra</TableHead>
+            <TableHead className="text-left"></TableHead>
+            <TableHead className="text-left">Nome</TableHead>
+            <TableHead className="text-left">Status</TableHead>
+            <TableHead className="text-left">% Máx. Embutido</TableHead>
+            <TableHead className="text-left">Entrada especial</TableHead>
+            <TableHead className="text-left">Ajuste de contemplação</TableHead>
+            <TableHead className="text-left">Agio de compra</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>

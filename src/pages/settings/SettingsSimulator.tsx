@@ -39,15 +39,15 @@ export default function SettingsSimulator() {
   const [showCopyLeveragesModal, setShowCopyLeveragesModal] = useState(false);
 
   const [adminSearchTerm, setAdminSearchTerm] = useState('');
-  const [adminStatusFilter, setAdminStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
+  const [adminStatusFilter, setAdminStatusFilter] = useState<'all' | 'active' | 'archived'>('active');
   const [productSearchTerm, setProductSearchTerm] = useState('');
-  const [productStatusFilter, setProductStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
+  const [productStatusFilter, setProductStatusFilter] = useState<'all' | 'active' | 'archived'>('active');
   const [installmentSearchTerm, setInstallmentSearchTerm] = useState('');
-  const [installmentStatusFilter, setInstallmentStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
+  const [installmentStatusFilter, setInstallmentStatusFilter] = useState<'all' | 'active' | 'archived'>('active');
   const [leverageSearchTerm, setLeverageSearchTerm] = useState('');
   const [leverageStatusFilter, setLeverageStatusFilter] = useState<'all' | 'active' | 'archived'>('active');
   const [reductionSearchTerm, setReductionSearchTerm] = useState('');
-  const [reductionStatusFilter, setReductionStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
+  const [reductionStatusFilter, setReductionStatusFilter] = useState<'all' | 'active' | 'archived'>('active');
   const [selectedReduction, setSelectedReduction] = useState<any>(null);
   const [showReductionModal, setShowReductionModal] = useState(false);
   const [isCopyReduction, setIsCopyReduction] = useState(false);
@@ -295,14 +295,27 @@ export default function SettingsSimulator() {
                           className="pl-10 field-secondary-focus no-ring-focus brand-radius"
                         />
                       </div>
-                      <Select value={productStatusFilter} onValueChange={(value: 'all' | 'active' | 'archived') => setProductStatusFilter(value)}>
-                        <SelectTrigger className="w-full sm:w-48 select-trigger-secondary no-ring-focus brand-radius">
-                          <SelectValue />
+                      <Select value={productAdminFilter} onValueChange={(value: string) => setProductAdminFilter(value)}>
+                        <SelectTrigger className="w-full sm:w-48 select-trigger-secondary no-ring-focus brand-radius text-left justify-start select-text-left">
+                          <SelectValue placeholder="Todas Adms" className="text-left justify-start" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="all" className="dropdown-item-secondary">Todos</SelectItem>
-                          <SelectItem value="active" className="dropdown-item-secondary">Ativos</SelectItem>
-                          <SelectItem value="archived" className="dropdown-item-secondary">Arquivados</SelectItem>
+                          <SelectItem value="all" className="dropdown-item-secondary">Todas Adms</SelectItem>
+                          {administrators.map((admin) => (
+                            <SelectItem key={admin.id} value={admin.id} className="dropdown-item-secondary">
+                              {admin.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={productStatusFilter} onValueChange={(value: 'all' | 'active' | 'archived') => setProductStatusFilter(value)}>
+                        <SelectTrigger className="w-full sm:w-48 select-trigger-secondary no-ring-focus brand-radius text-left justify-start select-text-left">
+                          <SelectValue className="text-left justify-start" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all" className="dropdown-item-secondary">Todas Situações</SelectItem>
+                          <SelectItem value="active" className="dropdown-item-secondary">Ativas</SelectItem>
+                          <SelectItem value="archived" className="dropdown-item-secondary">Arquivadas</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -311,7 +324,7 @@ export default function SettingsSimulator() {
                       key={refreshKey}
                       searchTerm={productSearchTerm}
                       statusFilter={productStatusFilter}
-                      selectedAdministrator={productAdminFilter || ''}
+                      selectedAdministrator={productAdminFilter === 'all' ? '' : productAdminFilter}
                       onEdit={(product: any) => { setSelectedProduct(product); setShowProductModal(true); }}
                       onCreate={() => { setSelectedProduct(null); setShowProductModal(true); }}
                       onDuplicate={(product: any) => { setSelectedProduct({ ...product, name: `${product.name} - Cópia` }); setShowProductModal(true); }}
@@ -322,13 +335,59 @@ export default function SettingsSimulator() {
 
                 {canInstallments && (
                 <TabsContent value="installments" className="p-6">
-                  <InstallmentTypesList
-                    key={refreshKey}
-                    searchTerm={installmentSearchTerm}
-                    statusFilter={installmentStatusFilter}
-                    selectedAdministrator={installmentAdminFilter || null}
-                    onEdit={(installmentType: any) => { setSelectedInstallmentType(installmentType); setShowInstallmentTypeModal(true); }}
-                  />
+                  <div className="space-y-6">
+                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                      <div>
+                        <h2 className="text-2xl font-semibold text-foreground">Tipos de Parcela</h2>
+                        <p className="text-muted-foreground mt-1">Gerencie os tipos de parcela</p>
+                      </div>
+                      <Button onClick={() => { setSelectedInstallmentType(null); setShowInstallmentTypeModal(true); }} variant="brandPrimaryToSecondary">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Adicionar Tipo de Parcela
+                      </Button>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                        <Input
+                          placeholder="Buscar tipos de parcela..."
+                          value={installmentSearchTerm}
+                          onChange={(e) => setInstallmentSearchTerm(e.target.value)}
+                          className="pl-10 field-secondary-focus no-ring-focus brand-radius"
+                        />
+                      </div>
+                      <Select value={installmentAdminFilter} onValueChange={(value: string) => setInstallmentAdminFilter(value)}>
+                        <SelectTrigger className="w-full sm:w-48 select-trigger-secondary no-ring-focus brand-radius text-left justify-start select-text-left">
+                          <SelectValue placeholder="Todas Adms" className="text-left justify-start" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all" className="dropdown-item-secondary">Todas Adms</SelectItem>
+                          {administrators.map((admin) => (
+                            <SelectItem key={admin.id} value={admin.id} className="dropdown-item-secondary">
+                              {admin.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={installmentStatusFilter} onValueChange={(value: 'all' | 'active' | 'archived') => setInstallmentStatusFilter(value)}>
+                        <SelectTrigger className="w-full sm:w-48 select-trigger-secondary no-ring-focus brand-radius text-left justify-start select-text-left">
+                          <SelectValue className="text-left justify-start" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all" className="dropdown-item-secondary">Todas Situações</SelectItem>
+                          <SelectItem value="active" className="dropdown-item-secondary">Ativas</SelectItem>
+                          <SelectItem value="archived" className="dropdown-item-secondary">Arquivadas</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <InstallmentTypesList
+                      key={refreshKey}
+                      searchTerm={installmentSearchTerm}
+                      statusFilter={installmentStatusFilter}
+                      selectedAdministrator={installmentAdminFilter === 'all' ? '' : installmentAdminFilter}
+                      onEdit={(installmentType: any) => { setSelectedInstallmentType(installmentType); setShowInstallmentTypeModal(true); }}
+                    />
+                  </div>
                 </TabsContent>
                 )}
 
@@ -340,7 +399,11 @@ export default function SettingsSimulator() {
                         <h2 className="text-2xl font-semibold text-foreground">Redução de Parcela</h2>
                         <p className="text-muted-foreground mt-1">Gerencie as reduções de parcela</p>
                       </div>
-                      <Button onClick={() => { setSelectedReduction(null); setShowReductionModal(true); setIsCopyReduction(false); }} variant="brandPrimaryToSecondary">
+                      <Button onClick={() => { 
+                        setSelectedReduction(null); 
+                        setShowReductionModal(true); 
+                        setIsCopyReduction(false);
+                      }} variant="brandPrimaryToSecondary">
                         <Plus className="w-4 h-4 mr-2" />
                         Adicionar Redução
                       </Button>
@@ -404,17 +467,47 @@ export default function SettingsSimulator() {
                         <h2 className="text-2xl font-semibold text-foreground">Alavancas</h2>
                         <p className="text-muted-foreground mt-1">Gerencie as alavancas</p>
                       </div>
-                      <Button onClick={() => { setSelectedLeverage(null); setShowLeverageModal(true); }} variant="brandPrimaryToSecondary">
+                      <Button onClick={() => { 
+                        console.log('[SettingsSimulator] Adicionar Alavanca clicado');
+                        setSelectedLeverage(null); 
+                        setShowLeverageModal(true); 
+                      }} variant="brandPrimaryToSecondary">
                         <Plus className="w-4 h-4 mr-2" />
                         Adicionar Alavanca
                       </Button>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-4">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                        <Input
+                          placeholder="Buscar alavancas..."
+                          value={leverageSearchTerm}
+                          onChange={(e) => setLeverageSearchTerm(e.target.value)}
+                          className="pl-10 field-secondary-focus no-ring-focus brand-radius"
+                        />
+                      </div>
+                      <Select value={leverageStatusFilter} onValueChange={(value: 'all' | 'active' | 'archived') => setLeverageStatusFilter(value)}>
+                        <SelectTrigger className="w-full sm:w-48 select-trigger-secondary no-ring-focus brand-radius text-left justify-start select-text-left">
+                          <SelectValue className="text-left justify-start" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all" className="dropdown-item-secondary">Todas Situações</SelectItem>
+                          <SelectItem value="active" className="dropdown-item-secondary">Ativas</SelectItem>
+                          <SelectItem value="archived" className="dropdown-item-secondary">Arquivadas</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
 
                     <LeveragesList
                       key={refreshKey}
                       searchTerm={leverageSearchTerm}
                       statusFilter={leverageStatusFilter}
-                      onEdit={(lev: any) => { setSelectedLeverage(lev); setShowLeverageModal(true); }}
+                      onEdit={(lev: any) => { 
+                        console.log('[SettingsSimulator] Editar Alavanca clicado:', lev);
+                        setSelectedLeverage(lev); 
+                        setShowLeverageModal(true); 
+                      }}
                     />
 
                     <CopyLeveragesModal
@@ -453,9 +546,12 @@ export default function SettingsSimulator() {
           />
           <LeverageModal
             leverage={selectedLeverage}
-            open={showLeverageModal}
-            onOpenChange={setShowLeverageModal}
-            onClose={closeModals}
+            isOpen={showLeverageModal}
+            onClose={() => setShowLeverageModal(false)}
+            onSave={() => {
+              setShowLeverageModal(false);
+              closeModals();
+            }}
           />
           <CopyReductionsModal
             open={showReductionModal && isCopyReduction}

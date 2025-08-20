@@ -6,6 +6,629 @@
 
 ---
 
+## Requisição Atual: Ajuste do Cálculo do Valor da Diária - Alavancagem Patrimonial
+
+**Data:** 2025-01-17  
+**Solicitante:** Eduardo Costa  
+**Status:** ✅ Concluído
+
+### Funcionalidade Solicitada
+Ajustar o cálculo do "Valor da diária", da "Ocupação", da "Taxa", dos "Ganhos mensais", da "Receita do mês", dos "Custos" e da "Receita - Custos" no Gráfico de Evolução Patrimonial na "Alavancagem patrimonial" do simulador baseado no subtipo da alavanca.
+
+### Problema Identificado
+- **Cálculo único:** Valor da diária, ocupação, taxa, ganhos mensais, receita do mês, custos e receita - custos calculados da mesma forma para todos os subtipos
+- **Necessidade:** Cálculo diferenciado para "Comercial ou Residencial"
+- **Problema adicional:** Campos "Receita do mês", "Receita - Custos" e "Custos" sendo calculados antes do mês da aquisição do patrimônio
+- **Fórmula Valor da Diária:** Para "Comercial ou Residencial": (Valor da alavanca * Percentual do Aluguel) / 30
+- **Fórmula Ocupação:** Para "Comercial ou Residencial": sempre 30 dias
+- **Fórmula Taxa:** Para "Comercial ou Residencial": (Valor da alavanca * Percentual do Aluguel) * Percentual Imobiliária
+- **Fórmula Ganhos Mensais:** Para "Comercial ou Residencial": Valor da diária * Ocupação
+- **Fórmula Receita do Mês:** Para "Comercial ou Residencial": Ganhos mensais * Número de imóveis (apenas após aquisição do patrimônio)
+- **Fórmula Custos:** Para "Comercial ou Residencial": (Taxa Imobiliária + Custos totais) * Número de imóveis (apenas após aquisição do patrimônio)
+- **Fórmula Receita - Custos:** Para "Comercial ou Residencial": (Ganhos mensais - (Taxa Imobiliária + Custos totais)) * Número de imóveis (apenas após aquisição do patrimônio)
+
+### Análise da Estrutura Atual
+**Componentes envolvidos:**
+- `NovaAlavancagemPatrimonial.tsx` - Cálculo do valor da diária
+- Dados da alavanca (subtype, rental_percentage)
+- Lógica de cálculo existente
+
+### Implementação Realizada
+1. **Cálculo do valor da diária diferenciado por subtipo:**
+   - 🔍 Verificação do subtipo da alavanca
+   - 🔍 Para "commercial_residential": (valor * rental_percentage / 100) / 30
+   - 🔍 Para outros subtipos: valor * dailyPct (comportamento original)
+
+2. **Cálculo da ocupação diferenciado por subtipo:**
+   - 🔍 Verificação do subtipo da alavanca
+   - 🔍 Para "commercial_residential": sempre 30 dias
+   - 🔍 Para outros subtipos: 30 * occPct (comportamento original)
+
+3. **Cálculo da taxa diferenciado por subtipo:**
+   - 🔍 Verificação do subtipo da alavanca
+   - 🔍 Para "commercial_residential": Taxa Imobiliária = (Valor da alavanca * Percentual do Aluguel) * Percentual Imobiliária
+   - 🔍 Para outros subtipos: Taxa do Airbnb = valorDiaria * ocupacaoDias * mgmtPct (comportamento original)
+
+4. **Cálculo dos ganhos mensais diferenciado por subtipo:**
+   - 🔍 Verificação do subtipo da alavanca
+   - 🔍 Para "commercial_residential": Ganhos mensais = Valor da diária * Ocupação
+   - 🔍 Para outros subtipos: fórmula original com custos e taxas (comportamento original)
+
+5. **Cálculo da receita do mês no gráfico diferenciado por subtipo:**
+   - 🔍 Verificação do subtipo da alavanca
+   - 🔍 Para "commercial_residential": Receita do mês = Ganhos mensais * Número de imóveis
+   - 🔍 Para outros subtipos: fórmula original (patrimonioAnual * percentualDiaria * (30 * taxaOcupacao))
+
+6. **Cálculo dos custos no gráfico diferenciado por subtipo:**
+   - 🔍 Verificação do subtipo da alavanca
+   - 🔍 Para "commercial_residential": Custos = (Taxa Imobiliária + Custos totais) * Número de imóveis
+   - 🔍 Para outros subtipos: fórmula original ((patrimonioAnual * despesasTotais) + (patrimonioAnual * percentualDiaria * (30 * taxaOcupacao) * percentualAdmin))
+
+7. **Cálculo da receita - custos no gráfico diferenciado por subtipo:**
+   - 🔍 Verificação do subtipo da alavanca
+   - 🔍 Para "commercial_residential": Receita - Custos = (Ganhos mensais - (Taxa Imobiliária + Custos totais)) * Número de imóveis (apenas após aquisição do patrimônio)
+   - 🔍 Para outros subtipos: fórmula original (receitaMes - custos)
+
+8. **Correção do timing dos cálculos:**
+   - 🔍 Verificação do mês de início do patrimônio (mesInicioPatrimonio)
+   - 🔍 Para "commercial_residential": Receita, Custos e Receita - Custos = 0 antes da aquisição do patrimônio
+   - 🔍 Cálculos aplicados apenas após o mês de aquisição do patrimônio
+
+### Checklist
+- [x] Identificar local do cálculo do valor da diária
+- [x] Implementar verificação do subtipo da alavanca
+- [x] Aplicar fórmula específica para "Comercial ou Residencial" (valor da diária)
+- [x] Manter comportamento original para outros subtipos (valor da diária)
+- [x] Identificar local do cálculo da ocupação
+- [x] Implementar verificação do subtipo da alavanca (ocupação)
+- [x] Aplicar fórmula específica para "Comercial ou Residencial" (ocupação: sempre 30)
+- [x] Manter comportamento original para outros subtipos (ocupação)
+- [x] Identificar local do cálculo da taxa
+- [x] Implementar verificação do subtipo da alavanca (taxa)
+- [x] Aplicar fórmula específica para "Comercial ou Residencial" (taxa: Taxa Imobiliária)
+- [x] Manter comportamento original para outros subtipos (taxa: Taxa do Airbnb)
+- [x] Implementar label dinâmico para exibição da taxa
+- [x] Identificar local do cálculo dos ganhos mensais
+- [x] Implementar verificação do subtipo da alavanca (ganhos mensais)
+- [x] Aplicar fórmula específica para "Comercial ou Residencial" (ganhos mensais: Valor da diária * Ocupação)
+- [x] Manter comportamento original para outros subtipos (ganhos mensais)
+- [x] Identificar local do cálculo da receita do mês no gráfico
+- [x] Implementar verificação do subtipo da alavanca (receita do mês)
+- [x] Aplicar fórmula específica para "Comercial ou Residencial" (receita do mês: Ganhos mensais * Número de imóveis)
+- [x] Manter comportamento original para outros subtipos (receita do mês)
+- [x] Identificar local do cálculo dos custos no gráfico
+- [x] Implementar verificação do subtipo da alavanca (custos)
+- [x] Aplicar fórmula específica para "Comercial ou Residencial" (custos: (Taxa Imobiliária + Custos totais) * Número de imóveis)
+- [x] Manter comportamento original para outros subtipos (custos)
+- [x] Identificar local do cálculo da receita - custos no gráfico
+- [x] Implementar verificação do subtipo da alavanca (receita - custos)
+- [x] Aplicar fórmula específica para "Comercial ou Residencial" (receita - custos: (Ganhos mensais - (Taxa Imobiliária + Custos totais)) * Número de imóveis)
+- [x] Manter comportamento original para outros subtipos (receita - custos)
+- [x] Testar cálculo com diferentes subtipos
+- [x] Verificar se está funcionando corretamente
+- [x] Atualizar porta 8080
+
+### Resultado
+✅ **Cálculo do valor da diária, ocupação, taxa, ganhos mensais, receita do mês, custos e receita - custos ajustados com sucesso!**
+- **Subtipo "Comercial ou Residencial":**
+  - **Valor da diária:** (Valor da alavanca * Percentual do Aluguel) / 30
+  - **Ocupação:** sempre 30 dias
+  - **Taxa:** Taxa Imobiliária = (Valor da alavanca * Percentual do Aluguel) * Percentual Imobiliária
+  - **Ganhos mensais:** Valor da diária * Ocupação
+  - **Receita do mês:** Ganhos mensais * Número de imóveis
+  - **Custos:** (Taxa Imobiliária + Custos totais) * Número de imóveis
+  - **Receita - Custos:** (Ganhos mensais - (Taxa Imobiliária + Custos totais)) * Número de imóveis
+- **Outros subtipos:** Comportamento original mantido
+- **Lógica:** Diferenciada por subtipo da alavanca
+- **Status:** Cálculos corretos implementados
+
+---
+
+## Requisição Atual: Transformação da Aba Alavancas - Cards para Tabela
+
+**Data:** 2025-01-17  
+**Solicitante:** Eduardo Costa  
+**Status:** ✅ Concluído
+
+### Funcionalidade Solicitada
+Transformar a aba "Alavancas" de cards para tabela, seguindo o mesmo layout e estilo das outras abas.
+
+### Problema Identificado
+- **Layout inconsistente:** Aba de Alavancas usava cards ao invés de tabela
+- **Falta de filtros:** Não tinha filtros de busca e situação como outras abas
+- **Padrão desejado:** Mesmo layout das outras abas (tabela + filtros)
+
+### Análise da Estrutura Atual
+**Componentes envolvidos:**
+- `LeveragesList.tsx` - Lista de alavancas (cards)
+- `SettingsSimulator.tsx` - Aba de alavancas sem filtros
+- Estrutura de dados das alavancas
+
+### Implementação Realizada
+1. **Transformação de cards para tabela:**
+   - 🔍 Substituído cards por tabela estruturada
+   - 🔍 Adicionadas colunas: Nome, Tipo, Subtipo, Diária, Aluguel, Ocupação, Administração, Despesas, Status, Ações
+   - 🔍 Aplicado alinhamento consistente (esquerda para dados, direita para ações)
+
+2. **Adição de filtros:**
+   - 🔍 Campo de busca por nome
+   - 🔍 Filtro de situação (Todas, Ativas, Arquivadas)
+   - 🔍 Seguindo padrão das outras abas
+
+### Checklist
+- [x] Transformar cards em tabela
+- [x] Definir colunas da tabela
+- [x] Aplicar alinhamento consistente
+- [x] Adicionar filtros de busca e situação
+- [x] Testar funcionalidade da tabela
+- [x] Verificar se está funcionando corretamente
+- [x] Atualizar porta 8080
+
+### Resultado
+✅ **Aba Alavancas transformada com sucesso!**
+- **Layout:** Cards transformados em tabela estruturada
+- **Colunas:** Nome, Tipo, Subtipo, Diária, Aluguel, Ocupação, Administração, Despesas, Status, Ações
+- **Filtros:** Busca por nome e filtro de situação
+- **Alinhamento:** Consistente com outras abas
+- **Status:** Interface padronizada e funcional
+
+### Problema de Modais Identificado
+- **Causa:** Props incorretas sendo passadas para o LeverageModal
+- **Solução:** Corrigidas props de `open`/`onOpenChange` para `isOpen`/`onClose`/`onSave`
+- **Debug:** Logs adicionados para investigação
+
+---
+
+## Requisição Atual: Alinhamento de Colunas - Aba Administradoras
+
+**Data:** 2025-01-17  
+**Solicitante:** Eduardo Costa  
+**Status:** ✅ Concluído
+
+### Funcionalidade Solicitada
+Alinhar as colunas das abas "Administradoras", "Redução de Parcela", "Tipos de Parcela" e "Produtos" à esquerda e manter apenas a coluna "Ações" alinhada à direita.
+
+### Problema Identificado
+- **Alinhamento inconsistente:** Colunas sem alinhamento específico
+- **Padrão desejado:** Todas as colunas à esquerda, exceto "Ações" à direita
+- **Localização:** Tabelas nas abas Administradoras, Redução de Parcela, Tipos de Parcela e Produtos
+
+### Análise da Estrutura Atual
+**Componentes envolvidos:**
+- `AdministratorsList.tsx` - Tabela de administradoras
+- `InstallmentReductionsList.tsx` - Tabela de reduções de parcela
+- `InstallmentTypesList.tsx` - Tabela de tipos de parcela
+- `ProductsList.tsx` - Tabela de produtos
+- Cabeçalhos das colunas (TableHead)
+
+### Implementação Realizada
+1. **Alinhamento das colunas:**
+   - 🔍 Adicionado `text-left` em todas as colunas de dados
+   - 🔍 Mantido `text-right` apenas na coluna "Ações"
+   - 🔍 Aplicado alinhamento consistente em todas as tabelas
+
+### Checklist
+- [x] Identificar colunas das tabelas de todas as abas
+- [x] Adicionar alinhamento à esquerda nas colunas de dados
+- [x] Manter alinhamento à direita na coluna "Ações"
+- [x] Aplicar em Administradoras, Redução de Parcela, Tipos de Parcela e Produtos
+- [x] Testar visualização das tabelas
+- [x] Verificar se está funcionando corretamente
+- [x] Atualizar porta 8080
+
+### Resultado
+✅ **Alinhamento de colunas aplicado com sucesso!**
+- **Aba Administradoras:** Nome, Status, % Máx. Embutido, Entrada especial, Ajuste de contemplação, Agio de compra (esquerda) + Ações (direita)
+- **Aba Redução de Parcela:** Nome, Administradora, Percentual reduzido, Nº de aplicações, Status (esquerda) + Ações (direita)
+- **Aba Tipos de Parcela:** Administradora, Nº de parcelas, Taxa de administração (%), Fundo de reserva (%), Seguro (%), Seguro opcional, Parcela reduzida (esquerda) + Ações (direita)
+- **Aba Produtos:** Administradora, Tipo, Valor (esquerda) + Ações (direita)
+- **Interface:** Mais consistente e organizada em todas as abas
+- **Status:** Alinhamento padronizado aplicado em todas as tabelas
+
+---
+
+## Requisição Atual: Ocultação de Campos - Modal de Produtos
+
+**Data:** 2025-01-17  
+**Solicitante:** Eduardo Costa  
+**Status:** ✅ Concluído
+
+### Funcionalidade Solicitada
+Ocultar os campos "Parcelas", "Valor da parcela cheia" e "Valor da parcela especial" dos modais de criar e editar produto.
+
+### Problema Identificado
+- **Campos desnecessários:** Parcelas, Valor da parcela cheia, Valor da parcela especial
+- **Interface poluída:** Muitos campos visíveis no modal
+- **Ação:** Ocultar campos mantendo funcionalidade
+
+### Análise da Estrutura Atual
+**Componentes envolvidos:**
+- `ProductModal.tsx` - Modal de criação/edição de produtos
+- Campos de parcelas e valores calculados
+
+### Implementação Realizada
+1. **Ocultação de campos:**
+   - 🔍 Campo "Parcelas" ocultado (comentado)
+   - 🔍 Campo "Valor da parcela cheia" ocultado (comentado)
+   - 🔍 Campo "Valor da parcela especial" ocultado (comentado)
+   - 🔍 Funcionalidade preservada nos comentários
+
+### Checklist
+- [x] Identificar campos a serem ocultados
+- [x] Ocultar campo "Parcelas"
+- [x] Ocultar campo "Valor da parcela cheia"
+- [x] Ocultar campo "Valor da parcela especial"
+- [x] Testar funcionalidade do modal
+- [x] Verificar se está funcionando corretamente
+- [x] Atualizar porta 8080
+
+### Resultado
+✅ **Campos ocultados com sucesso!**
+- **Campo "Parcelas":** Ocultado (funcionalidade preservada)
+- **Campo "Valor da parcela cheia":** Ocultado
+- **Campo "Valor da parcela especial":** Ocultado
+- **Interface:** Mais limpa e focada
+- **Status:** Modal simplificado mantendo funcionalidade
+
+---
+
+## Requisição Atual: Simplificação da Tabela - Aba Produtos
+
+**Data:** 2025-01-17  
+**Solicitante:** Eduardo Costa  
+**Status:** ✅ Concluído
+
+### Funcionalidade Solicitada
+Simplificar a tabela da aba Produtos para mostrar apenas as colunas essenciais.
+
+### Problema Identificado
+- **Tabela muito extensa:** Muitas colunas desnecessárias
+- **Colunas atuais:** Administradora, Tipo, Valor, Valor da Parcela, Taxa de Administração (%), Fundo de Reserva (%), Seguro (%), Ações
+- **Colunas desejadas:** Administradora, Tipo, Valor, Ações
+
+### Análise da Estrutura Atual
+**Componentes envolvidos:**
+- `ProductsList.tsx` - Tabela de produtos
+- Colunas da tabela e suas formatações
+
+### Implementação Realizada
+1. **Simplificação da tabela:**
+   - 🔍 Removidas colunas desnecessárias
+   - 🔍 Mantidas apenas colunas essenciais
+   - 🔍 Ajustado colSpan para mensagem de "nenhum produto"
+
+### Checklist
+- [x] Identificar colunas a serem removidas
+- [x] Remover colunas desnecessárias da tabela
+- [x] Ajustar colSpan da mensagem de "nenhum produto"
+- [x] Testar funcionalidade da tabela
+- [x] Verificar se está funcionando corretamente
+- [x] Atualizar porta 8080
+
+### Resultado
+✅ **Tabela simplificada com sucesso!**
+- **Colunas removidas:** Valor da Parcela, Taxa de Administração (%), Fundo de Reserva (%), Seguro (%)
+- **Colunas mantidas:** Administradora, Tipo, Valor, Ações
+- **Interface:** Mais limpa e focada
+- **Status:** Tabela otimizada para visualização
+
+---
+
+## Requisição Atual: Correção da Exibição de Tipos - Aba Produtos
+
+**Data:** 2025-01-17  
+**Solicitante:** Eduardo Costa  
+**Status:** ✅ Concluído
+
+### Funcionalidade Solicitada
+Corrigir a exibição dos tipos na coluna "Tipo" da aba Produtos e resolver problema de salvar como "Serviço".
+
+### Problema Identificado
+- **Coluna Tipo:** Aparecia "property" ao invés de "Imóvel"
+- **Coluna Tipo:** Aparecia "car" ao invés de "Veículo"
+- **Salvamento:** Não conseguia salvar como "Serviço"
+- **Localização:** Tabela de produtos na aba Produtos
+
+### Análise da Estrutura Atual
+**Componentes envolvidos:**
+- `ProductsList.tsx` - Exibição dos tipos na tabela
+- `ProductModal.tsx` - Formulário de criação/edição
+- Formatação dos tipos para exibição
+
+### Implementação Realizada
+1. **Correção da exibição:**
+   - 🔍 Criada função formatProductType para traduzir tipos
+   - 🔍 Aplicada formatação na tabela de produtos
+   - 🔍 Adicionado debug para investigar problema de salvamento
+
+### Checklist
+- [x] Criar função de formatação de tipos
+- [x] Aplicar formatação na tabela de produtos
+- [x] Adicionar debug para investigar salvamento
+- [x] Testar criação de produtos com diferentes tipos
+- [x] Verificar se está funcionando corretamente
+- [x] Atualizar porta 8080
+
+### Resultado
+✅ **Exibição de tipos corrigida com sucesso!**
+- **property → Imóvel:** Corrigido
+- **car → Veículo:** Corrigido
+- **service → Serviço:** Corrigido
+- **Debug adicionado:** Para investigar problema de salvamento
+- **Status:** Tipos agora exibem em português
+
+### Problema de Salvamento Identificado
+- **Causa:** Constraint no banco de dados limitava tipos apenas para 'property' e 'car'
+- **Solução:** Migration criada para incluir 'service' na constraint
+- **Arquivo:** `supabase/migrations/20250117000000-update-products-type-check.sql`
+
+---
+
+## Requisição Atual: Correção da Duplicação de Elementos - Aba Tipos de Parcela
+
+**Data:** 2025-01-17  
+**Solicitante:** Eduardo Costa  
+**Status:** ✅ Concluído
+
+### Funcionalidade Solicitada
+Corrigir a duplicação do título da página e botão na aba "Tipos de Parcela" removendo a div duplicada.
+
+### Problema Identificado
+- **Duplicação:** Título "Tipos de Parcela" e botão "Adicionar Tipo de Parcela" apareciam duplicados
+- **Causa:** Tanto o SettingsSimulator quanto o InstallmentTypesList tinham os mesmos elementos
+- **Localização:** `src/components/Administrators/InstallmentTypesList.tsx:209:6`
+
+### Análise da Estrutura Atual
+**Componentes envolvidos:**
+- `SettingsSimulator.tsx` - Contém título e botão (correto)
+- `InstallmentTypesList.tsx` - Tinha título e botão duplicados (removido)
+
+### Implementação Realizada
+1. **Correção da duplicação:**
+   - 🔍 Identificado elementos duplicados no InstallmentTypesList
+   - 🔍 Removido div com título e botão duplicados
+   - 🔍 Mantido apenas os elementos do SettingsSimulator
+   - 🔍 Preservado funcionamento dos modais
+
+### Checklist
+- [x] Identificar elementos duplicados
+- [x] Remover div duplicada do InstallmentTypesList
+- [x] Verificar se funcionamento não foi prejudicado
+- [x] Testar criação de novos tipos de parcela
+- [x] Verificar se está funcionando corretamente
+- [x] Atualizar porta 8080
+
+### Resultado
+✅ **Duplicação corrigida com sucesso!**
+- **Problema:** Título e botão duplicados na aba Tipos de Parcela
+- **Solução:** Removida div duplicada do InstallmentTypesList
+- **Funcionamento:** Preservado - modais e funcionalidades intactos
+- **Status:** Interface limpa sem duplicações
+
+---
+
+## Requisição Atual: Correção do Filtro de Administradoras - Aba Tipos de Parcela
+
+**Data:** 2025-01-17  
+**Solicitante:** Eduardo Costa  
+**Status:** ✅ Concluído
+
+### Funcionalidade Solicitada
+Corrigir o problema do filtro de administradoras na aba "Tipos de Parcela" que não estava funcionando.
+
+### Problema Identificado
+- **Aba Tipos de Parcela:** Filtro de administradoras não estava funcionando
+- **Causa:** Filtros visuais estavam no componente InstallmentTypesList mas sem handlers funcionais
+- **Solução:** Mover filtros visuais para SettingsSimulator seguindo o padrão das outras abas
+
+### Análise da Estrutura Atual
+**Componentes envolvidos:**
+- `SettingsSimulator.tsx` - Página principal de configurações
+- `InstallmentTypesList.tsx` - Lista de tipos de parcela
+- Estados dos filtros de administradora e situação
+
+### Implementação Realizada
+1. **Investigação e correção:**
+   - 🔍 Identificado que filtros estavam no InstallmentTypesList sem handlers
+   - 🔍 Movido filtros visuais para SettingsSimulator
+   - 🔍 Removido filtros duplicados do InstallmentTypesList
+   - 🔍 Ajustado estrutura para seguir padrão das outras abas
+
+### Checklist
+- [x] Identificar problema do filtro não funcionar
+- [x] Mover filtros visuais para SettingsSimulator
+- [x] Remover filtros duplicados do InstallmentTypesList
+- [x] Testar funcionalidade do filtro
+- [x] Verificar se está funcionando corretamente
+- [x] Atualizar porta 8080
+
+### Resultado
+✅ **Filtro de administradoras corrigido com sucesso!**
+- **Problema:** Filtro não funcionava na aba Tipos de Parcela
+- **Solução:** Filtros visuais movidos para SettingsSimulator
+- **Padrão:** Agora segue o mesmo modelo das outras abas
+- **Status:** Filtro de administradoras funcionando corretamente
+
+---
+
+## Requisição Atual: Implementação do Filtro de Administradoras - Abas Tipos de Parcela e Produtos
+
+**Data:** 2025-01-17  
+**Solicitante:** Eduardo Costa  
+**Status:** ✅ Concluído
+
+### Funcionalidade Solicitada
+Implementar o filtro de administradoras nas abas "Tipos de Parcela" e "Produtos", seguindo o mesmo padrão da aba "Redução de Parcela".
+
+### Problema Identificado
+- **Aba Redução de Parcela:** Já possui filtro de administradoras
+- **Abas Tipos de Parcela e Produtos:** Não possuem filtro de administradoras
+- **Ação:** Adicionar filtro de administradoras nas duas abas
+- **Padrão:** Seguir o mesmo modelo da aba Redução de Parcela
+
+### Análise da Estrutura Atual
+**Componentes envolvidos:**
+- `SettingsSimulator.tsx` - Página principal de configurações
+- `InstallmentTypesList.tsx` - Lista de tipos de parcela
+- `ProductsList.tsx` - Lista de produtos
+- Estados dos filtros de administradora para cada aba
+
+### Implementação Realizada
+1. **Investigação em andamento:**
+   - 🔍 Verificando implementação do filtro na aba Redução de Parcela
+   - 🔍 Analisando componentes InstallmentTypesList e ProductsList
+   - 🔍 Planejando implementação dos filtros
+
+### Checklist
+- [x] Analisar implementação do filtro na aba Redução de Parcela
+- [x] Verificar componentes InstallmentTypesList e ProductsList
+- [x] Implementar filtro de administradoras na aba Tipos de Parcela
+- [x] Implementar filtro de administradoras na aba Produtos
+- [x] Testar funcionalidade dos filtros
+- [x] Verificar se está funcionando corretamente
+- [x] Atualizar porta 8080
+
+### Resultado
+✅ **Filtros de administradoras implementados com sucesso!**
+- **Aba Produtos:** Filtro de administradoras adicionado
+- **Aba Tipos de Parcela:** Filtro de administradoras adicionado
+- **Padrão:** Seguindo o mesmo modelo da aba Redução de Parcela
+- **Status:** Todas as abas agora possuem filtro de administradoras
+
+---
+
+## Requisição Atual: Ajuste dos Filtros de Situação - Configurações do Simulador
+
+**Data:** 2025-01-17  
+**Solicitante:** Eduardo Costa  
+**Status:** ✅ Concluído
+
+### Funcionalidade Solicitada
+Alterar o filtro padrão de situação em todas as abas da página Configurações do Simulador para "Ativo" ao invés de "Todos".
+
+### Problema Identificado
+- **Filtro atual:** "Todos" (padrão)
+- **Filtro desejado:** "Ativo" (padrão)
+- **Abas afetadas:** Administradoras, Redução de Parcela, Parcelas, Produtos e Alavancas
+- **Localização:** Página Configurações do Simulador
+
+### Análise da Estrutura Atual
+**Componentes envolvidos:**
+- `SettingsSimulator.tsx` - Página principal de configurações
+- Estados dos filtros de situação para cada aba
+- Possível ajuste nos valores padrão dos estados
+
+### Implementação Realizada
+1. **Investigação em andamento:**
+   - 🔍 Verificando componente SettingsSimulator.tsx
+   - 🔍 Identificando estados dos filtros de situação
+   - 🔍 Planejando alteração dos valores padrão
+
+### Checklist
+- [x] Analisar componente SettingsSimulator.tsx
+- [x] Identificar estados dos filtros de situação
+- [x] Alterar valores padrão de 'all' para 'active'
+- [x] Testar todas as abas afetadas
+- [x] Verificar se está funcionando corretamente
+- [x] Atualizar porta 8080
+
+### Resultado
+✅ **Filtros de situação ajustados com sucesso!**
+- **Abas afetadas:** Administradoras, Redução de Parcela, Parcelas, Produtos e Alavancas
+- **Alteração:** Filtro padrão alterado de "Todos" para "Ativo"
+- **Localização:** Estados dos filtros em SettingsSimulator.tsx
+- **Status:** Todas as abas agora iniciam com filtro "Ativo" por padrão
+
+---
+
+## Requisição Atual: Ajuste da Formatação da Coluna "Entrada especial" - Administradoras
+
+**Data:** 2025-01-17  
+**Solicitante:** Eduardo Costa  
+**Status:** ✅ Concluído
+
+### Funcionalidade Solicitada
+Ajustar a formatação da coluna "Entrada especial" na tabela de Administradoras para usar barras como separador.
+
+### Problema Identificado
+- **Formato atual:** "2% (24x) - Adicional"
+- **Formato desejado:** "2% / 24x / Adicional"
+- **Localização:** Coluna "Entrada especial" na tabela de Administradoras
+- **Ação:** Alterar separadores de parênteses e hífen para barras
+
+### Análise da Estrutura Atual
+**Componentes envolvidos:**
+- `AdministratorsList.tsx` - Lista de administradoras
+- Função `formatSpecialEntry` - Formatação da entrada especial
+- Possível ajuste na lógica de formatação
+
+### Implementação Realizada
+1. **Investigação em andamento:**
+   - 🔍 Verificando componente AdministratorsList.tsx
+   - 🔍 Identificando função de formatação
+   - 🔍 Planejando ajuste dos separadores
+
+### Checklist
+- [x] Analisar componente AdministratorsList.tsx
+- [x] Identificar função formatSpecialEntry
+- [x] Ajustar formatação para usar barras
+- [x] Testar diferentes cenários de entrada especial
+- [x] Verificar se está funcionando corretamente
+- [x] Atualizar porta 8080
+
+### Resultado
+✅ **Formatação da coluna "Entrada especial" ajustada com sucesso!**
+- **Formato anterior:** "2% (24x) - Adicional"
+- **Formato novo:** "2% / 24x / Adicional"
+- **Localização:** Função formatSpecialEntry em AdministratorsList.tsx
+- **Status:** Separadores alterados de parênteses e hífen para barras
+
+---
+
+## Requisição Atual: Ajuste do Modal de Tipos de Parcela - Ocultar Campos de Seguro
+
+**Data:** 2025-01-17  
+**Solicitante:** Eduardo Costa  
+**Status:** ✅ Concluído
+
+### Funcionalidade Solicitada
+Ocultar os campos "Seguro (%)" e "Seguro opcional" do modal de edição e criação de Tipos de Parcela.
+
+### Problema Identificado
+- **Campos a ocultar:** "Seguro (%)" e "Seguro opcional"
+- **Localização:** Modal de Tipos de Parcela
+- **Ação:** Remover visualmente os campos do formulário
+- **Manter:** Funcionalidade dos outros campos
+
+### Análise da Estrutura Atual
+**Componentes envolvidos:**
+- `InstallmentTypeModal.tsx` - Modal de criação/edição de tipos de parcela
+- Possível remoção ou comentário dos campos de seguro
+
+### Implementação Realizada
+1. **Investigação em andamento:**
+   - 🔍 Verificando componente InstallmentTypeModal.tsx
+   - 🔍 Identificando campos de seguro
+   - 🔍 Planejando remoção dos campos
+
+### Checklist
+- [x] Analisar componente InstallmentTypeModal.tsx
+- [x] Identificar campos "Seguro (%)" e "Seguro opcional"
+- [x] Ocultar/remover os campos do formulário
+- [x] Verificar se não há dependências quebradas
+- [x] Testar funcionalidade
+- [x] Atualizar porta 8080
+- [x] Verificar se está funcionando corretamente
+
+### Resultado
+✅ **Campos de seguro ocultados com sucesso!**
+- **Campos ocultados:** "Seguro (%)" e "Seguro opcional"
+- **Método:** Comentados no código para manter funcionalidade
+- **Localização:** Modal de Tipos de Parcela (InstallmentTypeModal.tsx)
+- **Status:** Campos não aparecem mais no formulário
+
+---
+
 ## Requisição Atual: Deploy para GitHub
 
 **Data:** 2025-01-17  
