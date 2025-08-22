@@ -703,7 +703,8 @@ export default function SettingsGestao() {
                   {/* Dados Cadastrais */}
                   <Card>
                     <CardContent className="p-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {/* Linha 1: Nome da empresa, CNPJ e Nicho */}
                         <div className="space-y-2">
                           <Label>Nome da empresa</Label>
                           <Input 
@@ -720,7 +721,7 @@ export default function SettingsGestao() {
                             className="brand-radius field-secondary-focus no-ring-focus"
                           />
                         </div>
-                        <div className="space-y-2 md:col-span-2">
+                        <div className="space-y-2">
                           <Label>Nicho</Label>
                           <Input 
                             value={niche} 
@@ -728,6 +729,8 @@ export default function SettingsGestao() {
                             className="brand-radius field-secondary-focus no-ring-focus"
                           />
                         </div>
+
+                        {/* Linha 2: CEP e Endereço */}
                         <div className="space-y-2">
                           <Label>CEP</Label>
                           <Input 
@@ -737,7 +740,7 @@ export default function SettingsGestao() {
                             className="brand-radius field-secondary-focus no-ring-focus"
                           />
                         </div>
-                        <div className="space-y-2">
+                        <div className="space-y-2 md:col-span-2">
                           <Label>Endereço</Label>
                           <Input 
                             value={street} 
@@ -745,6 +748,8 @@ export default function SettingsGestao() {
                             className="brand-radius field-secondary-focus no-ring-focus"
                           />
                         </div>
+
+                        {/* Linha 3: Número, Bairro e Cidade */}
                         <div className="space-y-2">
                           <Label>Número</Label>
                           <Input 
@@ -769,6 +774,8 @@ export default function SettingsGestao() {
                             className="brand-radius field-secondary-focus no-ring-focus"
                           />
                         </div>
+
+                        {/* Linha 4: Estado, País e Fuso horário */}
                         <div className="space-y-2">
                           <Label>Estado</Label>
                           <Input 
