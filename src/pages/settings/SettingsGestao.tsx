@@ -226,9 +226,12 @@ export default function SettingsGestao() {
     }
   };
 
-  const handleAvatarCrop = async (croppedImageBlob: Blob) => {
-    try {
-      const file = new File([croppedImageBlob], 'avatar.jpg', { type: 'image/jpeg' });
+  const handleAvatarCrop = async (croppedImageDataUrl: string) => {
+          try {
+        // Converter data URL para Blob
+        const response = await fetch(croppedImageDataUrl);
+        const croppedImageBlob = await response.blob();
+        const file = new File([croppedImageBlob], 'avatar.jpg', { type: 'image/jpeg' });
       
       // Obter o usuário Supabase Auth para usar o auth.uid() correto
       const { data: { user: authUser } } = await supabase.auth.getUser();
