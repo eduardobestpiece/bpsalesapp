@@ -380,13 +380,13 @@ export default function SettingsSimulator() {
                         </SelectContent>
                       </Select>
                     </div>
-                    <InstallmentTypesList
-                      key={refreshKey}
-                      searchTerm={installmentSearchTerm}
-                      statusFilter={installmentStatusFilter}
+                  <InstallmentTypesList
+                    key={refreshKey}
+                    searchTerm={installmentSearchTerm}
+                    statusFilter={installmentStatusFilter}
                       selectedAdministrator={installmentAdminFilter === 'all' ? '' : installmentAdminFilter}
-                      onEdit={(installmentType: any) => { setSelectedInstallmentType(installmentType); setShowInstallmentTypeModal(true); }}
-                    />
+                    onEdit={(installmentType: any) => { setSelectedInstallmentType(installmentType); setShowInstallmentTypeModal(true); }}
+                  />
                   </div>
                 </TabsContent>
                 )}

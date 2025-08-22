@@ -4,7 +4,7 @@ import { Calculator, BarChart2, Settings } from 'lucide-react';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
+// import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
 import { useQuery } from '@tanstack/react-query';
 import { useDefaultBranding } from '@/hooks/useDefaultBranding';
 
@@ -70,7 +70,7 @@ export default function Home() {
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-[#131313] via-[#1E1E1E] to-[#161616] p-4">
       {/* Botão de alternância de tema */}
       <div className="absolute top-4 right-4">
-        <ThemeSwitch />
+        {/* <ThemeSwitch /> */}
       </div>
       
       <h1 className="text-[28px] md:text-[44px] font-bold text-white mb-4 text-center">

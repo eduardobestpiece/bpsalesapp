@@ -162,7 +162,7 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
                 Nenhuma alavanca encontrada.
               </TableCell>
             </TableRow>
-          ) : (
+                  ) : (
             leverages.map((leverage) => (
               <TableRow key={leverage.id}>
                 <TableCell className="font-medium">{leverage.name}</TableCell>
@@ -198,30 +198,30 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex gap-2 justify-end">
-                    <Button
-                      variant="brandOutlineSecondaryHover"
-                      size="sm"
-                      onClick={() => onEdit(leverage)}
-                      className="brand-radius"
-                      disabled={isSubMaster}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    {isMaster && (
-                      <Button
-                        variant="brandOutlineSecondaryHover"
-                        size="sm"
-                        onClick={() => handleArchiveToggle(leverage)}
-                        className="brand-radius"
-                      >
-                        {leverage.is_archived ? (
-                          <RotateCcw className="w-4 h-4" />
-                        ) : (
-                          <Archive className="w-4 h-4" />
-                        )}
-                      </Button>
+                <Button
+                  variant="brandOutlineSecondaryHover"
+                  size="sm"
+                  onClick={() => onEdit(leverage)}
+                  className="brand-radius"
+                  disabled={isSubMaster}
+                >
+                  <Edit className="w-4 h-4" />
+                </Button>
+                {isMaster && (
+                  <Button
+                    variant="brandOutlineSecondaryHover"
+                    size="sm"
+                    onClick={() => handleArchiveToggle(leverage)}
+                    className="brand-radius"
+                  >
+                    {leverage.is_archived ? (
+                      <RotateCcw className="w-4 h-4" />
+                    ) : (
+                      <Archive className="w-4 h-4" />
                     )}
-                  </div>
+                  </Button>
+                )}
+              </div>
                 </TableCell>
               </TableRow>
             ))

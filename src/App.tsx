@@ -8,6 +8,7 @@ import { CrmAuthProvider, useCrmAuth } from "@/contexts/CrmAuthContext";
 import { ProtectedRoute } from "@/components/CRM/ProtectedRoute";
 import { CrmLayout } from "@/components/Layout/CrmLayout";
 import { SimulatorLayout } from "@/components/Layout/SimulatorLayout";
+import { SettingsLayout } from "@/components/Layout/SettingsLayout";
 import Index from "./pages/Index";
 import Simulador from "./pages/Simulador";
 // import Configuracoes from "./pages/Configuracoes"; // removido: agora em módulo próprio
@@ -30,6 +31,7 @@ import { Loader2 } from "lucide-react";
 // Novas páginas do módulo Configurações
 import SettingsSimulator from "./pages/settings/SettingsSimulator";
 import SettingsCrm from "./pages/settings/SettingsCrm";
+import SettingsGestao from "./pages/settings/SettingsGestao";
 import SettingsUsers from "./pages/settings/SettingsUsers";
 import SettingsMaster from "./pages/settings/SettingsMaster";
 import SettingsEmpresa from "./pages/settings/SettingsEmpresa";
@@ -113,38 +115,42 @@ function AppContent() {
           {/* Novo módulo: Configurações */}
           {/* Rota antiga redireciona para o novo local */}
           <Route path="/configuracoes/simulador" element={<Navigate to="/simulador/configuracoes" replace />} />
+          
+          {/* Nova página unificada de Gestão */}
+          <Route path="/configuracoes/gestao" element={
+            user ? (
+              <SettingsLayout>
+                <SettingsGestao />
+              </SettingsLayout>
+            ) : <Navigate to="/crm/login" replace />
+          } />
+          
+          {/* Redirecionamentos das páginas antigas para a nova página de Gestão */}
+          <Route path="/configuracoes/perfil" element={<Navigate to="/configuracoes/gestao" replace />} />
+          <Route path="/configuracoes/empresa" element={<Navigate to="/configuracoes/gestao" replace />} />
+          <Route path="/configuracoes/usuarios" element={<Navigate to="/configuracoes/gestao" replace />} />
+          
           <Route path="/configuracoes/crm" element={
             user ? (
+              <SettingsLayout>
               <SettingsCrm />
-            ) : <Navigate to="/crm/login" replace />
-          } />
-          <Route path="/configuracoes/usuarios" element={
-            user ? (
-              <SettingsUsers />
-            ) : <Navigate to="/crm/login" replace />
-          } />
-          <Route path="/configuracoes/empresa" element={
-            user ? (
-              <SettingsEmpresa />
+              </SettingsLayout>
             ) : <Navigate to="/crm/login" replace />
           } />
           <Route path="/configuracoes/master" element={
             user ? (
               <ProtectedRoute requiredRole="master">
+                <SettingsLayout>
                 <SettingsMaster />
-              </ProtectedRoute>
-            ) : <Navigate to="/crm/login" replace />
-          } />
-          <Route path="/configuracoes/perfil" element={
-            user ? (
-              <ProtectedRoute requiredPageKey="profile">
-                <SettingsPerfil />
+                </SettingsLayout>
               </ProtectedRoute>
             ) : <Navigate to="/crm/login" replace />
           } />
           <Route path="/configuracoes/agendamento" element={
             user ? (
+              <SettingsLayout>
               <SettingsAgendamento />
+              </SettingsLayout>
             ) : <Navigate to="/crm/login" replace />
           } />
           

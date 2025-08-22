@@ -126,7 +126,7 @@ export const AvatarCropper = ({ isOpen, onClose, file, onCropComplete }: AvatarC
     e.stopPropagation();
     
     if (action === 'move') {
-      setIsDragging(true);
+    setIsDragging(true);
       setDragStart({ 
         x: e.clientX - cropArea.x, 
         y: e.clientY - cropArea.y 
@@ -140,9 +140,9 @@ export const AvatarCropper = ({ isOpen, onClose, file, onCropComplete }: AvatarC
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (isDragging) {
-      const newX = e.clientX - dragStart.x;
-      const newY = e.clientY - dragStart.y;
-      
+    const newX = e.clientX - dragStart.x;
+    const newY = e.clientY - dragStart.y;
+    
       const newCropArea = constrainCropArea({
         ...cropArea,
         x: newX,
@@ -207,16 +207,16 @@ export const AvatarCropper = ({ isOpen, onClose, file, onCropComplete }: AvatarC
     // Calculate scale factor between displayed image and natural size
     const scaleX = image.naturalWidth / image.offsetWidth;
     const scaleY = image.naturalHeight / image.offsetHeight;
-    
+
     // Calculate crop coordinates in natural image size
     const cropX = (cropArea.x - imageRect.x) * scaleX;
     const cropY = (cropArea.y - imageRect.y) * scaleY;
     const cropWidth = cropArea.width * scaleX;
     const cropHeight = cropArea.height * scaleY;
-
+    
     // Draw cropped image
     ctx.drawImage(
-      image,
+      image, 
       cropX,
       cropY,
       cropWidth,
@@ -248,10 +248,10 @@ export const AvatarCropper = ({ isOpen, onClose, file, onCropComplete }: AvatarC
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto brand-radius">
         <DialogHeader>
-          <DialogTitle>Ajustar Foto de Perfil</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-foreground">Ajustar Foto de Perfil</DialogTitle>
+          <DialogDescription className="text-muted-foreground">
             Selecione a área da imagem que será sua foto de perfil. Arraste e redimensione o quadrado para ajustar.
           </DialogDescription>
         </DialogHeader>
@@ -260,7 +260,7 @@ export const AvatarCropper = ({ isOpen, onClose, file, onCropComplete }: AvatarC
           {/* Image Container */}
           <div 
             ref={containerRef}
-            className="relative w-full h-[500px] bg-background rounded-lg overflow-hidden flex items-center justify-center border"
+            className="relative w-full h-[500px] bg-background brand-radius overflow-hidden flex items-center justify-center border border-border"
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
@@ -282,6 +282,7 @@ export const AvatarCropper = ({ isOpen, onClose, file, onCropComplete }: AvatarC
                     variant="outline"
                     size="sm"
                     onClick={() => window.location.reload()}
+                    className="field-secondary-focus no-ring-focus"
                   >
                     Tentar novamente
                   </Button>
@@ -290,25 +291,25 @@ export const AvatarCropper = ({ isOpen, onClose, file, onCropComplete }: AvatarC
             )}
 
             {imageUrl && (
-              <img
-                ref={imageRef}
-                src={imageUrl}
-                alt="Preview"
+                  <img
+                    ref={imageRef}
+                    src={imageUrl}
+                    alt="Preview"
                 className="max-w-full max-h-full object-contain select-none"
-                style={{
-                  userSelect: 'none',
-                  pointerEvents: 'none'
-                }}
-                onLoad={handleImageLoad}
-                onError={handleImageError}
-              />
+                    style={{
+                      userSelect: 'none',
+                      pointerEvents: 'none'
+                    }}
+                    onLoad={handleImageLoad}
+                    onError={handleImageError}
+                  />
             )}
 
-            {/* Crop area overlay */}
+                {/* Crop area overlay */}
             {imageLoaded && (
-              <div
-                className="absolute border-2 border-primary bg-primary/10 cursor-move"
-                style={{
+                <div
+                className="absolute border-2 border-[var(--brand-primary)] bg-[var(--brand-primary)]/10 cursor-move brand-radius"
+                  style={{
                   left: cropArea.x,
                   top: cropArea.y,
                   width: cropArea.width,
@@ -320,33 +321,33 @@ export const AvatarCropper = ({ isOpen, onClose, file, onCropComplete }: AvatarC
               >
                 {/* Resize handles */}
                 <div
-                  className="absolute w-3 h-3 bg-primary border border-background -top-1 -left-1 cursor-nw-resize"
+                  className="absolute w-3 h-3 bg-[var(--brand-primary)] border border-background -top-1 -left-1 cursor-nw-resize brand-radius"
                   onMouseDown={(e) => handleCropMouseDown(e, 'resize', 'top-left')}
                 />
                 <div
-                  className="absolute w-3 h-3 bg-primary border border-background -top-1 -right-1 cursor-ne-resize"
+                  className="absolute w-3 h-3 bg-[var(--brand-primary)] border border-background -top-1 -right-1 cursor-ne-resize brand-radius"
                   onMouseDown={(e) => handleCropMouseDown(e, 'resize', 'top-right')}
                 />
                 <div
-                  className="absolute w-3 h-3 bg-primary border border-background -bottom-1 -left-1 cursor-sw-resize"
+                  className="absolute w-3 h-3 bg-[var(--brand-primary)] border border-background -bottom-1 -left-1 cursor-sw-resize brand-radius"
                   onMouseDown={(e) => handleCropMouseDown(e, 'resize', 'bottom-left')}
                 />
                 <div
-                  className="absolute w-3 h-3 bg-primary border border-background -bottom-1 -right-1 cursor-se-resize"
+                  className="absolute w-3 h-3 bg-[var(--brand-primary)] border border-background -bottom-1 -right-1 cursor-se-resize brand-radius"
                   onMouseDown={(e) => handleCropMouseDown(e, 'resize', 'bottom-right')}
                 />
                 
                 {/* Center icon */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <Move className="w-6 h-6 text-primary drop-shadow-sm" />
+                  <Move className="w-6 h-6 text-[var(--brand-primary)] drop-shadow-sm" />
                 </div>
               </div>
             )}
-          </div>
+              </div>
 
-          {/* Instructions */}
+              {/* Instructions */}
           {imageLoaded && (
-            <div className="text-sm text-muted-foreground text-center">
+            <div className="text-sm text-muted-foreground text-center p-4 bg-muted/30 brand-radius">
               Arraste o quadrado para mover a área de seleção. Use os pontos nas bordas para redimensionar.
             </div>
           )}
@@ -355,13 +356,17 @@ export const AvatarCropper = ({ isOpen, onClose, file, onCropComplete }: AvatarC
         <canvas ref={canvasRef} style={{ display: 'none' }} />
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button 
+            variant="outline" 
+            onClick={onClose}
+            className="field-secondary-focus no-ring-focus hover:bg-[var(--brand-secondary)] hover:text-[var(--brand-secondary-foreground)]"
+          >
             Cancelar
           </Button>
           <Button 
             onClick={handleCropAndSave}
             disabled={!imageLoaded}
-            className="bg-primary hover:bg-primary/90"
+            className="bg-[var(--brand-primary)] hover:bg-[var(--brand-primary)]/90 text-[var(--brand-primary-foreground)]"
           >
             <Download className="w-4 h-4 mr-2" />
             Salvar Foto
@@ -370,4 +375,4 @@ export const AvatarCropper = ({ isOpen, onClose, file, onCropComplete }: AvatarC
       </DialogContent>
     </Dialog>
   );
-};
+}; 

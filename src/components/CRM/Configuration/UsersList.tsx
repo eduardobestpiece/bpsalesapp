@@ -93,7 +93,7 @@ export const UsersList = () => {
 
   return (
     <>
-      <Card>
+      <Card className="mt-8">
         <CardHeader>
           <CardTitle>Usuários</CardTitle>
           <CardDescription>Gerencie os usuários da empresa.</CardDescription>

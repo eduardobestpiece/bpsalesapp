@@ -1,6 +1,6 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { SettingsLayout } from '@/components/Layout/SettingsLayout';
+// import { SettingsLayout } from '@/components/Layout/SettingsLayout';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -395,14 +395,10 @@ function SettingsEmpresaInner() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="max-w-5xl mx-auto space-y-8">
-        <div className="flex items-center gap-3">
-          <Building2 className="h-6 w-6" />
+    <>
           <div>
             <h1 className="text-3xl font-bold">Empresa</h1>
             <p className="text-muted-foreground">Configure os dados cadastrais e o visual da sua empresa.</p>
-          </div>
         </div>
 
         {/* Dados Cadastrais */}
@@ -661,15 +657,10 @@ function SettingsEmpresaInner() {
             </div>
           </CardContent>
         </Card>
-      </div>
-    </div>
+    </>
   );
 }
 
 export default function SettingsEmpresa() {
-  return (
-    <SettingsLayout>
-      <SettingsEmpresaInner />
-    </SettingsLayout>
-  );
+  return <SettingsEmpresaInner />;
 } 

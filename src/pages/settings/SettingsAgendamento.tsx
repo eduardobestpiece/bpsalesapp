@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { SettingsLayout } from '@/components/Layout/SettingsLayout';
+// import { SettingsLayout } from '@/components/Layout/SettingsLayout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -773,8 +773,7 @@ export default function SettingsAgendamento() {
   };
 
   return (
-    <SettingsLayout>
-      <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
         <div className="max-w-6xl mx-auto">
           <h1 className="text-3xl font-bold text-foreground mb-6">Configuração do Agendamento</h1>
 
@@ -1328,6 +1327,5 @@ export default function SettingsAgendamento() {
           </Card>
         </div>
       </div>
-    </SettingsLayout>
   );
 } 

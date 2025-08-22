@@ -3,7 +3,7 @@ import { ReactNode, createContext, useContext, useState } from 'react';
 import { TrendingUp } from 'lucide-react';
 import { SidebarProvider, SidebarInset, SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { SimulatorSidebar } from './SimulatorSidebar';
-import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
+// import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
 import { CompanyProvider } from '@/contexts/CompanyContext';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -103,7 +103,7 @@ const SimulatorHeader = () => {
       }}
     >
       <SidebarTrigger className="-ml-1 text-foreground dark:text-white brand-radius hover:bg-[var(--brand-secondary)] active:bg-[var(--brand-secondary)] focus:bg-[var(--brand-secondary)] transition-colors" />
-      <ThemeSwitch />
+              {/* <ThemeSwitch /> */}
       <ModuleSwitcher current="simulator" />
       
       {/* Campos de configuração - Layout responsivo melhorado */}

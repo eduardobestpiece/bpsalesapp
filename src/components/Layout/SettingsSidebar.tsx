@@ -182,6 +182,17 @@ export const SettingsSidebar = () => {
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
+              {/* 1. Gestão */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/gestao')}>
+                  <Link to="/configuracoes/gestao">
+                    <Settings className="h-4 w-4" />
+                    <span>Gestão</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
+              {/* 4. CRM */}
               {(((userRole === 'admin' || userRole === 'master') ||
                  (pagePermissions['crm_config'] !== false ||
                   pagePermissions['crm_config_funnels'] !== false ||
@@ -196,34 +207,8 @@ export const SettingsSidebar = () => {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
-              {(userRole === 'admin' || userRole === 'master') && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/usuarios')}>
-                    <Link to="/configuracoes/usuarios">
-                      <Users className="h-4 w-4" />
-                      <span>Usuários</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-              {(!(userRole === 'admin' || userRole === 'master') && (pagePermissions['settings_users'] !== false)) && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/usuarios')}>
-                    <Link to="/configuracoes/usuarios">
-                      <Users className="h-4 w-4" />
-                      <span>Usuários</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/perfil')}>
-                  <Link to="/configuracoes/perfil">
-                    <UserIcon className="h-4 w-4" />
-                    <span>Meu Perfil</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+
+              {/* 5. Agendamento */}
               {pagePermissions['settings_agendamento'] !== false && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/agendamento')}>
@@ -234,31 +219,8 @@ export const SettingsSidebar = () => {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
-              {(userRole === 'admin' || userRole === 'master') && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/empresa')}>
-                    <Link to="/configuracoes/empresa">
-                      <Building2 className="h-4 w-4" />
-                      <span>Empresa</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
-              {(!(userRole === 'admin' || userRole === 'master') && (
-                pagePermissions['settings_company'] !== false ||
-                pagePermissions['settings_company_data'] !== false ||
-                pagePermissions['settings_company_branding'] !== false
-              )) && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/empresa')}>
-                    <Link to="/configuracoes/empresa">
-                      <Building2 className="h-4 w-4" />
-                      <span>Empresa</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
 
+              {/* 6. Master Config */}
               {userRole === 'master' && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/master')}>

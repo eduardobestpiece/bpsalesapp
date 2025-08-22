@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { CrmUserMenu } from './CrmUserMenu';
 import { Calculator, Users, BarChart3, TrendingUp } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
-import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
+// import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
@@ -77,7 +77,7 @@ export const CrmHeader = () => {
           </nav>
         </div>
         <div className="flex items-center space-x-4">
-          <ThemeSwitch />
+          {/* <ThemeSwitch /> */}
           <div className="hidden md:flex items-center space-x-2 text-sm text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full">
             <Users className="h-4 w-4 text-primary" />
             <span className="font-medium">CRM</span>

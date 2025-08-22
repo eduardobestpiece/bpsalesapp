@@ -10,7 +10,7 @@ import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
 import ForgotPasswordModal from '@/components/Auth/ForgotPasswordModal';
-import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
+// import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
 import { Logo } from '@/components/ui/Logo';
 import { supabase } from '@/integrations/supabase/client';
 import { useDefaultBranding } from '@/hooks/useDefaultBranding';
@@ -63,7 +63,7 @@ const CrmLogin = () => {
     <div className="min-h-screen bg-gradient-to-br from-[#131313] via-[#1E1E1E] to-[#161616] flex items-center justify-center p-4">
       {/* Botão de alternância de tema */}
       <div className="absolute top-4 right-4">
-        <ThemeSwitch />
+        {/* <ThemeSwitch /> */}
       </div>
       
       <div className="w-full max-w-md">

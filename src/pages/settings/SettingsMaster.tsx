@@ -1,5 +1,5 @@
 
-import { SettingsLayout } from '@/components/Layout/SettingsLayout';
+// import { SettingsLayout } from '@/components/Layout/SettingsLayout';
 import CrmMasterConfig from '@/pages/crm/CrmMasterConfig';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 
@@ -19,9 +19,5 @@ export default function SettingsMaster() {
     );
   }
 
-  return (
-    <SettingsLayout>
-      <CrmMasterConfig />
-    </SettingsLayout>
-  );
+  return <CrmMasterConfig />;
 } 

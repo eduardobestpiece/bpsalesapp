@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { UserMenu } from './UserMenu';
 import { Calculator, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
+// import { ThemeSwitch } from '@/components/ui/ThemeSwitch';
 
 export const Header = () => {
   return (
@@ -22,7 +22,7 @@ export const Header = () => {
         </div>
         
         <div className="flex items-center space-x-4">
-          <ThemeSwitch />
+          {/* <ThemeSwitch /> */}
           <div className="hidden md:flex items-center space-x-2 text-sm text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full">
             <TrendingUp className="h-4 w-4 text-success" />
             <span className="font-medium">Simule sua alavancagem</span>

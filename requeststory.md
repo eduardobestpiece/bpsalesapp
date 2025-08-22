@@ -6,7 +6,109 @@
 
 ---
 
-## Requisição Atual: Ajuste do Cálculo do Valor da Diária - Alavancagem Patrimonial
+## Requisição Atual: Correção do Avatar Cropper - Sliders com Limites Baseados no Tamanho Real da Imagem
+
+**Data:** 2025-01-17  
+**Solicitante:** Eduardo Costa  
+**Status:** ✅ Concluído
+
+### Funcionalidade Solicitada
+Corrigir o Avatar Cropper para que os sliders horizontais e verticais funcionem corretamente e respeitem os limites baseados no tamanho real da imagem, impedindo que o usuário selecione áreas fora da foto.
+
+### Problema Identificado
+- **Sliders travados:** Os controles horizontais e verticais não respondiam ao movimento
+- **Limites não aplicados:** A imagem podia ser movida para fora da área da foto
+- **Cálculo incorreto:** Limites não baseados no tamanho real da imagem
+- **Problema com componente:** Slider do shadcn/ui apresentava problemas de interação
+
+### Análise da Estrutura Atual
+**Componentes envolvidos:**
+- `AvatarCropper.tsx` - Componente principal do cropper
+- `Slider` do shadcn/ui - Componente de controle
+- Lógica de cálculo de limites baseada no zoom e dimensões da imagem
+
+### Implementação Realizada
+1. **Identificação do problema com Slider:**
+   - 🔍 Slider do shadcn/ui apresentava problemas de interação
+   - 🔍 Substituição temporária por input nativo para teste
+   - 🔍 Confirmação de que a lógica funcionava com inputs nativos
+
+2. **Implementação de limites baseados no tamanho real:**
+   - 🔍 Detecção automática das dimensões reais da imagem
+   - 🔍 Cálculo inteligente dos limites baseado na proporção da imagem
+   - 🔍 Aplicação de limites dinâmicos conforme o zoom
+
+3. **Correção dos sliders com limites aplicados:**
+   - 🔍 Retorno ao componente Slider do shadcn/ui
+   - 🔍 Aplicação de clamping interno nos valores dos sliders
+   - 🔍 Limites fixos (-200 a 200) para evitar travamento
+   - 🔍 Aplicação de limites reais via clamping
+
+4. **Função de cálculo de limites inteligente:**
+   ```typescript
+   const calculateLimits = () => {
+     // Calcula proporção da imagem
+     const imageAspectRatio = imageDimensions.width / imageDimensions.height;
+     
+     // Determina como a imagem se encaixa no container
+     if (imageAspectRatio > containerAspectRatio) {
+       // Imagem mais larga
+       scaledWidth = containerSize * zoom[0];
+       scaledHeight = (containerSize / imageAspectRatio) * zoom[0];
+     } else {
+       // Imagem mais alta
+       scaledWidth = (containerSize * imageAspectRatio) * zoom[0];
+       scaledHeight = containerSize * zoom[0];
+     }
+     
+     // Calcula limites máximos de movimento
+     const maxX = Math.max(0, (scaledWidth - cropSize) / 2);
+     const maxY = Math.max(0, (scaledHeight - cropSize) / 2);
+     
+     return { maxX, maxY };
+   };
+   ```
+
+5. **Aplicação de limites nos sliders:**
+   ```typescript
+   <Slider
+     value={[position.x]}
+     onValueChange={(value) => {
+       const clampedX = Math.max(-limits.maxX, Math.min(limits.maxX, value[0]));
+       setPosition(prev => ({
+         ...prev,
+         x: clampedX
+       }));
+     }}
+     min={-200}
+     max={200}
+     step={1}
+     className="w-full"
+   />
+   ```
+
+### Checklist
+- [x] Identificar problema com Slider do shadcn/ui
+- [x] Testar com inputs nativos para confirmar lógica
+- [x] Implementar detecção do tamanho real da imagem
+- [x] Criar função de cálculo de limites baseada no tamanho real
+- [x] Aplicar limites nos controles de arraste
+- [x] Aplicar limites nos sliders horizontais e verticais
+- [x] Testar funcionamento dos controles
+- [x] Verificar que não é possível sair da área da imagem
+- [x] Remover logs de debug
+- [x] Fazer deploy para GitHub
+
+### Resultado Final
+✅ **Sliders funcionando** sem travamento
+✅ **Limites aplicados** baseados no tamanho real da imagem
+✅ **Impossível sair** da área da foto
+✅ **Zoom responsivo** que atualiza limites automaticamente
+✅ **Arraste preciso** dentro dos limites calculados
+
+---
+
+## Requisição Anterior: Ajuste do Cálculo do Valor da Diária - Alavancagem Patrimonial
 
 **Data:** 2025-01-17  
 **Solicitante:** Eduardo Costa  

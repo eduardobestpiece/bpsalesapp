@@ -48,14 +48,48 @@ export const ModuleSwitcher = ({ current }: ModuleSwitcherProps) => {
 
   const computeSettingsPath = (): string => {
     const allowed = (key: string) => perms[key] !== false;
-    if (allowed('settings_profile') || allowed('settings_profile_info') || allowed('settings_profile_security')) return '/configuracoes/perfil';
-    if (allowed('simulator_config') || allowed('simulator_config_administrators') || allowed('simulator_config_reductions') || allowed('simulator_config_installments') || allowed('simulator_config_products') || allowed('simulator_config_leverages')) return '/configuracoes/simulador';
-    if (allowed('crm_config') || allowed('crm_config_funnels') || allowed('crm_config_sources') || allowed('crm_config_teams')) return '/configuracoes/crm';
-    if (allowed('settings_users') || allowed('settings_users_list')) return '/configuracoes/usuarios';
-    if (allowed('settings_company') || allowed('settings_company_data') || allowed('settings_company_branding')) return '/configuracoes/empresa';
-    if (userRole === 'master') return '/configuracoes/master';
-    if (settingsPageKeys.some(k => allowed(k))) return '/configuracoes/perfil';
-    return '/configuracoes/perfil';
+    
+    // Verificar se já estamos em uma página de configurações
+    const currentPath = window.location.pathname;
+    if (currentPath.startsWith('/configuracoes/')) {
+      return currentPath; // Manter na página atual
+    }
+    
+    // Ordem de prioridade conforme solicitado:
+    // 1. Gestão (unifica Meu Perfil, Empresa e Usuários)
+    if (allowed('settings_profile') || allowed('settings_profile_info') || allowed('settings_profile_security') ||
+        allowed('settings_company') || allowed('settings_company_data') || allowed('settings_company_branding') ||
+        allowed('settings_users') || allowed('settings_users_list')) {
+      return '/configuracoes/gestao';
+    }
+    
+    // 4. CRM
+    if (allowed('crm_config') || allowed('crm_config_funnels') || allowed('crm_config_sources') || allowed('crm_config_teams')) {
+      return '/configuracoes/crm';
+    }
+    
+    // 5. Agendamento
+    if (allowed('settings_agendamento')) {
+      return '/configuracoes/agendamento';
+    }
+    
+    // 6. Master Config (apenas para master)
+    if (userRole === 'master') {
+      return '/configuracoes/master';
+    }
+    
+    // 7. Simulador (configurações do simulador)
+    if (allowed('simulator_config') || allowed('simulator_config_administrators') || allowed('simulator_config_reductions') || allowed('simulator_config_installments') || allowed('simulator_config_products') || allowed('simulator_config_leverages')) {
+      return '/configuracoes/simulador';
+    }
+    
+    // Fallback: qualquer página de configurações disponível
+    if (settingsPageKeys.some(k => allowed(k))) {
+      return '/configuracoes/gestao';
+    }
+    
+    // Último fallback
+    return '/configuracoes/gestao';
   };
 
   const computeCrmPath = (): string => {
