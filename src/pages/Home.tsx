@@ -109,13 +109,13 @@ export default function Home() {
         {/* Botão Configurações */}
         {canAccessSettings && (
           <button
-            onClick={() => navigate('/configuracoes/simulador')}
+            onClick={() => navigate('/configuracoes/gestao')}
             className="w-full bg-[#1F1F1F] rounded-2xl shadow-xl p-6 flex items-center hover:bg-[#161616] transition border border-white/10 group focus:outline-none focus:ring-2 focus:ring-[#e50f5f]/50"
           >
             <Settings className="h-12 w-12 mr-6 group-hover:scale-110 transition" style={{ color: defaultBranding?.primary_color || '#e50f5f' }} />
             <div className="flex-1 text-left">
               <span className="text-xl font-semibold text-white block mb-1">Configurações</span>
-              <span className="text-gray-300 text-sm">Gerencie o Simulador, CRM e permissões.</span>
+              <span className="text-gray-300 text-sm">Gerencie seu perfil, empresa e usuários.</span>
             </div>
           </button>
         )}

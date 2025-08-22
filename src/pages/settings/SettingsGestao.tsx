@@ -18,8 +18,9 @@ import { toast } from 'sonner';
 import { AvatarCropper } from '@/components/CRM/AvatarCropper';
 
 export default function SettingsGestao() {
-  const { user, crmUser, userRole, companyId } = useCrmAuth();
+  const { user, crmUser, userRole, companyId, refreshCrmUser } = useCrmAuth();
   const { selectedCompanyId } = useCompany();
+  const queryClient = useQueryClient();
 
   // Estados para modais
   const [showAvatarCropper, setShowAvatarCropper] = useState(false);
@@ -108,7 +109,18 @@ export default function SettingsGestao() {
 
   // Carregar dados do perfil
   useEffect(() => {
+    console.log('crmUser mudou:', crmUser);
     if (crmUser) {
+      console.log('Carregando dados do crmUser:', {
+        first_name: crmUser.first_name,
+        last_name: crmUser.last_name,
+        email: crmUser.email,
+        phone: crmUser.phone,
+        birth_date: crmUser.birth_date,
+        bio: crmUser.bio,
+        avatar_url: crmUser.avatar_url
+      });
+      
       setFormData({
         first_name: crmUser.first_name || '',
         last_name: crmUser.last_name || '',
@@ -314,15 +326,18 @@ export default function SettingsGestao() {
 
       setFormData(prev => ({ ...prev, avatar_url: publicUrl }));
       
+      // Invalidar queries para forçar reload dos dados
+      queryClient.invalidateQueries({ queryKey: ['crm_user'] });
+      queryClient.invalidateQueries({ queryKey: ['crm_users'] });
+      
+      // Forçar refresh do contexto do usuário
+      if (refreshCrmUser) {
+        await refreshCrmUser();
+      }
+      
       // Fechar o modal e limpar o estado
       setShowAvatarCropper(false);
       setSelectedImage(null);
-      
-      // Atualizar o contexto do usuário para refletir a mudança
-      if (crmUser) {
-        // Forçar refresh dos dados do usuário
-        window.location.reload();
-      }
       
       toast.success('Avatar atualizado com sucesso!');
     } catch (error: any) {
@@ -396,8 +411,6 @@ export default function SettingsGestao() {
     }
     return color;
   };
-
-  const queryClient = useQueryClient();
 
   const upsertProfile = useMutation({
     mutationFn: async () => {
