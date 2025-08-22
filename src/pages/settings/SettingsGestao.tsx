@@ -704,91 +704,91 @@ export default function SettingsGestao() {
                   <Card>
                     <CardContent className="p-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           <Label>Nome da empresa</Label>
                           <Input 
                             value={name} 
                             onChange={(e) => setName(e.target.value)}
-                            style={{ borderRadius: 'var(--brand-radius, 8px)' }}
+                            className="brand-radius field-secondary-focus no-ring-focus"
                           />
                         </div>
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           <Label>CNPJ</Label>
                           <Input 
                             value={cnpj} 
                             onChange={(e) => setCnpj(e.target.value)}
-                            style={{ borderRadius: 'var(--brand-radius, 8px)' }}
+                            className="brand-radius field-secondary-focus no-ring-focus"
                           />
                         </div>
-                        <div className="space-y-1 md:col-span-2">
+                        <div className="space-y-2 md:col-span-2">
                           <Label>Nicho</Label>
                           <Input 
                             value={niche} 
                             onChange={(e) => setNiche(e.target.value)}
-                            style={{ borderRadius: 'var(--brand-radius, 8px)' }}
+                            className="brand-radius field-secondary-focus no-ring-focus"
                           />
                         </div>
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           <Label>CEP</Label>
                           <Input 
                             value={cep} 
                             onChange={(e) => handleCepChange(e.target.value)} 
                             placeholder="Somente números"
-                            style={{ borderRadius: 'var(--brand-radius, 8px)' }}
+                            className="brand-radius field-secondary-focus no-ring-focus"
                           />
                         </div>
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           <Label>Endereço</Label>
                           <Input 
                             value={street} 
                             onChange={(e) => setStreet(e.target.value)}
-                            style={{ borderRadius: 'var(--brand-radius, 8px)' }}
+                            className="brand-radius field-secondary-focus no-ring-focus"
                           />
                         </div>
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           <Label>Número</Label>
                           <Input 
                             value={number} 
                             onChange={(e) => setNumber(e.target.value)}
-                            style={{ borderRadius: 'var(--brand-radius, 8px)' }}
+                            className="brand-radius field-secondary-focus no-ring-focus"
                           />
                         </div>
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           <Label>Bairro</Label>
                           <Input 
                             value={neighborhood} 
                             onChange={(e) => setNeighborhood(e.target.value)}
-                            style={{ borderRadius: 'var(--brand-radius, 8px)' }}
+                            className="brand-radius field-secondary-focus no-ring-focus"
                           />
                         </div>
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           <Label>Cidade</Label>
                           <Input 
                             value={city} 
                             onChange={(e) => setCity(e.target.value)}
-                            style={{ borderRadius: 'var(--brand-radius, 8px)' }}
+                            className="brand-radius field-secondary-focus no-ring-focus"
                           />
                         </div>
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           <Label>Estado</Label>
                           <Input 
                             value={state} 
                             onChange={(e) => setStateUF(e.target.value)}
-                            style={{ borderRadius: 'var(--brand-radius, 8px)' }}
+                            className="brand-radius field-secondary-focus no-ring-focus"
                           />
                         </div>
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           <Label>País</Label>
                           <Input 
                             value={country} 
                             onChange={(e) => setCountry(e.target.value)}
-                            style={{ borderRadius: 'var(--brand-radius, 8px)' }}
+                            className="brand-radius field-secondary-focus no-ring-focus"
                           />
                         </div>
-                        <div className="space-y-1">
+                        <div className="space-y-2">
                           <Label>Fuso horário</Label>
                           <Select value={timezone} onValueChange={setTimezone}>
-                            <SelectTrigger style={{ borderRadius: 'var(--brand-radius, 8px)' }}>
+                            <SelectTrigger className="brand-radius field-secondary-focus no-ring-focus">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -807,54 +807,55 @@ export default function SettingsGestao() {
                   <Card>
                     <CardContent className="p-6">
                       <h3 className="text-lg font-semibold mb-4">Cores & Bordas</h3>
-                      <div className="space-y-3">
-                        <Label>Cor primária</Label>
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="color"
-                            value={primaryColor}
-                            onChange={(e) => setPrimaryColor(e.target.value)}
-                            className="h-10 w-16 border border-border bg-background"
-                            style={{ borderRadius: 'var(--brand-radius, 8px)' }}
-                          />
-                          <Input
-                            value={primaryColor}
-                            onChange={(e) => setPrimaryColor(e.target.value)}
-                            className="w-40"
-                            placeholder="#A86F57"
-                            style={{ borderRadius: 'var(--brand-radius, 8px)' }}
-                          />
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label>Cor primária</Label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="color"
+                              value={primaryColor}
+                              onChange={(e) => setPrimaryColor(e.target.value)}
+                              className="h-10 w-16 border border-border bg-background brand-radius"
+                            />
+                            <Input
+                              value={primaryColor}
+                              onChange={(e) => setPrimaryColor(e.target.value)}
+                              className="w-40 brand-radius field-secondary-focus no-ring-focus"
+                              placeholder="#A86F57"
+                            />
+                          </div>
                         </div>
 
-                        <Label>Cor secundária</Label>
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="color"
-                            value={secondaryColor}
-                            onChange={(e) => setSecondaryColor(normalizeHex(e.target.value))}
-                            className="h-10 w-16 border border-border bg-background"
-                            style={{ borderRadius: 'var(--brand-radius, 8px)' }}
-                          />
-                          <Input
-                            value={secondaryColor}
-                            onChange={(e) => setSecondaryColor(normalizeHex(e.target.value))}
-                            className="w-40"
-                            placeholder="#6B7280"
-                            style={{ borderRadius: 'var(--brand-radius, 8px)' }}
-                          />
+                        <div className="space-y-2">
+                          <Label>Cor secundária</Label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="color"
+                              value={secondaryColor}
+                              onChange={(e) => setSecondaryColor(normalizeHex(e.target.value))}
+                              className="h-10 w-16 border border-border bg-background brand-radius"
+                            />
+                            <Input
+                              value={secondaryColor}
+                              onChange={(e) => setSecondaryColor(normalizeHex(e.target.value))}
+                              className="w-40 brand-radius field-secondary-focus no-ring-focus"
+                              placeholder="#6B7280"
+                            />
+                          </div>
                         </div>
 
-                        <Label>Arredondamento das bordas (px)</Label>
-                        <div className="flex items-center gap-3">
-                          <Input
-                            type="number"
-                            min={0}
-                            max={32}
-                            value={borderRadiusPx}
-                            onChange={(e) => setBorderRadiusPx(Number(e.target.value))}
-                            className="w-32"
-                            style={{ borderRadius: 'var(--brand-radius, 8px)' }}
-                          />
+                        <div className="space-y-2">
+                          <Label>Arredondamento das bordas (px)</Label>
+                          <div className="flex items-center gap-3">
+                            <Input
+                              type="number"
+                              min={0}
+                              max={32}
+                              value={borderRadiusPx}
+                              onChange={(e) => setBorderRadiusPx(Number(e.target.value))}
+                              className="w-32 brand-radius field-secondary-focus no-ring-focus"
+                            />
+                          </div>
                         </div>
                       </div>
                     </CardContent>
