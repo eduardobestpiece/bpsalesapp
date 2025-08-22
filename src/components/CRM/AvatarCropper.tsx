@@ -2,7 +2,7 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Slider } from '@/components/ui/slider';
-import { RotateCw, Move, ZoomIn, Download } from 'lucide-react';
+import { ZoomIn, Download, Move } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface AvatarCropperProps {
@@ -19,12 +19,54 @@ export const AvatarCropper = ({ isOpen, onClose, file, onCropComplete }: AvatarC
   const [zoom, setZoom] = useState([1]);
   const [rotation, setRotation] = useState(0);
   const [position, setPosition] = useState({ x: 0, y: 0 });
+  
+
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [imageDimensions, setImageDimensions] = useState({ width: 0, height: 0 });
+  const [limits, setLimits] = useState({ maxX: 0, maxY: 0 });
 
   const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Function to calculate movement limits based on image size and zoom
+  const calculateLimits = () => {
+    if (!imageDimensions.width || !imageDimensions.height) {
+      return { maxX: 0, maxY: 0 };
+    }
+
+    const containerSize = 300;
+    const cropSize = 200;
+    
+    // Calculate how the image fits in the container
+    const imageAspectRatio = imageDimensions.width / imageDimensions.height;
+    const containerAspectRatio = containerSize / containerSize;
+    
+    let scaledWidth, scaledHeight;
+    
+    if (imageAspectRatio > containerAspectRatio) {
+      // Image is wider than container
+      scaledWidth = containerSize * zoom[0];
+      scaledHeight = (containerSize / imageAspectRatio) * zoom[0];
+    } else {
+      // Image is taller than container
+      scaledWidth = (containerSize * imageAspectRatio) * zoom[0];
+      scaledHeight = containerSize * zoom[0];
+    }
+    
+    // Calculate maximum movement allowed
+    const maxX = Math.max(0, (scaledWidth - cropSize) / 2);
+    const maxY = Math.max(0, (scaledHeight - cropSize) / 2);
+    
+    return { maxX, maxY };
+  };
+
+  // Function to update limits state
+  const updateLimits = () => {
+    const newLimits = calculateLimits();
+    setLimits(newLimits);
+  };
 
   // Load image when file changes
   useEffect(() => {
@@ -37,8 +79,29 @@ export const AvatarCropper = ({ isOpen, onClose, file, onCropComplete }: AvatarC
           setImageLoaded(false);
           setImageError(false);
           setPosition({ x: 0, y: 0 });
-          setZoom([1]);
           setRotation(0);
+          
+          // Calcular zoom inicial baseado na orientação da imagem
+          const img = new Image();
+          img.onload = () => {
+            const containerSize = 300; // Tamanho do container
+            const cropSize = 200; // Tamanho do quadrado de crop
+            
+            // Calcular zoom para que o quadrado ocupe 100% do espaço disponível
+            let initialZoom = 1;
+            if (img.width > img.height) {
+              // Imagem horizontal: quadrado ocupa 100% da altura
+              initialZoom = containerSize / img.height;
+            } else {
+              // Imagem vertical: quadrado ocupa 100% da largura
+              initialZoom = containerSize / img.width;
+            }
+            
+            // Ajustar para que o quadrado de crop seja visível
+            const maxZoom = Math.max(containerSize / cropSize, initialZoom);
+            setZoom([maxZoom]);
+          };
+          img.src = result;
         }
       };
       reader.onerror = () => {
@@ -50,6 +113,13 @@ export const AvatarCropper = ({ isOpen, onClose, file, onCropComplete }: AvatarC
   }, [file]);
 
   const handleImageLoad = () => {
+    if (imageRef.current) {
+      const img = imageRef.current;
+      setImageDimensions({
+        width: img.naturalWidth,
+        height: img.naturalHeight
+      });
+    }
     setImageLoaded(true);
     setImageError(false);
   };
@@ -59,7 +129,7 @@ export const AvatarCropper = ({ isOpen, onClose, file, onCropComplete }: AvatarC
     setImageError(true);
   };
 
-  // Mouse handlers for dragging
+    // Mouse handlers for dragging
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsDragging(true);
     setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y });
@@ -71,16 +141,26 @@ export const AvatarCropper = ({ isOpen, onClose, file, onCropComplete }: AvatarC
     const newX = e.clientX - dragStart.x;
     const newY = e.clientY - dragStart.y;
     
-    // Calculate max offset based on zoom and image size
-    const containerSize = 300;
-    const imageSize = containerSize * zoom[0];
-    const maxOffset = Math.max(0, (imageSize - containerSize) / 2);
+    const newPosition = {
+      x: Math.max(-limits.maxX, Math.min(limits.maxX, newX)),
+      y: Math.max(-limits.maxY, Math.min(limits.maxY, newY))
+    };
     
-    setPosition({
-      x: Math.max(-maxOffset, Math.min(maxOffset, newX)),
-      y: Math.max(-maxOffset, Math.min(maxOffset, newY))
-    });
+    setPosition(newPosition);
   };
+
+  // Update limits when zoom or image dimensions change
+  useEffect(() => {
+    updateLimits();
+  }, [zoom, imageDimensions]);
+
+  // Apply limits to position when limits change
+  useEffect(() => {
+    setPosition(prev => ({
+      x: Math.max(-limits.maxX, Math.min(limits.maxX, prev.x)),
+      y: Math.max(-limits.maxY, Math.min(limits.maxY, prev.y))
+    }));
+  }, [limits]);
 
   const handleMouseUp = () => {
     setIsDragging(false);
@@ -101,13 +181,9 @@ export const AvatarCropper = ({ isOpen, onClose, file, onCropComplete }: AvatarC
     const newX = touch.clientX - dragStart.x;
     const newY = touch.clientY - dragStart.y;
     
-    const containerSize = 300;
-    const imageSize = containerSize * zoom[0];
-    const maxOffset = Math.max(0, (imageSize - containerSize) / 2);
-    
     setPosition({
-      x: Math.max(-maxOffset, Math.min(maxOffset, newX)),
-      y: Math.max(-maxOffset, Math.min(maxOffset, newY))
+      x: Math.max(-limits.maxX, Math.min(limits.maxX, newX)),
+      y: Math.max(-limits.maxY, Math.min(limits.maxY, newY))
     });
   };
 
@@ -184,22 +260,24 @@ export const AvatarCropper = ({ isOpen, onClose, file, onCropComplete }: AvatarC
     }, 'image/jpeg', 0.85);
   }, [zoom, rotation, position, imageLoaded, onCropComplete]);
 
+
+  
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Ajustar Foto de Perfil</DialogTitle>
           <DialogDescription>
             Ajuste a imagem para selecionar a área que será sua foto de perfil. 
-            Use o zoom e a rotação para fazer as modificações necessárias.
+            Use o zoom para fazer as modificações necessárias.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex flex-col space-y-4">
+        <div className="flex flex-col space-y-6">
           {/* Image Container */}
           <div 
             ref={containerRef}
-            className="relative w-full h-[400px] bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center"
+            className="relative w-full h-[350px] bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center"
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
@@ -214,7 +292,25 @@ export const AvatarCropper = ({ isOpen, onClose, file, onCropComplete }: AvatarC
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
                   <p className="text-sm text-muted-foreground">Carregando imagem...</p>
+                  <p className="text-xs text-muted-foreground mt-2">URL: {imageUrl ? 'Definida' : 'Não definida'}</p>
+                  <p className="text-xs text-muted-foreground">Estado: imageLoaded={imageLoaded.toString()}, imageError={imageError.toString()}</p>
                 </div>
+                {/* Forçar carregamento da imagem mesmo quando imageLoaded é false */}
+                {imageUrl && (
+                  <img
+                    src={imageUrl}
+                    alt="Hidden"
+                    style={{ display: 'none' }}
+                    onLoad={() => {
+                      console.log('AvatarCropper: Hidden image loaded');
+                      setImageLoaded(true);
+                    }}
+                    onError={() => {
+                      console.log('AvatarCropper: Hidden image failed to load');
+                      setImageError(true);
+                    }}
+                  />
+                )}
               </div>
             )}
 
@@ -252,10 +348,11 @@ export const AvatarCropper = ({ isOpen, onClose, file, onCropComplete }: AvatarC
                       transform: `scale(${zoom[0]}) rotate(${rotation}deg)`,
                       transformOrigin: 'center center',
                       userSelect: 'none',
-                      pointerEvents: 'none'
+                      pointerEvents: 'auto'
                     }}
                     onLoad={handleImageLoad}
                     onError={handleImageError}
+
                   />
                 </div>
 
@@ -277,48 +374,84 @@ export const AvatarCropper = ({ isOpen, onClose, file, onCropComplete }: AvatarC
 
           {/* Controls */}
           {imageLoaded && (
-            <div className="space-y-4">
-              {/* Zoom Control */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <ZoomIn className="w-4 h-4" />
-                  <span className="text-sm font-medium">Zoom</span>
+            <div className="space-y-6">
+              {/* All Controls in a Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {/* Zoom Control */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <ZoomIn className="w-4 h-4" />
+                    <span className="text-sm font-medium">Zoom</span>
+                  </div>
+                  <Slider
+                    value={zoom}
+                    onValueChange={setZoom}
+                    min={0.3}
+                    max={5}
+                    step={0.1}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-muted-foreground">
+                    {Math.round(zoom[0] * 100)}%
+                  </div>
                 </div>
-                <Slider
-                  value={zoom}
-                  onValueChange={setZoom}
-                  min={0.5}
-                  max={3}
-                  step={0.1}
-                  className="w-full"
-                />
-                <div className="text-xs text-muted-foreground">
-                  {Math.round(zoom[0] * 100)}%
+
+                {/* Horizontal Position */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Move className="w-4 h-4" />
+                    <span className="text-sm font-medium">Horizontal</span>
+                  </div>
+                  <Slider
+                    value={[position.x]}
+                    onValueChange={(value) => {
+                      const clampedX = Math.max(-limits.maxX, Math.min(limits.maxX, value[0]));
+                      setPosition(prev => ({
+                        ...prev,
+                        x: clampedX
+                      }));
+                    }}
+                    min={-200}
+                    max={200}
+                    step={1}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-muted-foreground">
+                    {Math.round(position.x)}px
+                  </div>
+                </div>
+
+                {/* Vertical Position */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Move className="w-4 h-4 rotate-90" />
+                    <span className="text-sm font-medium">Vertical</span>
+                  </div>
+                  <Slider
+                    value={[position.y]}
+                    onValueChange={(value) => {
+                      const clampedY = Math.max(-limits.maxY, Math.min(limits.maxY, value[0]));
+                      setPosition(prev => ({
+                        ...prev,
+                        y: clampedY
+                      }));
+                    }}
+                    min={-200}
+                    max={200}
+                    step={1}
+                    className="w-full"
+                  />
+                  <div className="text-xs text-muted-foreground">
+                    {Math.round(position.y)}px
+                  </div>
                 </div>
               </div>
 
-              {/* Rotation Control */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <RotateCw className="w-4 h-4" />
-                  <span className="text-sm font-medium">Rotação</span>
-                </div>
-                <Slider
-                  value={[rotation]}
-                  onValueChange={(value) => setRotation(value[0])}
-                  min={-180}
-                  max={180}
-                  step={1}
-                  className="w-full"
-                />
-                <div className="text-xs text-muted-foreground">
-                  {rotation}°
-                </div>
-              </div>
+
 
               {/* Instructions */}
               <div className="text-xs text-muted-foreground text-center">
-                Arraste a imagem para posicioná-la. Use o zoom e rotação para ajustar.
+                Arraste a imagem ou use os controles para posicioná-la. Use o zoom para ajustar.
               </div>
             </div>
           )}

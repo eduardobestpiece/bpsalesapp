@@ -437,11 +437,27 @@ export const NovaAlavancagemPatrimonial = ({
   // Parcela Pós-Contemplação
   const parcelaPosContemplacao = parcelaAfterContemplacao;
 
-  // Renda passiva calculada com base no patrimônio ao final (valorizado) para alavancagem simples
+  // Renda passiva calculada com base no patrimônio final para alavancagem simples
   // Para alavancagem escalonada, usar o fluxo de caixa do último mês do gráfico
-  const rendaPassiva = isAlavancagemEscalonada 
-    ? (chartData.length > 0 ? chartData[chartData.length - 1].cashFlow : 0)
-    : ((patrimonioFinal * dailyPct * ocupacaoDias) - (patrimonioFinal * totalExpPct + ((patrimonioFinal * dailyPct * ocupacaoDias) * mgmtPct)));
+  let rendaPassiva;
+  if (isAlavancagemEscalonada) {
+    rendaPassiva = chartData.length > 0 ? chartData[chartData.length - 1].cashFlow : 0;
+  } else if (alavanca?.subtype === 'commercial_residential') {
+    // Para "Comercial ou Residencial": Receita - Custos baseada no patrimônio final
+    const percentualAluguel = alavanca?.rental_percentage || 0;
+    const percentualImobiliaria = alavanca?.real_estate_percentage || 0;
+    const percentualDespesasTotais = alavanca?.total_expenses || 0;
+    
+    const receitaAluguel = patrimonioFinal * (percentualAluguel / 100);
+    const taxaImobiliaria = receitaAluguel * (percentualImobiliaria / 100);
+    const despesasTotais = patrimonioFinal * (percentualDespesasTotais / 100);
+    
+    // Receita - Custos: (Patrimônio final * Percentual do Aluguel (%)) - ((Patrimônio final * Percentual do Aluguel (%)) * Percentual Imobiliária (%)) + (Patrimônio final * Valor das Despesas Totais (%))
+    rendaPassiva = receitaAluguel - (taxaImobiliaria + despesasTotais);
+  } else {
+    // Para outros subtipos (short_stay): fórmula original
+    rendaPassiva = ((patrimonioFinal * dailyPct * ocupacaoDias) - (patrimonioFinal * totalExpPct + ((patrimonioFinal * dailyPct * ocupacaoDias) * mgmtPct)));
+  }
 
   // Fluxo de Caixa Pós 240 meses (agora "Renda passiva" - rendimentos do último mês)
   const rendimentosUltimoMesSimples = ((patrimonioAoFinal * dailyPct * ocupacaoDias) - (patrimonioAoFinal * totalExpPct + ((patrimonioAoFinal * dailyPct * ocupacaoDias) * mgmtPct)));
@@ -662,7 +678,7 @@ export const NovaAlavancagemPatrimonial = ({
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle>Alavancagem patrimonial</CardTitle>
-          <Button variant="ghost" size="icon" title="Configurações de alavancagem" onClick={() => { console.debug('[Sim/Leverage] abrir modal alavancagem'); setShowAlavancagemModal(true); }}>
+          <Button variant="ghost" size="icon" title="Configurações de alavancagem" onClick={() => { console.debug('[Sim/Leverage] abrir modal alavancagem'); setShowAlavancagemModal(true); }} className="hover:bg-secondary">
             <Settings size={20} />
           </Button>
         </CardHeader>
@@ -893,8 +909,17 @@ export const NovaAlavancagemPatrimonial = ({
             // Receita do mês baseada no subtipo da alavanca
             let receitaMes;
             if (alavanca?.subtype === 'commercial_residential') {
-              // Para "Comercial ou Residencial": Receita do mês = Ganhos mensais * Número de imóveis (apenas após aquisição do patrimônio)
-              receitaMes = row.mes >= mesInicioPatrimonio ? ganhosMensais * numeroImoveis : 0;
+              // Para "Comercial ou Residencial": Receita do mês baseada no patrimônio atualizado a cada 12 meses
+              if (row.mes >= mesInicioPatrimonio) {
+                const mesesDesdeInicio = row.mes - mesInicioPatrimonio;
+                const anosCompletos = Math.floor(mesesDesdeInicio / 12);
+                const patrimonioAtualizado = patrimonioInicial * Math.pow(1 + taxaAnual, anosCompletos);
+                const percentualAluguel = alavanca?.rental_percentage || 0;
+                // Receita do mês: Patrimônio * Percentual do Aluguel (%)
+                receitaMes = patrimonioAtualizado * (percentualAluguel / 100);
+              } else {
+                receitaMes = 0;
+              }
             } else {
               // Para outros subtipos (short_stay): fórmula original
               receitaMes = patrimonioAnual * percentualDiaria * (30 * taxaOcupacao);
@@ -903,10 +928,28 @@ export const NovaAlavancagemPatrimonial = ({
             let custos;
             let receitaMenosCustos;
             if (alavanca?.subtype === 'commercial_residential') {
-              // Para "Comercial ou Residencial": Custos = (Taxa Imobiliária + Custos totais) * Número de imóveis (apenas após aquisição do patrimônio)
-              custos = row.mes >= mesInicioPatrimonio ? (taxaAirbnb + custosTotais) * numeroImoveis : 0;
-              // Para "Comercial ou Residencial": Receita - Custos = (Ganhos mensais - (Taxa Imobiliária + Custos totais)) * Número de imóveis (apenas após aquisição do patrimônio)
-              receitaMenosCustos = row.mes >= mesInicioPatrimonio ? (ganhosMensais - (taxaAirbnb + custosTotais)) * numeroImoveis : 0;
+              // Para "Comercial ou Residencial": Custos baseados no patrimônio atualizado a cada 12 meses
+              if (row.mes >= mesInicioPatrimonio) {
+                const mesesDesdeInicio = row.mes - mesInicioPatrimonio;
+                const anosCompletos = Math.floor(mesesDesdeInicio / 12);
+                const patrimonioAtualizado = patrimonioInicial * Math.pow(1 + taxaAnual, anosCompletos);
+                const percentualAluguel = alavanca?.rental_percentage || 0;
+                const percentualImobiliaria = alavanca?.real_estate_percentage || 0;
+                const percentualDespesasTotais = alavanca?.total_expenses || 0;
+                
+                const receitaAluguel = patrimonioAtualizado * (percentualAluguel / 100);
+                const taxaImobiliaria = receitaAluguel * (percentualImobiliaria / 100);
+                const despesasTotais = patrimonioAtualizado * (percentualDespesasTotais / 100);
+                
+                // Custos: ((Patrimônio * Percentual do Aluguel (%)) * Percentual Imobiliária (%)) + (Patrimônio * Valor das Despesas Totais (%))
+                custos = taxaImobiliaria + despesasTotais;
+                
+                // Receita - Custos: (Patrimônio * Percentual do Aluguel (%)) - ((Patrimônio * Percentual do Aluguel (%)) * Percentual Imobiliária (%)) + (Patrimônio * Valor das Despesas Totais (%))
+                receitaMenosCustos = receitaAluguel - custos;
+              } else {
+                custos = 0;
+                receitaMenosCustos = 0;
+              }
             } else {
               // Para outros subtipos (short_stay): fórmula original
               custos = (patrimonioAnual * despesasTotais) + (patrimonioAnual * percentualDiaria * (30 * taxaOcupacao) * percentualAdmin);
@@ -965,8 +1008,17 @@ export const NovaAlavancagemPatrimonial = ({
               // Receita do mês baseada no subtipo da alavanca
               let receitaMes;
               if (alavanca?.subtype === 'commercial_residential') {
-                // Para "Comercial ou Residencial": Receita do mês = Ganhos mensais * Número de imóveis (apenas após aquisição do patrimônio)
-                receitaMes = m >= mesInicioPatrimonio ? ganhosMensais * numeroImoveis : 0;
+                // Para "Comercial ou Residencial": Receita do mês baseada no patrimônio atualizado a cada 12 meses
+                if (m >= mesInicioPatrimonio) {
+                  const mesesDesdeInicio = m - mesInicioPatrimonio;
+                  const anosCompletos = Math.floor(mesesDesdeInicio / 12);
+                  const patrimonioAtualizado = patrimonioInicial * Math.pow(1 + taxaAnual, anosCompletos);
+                  const percentualAluguel = alavanca?.rental_percentage || 0;
+                  // Receita do mês: Patrimônio * Percentual do Aluguel (%)
+                  receitaMes = patrimonioAtualizado * (percentualAluguel / 100);
+                } else {
+                  receitaMes = 0;
+                }
               } else {
                 // Para outros subtipos (short_stay): fórmula original
                 receitaMes = patrimonioAnual * percentualDiaria * (30 * taxaOcupacao);
@@ -975,10 +1027,28 @@ export const NovaAlavancagemPatrimonial = ({
               let custos;
               let receitaMenosCustos;
               if (alavanca?.subtype === 'commercial_residential') {
-                // Para "Comercial ou Residencial": Custos = (Taxa Imobiliária + Custos totais) * Número de imóveis (apenas após aquisição do patrimônio)
-                custos = m >= mesInicioPatrimonio ? (taxaAirbnb + custosTotais) * numeroImoveis : 0;
-                // Para "Comercial ou Residencial": Receita - Custos = (Ganhos mensais - (Taxa Imobiliária + Custos totais)) * Número de imóveis (apenas após aquisição do patrimônio)
-                receitaMenosCustos = m >= mesInicioPatrimonio ? (ganhosMensais - (taxaAirbnb + custosTotais)) * numeroImoveis : 0;
+                // Para "Comercial ou Residencial": Custos baseados no patrimônio atualizado a cada 12 meses
+                if (m >= mesInicioPatrimonio) {
+                  const mesesDesdeInicio = m - mesInicioPatrimonio;
+                  const anosCompletos = Math.floor(mesesDesdeInicio / 12);
+                  const patrimonioAtualizado = patrimonioInicial * Math.pow(1 + taxaAnual, anosCompletos);
+                  const percentualAluguel = alavanca?.rental_percentage || 0;
+                  const percentualImobiliaria = alavanca?.real_estate_percentage || 0;
+                  const percentualDespesasTotais = alavanca?.total_expenses || 0;
+                  
+                  const receitaAluguel = patrimonioAtualizado * (percentualAluguel / 100);
+                  const taxaImobiliaria = receitaAluguel * (percentualImobiliaria / 100);
+                  const despesasTotais = patrimonioAtualizado * (percentualDespesasTotais / 100);
+                  
+                  // Custos: ((Patrimônio * Percentual do Aluguel (%)) * Percentual Imobiliária (%)) + (Patrimônio * Valor das Despesas Totais (%))
+                  custos = taxaImobiliaria + despesasTotais;
+                  
+                  // Receita - Custos: (Patrimônio * Percentual do Aluguel (%)) - ((Patrimônio * Percentual do Aluguel (%)) * Percentual Imobiliária (%)) + (Patrimônio * Valor das Despesas Totais (%))
+                  receitaMenosCustos = receitaAluguel - custos;
+                } else {
+                  custos = 0;
+                  receitaMenosCustos = 0;
+                }
               } else {
                 // Para outros subtipos (short_stay): fórmula original
                 custos = (patrimonioAnual * despesasTotais) + (patrimonioAnual * percentualDiaria * (30 * taxaOcupacao) * percentualAdmin);
