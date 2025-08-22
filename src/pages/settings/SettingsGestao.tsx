@@ -236,7 +236,8 @@ export default function SettingsGestao() {
         throw new Error('Usuário não autenticado');
       }
       
-      const fileName = `avatars/${authUser.id}/${Date.now()}.jpg`;
+      // Usar estrutura de pasta que funciona com a política RLS atual
+      const fileName = `${authUser.id}/avatar_${Date.now()}.jpg`;
       
       console.log('Fazendo upload do avatar para:', fileName);
       
@@ -246,6 +247,12 @@ export default function SettingsGestao() {
 
       if (uploadError) {
         console.error('Erro no upload:', uploadError);
+        console.error('Detalhes do erro:', {
+          message: uploadError.message,
+          details: uploadError.details,
+          hint: uploadError.hint,
+          code: uploadError.code
+        });
         throw uploadError;
       }
 
