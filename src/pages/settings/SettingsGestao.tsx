@@ -229,27 +229,50 @@ export default function SettingsGestao() {
   const handleAvatarCrop = async (croppedImageBlob: Blob) => {
     try {
       const file = new File([croppedImageBlob], 'avatar.jpg', { type: 'image/jpeg' });
-      const fileName = `avatars/${user?.id}/${Date.now()}.jpg`;
+      
+      // Obter o usuário Supabase Auth para usar o auth.uid() correto
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser) {
+        throw new Error('Usuário não autenticado');
+      }
+      
+      const fileName = `avatars/${authUser.id}/${Date.now()}.jpg`;
+      
+      console.log('Fazendo upload do avatar para:', fileName);
       
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(fileName, file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error('Erro no upload:', uploadError);
+        throw uploadError;
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
         .getPublicUrl(fileName);
 
-      const { error: updateError } = await supabase.auth.updateUser({
-        data: { avatar_url: publicUrl }
-      });
+      console.log('URL pública gerada:', publicUrl);
 
-      if (updateError) throw updateError;
+      // Atualizar o avatar_url na tabela crm_users usando email para evitar problemas de RLS
+      const { error: updateError } = await supabase
+        .from('crm_users')
+        .update({
+          avatar_url: publicUrl,
+          updated_at: new Date().toISOString()
+        })
+        .eq('email', crmUser?.email);
+
+      if (updateError) {
+        console.error('Erro ao atualizar crm_users:', updateError);
+        throw updateError;
+      }
 
       setFormData(prev => ({ ...prev, avatar_url: publicUrl }));
       toast.success('Avatar atualizado com sucesso!');
     } catch (error: any) {
+      console.error('Erro completo:', error);
       toast.error('Erro ao atualizar avatar: ' + error.message);
     }
   };
@@ -268,7 +291,7 @@ export default function SettingsGestao() {
           bio: formData.bio,
           updated_at: new Date().toISOString()
         })
-        .eq('id', crmUser.id);
+        .eq('email', crmUser.email);
 
       if (error) throw error;
       toast.success('Perfil atualizado com sucesso!');
