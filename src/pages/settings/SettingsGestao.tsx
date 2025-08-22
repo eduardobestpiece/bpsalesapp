@@ -263,20 +263,64 @@ export default function SettingsGestao() {
       console.log('URL pública gerada:', publicUrl);
 
       // Atualizar o avatar_url na tabela crm_users usando email para evitar problemas de RLS
-      const { error: updateError } = await supabase
-        .from('crm_users')
-        .update({
-          avatar_url: publicUrl,
-          updated_at: new Date().toISOString()
-        })
-        .eq('email', crmUser?.email);
+      console.log('Atualizando crm_users com email:', crmUser?.email);
+      console.log('Nova URL do avatar:', publicUrl);
+      
+      // Tentar atualizar usando ID primeiro, depois email como fallback
+      let updateData, updateError;
+      
+      if (crmUser?.id) {
+        console.log('Tentando atualizar usando ID:', crmUser.id);
+        const result = await supabase
+          .from('crm_users')
+          .update({
+            avatar_url: publicUrl,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', crmUser.id)
+          .select();
+        
+        updateData = result.data;
+        updateError = result.error;
+      }
+      
+      // Se falhar com ID, tentar com email
+      if (updateError && crmUser?.email) {
+        console.log('Falhou com ID, tentando com email:', crmUser.email);
+        const result = await supabase
+          .from('crm_users')
+          .update({
+            avatar_url: publicUrl,
+            updated_at: new Date().toISOString()
+          })
+          .eq('email', crmUser.email)
+          .select();
+        
+        updateData = result.data;
+        updateError = result.error;
+      }
 
+      console.log('Resultado da atualização:', updateData);
+      
       if (updateError) {
         console.error('Erro ao atualizar crm_users:', updateError);
         throw updateError;
       }
+      
+      console.log('crm_users atualizado com sucesso');
 
       setFormData(prev => ({ ...prev, avatar_url: publicUrl }));
+      
+      // Fechar o modal e limpar o estado
+      setShowAvatarCropper(false);
+      setSelectedImage(null);
+      
+      // Atualizar o contexto do usuário para refletir a mudança
+      if (crmUser) {
+        // Forçar refresh dos dados do usuário
+        window.location.reload();
+      }
+      
       toast.success('Avatar atualizado com sucesso!');
     } catch (error: any) {
       console.error('Erro completo:', error);
