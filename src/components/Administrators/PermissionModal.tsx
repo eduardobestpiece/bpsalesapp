@@ -17,6 +17,7 @@ import { useTeams } from '@/hooks/useTeams';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { TeamModal } from '@/components/CRM/Configuration/TeamModal';
 import { UserModal } from '@/components/CRM/Configuration/UserModal';
+import { useQuery } from '@tanstack/react-query';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Nome é obrigatório'),
@@ -30,12 +31,59 @@ type FormData = z.infer<typeof formSchema>;
 interface PermissionRow {
   id: string;
   permission: string;
-  access: number; // 0 = Nenhum, 1 = Permitido
+  view: number; // 0 = Nenhum, 1 = Permitido
+  edit: number; // 0 = Nenhum, 1 = Permitido
+  create: number; // 0 = Nenhum, 1 = Permitido
+  archive: number; // 0 = Nenhum, 1 = Permitido
+  deactivate: number; // 0 = Nenhum, 1 = Permitido
 }
 
 // Função para converter valor numérico em texto
 const getAccessLevelText = (value: number): string => {
   return value === 1 ? 'Permitido' : 'Nenhum';
+};
+
+// Componente de slider customizado
+const CustomSlider: React.FC<{
+  value: number;
+  onValueChange: (value: number) => void;
+  primaryColor: string;
+}> = ({ value, onValueChange, primaryColor }) => {
+  return (
+    <div className="relative w-1 h-32">
+      {/* Barra de fundo */}
+      <div 
+        className="absolute inset-0 w-1 bg-[#131313] rounded-full"
+        style={{ backgroundColor: '#131313' }}
+      />
+      
+      {/* Slider customizado */}
+      <Slider
+        value={[value]}
+        onValueChange={(vals) => onValueChange(vals[0])}
+        max={1}
+        min={0}
+        step={1}
+        className="absolute inset-0 w-1 h-32"
+        orientation="vertical"
+        style={{
+          '--slider-track-color': '#131313',
+          '--slider-thumb-color': primaryColor,
+        } as React.CSSProperties}
+      />
+      
+      {/* Estilos CSS customizados */}
+      <style jsx>{`
+        .slider-thumb {
+          background-color: ${primaryColor} !important;
+          border-color: ${primaryColor} !important;
+        }
+        .slider-track {
+          background-color: #131313 !important;
+        }
+      `}</style>
+    </div>
+  );
 };
 
 // Modal de criação
@@ -56,6 +104,21 @@ export const CreatePermissionModal: React.FC<{
   // Dados de times e usuários
   const { data: teams = [], isLoading: teamsLoading } = useTeams();
   const { data: users = [], isLoading: usersLoading } = useCrmUsersByCompany(effectiveCompanyId);
+
+  // Buscar cores da empresa
+  const { data: companyBranding } = useQuery({
+    queryKey: ['company_branding', effectiveCompanyId],
+    enabled: !!effectiveCompanyId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('company_branding')
+        .select('*')
+        .eq('company_id', effectiveCompanyId as string)
+        .maybeSingle();
+      if (error) throw error;
+      return data as any | null;
+    }
+  });
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -131,7 +194,11 @@ export const CreatePermissionModal: React.FC<{
       {
         id: 'simulator',
         permission: 'Simulador',
-        access: 0 // Nenhum por padrão
+        view: 0, // Nenhum por padrão
+        edit: 0, // Vazio
+        create: 0, // Vazio
+        archive: 0, // Vazio
+        deactivate: 0 // Vazio
       }
     ];
   };
@@ -157,6 +224,8 @@ export const CreatePermissionModal: React.FC<{
       toast.error('Erro ao salvar permissão');
     }
   };
+
+  const primaryColor = companyBranding?.primary_color || '#A86F57';
 
   console.log('CreatePermissionModal renderizando, open:', open);
   return (
@@ -260,7 +329,11 @@ export const CreatePermissionModal: React.FC<{
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-left py-2">Permissão</TableHead>
-                      <TableHead className="text-center py-2">Acesso</TableHead>
+                      <TableHead className="text-center py-2">Ver</TableHead>
+                      <TableHead className="text-center py-2">Editar</TableHead>
+                      <TableHead className="text-center py-2">Criar</TableHead>
+                      <TableHead className="text-center py-2">Arquivar</TableHead>
+                      <TableHead className="text-center py-2">Desativar</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -269,16 +342,52 @@ export const CreatePermissionModal: React.FC<{
                         <TableCell className="py-2 font-medium">{row.permission}</TableCell>
                         <TableCell className="py-2 text-center">
                           <div className="flex flex-col items-center space-y-2">
-                            <Slider
-                              value={[row.access]}
-                              onValueChange={(value) => updatePermissionRow(row.id, 'access', value[0])}
-                              max={1}
-                              min={0}
-                              step={1}
-                              className="w-20 h-32"
-                              orientation="vertical"
+                            <CustomSlider
+                              value={row.view}
+                              onValueChange={(value) => updatePermissionRow(row.id, 'view', value)}
+                              primaryColor={primaryColor}
                             />
-                            <span className="text-xs font-medium">{getAccessLevelText(row.access)}</span>
+                            <span className="text-xs font-medium">{getAccessLevelText(row.view)}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-2 text-center">
+                          <div className="flex flex-col items-center space-y-2">
+                            <CustomSlider
+                              value={row.edit}
+                              onValueChange={(value) => updatePermissionRow(row.id, 'edit', value)}
+                              primaryColor={primaryColor}
+                            />
+                            <span className="text-xs font-medium">{getAccessLevelText(row.edit)}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-2 text-center">
+                          <div className="flex flex-col items-center space-y-2">
+                            <CustomSlider
+                              value={row.create}
+                              onValueChange={(value) => updatePermissionRow(row.id, 'create', value)}
+                              primaryColor={primaryColor}
+                            />
+                            <span className="text-xs font-medium">{getAccessLevelText(row.create)}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-2 text-center">
+                          <div className="flex flex-col items-center space-y-2">
+                            <CustomSlider
+                              value={row.archive}
+                              onValueChange={(value) => updatePermissionRow(row.id, 'archive', value)}
+                              primaryColor={primaryColor}
+                            />
+                            <span className="text-xs font-medium">{getAccessLevelText(row.archive)}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-2 text-center">
+                          <div className="flex flex-col items-center space-y-2">
+                            <CustomSlider
+                              value={row.deactivate}
+                              onValueChange={(value) => updatePermissionRow(row.id, 'deactivate', value)}
+                              primaryColor={primaryColor}
+                            />
+                            <span className="text-xs font-medium">{getAccessLevelText(row.deactivate)}</span>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -325,6 +434,21 @@ export const EditPermissionModal: React.FC<{
   // Dados de times e usuários
   const { data: teams = [], isLoading: teamsLoading } = useTeams();
   const { data: users = [], isLoading: usersLoading } = useCrmUsersByCompany(effectiveCompanyId);
+
+  // Buscar cores da empresa
+  const { data: companyBranding } = useQuery({
+    queryKey: ['company_branding', effectiveCompanyId],
+    enabled: !!effectiveCompanyId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('company_branding')
+        .select('*')
+        .eq('company_id', effectiveCompanyId as string)
+        .maybeSingle();
+      if (error) throw error;
+      return data as any | null;
+    }
+  });
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -405,7 +529,11 @@ export const EditPermissionModal: React.FC<{
       {
         id: 'simulator',
         permission: 'Simulador',
-        access: 0 // Nenhum por padrão
+        view: 0, // Nenhum por padrão
+        edit: 0, // Vazio
+        create: 0, // Vazio
+        archive: 0, // Vazio
+        deactivate: 0 // Vazio
       }
     ];
   };
@@ -429,6 +557,8 @@ export const EditPermissionModal: React.FC<{
       toast.error('Erro ao atualizar permissão');
     }
   };
+
+  const primaryColor = companyBranding?.primary_color || '#A86F57';
 
   return (
     <>
@@ -531,7 +661,11 @@ export const EditPermissionModal: React.FC<{
                   <TableHeader>
                     <TableRow>
                       <TableHead className="text-left py-2">Permissão</TableHead>
-                      <TableHead className="text-center py-2">Acesso</TableHead>
+                      <TableHead className="text-center py-2">Ver</TableHead>
+                      <TableHead className="text-center py-2">Editar</TableHead>
+                      <TableHead className="text-center py-2">Criar</TableHead>
+                      <TableHead className="text-center py-2">Arquivar</TableHead>
+                      <TableHead className="text-center py-2">Desativar</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -540,16 +674,52 @@ export const EditPermissionModal: React.FC<{
                         <TableCell className="py-2 font-medium">{row.permission}</TableCell>
                         <TableCell className="py-2 text-center">
                           <div className="flex flex-col items-center space-y-2">
-                            <Slider
-                              value={[row.access]}
-                              onValueChange={(value) => updatePermissionRow(row.id, 'access', value[0])}
-                              max={1}
-                              min={0}
-                              step={1}
-                              className="w-20 h-32"
-                              orientation="vertical"
+                            <CustomSlider
+                              value={row.view}
+                              onValueChange={(value) => updatePermissionRow(row.id, 'view', value)}
+                              primaryColor={primaryColor}
                             />
-                            <span className="text-xs font-medium">{getAccessLevelText(row.access)}</span>
+                            <span className="text-xs font-medium">{getAccessLevelText(row.view)}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-2 text-center">
+                          <div className="flex flex-col items-center space-y-2">
+                            <CustomSlider
+                              value={row.edit}
+                              onValueChange={(value) => updatePermissionRow(row.id, 'edit', value)}
+                              primaryColor={primaryColor}
+                            />
+                            <span className="text-xs font-medium">{getAccessLevelText(row.edit)}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-2 text-center">
+                          <div className="flex flex-col items-center space-y-2">
+                            <CustomSlider
+                              value={row.create}
+                              onValueChange={(value) => updatePermissionRow(row.id, 'create', value)}
+                              primaryColor={primaryColor}
+                            />
+                            <span className="text-xs font-medium">{getAccessLevelText(row.create)}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-2 text-center">
+                          <div className="flex flex-col items-center space-y-2">
+                            <CustomSlider
+                              value={row.archive}
+                              onValueChange={(value) => updatePermissionRow(row.id, 'archive', value)}
+                              primaryColor={primaryColor}
+                            />
+                            <span className="text-xs font-medium">{getAccessLevelText(row.archive)}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="py-2 text-center">
+                          <div className="flex flex-col items-center space-y-2">
+                            <CustomSlider
+                              value={row.deactivate}
+                              onValueChange={(value) => updatePermissionRow(row.id, 'deactivate', value)}
+                              primaryColor={primaryColor}
+                            />
+                            <span className="text-xs font-medium">{getAccessLevelText(row.deactivate)}</span>
                           </div>
                         </TableCell>
                       </TableRow>

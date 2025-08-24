@@ -179,10 +179,13 @@ Criar dois modais para gerenciar permissões:
 - ✅ **Placeholder dinâmico:** Mensagem contextual baseada na seleção
 
 #### Nova Estrutura da Tabela:
-- ✅ **Cabeçalho:** Permissão, Acesso
+- ✅ **Cabeçalho:** Permissão, Ver, Editar, Criar, Arquivar, Desativar
 - ✅ **Item único:** Simulador
-- ✅ **Slider vertical:** 2 níveis (0 = Nenhum, 1 = Permitido)
-- ✅ **Valor padrão:** 0 (Nenhum)
+- ✅ **Coluna Ver:** Slider vertical com 2 níveis (0 = Nenhum, 1 = Permitido)
+- ✅ **Outras colunas:** Sliders vazios (valor 0)
+- ✅ **Barra vertical:** Cor #131313 como fundo
+- ✅ **Círculo do slider:** Cor primária da empresa selecionada
+- ✅ **Valor padrão:** 0 (Nenhum) para todas as colunas
 - ✅ **Interface Slider:** Barra de arrastar vertical com indicação visual
 - ✅ **Funcionalidade:** Controle de acesso ao simulador baseado no nível selecionado
 - ✅ **Lógica:** Se "Permitido" - função/time/usuário pode acessar simulador, se "Nenhum" - não pode acessar
