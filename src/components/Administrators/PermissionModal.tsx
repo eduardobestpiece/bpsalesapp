@@ -26,28 +26,21 @@ const formSchema = z.object({
 type FormData = z.infer<typeof formSchema>;
 
 // Dados para os dropdowns
-const MODULES = ['CRM', 'Simulador', 'Configurações'];
+const MODULES = ['Simulador', 'CRM', 'Configurações'];
 
 const PAGES_BY_MODULE = {
-  'CRM': ['Dashboard', 'Leads', 'Vendas', 'Indicadores', 'Agenda', 'Perfil'],
-  'Simulador': ['Simulador', 'Resultados', 'Configurações'],
-  'Configurações': ['Empresa', 'Usuários', 'Permissões', 'Master Config']
+  'Simulador': ['Configurações do Simulador', 'Simulador'],
+  'CRM': ['Indicadores', 'Comercial', 'Gestão', 'Configurações CRM'],
+  'Configurações': ['Configurações do Simulador', 'Simulador', 'Indicadores', 'Comercial', 'Gestão', 'Configurações CRM']
 };
 
 const TABS_BY_PAGE = {
-  'Dashboard': ['Visão Geral', 'Métricas'],
-  'Leads': ['Todos os Leads', 'Meus Leads', 'Novo Lead'],
-  'Vendas': ['Todas as Vendas', 'Minhas Vendas', 'Nova Venda'],
-  'Indicadores': ['Performance', 'Registro'],
-  'Agenda': ['Calendário', 'Eventos'],
-  'Perfil': ['Dados Pessoais', 'Integrações'],
-  'Simulador': ['Simulação', 'Histórico'],
-  'Resultados': ['Análise', 'Comparação'],
-  'Configurações': ['Geral', 'Avançado'],
-  'Empresa': ['Dados', 'Branding'],
-  'Usuários': ['Lista', 'Permissões'],
-  'Permissões': ['Funções', 'Times'],
-  'Master Config': ['Empresas', 'Permissões']
+  'Configurações do Simulador': ['Administradoras', 'Redução de Parcela', 'Parcelas', 'Produtos', 'Alavancas'],
+  'Simulador': ['Simulador'],
+  'Indicadores': ['Performance', 'Registro de Indicadores'],
+  'Comercial': ['Leads', 'Vendas'],
+  'Gestão': ['Meu Perfil', 'Empresa', 'Usuários'],
+  'Configurações CRM': ['Funis', 'Origens', 'Times']
 };
 
 const PERMISSION_LEVELS = ['Empresa', 'Time', 'Pessoal', 'Nenhuma'];
@@ -76,6 +69,7 @@ export const CreatePermissionModal: React.FC<{
   const effectiveCompanyId = selectedCompanyId || companyId;
   const [selectedModule, setSelectedModule] = useState<string>('');
   const [selectedPage, setSelectedPage] = useState<string>('');
+  const [selectedTab, setSelectedTab] = useState<string>('');
   const [permissionRows, setPermissionRows] = useState<PermissionRow[]>([]);
   
   // Estados para modais de times e usuários
@@ -100,45 +94,10 @@ export const CreatePermissionModal: React.FC<{
       form.reset();
       setSelectedModule('');
       setSelectedPage('');
+      setSelectedTab('');
       setPermissionRows([]);
     }
   }, [open, form]);
-
-  // Gerar linhas de permissão baseadas no módulo e página selecionados
-  const generatePermissionRows = (module: string, page: string) => {
-    const tabs = TABS_BY_PAGE[page as keyof typeof TABS_BY_PAGE] || [];
-    
-    const rows: PermissionRow[] = tabs.map((tab, index) => ({
-      id: `${module}-${page}-${tab}-${index}`,
-      module,
-      page,
-      tab,
-      view: 'Empresa',
-      create: 'Nenhuma',
-      edit: 'Nenhuma',
-      archive: 'Nenhuma',
-      deactivate: 'Nenhuma'
-    }));
-
-    setPermissionRows(rows);
-  };
-
-  const handleModuleChange = (module: string) => {
-    setSelectedModule(module);
-    setSelectedPage('');
-    setPermissionRows([]);
-  };
-
-  const handlePageChange = (page: string) => {
-    setSelectedPage(page);
-    generatePermissionRows(selectedModule, page);
-  };
-
-  const updatePermissionRow = (rowId: string, field: keyof PermissionRow, value: string) => {
-    setPermissionRows(prev => prev.map(row => 
-      row.id === rowId ? { ...row, [field]: value } : row
-    ));
-  };
 
   // Função para obter as opções do campo Detalhamento baseado no nível
   const getDetailOptions = () => {
@@ -319,98 +278,115 @@ export const CreatePermissionModal: React.FC<{
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {permissionRows.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                          Nenhuma configuração de permissão disponível.
-                          <br />
-                          <span className="text-sm">Configure módulos e páginas para definir permissões específicas.</span>
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      permissionRows.map((row) => (
-                        <TableRow key={row.id}>
-                          <TableCell className="py-2">{row.tab}</TableCell>
-                          <TableCell className="py-2">{row.page}</TableCell>
-                          <TableCell className="py-2">{row.module}</TableCell>
-                          <TableCell className="py-2 text-center">
-                            <Select 
-                              value={row.view} 
-                              onValueChange={(value) => updatePermissionRow(row.id, 'view', value)}
-                            >
-                              <SelectTrigger className="w-28 select-trigger-brand brand-radius">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {PERMISSION_LEVELS.map(level => (
-                                  <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell className="py-2 text-center">
-                            <Select 
-                              value={row.create} 
-                              onValueChange={(value) => updatePermissionRow(row.id, 'create', value)}
-                            >
-                              <SelectTrigger className="w-28 select-trigger-brand brand-radius">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {PERMISSION_LEVELS.map(level => (
-                                  <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell className="py-2 text-center">
-                            <Select 
-                              value={row.edit} 
-                              onValueChange={(value) => updatePermissionRow(row.id, 'edit', value)}
-                            >
-                              <SelectTrigger className="w-28 select-trigger-brand brand-radius">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {PERMISSION_LEVELS.map(level => (
-                                  <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell className="py-2 text-center">
-                            <Select 
-                              value={row.archive} 
-                              onValueChange={(value) => updatePermissionRow(row.id, 'archive', value)}
-                            >
-                              <SelectTrigger className="w-28 select-trigger-brand brand-radius">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {PERMISSION_LEVELS.map(level => (
-                                  <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell className="py-2 text-center">
-                            <Select 
-                              value={row.deactivate} 
-                              onValueChange={(value) => updatePermissionRow(row.id, 'deactivate', value)}
-                            >
-                              <SelectTrigger className="w-28 select-trigger-brand brand-radius">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {PERMISSION_LEVELS.map(level => (
-                                  <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
+                    <TableRow>
+                      <TableCell className="py-2">
+                        <Select 
+                          value={selectedTab} 
+                          onValueChange={(value) => setSelectedTab(value)}
+                          disabled={!selectedPage}
+                        >
+                          <SelectTrigger className="w-40 select-trigger-brand brand-radius">
+                            <SelectValue placeholder="Selecione a aba" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {selectedPage && TABS_BY_PAGE[selectedPage as keyof typeof TABS_BY_PAGE]?.map(tab => (
+                              <SelectItem key={tab} value={tab} className="dropdown-item-brand">{tab}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="py-2">
+                        <Select 
+                          value={selectedPage} 
+                          onValueChange={(value) => setSelectedPage(value)}
+                          disabled={!selectedModule}
+                        >
+                          <SelectTrigger className="w-40 select-trigger-brand brand-radius">
+                            <SelectValue placeholder="Selecione a página" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {selectedModule && PAGES_BY_MODULE[selectedModule as keyof typeof PAGES_BY_MODULE]?.map(page => (
+                              <SelectItem key={page} value={page} className="dropdown-item-brand">{page}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="py-2">
+                        <Select 
+                          value={selectedModule} 
+                          onValueChange={(value) => setSelectedModule(value)}
+                        >
+                          <SelectTrigger className="w-40 select-trigger-brand brand-radius">
+                            <SelectValue placeholder="Selecione o módulo" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {MODULES.map(module => (
+                              <SelectItem key={module} value={module} className="dropdown-item-brand">{module}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="py-2 text-center">
+                        <Select value="Empresa">
+                          <SelectTrigger className="w-28 select-trigger-brand brand-radius">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PERMISSION_LEVELS.map(level => (
+                              <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="py-2 text-center">
+                        <Select value="Nenhuma">
+                          <SelectTrigger className="w-28 select-trigger-brand brand-radius">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PERMISSION_LEVELS.map(level => (
+                              <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="py-2 text-center">
+                        <Select value="Nenhuma">
+                          <SelectTrigger className="w-28 select-trigger-brand brand-radius">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PERMISSION_LEVELS.map(level => (
+                              <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="py-2 text-center">
+                        <Select value="Nenhuma">
+                          <SelectTrigger className="w-28 select-trigger-brand brand-radius">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PERMISSION_LEVELS.map(level => (
+                              <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="py-2 text-center">
+                        <Select value="Nenhuma">
+                          <SelectTrigger className="w-28 select-trigger-brand brand-radius">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PERMISSION_LEVELS.map(level => (
+                              <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                    </TableRow>
                   </TableBody>
                 </Table>
               </div>
@@ -446,6 +422,7 @@ export const EditPermissionModal: React.FC<{
   const effectiveCompanyId = selectedCompanyId || companyId;
   const [selectedModule, setSelectedModule] = useState<string>('');
   const [selectedPage, setSelectedPage] = useState<string>('');
+  const [selectedTab, setSelectedTab] = useState<string>('');
   const [permissionRows, setPermissionRows] = useState<PermissionRow[]>([]);
   
   // Estados para modais de times e usuários
@@ -475,26 +452,10 @@ export const EditPermissionModal: React.FC<{
       // Aqui você carregaria os dados das permissões da tabela
       setSelectedModule(permission.module || '');
       setSelectedPage(permission.page || '');
+      setSelectedTab(permission.tab || '');
       // setPermissionRows(permission.rows || []);
     }
   }, [open, permission, form]);
-
-  const handleModuleChange = (module: string) => {
-    setSelectedModule(module);
-    setSelectedPage('');
-    setPermissionRows([]);
-  };
-
-  const handlePageChange = (page: string) => {
-    setSelectedPage(page);
-    // Gerar ou carregar as linhas de permissão
-  };
-
-  const updatePermissionRow = (rowId: string, field: keyof PermissionRow, value: string) => {
-    setPermissionRows(prev => prev.map(row => 
-      row.id === rowId ? { ...row, [field]: value } : row
-    ));
-  };
 
   // Função para obter as opções do campo Detalhamento baseado no nível
   const getDetailOptions = () => {
@@ -672,98 +633,115 @@ export const EditPermissionModal: React.FC<{
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {permissionRows.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                          Nenhuma configuração de permissão disponível.
-                          <br />
-                          <span className="text-sm">Configure módulos e páginas para definir permissões específicas.</span>
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      permissionRows.map((row) => (
-                        <TableRow key={row.id}>
-                          <TableCell className="py-2">{row.tab}</TableCell>
-                          <TableCell className="py-2">{row.page}</TableCell>
-                          <TableCell className="py-2">{row.module}</TableCell>
-                          <TableCell className="py-2 text-center">
-                            <Select 
-                              value={row.view} 
-                              onValueChange={(value) => updatePermissionRow(row.id, 'view', value)}
-                            >
-                              <SelectTrigger className="w-28 select-trigger-brand brand-radius">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {PERMISSION_LEVELS.map(level => (
-                                  <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell className="py-2 text-center">
-                            <Select 
-                              value={row.create} 
-                              onValueChange={(value) => updatePermissionRow(row.id, 'create', value)}
-                            >
-                              <SelectTrigger className="w-28 select-trigger-brand brand-radius">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {PERMISSION_LEVELS.map(level => (
-                                  <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell className="py-2 text-center">
-                            <Select 
-                              value={row.edit} 
-                              onValueChange={(value) => updatePermissionRow(row.id, 'edit', value)}
-                            >
-                              <SelectTrigger className="w-28 select-trigger-brand brand-radius">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {PERMISSION_LEVELS.map(level => (
-                                  <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell className="py-2 text-center">
-                            <Select 
-                              value={row.archive} 
-                              onValueChange={(value) => updatePermissionRow(row.id, 'archive', value)}
-                            >
-                              <SelectTrigger className="w-28 select-trigger-brand brand-radius">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {PERMISSION_LEVELS.map(level => (
-                                  <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                          <TableCell className="py-2 text-center">
-                            <Select 
-                              value={row.deactivate} 
-                              onValueChange={(value) => updatePermissionRow(row.id, 'deactivate', value)}
-                            >
-                              <SelectTrigger className="w-28 select-trigger-brand brand-radius">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {PERMISSION_LEVELS.map(level => (
-                                  <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
+                    <TableRow>
+                      <TableCell className="py-2">
+                        <Select 
+                          value={selectedTab} 
+                          onValueChange={(value) => setSelectedTab(value)}
+                          disabled={!selectedPage}
+                        >
+                          <SelectTrigger className="w-40 select-trigger-brand brand-radius">
+                            <SelectValue placeholder="Selecione a aba" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {selectedPage && TABS_BY_PAGE[selectedPage as keyof typeof TABS_BY_PAGE]?.map(tab => (
+                              <SelectItem key={tab} value={tab} className="dropdown-item-brand">{tab}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="py-2">
+                        <Select 
+                          value={selectedPage} 
+                          onValueChange={(value) => setSelectedPage(value)}
+                          disabled={!selectedModule}
+                        >
+                          <SelectTrigger className="w-40 select-trigger-brand brand-radius">
+                            <SelectValue placeholder="Selecione a página" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {selectedModule && PAGES_BY_MODULE[selectedModule as keyof typeof PAGES_BY_MODULE]?.map(page => (
+                              <SelectItem key={page} value={page} className="dropdown-item-brand">{page}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="py-2">
+                        <Select 
+                          value={selectedModule} 
+                          onValueChange={(value) => setSelectedModule(value)}
+                        >
+                          <SelectTrigger className="w-40 select-trigger-brand brand-radius">
+                            <SelectValue placeholder="Selecione o módulo" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {MODULES.map(module => (
+                              <SelectItem key={module} value={module} className="dropdown-item-brand">{module}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="py-2 text-center">
+                        <Select value="Empresa">
+                          <SelectTrigger className="w-28 select-trigger-brand brand-radius">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PERMISSION_LEVELS.map(level => (
+                              <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="py-2 text-center">
+                        <Select value="Nenhuma">
+                          <SelectTrigger className="w-28 select-trigger-brand brand-radius">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PERMISSION_LEVELS.map(level => (
+                              <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="py-2 text-center">
+                        <Select value="Nenhuma">
+                          <SelectTrigger className="w-28 select-trigger-brand brand-radius">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PERMISSION_LEVELS.map(level => (
+                              <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="py-2 text-center">
+                        <Select value="Nenhuma">
+                          <SelectTrigger className="w-28 select-trigger-brand brand-radius">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PERMISSION_LEVELS.map(level => (
+                              <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="py-2 text-center">
+                        <Select value="Nenhuma">
+                          <SelectTrigger className="w-28 select-trigger-brand brand-radius">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {PERMISSION_LEVELS.map(level => (
+                              <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                    </TableRow>
                   </TableBody>
                 </Table>
               </div>
