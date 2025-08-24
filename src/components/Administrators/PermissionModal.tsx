@@ -26,49 +26,16 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>;
 
-// Dados para os dropdowns
-const MODULES = ['Simulador', 'CRM', 'Configurações'];
-
-const PAGES_BY_MODULE = {
-  'Simulador': ['Configurações do Simulador', 'Simulador'],
-  'CRM': ['Indicadores', 'Comercial', 'Gestão', 'Configurações CRM'],
-  'Configurações': ['Master Config']
-};
-
-const TABS_BY_PAGE = {
-  'Configurações do Simulador': ['Administradoras', 'Redução de Parcela', 'Parcelas', 'Produtos', 'Alavancas'],
-  'Simulador': ['Simulador'],
-  'Indicadores': ['Performance', 'Registro de Indicadores'],
-  'Comercial': ['Leads', 'Vendas'],
-  'Gestão': ['Meu Perfil', 'Empresa', 'Usuários'],
-  'Configurações CRM': ['Funis', 'Origens', 'Times'],
-  'Master Config': ['Empresas', 'Permissões']
-};
-
-const PERMISSION_LEVELS = ['Empresa', 'Time', 'Pessoal', 'Nenhuma'];
-
 // Interface para as permissões da tabela
 interface PermissionRow {
   id: string;
-  module: string;
-  page: string;
-  tab: string;
-  all: number;
-  view: number;
-  create: number;
-  edit: number;
-  archive: number;
-  deactivate: number;
+  permission: string;
+  access: number; // 0 = Nenhum, 1 = Permitido
 }
 
 // Função para converter valor numérico em texto
-const getPermissionLevelText = (value: number): string => {
-  return PERMISSION_LEVELS[value] || 'Nenhuma';
-};
-
-// Função para converter texto em valor numérico
-const getPermissionLevelValue = (text: string): number => {
-  return PERMISSION_LEVELS.indexOf(text);
+const getAccessLevelText = (value: number): string => {
+  return value === 1 ? 'Permitido' : 'Nenhum';
 };
 
 // Modal de criação
@@ -102,7 +69,7 @@ export const CreatePermissionModal: React.FC<{
   useEffect(() => {
     if (open) {
       form.reset();
-      setPermissionRows(generateAllPermissionRows());
+      setPermissionRows(generatePermissionRows());
     }
   }, [open, form]);
 
@@ -158,34 +125,15 @@ export const CreatePermissionModal: React.FC<{
     form.setValue('detail', value);
   };
 
-  // Função para gerar todas as combinações de permissões
-  const generateAllPermissionRows = () => {
-    const rows: PermissionRow[] = [];
-    
-    MODULES.forEach(module => {
-      const pages = PAGES_BY_MODULE[module as keyof typeof PAGES_BY_MODULE] || [];
-      
-      pages.forEach(page => {
-        const tabs = TABS_BY_PAGE[page as keyof typeof TABS_BY_PAGE] || [];
-        
-        tabs.forEach(tab => {
-          rows.push({
-            id: `${module}-${page}-${tab}`,
-            module,
-            page,
-            tab,
-            all: 0, // Empresa
-            view: 0, // Empresa
-            create: 3, // Nenhuma
-            edit: 3, // Nenhuma
-            archive: 3, // Nenhuma
-            deactivate: 3 // Nenhuma
-          });
-        });
-      });
-    });
-    
-    return rows;
+  // Função para gerar as permissões
+  const generatePermissionRows = () => {
+    return [
+      {
+        id: 'simulator',
+        permission: 'Simulador',
+        access: 0 // Nenhum por padrão
+      }
+    ];
   };
 
   // Função para atualizar uma linha de permissão
@@ -307,109 +255,30 @@ export const CreatePermissionModal: React.FC<{
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Configuração de Permissões</h3>
               
-              <div className="border rounded-lg overflow-hidden brand-radius max-h-96 overflow-y-auto">
+              <div className="border rounded-lg overflow-hidden brand-radius">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-left py-2 sticky top-0 bg-background">Aba</TableHead>
-                      <TableHead className="text-left py-2 sticky top-0 bg-background">Página</TableHead>
-                      <TableHead className="text-left py-2 sticky top-0 bg-background">Módulo</TableHead>
-                      <TableHead className="text-center py-2 sticky top-0 bg-background">Todos</TableHead>
-                      <TableHead className="text-center py-2 sticky top-0 bg-background">Ver</TableHead>
-                      <TableHead className="text-center py-2 sticky top-0 bg-background">Criar</TableHead>
-                      <TableHead className="text-center py-2 sticky top-0 bg-background">Editar</TableHead>
-                      <TableHead className="text-center py-2 sticky top-0 bg-background">Arquivar</TableHead>
-                      <TableHead className="text-center py-2 sticky top-0 bg-background">Desativar</TableHead>
+                      <TableHead className="text-left py-2">Permissão</TableHead>
+                      <TableHead className="text-center py-2">Acesso</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {permissionRows.map((row) => (
                       <TableRow key={row.id}>
-                        <TableCell className="py-2 font-medium">{row.tab}</TableCell>
-                        <TableCell className="py-2">{row.page}</TableCell>
-                        <TableCell className="py-2">{row.module}</TableCell>
+                        <TableCell className="py-2 font-medium">{row.permission}</TableCell>
                         <TableCell className="py-2 text-center">
                           <div className="flex flex-col items-center space-y-2">
                             <Slider
-                              value={[row.all]}
-                              onValueChange={(value) => updatePermissionRow(row.id, 'all', value[0])}
-                              max={3}
+                              value={[row.access]}
+                              onValueChange={(value) => updatePermissionRow(row.id, 'access', value[0])}
+                              max={1}
                               min={0}
                               step={1}
                               className="w-20 h-32"
                               orientation="vertical"
                             />
-                            <span className="text-xs font-medium">{getPermissionLevelText(row.all)}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-2 text-center">
-                          <div className="flex flex-col items-center space-y-2">
-                            <Slider
-                              value={[row.view]}
-                              onValueChange={(value) => updatePermissionRow(row.id, 'view', value[0])}
-                              max={3}
-                              min={0}
-                              step={1}
-                              className="w-20 h-32"
-                              orientation="vertical"
-                            />
-                            <span className="text-xs font-medium">{getPermissionLevelText(row.view)}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-2 text-center">
-                          <div className="flex flex-col items-center space-y-2">
-                            <Slider
-                              value={[row.create]}
-                              onValueChange={(value) => updatePermissionRow(row.id, 'create', value[0])}
-                              max={3}
-                              min={0}
-                              step={1}
-                              className="w-20 h-32"
-                              orientation="vertical"
-                            />
-                            <span className="text-xs font-medium">{getPermissionLevelText(row.create)}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-2 text-center">
-                          <div className="flex flex-col items-center space-y-2">
-                            <Slider
-                              value={[row.edit]}
-                              onValueChange={(value) => updatePermissionRow(row.id, 'edit', value[0])}
-                              max={3}
-                              min={0}
-                              step={1}
-                              className="w-20 h-32"
-                              orientation="vertical"
-                            />
-                            <span className="text-xs font-medium">{getPermissionLevelText(row.edit)}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-2 text-center">
-                          <div className="flex flex-col items-center space-y-2">
-                            <Slider
-                              value={[row.archive]}
-                              onValueChange={(value) => updatePermissionRow(row.id, 'archive', value[0])}
-                              max={3}
-                              min={0}
-                              step={1}
-                              className="w-20 h-32"
-                              orientation="vertical"
-                            />
-                            <span className="text-xs font-medium">{getPermissionLevelText(row.archive)}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-2 text-center">
-                          <div className="flex flex-col items-center space-y-2">
-                            <Slider
-                              value={[row.deactivate]}
-                              onValueChange={(value) => updatePermissionRow(row.id, 'deactivate', value[0])}
-                              max={3}
-                              min={0}
-                              step={1}
-                              className="w-20 h-32"
-                              orientation="vertical"
-                            />
-                            <span className="text-xs font-medium">{getPermissionLevelText(row.deactivate)}</span>
+                            <span className="text-xs font-medium">{getAccessLevelText(row.access)}</span>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -474,7 +343,7 @@ export const EditPermissionModal: React.FC<{
         detail: permission.detail || '',
       });
       // Aqui você carregaria os dados das permissões da tabela
-      setPermissionRows(generateAllPermissionRows());
+      setPermissionRows(generatePermissionRows());
     }
   }, [open, permission, form]);
 
@@ -530,34 +399,15 @@ export const EditPermissionModal: React.FC<{
     form.setValue('detail', value);
   };
 
-  // Função para gerar todas as combinações de permissões
-  const generateAllPermissionRows = () => {
-    const rows: PermissionRow[] = [];
-    
-    MODULES.forEach(module => {
-      const pages = PAGES_BY_MODULE[module as keyof typeof PAGES_BY_MODULE] || [];
-      
-      pages.forEach(page => {
-        const tabs = TABS_BY_PAGE[page as keyof typeof TABS_BY_PAGE] || [];
-        
-        tabs.forEach(tab => {
-          rows.push({
-            id: `${module}-${page}-${tab}`,
-            module,
-            page,
-            tab,
-            all: 0, // Empresa
-            view: 0, // Empresa
-            create: 3, // Nenhuma
-            edit: 3, // Nenhuma
-            archive: 3, // Nenhuma
-            deactivate: 3 // Nenhuma
-          });
-        });
-      });
-    });
-    
-    return rows;
+  // Função para gerar as permissões
+  const generatePermissionRows = () => {
+    return [
+      {
+        id: 'simulator',
+        permission: 'Simulador',
+        access: 0 // Nenhum por padrão
+      }
+    ];
   };
 
   // Função para atualizar uma linha de permissão
@@ -676,109 +526,30 @@ export const EditPermissionModal: React.FC<{
             <div className="space-y-4">
               <h3 className="text-lg font-semibold">Configuração de Permissões</h3>
               
-              <div className="border rounded-lg overflow-hidden brand-radius max-h-96 overflow-y-auto">
+              <div className="border rounded-lg overflow-hidden brand-radius">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="text-left py-2 sticky top-0 bg-background">Aba</TableHead>
-                      <TableHead className="text-left py-2 sticky top-0 bg-background">Página</TableHead>
-                      <TableHead className="text-left py-2 sticky top-0 bg-background">Módulo</TableHead>
-                      <TableHead className="text-center py-2 sticky top-0 bg-background">Todos</TableHead>
-                      <TableHead className="text-center py-2 sticky top-0 bg-background">Ver</TableHead>
-                      <TableHead className="text-center py-2 sticky top-0 bg-background">Criar</TableHead>
-                      <TableHead className="text-center py-2 sticky top-0 bg-background">Editar</TableHead>
-                      <TableHead className="text-center py-2 sticky top-0 bg-background">Arquivar</TableHead>
-                      <TableHead className="text-center py-2 sticky top-0 bg-background">Desativar</TableHead>
+                      <TableHead className="text-left py-2">Permissão</TableHead>
+                      <TableHead className="text-center py-2">Acesso</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {permissionRows.map((row) => (
                       <TableRow key={row.id}>
-                        <TableCell className="py-2 font-medium">{row.tab}</TableCell>
-                        <TableCell className="py-2">{row.page}</TableCell>
-                        <TableCell className="py-2">{row.module}</TableCell>
+                        <TableCell className="py-2 font-medium">{row.permission}</TableCell>
                         <TableCell className="py-2 text-center">
                           <div className="flex flex-col items-center space-y-2">
                             <Slider
-                              value={[row.all]}
-                              onValueChange={(value) => updatePermissionRow(row.id, 'all', value[0])}
-                              max={3}
+                              value={[row.access]}
+                              onValueChange={(value) => updatePermissionRow(row.id, 'access', value[0])}
+                              max={1}
                               min={0}
                               step={1}
                               className="w-20 h-32"
                               orientation="vertical"
                             />
-                            <span className="text-xs font-medium">{getPermissionLevelText(row.all)}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-2 text-center">
-                          <div className="flex flex-col items-center space-y-2">
-                            <Slider
-                              value={[row.view]}
-                              onValueChange={(value) => updatePermissionRow(row.id, 'view', value[0])}
-                              max={3}
-                              min={0}
-                              step={1}
-                              className="w-20 h-32"
-                              orientation="vertical"
-                            />
-                            <span className="text-xs font-medium">{getPermissionLevelText(row.view)}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-2 text-center">
-                          <div className="flex flex-col items-center space-y-2">
-                            <Slider
-                              value={[row.create]}
-                              onValueChange={(value) => updatePermissionRow(row.id, 'create', value[0])}
-                              max={3}
-                              min={0}
-                              step={1}
-                              className="w-20 h-32"
-                              orientation="vertical"
-                            />
-                            <span className="text-xs font-medium">{getPermissionLevelText(row.create)}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-2 text-center">
-                          <div className="flex flex-col items-center space-y-2">
-                            <Slider
-                              value={[row.edit]}
-                              onValueChange={(value) => updatePermissionRow(row.id, 'edit', value[0])}
-                              max={3}
-                              min={0}
-                              step={1}
-                              className="w-20 h-32"
-                              orientation="vertical"
-                            />
-                            <span className="text-xs font-medium">{getPermissionLevelText(row.edit)}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-2 text-center">
-                          <div className="flex flex-col items-center space-y-2">
-                            <Slider
-                              value={[row.archive]}
-                              onValueChange={(value) => updatePermissionRow(row.id, 'archive', value[0])}
-                              max={3}
-                              min={0}
-                              step={1}
-                              className="w-20 h-32"
-                              orientation="vertical"
-                            />
-                            <span className="text-xs font-medium">{getPermissionLevelText(row.archive)}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="py-2 text-center">
-                          <div className="flex flex-col items-center space-y-2">
-                            <Slider
-                              value={[row.deactivate]}
-                              onValueChange={(value) => updatePermissionRow(row.id, 'deactivate', value[0])}
-                              max={3}
-                              min={0}
-                              step={1}
-                              className="w-20 h-32"
-                              orientation="vertical"
-                            />
-                            <span className="text-xs font-medium">{getPermissionLevelText(row.deactivate)}</span>
+                            <span className="text-xs font-medium">{getAccessLevelText(row.access)}</span>
                           </div>
                         </TableCell>
                       </TableRow>

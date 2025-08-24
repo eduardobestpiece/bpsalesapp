@@ -179,16 +179,13 @@ Criar dois modais para gerenciar permissões:
 - ✅ **Placeholder dinâmico:** Mensagem contextual baseada na seleção
 
 #### Nova Estrutura da Tabela:
-- ✅ **Cabeçalho:** Aba, Página, Módulo, Todos, Ver, Criar, Editar, Arquivar, Desativar
-- ✅ **Todas as combinações:** Cada linha representa uma combinação única de Módulo + Página + Aba
-- ✅ **Colunas de Permissão:** Sliders verticais com 4 níveis (Empresa, Time, Pessoal, Nenhuma)
-- ✅ **Valores padrão:** Todos = 0 (Empresa), Ver = 0 (Empresa), demais = 3 (Nenhuma)
-- ✅ **Interface Slider:** Barras de arrastar verticais com indicação visual do nível
-- ✅ **Scroll vertical:** Tabela com altura máxima e scroll para navegação
-- ✅ **Cabeçalho fixo:** Cabeçalho sticky para melhor navegação
-- ✅ **Geração automática:** Todas as combinações geradas automaticamente
-- ✅ **Correção:** Removidas duplicações de abas entre módulos
-- ✅ **Nova coluna:** "Todos" adicionada entre "Módulo" e "Ver"
+- ✅ **Cabeçalho:** Permissão, Acesso
+- ✅ **Item único:** Simulador
+- ✅ **Slider vertical:** 2 níveis (0 = Nenhum, 1 = Permitido)
+- ✅ **Valor padrão:** 0 (Nenhum)
+- ✅ **Interface Slider:** Barra de arrastar vertical com indicação visual
+- ✅ **Funcionalidade:** Controle de acesso ao simulador baseado no nível selecionado
+- ✅ **Lógica:** Se "Permitido" - função/time/usuário pode acessar simulador, se "Nenhum" - não pode acessar
 
 #### Ajustes Realizados:
 - ✅ **Identidade visual:** Aplicada em todos os campos (`campo-brand`, `brand-radius`, `select-trigger-brand`, `dropdown-item-brand`)
