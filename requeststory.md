@@ -114,7 +114,7 @@ Criar dois modais para gerenciar permissões:
 - ✅ `src/pages/settings/SettingsMaster.tsx` - Integração dos modais
 
 ### Status
-✅ **Concluído** - Nova estrutura da tabela de permissões implementada
+✅ **Concluído** - Tabela de permissões com todas as opções em linhas
 
 #### Funcionalidades Implementadas:
 - ✅ **Campo Detalhamento dinâmico:** Baseado na seleção do Nível
@@ -127,12 +127,12 @@ Criar dois modais para gerenciar permissões:
 
 #### Nova Estrutura da Tabela:
 - ✅ **Cabeçalho:** Aba, Página, Módulo, Ver, Criar, Editar, Arquivar, Desativar
-- ✅ **Coluna Módulos:** Dropdown com Simulador, CRM, Configurações
-- ✅ **Coluna Páginas:** Dropdown dinâmico baseado no módulo selecionado
-- ✅ **Coluna Abas:** Dropdown dinâmico baseado na página selecionada
+- ✅ **Todas as combinações:** Cada linha representa uma combinação única de Módulo + Página + Aba
 - ✅ **Colunas de Permissão:** Dropdowns com 4 níveis (Empresa, Time, Pessoal, Nenhuma)
-- ✅ **Seleção hierárquica:** Módulo → Página → Aba (dependentes)
 - ✅ **Valores padrão:** Ver = "Empresa", demais = "Nenhuma"
+- ✅ **Scroll vertical:** Tabela com altura máxima e scroll para navegação
+- ✅ **Cabeçalho fixo:** Cabeçalho sticky para melhor navegação
+- ✅ **Geração automática:** Todas as combinações geradas automaticamente
 
 #### Ajustes Realizados:
 - ✅ **Identidade visual:** Aplicada em todos os campos (`campo-brand`, `brand-radius`, `select-trigger-brand`, `dropdown-item-brand`)
