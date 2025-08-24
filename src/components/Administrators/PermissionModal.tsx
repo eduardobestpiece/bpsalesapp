@@ -31,7 +31,7 @@ const MODULES = ['Simulador', 'CRM', 'Configurações'];
 const PAGES_BY_MODULE = {
   'Simulador': ['Configurações do Simulador', 'Simulador'],
   'CRM': ['Indicadores', 'Comercial', 'Gestão', 'Configurações CRM'],
-  'Configurações': ['Configurações do Simulador', 'Simulador', 'Indicadores', 'Comercial', 'Gestão', 'Configurações CRM']
+  'Configurações': ['Master Config']
 };
 
 const TABS_BY_PAGE = {
@@ -40,7 +40,8 @@ const TABS_BY_PAGE = {
   'Indicadores': ['Performance', 'Registro de Indicadores'],
   'Comercial': ['Leads', 'Vendas'],
   'Gestão': ['Meu Perfil', 'Empresa', 'Usuários'],
-  'Configurações CRM': ['Funis', 'Origens', 'Times']
+  'Configurações CRM': ['Funis', 'Origens', 'Times'],
+  'Master Config': ['Empresas', 'Permissões']
 };
 
 const PERMISSION_LEVELS = ['Empresa', 'Time', 'Pessoal', 'Nenhuma'];

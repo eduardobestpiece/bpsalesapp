@@ -133,6 +133,7 @@ Criar dois modais para gerenciar permissões:
 - ✅ **Scroll vertical:** Tabela com altura máxima e scroll para navegação
 - ✅ **Cabeçalho fixo:** Cabeçalho sticky para melhor navegação
 - ✅ **Geração automática:** Todas as combinações geradas automaticamente
+- ✅ **Correção:** Removidas duplicações de abas entre módulos
 
 #### Ajustes Realizados:
 - ✅ **Identidade visual:** Aplicada em todos os campos (`campo-brand`, `brand-radius`, `select-trigger-brand`, `dropdown-item-brand`)
