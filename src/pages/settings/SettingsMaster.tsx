@@ -19,7 +19,7 @@ import { Label } from '@/components/ui/label';
 import { FullScreenModal } from '@/components/ui/FullScreenModal';
 import { Switch } from '@/components/ui/switch';
 import { MultiSelect } from '@/components/ui/multiselect';
-import { CreatePermissionModal, EditPermissionModal } from '@/components/Administrators/PermissionModal';
+
 
 interface Company {
   id: string;
@@ -38,54 +38,14 @@ export default function SettingsMaster() {
   // Estados para modais
   const [showCompanyModal, setShowCompanyModal] = useState(false);
   const [showEditCompanyModal, setShowEditCompanyModal] = useState(false);
-  const [showCreatePermissionModal, setShowCreatePermissionModal] = useState(false);
-  
-  // Debug para o modal
-  useEffect(() => {
-    console.log('showCreatePermissionModal mudou para:', showCreatePermissionModal);
-  }, [showCreatePermissionModal]);
-  const [showEditPermissionModal, setShowEditPermissionModal] = useState(false);
   
   // Estados para itens selecionados
   const [selectedCompany, setSelectedCompany] = useState<any>(null);
-  const [selectedPermission, setSelectedPermission] = useState<any>(null);
   
   // Estados para busca
   const [companySearchTerm, setCompanySearchTerm] = useState('');
   
-  // Estados para nova tabela de permissões
-  const [permissionsData, setPermissionsData] = useState([
-    {
-      id: '1',
-      name: 'Acesso ao Simulador',
-      status: 'active',
-      level: 'Função'
-    },
-    {
-      id: '2', 
-      name: 'Gerenciar Usuários',
-      status: 'active',
-      level: 'Função'
-    },
-    {
-      id: '3',
-      name: 'Configurações da Empresa',
-      status: 'active', 
-      level: 'Função'
-    },
-    {
-      id: '4',
-      name: 'Relatórios de Vendas',
-      status: 'inactive',
-      level: 'Time'
-    },
-    {
-      id: '5',
-      name: 'Dashboard Financeiro',
-      status: 'active',
-      level: 'Usuário'
-    }
-  ]);
+
 
   // Estados para edição de descrições removidos
 
@@ -710,7 +670,6 @@ export default function SettingsMaster() {
 
   const allowedOrder: { key: string; allowed: boolean }[] = [
     { key: 'companies', allowed: canManageCompanies },
-    { key: 'permissions', allowed: canManagePermissions },
   ];
   const firstAllowed = allowedOrder.find(i => i.allowed)?.key;
   const [tabValue, setTabValue] = useState<string>(firstAllowed || 'companies');
@@ -734,19 +693,7 @@ export default function SettingsMaster() {
     );
   }
 
-  // Funções para nova tabela de permissões
-  const handleEditPermission = (permission: any) => {
-    setSelectedPermission(permission);
-    setShowEditPermissionModal(true);
-  };
 
-  const handleTogglePermissionStatus = (permission: any) => {
-    setPermissionsData(prev => prev.map(p => 
-      p.id === permission.id 
-        ? { ...p, status: p.status === 'active' ? 'inactive' : 'active' }
-        : p
-    ));
-  };
 
   // Função clearAllFilters removida
 
@@ -758,7 +705,7 @@ export default function SettingsMaster() {
     <>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">Master Config</h1>
-        <p className="text-muted-foreground">Gerencie empresas e permissões do sistema</p>
+        <p className="text-muted-foreground">Gerencie todas as empresas do sistema</p>
       </div>
 
       <Card className="shadow-xl border-0 bg-card">
@@ -777,15 +724,7 @@ export default function SettingsMaster() {
                   <div className="w-px h-6 bg-border/30 self-center"></div>
                 </>
               )}
-              {canManagePermissions && (
-                <TabsTrigger 
-                  value="permissions" 
-                  className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
-                  style={{ '--tab-active-color': primaryColor } as React.CSSProperties}
-                >
-                  Permissões
-                </TabsTrigger>
-              )}
+
             </TabsList>
 
             {canManageCompanies && (
@@ -897,97 +836,7 @@ export default function SettingsMaster() {
               </TabsContent>
             )}
 
-            {canManagePermissions && (
-              <TabsContent value="permissions" className="p-6">
-                <div className="space-y-6">
-                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                    <div>
-                      <h2 className="text-2xl font-semibold text-foreground">Permissões do Sistema</h2>
-                      <p className="text-muted-foreground mt-1">Gerencie as permissões de acesso do sistema</p>
-                    </div>
-                    <Button onClick={() => {
-                      console.log('Botão Nova Permissão clicado');
-                      setShowCreatePermissionModal(true);
-                    }} variant="brandPrimaryToSecondary" className="brand-radius">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Nova Permissão
-                    </Button>
-                  </div>
 
-                  {/* Filtros removidos conforme solicitado */}
-
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="text-left py-2">Nome</TableHead>
-                        <TableHead className="text-left py-2">Situação</TableHead>
-                        <TableHead className="text-left py-2">Nível</TableHead>
-                        <TableHead className="text-right py-2">Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {permissionsData.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
-                            Nenhuma permissão encontrada.
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        permissionsData.map((permission) => (
-                          <TableRow key={permission.id}>
-                            <TableCell className="font-medium py-2">{permission.name}</TableCell>
-                            <TableCell className="py-2">
-                              <Badge 
-                                className={permission.status === 'active' ? 'text-white' : 'text-white'}
-                                style={{ 
-                                  backgroundColor: permission.status === 'active' ? 'var(--brand-primary)' : '#6B7280',
-                                  borderRadius: 'var(--brand-radius, 8px)' 
-                                }}
-                              >
-                                {permission.status === 'active' ? 'Ativa' : 'Inativa'}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="py-2">
-                              <Badge variant="outline" style={{ borderRadius: 'var(--brand-radius, 8px)' }}>
-                                {permission.level}
-                              </Badge>
-                            </TableCell>
-                            <TableCell className="text-right py-2">
-                              <div className="flex items-center justify-end gap-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleEditPermission(permission)}
-                                  title="Editar permissão"
-                                  className="text-white hover:bg-[var(--brand-secondary)] brand-radius"
-                                  style={{ '--brand-secondary': secondaryColor } as React.CSSProperties}
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleTogglePermissionStatus(permission)}
-                                  title={permission.status === 'active' ? 'Desativar permissão' : 'Ativar permissão'}
-                                  className="text-white hover:bg-[var(--brand-secondary)] brand-radius"
-                                  style={{ '--brand-secondary': secondaryColor } as React.CSSProperties}
-                                >
-                                  {permission.status === 'active' ? (
-                                    <PowerOff className="w-4 h-4" />
-                                  ) : (
-                                    <Power className="w-4 h-4" />
-                                  )}
-                                </Button>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </TabsContent>
-            )}
           </Tabs>
         </CardContent>
       </Card>
@@ -1339,29 +1188,7 @@ export default function SettingsMaster() {
         </FullScreenModal>
       )}
 
-      {/* Modal de Criação de Permissão */}
-      <CreatePermissionModal
-        open={showCreatePermissionModal}
-        onOpenChange={setShowCreatePermissionModal}
-        onSuccess={() => {
-          setShowCreatePermissionModal(false);
-          // Aqui você pode adicionar lógica para atualizar a lista de permissões
-          toast.success('Permissão criada com sucesso!');
-        }}
-      />
 
-      {/* Modal de Edição de Permissão */}
-      <EditPermissionModal
-        open={showEditPermissionModal}
-        onOpenChange={setShowEditPermissionModal}
-        onSuccess={() => {
-          setShowEditPermissionModal(false);
-          setSelectedPermission(null);
-          // Aqui você pode adicionar lógica para atualizar a lista de permissões
-          toast.success('Permissão atualizada com sucesso!');
-        }}
-        permission={selectedPermission}
-      />
     </>
   );
 } 

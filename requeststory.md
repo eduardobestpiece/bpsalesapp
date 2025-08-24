@@ -6,6 +6,59 @@
 
 ---
 
+## Nova Requisição: Transferência da Aba de Permissões para Gestão
+
+**Data:** 2025-01-17  
+**Solicitante:** Eduardo Costa  
+**Status:** ✅ Concluído
+
+### Funcionalidade Solicitada
+Transferir a aba de permissões da página Master Config para a página de Gestão.
+
+### Implementação Realizada
+1. **Adição na página de Gestão (`SettingsGestao.tsx`):**
+   - ✅ Importação dos modais de permissões
+   - ✅ Estados para controlar modais de permissões
+   - ✅ Nova aba "Permissões" adicionada ao TabsList
+   - ✅ Conteúdo da aba com tabela de permissões
+   - ✅ Botão "Nova Permissão" funcional
+   - ✅ Tabela com dados mock (Administrador CRM, Líder de Vendas)
+   - ✅ Botões de ação (Editar e Desativar)
+   - ✅ Modais integrados (CreatePermissionModal e EditPermissionModal)
+
+2. **Remoção da página Master Config (`SettingsMaster.tsx`):**
+   - ✅ Importação dos modais removida
+   - ✅ Estados relacionados às permissões removidos
+   - ✅ Aba "Permissões" removida do TabsList
+   - ✅ Conteúdo da aba de permissões removido
+   - ✅ Funções relacionadas às permissões removidas
+   - ✅ Modais de permissões removidos
+   - ✅ Descrição da página atualizada
+
+3. **Estrutura atualizada:**
+   - ✅ **Master Config:** Apenas gestão de empresas
+   - ✅ **Gestão:** Perfil, Empresa, Usuários, Permissões
+
+### Checklist
+- [x] Adicionar aba de permissões na página de Gestão
+- [x] Integrar modais de criação e edição
+- [x] Criar tabela de permissões com dados mock
+- [x] Remover aba de permissões da página Master Config
+- [x] Limpar código não utilizado
+- [x] Atualizar descrições das páginas
+- [x] Testar funcionalidade completa
+
+### Resultado
+✅ **Transferência concluída com sucesso!**
+- **Master Config:** Focada apenas em gestão de empresas
+- **Gestão:** Agora inclui permissões junto com perfil, empresa e usuários
+- **Interface:** Organização mais lógica e intuitiva
+- **Funcionalidade:** Todos os modais e tabelas funcionando corretamente
+
+---
+
+---
+
 ## Requisição Atual: Nova Tabela de Permissões - Master Config
 
 **Data:** 2025-01-17  

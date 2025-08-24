@@ -17,6 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AvatarCropper } from '@/components/CRM/AvatarCropper';
 import { UserModal } from '@/components/CRM/Configuration/UserModal';
+import { CreatePermissionModal, EditPermissionModal } from '@/components/Administrators/PermissionModal';
 
 export default function SettingsGestao() {
   const { user, crmUser, userRole, companyId, refreshCrmUser } = useCrmAuth();
@@ -28,6 +29,9 @@ export default function SettingsGestao() {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [showUserModal, setShowUserModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [showCreatePermissionModal, setShowCreatePermissionModal] = useState(false);
+  const [showEditPermissionModal, setShowEditPermissionModal] = useState(false);
+  const [selectedPermission, setSelectedPermission] = useState<any>(null);
 
   // Estados para perfil
   const [formData, setFormData] = useState({
@@ -131,6 +135,7 @@ export default function SettingsGestao() {
   const canProfile = perms['settings_profile'] !== false;
   const canCompany = perms['settings_company'] !== false || userRole === 'admin' || userRole === 'master';
   const canUsers = perms['settings_users'] !== false || userRole === 'admin' || userRole === 'master';
+  const canPermissions = perms['settings_permissions'] !== false || userRole === 'admin' || userRole === 'master';
   const canEdit = userRole === 'admin' || userRole === 'master';
 
   // Carregar dados de branding
@@ -151,6 +156,7 @@ export default function SettingsGestao() {
     { key: 'profile', allowed: canProfile },
     { key: 'company', allowed: canCompany },
     { key: 'users', allowed: canUsers },
+    { key: 'permissions', allowed: canPermissions },
   ];
   const firstAllowed = allowedOrder.find(i => i.allowed)?.key;
   const [tabValue, setTabValue] = useState<string>(firstAllowed || 'profile');
@@ -503,6 +509,22 @@ export default function SettingsGestao() {
   const handleCloseUserModal = () => {
     setShowUserModal(false);
     setSelectedUser(null);
+  };
+
+  // Funções para modal de permissões
+  const handleCreatePermission = () => {
+    setShowCreatePermissionModal(true);
+  };
+
+  const handleEditPermission = (permission: any) => {
+    setSelectedPermission(permission);
+    setShowEditPermissionModal(true);
+  };
+
+  const handleClosePermissionModals = () => {
+    setShowCreatePermissionModal(false);
+    setShowEditPermissionModal(false);
+    setSelectedPermission(null);
   };
 
   // Função para ativar/desativar usuário
@@ -880,12 +902,24 @@ export default function SettingsGestao() {
                 </>
               )}
               {canUsers && (
+                <>
+                  <TabsTrigger 
+                    value="users" 
+                    className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
+                    style={{ '--tab-active-color': primaryColor } as React.CSSProperties}
+                  >
+                    Usuários
+                  </TabsTrigger>
+                  <div className="w-px h-6 bg-border/30 self-center"></div>
+                </>
+              )}
+              {canPermissions && (
                 <TabsTrigger 
-                  value="users" 
+                  value="permissions" 
                   className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
                   style={{ '--tab-active-color': primaryColor } as React.CSSProperties}
                 >
-                  Usuários
+                  Permissões
                 </TabsTrigger>
               )}
             </TabsList>
@@ -1516,6 +1550,109 @@ export default function SettingsGestao() {
                 </div>
               </TabsContent>
             )}
+
+            {canPermissions && (
+              <TabsContent value="permissions" className="p-6">
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-semibold text-foreground">Permissões</h2>
+                      <p className="text-muted-foreground mt-1">Gerencie as permissões de acesso do sistema</p>
+                    </div>
+                    <Button 
+                      onClick={handleCreatePermission}
+                      className="text-white"
+                      style={{ backgroundColor: 'var(--brand-primary, #A86F57)', borderRadius: 'var(--brand-radius, 8px)' }}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      Nova Permissão
+                    </Button>
+                  </div>
+
+                  {/* Tabela de Permissões */}
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-left">Nome</TableHead>
+                        <TableHead className="text-left">Situação</TableHead>
+                        <TableHead className="text-left">Nível</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell className="font-medium">Administrador CRM</TableCell>
+                        <TableCell>
+                          <Badge
+                            className="text-white"
+                            style={{ 
+                              backgroundColor: 'var(--brand-primary, #A86F57)', 
+                              borderRadius: 'var(--brand-radius, 8px)' 
+                            }}
+                          >
+                            Ativa
+                          </Badge>
+                        </TableCell>
+                        <TableCell>Função</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end space-x-2">
+                            <Button
+                              variant="brandOutlineSecondaryHover"
+                              size="sm"
+                              className="brand-radius"
+                              onClick={() => handleEditPermission({ id: 1, name: 'Administrador CRM' })}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="brandOutlineSecondaryHover"
+                              size="sm"
+                              className="brand-radius"
+                            >
+                              <Archive className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell className="font-medium">Líder de Vendas</TableCell>
+                        <TableCell>
+                          <Badge
+                            className="text-white"
+                            style={{ 
+                              backgroundColor: 'var(--brand-primary, #A86F57)', 
+                              borderRadius: 'var(--brand-radius, 8px)' 
+                            }}
+                          >
+                            Ativa
+                          </Badge>
+                        </TableCell>
+                        <TableCell>Time</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end space-x-2">
+                            <Button
+                              variant="brandOutlineSecondaryHover"
+                              size="sm"
+                              className="brand-radius"
+                              onClick={() => handleEditPermission({ id: 2, name: 'Líder de Vendas' })}
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              variant="brandOutlineSecondaryHover"
+                              size="sm"
+                              className="brand-radius"
+                            >
+                              <Archive className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+              </TabsContent>
+            )}
           </Tabs>
         </CardContent>
       </Card>
@@ -1538,6 +1675,20 @@ export default function SettingsGestao() {
         isOpen={showUserModal}
         onClose={handleCloseUserModal}
         user={selectedUser}
+      />
+
+      {/* Modais de Permissões */}
+      <CreatePermissionModal
+        open={showCreatePermissionModal}
+        onOpenChange={setShowCreatePermissionModal}
+        onSuccess={handleClosePermissionModals}
+      />
+
+      <EditPermissionModal
+        open={showEditPermissionModal}
+        onOpenChange={setShowEditPermissionModal}
+        onSuccess={handleClosePermissionModals}
+        permission={selectedPermission}
       />
     </>
   );
