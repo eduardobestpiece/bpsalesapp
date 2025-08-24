@@ -38,7 +38,7 @@ export const SettingsLayout = ({ children }: SettingsLayoutProps) => {
             <SettingsHeader />
             <main className="flex-1 p-0 bg-background dark:bg-[#131313] max-w-full my-16 mx-8">
               <div className="max-w-5xl mx-0 space-y-8">
-                {children}
+              {children}
               </div>
             </main>
           </SidebarInset>

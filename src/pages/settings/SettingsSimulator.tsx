@@ -60,6 +60,22 @@ export default function SettingsSimulator() {
   const { userRole, companyId } = useCrmAuth();
   const isMaster = userRole === 'master';
 
+  // Buscar cores da empresa
+  const { data: branding } = useQuery({
+    queryKey: ['company_branding', companyId],
+    enabled: !!companyId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('company_branding')
+        .select('*')
+        .eq('company_id', companyId)
+        .maybeSingle();
+      return data;
+    }
+  });
+
+  const primaryColor = branding?.primary_color || '#A86F57';
+
   const handleRefresh = () => setRefreshKey(prev => prev + 1);
 
   const closeModals = () => {
@@ -147,7 +163,10 @@ export default function SettingsSimulator() {
                     <>
                       <TabsTrigger 
                         value="administrators" 
-                        className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[#e50f5f]"
+                        className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[var(--tab-active-color)]"
+                        style={{ 
+                          '--tab-active-color': primaryColor 
+                        } as React.CSSProperties}
                       >
                         Administradoras
                       </TabsTrigger>
@@ -158,7 +177,10 @@ export default function SettingsSimulator() {
                     <>
                       <TabsTrigger 
                         value="reductions" 
-                        className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[#e50f5f]"
+                        className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[var(--tab-active-color)]"
+                        style={{ 
+                          '--tab-active-color': primaryColor 
+                        } as React.CSSProperties}
                       >
                         Redução de Parcela
                       </TabsTrigger>
@@ -169,7 +191,10 @@ export default function SettingsSimulator() {
                     <>
                       <TabsTrigger 
                         value="installments" 
-                        className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[#e50f5f]"
+                        className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[var(--tab-active-color)]"
+                        style={{ 
+                          '--tab-active-color': primaryColor 
+                        } as React.CSSProperties}
                       >
                         Parcelas
                       </TabsTrigger>
@@ -180,7 +205,10 @@ export default function SettingsSimulator() {
                     <>
                       <TabsTrigger 
                         value="products" 
-                        className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[#e50f5f]"
+                        className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[var(--tab-active-color)]"
+                        style={{ 
+                          '--tab-active-color': primaryColor 
+                        } as React.CSSProperties}
                       >
                         Produtos
                       </TabsTrigger>
@@ -190,7 +218,10 @@ export default function SettingsSimulator() {
                   {canLeverages && (
                     <TabsTrigger 
                       value="leverages" 
-                      className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[#e50f5f]"
+                      className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[var(--tab-active-color)]"
+                      style={{ 
+                        '--tab-active-color': primaryColor 
+                      } as React.CSSProperties}
                     >
                       Alavancas
                     </TabsTrigger>

@@ -22,6 +22,7 @@ interface Company {
   name: string;
   status: 'active' | 'archived';
   created_at: string;
+  updated_at?: string;
 }
 
 const CrmMasterConfig = () => {
@@ -38,7 +39,7 @@ const CrmMasterConfig = () => {
       setModule('crm');
     }
   }, [isSimulatorModule, setModule]);
-  const { userRole, companyId } = useCrmAuth();
+  const { userRole, companyId, session, user } = useCrmAuth();
   const queryClient = useQueryClient();
   const [newCompanyName, setNewCompanyName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -100,6 +101,8 @@ const CrmMasterConfig = () => {
     }
   }, [userRole]);
 
+  // Debug useEffect removido
+
   // Fallback visual para loading, erro ou ausência de abas
   if (tabsLoading) {
     return <div className="flex items-center justify-center min-h-[400px]"><span>Carregando permissões...</span></div>;
@@ -112,18 +115,19 @@ const CrmMasterConfig = () => {
   }
 
   // Fetch companies
-  const { data: companies = [], isLoading: companiesLoading } = useQuery({
+  const { data: companies = [], isLoading: companiesLoading, error: companiesError } = useQuery({
     queryKey: ['companies'],
     queryFn: async () => {
+      // Debug logs removidos
+      
       const { data, error } = await supabase
         .from('companies')
-        .select('*')
+        .select('id, name, status, created_at')
         .order('created_at', { ascending: false });
 
       if (error) {
         throw error;
       }
-
       return data as Company[];
     },
     enabled: userRole === 'master'
@@ -328,7 +332,7 @@ const CrmMasterConfig = () => {
   // Antes de usar archivedItems, garantir que é array
   const safeArchivedItems = Array.isArray(archivedItems) ? archivedItems : [];
 
-  // LOG extra para debug
+  // Debug logs removidos
 
   // Garantir que defaultTab é string válida
   const safeDefaultTab = typeof defaultTab === 'string' && defaultTab ? defaultTab : (safeAllowedTabs[0] || 'companies');
@@ -851,8 +855,7 @@ function AccessPermissionsTable() {
         { key: 'comercial', label: 'Comercial', module: 'crm', parent_key: null, display_order: 30 },
         { key: 'comercial_leads', label: 'Leads', module: 'crm', parent_key: 'comercial', display_order: 31 },
         { key: 'comercial_sales', label: 'Vendas', module: 'crm', parent_key: 'comercial', display_order: 32 },
-        { key: 'agenda', label: 'Agenda', module: 'crm', parent_key: null, display_order: 35 },
-        { key: 'agenda_temp', label: 'Agenda Temporária', module: 'crm', parent_key: 'agenda', display_order: 36 },
+        
         { key: 'indicadores', label: 'Indicadores', module: 'crm', parent_key: null, display_order: 40 },
         { key: 'indicadores_performance', label: 'Performance', module: 'crm', parent_key: 'indicadores', display_order: 41 },
         { key: 'indicadores_registro', label: 'Registro de Indicadores', module: 'crm', parent_key: 'indicadores', display_order: 42 },
@@ -882,11 +885,7 @@ function AccessPermissionsTable() {
         { key: 'settings_company', label: 'Empresa', module: 'settings', parent_key: null, display_order: 80 },
         { key: 'settings_company_data', label: 'Dados da empresa', module: 'settings', parent_key: 'settings_company', display_order: 801 },
         { key: 'settings_company_branding', label: 'Identidade visual', module: 'settings', parent_key: 'settings_company', display_order: 802 },
-        { key: 'settings_agendamento', label: 'Agendamento', module: 'settings', parent_key: null, display_order: 90 },
-        { key: 'settings_agendamento_availability', label: 'Disponibilidade', module: 'settings', parent_key: 'settings_agendamento', display_order: 901 },
-        { key: 'settings_agendamento_event_types', label: 'Tipos de Evento', module: 'settings', parent_key: 'settings_agendamento', display_order: 902 },
-        { key: 'settings_agendamento_forms', label: 'Formulário', module: 'settings', parent_key: 'settings_agendamento', display_order: 903 },
-        { key: 'settings_agendamento_calendar', label: 'Integração de Calendário', module: 'settings', parent_key: 'settings_agendamento', display_order: 904 },
+        
         
         // Master Module
         { key: 'master_config', label: 'Configurações Master', module: 'master', parent_key: null, display_order: 200 },

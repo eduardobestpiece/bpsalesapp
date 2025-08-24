@@ -324,4 +324,9 @@ All colors MUST be HSL.
     justify-content: flex-start !important;
     width: 100% !important;
   }
+
+  /* Cor da barrinha das abas ativas */
+  [data-state="active"]:after {
+    background-color: var(--tab-active-color, #A86F57) !important;
+  }
 }

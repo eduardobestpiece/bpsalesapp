@@ -63,6 +63,22 @@ export default function SettingsCrm() {
     }
   });
 
+  // Buscar cores da empresa
+  const { data: branding } = useQuery({
+    queryKey: ['company_branding', selectedCompanyId || companyId],
+    enabled: !!(selectedCompanyId || companyId),
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('company_branding')
+        .select('*')
+        .eq('company_id', selectedCompanyId || companyId)
+        .maybeSingle();
+      return data;
+    }
+  });
+
+  const primaryColor = branding?.primary_color || '#A86F57';
+
   const canFunnels = perms['crm_config_funnels'] !== false;
   const canSources = perms['crm_config_sources'] !== false;
   const canTeams = perms['crm_config_teams'] !== false;
@@ -180,7 +196,8 @@ export default function SettingsCrm() {
                 <>
                   <TabsTrigger 
                     value="funnels" 
-                    className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[#e50f5f]"
+                    className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
+                    style={{ '--tab-active-color': primaryColor } as React.CSSProperties}
                   >
                     Funis
                   </TabsTrigger>
@@ -191,7 +208,8 @@ export default function SettingsCrm() {
                 <>
                   <TabsTrigger 
                     value="sources" 
-                    className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[#e50f5f]"
+                    className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
+                    style={{ '--tab-active-color': primaryColor } as React.CSSProperties}
                   >
                     Origens
                   </TabsTrigger>
@@ -201,14 +219,15 @@ export default function SettingsCrm() {
               {canTeams && (
                 <TabsTrigger 
                   value="teams" 
-                  className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[#e50f5f]"
+                  className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
+                  style={{ '--tab-active-color': primaryColor } as React.CSSProperties}
                 >
                   Times
                 </TabsTrigger>
               )}
                   </TabsList>
 
-                              {canFunnels && (
+                  {canFunnels && (
               <TabsContent value="funnels" className="p-6">
                 <div className="space-y-6">
                   <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -235,31 +254,31 @@ export default function SettingsCrm() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="text-left">Nome</TableHead>
-                        <TableHead className="text-left">Status</TableHead>
-                        <TableHead className="text-left">Verificação</TableHead>
-                        <TableHead className="text-left">Etapas</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
+                        <TableHead className="text-left py-2">Nome</TableHead>
+                        <TableHead className="text-left py-2">Status</TableHead>
+                        <TableHead className="text-left py-2">Verificação</TableHead>
+                        <TableHead className="text-left py-2">Etapas</TableHead>
+                        <TableHead className="text-right py-2">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {funnelsLoading ? (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center py-4">
+                          <TableCell colSpan={5} className="text-center py-2">
                             Carregando funis...
                           </TableCell>
                         </TableRow>
                       ) : filteredFunnels.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
                             {funnelSearchTerm ? 'Nenhum funil encontrado com este termo.' : 'Nenhum funil encontrado. Crie o primeiro funil para começar.'}
                           </TableCell>
                         </TableRow>
                       ) : (
                         filteredFunnels.map((funnel) => (
                           <TableRow key={funnel.id}>
-                            <TableCell className="font-medium">{funnel.name}</TableCell>
-                            <TableCell>
+                            <TableCell className="font-medium py-2">{funnel.name}</TableCell>
+                            <TableCell className="py-2">
                               {funnel.status === 'active' ? (
                                 <Badge
                                   className="text-white"
@@ -273,12 +292,12 @@ export default function SettingsCrm() {
                                 </Badge>
                               )}
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="py-2">
                               {getVerificationTypeLabel(funnel.verification_type)}
                               {funnel.verification_day && ` - Dia ${funnel.verification_day}`}
                             </TableCell>
-                            <TableCell>{funnel.stages?.length || 0} etapas</TableCell>
-                            <TableCell className="text-right">
+                            <TableCell className="py-2">{funnel.stages?.length || 0} etapas</TableCell>
+                            <TableCell className="text-right py-2">
                               <div className="flex justify-end space-x-2">
                                 <Button
                                   variant="brandOutlineSecondaryHover"
@@ -306,9 +325,9 @@ export default function SettingsCrm() {
                     </TableBody>
                   </Table>
                 </div>
-              </TabsContent>
-            )}
-            {canSources && (
+                    </TabsContent>
+                  )}
+                  {canSources && (
               <TabsContent value="sources" className="p-6">
                 <div className="space-y-6">
                   <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -335,30 +354,30 @@ export default function SettingsCrm() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="text-left">Nome</TableHead>
-                        <TableHead className="text-left">Status</TableHead>
-                        <TableHead className="text-left">Descrição</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
+                        <TableHead className="text-left py-2">Nome</TableHead>
+                        <TableHead className="text-left py-2">Status</TableHead>
+                        <TableHead className="text-left py-2">Descrição</TableHead>
+                        <TableHead className="text-right py-2">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {sourcesLoading ? (
                         <TableRow>
-                          <TableCell colSpan={4} className="text-center py-4">
+                          <TableCell colSpan={4} className="text-center py-2">
                             Carregando origens...
                           </TableCell>
                         </TableRow>
                       ) : filteredSources.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
                             {sourceSearchTerm ? 'Nenhuma origem encontrada com este termo.' : 'Nenhuma origem encontrada. Crie a primeira origem para começar.'}
                           </TableCell>
                         </TableRow>
                       ) : (
                         filteredSources.map((source) => (
                           <TableRow key={source.id}>
-                            <TableCell className="font-medium">{source.name}</TableCell>
-                            <TableCell>
+                            <TableCell className="font-medium py-2">{source.name}</TableCell>
+                            <TableCell className="py-2">
                               {source.status === 'active' ? (
                                 <Badge
                                   className="text-white"
@@ -372,8 +391,8 @@ export default function SettingsCrm() {
                                 </Badge>
                               )}
                             </TableCell>
-                            <TableCell>{source.description || 'Sem descrição'}</TableCell>
-                            <TableCell className="text-right">
+                            <TableCell className="py-2">{source.description || 'Sem descrição'}</TableCell>
+                            <TableCell className="text-right py-2">
                               <div className="flex justify-end space-x-2">
                                 <Button
                                   variant="brandOutlineSecondaryHover"
@@ -401,9 +420,9 @@ export default function SettingsCrm() {
                     </TableBody>
                   </Table>
                 </div>
-              </TabsContent>
-            )}
-            {canTeams && (
+                    </TabsContent>
+                  )}
+                  {canTeams && (
               <TabsContent value="teams" className="p-6">
                 <div className="space-y-6">
                   <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -430,31 +449,31 @@ export default function SettingsCrm() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="text-left">Nome</TableHead>
-                        <TableHead className="text-left">Status</TableHead>
-                        <TableHead className="text-left">Descrição</TableHead>
-                        <TableHead className="text-left">Membros</TableHead>
-                        <TableHead className="text-right">Ações</TableHead>
+                        <TableHead className="text-left py-2">Nome</TableHead>
+                        <TableHead className="text-left py-2">Status</TableHead>
+                        <TableHead className="text-left py-2">Descrição</TableHead>
+                        <TableHead className="text-left py-2">Membros</TableHead>
+                        <TableHead className="text-right py-2">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {teamsLoading ? (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center py-4">
+                          <TableCell colSpan={5} className="text-center py-2">
                             Carregando times...
                           </TableCell>
                         </TableRow>
                       ) : filteredTeams.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={5} className="text-center py-4 text-muted-foreground">
                             {teamSearchTerm ? 'Nenhum time encontrado com este termo.' : 'Nenhum time encontrado. Crie o primeiro time para começar.'}
                           </TableCell>
                         </TableRow>
                       ) : (
                         filteredTeams.map((team) => (
                           <TableRow key={team.id}>
-                            <TableCell className="font-medium">{team.name}</TableCell>
-                            <TableCell>
+                            <TableCell className="font-medium py-2">{team.name}</TableCell>
+                            <TableCell className="py-2">
                               {team.status === 'active' ? (
                                 <Badge
                                   className="text-white"
@@ -468,9 +487,9 @@ export default function SettingsCrm() {
                                 </Badge>
                               )}
                             </TableCell>
-                            <TableCell>{team.description || 'Sem descrição'}</TableCell>
-                            <TableCell>{team.members?.length || 0} membros</TableCell>
-                            <TableCell className="text-right">
+                            <TableCell className="py-2">{team.description || 'Sem descrição'}</TableCell>
+                            <TableCell className="py-2">{team.members?.length || 0} membros</TableCell>
+                            <TableCell className="text-right py-2">
                               <div className="flex justify-end space-x-2">
                                 <Button
                                   variant="brandOutlineSecondaryHover"
@@ -498,8 +517,8 @@ export default function SettingsCrm() {
                     </TableBody>
                   </Table>
                 </div>
-              </TabsContent>
-            )}
+                    </TabsContent>
+                  )}
                 </Tabs>
         </CardContent>
       </Card>

@@ -68,10 +68,7 @@ export const ModuleSwitcher = ({ current }: ModuleSwitcherProps) => {
       return '/configuracoes/crm';
     }
     
-    // 5. Agendamento
-    if (allowed('settings_agendamento')) {
-      return '/configuracoes/agendamento';
-    }
+
     
     // 6. Master Config (apenas para master)
     if (userRole === 'master') {

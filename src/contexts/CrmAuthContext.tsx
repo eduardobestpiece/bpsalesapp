@@ -88,6 +88,12 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
         .limit(1)
         .maybeSingle();
       if (byEmail && !byEmailError) {
+        // Verificar se o usuário está ativo
+        if (byEmail.status === 'archived') {
+          // Se usuário está inativo, fazer logout e retornar null
+          await supabase.auth.signOut();
+          return null;
+        }
         return byEmail as any;
       }
     }
@@ -99,6 +105,12 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
       .eq('id', authUser.id)
       .maybeSingle();
     if (byId) {
+      // Verificar se o usuário está ativo
+      if (byId.status === 'archived') {
+        // Se usuário está inativo, fazer logout e retornar null
+        await supabase.auth.signOut();
+        return null;
+      }
       return byId as any;
     }
 
@@ -139,11 +151,25 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (authUser.email) {
         const cached = getCrmUserCache(authUser.email);
         if (cached) {
+          // Verificar se o usuário cached está ativo
+          if (cached.status === 'archived') {
+            // Se usuário está inativo, fazer logout e retornar null
+            await supabase.auth.signOut();
+            return null;
+          }
           return cached;
         }
       }
 
       const ensured = await ensureCrmUser(authUser);
+      
+      // Verificar se o usuário está ativo
+      if (ensured && ensured.status === 'archived') {
+        // Se usuário está inativo, fazer logout e retornar null
+        await supabase.auth.signOut();
+        return null;
+      }
+      
       if (ensured && authUser.email) {
         saveCrmUserCache(authUser.email, ensured);
       }
@@ -172,6 +198,14 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
       if (!fresh) {
         fresh = await ensureCrmUser(user);
       }
+      
+      // Verificar se o usuário está ativo
+      if (fresh && fresh.status === 'archived') {
+        // Se usuário está inativo, fazer logout
+        await supabase.auth.signOut();
+        return;
+      }
+      
       setCrmUser(fresh);
       setUserRole((fresh?.role as UserRole) ?? null);
       setCompanyId(fresh?.company_id ?? null);
@@ -248,6 +282,33 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const signIn = async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
+    
+    // Se não houve erro no login, verificar se o usuário está arquivado
+    if (!error) {
+      try {
+        const { data: crmUser, error: crmError } = await supabase
+          .from('crm_users')
+          .select('*')
+          .eq('email', email)
+          .order('updated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        if (!crmError && crmUser && crmUser.status === 'archived') {
+          // Fazer logout do usuário arquivado
+          await supabase.auth.signOut();
+          // Retornar erro personalizado
+          return { 
+            error: { 
+              message: 'Conta suspensa, entre em contato com seu gestor' 
+            } 
+          };
+        }
+      } catch (e) {
+        // Ignorar erros na verificação
+      }
+    }
+    
     return { error };
   };
 

@@ -36,7 +36,7 @@ import SettingsUsers from "./pages/settings/SettingsUsers";
 import SettingsMaster from "./pages/settings/SettingsMaster";
 import SettingsEmpresa from "./pages/settings/SettingsEmpresa";
 import SettingsPerfil from "./pages/settings/SettingsPerfil";
-import SettingsAgendamento from "./pages/settings/SettingsAgendamento";
+
 
 const queryClient = new QueryClient();
 
@@ -146,13 +146,7 @@ function AppContent() {
               </ProtectedRoute>
             ) : <Navigate to="/crm/login" replace />
           } />
-          <Route path="/configuracoes/agendamento" element={
-            user ? (
-              <SettingsLayout>
-              <SettingsAgendamento />
-              </SettingsLayout>
-            ) : <Navigate to="/crm/login" replace />
-          } />
+
           
           {/* CRM Routes */}
           <Route path="/crm" element={

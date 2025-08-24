@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Edit, Archive, Search, Camera, Save } from 'lucide-react';
+import { Plus, Edit, Archive, Search, Camera, Save, ImageIcon, Loader2, Power, PowerOff } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,6 +16,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { AvatarCropper } from '@/components/CRM/AvatarCropper';
+import { UserModal } from '@/components/CRM/Configuration/UserModal';
 
 export default function SettingsGestao() {
   const { user, crmUser, userRole, companyId, refreshCrmUser } = useCrmAuth();
@@ -25,6 +26,8 @@ export default function SettingsGestao() {
   // Estados para modais
   const [showAvatarCropper, setShowAvatarCropper] = useState(false);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
 
   // Estados para perfil
   const [formData, setFormData] = useState({
@@ -56,8 +59,45 @@ export default function SettingsGestao() {
 
   // Estados para busca de usuários
   const [userSearchTerm, setUserSearchTerm] = useState('');
+  const [userRoleFilter, setUserRoleFilter] = useState('all'); // 'all', 'user', 'admin', 'master', etc.
+  const [userStatusFilter, setUserStatusFilter] = useState('active'); // 'all', 'active', 'archived'
+  const [cnpjError, setCnpjError] = useState<string>('');
+
+  // Estados para CPF
+  const [cpf, setCpf] = useState('');
+  const [cpfError, setCpfError] = useState('');
+
+  // Estados para logos
+  const [squarePreview, setSquarePreview] = useState<string>('');
+  const [horizontalPreview, setHorizontalPreview] = useState<string>('');
+  const [horizontalDarkPreview, setHorizontalDarkPreview] = useState<string>('');
+  const [isUploadingSquare, setIsUploadingSquare] = useState(false);
+  const [isUploadingHorizontal, setIsUploadingHorizontal] = useState(false);
+  const [isUploadingHorizontalDark, setIsUploadingHorizontalDark] = useState(false);
+
+  // Refs para inputs de arquivo
+  const squareInputRef = useRef<HTMLInputElement>(null);
+  const horizontalInputRef = useRef<HTMLInputElement>(null);
+  const horizontalDarkInputRef = useRef<HTMLInputElement>(null);
 
   // Dados
+  const effectiveCompanyId = selectedCompanyId || companyId;
+
+  // Query para branding
+  const { data: branding } = useQuery({
+    queryKey: ['company_branding', effectiveCompanyId],
+    enabled: !!effectiveCompanyId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('company_branding')
+        .select('*')
+        .eq('company_id', effectiveCompanyId as string)
+        .maybeSingle();
+      if (error) throw error;
+      return data as any | null;
+    }
+  });
+
   const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ['crm_users', selectedCompanyId || companyId],
     queryFn: async () => {
@@ -91,6 +131,21 @@ export default function SettingsGestao() {
   const canProfile = perms['settings_profile'] !== false;
   const canCompany = perms['settings_company'] !== false || userRole === 'admin' || userRole === 'master';
   const canUsers = perms['settings_users'] !== false || userRole === 'admin' || userRole === 'master';
+  const canEdit = userRole === 'admin' || userRole === 'master';
+
+  // Carregar dados de branding
+  useEffect(() => {
+    if (branding) {
+      setSquarePreview(branding.logo_square_url || '');
+      setHorizontalPreview(branding.logo_horizontal_url || branding.logo_vertical_url || '');
+      setHorizontalDarkPreview(branding.logo_horizontal_dark_url || '');
+      setPrimaryColor(branding.primary_color || '#A86F57');
+      setSecondaryColor(branding.secondary_color || '#6B7280');
+      setBorderRadiusPx(typeof branding.border_radius_px === 'number' ? branding.border_radius_px : 8);
+    }
+  }, [branding]);
+
+
 
   const allowedOrder: { key: string; allowed: boolean }[] = [
     { key: 'profile', allowed: canProfile },
@@ -109,18 +164,7 @@ export default function SettingsGestao() {
 
   // Carregar dados do perfil
   useEffect(() => {
-    console.log('crmUser mudou:', crmUser);
     if (crmUser) {
-      console.log('Carregando dados do crmUser:', {
-        first_name: crmUser.first_name,
-        last_name: crmUser.last_name,
-        email: crmUser.email,
-        phone: crmUser.phone,
-        birth_date: crmUser.birth_date,
-        bio: crmUser.bio,
-        avatar_url: crmUser.avatar_url
-      });
-      
       setFormData({
         first_name: crmUser.first_name || '',
         last_name: crmUser.last_name || '',
@@ -130,6 +174,8 @@ export default function SettingsGestao() {
         bio: crmUser.bio || '',
         avatar_url: crmUser.avatar_url || ''
       });
+      // Carregar CPF (quando o campo estiver disponível no banco)
+      setCpf(crmUser.cpf || '');
     }
   }, [crmUser]);
 
@@ -139,40 +185,31 @@ export default function SettingsGestao() {
     queryFn: async () => {
       if (!selectedCompanyId && !companyId) return null;
       
-      console.log('Carregando dados da empresa para company_id:', selectedCompanyId || companyId);
-      
-      // Primeiro, tentar buscar na tabela companies
-      let { data, error } = await supabase
+      // Buscar dados da tabela companies (nome básico)
+      const { data: companyData, error: companyError } = await supabase
         .from('companies')
         .select('*')
         .eq('id', selectedCompanyId || companyId)
         .maybeSingle();
       
-      console.log('Dados da tabela companies:', data);
-      console.log('Erro da tabela companies:', error);
+      // Buscar dados da tabela company_profiles (dados detalhados)
+      const { data: profileData, error: profileError } = await supabase
+        .from('company_profiles')
+        .select('*')
+        .eq('company_id', selectedCompanyId || companyId)
+        .maybeSingle();
       
-      // Se não encontrar na tabela companies, tentar na tabela company_profiles
-      if (!data && !error) {
-        console.log('Tentando buscar na tabela company_profiles...');
-        const result = await supabase
-          .from('company_profiles')
-          .select('*')
-          .eq('company_id', selectedCompanyId || companyId)
-          .maybeSingle();
-        
-        data = result.data;
-        error = result.error;
-        
-        console.log('Dados da tabela company_profiles:', data);
-        console.log('Erro da tabela company_profiles:', error);
-      }
+      // Combinar dados das duas tabelas
+      const combinedData = {
+        ...companyData,
+        ...profileData
+      };
       
-      if (error) {
-        console.error('Erro ao carregar dados da empresa:', error);
+      if (companyError && profileError) {
         return null;
       }
       
-      return data;
+      return combinedData;
     },
     enabled: !!(selectedCompanyId || companyId)
   });
@@ -199,15 +236,22 @@ export default function SettingsGestao() {
 
   // Carregar dados da empresa quando as queries retornarem
   useEffect(() => {
-    console.log('companyProfile mudou:', companyProfile);
+    // Limpar localStorage antigo (dados não são mais necessários)
+    const localStorageKey = `company_data_${selectedCompanyId || companyId}`;
+    if (localStorage.getItem(localStorageKey)) {
+      localStorage.removeItem(localStorageKey);
+    }
+    
+    // Carregar dados APENAS do Supabase (banco de dados)
     if (companyProfile) {
-      console.log('Carregando dados do companyProfile:', companyProfile);
-      // Os dados podem vir da tabela companies ou company_profiles
+      // Carregar dados da tabela companies (nome)
       setName(companyProfile.name || companyProfile.company_name || '');
+      
+      // Carregar dados da tabela company_profiles (dados detalhados)
       setCnpj(companyProfile.cnpj || '');
       setNiche(companyProfile.niche || '');
       setCep(companyProfile.cep || '');
-      setStreet(companyProfile.street || '');
+      setStreet(companyProfile.address || companyProfile.street || '');
       setNumber(companyProfile.number || '');
       setNeighborhood(companyProfile.neighborhood || '');
       setCity(companyProfile.city || '');
@@ -215,7 +259,7 @@ export default function SettingsGestao() {
       setCountry(companyProfile.country || '');
       setTimezone(companyProfile.timezone || 'America/Sao_Paulo');
     }
-  }, [companyProfile]);
+  }, [companyProfile, selectedCompanyId, companyId]);
 
   useEffect(() => {
     if (companyBranding) {
@@ -358,16 +402,77 @@ export default function SettingsGestao() {
           phone: formData.phone,
           birth_date: formData.birth_date || null,
           bio: formData.bio,
+          cpf: cpf, // Adicionar CPF quando o campo estiver disponível no banco
           updated_at: new Date().toISOString()
         })
         .eq('email', crmUser.email);
 
       if (error) throw error;
+      
+      // Invalidar queries para forçar recarregamento dos dados
+      queryClient.invalidateQueries({ queryKey: ['crm_user'] });
+      queryClient.invalidateQueries({ queryKey: ['crm_users'] });
+      
+      // Atualizar o contexto do usuário
+      if (refreshCrmUser) {
+        await refreshCrmUser();
+      }
+      
       toast.success('Perfil atualizado com sucesso!');
     } catch (error: any) {
       toast.error('Erro ao atualizar perfil: ' + error.message);
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // Função para salvar cores
+  const handlePrimaryColorSave = () => {
+    upsertBranding.mutate({
+      primary_color: primaryColor,
+      secondary_color: secondaryColor,
+      border_radius_px: borderRadiusPx
+    });
+  };
+
+  // Função para fazer upload de logos
+  const handleUpload = async (file: File, type: 'square' | 'horizontal' | 'horizontal_dark') => {
+    if (!effectiveCompanyId) {
+      toast.error('Empresa não encontrada');
+      return;
+    }
+    try {
+      if (type === 'square') setIsUploadingSquare(true);
+      if (type === 'horizontal') setIsUploadingHorizontal(true);
+      if (type === 'horizontal_dark') setIsUploadingHorizontalDark(true);
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${effectiveCompanyId}/${type}_${Date.now()}.${fileExt}`;
+      
+      const { data, error } = await supabase.storage
+        .from('company-logos')
+        .upload(fileName, file);
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('company-logos')
+        .getPublicUrl(fileName);
+
+      const updateData: any = {};
+      if (type === 'square') updateData.logo_square_url = publicUrl;
+      if (type === 'horizontal') updateData.logo_horizontal_url = publicUrl;
+      if (type === 'horizontal_dark') updateData.logo_horizontal_dark_url = publicUrl;
+
+      await upsertBranding.mutateAsync(updateData);
+
+      toast.success('Logo enviada com sucesso!');
+    } catch (error: any) {
+      toast.error('Erro ao enviar logo: ' + error.message);
+    } finally {
+      if (type === 'square') setIsUploadingSquare(false);
+      if (type === 'horizontal') setIsUploadingHorizontal(false);
+      if (type === 'horizontal_dark') setIsUploadingHorizontalDark(false);
     }
   };
 
@@ -381,6 +486,59 @@ export default function SettingsGestao() {
       toast.success('E-mail de redefinição enviado!');
     } catch (error: any) {
       toast.error('Erro ao enviar e-mail: ' + error.message);
+    }
+  };
+
+  // Funções para modal de usuário
+  const handleAddUser = () => {
+    setSelectedUser(null);
+    setShowUserModal(true);
+  };
+
+  const handleEditUser = (user: any) => {
+    setSelectedUser(user);
+    setShowUserModal(true);
+  };
+
+  const handleCloseUserModal = () => {
+    setShowUserModal(false);
+    setSelectedUser(null);
+  };
+
+  // Função para ativar/desativar usuário
+  const handleToggleUserStatus = async (user: any) => {
+    try {
+      const newStatus = user.status === 'active' ? 'archived' : 'active';
+      const statusText = newStatus === 'active' ? 'ativado' : 'desativado';
+      
+      const { error } = await supabase
+        .from('crm_users')
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      // Se o usuário está sendo desativado e é o usuário atual logado, fazer logout
+      if (newStatus === 'archived' && crmUser && user.id === crmUser.id) {
+        toast.info('Você foi desconectado pois sua conta foi desativada.');
+        await supabase.auth.signOut();
+        return;
+      }
+
+      // Invalidar queries para atualizar a lista
+      queryClient.invalidateQueries({ queryKey: ['crm_users', selectedCompanyId || companyId] });
+      
+      toast.success(`Usuário ${statusText} com sucesso!`);
+      
+      // Mostrar aviso se usuário foi desativado
+      if (newStatus === 'archived') {
+        toast.info('O usuário foi desativado e não poderá mais acessar a plataforma.');
+      }
+    } catch (error: any) {
+      toast.error('Erro ao alterar status do usuário: ' + error.message);
     }
   };
 
@@ -412,59 +570,203 @@ export default function SettingsGestao() {
     return color;
   };
 
+  // Função para validar CNPJ
+  const validateCNPJ = (cnpj: string): boolean => {
+    // Remove caracteres não numéricos
+    const cleanCNPJ = cnpj.replace(/[^\d]/g, '');
+    
+    // Verifica se tem 14 dígitos
+    if (cleanCNPJ.length !== 14) return false;
+    
+    // Verifica se todos os dígitos são iguais
+    if (/^(\d)\1+$/.test(cleanCNPJ)) return false;
+    
+    // Validação dos dígitos verificadores
+    let sum = 0;
+    let weight = 2;
+    
+    // Primeiro dígito verificador
+    for (let i = 11; i >= 0; i--) {
+      sum += parseInt(cleanCNPJ[i]) * weight;
+      weight = weight === 9 ? 2 : weight + 1;
+    }
+    
+    let digit = 11 - (sum % 11);
+    if (digit >= 10) digit = 0;
+    
+    if (parseInt(cleanCNPJ[12]) !== digit) return false;
+    
+    // Segundo dígito verificador
+    sum = 0;
+    weight = 2;
+    
+    for (let i = 12; i >= 0; i--) {
+      sum += parseInt(cleanCNPJ[i]) * weight;
+      weight = weight === 9 ? 2 : weight + 1;
+    }
+    
+    digit = 11 - (sum % 11);
+    if (digit >= 10) digit = 0;
+    
+    return parseInt(cleanCNPJ[13]) === digit;
+  };
+
+  // Função para formatar CNPJ
+  const formatCNPJ = (cnpj: string): string => {
+    const cleanCNPJ = cnpj.replace(/[^\d]/g, '');
+    return cleanCNPJ.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/, '$1.$2.$3/$4-$5');
+  };
+
+  // Handler para mudança do CNPJ
+  const handleCNPJChange = (value: string) => {
+    const cleanValue = value.replace(/[^\d]/g, '');
+    
+    // Limita a 14 dígitos
+    if (cleanValue.length <= 14) {
+      const formattedValue = formatCNPJ(cleanValue);
+      setCnpj(formattedValue);
+      
+      // Validação
+      if (cleanValue.length === 14) {
+        if (validateCNPJ(formattedValue)) {
+          setCnpjError('');
+        } else {
+          setCnpjError('CNPJ inválido');
+        }
+      } else {
+        setCnpjError('');
+      }
+    }
+  };
+
+  // Mutation para salvar branding
+  const upsertBranding = useMutation({
+    mutationFn: async (payload: Partial<{ logo_square_url: string; logo_horizontal_url: string; logo_horizontal_dark_url: string; primary_color: string; secondary_color: string; border_radius_px: number }>) => {
+      if (!effectiveCompanyId) throw new Error('Empresa não definida');
+      const values = {
+        company_id: effectiveCompanyId,
+        ...payload,
+        ...(payload.primary_color ? { primary_color: normalizeHex(payload.primary_color) } : {}),
+        ...(payload.secondary_color ? { secondary_color: normalizeHex(payload.secondary_color) } : {}),
+      } as any;
+      
+      const { data: existing } = await supabase
+        .from('company_branding')
+        .select('company_id')
+        .eq('company_id', effectiveCompanyId as string)
+        .maybeSingle();
+      
+      if (existing?.company_id) {
+        const { data: updated, error } = await supabase
+          .from('company_branding')
+          .update(values)
+          .eq('company_id', effectiveCompanyId as string)
+          .select('*')
+          .maybeSingle();
+        if (error) { throw error; }
+      } else {
+        const { data: inserted, error } = await supabase
+          .from('company_branding')
+          .insert(values)
+          .select('*')
+          .maybeSingle();
+        if (error) { throw error; }
+      }
+    },
+    onSuccess: async (_data, variables) => {
+      queryClient.setQueryData(['company_branding', effectiveCompanyId], (old: any) => ({
+        ...(old || { company_id: effectiveCompanyId }),
+        ...variables,
+      }));
+      await queryClient.invalidateQueries({ queryKey: ['company_branding', effectiveCompanyId] });
+      await queryClient.refetchQueries({ queryKey: ['company_branding', effectiveCompanyId] });
+    },
+    onError: (_e: any) => {}
+  });
+
   const upsertProfile = useMutation({
     mutationFn: async () => {
-      // Primeiro, tentar atualizar a tabela companies
-      let { error } = await supabase
-        .from('companies')
-        .update({
-          name,
-          cnpj,
-          niche,
-          cep,
-          street,
-          number,
-          neighborhood,
-          city,
-          state,
-          country,
-          timezone
-        })
-        .eq('id', selectedCompanyId || companyId);
+      try {
+        // 1. Atualizar o nome na tabela companies
+        const { error: companyError } = await supabase
+          .from('companies')
+          .update({ name })
+          .eq('id', selectedCompanyId || companyId);
 
-      // Se não conseguir atualizar companies, tentar upsert em company_profiles
-      if (error) {
-        console.log('Erro ao atualizar companies, tentando company_profiles:', error);
-        const { error: profileError } = await supabase
+        if (companyError) {
+          throw companyError;
+        }
+
+        // 2. Salvar na tabela company_profiles
+        // Primeiro, verificar se já existe um registro
+        const { data: existingProfile } = await supabase
           .from('company_profiles')
+          .select('company_id')
+          .eq('company_id', selectedCompanyId || companyId)
+          .maybeSingle();
+
+        let profileError = null;
+        
+        if (existingProfile) {
+          // Se existe, fazer UPDATE
+          const { error } = await supabase
+            .from('company_profiles')
+            .update({
+              name,
+              cnpj,
+              niche,
+              cep,
+              address: street,
+              number,
+              neighborhood,
+              city,
+              state,
+              country,
+              timezone
+            })
+            .eq('company_id', selectedCompanyId || companyId);
+          profileError = error;
+        } else {
+          // Se não existe, fazer INSERT
+          const { error } = await supabase
+            .from('company_profiles')
+            .insert({
+              company_id: selectedCompanyId || companyId,
+              name,
+              cnpj,
+              niche,
+              cep,
+              address: street,
+              number,
+              neighborhood,
+              city,
+              state,
+              country,
+              timezone
+            });
+          profileError = error;
+        }
+
+        if (profileError) {
+          throw profileError;
+        }
+
+        // 3. Salvar branding
+        const { error: brandingError } = await supabase
+          .from('company_branding')
           .upsert({
             company_id: selectedCompanyId || companyId,
-            name,
-            cnpj,
-            niche,
-            cep,
-            street,
-            number,
-            neighborhood,
-            city,
-            state,
-            country,
-            timezone
+            primary_color: primaryColor,
+            secondary_color: normalizeHex(secondaryColor),
+            border_radius_px: borderRadiusPx
           });
 
-        if (profileError) throw profileError;
+        if (brandingError) {
+          throw brandingError;
+        }
+      } catch (err) {
+        throw err;
       }
-
-      const { error: brandingError } = await supabase
-        .from('company_branding')
-        .upsert({
-          company_id: selectedCompanyId || companyId,
-          primary_color: primaryColor,
-          secondary_color: normalizeHex(secondaryColor),
-          border_radius_px: borderRadiusPx
-        });
-
-      if (brandingError) throw brandingError;
     },
     onSuccess: () => {
       toast.success('Dados da empresa salvos com sucesso!');
@@ -472,21 +774,75 @@ export default function SettingsGestao() {
       queryClient.invalidateQueries({ queryKey: ['company_branding', selectedCompanyId || companyId] });
     },
     onError: (error: any) => {
-      toast.error('Erro ao salvar dados da empresa: ' + error.message);
+      toast.error('Erro ao salvar dados da empresa: ' + (error.message || 'Erro desconhecido'));
     }
   });
 
   // Filtros
-  const filteredUsers = users.filter(user =>
-    user.first_name?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-    user.last_name?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-    user.email?.toLowerCase().includes(userSearchTerm.toLowerCase())
-  );
+  const filteredUsers = users.filter(user => {
+    // Filtro de pesquisa
+    const matchesSearch = user.first_name?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+                         user.last_name?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+                         user.email?.toLowerCase().includes(userSearchTerm.toLowerCase());
+    
+    // Filtro de cargo
+    const matchesRole = userRoleFilter === 'all' || user.role === userRoleFilter;
+    
+    // Filtro de situação
+    const matchesStatus = userStatusFilter === 'all' || user.status === userStatusFilter;
+    
+    return matchesSearch && matchesRole && matchesStatus;
+  });
 
   // Funções auxiliares
   const userInitials = crmUser
     ? `${crmUser.first_name?.charAt(0) || ''}${crmUser.last_name?.charAt(0) || ''}`.toUpperCase()
     : 'U';
+
+  // Funções para validação e formatação do CPF
+  const validateCPF = (cpf: string): boolean => {
+    const cleanCPF = cpf.replace(/[^\d]/g, '');
+    if (cleanCPF.length !== 11) return false;
+    if (/^(\d)\1+$/.test(cleanCPF)) return false;
+    
+    let sum = 0;
+    for (let i = 0; i < 9; i++) {
+      sum += parseInt(cleanCPF[i]) * (10 - i);
+    }
+    let digit = 11 - (sum % 11);
+    if (digit >= 10) digit = 0;
+    if (parseInt(cleanCPF[9]) !== digit) return false;
+    
+    sum = 0;
+    for (let i = 0; i < 10; i++) {
+      sum += parseInt(cleanCPF[i]) * (11 - i);
+    }
+    digit = 11 - (sum % 11);
+    if (digit >= 10) digit = 0;
+    return parseInt(cleanCPF[10]) === digit;
+  };
+
+  const formatCPF = (cpf: string): string => {
+    const cleanCPF = cpf.replace(/[^\d]/g, '');
+    return cleanCPF.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
+  };
+
+  const handleCPFChange = (value: string) => {
+    const cleanValue = value.replace(/[^\d]/g, '');
+    if (cleanValue.length <= 11) {
+      const formattedValue = formatCPF(cleanValue);
+      setCpf(formattedValue);
+      if (cleanValue.length === 11) {
+        if (validateCPF(formattedValue)) {
+          setCpfError('');
+        } else {
+          setCpfError('CPF inválido');
+        }
+      } else {
+        setCpfError('');
+      }
+    }
+  };
 
   return (
     <>
@@ -503,7 +859,8 @@ export default function SettingsGestao() {
                 <>
                   <TabsTrigger 
                     value="profile" 
-                    className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[#e50f5f]"
+                    className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
+                    style={{ '--tab-active-color': primaryColor } as React.CSSProperties}
                   >
                     Meu Perfil
                   </TabsTrigger>
@@ -514,7 +871,8 @@ export default function SettingsGestao() {
                 <>
                   <TabsTrigger 
                     value="company" 
-                    className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[#e50f5f]"
+                    className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
+                    style={{ '--tab-active-color': primaryColor } as React.CSSProperties}
                   >
                     Empresa
                   </TabsTrigger>
@@ -524,7 +882,8 @@ export default function SettingsGestao() {
               {canUsers && (
                 <TabsTrigger 
                   value="users" 
-                  className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[#e50f5f]"
+                  className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
+                  style={{ '--tab-active-color': primaryColor } as React.CSSProperties}
                 >
                   Usuários
                 </TabsTrigger>
@@ -585,7 +944,7 @@ export default function SettingsGestao() {
 
                       {/* Informações Pessoais */}
                       <div className="mt-8 space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                           <div className="space-y-2">
                             <Label htmlFor="first_name">Nome</Label>
                             <Input
@@ -606,41 +965,59 @@ export default function SettingsGestao() {
                               className="brand-radius field-secondary-focus no-ring-focus"
                             />
                           </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="email">E-mail</Label>
+                            <Input
+                              id="email"
+                              value={formData.email}
+                              disabled
+                              className="bg-muted brand-radius field-secondary-focus no-ring-focus"
+                            />
+                          </div>
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="email">E-mail</Label>
-                          <Input
-                            id="email"
-                            value={formData.email}
-                            disabled
-                            className="bg-muted brand-radius field-secondary-focus no-ring-focus"
-                          />
                           <p className="text-xs text-muted-foreground">
                             O e-mail não pode ser alterado. Entre em contato com o suporte se necessário.
                           </p>
                         </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="phone">Telefone</Label>
-                          <Input
-                            id="phone"
-                            value={formData.phone}
-                            onChange={(e) => handleInputChange('phone', e.target.value)}
-                            placeholder="(11) 99999-9999"
-                            className="brand-radius field-secondary-focus no-ring-focus"
-                          />
-                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="phone">Telefone</Label>
+                            <Input
+                              id="phone"
+                              value={formData.phone}
+                              onChange={(e) => handleInputChange('phone', e.target.value)}
+                              placeholder="(11) 99999-9999"
+                              className="brand-radius field-secondary-focus no-ring-focus"
+                            />
+                          </div>
 
-                        <div className="space-y-2">
-                          <Label htmlFor="birth_date">Data de Nascimento</Label>
-                          <Input
-                            id="birth_date"
-                            type="date"
-                            value={formData.birth_date}
-                            onChange={(e) => handleInputChange('birth_date', e.target.value)}
-                            className="brand-radius field-secondary-focus no-ring-focus"
-                          />
+                          <div className="space-y-2">
+                            <Label htmlFor="birth_date">Data de Nascimento</Label>
+                            <Input
+                              id="birth_date"
+                              type="date"
+                              value={formData.birth_date}
+                              onChange={(e) => handleInputChange('birth_date', e.target.value)}
+                              className="brand-radius field-secondary-focus no-ring-focus"
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label htmlFor="cpf">CPF</Label>
+                            <Input
+                              id="cpf"
+                              value={cpf}
+                              onChange={(e) => handleCPFChange(e.target.value)}
+                              placeholder="000.000.000-00"
+                              className={`brand-radius field-secondary-focus no-ring-focus ${cpfError ? 'border-red-500' : ''}`}
+                            />
+                            {cpfError && (
+                              <p className="text-sm text-red-500">{cpfError}</p>
+                            )}
+                          </div>
                         </div>
 
                         <div className="space-y-2">
@@ -717,9 +1094,13 @@ export default function SettingsGestao() {
                           <Label>CNPJ</Label>
                           <Input 
                             value={cnpj} 
-                            onChange={(e) => setCnpj(e.target.value)}
-                            className="brand-radius field-secondary-focus no-ring-focus"
+                            onChange={(e) => handleCNPJChange(e.target.value)}
+                            placeholder="00.000.000/0000-00"
+                            className={`brand-radius field-secondary-focus no-ring-focus ${cnpjError ? 'border-red-500' : ''}`}
                           />
+                          {cnpjError && (
+                            <p className="text-sm text-red-500">{cnpjError}</p>
+                          )}
                         </div>
                         <div className="space-y-2">
                           <Label>Nicho</Label>
@@ -810,48 +1191,169 @@ export default function SettingsGestao() {
                     </CardContent>
                   </Card>
 
-                  {/* Cores & Bordas */}
+
+                  {/* Identidade visual */}
                   <Card>
                     <CardContent className="p-6">
-                      <h3 className="text-lg font-semibold mb-4">Cores & Bordas</h3>
-                      <div className="space-y-4">
-                        <div className="space-y-2">
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <h3 className="text-lg font-semibold">Identidade visual</h3>
+                          <p className="text-sm text-muted-foreground">Envie suas logos e defina a cor primária.</p>
+                        </div>
+                        <Button 
+                          onClick={handlePrimaryColorSave} 
+                          disabled={upsertBranding.isPending}
+                          className="text-white"
+                          style={{ backgroundColor: 'var(--brand-primary, #A86F57)', borderRadius: 'var(--brand-radius, 8px)' }}
+                        >
+                          {upsertBranding.isPending ? 'Salvando...' : 'Salvar'}
+                        </Button>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* Logo Quadrada */}
+                        <div className="space-y-3">
+                          <Label>Logo quadrada</Label>
+                          <div
+                            className="w-full aspect-square border rounded-lg bg-muted/30 flex items-center justify-center overflow-hidden cursor-pointer"
+                            onClick={() => canEdit && squareInputRef.current?.click()}
+                          >
+                            {squarePreview ? (
+                              <img src={squarePreview} alt="Logo quadrada" className="w-full h-full object-contain" />
+                            ) : (
+                              <div className="text-muted-foreground flex flex-col items-center">
+                                <ImageIcon className="h-10 w-10 mb-2" />
+                                <span>Clique para enviar</span>
+                              </div>
+                            )}
+                            {(isUploadingSquare) && (
+                              <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                                <Loader2 className="h-5 w-5 animate-spin text-white" />
+                              </div>
+                            )}
+                          </div>
+                          <Input 
+                            type="file" 
+                            accept="image/*" 
+                            ref={squareInputRef} 
+                            className="hidden" 
+                            onChange={(e) => {
+                              const f = e.target.files?.[0];
+                              if (f) handleUpload(f, 'square');
+                            }} 
+                          />
+                        </div>
+
+                        {/* Logos Horizontais: light + dark */}
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label>Logo horizontal</Label>
+                            <div
+                              className="relative w-full border rounded-lg bg-muted/30 flex items-center justify-center overflow-hidden cursor-pointer p-3"
+                              style={{ minHeight: 120 }}
+                              onClick={() => canEdit && horizontalInputRef.current?.click()}
+                            >
+                              {horizontalPreview ? (
+                                <img src={horizontalPreview} alt="Logo horizontal" className="h-auto max-h-28 w-auto" />
+                              ) : (
+                                <div className="text-muted-foreground flex flex-col items-center">
+                                  <ImageIcon className="h-10 w-10 mb-2" />
+                                  <span>Clique para enviar</span>
+                                </div>
+                              )}
+                              {(isUploadingHorizontal) && (
+                                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                                  <Loader2 className="h-5 w-5 animate-spin text-white" />
+                                </div>
+                              )}
+                            </div>
+                            <Input 
+                              type="file" 
+                              accept="image/*" 
+                              ref={horizontalInputRef} 
+                              className="hidden" 
+                              onChange={(e) => {
+                                const f = e.target.files?.[0];
+                                if (f) handleUpload(f, 'horizontal');
+                              }} 
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Logo horizontal (dark mode)</Label>
+                            <div
+                              className="relative w-full border rounded-lg bg-muted/30 flex items-center justify-center overflow-hidden cursor-pointer p-3"
+                              style={{ minHeight: 120 }}
+                              onClick={() => canEdit && horizontalDarkInputRef.current?.click()}
+                            >
+                              {horizontalDarkPreview ? (
+                                <img src={horizontalDarkPreview} alt="Logo horizontal (dark)" className="h-auto max-h-28 w-auto" />
+                              ) : (
+                                <div className="text-muted-foreground flex flex-col items-center">
+                                  <ImageIcon className="h-10 w-10 mb-2" />
+                                  <span>Clique para enviar</span>
+                                </div>
+                              )}
+                              {(isUploadingHorizontalDark) && (
+                                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                                  <Loader2 className="h-5 w-5 animate-spin text-white" />
+                                </div>
+                              )}
+                            </div>
+                            <Input 
+                              type="file" 
+                              accept="image/*" 
+                              ref={horizontalDarkInputRef} 
+                              className="hidden" 
+                              onChange={(e) => {
+                                const f = e.target.files?.[0];
+                                if (f) handleUpload(f, 'horizontal_dark');
+                              }} 
+                            />
+                          </div>
+                        </div>
+
+                        {/* Cores & Bordas */}
+                        <div className="space-y-3">
                           <Label>Cor primária</Label>
                           <div className="flex items-center gap-3">
                             <input
                               type="color"
                               value={primaryColor}
                               onChange={(e) => setPrimaryColor(e.target.value)}
-                              className="h-10 w-16 border border-border bg-background brand-radius"
+                              className="h-10 w-16 border border-border bg-background"
+                              style={{ borderRadius: 'var(--brand-radius, 8px)' }}
+                              disabled={!canEdit}
                             />
                             <Input
                               value={primaryColor}
                               onChange={(e) => setPrimaryColor(e.target.value)}
-                              className="w-40 brand-radius field-secondary-focus no-ring-focus"
+                              className="w-40"
                               placeholder="#A86F57"
+                              style={{ borderRadius: 'var(--brand-radius, 8px)' }}
+                              disabled={!canEdit}
                             />
                           </div>
-                        </div>
 
-                        <div className="space-y-2">
                           <Label>Cor secundária</Label>
                           <div className="flex items-center gap-3">
                             <input
                               type="color"
                               value={secondaryColor}
                               onChange={(e) => setSecondaryColor(normalizeHex(e.target.value))}
-                              className="h-10 w-16 border border-border bg-background brand-radius"
+                              className="h-10 w-16 border border-border bg-background"
+                              style={{ borderRadius: 'var(--brand-radius, 8px)' }}
+                              disabled={!canEdit}
                             />
                             <Input
                               value={secondaryColor}
                               onChange={(e) => setSecondaryColor(normalizeHex(e.target.value))}
-                              className="w-40 brand-radius field-secondary-focus no-ring-focus"
+                              className="w-40"
                               placeholder="#6B7280"
+                              style={{ borderRadius: 'var(--brand-radius, 8px)' }}
+                              disabled={!canEdit}
                             />
                           </div>
-                        </div>
 
-                        <div className="space-y-2">
                           <Label>Arredondamento das bordas (px)</Label>
                           <div className="flex items-center gap-3">
                             <Input
@@ -860,7 +1362,9 @@ export default function SettingsGestao() {
                               max={32}
                               value={borderRadiusPx}
                               onChange={(e) => setBorderRadiusPx(Number(e.target.value))}
-                              className="w-32 brand-radius field-secondary-focus no-ring-focus"
+                              className="w-32"
+                              style={{ borderRadius: 'var(--brand-radius, 8px)' }}
+                              disabled={!canEdit}
                             />
                           </div>
                         </div>
@@ -879,16 +1383,58 @@ export default function SettingsGestao() {
                       <h2 className="text-2xl font-semibold text-foreground">Usuários</h2>
                       <p className="text-muted-foreground mt-1">Gerencie os usuários do CRM</p>
                     </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-sm text-muted-foreground">
+                        Total: <span className="font-semibold text-foreground">{filteredUsers.length}</span> usuário{filteredUsers.length !== 1 ? 's' : ''}
+                      </div>
+                      <Button 
+                        onClick={handleAddUser}
+                        className="text-white"
+                        style={{ backgroundColor: 'var(--brand-primary, #A86F57)', borderRadius: 'var(--brand-radius, 8px)' }}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Adicionar Usuário
+                      </Button>
+                    </div>
                   </div>
 
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                    <Input
-                      placeholder="Pesquisar usuários..."
-                      value={userSearchTerm}
-                      onChange={(e) => setUserSearchTerm(e.target.value)}
-                      className="pl-10 field-secondary-focus no-ring-focus brand-radius"
-                    />
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                      <Input
+                        placeholder="Pesquisar usuários..."
+                        value={userSearchTerm}
+                        onChange={(e) => setUserSearchTerm(e.target.value)}
+                        className="pl-10 field-secondary-focus no-ring-focus brand-radius"
+                      />
+                    </div>
+                    
+                    <div className="flex gap-2">
+                      <Select value={userRoleFilter} onValueChange={setUserRoleFilter}>
+                        <SelectTrigger className="w-40 field-secondary-focus no-ring-focus brand-radius">
+                          <SelectValue placeholder="Cargo" />
+                        </SelectTrigger>
+                        <SelectContent style={{ '--brand-secondary': secondaryColor } as React.CSSProperties}>
+                          <SelectItem value="all" className="dropdown-item-brand">Todos Cargos</SelectItem>
+                          <SelectItem value="user" className="dropdown-item-brand">Usuário</SelectItem>
+                          <SelectItem value="leader" className="dropdown-item-brand">Líder</SelectItem>
+                          <SelectItem value="admin" className="dropdown-item-brand">Administrador</SelectItem>
+                          <SelectItem value="submaster" className="dropdown-item-brand">SubMaster</SelectItem>
+                          <SelectItem value="master" className="dropdown-item-brand">Master</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      
+                      <Select value={userStatusFilter} onValueChange={setUserStatusFilter}>
+                        <SelectTrigger className="w-40 field-secondary-focus no-ring-focus brand-radius">
+                          <SelectValue placeholder="Situação" />
+                        </SelectTrigger>
+                        <SelectContent style={{ '--brand-secondary': secondaryColor } as React.CSSProperties}>
+                          <SelectItem value="all" className="dropdown-item-brand">Todas Situações</SelectItem>
+                          <SelectItem value="active" className="dropdown-item-brand">Ativos</SelectItem>
+                          <SelectItem value="archived" className="dropdown-item-brand">Inativos</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
                   <Table>
@@ -925,9 +1471,14 @@ export default function SettingsGestao() {
                             <TableCell>
                               <Badge
                                 className="text-white"
-                                style={{ backgroundColor: 'var(--brand-primary, #A86F57)', borderRadius: 'var(--brand-radius, 8px)' }}
+                                style={{ 
+                                  backgroundColor: user.status === 'active' 
+                                    ? 'var(--brand-primary, #A86F57)' 
+                                    : '#6B7280', 
+                                  borderRadius: 'var(--brand-radius, 8px)' 
+                                }}
                               >
-                                Ativo
+                                {user.status === 'active' ? 'Ativo' : 'Inativo'}
                               </Badge>
                             </TableCell>
                             <TableCell className="text-right">
@@ -936,9 +1487,25 @@ export default function SettingsGestao() {
                                   variant="brandOutlineSecondaryHover"
                                   size="sm"
                                   className="brand-radius"
+                                  onClick={() => handleEditUser(user)}
                                 >
                                   <Edit className="w-4 h-4" />
                                 </Button>
+                                {user.role !== 'master' && (
+                                  <Button
+                                    variant="brandOutlineSecondaryHover"
+                                    size="sm"
+                                    className="brand-radius"
+                                    onClick={() => handleToggleUserStatus(user)}
+                                    title={user.status === 'active' ? 'Desativar usuário' : 'Ativar usuário'}
+                                  >
+                                    {user.status === 'active' ? (
+                                      <PowerOff className="w-4 h-4" />
+                                    ) : (
+                                      <Power className="w-4 h-4" />
+                                    )}
+                                  </Button>
+                                )}
                               </div>
                             </TableCell>
                           </TableRow>
@@ -965,6 +1532,13 @@ export default function SettingsGestao() {
           onCropComplete={handleAvatarCrop}
         />
       )}
+
+      {/* Modal de Usuário */}
+      <UserModal
+        isOpen={showUserModal}
+        onClose={handleCloseUserModal}
+        user={selectedUser}
+      />
     </>
   );
 } 

@@ -41,7 +41,9 @@ const CrmLogin = () => {
       const { error } = await signIn(email, password);
 
       if (error) {
-        if (error.message.includes('Invalid login credentials')) {
+        if (error.message.includes('Conta suspensa, entre em contato com seu gestor')) {
+          setError('Conta suspensa, entre em contato com seu gestor');
+        } else if (error.message.includes('Invalid login credentials')) {
           setError('Credenciais inválidas. Verifique seu email e senha.');
         } else if (error.message.includes('Email not confirmed')) {
           setError('Email não confirmado. Verifique sua caixa de entrada.');

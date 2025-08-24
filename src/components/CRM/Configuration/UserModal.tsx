@@ -10,11 +10,12 @@ import { useUpdateCrmUser } from '@/hooks/useCrmUsers';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
-import { useFunnels } from '@/hooks/useFunnels';
+
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ChevronDown } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
+
 
 interface UserModalProps {
   isOpen: boolean;
@@ -29,7 +30,6 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
     email: '',
     phone: '',
     role: 'user' as 'master' | 'admin' | 'leader' | 'user',
-    funnels: [] as string[],
   });
   const [isLoading, setIsLoading] = useState(false);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
@@ -50,7 +50,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
     },
   });
   // Funis filtrados pela empresa selecionada
-  const { data: funnels = [] } = useFunnels(selectedCompanyId || companyId);
+
 
   // Verificar se o usuário atual pode criar administradores
   const canCreateAdmin = crmUser?.role === 'master' || crmUser?.role === 'admin';
@@ -64,7 +64,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
         email: user.email,
         phone: user.phone || '',
         role: user.role,
-        funnels: user.funnels || [],
+
       });
     } else {
       setFormData({
@@ -73,12 +73,10 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
         email: '',
         phone: '',
         role: 'user',
-        funnels: [],
       });
     }
   }, [user]);
 
-  // Corrigir envio do campo funnels para garantir array de strings
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -96,7 +94,6 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
     setIsLoading(true);
 
     try {
-      const funisArray = Array.isArray(formData.funnels) ? formData.funnels : (typeof formData.funnels === 'string' ? [formData.funnels] : []);
       if (user) {
         // Editar usuário existente
         await updateUserMutation.mutateAsync({
@@ -106,7 +103,6 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
           phone: formData.phone.trim() || null,
           email: formData.email.trim(),
           role: formData.role,
-          funnels: funisArray,
           company_id: finalCompanyId,
           status: 'active'
         });
@@ -118,7 +114,6 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
           body: {
             email: formData.email.trim(),
             role: formData.role,
-            funnels: funisArray,
             company_id: finalCompanyId
           }
         });
@@ -153,7 +148,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
       }
 
       onClose();
-      setFormData({ first_name: '', last_name: '', email: '', phone: '', role: 'user', funnels: [] });
+      setFormData({ first_name: '', last_name: '', email: '', phone: '', role: 'user' });
     } catch (error: any) {
       toast.error(error.message || 'Erro ao salvar usuário');
     } finally {
@@ -273,31 +268,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
               </SelectContent>
             </Select>
           </div>
-          {/* Seleção de funis - visível para master, admin e líder */}
-          {(crmUser?.role === 'master' || crmUser?.role === 'admin' || crmUser?.role === 'leader') && (
-            <div>
-              <Label htmlFor="funnels">Funis *</Label>
-              <Select
-                value={formData.funnels.join(',')}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, funnels: value.split(',').filter(Boolean) }))}
-                disabled={isLoading}
-                required
-              >
-                <SelectTrigger className="select-trigger-brand brand-radius">
-                  <SelectValue placeholder="Selecione os funis" />
-                </SelectTrigger>
-                <SelectContent>
-                  {funnels.length > 0 ? (
-                    funnels.map((f: any) => (
-                      <SelectItem key={f.id} value={f.id} className="dropdown-item-brand">{f.name}</SelectItem>
-                    ))
-                  ) : (
-                    <div className="px-4 py-2 text-muted-foreground text-sm">Nenhum funil encontrado</div>
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+
           <div className="flex justify-end space-x-2 pt-4"></div>
         </form>
     </FullScreenModal>

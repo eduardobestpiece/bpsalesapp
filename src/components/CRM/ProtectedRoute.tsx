@@ -85,6 +85,13 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/crm/login" replace />;
   }
 
+  // Verificar se o usuário está ativo
+  if (crmUser.status === 'archived') {
+    // Fazer logout automático se usuário está inativo
+    supabase.auth.signOut();
+    return <Navigate to="/crm/login" replace />;
+  }
+
   if (requiredRole && !hasPermission(requiredRole as any)) {
     return (
       <div className="min-h-screen flex items-center justify-center">

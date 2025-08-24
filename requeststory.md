@@ -6,7 +6,278 @@
 
 ---
 
-## Requisição Atual: Correção do Avatar Cropper - Sliders com Limites Baseados no Tamanho Real da Imagem
+## Requisição Atual: Nova Tabela de Permissões - Master Config
+
+**Data:** 2025-01-17  
+**Solicitante:** Eduardo Costa  
+**Status:** ✅ Concluído
+
+### Funcionalidade Solicitada
+Substituir a tabela atual de permissões por uma nova tabela com estrutura simplificada:
+- **Cabeçalho:** Nome, Situação, Nível, Ações
+- **Nome:** Nome da permissão
+- **Situação:** Se está ativa ou não (badge colorido)
+- **Nível:** Função, Time ou Usuário (badge outline)
+- **Ações:** Botão de Editar e Botão de Desativar/Ativar
+
+### Problema Identificado
+- **Tabela complexa:** Estrutura anterior muito complexa com muitas colunas
+- **Interface confusa:** Muitos switches e informações desnecessárias
+- **Ação:** Criar tabela mais simples e intuitiva
+
+### Análise da Estrutura Atual
+**Componentes envolvidos:**
+- `SettingsMaster.tsx` - Página do Master Config
+- Tabela antiga com colunas: Módulo, Página, Aba, Descrição, Admin, Líder, Usuário, Ações
+- Dados mock para nova estrutura
+
+### Implementação Realizada
+1. **Remoção da tabela antiga:**
+   - ✅ Tabela complexa removida completamente
+   - ✅ Colunas antigas removidas (Módulo, Página, Aba, Descrição, Admin, Líder, Usuário)
+   - ✅ Switches e controles complexos removidos
+
+2. **Criação da nova tabela:**
+   - ✅ **Coluna Nome:** Nome da permissão (ex: "Acesso ao Simulador")
+   - ✅ **Coluna Situação:** Badge colorido (Ativa/Inativa)
+   - ✅ **Coluna Nível:** Badge outline (Função/Time/Usuário)
+   - ✅ **Coluna Ações:** Botões Editar e Desativar/Ativar
+
+3. **Dados mock criados:**
+   - ✅ 5 permissões de exemplo com diferentes níveis
+   - ✅ Estados ativos e inativos
+   - ✅ Funções para manipular dados
+
+4. **Funcionalidades implementadas:**
+   - ✅ `handleEditPermission()` - Para edição de permissões
+   - ✅ `handleTogglePermissionStatus()` - Para ativar/desativar
+   - ✅ Interface limpa e intuitiva
+
+### Checklist
+- [x] Remover tabela antiga complexa
+- [x] Criar nova estrutura de dados mock
+- [x] Implementar nova tabela com 4 colunas
+- [x] Adicionar badges para Situação e Nível
+- [x] Implementar botões de ação (Editar e Desativar)
+- [x] Criar funções para manipular dados
+- [x] Testar funcionalidade da nova tabela
+- [x] Verificar se está funcionando corretamente
+
+### Resultado
+✅ **Nova tabela de permissões criada com sucesso!**
+- **Estrutura:** Nome, Situação, Nível, Ações
+- **Interface:** Limpa e intuitiva
+- **Funcionalidade:** Botões de editar e ativar/desativar funcionais
+- **Dados:** 5 permissões de exemplo com diferentes níveis
+- **Status:** Tabela simplificada e funcional
+
+### Correção de Erro
+- **Problema:** Erro `ReferenceError: selectedModules is not defined`
+- **Causa:** Variáveis removidas ainda sendo referenciadas no código
+- **Solução:** Removidas todas as referências às variáveis não utilizadas
+- **Status:** Erro corrigido, página funcionando normalmente
+
+---
+
+## Nova Requisição: Modais de Criar e Editar Permissões
+
+### Solicitação
+Criar dois modais para gerenciar permissões:
+- **Modal de Criação:** Para criar novas permissões
+- **Modal de Edição:** Para editar permissões existentes
+- **Estrutura:** Mesmo estilo do modal de administradora
+
+### Implementação
+✅ **Modais criados com sucesso!**
+
+#### Estrutura dos Modais:
+- **Campos básicos:**
+  - ✅ Nome da permissão
+  - ✅ Nível (dropdown): Função, Time, Usuário
+  - ✅ Detalhamento (campo de texto)
+
+- **Tabela de permissões:**
+  - ✅ Cabeçalho: Aba, Página, Módulo, Ver, Criar, Editar, Arquivar, Desativar
+  - ✅ Dropdowns dinâmicos para Módulo, Página e Aba
+  - ✅ Dropdowns de permissão com 4 níveis: Empresa, Time, Pessoal, Nenhuma
+
+#### Funcionalidades:
+- ✅ **Módulos:** CRM, Simulador, Configurações
+- ✅ **Páginas dinâmicas:** Baseadas no módulo selecionado
+- ✅ **Abas dinâmicas:** Baseadas na página selecionada
+- ✅ **Níveis de permissão:** Empresa, Time, Pessoal, Nenhuma
+- ✅ **Interface responsiva:** Mesmo estilo do modal de administradora
+- ✅ **Integração:** Botão "Nova Permissão" adicionado na aba de permissões
+
+#### Arquivos criados/modificados:
+- ✅ `src/components/Administrators/PermissionModal.tsx` - Novos modais
+- ✅ `src/pages/settings/SettingsMaster.tsx` - Integração dos modais
+
+### Status
+✅ **Concluído** - Modais ajustados conforme solicitado
+
+#### Ajustes Realizados:
+- ✅ **Identidade visual:** Aplicada em todos os campos (`campo-brand`, `brand-radius`, `select-trigger-brand`, `dropdown-item-brand`)
+- ✅ **Layout reorganizado:**
+  - **Linha 1:** Nome da Permissão (campo único)
+  - **Linha 2:** Nível e Detalhamento (lado a lado)
+- ✅ **Tabela fixa:** Sempre visível com cabeçalho completo
+- ✅ **Colunas da tabela:** Aba, Página, Módulo, Ver, Criar, Editar, Arquivar, Desativar
+- ✅ **Mensagem informativa:** Quando não há permissões configuradas
+- ✅ **Melhorias visuais:** 
+  - Dropdowns com largura adequada (w-28)
+  - Alinhamento centralizado nas colunas de ação
+  - Espaçamento otimizado (py-2)
+
+---
+
+## Requisição Anterior: Simplificação da Aba Permissões - Master Config
+
+**Data:** 2025-01-17  
+**Solicitante:** Eduardo Costa  
+**Status:** ✅ Concluído
+
+### Funcionalidade Solicitada
+Remover a seção "Informações sobre Permissões" e os filtros (Módulo, Página, Aba e Situação) da aba "Permissões" no Master Config.
+
+### Problema Identificado
+- **Interface poluída:** Seção de informações muito extensa e filtros desnecessários
+- **Complexidade:** Muitos filtros que podem confundir o usuário
+- **Ação:** Simplificar a interface removendo elementos desnecessários
+
+### Análise da Estrutura Atual
+**Componentes envolvidos:**
+- `SettingsMaster.tsx` - Página do Master Config
+- Seção "Informações sobre Permissões" (Card azul)
+- Filtros: Módulo, Página, Aba e Situação
+- Campo de busca e botão "Limpar Filtros"
+
+### Implementação Realizada
+1. **Remoção da seção de informações:**
+   - ✅ Card azul com "Informações sobre Permissões" removido
+   - ✅ Todas as explicações detalhadas sobre permissões removidas
+   - ✅ Interface mais limpa e direta
+
+2. **Remoção dos filtros:**
+   - ✅ Filtro "Módulo" (MultiSelect) removido
+   - ✅ Filtro "Página" (MultiSelect) removido
+   - ✅ Filtro "Aba" (MultiSelect) removido
+   - ✅ Filtro "Situação" (Select) removido
+   - ✅ Campo de busca removido
+   - ✅ Botão "Limpar Filtros" removido
+
+### Checklist
+- [x] Identificar seção "Informações sobre Permissões"
+- [x] Remover Card azul com explicações
+- [x] Identificar filtros Módulo, Página, Aba e Situação
+- [x] Remover todos os filtros da interface
+- [x] Remover campo de busca
+- [x] Remover botão "Limpar Filtros"
+- [x] Testar funcionalidade da tabela de permissões
+- [x] Verificar se está funcionando corretamente
+
+### Resultado
+✅ **Aba Permissões simplificada com sucesso!**
+- **Interface:** Mais limpa e direta
+- **Funcionalidade:** Tabela de permissões mantida e funcional
+- **Usabilidade:** Menos complexidade para o usuário
+- **Status:** Aba de permissões otimizada
+
+---
+
+## Requisição Anterior: Correção da Lista de Empresas - Master Config
+
+**Data:** 2025-01-17  
+**Solicitante:** Eduardo Costa  
+**Status:** ✅ Concluído
+
+### Funcionalidade Solicitada
+Corrigir o problema da página "Empresas" em Master Config que não está exibindo as empresas na lista.
+
+### Problema Identificado
+- **Lista vazia:** A tabela de empresas mostra "Nenhuma empresa encontrada" mesmo havendo empresas no banco
+- **Empresas existentes:** Banco de dados possui 2 empresas cadastradas (Monteo Investimentos e Best Piece)
+- **Possível causa:** Problema na query, permissões RLS ou contexto de autenticação
+- **Localização:** Página Master Config → Aba "Empresas"
+
+### Análise da Estrutura Atual
+**Componentes envolvidos:**
+- `CrmMasterConfig.tsx` - Página principal do Master Config
+- `CrmAuthContext.tsx` - Contexto de autenticação
+- Query das empresas usando React Query
+- Tabela companies no Supabase
+
+### Implementação Realizada
+1. **Análise do banco de dados:**
+   - ✅ Verificação: 2 empresas existem no banco (Monteo Investimentos, Best Piece)
+   - ✅ Verificação: RLS policy permite SELECT para usuários autenticados
+   - ✅ Verificação: Estrutura da tabela companies está correta
+   - ✅ Verificação: 2 empresas ativas confirmadas via COUNT query
+
+2. **Identificação de páginas duplicadas:**
+   - 🔍 CrmMasterConfig.tsx - Página original do Master Config
+   - 🔍 SettingsMaster.tsx - Nova página do Master Config no módulo configurações
+   - 🔍 Possível conflito entre as duas implementações
+
+3. **Adição de logs de debug extensivos:**
+   - 🔍 Logs na query de empresas para monitorar execução
+   - 🔍 Logs do userRole para verificar permissões
+   - 🔍 Logs dos resultados da query para identificar problema
+   - 🔍 Logs de sessão e usuário do Supabase
+   - 🔍 Logs de contagem de empresas para verificar conectividade
+   - 🔍 Logs de renderização para verificar dados chegando ao componente
+
+4. **Correções temporárias aplicadas:**
+   - 🔍 Removido `enabled: userRole === 'master'` temporariamente para debug
+   - 🔍 Adicionados logs detalhados em ambas as páginas
+   - 🔍 Verificação de sessão ativa do Supabase
+
+### Checklist
+- [x] Verificar se empresas existem no banco de dados
+- [x] Verificar políticas RLS da tabela companies
+- [x] Adicionar logs de debug na query de empresas
+- [x] Identificar páginas duplicadas (CrmMasterConfig vs SettingsMaster)
+- [x] Adicionar logs de debug extensivos em ambas as páginas
+- [x] Verificar conectividade com Supabase
+- [x] Identificar qual página está sendo realmente acessada
+- [x] Identificar causa específica do problema (erro de digitação)
+- [x] Implementar correção (profileData → profile)
+- [x] Remover logs de debug
+- [x] Testar funcionalidade
+- [x] Atualizar porta 8080
+- [x] Verificar se está funcionando corretamente
+
+### Causa Raiz Identificada
+- **Erro de digitação:** Na linha 148 do arquivo `SettingsMaster.tsx`
+- **Variável incorreta:** `profileData` ao invés de `profile`
+- **Erro JavaScript:** `ReferenceError: profileData is not defined`
+- **Impacto:** Query falhava e retornava array vazio, causando lista vazia
+
+### Correção Implementada
+1. **Correção do erro de digitação:**
+   ```typescript
+   // ❌ Antes (linha 148)
+   state_uf: profileData?.state || '', 
+   
+   // ✅ Depois (corrigido)
+   state_uf: profile?.state || '',
+   ```
+
+2. **Limpeza de código:**
+   - ✅ Removidos todos os logs de debug temporários
+   - ✅ Restauradas condições `enabled: userRole === 'master'`
+   - ✅ Limpeza de código em ambas as páginas (CrmMasterConfig e SettingsMaster)
+
+### Resultado
+✅ **Lista de empresas corrigida com sucesso!**
+- **Problema:** Erro de digitação causando falha na query
+- **Solução:** Correção da variável `profileData` para `profile`
+- **Status:** Empresas agora aparecem corretamente na lista
+- **Funcionalidade:** Página Master Config totalmente funcional
+
+---
+
+## Requisição Anterior: Correção do Avatar Cropper - Sliders com Limites Baseados no Tamanho Real da Imagem
 
 **Data:** 2025-01-17  
 **Solicitante:** Eduardo Costa  
