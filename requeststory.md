@@ -126,14 +126,15 @@ Criar dois modais para gerenciar permissões:
 - ✅ **Placeholder dinâmico:** Mensagem contextual baseada na seleção
 
 #### Nova Estrutura da Tabela:
-- ✅ **Cabeçalho:** Aba, Página, Módulo, Ver, Criar, Editar, Arquivar, Desativar
+- ✅ **Cabeçalho:** Aba, Página, Módulo, Todos, Ver, Criar, Editar, Arquivar, Desativar
 - ✅ **Todas as combinações:** Cada linha representa uma combinação única de Módulo + Página + Aba
 - ✅ **Colunas de Permissão:** Dropdowns com 4 níveis (Empresa, Time, Pessoal, Nenhuma)
-- ✅ **Valores padrão:** Ver = "Empresa", demais = "Nenhuma"
+- ✅ **Valores padrão:** Todos = "Empresa", Ver = "Empresa", demais = "Nenhuma"
 - ✅ **Scroll vertical:** Tabela com altura máxima e scroll para navegação
 - ✅ **Cabeçalho fixo:** Cabeçalho sticky para melhor navegação
 - ✅ **Geração automática:** Todas as combinações geradas automaticamente
 - ✅ **Correção:** Removidas duplicações de abas entre módulos
+- ✅ **Nova coluna:** "Todos" adicionada entre "Módulo" e "Ver"
 
 #### Ajustes Realizados:
 - ✅ **Identidade visual:** Aplicada em todos os campos (`campo-brand`, `brand-radius`, `select-trigger-brand`, `dropdown-item-brand`)

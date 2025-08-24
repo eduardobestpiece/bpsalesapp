@@ -52,6 +52,7 @@ interface PermissionRow {
   module: string;
   page: string;
   tab: string;
+  all: string;
   view: string;
   create: string;
   edit: string;
@@ -162,6 +163,7 @@ export const CreatePermissionModal: React.FC<{
             module,
             page,
             tab,
+            all: 'Empresa',
             view: 'Empresa',
             create: 'Nenhuma',
             edit: 'Nenhuma',
@@ -301,6 +303,7 @@ export const CreatePermissionModal: React.FC<{
                       <TableHead className="text-left py-2 sticky top-0 bg-background">Aba</TableHead>
                       <TableHead className="text-left py-2 sticky top-0 bg-background">Página</TableHead>
                       <TableHead className="text-left py-2 sticky top-0 bg-background">Módulo</TableHead>
+                      <TableHead className="text-center py-2 sticky top-0 bg-background">Todos</TableHead>
                       <TableHead className="text-center py-2 sticky top-0 bg-background">Ver</TableHead>
                       <TableHead className="text-center py-2 sticky top-0 bg-background">Criar</TableHead>
                       <TableHead className="text-center py-2 sticky top-0 bg-background">Editar</TableHead>
@@ -314,6 +317,21 @@ export const CreatePermissionModal: React.FC<{
                         <TableCell className="py-2 font-medium">{row.tab}</TableCell>
                         <TableCell className="py-2">{row.page}</TableCell>
                         <TableCell className="py-2">{row.module}</TableCell>
+                        <TableCell className="py-2 text-center">
+                          <Select 
+                            value={row.all} 
+                            onValueChange={(value) => updatePermissionRow(row.id, 'all', value)}
+                          >
+                            <SelectTrigger className="w-28 select-trigger-brand brand-radius">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {PERMISSION_LEVELS.map(level => (
+                                <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
                         <TableCell className="py-2 text-center">
                           <Select 
                             value={row.view} 
@@ -523,6 +541,7 @@ export const EditPermissionModal: React.FC<{
             module,
             page,
             tab,
+            all: 'Empresa',
             view: 'Empresa',
             create: 'Nenhuma',
             edit: 'Nenhuma',
@@ -659,6 +678,7 @@ export const EditPermissionModal: React.FC<{
                       <TableHead className="text-left py-2 sticky top-0 bg-background">Aba</TableHead>
                       <TableHead className="text-left py-2 sticky top-0 bg-background">Página</TableHead>
                       <TableHead className="text-left py-2 sticky top-0 bg-background">Módulo</TableHead>
+                      <TableHead className="text-center py-2 sticky top-0 bg-background">Todos</TableHead>
                       <TableHead className="text-center py-2 sticky top-0 bg-background">Ver</TableHead>
                       <TableHead className="text-center py-2 sticky top-0 bg-background">Criar</TableHead>
                       <TableHead className="text-center py-2 sticky top-0 bg-background">Editar</TableHead>
@@ -672,6 +692,21 @@ export const EditPermissionModal: React.FC<{
                         <TableCell className="py-2 font-medium">{row.tab}</TableCell>
                         <TableCell className="py-2">{row.page}</TableCell>
                         <TableCell className="py-2">{row.module}</TableCell>
+                        <TableCell className="py-2 text-center">
+                          <Select 
+                            value={row.all} 
+                            onValueChange={(value) => updatePermissionRow(row.id, 'all', value)}
+                          >
+                            <SelectTrigger className="w-28 select-trigger-brand brand-radius">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {PERMISSION_LEVELS.map(level => (
+                                <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </TableCell>
                         <TableCell className="py-2 text-center">
                           <Select 
                             value={row.view} 
