@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Slider } from '@/components/ui/slider';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useCompany } from '@/contexts/CompanyContext';
@@ -52,13 +53,23 @@ interface PermissionRow {
   module: string;
   page: string;
   tab: string;
-  all: string;
-  view: string;
-  create: string;
-  edit: string;
-  archive: string;
-  deactivate: string;
+  all: number;
+  view: number;
+  create: number;
+  edit: number;
+  archive: number;
+  deactivate: number;
 }
+
+// Função para converter valor numérico em texto
+const getPermissionLevelText = (value: number): string => {
+  return PERMISSION_LEVELS[value] || 'Nenhuma';
+};
+
+// Função para converter texto em valor numérico
+const getPermissionLevelValue = (text: string): number => {
+  return PERMISSION_LEVELS.indexOf(text);
+};
 
 // Modal de criação
 export const CreatePermissionModal: React.FC<{
@@ -163,12 +174,12 @@ export const CreatePermissionModal: React.FC<{
             module,
             page,
             tab,
-            all: 'Empresa',
-            view: 'Empresa',
-            create: 'Nenhuma',
-            edit: 'Nenhuma',
-            archive: 'Nenhuma',
-            deactivate: 'Nenhuma'
+            all: 0, // Empresa
+            view: 0, // Empresa
+            create: 3, // Nenhuma
+            edit: 3, // Nenhuma
+            archive: 3, // Nenhuma
+            deactivate: 3 // Nenhuma
           });
         });
       });
@@ -178,7 +189,7 @@ export const CreatePermissionModal: React.FC<{
   };
 
   // Função para atualizar uma linha de permissão
-  const updatePermissionRow = (rowId: string, field: keyof PermissionRow, value: string) => {
+  const updatePermissionRow = (rowId: string, field: keyof PermissionRow, value: number) => {
     setPermissionRows(prev => prev.map(row => 
       row.id === rowId ? { ...row, [field]: value } : row
     ));
@@ -318,94 +329,88 @@ export const CreatePermissionModal: React.FC<{
                         <TableCell className="py-2">{row.page}</TableCell>
                         <TableCell className="py-2">{row.module}</TableCell>
                         <TableCell className="py-2 text-center">
-                          <Select 
-                            value={row.all} 
-                            onValueChange={(value) => updatePermissionRow(row.id, 'all', value)}
-                          >
-                            <SelectTrigger className="w-28 select-trigger-brand brand-radius">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {PERMISSION_LEVELS.map(level => (
-                                <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex flex-col items-center space-y-2">
+                            <Slider
+                              value={[row.all]}
+                              onValueChange={(value) => updatePermissionRow(row.id, 'all', value[0])}
+                              max={3}
+                              min={0}
+                              step={1}
+                              className="w-20 h-32"
+                              orientation="vertical"
+                            />
+                            <span className="text-xs font-medium">{getPermissionLevelText(row.all)}</span>
+                          </div>
                         </TableCell>
                         <TableCell className="py-2 text-center">
-                          <Select 
-                            value={row.view} 
-                            onValueChange={(value) => updatePermissionRow(row.id, 'view', value)}
-                          >
-                            <SelectTrigger className="w-28 select-trigger-brand brand-radius">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {PERMISSION_LEVELS.map(level => (
-                                <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex flex-col items-center space-y-2">
+                            <Slider
+                              value={[row.view]}
+                              onValueChange={(value) => updatePermissionRow(row.id, 'view', value[0])}
+                              max={3}
+                              min={0}
+                              step={1}
+                              className="w-20 h-32"
+                              orientation="vertical"
+                            />
+                            <span className="text-xs font-medium">{getPermissionLevelText(row.view)}</span>
+                          </div>
                         </TableCell>
                         <TableCell className="py-2 text-center">
-                          <Select 
-                            value={row.create} 
-                            onValueChange={(value) => updatePermissionRow(row.id, 'create', value)}
-                          >
-                            <SelectTrigger className="w-28 select-trigger-brand brand-radius">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {PERMISSION_LEVELS.map(level => (
-                                <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex flex-col items-center space-y-2">
+                            <Slider
+                              value={[row.create]}
+                              onValueChange={(value) => updatePermissionRow(row.id, 'create', value[0])}
+                              max={3}
+                              min={0}
+                              step={1}
+                              className="w-20 h-32"
+                              orientation="vertical"
+                            />
+                            <span className="text-xs font-medium">{getPermissionLevelText(row.create)}</span>
+                          </div>
                         </TableCell>
                         <TableCell className="py-2 text-center">
-                          <Select 
-                            value={row.edit} 
-                            onValueChange={(value) => updatePermissionRow(row.id, 'edit', value)}
-                          >
-                            <SelectTrigger className="w-28 select-trigger-brand brand-radius">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {PERMISSION_LEVELS.map(level => (
-                                <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex flex-col items-center space-y-2">
+                            <Slider
+                              value={[row.edit]}
+                              onValueChange={(value) => updatePermissionRow(row.id, 'edit', value[0])}
+                              max={3}
+                              min={0}
+                              step={1}
+                              className="w-20 h-32"
+                              orientation="vertical"
+                            />
+                            <span className="text-xs font-medium">{getPermissionLevelText(row.edit)}</span>
+                          </div>
                         </TableCell>
                         <TableCell className="py-2 text-center">
-                          <Select 
-                            value={row.archive} 
-                            onValueChange={(value) => updatePermissionRow(row.id, 'archive', value)}
-                          >
-                            <SelectTrigger className="w-28 select-trigger-brand brand-radius">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {PERMISSION_LEVELS.map(level => (
-                                <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex flex-col items-center space-y-2">
+                            <Slider
+                              value={[row.archive]}
+                              onValueChange={(value) => updatePermissionRow(row.id, 'archive', value[0])}
+                              max={3}
+                              min={0}
+                              step={1}
+                              className="w-20 h-32"
+                              orientation="vertical"
+                            />
+                            <span className="text-xs font-medium">{getPermissionLevelText(row.archive)}</span>
+                          </div>
                         </TableCell>
                         <TableCell className="py-2 text-center">
-                          <Select 
-                            value={row.deactivate} 
-                            onValueChange={(value) => updatePermissionRow(row.id, 'deactivate', value)}
-                          >
-                            <SelectTrigger className="w-28 select-trigger-brand brand-radius">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {PERMISSION_LEVELS.map(level => (
-                                <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex flex-col items-center space-y-2">
+                            <Slider
+                              value={[row.deactivate]}
+                              onValueChange={(value) => updatePermissionRow(row.id, 'deactivate', value[0])}
+                              max={3}
+                              min={0}
+                              step={1}
+                              className="w-20 h-32"
+                              orientation="vertical"
+                            />
+                            <span className="text-xs font-medium">{getPermissionLevelText(row.deactivate)}</span>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
@@ -541,12 +546,12 @@ export const EditPermissionModal: React.FC<{
             module,
             page,
             tab,
-            all: 'Empresa',
-            view: 'Empresa',
-            create: 'Nenhuma',
-            edit: 'Nenhuma',
-            archive: 'Nenhuma',
-            deactivate: 'Nenhuma'
+            all: 0, // Empresa
+            view: 0, // Empresa
+            create: 3, // Nenhuma
+            edit: 3, // Nenhuma
+            archive: 3, // Nenhuma
+            deactivate: 3 // Nenhuma
           });
         });
       });
@@ -556,7 +561,7 @@ export const EditPermissionModal: React.FC<{
   };
 
   // Função para atualizar uma linha de permissão
-  const updatePermissionRow = (rowId: string, field: keyof PermissionRow, value: string) => {
+  const updatePermissionRow = (rowId: string, field: keyof PermissionRow, value: number) => {
     setPermissionRows(prev => prev.map(row => 
       row.id === rowId ? { ...row, [field]: value } : row
     ));
@@ -693,94 +698,88 @@ export const EditPermissionModal: React.FC<{
                         <TableCell className="py-2">{row.page}</TableCell>
                         <TableCell className="py-2">{row.module}</TableCell>
                         <TableCell className="py-2 text-center">
-                          <Select 
-                            value={row.all} 
-                            onValueChange={(value) => updatePermissionRow(row.id, 'all', value)}
-                          >
-                            <SelectTrigger className="w-28 select-trigger-brand brand-radius">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {PERMISSION_LEVELS.map(level => (
-                                <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex flex-col items-center space-y-2">
+                            <Slider
+                              value={[row.all]}
+                              onValueChange={(value) => updatePermissionRow(row.id, 'all', value[0])}
+                              max={3}
+                              min={0}
+                              step={1}
+                              className="w-20 h-32"
+                              orientation="vertical"
+                            />
+                            <span className="text-xs font-medium">{getPermissionLevelText(row.all)}</span>
+                          </div>
                         </TableCell>
                         <TableCell className="py-2 text-center">
-                          <Select 
-                            value={row.view} 
-                            onValueChange={(value) => updatePermissionRow(row.id, 'view', value)}
-                          >
-                            <SelectTrigger className="w-28 select-trigger-brand brand-radius">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {PERMISSION_LEVELS.map(level => (
-                                <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex flex-col items-center space-y-2">
+                            <Slider
+                              value={[row.view]}
+                              onValueChange={(value) => updatePermissionRow(row.id, 'view', value[0])}
+                              max={3}
+                              min={0}
+                              step={1}
+                              className="w-20 h-32"
+                              orientation="vertical"
+                            />
+                            <span className="text-xs font-medium">{getPermissionLevelText(row.view)}</span>
+                          </div>
                         </TableCell>
                         <TableCell className="py-2 text-center">
-                          <Select 
-                            value={row.create} 
-                            onValueChange={(value) => updatePermissionRow(row.id, 'create', value)}
-                          >
-                            <SelectTrigger className="w-28 select-trigger-brand brand-radius">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {PERMISSION_LEVELS.map(level => (
-                                <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex flex-col items-center space-y-2">
+                            <Slider
+                              value={[row.create]}
+                              onValueChange={(value) => updatePermissionRow(row.id, 'create', value[0])}
+                              max={3}
+                              min={0}
+                              step={1}
+                              className="w-20 h-32"
+                              orientation="vertical"
+                            />
+                            <span className="text-xs font-medium">{getPermissionLevelText(row.create)}</span>
+                          </div>
                         </TableCell>
                         <TableCell className="py-2 text-center">
-                          <Select 
-                            value={row.edit} 
-                            onValueChange={(value) => updatePermissionRow(row.id, 'edit', value)}
-                          >
-                            <SelectTrigger className="w-28 select-trigger-brand brand-radius">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {PERMISSION_LEVELS.map(level => (
-                                <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex flex-col items-center space-y-2">
+                            <Slider
+                              value={[row.edit]}
+                              onValueChange={(value) => updatePermissionRow(row.id, 'edit', value[0])}
+                              max={3}
+                              min={0}
+                              step={1}
+                              className="w-20 h-32"
+                              orientation="vertical"
+                            />
+                            <span className="text-xs font-medium">{getPermissionLevelText(row.edit)}</span>
+                          </div>
                         </TableCell>
                         <TableCell className="py-2 text-center">
-                          <Select 
-                            value={row.archive} 
-                            onValueChange={(value) => updatePermissionRow(row.id, 'archive', value)}
-                          >
-                            <SelectTrigger className="w-28 select-trigger-brand brand-radius">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {PERMISSION_LEVELS.map(level => (
-                                <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex flex-col items-center space-y-2">
+                            <Slider
+                              value={[row.archive]}
+                              onValueChange={(value) => updatePermissionRow(row.id, 'archive', value[0])}
+                              max={3}
+                              min={0}
+                              step={1}
+                              className="w-20 h-32"
+                              orientation="vertical"
+                            />
+                            <span className="text-xs font-medium">{getPermissionLevelText(row.archive)}</span>
+                          </div>
                         </TableCell>
                         <TableCell className="py-2 text-center">
-                          <Select 
-                            value={row.deactivate} 
-                            onValueChange={(value) => updatePermissionRow(row.id, 'deactivate', value)}
-                          >
-                            <SelectTrigger className="w-28 select-trigger-brand brand-radius">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {PERMISSION_LEVELS.map(level => (
-                                <SelectItem key={level} value={level} className="dropdown-item-brand">{level}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <div className="flex flex-col items-center space-y-2">
+                            <Slider
+                              value={[row.deactivate]}
+                              onValueChange={(value) => updatePermissionRow(row.id, 'deactivate', value[0])}
+                              max={3}
+                              min={0}
+                              step={1}
+                              className="w-20 h-32"
+                              orientation="vertical"
+                            />
+                            <span className="text-xs font-medium">{getPermissionLevelText(row.deactivate)}</span>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}

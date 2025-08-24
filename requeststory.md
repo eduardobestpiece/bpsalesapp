@@ -128,8 +128,9 @@ Criar dois modais para gerenciar permissões:
 #### Nova Estrutura da Tabela:
 - ✅ **Cabeçalho:** Aba, Página, Módulo, Todos, Ver, Criar, Editar, Arquivar, Desativar
 - ✅ **Todas as combinações:** Cada linha representa uma combinação única de Módulo + Página + Aba
-- ✅ **Colunas de Permissão:** Dropdowns com 4 níveis (Empresa, Time, Pessoal, Nenhuma)
-- ✅ **Valores padrão:** Todos = "Empresa", Ver = "Empresa", demais = "Nenhuma"
+- ✅ **Colunas de Permissão:** Sliders verticais com 4 níveis (Empresa, Time, Pessoal, Nenhuma)
+- ✅ **Valores padrão:** Todos = 0 (Empresa), Ver = 0 (Empresa), demais = 3 (Nenhuma)
+- ✅ **Interface Slider:** Barras de arrastar verticais com indicação visual do nível
 - ✅ **Scroll vertical:** Tabela com altura máxima e scroll para navegação
 - ✅ **Cabeçalho fixo:** Cabeçalho sticky para melhor navegação
 - ✅ **Geração automática:** Todas as combinações geradas automaticamente
