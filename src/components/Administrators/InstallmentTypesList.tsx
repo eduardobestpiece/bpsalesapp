@@ -36,6 +36,9 @@ interface InstallmentTypesListProps {
   statusFilter: 'all' | 'active' | 'archived';
   selectedAdministrator: string;
   onEdit: (installmentType: any) => void;
+  canEdit?: boolean;
+  canCreate?: boolean;
+  canArchive?: boolean;
 }
 
 export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
@@ -43,6 +46,9 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
   statusFilter,
   selectedAdministrator,
   onEdit,
+  canEdit = true,
+  canCreate = true,
+  canArchive = true
 }) => {
   const { toast } = useToast();
   const { userRole } = useCrmAuth();
@@ -255,47 +261,51 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
               <TableCell>{reductionsMap[installmentType.id] ? 'Sim' : 'Não'}</TableCell>
               <TableCell>
                 <div className="flex space-x-2">
-                  <Button
-                    variant="brandOutlineSecondaryHover"
-                    size="sm"
-                    onClick={() => handleEdit(installmentType)}
-                    className="brand-radius"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="brandOutlineSecondaryHover"
-                        size="sm"
-                        className="brand-radius"
-                      >
-                        {installmentType.is_archived ? (
-                          <RotateCcw className="w-4 h-4" />
-                        ) : (
-                          <Archive className="w-4 h-4" />
-                        )}
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>
-                          {installmentType.is_archived ? 'Reativar' : 'Arquivar'} Parcela
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Tem certeza que deseja {installmentType.is_archived ? 'reativar' : 'arquivar'} a parcela?
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleArchiveToggle(installmentType)}
+                  {canEdit && (
+                    <Button
+                      variant="brandOutlineSecondaryHover"
+                      size="sm"
+                      onClick={() => handleEdit(installmentType)}
+                      className="brand-radius"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {canArchive && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="brandOutlineSecondaryHover"
+                          size="sm"
+                          className="brand-radius"
                         >
-                          {installmentType.is_archived ? 'Reativar' : 'Arquivar'}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                          {installmentType.is_archived ? (
+                            <RotateCcw className="w-4 h-4" />
+                          ) : (
+                            <Archive className="w-4 h-4" />
+                          )}
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>
+                            {installmentType.is_archived ? 'Reativar' : 'Arquivar'} Parcela
+                          </AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tem certeza que deseja {installmentType.is_archived ? 'reativar' : 'arquivar'} a parcela?
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleArchiveToggle(installmentType)}
+                          >
+                            {installmentType.is_archived ? 'Reativar' : 'Arquivar'}
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
                 </div>
               </TableCell>
             </TableRow>

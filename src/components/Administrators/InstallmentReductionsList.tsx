@@ -34,13 +34,19 @@ interface InstallmentReductionsListProps {
   statusFilter: 'all' | 'active' | 'archived';
   selectedAdministrator: string;
   onEdit: (reduction: InstallmentReduction) => void;
+  canEdit?: boolean;
+  canCreate?: boolean;
+  canArchive?: boolean;
 }
 
 export const InstallmentReductionsList: React.FC<InstallmentReductionsListProps> = ({
   searchTerm,
   statusFilter,
   selectedAdministrator,
-  onEdit
+  onEdit,
+  canEdit = true,
+  canCreate = true,
+  canArchive = true
 }) => {
   const { toast } = useToast();
   const [reductions, setReductions] = useState<InstallmentReduction[]>([]);
@@ -188,22 +194,26 @@ export const InstallmentReductionsList: React.FC<InstallmentReductionsListProps>
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex gap-2 justify-end">
-                    <Button
-                      variant="brandOutlineSecondaryHover"
-                      size="sm"
-                      onClick={() => onEdit(reduction)}
-                      className="brand-radius"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="brandOutlineSecondaryHover"
-                      size="sm"
-                      onClick={() => handleArchive(reduction)}
-                      className="brand-radius"
-                    >
-                      {reduction.is_archived ? <RotateCcw className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
-                    </Button>
+                    {canEdit && (
+                      <Button
+                        variant="brandOutlineSecondaryHover"
+                        size="sm"
+                        onClick={() => onEdit(reduction)}
+                        className="brand-radius"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {canArchive && (
+                      <Button
+                        variant="brandOutlineSecondaryHover"
+                        size="sm"
+                        onClick={() => handleArchive(reduction)}
+                        className="brand-radius"
+                      >
+                        {reduction.is_archived ? <RotateCcw className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
+                      </Button>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>

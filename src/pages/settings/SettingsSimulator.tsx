@@ -24,6 +24,7 @@ import { InstallmentReductionModal } from '@/components/Administrators/Installme
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useUserPermissions } from '@/hooks/useUserPermissions';
 
 export default function SettingsSimulator() {
   const [selectedAdministrator, setSelectedAdministrator] = useState<any>(null);
@@ -59,6 +60,9 @@ export default function SettingsSimulator() {
 
   const { userRole, companyId } = useCrmAuth();
   const isMaster = userRole === 'master';
+
+  // Hook para verificar permissões customizadas
+  const { canEditSimulatorConfig, canCreateSimulatorConfig, canArchiveSimulatorConfig } = useUserPermissions();
 
   // Buscar cores da empresa
   const { data: branding } = useQuery({
@@ -248,13 +252,15 @@ export default function SettingsSimulator() {
                             <Copy className="w-4 h-4" />
                           </Button>
                         )}
-                        <Button onClick={() => setShowCreateAdministratorModal(true)}
-                          variant="brandPrimaryToSecondary"
-                          className="brand-radius"
-                        >
-                          <Plus className="w-4 h-4 mr-2" />
-                          Adicionar Administradora
-                        </Button>
+                        {canCreateSimulatorConfig() && (
+                          <Button onClick={() => setShowCreateAdministratorModal(true)}
+                            variant="brandPrimaryToSecondary"
+                            className="brand-radius"
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Adicionar Administradora
+                          </Button>
+                        )}
                       </div>
                     </div>
 
@@ -291,6 +297,9 @@ export default function SettingsSimulator() {
                       searchTerm={adminSearchTerm}
                       statusFilter={adminStatusFilter}
                       onEdit={(administrator: any) => { setSelectedAdministrator(administrator); setShowEditAdministratorModal(true); }}
+                      canEdit={canEditSimulatorConfig()}
+                      canCreate={canCreateSimulatorConfig()}
+                      canArchive={canArchiveSimulatorConfig()}
                     />
                     <CopyAdministratorsModal
                       open={showCopyAdministratorsModal}
@@ -308,12 +317,14 @@ export default function SettingsSimulator() {
                         <h2 className="text-2xl font-semibold text-foreground">Produtos</h2>
                         <p className="text-muted-foreground mt-1">Gerencie os produtos de consórcio</p>
                       </div>
-                      <Button onClick={() => { setSelectedProduct(null); setShowProductModal(true); }}
-                        variant="brandPrimaryToSecondary"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Adicionar Produto
-                      </Button>
+                      {canCreateSimulatorConfig() && (
+                        <Button onClick={() => { setSelectedProduct(null); setShowProductModal(true); }}
+                          variant="brandPrimaryToSecondary"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Adicionar Produto
+                        </Button>
+                      )}
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-4">
@@ -359,6 +370,9 @@ export default function SettingsSimulator() {
                       onEdit={(product: any) => { setSelectedProduct(product); setShowProductModal(true); }}
                       onCreate={() => { setSelectedProduct(null); setShowProductModal(true); }}
                       onDuplicate={(product: any) => { setSelectedProduct({ ...product, name: `${product.name} - Cópia` }); setShowProductModal(true); }}
+                      canEdit={canEditSimulatorConfig()}
+                      canCreate={canCreateSimulatorConfig()}
+                      canArchive={canArchiveSimulatorConfig()}
                     />
                   </div>
                 </TabsContent>
@@ -372,10 +386,12 @@ export default function SettingsSimulator() {
                         <h2 className="text-2xl font-semibold text-foreground">Tipos de Parcela</h2>
                         <p className="text-muted-foreground mt-1">Gerencie os tipos de parcela</p>
                       </div>
-                      <Button onClick={() => { setSelectedInstallmentType(null); setShowInstallmentTypeModal(true); }} variant="brandPrimaryToSecondary">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Adicionar Tipo de Parcela
-                      </Button>
+                      {canCreateSimulatorConfig() && (
+                        <Button onClick={() => { setSelectedInstallmentType(null); setShowInstallmentTypeModal(true); }} variant="brandPrimaryToSecondary">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Adicionar Tipo de Parcela
+                        </Button>
+                      )}
                     </div>
                     <div className="flex flex-col sm:flex-row gap-4">
                       <div className="relative flex-1">
@@ -417,6 +433,9 @@ export default function SettingsSimulator() {
                     statusFilter={installmentStatusFilter}
                       selectedAdministrator={installmentAdminFilter === 'all' ? '' : installmentAdminFilter}
                     onEdit={(installmentType: any) => { setSelectedInstallmentType(installmentType); setShowInstallmentTypeModal(true); }}
+                    canEdit={canEditSimulatorConfig()}
+                    canCreate={canCreateSimulatorConfig()}
+                    canArchive={canArchiveSimulatorConfig()}
                   />
                   </div>
                 </TabsContent>
@@ -430,14 +449,16 @@ export default function SettingsSimulator() {
                         <h2 className="text-2xl font-semibold text-foreground">Redução de Parcela</h2>
                         <p className="text-muted-foreground mt-1">Gerencie as reduções de parcela</p>
                       </div>
-                      <Button onClick={() => { 
-                        setSelectedReduction(null); 
-                        setShowReductionModal(true); 
-                        setIsCopyReduction(false);
-                      }} variant="brandPrimaryToSecondary">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Adicionar Redução
-                      </Button>
+                      {canCreateSimulatorConfig() && (
+                        <Button onClick={() => { 
+                          setSelectedReduction(null); 
+                          setShowReductionModal(true); 
+                          setIsCopyReduction(false);
+                        }} variant="brandPrimaryToSecondary">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Adicionar Redução
+                        </Button>
+                      )}
                     </div>
                     <div className="flex flex-col sm:flex-row gap-4">
                       <div className="relative flex-1">
@@ -479,6 +500,9 @@ export default function SettingsSimulator() {
                       statusFilter={reductionStatusFilter}
                       selectedAdministrator={reductionAdminFilter === 'all' ? '' : reductionAdminFilter}
                       onEdit={(red: any) => { setSelectedReduction(red); setShowReductionModal(true); setIsCopyReduction(false); }}
+                      canEdit={canEditSimulatorConfig()}
+                      canCreate={canCreateSimulatorConfig()}
+                      canArchive={canArchiveSimulatorConfig()}
                     />
                     <InstallmentReductionModal
                       reduction={selectedReduction}
@@ -498,14 +522,16 @@ export default function SettingsSimulator() {
                         <h2 className="text-2xl font-semibold text-foreground">Alavancas</h2>
                         <p className="text-muted-foreground mt-1">Gerencie as alavancas</p>
                       </div>
-                      <Button onClick={() => { 
-                        console.log('[SettingsSimulator] Adicionar Alavanca clicado');
-                        setSelectedLeverage(null); 
-                        setShowLeverageModal(true); 
-                      }} variant="brandPrimaryToSecondary">
-                        <Plus className="w-4 h-4 mr-2" />
-                        Adicionar Alavanca
-                      </Button>
+                      {canCreateSimulatorConfig() && (
+                        <Button onClick={() => { 
+                          console.log('[SettingsSimulator] Adicionar Alavanca clicado');
+                          setSelectedLeverage(null); 
+                          setShowLeverageModal(true); 
+                        }} variant="brandPrimaryToSecondary">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Adicionar Alavanca
+                        </Button>
+                      )}
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-4">
@@ -539,6 +565,9 @@ export default function SettingsSimulator() {
                         setSelectedLeverage(lev); 
                         setShowLeverageModal(true); 
                       }}
+                      canEdit={canEditSimulatorConfig()}
+                      canCreate={canCreateSimulatorConfig()}
+                      canArchive={canArchiveSimulatorConfig()}
                     />
 
                     <CopyLeveragesModal

@@ -18,9 +18,10 @@ interface TeamModalProps {
   isOpen: boolean;
   onClose: () => void;
   team?: any;
+  onSuccess?: (team: any) => void;
 }
 
-export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
+export const TeamModal = ({ isOpen, onClose, team, onSuccess }: TeamModalProps) => {
   const [formData, setFormData] = useState({
     name: '',
     leader_id: '',
@@ -177,6 +178,12 @@ export const TeamModal = ({ isOpen, onClose, team }: TeamModalProps) => {
       queryClient.invalidateQueries({ queryKey: ['teams', selectedCompanyId] });
 
       toast.success(`${team ? 'Time atualizado' : 'Time criado'} com sucesso! (${refreshedMemberIds.length} membro(s))`);
+      
+      // Se for criação de um novo time e onSuccess foi fornecido, chamar com o time criado
+      if (!team && onSuccess) {
+        onSuccess({ id: teamId, name: formData.name.trim(), leader_id: formData.leader_id });
+      }
+      
       onClose();
       setFormData({ name: '', leader_id: '' });
       setMembers([]);

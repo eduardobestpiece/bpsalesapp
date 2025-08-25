@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { useUserPermissions } from '@/hooks/useUserPermissions';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ModuleSwitcherProps {
@@ -12,12 +13,33 @@ interface ModuleSwitcherProps {
 export const ModuleSwitcher = ({ current }: ModuleSwitcherProps) => {
   const navigate = useNavigate();
   const { userRole, companyId, crmUser } = useCrmAuth();
+  
+  // Hook para verificar permissões customizadas do usuário
+  const { canAccessSimulator, canAccessSimulatorConfig } = useUserPermissions();
 
   const effectiveCompanyId =
     (typeof window !== 'undefined' ? localStorage.getItem('selectedCompanyId') : null) ||
     companyId ||
     crmUser?.company_id ||
     null;
+
+  const handleModuleChange = (module: string) => {
+    if (module === 'simulator') {
+      // Verificar permissões para decidir para onde redirecionar
+      const canAccessSimulatorPage = canAccessSimulator();
+      const canAccessConfigPage = canAccessSimulatorConfig();
+      
+      if (canAccessSimulatorPage) {
+        navigate('/simulador');
+      } else if (canAccessConfigPage) {
+        navigate('/simulador/configuracoes');
+      }
+    } else if (module === 'crm') {
+      navigate(computeCrmPath());
+    } else if (module === 'settings') {
+      navigate(computeSettingsPath());
+    }
+  };
 
   const { data: perms = {} } = useQuery({
     queryKey: ['role_page_permissions', effectiveCompanyId, userRole],
@@ -97,18 +119,18 @@ export const ModuleSwitcher = ({ current }: ModuleSwitcherProps) => {
 
   const modules = useMemo(() => {
     const allowedSettings = (
-      perms['simulator_config'] !== false ||
+      canAccessSimulatorConfig() ||
       userRole === 'admin' || userRole === 'master'
     );
 
     const list: { key: 'simulator'|'crm'|'settings'; label: string; path: string; allowed: boolean }[] = [
-      { key: 'simulator', label: 'Simulador', path: '/simulador', allowed: perms['simulator'] !== false },
+      { key: 'simulator', label: 'Simulador', path: '/simulador', allowed: canAccessSimulator() || canAccessSimulatorConfig() },
       { key: 'crm', label: 'CRM', path: computeCrmPath(), allowed: (perms['indicadores'] !== false) || (perms['comercial'] !== false) },
       { key: 'settings', label: 'Configurações', path: computeSettingsPath(), allowed: allowedSettings },
     ];
 
     return list.filter(m => m.allowed);
-  }, [perms, userRole, settingsPageKeys]);
+  }, [perms, userRole, settingsPageKeys, canAccessSimulator, canAccessSimulatorConfig]);
 
   const currentLabel = modules.find(m => m.key === current)?.label || (current === 'crm' ? 'CRM' : current === 'settings' ? 'Configurações' : 'Simulador');
 

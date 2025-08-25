@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useQuery } from '@tanstack/react-query';
+import { useUserPermissions } from '@/hooks/useUserPermissions';
 import {
   Sidebar,
   SidebarContent,
@@ -27,6 +28,9 @@ export const SimulatorSidebar = () => {
   const { userRole, companyId, crmUser, signOut } = useCrmAuth();
   const [pagePermissions, setPagePermissions] = useState<any>({});
   const { selectedCompanyId, setSelectedCompanyId } = useCompany();
+  
+  // Hook para verificar permissões customizadas do usuário
+  const { canAccessSimulator, canAccessSimulatorConfig, isLoading: permissionsLoading } = useUserPermissions();
 
   // Buscar empresas (sempre habilitar; RLS controla visibilidade)
   const { data: companies = [], isLoading: companiesLoading } = useQuery({
@@ -163,9 +167,12 @@ export const SimulatorSidebar = () => {
     }
   });
   
-  // Verificar especificamente se tem permissão para simulator_config
-  const canSeeSettingsModule = pagePermissions['simulator_config'] !== false || userRole === 'admin' || userRole === 'master';
-  const canSeeSimulator = pagePermissions['simulator'] !== false || userRole === 'master';
+  // Verificar permissões usando o novo sistema de permissões customizadas
+  const canSeeSimulator = canAccessSimulator();
+  const canSeeSettingsModule = canAccessSimulatorConfig();
+
+  // Só mostrar o menu se o usuário tiver acesso a pelo menos uma das opções
+  const shouldShowMenu = canSeeSimulator || canSeeSettingsModule;
 
   return (
     <Sidebar className="border-r border-border">

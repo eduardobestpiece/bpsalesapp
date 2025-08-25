@@ -3,6 +3,7 @@ import { User, Settings, LogOut, Calculator, Shield } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useModule } from '@/contexts/ModuleContext';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { useUserPermissions } from '@/hooks/useUserPermissions';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,10 +19,20 @@ export const CrmUserMenu = ({ pagePermissions = {} }: { pagePermissions?: any })
   const { setModule } = useModule();
   const { crmUser, signOut, userRole } = useCrmAuth();
   const navigate = useNavigate();
+  
+  // Hook para verificar permissões customizadas do usuário
+  const { canAccessSimulator, canAccessSimulatorConfig } = useUserPermissions();
 
   const handleGoToSimulator = () => {
-    setModule('simulator');
-    navigate('/');
+    // Verificar permissões para decidir para onde redirecionar
+    const canAccessSimulatorPage = canAccessSimulator();
+    const canAccessConfigPage = canAccessSimulatorConfig();
+    
+    if (canAccessSimulatorPage) {
+      navigate('/simulador');
+    } else if (canAccessConfigPage) {
+      navigate('/simulador/configuracoes');
+    }
   };
 
   const handleSignOut = async () => {
@@ -103,7 +114,7 @@ export const CrmUserMenu = ({ pagePermissions = {} }: { pagePermissions?: any })
           </DropdownMenuItem>
         )}
 
-        {pagePermissions['simulator'] !== false && (
+        {(canAccessSimulator() || canAccessSimulatorConfig()) && (
           <DropdownMenuItem className="p-3 cursor-pointer hover:bg-blue-50/70 rounded-lg" onClick={handleGoToSimulator}>
             <span className="flex items-center w-full">
               <Calculator className="mr-3 h-5 w-5 text-blue-600" />

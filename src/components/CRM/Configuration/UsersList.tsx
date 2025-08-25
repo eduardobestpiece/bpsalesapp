@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Plus, Edit, User, Search } from 'lucide-react';
-import { useCrmUsers } from '@/hooks/useCrmData';
+import { useCrmUsersByCompany } from '@/hooks/useCrmUsers';
 import { UserModal } from './UserModal';
 import { useUpdateCrmUser } from '@/hooks/useCrmUsers';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
@@ -16,11 +16,22 @@ export const UsersList = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const { data: users = [], isLoading } = useCrmUsers();
-  const updateUserMutation = useUpdateCrmUser();
   const { userRole, crmUser } = useCrmAuth();
   const { selectedCompanyId } = useCompany();
   const isSubMaster = userRole === 'submaster';
+
+  // Determinar qual companyId usar
+  const effectiveCompanyId = userRole === 'master' ? selectedCompanyId : crmUser?.company_id;
+  
+  console.log('[UsersList] userRole:', userRole);
+  console.log('[UsersList] selectedCompanyId:', selectedCompanyId);
+  console.log('[UsersList] crmUser?.company_id:', crmUser?.company_id);
+  console.log('[UsersList] effectiveCompanyId:', effectiveCompanyId);
+
+  const { data: users = [], isLoading } = useCrmUsersByCompany(effectiveCompanyId);
+  const updateUserMutation = useUpdateCrmUser();
+
+  console.log('[UsersList] Usuários carregados:', users);
 
   const handleEdit = (user: any) => {
     // Buscar o usuário atualizado da lista pelo ID
@@ -86,6 +97,8 @@ export const UsersList = () => {
            user.email?.toLowerCase().includes(searchLower) ||
            user.phone?.toLowerCase().includes(searchLower);
   });
+
+  console.log('[UsersList] Usuários filtrados:', filteredUsers);
 
   if (isLoading) {
     return <div className="text-center py-4">Carregando usuários...</div>;

@@ -28,7 +28,7 @@ export const CrmSidebar = () => {
   const { userRole, companyId, crmUser, signOut } = useCrmAuth();
   const { selectedCompanyId, setSelectedCompanyId } = useCompany();
   const [pagePermissions, setPagePermissions] = useState<any>({});
-
+  
   // Buscar empresas (sempre habilitar; RLS controla visibilidade)
   const { data: companies = [], isLoading: companiesLoading } = useQuery({
     queryKey: ['companies'],
@@ -231,8 +231,6 @@ export const CrmSidebar = () => {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               )}
-              
-              
               
             </SidebarMenu>
           </SidebarGroupContent>

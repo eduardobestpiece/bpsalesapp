@@ -36,6 +36,9 @@ interface AdministratorsListProps {
   searchTerm: string;
   statusFilter: 'all' | 'active' | 'archived';
   onEdit: (admin: Administrator) => void;
+  canEdit?: boolean;
+  canCreate?: boolean;
+  canArchive?: boolean;
 }
 
 // Função para formatar a entrada especial
@@ -78,7 +81,10 @@ const formatSpecialEntry = (admin: Administrator): string => {
 export const AdministratorsList: React.FC<AdministratorsListProps> = ({
   searchTerm,
   statusFilter,
-  onEdit
+  onEdit,
+  canEdit = true,
+  canCreate = true,
+  canArchive = true
 }) => {
   const { toast } = useToast();
   const [administrators, setAdministrators] = useState<Administrator[]>([]);
@@ -265,24 +271,28 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
               <TableCell>{admin.agio_purchase_percentage ? `${admin.agio_purchase_percentage}%` : '-'}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-end space-x-2">
-                  <Button
-                    variant="brandOutlineSecondaryHover"
-                    size="sm"
-                    onClick={() => onEdit(admin)}
-                    disabled={isSubMaster}
-                    className="brand-radius"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="brandOutlineSecondaryHover"
-                    size="sm"
-                    onClick={() => handleArchive(admin.id, admin.is_archived)}
-                    disabled={isSubMaster}
-                    className="brand-radius"
-                  >
-                    <Archive className="w-4 h-4" />
-                  </Button>
+                  {canEdit && (
+                    <Button
+                      variant="brandOutlineSecondaryHover"
+                      size="sm"
+                      onClick={() => onEdit(admin)}
+                      disabled={isSubMaster}
+                      className="brand-radius"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </Button>
+                  )}
+                  {canArchive && (
+                    <Button
+                      variant="brandOutlineSecondaryHover"
+                      size="sm"
+                      onClick={() => handleArchive(admin.id, admin.is_archived)}
+                      disabled={isSubMaster}
+                      className="brand-radius"
+                    >
+                      <Archive className="w-4 h-4" />
+                    </Button>
+                  )}
                 </div>
               </TableCell>
             </TableRow>

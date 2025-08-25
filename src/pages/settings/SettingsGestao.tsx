@@ -18,6 +18,7 @@ import { toast } from 'sonner';
 import { AvatarCropper } from '@/components/CRM/AvatarCropper';
 import { UserModal } from '@/components/CRM/Configuration/UserModal';
 import { CreatePermissionModal, EditPermissionModal } from '@/components/Administrators/PermissionModal';
+import { usePermissions } from '@/hooks/usePermissions';
 
 export default function SettingsGestao() {
   const { user, crmUser, userRole, companyId, refreshCrmUser } = useCrmAuth();
@@ -32,6 +33,17 @@ export default function SettingsGestao() {
   const [showCreatePermissionModal, setShowCreatePermissionModal] = useState(false);
   const [showEditPermissionModal, setShowEditPermissionModal] = useState(false);
   const [selectedPermission, setSelectedPermission] = useState<any>(null);
+
+  // Hook para gerenciar permissões
+  const {
+    formattedPermissions,
+    isLoading: permissionsLoading,
+    refetch: refetchPermissions,
+    deletePermission,
+    reactivatePermission,
+    isDeleting,
+    isReactivating
+  } = usePermissions();
 
   // Estados para perfil
   const [formData, setFormData] = useState({
@@ -525,6 +537,8 @@ export default function SettingsGestao() {
     setShowCreatePermissionModal(false);
     setShowEditPermissionModal(false);
     setSelectedPermission(null);
+    // Atualizar a lista de permissões
+    refetchPermissions();
   };
 
   // Função para ativar/desativar usuário
@@ -1576,78 +1590,89 @@ export default function SettingsGestao() {
                         <TableHead className="text-left">Nome</TableHead>
                         <TableHead className="text-left">Situação</TableHead>
                         <TableHead className="text-left">Nível</TableHead>
+                        <TableHead className="text-left">Detalhamento</TableHead>
                         <TableHead className="text-right">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      <TableRow>
-                        <TableCell className="font-medium">Administrador CRM</TableCell>
-                        <TableCell>
-                          <Badge
-                            className="text-white"
-                            style={{ 
-                              backgroundColor: 'var(--brand-primary, #A86F57)', 
-                              borderRadius: 'var(--brand-radius, 8px)' 
-                            }}
-                          >
-                            Ativa
-                          </Badge>
-                        </TableCell>
-                        <TableCell>Função</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end space-x-2">
-                            <Button
-                              variant="brandOutlineSecondaryHover"
-                              size="sm"
-                              className="brand-radius"
-                              onClick={() => handleEditPermission({ id: 1, name: 'Administrador CRM' })}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="brandOutlineSecondaryHover"
-                              size="sm"
-                              className="brand-radius"
-                            >
-                              <Archive className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                      <TableRow>
-                        <TableCell className="font-medium">Líder de Vendas</TableCell>
-                        <TableCell>
-                          <Badge
-                            className="text-white"
-                            style={{ 
-                              backgroundColor: 'var(--brand-primary, #A86F57)', 
-                              borderRadius: 'var(--brand-radius, 8px)' 
-                            }}
-                          >
-                            Ativa
-                          </Badge>
-                        </TableCell>
-                        <TableCell>Time</TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end space-x-2">
-                            <Button
-                              variant="brandOutlineSecondaryHover"
-                              size="sm"
-                              className="brand-radius"
-                              onClick={() => handleEditPermission({ id: 2, name: 'Líder de Vendas' })}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="brandOutlineSecondaryHover"
-                              size="sm"
-                              className="brand-radius"
-                            >
-                              <Archive className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
+                      {permissionsLoading ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8">
+                            <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+                            <p className="text-muted-foreground">Carregando permissões...</p>
+                          </TableCell>
+                        </TableRow>
+                      ) : formattedPermissions.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8">
+                            <p className="text-muted-foreground">Nenhuma permissão encontrada</p>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        formattedPermissions.map((permission) => (
+                          <TableRow key={permission.id}>
+                            <TableCell className="font-medium">{permission.name}</TableCell>
+                            <TableCell>
+                              <Badge
+                                className="text-white"
+                                style={{ 
+                                  backgroundColor: permission.status === 'active' 
+                                    ? 'var(--brand-primary, #A86F57)' 
+                                    : '#6b7280', 
+                                  borderRadius: 'var(--brand-radius, 8px)' 
+                                }}
+                              >
+                                {permission.status === 'active' ? 'Ativa' : 'Inativa'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>{permission.level}</TableCell>
+                            <TableCell className="max-w-xs truncate" title={permission.detail}>
+                              {permission.detail || '-'}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <div className="flex justify-end space-x-2">
+                                <Button
+                                  variant="brandOutlineSecondaryHover"
+                                  size="sm"
+                                  className="brand-radius"
+                                  onClick={() => handleEditPermission(permission.raw)}
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                {permission.status === 'active' ? (
+                                  <Button
+                                    variant="brandOutlineSecondaryHover"
+                                    size="sm"
+                                    className="brand-radius"
+                                    onClick={() => deletePermission(permission.id)}
+                                    disabled={isDeleting}
+                                  >
+                                    {isDeleting ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <PowerOff className="w-4 h-4" />
+                                    )}
+                                  </Button>
+                                ) : (
+                                  <Button
+                                    variant="brandOutlineSecondaryHover"
+                                    size="sm"
+                                    className="brand-radius"
+                                    onClick={() => reactivatePermission(permission.id)}
+                                    disabled={isReactivating}
+                                  >
+                                    {isReactivating ? (
+                                      <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                      <Power className="w-4 h-4" />
+                                    )}
+                                  </Button>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
                     </TableBody>
                   </Table>
                 </div>

@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ModuleProvider } from "@/contexts/ModuleContext";
 import { CrmAuthProvider, useCrmAuth } from "@/contexts/CrmAuthContext";
 import { ProtectedRoute } from "@/components/CRM/ProtectedRoute";
+import { ProtectedRoute as CustomProtectedRoute } from "@/components/ProtectedRoute";
 import { CrmLayout } from "@/components/Layout/CrmLayout";
 import { SimulatorLayout } from "@/components/Layout/SimulatorLayout";
 import { SettingsLayout } from "@/components/Layout/SettingsLayout";
@@ -97,18 +98,18 @@ function AppContent() {
           } />
           <Route path="/simulador" element={
             user ? (
-              <ProtectedRoute requiredPageKey="simulator">
+              <CustomProtectedRoute requiredModule="simulator" requiredAction="view" fallbackPath="/simulador/configuracoes">
                 <Simulador />
-              </ProtectedRoute>
+              </CustomProtectedRoute>
             ) : <Navigate to="/crm/login" replace />
           } />
 
           {/* Configurações do Simulador agora dentro do módulo Simulador */}
           <Route path="/simulador/configuracoes" element={
             user ? (
-              <ProtectedRoute requiredPageKey="simulator_config">
+              <CustomProtectedRoute requiredModule="simulator-config" requiredAction="view">
                 <SettingsSimulator />
-              </ProtectedRoute>
+              </CustomProtectedRoute>
             ) : <Navigate to="/crm/login" replace />
           } />
 

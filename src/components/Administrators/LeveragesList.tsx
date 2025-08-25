@@ -15,9 +15,19 @@ interface LeveragesListProps {
   searchTerm: string;
   statusFilter: 'all' | 'active' | 'archived';
   onEdit: (leverage: any) => void;
+  canEdit?: boolean;
+  canCreate?: boolean;
+  canArchive?: boolean;
 }
 
-export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesListProps) => {
+export const LeveragesList: React.FC<LeveragesListProps> = ({
+  searchTerm,
+  statusFilter,
+  onEdit,
+  canEdit = true,
+  canCreate = true,
+  canArchive = true
+}) => {
   const { toast } = useToast();
   const [leverages, setLeverages] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -198,30 +208,32 @@ export const LeveragesList = ({ searchTerm, statusFilter, onEdit }: LeveragesLis
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex gap-2 justify-end">
-                <Button
-                  variant="brandOutlineSecondaryHover"
-                  size="sm"
-                  onClick={() => onEdit(leverage)}
-                  className="brand-radius"
-                  disabled={isSubMaster}
-                >
-                  <Edit className="w-4 h-4" />
-                </Button>
-                {isMaster && (
-                  <Button
-                    variant="brandOutlineSecondaryHover"
-                    size="sm"
-                    onClick={() => handleArchiveToggle(leverage)}
-                    className="brand-radius"
-                  >
-                    {leverage.is_archived ? (
-                      <RotateCcw className="w-4 h-4" />
-                    ) : (
-                      <Archive className="w-4 h-4" />
+                    {canEdit && (
+                      <Button
+                        variant="brandOutlineSecondaryHover"
+                        size="sm"
+                        onClick={() => onEdit(leverage)}
+                        className="brand-radius"
+                        disabled={isSubMaster}
+                      >
+                        <Edit className="w-4 h-4" />
+                      </Button>
                     )}
-                  </Button>
-                )}
-              </div>
+                    {canArchive && (
+                      <Button
+                        variant="brandOutlineSecondaryHover"
+                        size="sm"
+                        onClick={() => handleArchiveToggle(leverage)}
+                        className="brand-radius"
+                      >
+                        {leverage.is_archived ? (
+                          <RotateCcw className="w-4 h-4" />
+                        ) : (
+                          <Archive className="w-4 h-4" />
+                        )}
+                      </Button>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             ))

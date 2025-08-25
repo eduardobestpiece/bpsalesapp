@@ -42,6 +42,9 @@ interface ProductsListProps {
   onEdit: (product: Product) => void;
   onCreate: () => void;
   onDuplicate: (product: Product) => void;
+  canEdit?: boolean;
+  canCreate?: boolean;
+  canArchive?: boolean;
 }
 
 export const ProductsList: React.FC<ProductsListProps> = ({
@@ -50,7 +53,10 @@ export const ProductsList: React.FC<ProductsListProps> = ({
   selectedAdministrator,
   onEdit,
   onCreate,
-  onDuplicate
+  onDuplicate,
+  canEdit = true,
+  canCreate = true,
+  canArchive = true
 }) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -225,22 +231,26 @@ export const ProductsList: React.FC<ProductsListProps> = ({
                     <TableCell>{formatCurrency(product.credit_value)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex gap-2 justify-end">
-                        <Button
-                          variant="brandOutlineSecondaryHover"
-                          size="sm"
-                          onClick={() => handleEdit(product)}
-                          className="brand-radius"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="brandOutlineSecondaryHover"
-                          size="sm"
-                          onClick={() => handleArchive(product)}
-                          className="brand-radius"
-                        >
-                          <Archive className="w-4 h-4" />
-                        </Button>
+                        {canEdit && (
+                          <Button
+                            variant="brandOutlineSecondaryHover"
+                            size="sm"
+                            onClick={() => handleEdit(product)}
+                            className="brand-radius"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                        )}
+                        {canArchive && (
+                          <Button
+                            variant="brandOutlineSecondaryHover"
+                            size="sm"
+                            onClick={() => handleArchive(product)}
+                            className="brand-radius"
+                          >
+                            <Archive className="w-4 h-4" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>

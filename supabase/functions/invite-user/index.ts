@@ -30,7 +30,7 @@ serve(async (req) => {
     const requestBody = await req.json()
     console.log('Request body:', requestBody)
     
-    const { email, role, funnels, company_id } = requestBody
+    const { email, role, funnels, company_id, team_id } = requestBody
 
     if (!email || !role || !company_id) {
       console.error('Missing required fields:', { email: !!email, role: !!role, company_id: !!company_id })
@@ -179,6 +179,7 @@ serve(async (req) => {
         email,
         role,
         company_id,
+        team_id: team_id || null,
         status: 'active',
         first_name: '',
         last_name: '',
