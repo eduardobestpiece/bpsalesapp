@@ -1,21 +1,60 @@
 
 import { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 import { LeadsList } from '@/components/CRM/LeadsList';
+import { LeadsTable } from '@/components/CRM/LeadsTable';
 import { SalesList } from '@/components/CRM/SalesList';
+import { LeadModal } from '@/components/CRM/LeadModal';
 
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { useCompany } from '@/contexts/CompanyContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useQuery } from '@tanstack/react-query';
 
 const CrmDashboard = () => {
   const { companyId, userRole } = useCrmAuth();
+  const { selectedCompanyId } = useCompany();
+  const effectiveCompanyId = selectedCompanyId || companyId;
+  
   const [allowedTabs, setAllowedTabs] = useState<string[]>([]);
   const [defaultTab, setDefaultTab] = useState<string>('leads');
   const [tabsLoading, setTabsLoading] = useState(true);
   const [tabsError, setTabsError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedLead, setSelectedLead] = useState<any>(null);
+  const [showLeadModal, setShowLeadModal] = useState(false);
+
+  const handleEditLead = (lead: any) => {
+    setSelectedLead(lead);
+    setShowLeadModal(true);
+  };
+
+  const handleCloseLeadModal = () => {
+    setShowLeadModal(false);
+    setSelectedLead(null);
+  };
+
+  // Buscar cores da empresa para o estilo das abas
+  const { data: branding } = useQuery({
+    queryKey: ['company_branding', effectiveCompanyId],
+    enabled: !!effectiveCompanyId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('company_branding')
+        .select('*')
+        .eq('company_id', effectiveCompanyId)
+        .maybeSingle();
+      return data;
+    }
+  });
+
+  const primaryColor = branding?.primary_color || '#A86F57';
 
   useEffect(() => {
-    if (!companyId || !userRole) return;
+    if (!effectiveCompanyId || !userRole) return;
 
     // Master tem acesso total
     if (userRole === 'master') {
@@ -31,7 +70,7 @@ const CrmDashboard = () => {
     supabase
       .from('role_page_permissions')
       .select('page, allowed')
-      .eq('company_id', companyId)
+      .eq('company_id', effectiveCompanyId)
       .eq('role', userRole)
       .then(({ data, error }) => {
         if (error) {
@@ -49,16 +88,12 @@ const CrmDashboard = () => {
         setDefaultTab(tabs[0] || 'leads');
         setTabsLoading(false);
       });
-  }, [companyId, userRole]);
+  }, [effectiveCompanyId, userRole]);
 
-  if (!companyId) {
+  if (!effectiveCompanyId) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-white to-muted/10">
-        <main className="container mx-auto px-4 py-8">
-          <div className="text-center">
-            <p className="text-muted-foreground">Carregando informações da empresa...</p>
-          </div>
-        </main>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <p className="text-muted-foreground">Carregando informações da empresa...</p>
       </div>
     );
   }
@@ -75,47 +110,92 @@ const CrmDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-50/20 via-background to-muted/10 dark:from-[#131313] dark:via-[#1E1E1E] dark:to-[#161616]">
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-full mx-auto">
-          <div className="bg-background/90 backdrop-blur-sm rounded-3xl shadow-xl border border-border/50 p-1">
-            <div className="bg-card rounded-[calc(1.5rem-4px)] p-8 shadow-sm min-h-[600px]">
-              
-              <div className="text-center space-y-2 mb-8">
-                <h2 className="text-2xl font-bold">Comercial</h2>
-                <p className="text-muted-foreground">
-                  Gerencie seus leads e vendas
-                </p>
-              </div>
+    <div className="max-w-6xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-foreground mb-2">Comercial</h1>
+        <p className="text-muted-foreground">Gerencie seus leads e vendas</p>
+      </div>
 
-              {allowedTabs.length > 0 && (
-                <Tabs defaultValue={defaultTab} className="w-full">
-                  <TabsList className="mb-2 flex w-full gap-2">
-                    {allowedTabs.includes('leads') && (
-                      <TabsTrigger className="flex-1 brand-radius" value="leads">Leads</TabsTrigger>
-                    )}
-                    {allowedTabs.includes('sales') && (
-                      <TabsTrigger className="flex-1 brand-radius" value="sales">Vendas</TabsTrigger>
-                    )}
-
-                  </TabsList>
-                  {allowedTabs.includes('leads') && (
-                    <TabsContent value="leads" className="mt-6">
-                      <LeadsList companyId={companyId} />
-                    </TabsContent>
-                  )}
-                  {allowedTabs.includes('sales') && (
-                    <TabsContent value="sales" className="mt-6">
-                      <SalesList companyId={companyId} />
-                    </TabsContent>
-                  )}
-
-                </Tabs>
+      <Card className="shadow-xl border-0 bg-card">
+        <CardContent className="p-0">
+          <Tabs defaultValue={defaultTab} className="w-full">
+            <TabsList className="flex items-end border-b border-border/30 bg-transparent p-0 rounded-none justify-start w-fit">
+              {allowedTabs.includes('leads') && (
+                <>
+                  <TabsTrigger 
+                    value="leads" 
+                    className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[var(--tab-active-color)]"
+                    style={{ 
+                      '--tab-active-color': primaryColor 
+                    } as React.CSSProperties}
+                  >
+                    Leads
+                  </TabsTrigger>
+                  <div className="w-px h-6 bg-border/30 self-center"></div>
+                </>
               )}
-            </div>
-          </div>
-        </div>
-      </main>
+              {allowedTabs.includes('sales') && (
+                <TabsTrigger 
+                  value="sales" 
+                  className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[var(--tab-active-color)]"
+                  style={{ 
+                    '--tab-active-color': primaryColor 
+                  } as React.CSSProperties}
+                >
+                  Vendas
+                </TabsTrigger>
+              )}
+            </TabsList>
+            
+            {allowedTabs.includes('leads') && (
+              <TabsContent value="leads" className="p-6">
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-semibold text-foreground">Leads</h2>
+                      <p className="text-muted-foreground mt-1">Gerencie seus leads e oportunidades</p>
+                    </div>
+                    <Button 
+                      onClick={() => setShowLeadModal(true)} 
+                      disabled={userRole === 'submaster'}
+                      variant="brandPrimaryToSecondary"
+                      className="brand-radius"
+                    >
+                      <Plus className="w-4 h-4 mr-2" /> Adicionar Lead
+                    </Button>
+                  </div>
+                  <LeadsList 
+                    companyId={effectiveCompanyId} 
+                    showTable={false} 
+                    onSearchTermChange={setSearchTerm}
+                  />
+                  <LeadsTable searchTerm={searchTerm} onEdit={handleEditLead} />
+                </div>
+              </TabsContent>
+            )}
+            
+            {allowedTabs.includes('sales') && (
+              <TabsContent value="sales" className="p-6">
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-semibold text-foreground">Vendas</h2>
+                      <p className="text-muted-foreground mt-1">Acompanhe suas vendas e resultados</p>
+                    </div>
+                  </div>
+                  <SalesList companyId={effectiveCompanyId} />
+                </div>
+              </TabsContent>
+            )}
+          </Tabs>
+        </CardContent>
+      </Card>
+      <LeadModal
+        isOpen={showLeadModal}
+        onClose={handleCloseLeadModal}
+        companyId={effectiveCompanyId}
+        lead={selectedLead}
+      />
     </div>
   );
 };

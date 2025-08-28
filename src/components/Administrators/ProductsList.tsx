@@ -232,24 +232,24 @@ export const ProductsList: React.FC<ProductsListProps> = ({
                     <TableCell className="text-right">
                       <div className="flex gap-2 justify-end">
                         {canEdit && (
-                          <Button
-                            variant="brandOutlineSecondaryHover"
-                            size="sm"
-                            onClick={() => handleEdit(product)}
-                            className="brand-radius"
-                          >
-                            <Edit className="w-4 h-4" />
-                          </Button>
+                        <Button
+                          variant="brandOutlineSecondaryHover"
+                          size="sm"
+                          onClick={() => handleEdit(product)}
+                          className="brand-radius"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Button>
                         )}
                         {canArchive && (
-                          <Button
-                            variant="brandOutlineSecondaryHover"
-                            size="sm"
-                            onClick={() => handleArchive(product)}
-                            className="brand-radius"
-                          >
-                            <Archive className="w-4 h-4" />
-                          </Button>
+                        <Button
+                          variant="brandOutlineSecondaryHover"
+                          size="sm"
+                          onClick={() => handleArchive(product)}
+                          className="brand-radius"
+                        >
+                          <Archive className="w-4 h-4" />
+                        </Button>
                         )}
                       </div>
                     </TableCell>

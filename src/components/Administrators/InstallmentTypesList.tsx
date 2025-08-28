@@ -262,49 +262,49 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
               <TableCell>
                 <div className="flex space-x-2">
                   {canEdit && (
-                    <Button
-                      variant="brandOutlineSecondaryHover"
-                      size="sm"
-                      onClick={() => handleEdit(installmentType)}
-                      className="brand-radius"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
+                  <Button
+                    variant="brandOutlineSecondaryHover"
+                    size="sm"
+                    onClick={() => handleEdit(installmentType)}
+                    className="brand-radius"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
                   )}
                   {canArchive && (
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button
-                          variant="brandOutlineSecondaryHover"
-                          size="sm"
-                          className="brand-radius"
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button
+                        variant="brandOutlineSecondaryHover"
+                        size="sm"
+                        className="brand-radius"
+                      >
+                        {installmentType.is_archived ? (
+                          <RotateCcw className="w-4 h-4" />
+                        ) : (
+                          <Archive className="w-4 h-4" />
+                        )}
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>
+                          {installmentType.is_archived ? 'Reativar' : 'Arquivar'} Parcela
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Tem certeza que deseja {installmentType.is_archived ? 'reativar' : 'arquivar'} a parcela?
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={() => handleArchiveToggle(installmentType)}
                         >
-                          {installmentType.is_archived ? (
-                            <RotateCcw className="w-4 h-4" />
-                          ) : (
-                            <Archive className="w-4 h-4" />
-                          )}
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>
-                            {installmentType.is_archived ? 'Reativar' : 'Arquivar'} Parcela
-                          </AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Tem certeza que deseja {installmentType.is_archived ? 'reativar' : 'arquivar'} a parcela?
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction
-                            onClick={() => handleArchiveToggle(installmentType)}
-                          >
-                            {installmentType.is_archived ? 'Reativar' : 'Arquivar'}
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                          {installmentType.is_archived ? 'Reativar' : 'Arquivar'}
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                   )}
                 </div>
               </TableCell>

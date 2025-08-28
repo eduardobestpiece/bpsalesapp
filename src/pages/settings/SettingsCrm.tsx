@@ -5,9 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Edit, Archive, Search } from 'lucide-react';
-import { useFunnels, useDeleteFunnel } from '@/hooks/useFunnels';
+import { Plus, Edit, Archive, Search, Trash2 } from 'lucide-react';
+import { useFunnels, useDeleteFunnel, usePermanentlyDeleteFunnel } from '@/hooks/useFunnels';
 import { useSources, useDeleteSource } from '@/hooks/useSources';
 import { useTeams, useDeleteTeam } from '@/hooks/useTeams';
 import { toast } from 'sonner';
@@ -37,6 +38,11 @@ export default function SettingsCrm() {
   const [funnelSearchTerm, setFunnelSearchTerm] = useState('');
   const [sourceSearchTerm, setSourceSearchTerm] = useState('');
   const [teamSearchTerm, setTeamSearchTerm] = useState('');
+  
+  // Estados para filtros de situação
+  const [funnelStatusFilter, setFunnelStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
+  const [sourceStatusFilter, setSourceStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
+  const [teamStatusFilter, setTeamStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
 
   // Dados
   const { data: funnels = [], isLoading: funnelsLoading } = useFunnels(selectedCompanyId || companyId);
@@ -45,8 +51,16 @@ export default function SettingsCrm() {
 
   // Mutations
   const deleteFunnelMutation = useDeleteFunnel();
+  const permanentlyDeleteFunnelMutation = usePermanentlyDeleteFunnel();
   const deleteSourceMutation = useDeleteSource();
   const deleteTeamMutation = useDeleteTeam();
+  
+  // Verificar se o usuário é Master
+  const isMaster = userRole === 'master';
+  
+  // Debug para verificar permissões
+  console.log('[SETTINGS_CRM_DEBUG] userRole:', userRole);
+  console.log('[SETTINGS_CRM_DEBUG] isMaster:', isMaster);
 
   const { data: perms = {} } = useQuery({
     queryKey: ['role_page_permissions', companyId, userRole],
@@ -78,6 +92,11 @@ export default function SettingsCrm() {
   });
 
   const primaryColor = branding?.primary_color || '#A86F57';
+  
+  // Debug para verificar cores
+  console.log('[SETTINGS_CRM_DEBUG] Branding:', branding);
+  console.log('[SETTINGS_CRM_DEBUG] Primary Color:', primaryColor);
+  console.log('[SETTINGS_CRM_DEBUG] Secondary Color:', branding?.secondary_color);
 
   const canFunnels = perms['crm_config_funnels'] !== false;
   const canSources = perms['crm_config_sources'] !== false;
@@ -115,6 +134,30 @@ export default function SettingsCrm() {
       toast.success('Funil arquivado com sucesso!');
     } catch (error: any) {
       toast.error(error.message || 'Erro ao arquivar funil');
+    }
+  };
+
+  const handleFunnelPermanentlyDelete = async (funnelId: string, funnelName: string) => {
+    if (!isMaster) {
+      toast.error('Apenas usuários Master podem excluir funis permanentemente');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `ATENÇÃO: Esta ação é irreversível!\n\n` +
+      `Você está prestes a excluir permanentemente o funil "${funnelName}" e todos os seus dados.\n\n` +
+      `Esta ação não pode ser desfeita. Deseja continuar?`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await permanentlyDeleteFunnelMutation.mutateAsync(funnelId);
+      toast.success('Funil excluído permanentemente com sucesso!');
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao excluir funil permanentemente');
     }
   };
 
@@ -169,17 +212,23 @@ export default function SettingsCrm() {
   };
 
   // Filtros
-  const filteredFunnels = funnels.filter(funnel =>
-    funnel.name?.toLowerCase().includes(funnelSearchTerm.toLowerCase())
-  );
+  const filteredFunnels = funnels.filter(funnel => {
+    const matchesSearch = funnel.name?.toLowerCase().includes(funnelSearchTerm.toLowerCase());
+    const matchesStatus = funnelStatusFilter === 'all' || funnel.status === funnelStatusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
-  const filteredSources = sources.filter(source =>
-    source.name?.toLowerCase().includes(sourceSearchTerm.toLowerCase())
-  );
+  const filteredSources = sources.filter(source => {
+    const matchesSearch = source.name?.toLowerCase().includes(sourceSearchTerm.toLowerCase());
+    const matchesStatus = sourceStatusFilter === 'all' || source.status === sourceStatusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
-  const filteredTeams = teams.filter(team =>
-    team.name?.toLowerCase().includes(teamSearchTerm.toLowerCase())
-  );
+  const filteredTeams = teams.filter(team => {
+    const matchesSearch = team.name?.toLowerCase().includes(teamSearchTerm.toLowerCase());
+    const matchesStatus = teamStatusFilter === 'all' || team.status === teamStatusFilter;
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <>
@@ -241,14 +290,40 @@ export default function SettingsCrm() {
                     </Button>
                   </div>
 
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                    <Input
-                      placeholder="Pesquisar por nome..."
-                      value={funnelSearchTerm}
-                      onChange={(e) => setFunnelSearchTerm(e.target.value)}
-                      className="pl-10 field-secondary-focus no-ring-focus brand-radius"
-                    />
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                      <Input
+                        placeholder="Pesquisar por nome..."
+                        value={funnelSearchTerm}
+                        onChange={(e) => setFunnelSearchTerm(e.target.value)}
+                        className="pl-10 field-secondary-focus no-ring-focus brand-radius"
+                      />
+                    </div>
+                    <div className="w-full sm:w-48">
+                      <Select value={funnelStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setFunnelStatusFilter(value)}>
+                        <SelectTrigger 
+                          className="field-secondary-focus no-ring-focus brand-radius status-filter-dropdown"
+                          style={{ 
+                            '--brand-primary': primaryColor,
+                            '--brand-secondary': branding?.secondary_color || '#6B7280'
+                          } as React.CSSProperties}
+                        >
+                          <SelectValue placeholder="Filtrar por situação" />
+                        </SelectTrigger>
+                        <SelectContent 
+                          className="status-filter-dropdown"
+                          style={{ 
+                            '--brand-primary': primaryColor,
+                            '--brand-secondary': branding?.secondary_color || '#6B7280'
+                          } as React.CSSProperties}
+                        >
+                          <SelectItem value="all">Todos</SelectItem>
+                          <SelectItem value="active">Ativo</SelectItem>
+                          <SelectItem value="inactive">Inativo</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
                   <Table>
@@ -317,6 +392,17 @@ export default function SettingsCrm() {
                                     <Archive className="w-4 h-4" />
                                   </Button>
                                 )}
+                                {isMaster && (
+                                  <Button
+                                    variant="brandOutlineSecondaryHover"
+                                    size="sm"
+                                    onClick={() => handleFunnelPermanentlyDelete(funnel.id, funnel.name)}
+                                    className="brand-radius"
+                                    style={{ borderColor: '#ef4444', color: '#ef4444' }}
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                )}
                               </div>
                             </TableCell>
                           </TableRow>
@@ -341,14 +427,40 @@ export default function SettingsCrm() {
                     </Button>
                   </div>
 
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                    <Input
-                      placeholder="Pesquisar por nome..."
-                      value={sourceSearchTerm}
-                      onChange={(e) => setSourceSearchTerm(e.target.value)}
-                      className="pl-10 field-secondary-focus no-ring-focus brand-radius"
-                    />
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                      <Input
+                        placeholder="Pesquisar por nome..."
+                        value={sourceSearchTerm}
+                        onChange={(e) => setSourceSearchTerm(e.target.value)}
+                        className="pl-10 field-secondary-focus no-ring-focus brand-radius"
+                      />
+                    </div>
+                    <div className="w-full sm:w-48">
+                      <Select value={sourceStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setSourceStatusFilter(value)}>
+                        <SelectTrigger 
+                          className="field-secondary-focus no-ring-focus brand-radius status-filter-dropdown"
+                          style={{ 
+                            '--brand-primary': primaryColor,
+                            '--brand-secondary': branding?.secondary_color || '#6B7280'
+                          } as React.CSSProperties}
+                        >
+                          <SelectValue placeholder="Filtrar por situação" />
+                        </SelectTrigger>
+                        <SelectContent 
+                          className="status-filter-dropdown"
+                          style={{ 
+                            '--brand-primary': primaryColor,
+                            '--brand-secondary': branding?.secondary_color || '#6B7280'
+                          } as React.CSSProperties}
+                        >
+                          <SelectItem value="all">Todos</SelectItem>
+                          <SelectItem value="active">Ativo</SelectItem>
+                          <SelectItem value="inactive">Inativo</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
                   <Table>
@@ -436,14 +548,40 @@ export default function SettingsCrm() {
                     </Button>
                   </div>
 
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
-                    <Input
-                      placeholder="Pesquisar por nome..."
-                      value={teamSearchTerm}
-                      onChange={(e) => setTeamSearchTerm(e.target.value)}
-                      className="pl-10 field-secondary-focus no-ring-focus brand-radius"
-                    />
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                      <Input
+                        placeholder="Pesquisar por nome..."
+                        value={teamSearchTerm}
+                        onChange={(e) => setTeamSearchTerm(e.target.value)}
+                        className="pl-10 field-secondary-focus no-ring-focus brand-radius"
+                      />
+                    </div>
+                    <div className="w-full sm:w-48">
+                      <Select value={teamStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setTeamStatusFilter(value)}>
+                        <SelectTrigger 
+                          className="field-secondary-focus no-ring-focus brand-radius status-filter-dropdown"
+                          style={{ 
+                            '--brand-primary': primaryColor,
+                            '--brand-secondary': branding?.secondary_color || '#6B7280'
+                          } as React.CSSProperties}
+                        >
+                          <SelectValue placeholder="Filtrar por situação" />
+                        </SelectTrigger>
+                        <SelectContent 
+                          className="status-filter-dropdown"
+                          style={{ 
+                            '--brand-primary': primaryColor,
+                            '--brand-secondary': branding?.secondary_color || '#6B7280'
+                          } as React.CSSProperties}
+                        >
+                          <SelectItem value="all">Todos</SelectItem>
+                          <SelectItem value="active">Ativo</SelectItem>
+                          <SelectItem value="inactive">Inativo</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
 
                   <Table>

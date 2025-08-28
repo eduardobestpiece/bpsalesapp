@@ -1,4 +1,4 @@
-## 📅 **Última Atualização:** 2025-08-08
+## 📅 **Última Atualização:** 2025-01-29
 
 ### 🚀 Deploy e correções recentes
 - Ajuste no carregamento de autenticação em `src/contexts/CrmAuthContext.tsx` para evitar tela de “Carregando...”

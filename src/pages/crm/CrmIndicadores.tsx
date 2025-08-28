@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Plus, Filter, Edit, Archive, Trash2, CheckCircle, AlertCircle, XCircle, User as UserIcon } from 'lucide-react';
 import { IndicatorModal } from '@/components/CRM/IndicatorModal';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
@@ -15,6 +16,7 @@ import { useCrmUsersByCompany } from '@/hooks/useCrmUsers';
 import { useCompany } from '@/contexts/CompanyContext';
 import { FullScreenModal } from '@/components/ui/FullScreenModal';
 import { simInfoLog } from '@/lib/devlog';
+import { useQuery } from '@tanstack/react-query';
 
 // Função utilitária para status visual do prazo
 function getPrazoStatus(indicator: any, funnel: any) {
@@ -66,6 +68,22 @@ const CrmIndicadores = () => {
   // Carregar times e usuários ANTES de calcular o escopo (usa teams no useMemo abaixo)
   const { data: teams = [], isLoading: isTeamsLoading } = useTeams();
   const { data: crmUsers = [], isLoading: isUsersLoading } = useCrmUsersByCompany(effectiveCompanyId);
+
+  // Buscar cores da empresa para o estilo das abas
+  const { data: branding } = useQuery({
+    queryKey: ['company_branding', effectiveCompanyId],
+    enabled: !!effectiveCompanyId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('company_branding')
+        .select('*')
+        .eq('company_id', effectiveCompanyId)
+        .maybeSingle();
+      return data;
+    }
+  });
+
+  const primaryColor = branding?.primary_color || '#A86F57';
 
   // Buscar indicadores conforme perfil - memoizado para evitar mudanças desnecessárias
   const userIdForIndicators = useMemo(() => {
@@ -359,205 +377,226 @@ const CrmIndicadores = () => {
   const isGestor = crmUser?.role === 'admin' || crmUser?.role === 'master' || crmUser?.role === 'leader';
 
   return (
-    <div className="min-h-screen bg-background">
-      <main className="container mx-auto px-4 py-8">
-        <div className="max-w-full mx-auto">
-          <div className="bg-card/90 backdrop-blur-sm rounded-3xl shadow-xl border border-border p-1">
-            <div className="bg-card rounded-[calc(1.5rem-4px)] p-8 shadow-sm min-h-[600px]">
-              <Tabs defaultValue={defaultTab}>
-                <TabsList className="mb-6">
-                  {allowedTabs.includes('performance') && (
-                    <TabsTrigger value="performance">Performance</TabsTrigger>
-                  )}
-                  {allowedTabs.includes('registro') && (
-                    <TabsTrigger value="registro">Registro de Indicadores</TabsTrigger>
-                  )}
-                </TabsList>
-                
-                {allowedTabs.includes('performance') && (
-                  <TabsContent value="performance">
-                    <CrmPerformance embedded />
-                  </TabsContent>
-                )}
-                
-                {allowedTabs.includes('registro') && (
-                  <TabsContent value="registro">
-                    <Card>
-                      <CardHeader>
-                        <div className="flex justify-between items-center">
-                          <div>
-                            <CardTitle>Meus Indicadores</CardTitle>
-                            <CardDescription>
-                              Registre seus números por período e funil
-                            </CardDescription>
-                          </div>
-                          <div className="flex gap-2">
-                            <div className="flex items-center gap-4">
-                              {isGestor && (
-                                <Button
-                                  variant={showOnlyMine ? 'brandOutlineSecondaryHover' : 'outline'}
-                                  size="icon"
-                                  className="mr-2 brand-radius hover:bg-[var(--brand-secondary)] active:bg-[var(--brand-secondary)] focus:bg-[var(--brand-secondary)]"
-                                  title="Meus Indicadores"
-                                  onClick={() => {
-                                    setShowOnlyMine((prev) => {
-                                      const next = !prev;
-                                      // Sincronizar filtro de usuário para evitar conflitos com outros filtros
-                                      if (next) {
-                                        setFilters((f) => ({ ...f, userId: crmUser?.id || '' }));
-                                      } else {
-                                        setFilters((f) => ({ ...f, userId: '' }));
-                                      }
-                                      return next;
-                                    });
-                                  }}
-                                >
-                                  <UserIcon className="w-5 h-5" />
-                                </Button>
-                              )}
-                              {allowedFunnels.length > 1 && (
-                                <div>
-                                  <select 
-                                    value={selectedFunnelId} 
-                                    onChange={e => setSelectedFunnelId(e.target.value)} 
-                                    className="border border-input bg-background text-foreground rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                                  >
-                                    <option value="">Todos os funis</option>
-                                    {allowedFunnels.map(f => (
-                                      <option key={f.id} value={f.id}>{f.name}</option>
-                                    ))}
-                                  </select>
-                                </div>
-                              )}
-                              <Button variant="outline" className="brand-radius hover:bg-[var(--brand-secondary)] active:bg-[var(--brand-secondary)] focus:bg-[var(--brand-secondary)]" onClick={() => setShowFiltersModal(true)}>
-                                <Filter className="w-4 h-4 mr-2" />
-                                Filtros
-                              </Button>
-                              <Button onClick={() => setShowModal(true)} variant="brandPrimaryToSecondary" className="brand-radius">
-                                <Plus className="w-4 h-4 mr-2" />
-                                Registrar Indicador
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="overflow-x-auto rounded-2xl shadow border border-border bg-card">
-                          <table className="min-w-full border-separate border-spacing-y-1">
-                            <thead className="sticky top-0 z-10 bg-muted text-xs">
-                              <tr>
-                                <th className="px-2 py-2 text-center font-semibold rounded-tl-2xl"> </th>
-                                <th className="px-2 py-2 text-left font-semibold">Período</th>
-                                {funnelData.lastStage && <th className="px-2 py-2 text-left font-semibold">{funnelData.lastStage.name}</th>}
-                                <th className="px-2 py-2 text-left font-semibold">Valor das Vendas</th>
-                                <th className="px-2 py-2 text-left font-semibold">Ticket Médio</th>
-                                <th className="px-2 py-2 text-left font-semibold">Taxa de Conversão</th>
-                                <th className="px-2 py-2 text-left font-semibold">Conversão do Funil</th>
-                                {funnelData.recommendationStage && <th className="px-2 py-2 text-left font-semibold">Média de Recomendações</th>}
-                                {isGestor && <th className="px-2 py-2 text-left font-semibold">Usuário</th>}
-                                <th className="px-2 py-2 text-center font-semibold rounded-tr-2xl">Ações</th>
-                              </tr>
-                            </thead>
-                            <tbody className="text-sm">
-                              {filteredIndicators.length === 0 ? (
-                                <tr>
-                                  <td colSpan={10} className="text-center text-muted-foreground py-8">
-                                    Nenhum indicador encontrado.
-                                  </td>
-                                </tr>
-                              ) : (
-                                filteredIndicators.map((indicator, idx) => {
-                                  // Verificação de segurança final antes do render - verificação tripla
-                                  if (!isValidIndicator(indicator)) {
-                                    return null;
-                                  }
-                                  
-                                  // Buscar funil e etapas com verificações de segurança
-                                  const funnel = funnels?.find(f => f && f.id === indicator.funnel_id);
-                                  if (!funnel) {
-                                    return null;
-                                  }
-                                  
-                                  const stages = (funnel.stages || []).sort((a: any, b: any) => a.stage_order - b.stage_order);
-                                  const lastStageLocal = stages[stages.length - 1];
-                                  const penultimateStage = stages[stages.length - 2];
-                                  const firstStage = stages[0];
-                                  const lastValue = (indicator.values || []).find((v: any) => v && v.stage_id === lastStageLocal?.id)?.value || 0;
-                                  const penultimateValue = (indicator.values || []).find((v: any) => v && v.stage_id === penultimateStage?.id)?.value || 0;
-                                  const firstValue = (indicator.values || []).find((v: any) => v && v.stage_id === firstStage?.id)?.value || 0;
-                                  const salesValue = indicator.sales_value || 0;
-                                  const ticketMedio = lastValue > 0 ? salesValue / lastValue : 0;
-                                  const taxaConversao = penultimateValue > 0 ? (lastValue / penultimateValue) * 100 : 0;
-                                  const conversaoFunil = firstValue > 0 ? (lastValue / firstValue) * 100 : 0;
-                                  const recommendationStageLocal = stages.find((s: any) => s && s.name && (s.name.toLowerCase().includes('reuni') || s.name.toLowerCase().includes('recomend')));
-                                  const recommendationStageValue = (indicator.values || []).find((v: any) => v && v.stage_id === recommendationStageLocal?.id)?.value || 0;
-                                  const recommendationsCount = indicator.recommendations_count || 0;
-                                  const mediaRecomendacoes = recommendationStageValue > 0 ? recommendationsCount / recommendationStageValue : 0;
-                                  const prazoStatus = getPrazoStatus(indicator, funnel);
-                                  const user = crmUsers.find(u => u && u.id === indicator.user_id);
+    <div className="max-w-6xl mx-auto">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-foreground mb-2">Indicadores</h1>
+        <p className="text-muted-foreground">Acompanhe performance e registre seus indicadores</p>
+      </div>
 
-                                  return (
-                                    <tr key={indicator.id} className={idx % 2 === 0 ? 'bg-card' : 'bg-muted/40'}>
-                                      <td className="px-2 py-2 text-center">
-                                        {prazoStatus && (
-                                          <span className={`inline-block w-3 h-3 rounded-full ${
-                                            prazoStatus.color === 'green' ? 'bg-green-500' : prazoStatus.color === 'yellow' ? 'bg-yellow-400' : 'bg-red-500'
-                                          }`}></span>
-                                        )}
-                                      </td>
-                                      <td className="px-2 py-2">
-                                        {indicator.period_start && indicator.period_end
-                                          ? `De ${formatDate(indicator.period_start)} até ${formatDate(indicator.period_end)}`
-                                          : 'Período não definido'
-                                        }
-                                      </td>
-                                      {lastStageLocal && <td className="px-2 py-2 text-center font-bold text-base">{lastValue}</td>}
-                                      <td className="px-2 py-2 text-center">{salesValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</td>
-                                      <td className="px-2 py-2 text-center">{ticketMedio > 0 ? ticketMedio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</td>
-                                      <td className="px-2 py-2 text-center">{penultimateValue > 0 ? taxaConversao.toFixed(1) + '%' : '-'}</td>
-                                      <td className="px-2 py-2 text-center">{firstValue > 0 ? conversaoFunil.toFixed(1) + '%' : '-'}</td>
-                                      {recommendationStageLocal && <td className="px-2 py-2 text-center">{recommendationStageValue > 0 ? mediaRecomendacoes.toFixed(2) : '-'}</td>}
-                                      {isGestor && (
-                                        <td className="px-2 py-2 text-left">
-                                          {user ? `${user.first_name} ${user.last_name}` : '-'}
-                                        </td>
-                                      )}
-                                      <td className="px-2 py-2 text-center">
-                                        <div className="flex gap-2 justify-center">
-                                          {(() => {
-                                            const isAdmin = crmUser?.role === 'admin' || crmUser?.role === 'master';
-                                            const canEditIndicator = isAdmin || indicator.user_id === crmUser?.id;
-                                            return (
-                                              <>
-                                                {canEditIndicator && (
-                                                  <Button variant="outline" size="sm" className="brand-radius hover:bg-[var(--brand-secondary)] active:bg-[var(--brand-secondary)] focus:bg-[var(--brand-secondary)]" onClick={() => handleEdit(indicator)}>
-                                                    <Edit className="w-4 h-4" />
-                                                  </Button>
-                                                )}
-                                                <Button variant="outline" size="sm" className="brand-radius hover:bg-[var(--brand-secondary)] active:bg-[var(--brand-secondary)] focus:bg-[var(--brand-secondary)]" onClick={() => handleArchive(indicator)}>
-                                                  <Archive className="w-4 h-4" />
-                                                </Button>
-                                              </>
-                                            );
-                                          })()}
-                                        </div>
-                                      </td>
-                                    </tr>
-                                  );
-                                }).filter(Boolean)
+      <Card className="shadow-xl border-0 bg-card">
+        <CardContent className="p-0">
+          <Tabs defaultValue={defaultTab} className="w-full">
+            <TabsList className="flex items-end border-b border-border/30 bg-transparent p-0 rounded-none justify-start w-fit">
+              {allowedTabs.includes('performance') && (
+                <>
+                  <TabsTrigger 
+                    value="performance" 
+                    className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[var(--tab-active-color)]"
+                    style={{ 
+                      '--tab-active-color': primaryColor 
+                    } as React.CSSProperties}
+                  >
+                    Performance
+                  </TabsTrigger>
+                  <div className="w-px h-6 bg-border/30 self-center"></div>
+                </>
+              )}
+              {allowedTabs.includes('registro') && (
+                <TabsTrigger 
+                  value="registro" 
+                  className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[var(--tab-active-color)]"
+                  style={{ 
+                    '--tab-active-color': primaryColor 
+                  } as React.CSSProperties}
+                >
+                  Registro de Indicadores
+                </TabsTrigger>
+              )}
+            </TabsList>
+            
+            {allowedTabs.includes('performance') && (
+              <TabsContent value="performance" className="p-6">
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-semibold text-foreground">Performance</h2>
+                      <p className="text-muted-foreground mt-1">Visualize métricas e indicadores de performance</p>
+                    </div>
+                  </div>
+                  <CrmPerformance embedded />
+                </div>
+              </TabsContent>
+            )}
+            
+            {allowedTabs.includes('registro') && (
+              <TabsContent value="registro" className="p-6">
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-semibold text-foreground">Registro de Indicadores</h2>
+                      <p className="text-muted-foreground mt-1">Registre seus números por período e funil</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="flex items-center gap-4">
+                        {isGestor && (
+                          <Button
+                            variant={showOnlyMine ? 'brandOutlineSecondaryHover' : 'outline'}
+                            size="icon"
+                            className="mr-2 brand-radius hover:bg-[var(--brand-secondary)] active:bg-[var(--brand-secondary)] focus:bg-[var(--brand-secondary)]"
+                            title="Meus Indicadores"
+                            onClick={() => {
+                              setShowOnlyMine((prev) => {
+                                const next = !prev;
+                                // Sincronizar filtro de usuário para evitar conflitos com outros filtros
+                                if (next) {
+                                  setFilters((f) => ({ ...f, userId: crmUser?.id || '' }));
+                                } else {
+                                  setFilters((f) => ({ ...f, userId: '' }));
+                                }
+                                return next;
+                              });
+                            }}
+                          >
+                            <UserIcon className="w-5 h-5" />
+                          </Button>
+                        )}
+                        {allowedFunnels.length > 1 && (
+                          <div>
+                            <select 
+                              value={selectedFunnelId} 
+                              onChange={e => setSelectedFunnelId(e.target.value)} 
+                              className="border border-input bg-background text-foreground rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                            >
+                              <option value="">Todos os funis</option>
+                              {allowedFunnels.map(f => (
+                                <option key={f.id} value={f.id}>{f.name}</option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                        <Button variant="outline" className="brand-radius hover:bg-[var(--brand-secondary)] active:bg-[var(--brand-secondary)] focus:bg-[var(--brand-secondary)]" onClick={() => setShowFiltersModal(true)}>
+                          <Filter className="w-4 h-4 mr-2" />
+                          Filtros
+                        </Button>
+                        <Button onClick={() => setShowModal(true)} variant="brandPrimaryToSecondary" className="brand-radius">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Registrar Indicador
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-center"> </TableHead>
+                        <TableHead className="text-left">Período</TableHead>
+                        {funnelData.lastStage && <TableHead className="text-left">{funnelData.lastStage.name}</TableHead>}
+                        <TableHead className="text-left">Valor das Vendas</TableHead>
+                        <TableHead className="text-left">Ticket Médio</TableHead>
+                        <TableHead className="text-left">Taxa de Conversão</TableHead>
+                        <TableHead className="text-left">Conversão do Funil</TableHead>
+                        {funnelData.recommendationStage && <TableHead className="text-left">Média de Recomendações</TableHead>}
+                        {isGestor && <TableHead className="text-left">Usuário</TableHead>}
+                        <TableHead className="text-center">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredIndicators.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={10} className="text-center text-muted-foreground py-8">
+                            Nenhum indicador encontrado.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredIndicators.map((indicator, idx) => {
+                          // Verificação de segurança final antes do render - verificação tripla
+                          if (!isValidIndicator(indicator)) {
+                            return null;
+                          }
+                          
+                          // Buscar funil e etapas com verificações de segurança
+                          const funnel = funnels?.find(f => f && f.id === indicator.funnel_id);
+                          if (!funnel) {
+                            return null;
+                          }
+                          
+                          const stages = (funnel.stages || []).sort((a: any, b: any) => a.stage_order - b.stage_order);
+                          const lastStageLocal = stages[stages.length - 1];
+                          const penultimateStage = stages[stages.length - 2];
+                          const firstStage = stages[0];
+                          const lastValue = (indicator.values || []).find((v: any) => v && v.stage_id === lastStageLocal?.id)?.value || 0;
+                          const penultimateValue = (indicator.values || []).find((v: any) => v && v.stage_id === penultimateStage?.id)?.value || 0;
+                          const firstValue = (indicator.values || []).find((v: any) => v && v.stage_id === firstStage?.id)?.value || 0;
+                          const salesValue = indicator.sales_value || 0;
+                          const ticketMedio = lastValue > 0 ? salesValue / lastValue : 0;
+                          const taxaConversao = penultimateValue > 0 ? (lastValue / penultimateValue) * 100 : 0;
+                          const conversaoFunil = firstValue > 0 ? (lastValue / firstValue) * 100 : 0;
+                          const recommendationStageLocal = stages.find((s: any) => s && s.name && (s.name.toLowerCase().includes('reuni') || s.name.toLowerCase().includes('recomend')));
+                          const recommendationStageValue = (indicator.values || []).find((v: any) => v && v.stage_id === recommendationStageLocal?.id)?.value || 0;
+                          const recommendationsCount = indicator.recommendations_count || 0;
+                          const mediaRecomendacoes = recommendationStageValue > 0 ? recommendationsCount / recommendationStageValue : 0;
+                          const prazoStatus = getPrazoStatus(indicator, funnel);
+                          const user = crmUsers.find(u => u && u.id === indicator.user_id);
+
+                          return (
+                            <TableRow key={indicator.id}>
+                              <TableCell className="text-center">
+                                {prazoStatus && (
+                                  <span className={`inline-block w-3 h-3 rounded-full ${
+                                    prazoStatus.color === 'green' ? 'bg-green-500' : prazoStatus.color === 'yellow' ? 'bg-yellow-400' : 'bg-red-500'
+                                  }`}></span>
+                                )}
+                              </TableCell>
+                              <TableCell>
+                                {indicator.period_start && indicator.period_end
+                                  ? `De ${formatDate(indicator.period_start)} até ${formatDate(indicator.period_end)}`
+                                  : 'Período não definido'
+                                }
+                              </TableCell>
+                              {lastStageLocal && <TableCell className="text-center font-bold text-base">{lastValue}</TableCell>}
+                              <TableCell className="text-center">{salesValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</TableCell>
+                              <TableCell className="text-center">{ticketMedio > 0 ? ticketMedio.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : '-'}</TableCell>
+                              <TableCell className="text-center">{penultimateValue > 0 ? taxaConversao.toFixed(1) + '%' : '-'}</TableCell>
+                              <TableCell className="text-center">{firstValue > 0 ? conversaoFunil.toFixed(1) + '%' : '-'}</TableCell>
+                              {recommendationStageLocal && <TableCell className="text-center">{recommendationStageValue > 0 ? mediaRecomendacoes.toFixed(2) : '-'}</TableCell>}
+                              {isGestor && (
+                                <TableCell className="text-left">
+                                  {user ? `${user.first_name} ${user.last_name}` : '-'}
+                                </TableCell>
                               )}
-                            </tbody>
-                          </table>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </TabsContent>
-                )}
-              </Tabs>
-            </div>
-          </div>
-        </div>
-      </main>
+                              <TableCell className="text-center">
+                                <div className="flex gap-2 justify-center">
+                                  {(() => {
+                                    const isAdmin = crmUser?.role === 'admin' || crmUser?.role === 'master';
+                                    const canEditIndicator = isAdmin || indicator.user_id === crmUser?.id;
+                                    return (
+                                      <>
+                                        {canEditIndicator && (
+                                          <Button variant="outline" size="sm" className="brand-radius hover:bg-[var(--brand-secondary)] active:bg-[var(--brand-secondary)] focus:bg-[var(--brand-secondary)]" onClick={() => handleEdit(indicator)}>
+                                            <Edit className="w-4 h-4" />
+                                          </Button>
+                                        )}
+                                        <Button variant="outline" size="sm" className="brand-radius hover:bg-[var(--brand-secondary)] active:bg-[var(--brand-secondary)] focus:bg-[var(--brand-secondary)]" onClick={() => handleArchive(indicator)}>
+                                          <Archive className="w-4 h-4" />
+                                        </Button>
+                                      </>
+                                    );
+                                    })()}
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          }).filter(Boolean)
+                        )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </TabsContent>
+            )}
+          </Tabs>
+        </CardContent>
+      </Card>
 
       <IndicatorModal
         isOpen={showModal}

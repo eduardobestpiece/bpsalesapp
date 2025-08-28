@@ -23,15 +23,18 @@ export const UsersList = () => {
   // Determinar qual companyId usar
   const effectiveCompanyId = userRole === 'master' ? selectedCompanyId : crmUser?.company_id;
   
+  console.log('[UsersList] ===== DEBUG COMPANY ID =====');
   console.log('[UsersList] userRole:', userRole);
   console.log('[UsersList] selectedCompanyId:', selectedCompanyId);
   console.log('[UsersList] crmUser?.company_id:', crmUser?.company_id);
   console.log('[UsersList] effectiveCompanyId:', effectiveCompanyId);
+  console.log('[UsersList] crmUser completo:', crmUser);
 
   const { data: users = [], isLoading } = useCrmUsersByCompany(effectiveCompanyId);
   const updateUserMutation = useUpdateCrmUser();
 
   console.log('[UsersList] Usuários carregados:', users);
+  console.log('[UsersList] Número de usuários:', users.length);
 
   const handleEdit = (user: any) => {
     // Buscar o usuário atualizado da lista pelo ID

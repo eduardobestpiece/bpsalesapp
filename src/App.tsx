@@ -37,6 +37,9 @@ import SettingsUsers from "./pages/settings/SettingsUsers";
 import SettingsMaster from "./pages/settings/SettingsMaster";
 import SettingsEmpresa from "./pages/settings/SettingsEmpresa";
 import SettingsPerfil from "./pages/settings/SettingsPerfil";
+import { TestPermissions } from "./components/TestPermissions";
+import { DebugPermissions } from "./components/DebugPermissions";
+import { DebugTabPermissions } from "./components/DebugTabPermissions";
 
 
 const queryClient = new QueryClient();
@@ -170,6 +173,33 @@ function AppContent() {
               <CrmLayout>
                 <CrmPerfil />
               </CrmLayout>
+            ) : <Navigate to="/crm/login" replace />
+          } />
+          
+          {/* Rota temporária para testar permissões */}
+          <Route path="/test-permissions" element={
+            user ? (
+              <div className="container mx-auto p-6">
+                <TestPermissions />
+              </div>
+            ) : <Navigate to="/crm/login" replace />
+          } />
+          
+          {/* Rota temporária para debug de permissões */}
+          <Route path="/debug-permissions" element={
+            user ? (
+              <div className="container mx-auto p-6">
+                <DebugPermissions />
+              </div>
+            ) : <Navigate to="/crm/login" replace />
+          } />
+          
+          {/* Rota temporária para debug de permissões das abas */}
+          <Route path="/debug-tab-permissions" element={
+            user ? (
+              <div className="container mx-auto p-6">
+                <DebugTabPermissions />
+              </div>
             ) : <Navigate to="/crm/login" replace />
           } />
           

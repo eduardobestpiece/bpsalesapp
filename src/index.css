@@ -18,19 +18,19 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 7.45%;
 
-    /* Primary colors - Marrom Monteo #AA6E55 */
-    --primary: 18 32% 51%;
+    /* Primary colors - Usar cor primária da empresa */
+    --primary: var(--brand-primary-hsl, 18 32% 51%);
     --primary-foreground: 0 0% 100%;
-    --primary-50: 18 32% 95%;
-    --primary-100: 18 32% 90%;
-    --primary-200: 18 32% 80%;
-    --primary-300: 18 32% 70%;
-    --primary-400: 18 32% 61%;
-    --primary-500: 18 32% 51%;
-    --primary-600: 18 32% 46%;
-    --primary-700: 18 32% 41%;
-    --primary-800: 18 32% 36%;
-    --primary-900: 18 32% 31%;
+    --primary-50: var(--brand-primary-hsl, 18 32% 95%);
+    --primary-100: var(--brand-primary-hsl, 18 32% 90%);
+    --primary-200: var(--brand-primary-hsl, 18 32% 80%);
+    --primary-300: var(--brand-primary-hsl, 18 32% 70%);
+    --primary-400: var(--brand-primary-hsl, 18 32% 61%);
+    --primary-500: var(--brand-primary-hsl, 18 32% 51%);
+    --primary-600: var(--brand-primary-hsl, 18 32% 46%);
+    --primary-700: var(--brand-primary-hsl, 18 32% 41%);
+    --primary-800: var(--brand-primary-hsl, 18 32% 36%);
+    --primary-900: var(--brand-primary-hsl, 18 32% 31%);
 
     /* Secondary colors - Cinza Escuro #1E1E1E */
     --secondary: 0 0% 11.76%;
@@ -84,7 +84,7 @@ All colors MUST be HSL.
     --popover: 0 0% 12.16%; /* #1F1F1F */
     --popover-foreground: 0 0% 100%;
 
-    --primary: 18 32% 51%; /* Mantém cor primária marrom */
+    --primary: var(--brand-primary-hsl, 18 32% 51%); /* Usar cor primária da empresa */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 11.76%; /* #1E1E1E */
@@ -228,6 +228,29 @@ All colors MUST be HSL.
     color: #fff !important;
   }
 
+  /* Itens do dropdown com cor primária da empresa */
+  .dropdown-item-primary[data-highlighted],
+  .dropdown-item-primary[data-state='checked'],
+  .dropdown-item-primary:hover {
+    background-color: var(--brand-primary) !important;
+    color: #fff !important;
+  }
+
+  /* PhoneInput com border-radius da empresa */
+  .phone-input-container {
+    border-radius: var(--brand-radius, 8px);
+  }
+  
+  .phone-input-container .phone-selector {
+    border-top-left-radius: var(--brand-radius, 8px) !important;
+    border-bottom-left-radius: var(--brand-radius, 8px) !important;
+  }
+  
+  .phone-input-container .phone-input {
+    border-top-right-radius: var(--brand-radius, 8px) !important;
+    border-bottom-right-radius: var(--brand-radius, 8px) !important;
+  }
+
   /* ===== Modelos de estilo (Português) ===== */
   /* Botão primário */
   .btn-primario {
@@ -285,6 +308,18 @@ All colors MUST be HSL.
     box-shadow: none !important;
     border-color: var(--brand-secondary) !important;
   }
+  
+  /* Campos com foco na cor primária da empresa */
+  .campo-primary-focus {
+    border-radius: var(--brand-radius, 8px);
+  }
+  .campo-primary-focus:focus,
+  .campo-primary-focus:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: var(--brand-primary) !important;
+  }
+  
   .select-trigger-brand {
     border-radius: var(--brand-radius, 8px);
   }
@@ -297,10 +332,49 @@ All colors MUST be HSL.
   .select-trigger-brand[data-state='open'] {
     border-color: var(--brand-secondary) !important;
   }
+  
+  /* Select com foco na cor primária da empresa */
+  .select-trigger-primary {
+    border-radius: var(--brand-radius, 8px);
+  }
+  .select-trigger-primary:focus,
+  .select-trigger-primary:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: var(--brand-primary) !important;
+  }
+  .select-trigger-primary[data-state='open'] {
+    border-color: var(--brand-primary) !important;
+  }
+  
   .dropdown-item-brand[data-highlighted],
   .dropdown-item-brand[data-state='checked'] {
-    background-color: var(--brand-secondary) !important;
+    background-color: var(--brand-primary) !important;
     color: #fff !important;
+  }
+
+  /* Dropdowns do LeadModal com cor primária da empresa */
+  .lead-modal-dropdown [data-radix-select-item][data-highlighted],
+  .lead-modal-dropdown [data-radix-select-item][data-state='checked'] {
+    background-color: var(--brand-primary) !important;
+    color: #fff !important;
+  }
+
+  /* SelectItems do LeadModal com cor primária da empresa */
+  .lead-dropdown-item[data-highlighted],
+  .lead-dropdown-item[data-state='checked'] {
+    background-color: var(--brand-primary) !important;
+    color: #fff !important;
+  }
+
+  /* Botão de 3 pontinhos sem borda */
+  .more-button:focus,
+  .more-button:focus-visible,
+  .more-button:active {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+    ring: none !important;
   }
 
   /* Forçar alinhamento à esquerda nos Selects */
@@ -328,5 +402,57 @@ All colors MUST be HSL.
   /* Cor da barrinha das abas ativas */
   [data-state="active"]:after {
     background-color: var(--tab-active-color, #A86F57) !important;
+  }
+
+  /* Estilos para dropdowns de situação */
+  .status-filter-dropdown[data-state='open'] {
+    border-color: var(--brand-secondary) !important;
+  }
+  
+  .status-filter-dropdown .select-content {
+    border-color: var(--brand-secondary) !important;
+  }
+  
+  /* Hover nos itens do dropdown */
+  .status-filter-dropdown [data-highlighted] {
+    background-color: var(--brand-secondary) !important;
+    color: #fff !important;
+  }
+  
+  /* Item selecionado */
+  .status-filter-dropdown [data-state='checked'] {
+    background-color: var(--brand-primary) !important;
+    color: #fff !important;
+  }
+  
+  /* Ícone de check do item selecionado */
+  .status-filter-dropdown [data-state='checked'] .h-4 {
+    color: #fff !important;
+  }
+  
+  /* Estilos específicos para o Radix Select */
+  .status-filter-dropdown [data-radix-select-item][data-highlighted] {
+    background-color: var(--brand-secondary) !important;
+    color: #fff !important;
+  }
+  
+  .status-filter-dropdown [data-radix-select-item][data-state='checked'] {
+    background-color: var(--brand-primary) !important;
+    color: #fff !important;
+  }
+
+  /* Estilos para o botão do ModuleSwitcher */
+  .module-switcher-button {
+    transition: background-color 0.2s ease, color 0.2s ease !important;
+  }
+  
+  .module-switcher-button:hover {
+    background-color: var(--brand-secondary) !important;
+    color: #fff !important;
+  }
+  
+  .module-switcher-button:active {
+    background-color: var(--brand-secondary) !important;
+    color: #fff !important;
   }
 }

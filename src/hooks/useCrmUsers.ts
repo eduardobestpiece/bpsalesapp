@@ -26,7 +26,7 @@ export const useCrmUsers = (companyId?: string) => {
       
       console.log('[useCrmUsers] Resultado da query:', { data, error });
       console.log('[useCrmUsers] Número de usuários retornados:', data?.length || 0);
-      
+
       if (error) {
         console.error('[useCrmUsers] Erro na query:', error);
         throw error;
@@ -40,10 +40,15 @@ export const useCrmUsers = (companyId?: string) => {
 };
 
 export const useCrmUsersByCompany = (companyId?: string | null) => {
+  console.log('[useCrmUsersByCompany] Hook chamado com companyId:', companyId);
+  
   return useQuery({
     queryKey: ['crm-users', companyId],
     enabled: !!companyId,
     queryFn: async () => {
+      console.log('[useCrmUsersByCompany] Executando query para buscar usuários...');
+      console.log('[useCrmUsersByCompany] CompanyId:', companyId);
+      
       simInfoLog('[USERS-QUERY] fetching by company', { companyId });
       const { data, error } = await supabase
         .from('crm_users')
@@ -52,8 +57,12 @@ export const useCrmUsersByCompany = (companyId?: string | null) => {
         .eq('company_id', companyId as string)
         .order('created_at', { ascending: false });
 
+      console.log('[useCrmUsersByCompany] Resultado da query:', { data, error });
+      console.log('[useCrmUsersByCompany] Número de usuários retornados:', data?.length || 0);
+
       simInfoLog('[USERS-QUERY] result', { count: data?.length ?? 0, error });
       if (error) {
+        console.error('[useCrmUsersByCompany] Erro na query:', error);
         if (error.code === 'PGRST301' || error.message.includes('RLS')) {
           return [] as CrmUser[];
         }
@@ -185,7 +194,7 @@ export const useUpdateCrmUser = () => {
         .select('*')
         .eq('id', id)
         .single();
-      
+
       console.log('[useUpdateCrmUser] Resultado da busca:', { updatedUser, fetchError });
 
       if (fetchError) {

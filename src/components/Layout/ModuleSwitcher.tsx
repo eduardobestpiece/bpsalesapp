@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useUserPermissions } from '@/hooks/useUserPermissions';
+import { useCompany } from '@/contexts/CompanyContext';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ModuleSwitcherProps {
@@ -13,9 +14,28 @@ interface ModuleSwitcherProps {
 export const ModuleSwitcher = ({ current }: ModuleSwitcherProps) => {
   const navigate = useNavigate();
   const { userRole, companyId, crmUser } = useCrmAuth();
+  const { selectedCompanyId } = useCompany();
   
   // Hook para verificar permissões customizadas do usuário
   const { canAccessSimulator, canAccessSimulatorConfig } = useUserPermissions();
+
+  // Buscar branding da empresa
+  const currentCompanyId = selectedCompanyId || companyId;
+  const { data: branding } = useQuery({
+    queryKey: ['company_branding', currentCompanyId],
+    enabled: !!currentCompanyId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('company_branding')
+        .select('primary_color, secondary_color')
+        .eq('company_id', currentCompanyId)
+        .maybeSingle();
+      return data;
+    },
+  });
+
+  const primaryColor = branding?.primary_color || '#A86F57';
+  const secondaryColor = branding?.secondary_color || '#6B7280';
 
   const effectiveCompanyId =
     (typeof window !== 'undefined' ? localStorage.getItem('selectedCompanyId') : null) ||
@@ -138,8 +158,12 @@ export const ModuleSwitcher = ({ current }: ModuleSwitcherProps) => {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
-          className="flex items-center space-x-2 text-sm text-foreground px-3 py-1.5 brand-radius"
-          style={{ backgroundColor: 'rgba(var(--brand-secondary-rgb), 0.10)' }}
+          className="flex items-center space-x-2 text-sm text-foreground px-3 py-1.5 brand-radius module-switcher-button"
+          style={{ 
+            backgroundColor: 'rgba(var(--brand-secondary-rgb), 0.10)',
+            '--brand-secondary': secondaryColor,
+            '--brand-primary': primaryColor
+          } as React.CSSProperties}
         >
           <span className="font-medium">{currentLabel}</span>
         </button>

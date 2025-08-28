@@ -166,7 +166,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
         };
         
         console.log('[UserModal] Dados para convite:', inviteData);
-        
+
         const { data, error } = await supabase.functions.invoke('invite-user', {
           body: inviteData,
         });
@@ -219,101 +219,101 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
 
   return (
     <>
-      <FullScreenModal
-        isOpen={isOpen}
-        onClose={onClose}
-        title={user ? 'Editar Usuário' : 'Novo Usuário'}
-        actions={<Button type="submit" form="user-form" variant="brandPrimaryToSecondary" className="brand-radius">{isLoading ? 'Salvando...' : (user ? 'Atualizar' : 'Convidar')}</Button>}
-      >
-          <form id="user-form" onSubmit={handleSubmit} className="space-y-4">
-            {/* Seleção de empresa */}
-            {crmUser?.role === 'master' && (
-              <div>
-                <Label htmlFor="company_id">Empresa *</Label>
-                <Select
-                  value={selectedCompanyId || companyId || ''}
-                  onValueChange={(value) => setSelectedCompanyId(value)}
-                  disabled={isLoading || companiesLoading}
-                  required
-                >
-                  <SelectTrigger className="select-trigger-brand brand-radius">
-                    <SelectValue placeholder="Selecione a empresa" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {companiesLoading ? (
-                      <div className="px-4 py-2 text-muted-foreground text-sm">Carregando empresas...</div>
-                    ) : companies.length > 0 ? (
-                      companies.map((c: any) => (
-                        <SelectItem key={c.id} value={c.id} className="dropdown-item-brand">{c.name}</SelectItem>
-                      ))
-                    ) : (
-                      <div className="px-4 py-2 text-muted-foreground text-sm">Nenhuma empresa encontrada</div>
-                    )}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-            {user && (
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="first_name">Nome *</Label>
-                  <Input
-                    id="first_name"
-                    value={formData.first_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
-                    required
-                    disabled={isLoading}
-                    className="campo-brand brand-radius"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="last_name">Sobrenome *</Label>
-                  <Input
-                    id="last_name"
-                    value={formData.last_name}
-                    onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
-                    required
-                    disabled={isLoading}
-                    className="campo-brand brand-radius"
-                  />
-                </div>
-              </div>
-            )}
+    <FullScreenModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={user ? 'Editar Usuário' : 'Novo Usuário'}
+      actions={<Button type="submit" form="user-form" variant="brandPrimaryToSecondary" className="brand-radius">{isLoading ? 'Salvando...' : (user ? 'Atualizar' : 'Convidar')}</Button>}
+    >
+        <form id="user-form" onSubmit={handleSubmit} className="space-y-4">
+          {/* Seleção de empresa */}
+          {crmUser?.role === 'master' && (
             <div>
-              <Label htmlFor="email">Email *</Label>
-              <Input
-                id="email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+              <Label htmlFor="company_id">Empresa *</Label>
+              <Select
+                value={selectedCompanyId || companyId || ''}
+                onValueChange={(value) => setSelectedCompanyId(value)}
+                disabled={isLoading || companiesLoading}
                 required
-                disabled={isLoading || !!user}
-                className="campo-brand brand-radius"
-              />
-              {user && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  O email não pode ser alterado após a criação
-                </p>
-              )}
+              >
+                <SelectTrigger className="select-trigger-brand brand-radius">
+                  <SelectValue placeholder="Selecione a empresa" />
+                </SelectTrigger>
+                <SelectContent>
+                  {companiesLoading ? (
+                    <div className="px-4 py-2 text-muted-foreground text-sm">Carregando empresas...</div>
+                  ) : companies.length > 0 ? (
+                    companies.map((c: any) => (
+                      <SelectItem key={c.id} value={c.id} className="dropdown-item-brand">{c.name}</SelectItem>
+                    ))
+                  ) : (
+                    <div className="px-4 py-2 text-muted-foreground text-sm">Nenhuma empresa encontrada</div>
+                  )}
+                </SelectContent>
+              </Select>
             </div>
-            {user && (
+          )}
+          {user && (
+            <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="phone">Telefone</Label>
+                <Label htmlFor="first_name">Nome *</Label>
                 <Input
-                  id="phone"
-                  value={formData.phone}
-                  onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                  placeholder="(11) 99999-9999"
+                  id="first_name"
+                  value={formData.first_name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
+                  required
                   disabled={isLoading}
                   className="campo-brand brand-radius"
                 />
               </div>
+              <div>
+                <Label htmlFor="last_name">Sobrenome *</Label>
+                <Input
+                  id="last_name"
+                  value={formData.last_name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
+                  required
+                  disabled={isLoading}
+                  className="campo-brand brand-radius"
+                />
+              </div>
+            </div>
+          )}
+          <div>
+            <Label htmlFor="email">Email *</Label>
+            <Input
+              id="email"
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+              required
+              disabled={isLoading || !!user}
+              className="campo-brand brand-radius"
+            />
+            {user && (
+              <p className="text-xs text-muted-foreground mt-1">
+                O email não pode ser alterado após a criação
+              </p>
             )}
-            {/* Seleção de papel */}
+          </div>
+          {user && (
             <div>
-              <Label htmlFor="role">Papel *</Label>
-              <Select
-                value={formData.role}
+              <Label htmlFor="phone">Telefone</Label>
+              <Input
+                id="phone"
+                value={formData.phone}
+                onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
+                placeholder="(11) 99999-9999"
+                disabled={isLoading}
+                className="campo-brand brand-radius"
+              />
+            </div>
+          )}
+          {/* Seleção de papel */}
+          <div>
+            <Label htmlFor="role">Papel *</Label>
+            <Select
+              value={formData.role}
                 onValueChange={(value) => {
                   setFormData((prev) => ({ 
                     ...prev, 
@@ -322,21 +322,21 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
                     team_id: value === 'leader' ? prev.team_id : ''
                   }));
                 }}
-                disabled={isLoading}
-                required
-              >
-                <SelectTrigger className="select-trigger-brand brand-radius">
-                  <SelectValue placeholder="Selecione o papel" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="user" className="dropdown-item-brand">Usuário</SelectItem>
+              disabled={isLoading}
+              required
+            >
+              <SelectTrigger className="select-trigger-brand brand-radius">
+                <SelectValue placeholder="Selecione o papel" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="user" className="dropdown-item-brand">Usuário</SelectItem>
                   <SelectItem value="leader" className="dropdown-item-brand">Líder</SelectItem>
-                  {canCreateAdmin && <SelectItem value="admin" className="dropdown-item-brand">Administrador</SelectItem>}
-                  {canCreateSubMaster && <SelectItem value="submaster" className="dropdown-item-brand">SubMaster (visualização total, sem edição)</SelectItem>}
-                  {crmUser?.role === 'master' && <SelectItem value="master" className="dropdown-item-brand">Master</SelectItem>}
-                </SelectContent>
-              </Select>
-            </div>
+                {canCreateAdmin && <SelectItem value="admin" className="dropdown-item-brand">Administrador</SelectItem>}
+                {canCreateSubMaster && <SelectItem value="submaster" className="dropdown-item-brand">SubMaster (visualização total, sem edição)</SelectItem>}
+                {crmUser?.role === 'master' && <SelectItem value="master" className="dropdown-item-brand">Master</SelectItem>}
+              </SelectContent>
+            </Select>
+          </div>
 
             {/* Seleção de time (apenas para líderes) */}
             {formData.role === 'leader' && (
@@ -371,9 +371,9 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
               </div>
             )}
 
-            <div className="flex justify-end space-x-2 pt-4"></div>
-          </form>
-      </FullScreenModal>
+          <div className="flex justify-end space-x-2 pt-4"></div>
+        </form>
+    </FullScreenModal>
 
       {/* Modal para criar time */}
       <TeamModal

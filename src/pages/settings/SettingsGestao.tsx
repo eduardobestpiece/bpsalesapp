@@ -19,6 +19,7 @@ import { AvatarCropper } from '@/components/CRM/AvatarCropper';
 import { UserModal } from '@/components/CRM/Configuration/UserModal';
 import { CreatePermissionModal, EditPermissionModal } from '@/components/Administrators/PermissionModal';
 import { usePermissions } from '@/hooks/usePermissions';
+import { useGestaoPermissions } from '@/hooks/useGestaoPermissions';
 
 export default function SettingsGestao() {
   const { user, crmUser, userRole, companyId, refreshCrmUser } = useCrmAuth();
@@ -117,12 +118,30 @@ export default function SettingsGestao() {
   const { data: users = [], isLoading: usersLoading } = useQuery({
     queryKey: ['crm_users', selectedCompanyId || companyId],
     queryFn: async () => {
-      if (!selectedCompanyId && !companyId) return [];
-      const { data } = await supabase
+      console.log('[SettingsGestao] Executando query de usuários...');
+      console.log('[SettingsGestao] selectedCompanyId:', selectedCompanyId);
+      console.log('[SettingsGestao] companyId:', companyId);
+      console.log('[SettingsGestao] effectiveCompanyId:', selectedCompanyId || companyId);
+      
+      if (!selectedCompanyId && !companyId) {
+        console.log('[SettingsGestao] Nenhum companyId disponível, retornando array vazio');
+        return [];
+      }
+      
+      const { data, error } = await supabase
         .from('crm_users')
         .select('*')
         .eq('company_id', selectedCompanyId || companyId)
         .order('created_at', { ascending: false });
+      
+      console.log('[SettingsGestao] Resultado da query:', { data, error });
+      console.log('[SettingsGestao] Número de usuários retornados:', data?.length || 0);
+      
+      if (error) {
+        console.error('[SettingsGestao] Erro na query:', error);
+        throw error;
+      }
+      
       return data || [];
     },
     enabled: !!(selectedCompanyId || companyId)
@@ -143,12 +162,30 @@ export default function SettingsGestao() {
     }
   });
 
+  // Hook para permissões de gestão
+  const gestaoPermissions = useGestaoPermissions();
+
   // Simplificar permissões - permitir acesso se não houver restrições específicas
   const canProfile = perms['settings_profile'] !== false;
-  const canCompany = perms['settings_company'] !== false || userRole === 'admin' || userRole === 'master';
-  const canUsers = perms['settings_users'] !== false || userRole === 'admin' || userRole === 'master';
-  const canPermissions = perms['settings_permissions'] !== false || userRole === 'admin' || userRole === 'master';
-  const canEdit = userRole === 'admin' || userRole === 'master';
+  const canCompany = gestaoPermissions.canView;
+  const canUsers = gestaoPermissions.canView;
+  const canPermissions = gestaoPermissions.canView;
+  const canEdit = gestaoPermissions.canEdit;
+  const canCreate = gestaoPermissions.canCreate;
+  const canDeactivate = gestaoPermissions.canDeactivate;
+
+
+
+  // Função para traduzir roles para português
+  const getRoleLabel = (role: string) => {
+    const labels = {
+      master: 'Master',
+      admin: 'Administrador',
+      leader: 'Líder',
+      user: 'Usuário'
+    };
+    return labels[role as keyof typeof labels] || role;
+  };
 
   // Carregar dados de branding
   useEffect(() => {
@@ -830,6 +867,10 @@ export default function SettingsGestao() {
     return matchesSearch && matchesRole && matchesStatus;
   });
 
+  console.log('[SettingsGestao] Usuários carregados:', users);
+  console.log('[SettingsGestao] Usuários filtrados:', filteredUsers);
+  console.log('[SettingsGestao] Filtros aplicados:', { userSearchTerm, userRoleFilter, userStatusFilter });
+
   // Funções auxiliares
   const userInitials = crmUser
     ? `${crmUser.first_name?.charAt(0) || ''}${crmUser.last_name?.charAt(0) || ''}`.toUpperCase()
@@ -885,6 +926,8 @@ export default function SettingsGestao() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">Gestão</h1>
         <p className="text-muted-foreground">Gerencie perfil, empresa e usuários</p>
+        
+
       </div>
 
       <Card className="shadow-xl border-0 bg-card">
@@ -1115,14 +1158,16 @@ export default function SettingsGestao() {
                       <h2 className="text-2xl font-semibold text-foreground">Empresa</h2>
                       <p className="text-muted-foreground mt-1">Configure os dados cadastrais e o visual da sua empresa</p>
                     </div>
-                    <Button 
-                      onClick={() => upsertProfile.mutate()} 
-                      disabled={upsertProfile.isPending}
-                      className="text-white"
-                      style={{ backgroundColor: 'var(--brand-primary, #A86F57)', borderRadius: 'var(--brand-radius, 8px)' }}
-                    >
-                      {upsertProfile.isPending ? 'Salvando...' : 'Salvar dados da empresa'}
-                    </Button>
+                    {canEdit && (
+                      <Button 
+                        onClick={() => upsertProfile.mutate()} 
+                        disabled={upsertProfile.isPending}
+                        className="text-white"
+                        style={{ backgroundColor: 'var(--brand-primary, #A86F57)', borderRadius: 'var(--brand-radius, 8px)' }}
+                      >
+                        {upsertProfile.isPending ? 'Salvando...' : 'Salvar dados da empresa'}
+                      </Button>
+                    )}
                   </div>
 
                   {/* Dados Cadastrais */}
@@ -1435,14 +1480,16 @@ export default function SettingsGestao() {
                       <div className="text-sm text-muted-foreground">
                         Total: <span className="font-semibold text-foreground">{filteredUsers.length}</span> usuário{filteredUsers.length !== 1 ? 's' : ''}
                       </div>
-                      <Button 
-                        onClick={handleAddUser}
-                        className="text-white"
-                        style={{ backgroundColor: 'var(--brand-primary, #A86F57)', borderRadius: 'var(--brand-radius, 8px)' }}
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Adicionar Usuário
-                      </Button>
+                      {canCreate && (
+                        <Button 
+                          onClick={handleAddUser}
+                          className="text-white"
+                          style={{ backgroundColor: 'var(--brand-primary, #A86F57)', borderRadius: 'var(--brand-radius, 8px)' }}
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Adicionar Usuário
+                        </Button>
+                      )}
                     </div>
                   </div>
 
@@ -1490,6 +1537,7 @@ export default function SettingsGestao() {
                       <TableRow>
                         <TableHead className="text-left">Nome</TableHead>
                         <TableHead className="text-left">E-mail</TableHead>
+                        <TableHead className="text-left">Telefone</TableHead>
                         <TableHead className="text-left">Função</TableHead>
                         <TableHead className="text-left">Status</TableHead>
                         <TableHead className="text-right">Ações</TableHead>
@@ -1498,13 +1546,13 @@ export default function SettingsGestao() {
                     <TableBody>
                       {usersLoading ? (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center py-4">
+                          <TableCell colSpan={6} className="text-center py-4">
                             Carregando usuários...
                           </TableCell>
                         </TableRow>
                       ) : filteredUsers.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                          <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                             {userSearchTerm ? 'Nenhum usuário encontrado com este termo.' : 'Nenhum usuário encontrado.'}
                           </TableCell>
                         </TableRow>
@@ -1515,7 +1563,8 @@ export default function SettingsGestao() {
                               {user.first_name} {user.last_name}
                             </TableCell>
                             <TableCell>{user.email}</TableCell>
-                            <TableCell>{user.role || 'Usuário'}</TableCell>
+                            <TableCell>{user.phone || '-'}</TableCell>
+                            <TableCell>{getRoleLabel(user.role)}</TableCell>
                             <TableCell>
                               <Badge
                                 className="text-white"
@@ -1531,15 +1580,17 @@ export default function SettingsGestao() {
                             </TableCell>
                             <TableCell className="text-right">
                               <div className="flex justify-end space-x-2">
-                                <Button
-                                  variant="brandOutlineSecondaryHover"
-                                  size="sm"
-                                  className="brand-radius"
-                                  onClick={() => handleEditUser(user)}
-                                >
-                                  <Edit className="w-4 h-4" />
-                                </Button>
-                                {user.role !== 'master' && (
+                                {canEdit && (
+                                  <Button
+                                    variant="brandOutlineSecondaryHover"
+                                    size="sm"
+                                    className="brand-radius"
+                                    onClick={() => handleEditUser(user)}
+                                  >
+                                    <Edit className="w-4 h-4" />
+                                  </Button>
+                                )}
+                                {canDeactivate && user.role !== 'master' && (
                                   <Button
                                     variant="brandOutlineSecondaryHover"
                                     size="sm"
@@ -1573,14 +1624,16 @@ export default function SettingsGestao() {
                       <h2 className="text-2xl font-semibold text-foreground">Permissões</h2>
                       <p className="text-muted-foreground mt-1">Gerencie as permissões de acesso do sistema</p>
                     </div>
-                    <Button 
-                      onClick={handleCreatePermission}
-                      className="text-white"
-                      style={{ backgroundColor: 'var(--brand-primary, #A86F57)', borderRadius: 'var(--brand-radius, 8px)' }}
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      Nova Permissão
-                    </Button>
+                    {canCreate && (
+                      <Button 
+                        onClick={handleCreatePermission}
+                        className="text-white"
+                        style={{ backgroundColor: 'var(--brand-primary, #A86F57)', borderRadius: 'var(--brand-radius, 8px)' }}
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Nova Permissão
+                      </Button>
+                    )}
                   </div>
 
                   {/* Tabela de Permissões */}
@@ -1596,7 +1649,7 @@ export default function SettingsGestao() {
                     </TableHeader>
                     <TableBody>
                       {permissionsLoading ? (
-                        <TableRow>
+                      <TableRow>
                           <TableCell colSpan={5} className="text-center py-8">
                             <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
                             <p className="text-muted-foreground">Carregando permissões...</p>
@@ -1612,65 +1665,69 @@ export default function SettingsGestao() {
                         formattedPermissions.map((permission) => (
                           <TableRow key={permission.id}>
                             <TableCell className="font-medium">{permission.name}</TableCell>
-                            <TableCell>
-                              <Badge
-                                className="text-white"
-                                style={{ 
+                        <TableCell>
+                          <Badge
+                            className="text-white"
+                            style={{ 
                                   backgroundColor: permission.status === 'active' 
                                     ? 'var(--brand-primary, #A86F57)' 
                                     : '#6b7280', 
-                                  borderRadius: 'var(--brand-radius, 8px)' 
-                                }}
-                              >
+                              borderRadius: 'var(--brand-radius, 8px)' 
+                            }}
+                          >
                                 {permission.status === 'active' ? 'Ativa' : 'Inativa'}
-                              </Badge>
-                            </TableCell>
+                          </Badge>
+                        </TableCell>
                             <TableCell>{permission.level}</TableCell>
                             <TableCell className="max-w-xs truncate" title={permission.detail}>
                               {permission.detail || '-'}
                             </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end space-x-2">
+                        <TableCell className="text-right">
+                          <div className="flex justify-end space-x-2">
+                            {canEdit && (
+                              <Button
+                                variant="brandOutlineSecondaryHover"
+                                size="sm"
+                                className="brand-radius"
+                                onClick={() => handleEditPermission(permission.raw)}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            )}
+                            {canDeactivate && (
+                              permission.status === 'active' ? (
                                 <Button
                                   variant="brandOutlineSecondaryHover"
                                   size="sm"
                                   className="brand-radius"
-                                  onClick={() => handleEditPermission(permission.raw)}
+                                  onClick={() => deletePermission(permission.id)}
+                                  disabled={isDeleting}
                                 >
-                                  <Edit className="w-4 h-4" />
+                                  {isDeleting ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <PowerOff className="w-4 h-4" />
+                                  )}
                                 </Button>
-                                {permission.status === 'active' ? (
-                                  <Button
-                                    variant="brandOutlineSecondaryHover"
-                                    size="sm"
-                                    className="brand-radius"
-                                    onClick={() => deletePermission(permission.id)}
-                                    disabled={isDeleting}
-                                  >
-                                    {isDeleting ? (
-                                      <Loader2 className="w-4 h-4 animate-spin" />
-                                    ) : (
-                                      <PowerOff className="w-4 h-4" />
-                                    )}
-                                  </Button>
-                                ) : (
-                                  <Button
-                                    variant="brandOutlineSecondaryHover"
-                                    size="sm"
-                                    className="brand-radius"
-                                    onClick={() => reactivatePermission(permission.id)}
-                                    disabled={isReactivating}
-                                  >
-                                    {isReactivating ? (
-                                      <Loader2 className="w-4 h-4 animate-spin" />
-                                    ) : (
-                                      <Power className="w-4 h-4" />
-                                    )}
-                                  </Button>
-                                )}
-                              </div>
-                            </TableCell>
-                          </TableRow>
+                              ) : (
+                                <Button
+                                  variant="brandOutlineSecondaryHover"
+                                  size="sm"
+                                  className="brand-radius"
+                                  onClick={() => reactivatePermission(permission.id)}
+                                  disabled={isReactivating}
+                                >
+                                  {isReactivating ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <Power className="w-4 h-4" />
+                                  )}
+                                </Button>
+                              )
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
                         ))
                       )}
                     </TableBody>

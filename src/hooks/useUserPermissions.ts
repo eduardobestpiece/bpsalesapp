@@ -231,6 +231,7 @@ export const useUserPermissions = () => {
   };
 
   return {
+    userRole, // Adicionando userRole ao retorno
     userPermissions,
     canAccessModule,
     canAccessSimulator,

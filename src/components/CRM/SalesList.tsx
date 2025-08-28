@@ -61,15 +61,13 @@ export const SalesList = ({ companyId }: SalesListProps) => {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="flex justify-between mb-4">
-            <Input
-              placeholder="Buscar venda..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="max-w-xs"
-              disabled={isSubMaster}
-            />
-          </div>
+          <Input
+            placeholder="Buscar venda..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="max-w-xs mb-4"
+            disabled={isSubMaster}
+          />
           <div className="space-y-2">
             {isLoading ? (
               <div>Carregando...</div>

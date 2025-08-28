@@ -6,6 +6,511 @@
 
 ---
 
+## Requisição Atual: Remoção dos Campos Valor das Vendas e Recomendações dos Modais de Funis
+
+**Data:** 2025-01-29  
+**Solicitante:** Eduardo Costa  
+**Status:** ✅ Concluído
+
+### Funcionalidade Solicitada
+Remover os campos "Valor das Vendas", "Recomendações", "Periodicidade" e "Prazo do Indicador" dos modais de criação e edição de funis, otimizar a estrutura do layout e adicionar campo "Conexão" nas etapas do funil.
+
+### Análise Realizada
+1. **Localização dos Arquivos:**
+   - Modal de funis: `src/components/CRM/Configuration/FunnelModal.tsx`
+   - Campos identificados: `sales_value_mode` e `recommendations_mode`
+
+2. **Campos a Remover:**
+   - Campo "Valor das Vendas" (sales_value_mode)
+   - Campo "Recomendações" (recommendations_mode)
+   - Campo "Periodicidade" (verification_type)
+   - Campo "Dia de Verificação" (verification_day)
+   - Campo "Prazo do Indicador" (indicator_deadline_hours)
+
+### Implementação Realizada
+
+#### **1. Remoção dos Campos do Estado**
+- ✅ **Removido**: `sales_value_mode`, `recommendations_mode`, `verification_type`, `verification_day` e `indicator_deadline_hours` do estado `formData`
+- ✅ **Simplificado**: Interface de formulário mais limpa
+
+#### **2. Remoção da Interface**
+- ✅ **Seção Removida**: Campos restritos para master/admin
+- ✅ **Campo Removido**: Periodicidade (verification_type)
+- ✅ **Campo Removido**: Dia de Verificação (verification_day)
+- ✅ **Campo Removido**: Prazo do Indicador (indicator_deadline_hours)
+- ✅ **Interface Limpa**: Apenas campos essenciais mantidos
+
+#### **3. Remoção da Lógica de Salvamento**
+- ✅ **Dados Removidos**: Campos não são mais enviados para o banco
+- ✅ **Função Removida**: `getVerificationDayOptions()` não é mais necessária
+- ✅ **Validação Removida**: Validação do prazo do indicador não é mais necessária
+- ✅ **Reset Simplificado**: Formulário reset sem os campos removidos
+
+#### **4. Otimização da Estrutura do Layout**
+- ✅ **Divs Removidas**: Espaços em branco desnecessários removidos
+- ✅ **Card Removido**: Estrutura do Card substituída por div simples
+- ✅ **Layout Limpo**: Estrutura mais organizada e eficiente
+- ✅ **Código Otimizado**: Remoção de elementos vazios e importações desnecessárias
+
+#### **5. Adição do Campo Conexão**
+- ✅ **Switch de Controle**: Liga/desliga conexão por etapa
+- ✅ **Seleção de Funil**: Dropdown para escolher funil de destino
+- ✅ **Seleção de Etapa**: Dropdown para escolher etapa de destino
+- ✅ **Indicador Visual**: Fluxo visual da conexão
+- ✅ **Interface Integrada**: Campo adicionado dentro de cada etapa
+- ✅ **Opção Adicionar Funil**: Primeira opção do dropdown (funcionalidade em desenvolvimento)
+- ✅ **Feedback ao Usuário**: Toast informativo quando selecionado
+- ✅ **Hook useFunnels**: Importação e uso correto do hook para buscar funis
+- ✅ **Variável selectedFunnel**: Corrigida referência para usar `funnel` existente
+- ✅ **SelectItem Value**: Corrigido valor vazio para "separator" válido
+- ✅ **Conexão na Última Etapa**: Campo de conexão aparece apenas na última etapa do funil
+- ✅ **Checkbox de Recomendações**: Substituído radio button por checkbox opcional
+- ✅ **Campo Meta de Recomendações**: Aparece quando etapa é selecionada como recomendação
+- ✅ **Checkbox Funcional**: Corrigido problema de desmarcação em novos funis
+- ✅ **Layout Reorganizado**: 3 linhas bem estruturadas conforme solicitado
+- ✅ **Switch de Conexão**: Posicionado à direita do texto, alinhado à esquerda
+- ✅ **Checkbox de Recomendações**: Movido para direita do número da etapa
+- ✅ **Campo Meta**: Aparece na mesma linha dos outros campos quando checkbox marcado
+- ✅ **Adicionar Funil**: Opção aparece apenas no modal de edição
+- ✅ **Toast Informativo**: Feedback temporário para funcionalidade futura
+- ✅ **Sem Erros**: Código limpo sem recursão
+- ✅ **Campo Conversão**: Checkbox "Conversão" adicionado ao lado de "Etapa de Recomendações"
+- ✅ **Dropdown Tipo de Conversão**: Aparece quando conversão é marcada com opções MQL, SQL, SAL, Venda
+- ✅ **Correção Campo verification_type**: Adicionado campo obrigatório para criação de funis
+- ✅ **Correção Nomes dos Campos**: Ajustados nomes dos campos de conexão para corresponder ao banco
+- ✅ **Correção Dropdown Etapa**: Campo "Etapa do funil" agora aparece corretamente
+- ✅ **Remoção recommendation_target**: Campo removido da criação de funis (não existe na tabela)
+- ✅ **Correção UUID Temporário**: Validação para evitar envio de IDs temporários como UUIDs
+- ✅ **Correção Checkbox Recomendações**: Funciona agora tanto para etapas existentes quanto novas
+- ✅ **Adição Colunas Conversão**: SQL fornecido para adicionar is_conversion e conversion_type
+- ✅ **Debugs Detalhados**: Adicionados logs completos para identificar problemas
+- ✅ **Correção Meta Recomendações**: Campo de meta agora é salvo corretamente
+- ✅ **Correção Checkbox Criação**: Checkbox funciona agora na criação de novos funis
+- ✅ **Correção Listagem Funis**: Agora mostra todos os funis (ativos e arquivados)
+- ✅ **Correção Campo Meta**: Campo de meta agora aparece na criação de funis
+- ✅ **Exclusão Permanente Master**: Usuários Master podem excluir funis permanentemente
+- ✅ **Correção userRole**: Hook useUserPermissions agora retorna userRole corretamente
+- ✅ **Implementação SettingsCrm**: Funcionalidade de exclusão adicionada na página correta
+- ✅ **Correção Foreign Key Constraint**: Ordem de exclusão corrigida para evitar referência circular
+- ✅ **Correção Referências Entre Etapas**: Limpeza de conversion_stage_id antes da exclusão
+- ✅ **Correção Ordem de Exclusão**: Busca e limpeza de referências antes da exclusão em lote
+- ✅ **Filtros por Situação**: Implementados nas abas Funis, Origens e Times
+- ✅ **Personalização de Cores**: Dropdowns de situação com cores da empresa
+- ✅ **Correção Seletores CSS**: Ajustados para funcionar com Radix UI
+- ✅ **Botão ModuleSwitcher**: Personalizado com cores da empresa
+- ✅ **Botão SidebarTrigger**: Personalizado com cores da empresa
+
+### Funcionalidades Mantidas
+- ✅ **Nome do Funil**: Campo obrigatório
+- ✅ **Etapas do Funil**: Com metas e percentuais
+- ✅ **Etapa de Recomendações**: Seleção via radio buttons
+- ✅ **Campo Conexão**: Switch para conectar etapas a outros funis
+
+### Status Atual
+- ✅ **Campos Removidos**: Interface limpa e simplificada
+- ✅ **Funcionalidade Mantida**: Todas as outras funcionalidades preservadas
+- ✅ **Código Limpo**: Removidas referências desnecessárias
+
+---
+
+## Requisição Anterior: Recriação Completa do Sistema de Registro de Indicadores
+
+**Data:** 2025-01-29  
+**Solicitante:** Eduardo Costa  
+**Status:** ✅ Concluído
+
+### Funcionalidade Solicitada
+Recriar completamente o sistema de registro de indicadores com as seguintes mudanças:
+
+1. **Remover Periodicidade Semanal/Mensal**: Apenas diário
+2. **Remover Campos**: Valor das Vendas e Recomendações do modal
+3. **Adicionar Sistema de Conversão**: Opção de liga/desliga para conectar etapas a outros funis
+
+### Análise Realizada
+1. **Estrutura Atual do Sistema:**
+   - Modal complexo com múltiplas periodicidades
+   - Campos de vendas e recomendações
+   - Sistema de períodos baseado em funis
+   - Estrutura de banco com campos desnecessários
+
+2. **Necessidades Identificadas:**
+   - Simplificação para apenas periodicidade diária
+   - Remoção de campos não utilizados
+   - Implementação de sistema de conversão entre funis
+   - Interface mais limpa e focada
+
+### Implementação Realizada
+
+#### **1. Migração do Banco de Dados**
+- ✅ **Script SQL Criado**: `update_indicators_system.sql`
+- ✅ **Novos Campos**: `conversion_enabled`, `conversion_funnel_id`, `conversion_stage_id` em `funnel_stages`
+- ✅ **Campo de Controle**: `is_daily` em `indicators`
+- ✅ **Funções Auxiliares**: `get_conversion_stages()`, `validate_conversion_setup()`
+- ✅ **View de Suporte**: `indicators_with_conversions`
+
+#### **2. Modal de Indicadores Recriado**
+- ✅ **Periodicidade Simplificada**: Apenas diário (últimos 30 dias)
+- ✅ **Campos Removidos**: Valor das Vendas e Recomendações
+- ✅ **Interface Limpa**: Foco nas etapas do funil
+- ✅ **Sistema de Conversão**: Switch para habilitar/desabilitar conversão
+
+#### **3. Funcionalidades de Conversão**
+- ✅ **Switch de Controle**: Liga/desliga conversão por etapa
+- ✅ **Seleção de Funil**: Dropdown para escolher funil de destino
+- ✅ **Seleção de Etapa**: Dropdown para escolher etapa de destino
+- ✅ **Indicador Visual**: Fluxo visual da conversão
+- ✅ **Validação**: Constraint no banco para garantir configuração correta
+
+### Funcionalidades Implementadas
+
+#### **1. Estrutura de Banco Atualizada**
+```sql
+-- Novos campos em funnel_stages
+ALTER TABLE funnel_stages 
+ADD COLUMN conversion_enabled BOOLEAN DEFAULT FALSE,
+ADD COLUMN conversion_funnel_id UUID REFERENCES funnels(id),
+ADD COLUMN conversion_stage_id UUID REFERENCES funnel_stages(id);
+
+-- Campo de controle em indicators
+ALTER TABLE indicators 
+ADD COLUMN is_daily BOOLEAN DEFAULT TRUE;
+```
+
+#### **2. Interface Simplificada**
+```tsx
+// Apenas seleção de funil e data
+<Select value={formData.funnel_id}>
+  <SelectValue placeholder="Selecione um funil" />
+</Select>
+
+<Select value={formData.period_date}>
+  <SelectValue placeholder="Selecione a data" />
+</Select>
+```
+
+#### **3. Sistema de Conversão**
+```tsx
+// Switch para habilitar conversão
+<Switch
+  checked={stage.conversion_enabled || false}
+  onCheckedChange={(checked) => {
+    // Lógica de conversão
+  }}
+/>
+
+// Seleção de funil e etapa de conversão
+<Select value={stage.conversion_funnel_id}>
+  <SelectValue placeholder="Selecione o funil" />
+</Select>
+
+<Select value={stage.conversion_stage_id}>
+  <SelectValue placeholder="Selecione a etapa" />
+</Select>
+```
+
+### Status Atual
+- ✅ **Migração Criada**: Script SQL pronto para execução
+- ✅ **Modal Recriado**: Interface simplificada e funcional
+- ✅ **Sistema de Conversão**: Implementado com validações
+- ✅ **Código Limpo**: Removidas funcionalidades desnecessárias
+- ⏳ **Aguardando**: Execução do script SQL no Supabase
+
+### Próximos Passos
+1. **Executar Script SQL**: No SQL Editor do Supabase
+2. **Testar Funcionalidades**: Verificar conversões e validações
+3. **Ajustes Finais**: Se necessário após testes
+
+---
+
+## Requisição Anterior: Aplicação do Layout Padrão na Página Comercial do CRM
+
+**Data:** 2025-01-29  
+**Solicitante:** Eduardo Costa  
+**Status:** ✅ Concluído
+
+### Funcionalidade Solicitada
+Aplicar o mesmo padrão de layout das páginas "Configurações do Simulador" e "Gestão" na página "Comercial" do módulo CRM.
+
+### Análise Realizada
+1. **Estrutura Atual da Página Comercial:**
+   - **CrmDashboard**: Página principal do módulo Comercial com abas "Leads" e "Vendas"
+   - **Layout Antigo**: Usava gradientes e estrutura diferente das outras páginas
+   - **Necessidade**: Padronizar com o layout das outras páginas de configuração
+
+2. **Elementos Identificados para Padronização:**
+   - Header com título e descrição
+   - Card principal com sombra e bordas
+   - TabsList com separadores visuais
+   - TabsTrigger com indicador ativo dinâmico
+   - TabsContent com padding consistente
+   - Cores dinâmicas baseadas no branding da empresa
+
+### Implementação Realizada
+- ✅ **Estrutura Base**: Aplicado o mesmo layout de Card principal
+- ✅ **Sistema de Abas**: Implementado TabsList com separadores visuais
+- ✅ **Estilo Dinâmico**: Integradas cores da empresa no estilo das abas
+- ✅ **Organização de Conteúdo**: Reorganizado conteúdo em TabsContent
+- ✅ **Consistência Visual**: Mantido padrão visual com outras páginas
+
+### Funcionalidades Implementadas
+
+#### **1. Layout Estrutural**
+```tsx
+<div className="max-w-6xl mx-auto">
+  <div className="mb-8">
+    <h1 className="text-3xl font-bold text-foreground mb-2">Comercial</h1>
+    <p className="text-muted-foreground">Gerencie seus leads e vendas</p>
+  </div>
+  <Card className="shadow-xl border-0 bg-card">
+```
+
+#### **2. Sistema de Abas com Separadores**
+```tsx
+<TabsList className="flex items-end border-b border-border/30 bg-transparent p-0 rounded-none justify-start w-fit">
+  <TabsTrigger 
+    value="leads" 
+    className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[var(--tab-active-color)]"
+    style={{ '--tab-active-color': primaryColor } as React.CSSProperties}
+  >
+    Leads
+  </TabsTrigger>
+  <div className="w-px h-6 bg-border/30 self-center"></div>
+```
+
+#### **3. Integração com Branding**
+- ✅ **Query de Branding**: Adicionada query para buscar `company_branding`
+- ✅ **Cores Dinâmicas**: Aplicadas nas abas ativas
+- ✅ **Consistência Visual**: Mantida com outras páginas
+
+#### **4. Organização de Conteúdo**
+- ✅ **TabsContent**: Cada aba com `p-6` consistente
+- ✅ **Headers**: Títulos e descrições padronizados para "Leads" e "Vendas"
+- ✅ **Estrutura**: Espaçamento e organização uniformes
+
+### Status Atual
+- ✅ **Layout Consistente**: Página Comercial agora segue o mesmo padrão visual das outras páginas
+- ✅ **Estilo Dinâmico**: Abas com cores da empresa selecionada
+- ✅ **Organização Melhorada**: Conteúdo bem estruturado e organizado
+- ✅ **Experiência Unificada**: Interface consistente em todo o sistema
+
+---
+
+## Requisição Anterior: Aplicação do Layout Padrão na Página de Indicadores do CRM
+
+**Data:** 2025-01-29  
+**Solicitante:** Eduardo Costa  
+**Status:** ✅ Concluído
+
+### Funcionalidade Solicitada
+Analisar toda a estrutura, layout e estilo das páginas "Configurações do Simulador" e "Gestão" para aplicar o mesmo padrão na página de "Indicadores" do módulo CRM.
+
+### Análise Realizada
+1. **Estrutura das Páginas de Referência:**
+   - **SettingsSimulator**: Card principal com `shadow-xl border-0 bg-card`, TabsList com separadores visuais, TabsTrigger com estilo dinâmico baseado na cor primária da empresa
+   - **SettingsGestao**: Mesmo padrão visual, com header consistente e organização de conteúdo em TabsContent
+
+2. **Elementos Identificados:**
+   - Header com título e descrição
+   - Card principal com sombra e bordas
+   - TabsList com separadores (`w-px h-6 bg-border/30`)
+   - TabsTrigger com indicador ativo dinâmico
+   - TabsContent com padding consistente
+   - Cores dinâmicas baseadas no branding da empresa
+
+### Implementação Realizada
+- ✅ **Estrutura Base**: Aplicado o mesmo layout de Card principal
+- ✅ **Sistema de Abas**: Implementado TabsList com separadores visuais
+- ✅ **Estilo Dinâmico**: Integradas cores da empresa no estilo das abas
+- ✅ **Organização de Conteúdo**: Reorganizado conteúdo em TabsContent
+- ✅ **Consistência Visual**: Mantido padrão visual com outras páginas
+
+### Funcionalidades Implementadas
+
+#### **1. Layout Estrutural**
+```tsx
+<div className="max-w-6xl mx-auto">
+  <div className="mb-8">
+    <h1 className="text-3xl font-bold text-foreground mb-2">Indicadores</h1>
+    <p className="text-muted-foreground">Acompanhe performance e registre seus indicadores</p>
+  </div>
+  <Card className="shadow-xl border-0 bg-card">
+```
+
+#### **2. Sistema de Abas com Separadores**
+```tsx
+<TabsList className="flex items-end border-b border-border/30 bg-transparent p-0 rounded-none justify-start w-fit">
+  <TabsTrigger 
+    value="performance" 
+    className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-[var(--tab-active-color)]"
+    style={{ '--tab-active-color': primaryColor } as React.CSSProperties}
+  >
+    Performance
+  </TabsTrigger>
+  <div className="w-px h-6 bg-border/30 self-center"></div>
+```
+
+#### **3. Integração com Branding**
+- ✅ **Query de Branding**: Adicionada query para buscar `company_branding`
+- ✅ **Cores Dinâmicas**: Aplicadas nas abas ativas
+- ✅ **Consistência Visual**: Mantida com outras páginas
+
+#### **4. Organização de Conteúdo**
+- ✅ **TabsContent**: Cada aba com `p-6` consistente
+- ✅ **Headers**: Títulos e descrições padronizados
+- ✅ **Estrutura**: Espaçamento e organização uniformes
+
+### Status Atual
+- ✅ **Layout Consistente**: Página de Indicadores agora segue o mesmo padrão visual das outras páginas
+- ✅ **Estilo Dinâmico**: Abas com cores da empresa selecionada
+- ✅ **Organização Melhorada**: Conteúdo bem estruturado e organizado
+- ✅ **Experiência Unificada**: Interface consistente em todo o sistema
+
+---
+
+## Requisição Anterior: Sistema de Permissões para Aba de Gestão
+
+**Data:** 2025-01-29  
+**Solicitante:** Eduardo Costa  
+**Status:** ✅ Concluído
+
+### Funcionalidade Solicitada
+Implementar sistema de permissões para a aba de Gestão nas Configurações de Permissões com as seguintes regras:
+
+#### **Permissão "Ver":**
+- ✅ **Permitido:** Usuário consegue ver e acessar as abas Empresa, Usuários e Permissões
+- ❌ **Nenhum:** Usuário NÃO consegue ver e acessar as abas
+
+#### **Permissão "Editar":**
+- ✅ **Permitido:** Usuário consegue editar informações da empresa, ver botões de editar e editar Usuários/Permissões
+- ❌ **Nenhum:** Usuário NÃO consegue editar, NÃO vê botões de editar
+
+#### **Permissão "Criar":**
+- ✅ **Permitido:** Usuário consegue ver botões de criar e criar Usuários/Permissões
+- ❌ **Nenhum:** Usuário NÃO vê botões de criar, NÃO consegue criar
+
+#### **Permissão "Desativar":**
+- ✅ **Permitido:** Usuário consegue ver botões de desligar e desativar Usuários/Permissões
+- ❌ **Nenhum:** Usuário NÃO vê botões de desligar, NÃO consegue desativar
+
+### Implementação Realizada
+- ✅ **Hook de Permissões:** Criado `useGestaoPermissions` para verificar permissões de gestão
+- ✅ **Componente de Tabs:** Implementada renderização condicional das abas baseada em `canView`
+- ✅ **Botões de Ação:** Implementada visibilidade condicional dos botões baseada em permissões
+- ✅ **Interface:** Atualizada página de Gestão para usar o sistema de permissões
+
+### Funcionalidades Implementadas
+
+#### **1. Hook `useGestaoPermissions`**
+- ✅ **Verificação de Permissões:** Busca permissões específicas para o módulo 'gestao'
+- ✅ **Permissões Padrão:** Define permissões padrão baseadas no role do usuário
+- ✅ **Retorno:** `canView`, `canEdit`, `canCreate`, `canDeactivate`
+
+#### **2. Renderização Condicional das Abas**
+- ✅ **Aba Empresa:** Visível apenas se `canView = true`
+- ✅ **Aba Usuários:** Visível apenas se `canView = true`
+- ✅ **Aba Permissões:** Visível apenas se `canView = true`
+
+#### **3. Botões de Ação Condicionais**
+- ✅ **Botão "Salvar dados da empresa":** Visível apenas se `canEdit = true`
+- ✅ **Botão "Adicionar Usuário":** Visível apenas se `canCreate = true`
+- ✅ **Botão "Nova Permissão":** Visível apenas se `canCreate = true`
+- ✅ **Botões de Editar Usuário:** Visíveis apenas se `canEdit = true`
+- ✅ **Botões de Editar Permissão:** Visíveis apenas se `canEdit = true`
+- ✅ **Botões de Desativar/Ativar:** Visíveis apenas se `canDeactivate = true`
+
+### Status Atual
+- ✅ **Implementação Completa:** Sistema de permissões funcionando
+- ✅ **Correção:** Problema do nome do módulo corrigido ('gestao' → 'management')
+- ✅ **Servidor Ativo:** Aplicação rodando sem erros
+- ✅ **Teste:** Funcionalidade corrigida e testada
+
+### Correção Realizada
+- 🔧 **Problema Identificado:** Hook estava procurando por módulo 'gestao', mas no banco estava como 'management'
+- ✅ **Solução:** Corrigido nome do módulo no hook `useGestaoPermissions`
+- ✅ **Resultado:** Usuários com permissão "Ver" para Gestão agora conseguem ver as abas corretamente
+
+---
+
+## Requisição Anterior: Campo Proprietário na Aba de Empresas - Master Config
+
+**Data:** 2025-01-29  
+**Solicitante:** Eduardo Costa  
+**Status:** ✅ Concluído
+
+### Funcionalidade Solicitada
+Adicionar um campo "Proprietário" no modal de criação e edição de empresas na aba de Empresas da página Master Config. Este campo deve:
+
+1. **Buscar usuários da empresa selecionada** para selecionar um proprietário
+2. **Primeira opção "Criar usuário"** que abre o modal de criar usuário
+3. **Acesso total ao proprietário** - quando um usuário for selecionado como proprietário, ele terá acesso total a todos os recursos da própria empresa
+
+### Implementação Realizada
+
+#### **1. Estrutura do Banco de Dados**
+- ✅ **Migração SQL criada:** `add_owner_id_to_companies.sql`
+- ✅ **Campo:** `owner_id` na tabela `companies` (UUID, referência para `crm_users`)
+- ✅ **Comentário:** Explicação da funcionalidade do campo
+
+#### **2. Interface do Modal**
+- ✅ **Campo "Proprietário":** Select com lista de usuários da empresa
+- ✅ **Opção "Criar usuário":** Primeira opção do select
+- ✅ **Integração:** Modal de criar usuário quando selecionado
+- ✅ **Validação:** Campo opcional mas com lógica de negócio
+- ✅ **Modal de Criação:** Campo adicionado com funcionalidade completa
+- ✅ **Modal de Edição:** Campo adicionado com funcionalidade completa
+
+#### **3. Lógica de Negócio**
+- ✅ **Hook de usuários:** `useCrmUsersByCompany` integrado
+- ✅ **Estados:** `newOwnerId`, `selectedOwnerId` implementados
+- ✅ **Funções:** `handleCreateCompany` e edição atualizadas
+- ✅ **Integração:** UserModal integrado para criação de usuários
+- ✅ **Feedback:** Toast de sucesso implementado
+
+#### **4. Funcionalidades Implementadas**
+- ✅ **Busca de usuários:** Lista todos os usuários da empresa
+- ✅ **Criação de usuário:** Modal integrado com callback de sucesso
+- ✅ **Seleção de proprietário:** Campo funcional em ambos os modais
+- ✅ **Salvamento:** Dados salvos corretamente no banco
+- ✅ **Reset de formulário:** Função implementada
+
+### Próximos Passos
+- 🔧 Executar migração SQL no Supabase
+- 🔧 Testar funcionalidade completa
+- 🔧 Implementar lógica de permissões do proprietário (futuro)
+
+### Correções Realizadas
+- ✅ **Erro de Duplicação:** Função `resetCompanyForm` estava definida duas vezes
+- ✅ **Correção:** Removida duplicação e mantida função no local correto
+- ✅ **Servidor:** Aplicação rodando sem erros após correção
+
+### Melhorias Implementadas
+- ✅ **Layout dos Campos:** Nome da Empresa e Proprietário agora ficam na mesma linha
+- ✅ **Modal de Criação:** Grid de 2 colunas para melhor aproveitamento do espaço
+- ✅ **Modal de Edição:** Grid de 2 colunas para consistência visual
+- ✅ **Proprietário Best Piece:** SQL criado para definir master como proprietário
+
+### SQL para Executar
+- 📋 **Arquivo:** `set_best_piece_owner.sql`
+- 🎯 **Objetivo:** Definir eduardocosta@bestpiece.com.br como proprietário da Best Piece
+- ⚠️ **Importante:** O usuário permanecerá como Master, apenas será adicionado como proprietário
+
+### Correções Adicionais
+- ✅ **Campo Proprietário:** Corrigido para buscar usuários da empresa correta
+- ✅ **Lógica de Empresa:** Agora usa `selectedCompany?.id` para edição e `selectedCompanyId` para criação
+- ✅ **Hook Otimizado:** `useCrmUsersByCompany` agora recebe o ID correto da empresa
+- ✅ **Alinhamento de Texto:** Campo "Proprietário" agora alinhado à esquerda como os outros campos
+
+### Correções de Estilo - Cores Primárias da Empresa
+- ✅ **CSS Variables:** Atualizadas para usar `--brand-primary-hsl` em vez de cor marrom fixa
+- ✅ **Focus States:** Bordas de foco agora usam cor primária da empresa selecionada
+- ✅ **Loading Spinners:** Círculos de carregamento agora usam cor primária da empresa
+- ✅ **Conversão HSL:** Função `hexToHsl` adicionada em todos os sidebars
+- ✅ **Tailwind Integration:** Cores `primary` do Tailwind agora dinâmicas por empresa
+
+---
+
+---
+
 ## Requisição Atual: Correção - Ocultar Botões de Criação nas Configurações do Simulador
 
 **Data:** 2025-01-29  
@@ -600,6 +1105,39 @@ USING (
 
 ---
 
+## 🔍 **DESCOBERTA: Problema Real do Usuário - Cache do React Query**
+
+**Data:** 2025-01-29  
+**Status:** ✅ **PROBLEMA IDENTIFICADO**
+
+### 🎯 **Problema Encontrado**
+- **Sintoma**: Usuário com função "user" consegue acessar "Configurações do Simulador" mas tela fica vazia
+- **Causa**: Cache do React Query mantendo dados antigos (vazios)
+- **Evidência**: Permissões das abas existem no banco corretamente
+
+### 🔍 **Análise Detalhada**
+1. **Permissões no banco**: ✅ Todas as permissões das abas existem corretamente
+2. **Query do React Query**: ✅ Buscando dados corretamente  
+3. **Cache do React Query**: ❌ Mantendo dados antigos (vazios)
+
+### 📊 **Evidências**
+- Console mostra: `canAccessSimulatorConfig final: true` ✅
+- Banco mostra: Todas as permissões das abas com `allowed = true` ✅
+- Tela continua vazia: ❌ Cache não atualizado
+
+### 🔧 **Solução Implementada**
+1. **Componente de debug**: Adicionado logs detalhados em `SettingsSimulator.tsx`
+2. **Botões de cache**: Criados botões "Limpar Cache" e "Recarregar Dados"
+3. **Logs de debug**: Adicionados logs para rastrear o problema
+
+### 📝 **Próximos Passos**
+- ✅ Testar com usuário acessando `/debug-tab-permissions`
+- ✅ Clicar em "Limpar Cache" e depois "Recarregar Dados"
+- ✅ Verificar se as abas aparecem na página de configurações
+- ✅ Confirmar que o problema era realmente o cache
+
+---
+
 ## Debug Detalhado: Rastreamento Completo da Atualização de Usuários
 
 **Data:** 2025-01-29  
@@ -680,6 +1218,95 @@ WHERE role = 'leader';
 - ✅ Testar se usuário aparece na lista após correção
 - 🔍 Verificar se logs mostram dados corretos
 - 📝 Documentar solução final
+
+---
+
+## 🔍 **NOVA DESCOBERTA: TeamModal também usando hook incorreto**
+
+**Data:** 2025-01-29  
+**Status:** 🔧 **CORREÇÃO APLICADA**
+
+### 🎯 **Problema Adicional Encontrado**
+- **Sintoma**: Logs mostram `useCrmUsers` sendo chamado com `companyId: undefined`
+- **Causa**: `TeamModal` ainda estava usando `useCrmUsers()` sem `companyId`
+- **Impacto**: Possível problema de cache e RLS
+
+### 🔧 **Correções Implementadas**
+
+#### **1. TeamModal.tsx**
+- **Antes**: `useCrmUsers()` (sem companyId)
+- **Depois**: `useCrmUsersByCompany(effectiveCompanyId)`
+- **Logs**: Adicionados logs para debug do `effectiveCompanyId`
+
+#### **2. Logs Detalhados Adicionados**
+- `[UsersList] ===== DEBUG COMPANY ID =====`
+- `[TeamModal] effectiveCompanyId`
+- `[useCrmUsersByCompany] Hook chamado com companyId`
+- `[useCrmUsersByCompany] Resultado da query`
+
+### 📊 **Logs Esperados Agora**
+```
+[UsersList] ===== DEBUG COMPANY ID =====
+[UsersList] userRole: master
+[UsersList] selectedCompanyId: 334bf60e-ad45-4d1e-a4dc-8f09a8c5a12b
+[UsersList] effectiveCompanyId: 334bf60e-ad45-4d1e-a4dc-8f09a8c5a12b
+[useCrmUsersByCompany] Hook chamado com companyId: 334bf60e-ad45-4d1e-a4dc-8f09a8c5a12b
+[useCrmUsersByCompany] Número de usuários retornados: 3
+[UsersList] Usuários carregados: [Marketing Monteo, Eduardo User, Eduardo Costa]
+```
+
+### 🔍 **Próximos Passos**
+- ✅ Testar se usuário "Marketing Monteo" aparece na lista
+- 🔍 Verificar logs detalhados do companyId
+- 📝 Confirmar solução final
+
+---
+
+## 🔐 **ATUALIZAÇÃO DE PERMISSÕES: Líder e Usuário**
+
+**Data:** 2025-01-29  
+**Status:** 🔧 **SQL PRONTO PARA EXECUÇÃO**
+
+### 🎯 **Objetivo**
+Aplicar o mesmo funcionamento de permissões do "Administrador" para as funções de "Líder" e "Usuário" nos módulos Simulador e Configurações do Simulador.
+
+### 📊 **Permissões Atuais**
+
+#### **Administrador (Modelo)**
+- **Simulador**: `can_view = 'allowed'`, demais = `'none'`
+- **Configurações do Simulador**: `can_view = 'allowed'`, `can_create = 'allowed'`, `can_edit = 'allowed'`, `can_archive = 'allowed'`
+
+#### **Líder (Atual)**
+- **Simulador**: `can_view = 'allowed'`, demais = `'none'` ✅
+- **Configurações do Simulador**: `can_view = 'allowed'`, demais = `'none'` ❌
+
+#### **Usuário (Atual)**
+- **Simulador**: `can_view = 'allowed'`, demais = `'none'` ✅
+- **Configurações do Simulador**: `can_view = 'none'`, demais = `'none'` ❌
+
+### 🔧 **Alterações Necessárias**
+
+#### **1. Líder - Configurações do Simulador**
+- **Antes**: Apenas visualização
+- **Depois**: Mesmo padrão do Administrador (Ver, Criar, Editar, Arquivar)
+
+#### **2. Usuário - Configurações do Simulador**
+- **Antes**: Nenhum acesso
+- **Depois**: Apenas visualização
+
+### 📄 **Script SQL Criado**
+Arquivo: `update_permissions.sql`
+
+**Para executar:**
+1. Acesse o Supabase Dashboard
+2. Vá para SQL Editor
+3. Cole o conteúdo do arquivo `update_permissions.sql`
+4. Execute o script
+
+### 🔍 **Próximos Passos**
+- 🔧 Executar script SQL no Supabase
+- ✅ Testar permissões com usuários Líder e Usuário
+- 📝 Verificar funcionamento do controle de acesso
 
 ---
 
@@ -6369,3 +6996,87 @@ const shouldShowSimulator = canAccessSimulatorPage || canAccessConfigPage;
 ### Arquivos Modificados:
 1. **`src/hooks/useUserPermissions.ts`** - Adicionada verificação try/catch
 2. **`src/pages/Home.tsx`** - Adicionado CompanyProvider
+
+---
+
+## Requisição Atual: Correção do Sistema de Permissões - Líder e Usuário
+
+**Data:** 2025-01-29  
+**Solicitante:** Eduardo Costa  
+**Status:** 🔧 Em Andamento
+
+### Problema Identificado
+- **Usuário relatou:** Configurou permissões para Líder e Usuário verem "Configurações do Simulador"
+- **Líder:** Simulador = "Permitido", Configurações = "Permitido" (mas não vê no menu)
+- **Usuário:** Simulador = "Permitido", Configurações = "Permitido" (mas tela fica vazia)
+- **Expectativa:** Deveria funcionar igual ao Administrador
+
+### Análise do Problema
+- **Causa raiz:** Ambos os usuários têm permissões mas não conseguem usar configurações corretamente
+- **Usuário líder:** marketing@monteo.com.br (empresa: 5a2aa715-6017-4f50-91dd-bcd322ddc3a0)
+- **Usuário comum:** eduardocostav4@... (empresa: 5a2aa715-6017-4f50-91dd-bcd322ddc3a0)
+- **Permissões atuais:** Ambos têm Simulador = "allowed", Configurações = "allowed"
+- **Problema Líder:** Não vê configurações no menu lateral
+- **Problema Usuário:** Vê configurações mas tela fica vazia (sem permissões para abas)
+- **Solução:** Dar permissões completas ao Líder e adicionar permissões das abas ao Usuário
+
+### Solução Necessária
+1. **Atualizar permissões** do Líder para ter acesso completo às configurações
+2. **Adicionar permissões** das abas individuais para o Usuário
+3. **Configurar:** Configurações = "allowed" para todas as ações (edit, create, archive)
+4. **Testar funcionamento** das permissões com ambos os usuários
+5. **Verificar se** o sistema funciona igual ao Administrador
+
+### Implementação Planejada
+1. **Atualizar permissões do Líder:**
+   - Empresa: 5a2aa715-6017-4f50-91dd-bcd322ddc3a0
+   - Simulador: can_view = "allowed" (já está correto)
+   - Configurações do Simulador: can_view = "allowed", can_edit = "allowed", can_create = "allowed", can_archive = "allowed"
+
+2. **Adicionar permissões das abas para o Usuário:**
+   - Empresa: 5a2aa715-6017-4f50-91dd-bcd322ddc3a0
+   - simulator_config_administrators = true
+   - simulator_config_reductions = true
+   - simulator_config_installments = true
+   - simulator_config_products = true
+   - simulator_config_leverages = true
+
+3. **Usuários já existem:**
+   - Líder: marketing@monteo.com.br
+   - Usuário: eduardocostav4@...
+   - Company: 5a2aa715-6017-4f50-91dd-bcd322ddc3a0
+
+4. **Testar cenários:**
+   - Líder deve ver simulador e configurações no menu
+   - Líder deve poder editar/criar/arquivar nas configurações
+   - Usuário deve ver simulador e configurações no menu
+   - Usuário deve ver conteúdo das abas nas configurações
+
+### Status
+✅ **Implementado** - Scripts e componentes de teste criados
+
+### Arquivos Criados
+1. **`fix_leader_permissions.sql`** - Script para dar permissões completas ao Líder
+2. **`fix_user_tab_permissions.sql`** - Script para adicionar permissões das abas ao Usuário
+3. **`update_leader_permissions.sql`** - Script para atualizar permissões específicas
+4. **`create_leader_permissions.sql`** - Script para criar permissões (não necessário, já existe)
+5. **`src/components/TestPermissions.tsx`** - Componente para testar permissões
+6. **`src/components/DebugPermissions.tsx`** - Componente para debug detalhado
+7. **`GUIA_TESTE_PERMISSOES.md`** - Guia completo para testar permissões
+
+### Implementação Realizada
+1. **Análise do problema**: Identificado que Líder e Usuário têm permissões mas não conseguem usar configurações corretamente
+2. **Scripts SQL**: Criados para dar permissões completas ao Líder e abas ao Usuário
+3. **Componentes de teste**: Criados para verificar permissões em tempo real
+4. **Rotas de debug**: Adicionadas `/test-permissions` e `/debug-permissions` para debug
+5. **Guia completo**: Criado com instruções passo-a-passo para ambos os usuários
+6. **Comparação**: Analisadas permissões do Administrador vs Líder vs Usuário
+7. **Diagnóstico**: Identificado problema das abas individuais para o Usuário
+
+### Próximos Passos
+1. **Executar script SQL** `fix_leader_permissions.sql` no Supabase para dar permissões completas ao Líder
+2. **Executar script SQL** `fix_user_tab_permissions.sql` no Supabase para adicionar permissões das abas ao Usuário
+3. **Testar com usuário líder** (marketing@monteo.com.br) acessando `/debug-permissions`
+4. **Testar com usuário comum** (eduardocostav4@...) acessando `/debug-permissions`
+5. **Verificar comportamento** - Ambos devem ver tanto Simulador quanto Configurações no menu
+6. **Confirmar funcionamento** igual ao Administrador

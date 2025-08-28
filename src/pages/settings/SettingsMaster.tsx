@@ -19,6 +19,8 @@ import { Label } from '@/components/ui/label';
 import { FullScreenModal } from '@/components/ui/FullScreenModal';
 import { Switch } from '@/components/ui/switch';
 import { MultiSelect } from '@/components/ui/multiselect';
+import { useCrmUsersByCompany } from '@/hooks/useCrmUsers';
+import { UserModal } from '@/components/CRM/Configuration/UserModal';
 
 
 interface Company {
@@ -41,6 +43,8 @@ export default function SettingsMaster() {
   
   // Estados para itens selecionados
   const [selectedCompany, setSelectedCompany] = useState<any>(null);
+  const [selectedOwnerId, setSelectedOwnerId] = useState<string>('');
+  const [showEditCreateUserModal, setShowEditCreateUserModal] = useState(false);
   
   // Estados para busca
   const [companySearchTerm, setCompanySearchTerm] = useState('');
@@ -61,7 +65,11 @@ export default function SettingsMaster() {
   const [newStateUF, setNewStateUF] = useState('');
   const [newCountry, setNewCountry] = useState('');
   const [newTimezone, setNewTimezone] = useState('America/Sao_Paulo');
+  const [newOwnerId, setNewOwnerId] = useState<string>('');
   const [isCreating, setIsCreating] = useState(false);
+  
+  // Estados para modal de criar usuário
+  const [showCreateUserModal, setShowCreateUserModal] = useState(false);
 
   // Buscar cores da empresa
   const { data: branding } = useQuery({
@@ -79,6 +87,30 @@ export default function SettingsMaster() {
 
   const primaryColor = branding?.primary_color || '#A86F57';
   const secondaryColor = branding?.secondary_color || '#6B7280';
+
+    // Buscar usuários da empresa para o campo proprietário
+  // Quando editando uma empresa, usar o ID da empresa sendo editada
+  // Quando criando uma empresa, usar a empresa selecionada no contexto
+  const effectiveCompanyId = selectedCompany?.id || selectedCompanyId || companyId;
+  const { data: companyUsers = [], isLoading: usersLoading } = useCrmUsersByCompany(effectiveCompanyId);
+
+  // Função para resetar formulário de criação de empresa
+  const resetCompanyForm = () => {
+    setNewCompanyName('');
+    setNewCnpj('');
+    setNewNiche('');
+    setNewCep('');
+    setNewStreet('');
+    setNewNumber('');
+    setNewNeighborhood('');
+    setNewCity('');
+    setNewStateUF('');
+    setNewCountry('');
+    setNewTimezone('America/Sao_Paulo');
+    setNewOwnerId('');
+  };
+
+ 
 
   // Dados
   const { data: companies = [], isLoading: companiesLoading, error: companiesError } = useQuery({
@@ -335,19 +367,6 @@ export default function SettingsMaster() {
   });
 
   // Funções auxiliares
-  const resetCompanyForm = () => {
-    setNewCompanyName('');
-    setNewCnpj('');
-    setNewNiche('');
-    setNewCep('');
-    setNewStreet('');
-    setNewNumber('');
-    setNewNeighborhood('');
-    setNewCity('');
-    setNewStateUF('');
-    setNewCountry('');
-    setNewTimezone('America/Sao_Paulo');
-  };
 
   const handleCreateCompany = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -361,20 +380,47 @@ export default function SettingsMaster() {
     try {
       const companyData = {
         name: newCompanyName.trim(),
-        cnpj: newCnpj.trim() || null,
-        niche: newNiche.trim() || null,
-        cep: newCep.trim() || null,
-        street: newStreet.trim() || null,
-        number: newNumber.trim() || null,
-        neighborhood: newNeighborhood.trim() || null,
-        city: newCity.trim() || null,
-        state_uf: newStateUF.trim() || null,
-        country: newCountry.trim() || 'Brasil',
-        timezone: newTimezone,
+        owner_id: newOwnerId || null,
         status: 'active'
       };
 
-      await createCompanyMutation.mutateAsync(companyData);
+      // Criar empresa primeiro
+      const { data: newCompany, error: companyError } = await supabase
+        .from('companies')
+        .insert([companyData])
+        .select()
+        .single();
+
+      if (companyError) throw companyError;
+
+      // Criar perfil da empresa
+      const profileData = {
+        company_id: newCompany.id,
+        name: newCompanyName.trim(),
+        cnpj: newCnpj.trim() || null,
+        niche: newNiche.trim() || null,
+        cep: newCep.trim() || null,
+        address: newStreet.trim() || null,
+        number: newNumber.trim() || null,
+        neighborhood: newNeighborhood.trim() || null,
+        city: newCity.trim() || null,
+        state: newStateUF.trim() || null,
+        country: newCountry.trim() || 'Brasil',
+        timezone: newTimezone
+      };
+
+      const { error: profileError } = await supabase
+        .from('company_profiles')
+        .insert([profileData]);
+
+      if (profileError) throw profileError;
+
+      queryClient.invalidateQueries({ queryKey: ['companies', 'master'] });
+      toast.success('Empresa criada com sucesso!');
+      setShowCompanyModal(false);
+      resetCompanyForm();
+    } catch (error: any) {
+      toast.error('Erro ao criar empresa: ' + error.message);
     } finally {
       setIsCreating(false);
     }
@@ -405,6 +451,7 @@ export default function SettingsMaster() {
       const companyCopy = {
         id: companyData.id,
         name: companyData.name || '',
+        owner_id: companyData.owner_id || '',
         cnpj: profileData?.cnpj || '',
         niche: profileData?.niche || '',
         cep: profileData?.cep || '',
@@ -417,6 +464,8 @@ export default function SettingsMaster() {
         timezone: profileData?.timezone || 'America/Sao_Paulo',
         status: companyData.status || 'active'
       };
+      
+      setSelectedOwnerId(companyData.owner_id || '');
       
       setSelectedCompany(companyCopy);
       setShowEditCompanyModal(true);
@@ -870,7 +919,10 @@ export default function SettingsMaster() {
               // Atualizar dados básicos da empresa
               const { error: companyError } = await supabase
                 .from('companies')
-                .update({ name })
+                .update({ 
+                  name,
+                  owner_id: selectedOwnerId || null
+                })
                 .eq('id', id);
               
               if (companyError) throw companyError;
@@ -906,17 +958,52 @@ export default function SettingsMaster() {
               toast.error('Erro ao atualizar empresa: ' + error.message);
             }
           }} className="space-y-4">
-              <div>
-                <Label htmlFor="editCompanyName">Nome da Empresa *</Label>
-                <Input
-                  id="editCompanyName"
-                  value={selectedCompany.name}
-                  onChange={(e) => setSelectedCompany({...selectedCompany, name: e.target.value})}
-                  placeholder="Digite o nome da empresa"
-                  className="campo-brand brand-radius"
-                  required
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="editCompanyName">Nome da Empresa *</Label>
+                  <Input
+                    id="editCompanyName"
+                    value={selectedCompany.name}
+                    onChange={(e) => setSelectedCompany({...selectedCompany, name: e.target.value})}
+                    placeholder="Digite o nome da empresa"
+                    className="campo-brand brand-radius"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="editOwner">Proprietário</Label>
+                  <Select
+                    value={selectedOwnerId}
+                    onValueChange={(value) => {
+                      if (value === 'create') {
+                        setShowEditCreateUserModal(true);
+                      } else {
+                        setSelectedOwnerId(value);
+                      }
+                    }}
+                    disabled={usersLoading}
+                  >
+                                    <SelectTrigger className="select-trigger-brand brand-radius text-left">
+                  <SelectValue placeholder="Selecione o proprietário da empresa" />
+                </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="create" className="dropdown-item-brand">
+                        + Criar usuário
+                      </SelectItem>
+                      {companyUsers.map((user) => (
+                        <SelectItem key={user.id} value={user.id} className="dropdown-item-brand">
+                          {user.first_name} {user.last_name} ({user.email})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
+              
+              <p className="text-sm text-muted-foreground">
+                O proprietário terá acesso total a todos os recursos da empresa
+              </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -1058,17 +1145,52 @@ export default function SettingsMaster() {
           }
         >
           <form id="create-company-form" onSubmit={handleCreateCompany} className="space-y-4">
-            <div>
-              <Label htmlFor="companyName">Nome da Empresa *</Label>
-              <Input
-                id="companyName"
-                value={newCompanyName}
-                onChange={(e) => setNewCompanyName(e.target.value)}
-                placeholder="Digite o nome da empresa"
-                className="campo-brand brand-radius"
-                required
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="companyName">Nome da Empresa *</Label>
+                <Input
+                  id="companyName"
+                  value={newCompanyName}
+                  onChange={(e) => setNewCompanyName(e.target.value)}
+                  placeholder="Digite o nome da empresa"
+                  className="campo-brand brand-radius"
+                  required
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="owner">Proprietário</Label>
+                <Select
+                  value={newOwnerId}
+                  onValueChange={(value) => {
+                    if (value === 'create') {
+                      setShowCreateUserModal(true);
+                    } else {
+                      setNewOwnerId(value);
+                    }
+                  }}
+                  disabled={usersLoading}
+                >
+                  <SelectTrigger className="select-trigger-brand brand-radius text-left">
+                    <SelectValue placeholder="Selecione o proprietário da empresa" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="create" className="dropdown-item-brand">
+                      + Criar usuário
+                    </SelectItem>
+                    {companyUsers.map((user) => (
+                      <SelectItem key={user.id} value={user.id} className="dropdown-item-brand">
+                        {user.first_name} {user.last_name} ({user.email})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+            
+            <p className="text-sm text-muted-foreground">
+              O proprietário terá acesso total a todos os recursos da empresa
+            </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
@@ -1186,6 +1308,32 @@ export default function SettingsMaster() {
             </div>
           </form>
         </FullScreenModal>
+      )}
+
+      {/* Modal de Criar Usuário */}
+      {showCreateUserModal && (
+        <UserModal
+          isOpen={showCreateUserModal}
+          onClose={() => setShowCreateUserModal(false)}
+          onSuccess={(newUser) => {
+            setNewOwnerId(newUser.id);
+            setShowCreateUserModal(false);
+            toast.success('Usuário criado com sucesso!');
+          }}
+        />
+      )}
+
+      {/* Modal de Criar Usuário para Edição */}
+      {showEditCreateUserModal && (
+        <UserModal
+          isOpen={showEditCreateUserModal}
+          onClose={() => setShowEditCreateUserModal(false)}
+          onSuccess={(newUser) => {
+            setSelectedOwnerId(newUser.id);
+            setShowEditCreateUserModal(false);
+            toast.success('Usuário criado com sucesso!');
+          }}
+        />
       )}
 
 

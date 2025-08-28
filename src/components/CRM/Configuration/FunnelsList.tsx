@@ -4,13 +4,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Plus, Edit, Archive, Eye, Search } from 'lucide-react';
+import { Plus, Edit, Archive, Eye, Search, Trash2 } from 'lucide-react';
 import { useFunnels } from '@/hooks/useCrmData';
-import { useDeleteFunnel } from '@/hooks/useFunnels';
+import { useDeleteFunnel, usePermanentlyDeleteFunnel } from '@/hooks/useFunnels';
 import { toast } from 'sonner';
 import { FunnelModal } from './FunnelModal';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
+import { useUserPermissions } from '@/hooks/useUserPermissions';
 
 export const FunnelsList = () => {
   const [showModal, setShowModal] = useState(false);
@@ -20,6 +21,15 @@ export const FunnelsList = () => {
   const { selectedCompanyId } = useCompany();
   const { data: funnels = [], isLoading } = useFunnels(selectedCompanyId || companyId);
   const deleteFunnelMutation = useDeleteFunnel();
+  const permanentlyDeleteFunnelMutation = usePermanentlyDeleteFunnel();
+  const { userRole } = useUserPermissions();
+  
+  // Verificar se o usuário é Master
+  const isMaster = userRole === 'master';
+  
+  // Debug para verificar permissões
+  console.log('[FUNNELS_LIST_DEBUG] userRole:', userRole);
+  console.log('[FUNNELS_LIST_DEBUG] isMaster:', isMaster);
 
   const handleEdit = (funnel: any) => {
     setSelectedFunnel(funnel);
@@ -37,6 +47,30 @@ export const FunnelsList = () => {
       toast.success('Funil arquivado com sucesso!');
     } catch (error: any) {
       toast.error(error.message || 'Erro ao arquivar funil');
+    }
+  };
+
+  const handlePermanentlyDelete = async (funnelId: string, funnelName: string) => {
+    if (!isMaster) {
+      toast.error('Apenas usuários Master podem excluir funis permanentemente');
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `ATENÇÃO: Esta ação é irreversível!\n\n` +
+      `Você está prestes a excluir permanentemente o funil "${funnelName}" e todos os seus dados.\n\n` +
+      `Esta ação não pode ser desfeita. Deseja continuar?`
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await permanentlyDeleteFunnelMutation.mutateAsync(funnelId);
+      toast.success('Funil excluído permanentemente com sucesso!');
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao excluir funil permanentemente');
     }
   };
 
@@ -127,6 +161,21 @@ export const FunnelsList = () => {
                         className="brand-radius"
                       >
                         <Archive className="w-4 h-4" />
+                      </Button>
+                    )}
+                    {(() => {
+                      console.log('[FUNNELS_LIST_DEBUG] Renderizando botão para funil:', funnel.name);
+                      console.log('[FUNNELS_LIST_DEBUG] isMaster:', isMaster);
+                      return isMaster;
+                    })() && (
+                      <Button
+                        variant="brandOutlineSecondaryHover"
+                        size="sm"
+                        onClick={() => handlePermanentlyDelete(funnel.id, funnel.name)}
+                        className="brand-radius"
+                        style={{ borderColor: '#ef4444', color: '#ef4444' }}
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </Button>
                     )}
                   </div>

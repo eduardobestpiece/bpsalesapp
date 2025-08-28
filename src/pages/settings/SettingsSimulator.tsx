@@ -96,17 +96,35 @@ export default function SettingsSimulator() {
   };
 
   // Permissões por aba (role_page_permissions)
-  const { data: perms = {} } = useQuery({
+  const { data: perms = {}, isLoading: permsLoading, error: permsError } = useQuery({
     queryKey: ['role_page_permissions', companyId, userRole],
     enabled: !!companyId && !!userRole,
     queryFn: async () => {
-      const { data } = await supabase
+      console.log('[DEBUG] SettingsSimulator - Buscando permissões das abas...');
+      console.log('[DEBUG] SettingsSimulator - companyId:', companyId);
+      console.log('[DEBUG] SettingsSimulator - userRole:', userRole);
+      
+      const { data, error } = await supabase
         .from('role_page_permissions')
         .select('*')
         .eq('company_id', companyId as string)
         .eq('role', userRole as any);
+      
+      console.log('[DEBUG] SettingsSimulator - Resultado da query:', data);
+      console.log('[DEBUG] SettingsSimulator - Erro da query:', error);
+      
+      if (error) {
+        console.error('[DEBUG] SettingsSimulator - Erro ao buscar permissões:', error);
+        throw error;
+      }
+      
       const map: Record<string, boolean> = {};
-      data?.forEach((r: any) => { map[r.page] = r.allowed; });
+      data?.forEach((r: any) => { 
+        map[r.page] = r.allowed;
+        console.log(`[DEBUG] SettingsSimulator - Permissão: ${r.page} = ${r.allowed}`);
+      });
+      
+      console.log('[DEBUG] SettingsSimulator - Mapa final de permissões:', map);
       return map;
     }
   });
@@ -116,6 +134,17 @@ export default function SettingsSimulator() {
   const canInstallments = perms['simulator_config_installments'] !== false;
   const canProducts = perms['simulator_config_products'] !== false;
   const canLeverages = perms['simulator_config_leverages'] !== false;
+
+  // Debug das permissões das abas
+  console.log('[DEBUG] SettingsSimulator - Status da query:', { permsLoading, permsError });
+  console.log('[DEBUG] SettingsSimulator - Permissões das abas:', {
+    canAdmins,
+    canReductions,
+    canInstallments,
+    canProducts,
+    canLeverages,
+    perms
+  });
 
   // Buscar administradoras para o filtro
   const { data: administrators = [] } = useQuery({
@@ -253,13 +282,13 @@ export default function SettingsSimulator() {
                           </Button>
                         )}
                         {canCreateSimulatorConfig() && (
-                          <Button onClick={() => setShowCreateAdministratorModal(true)}
-                            variant="brandPrimaryToSecondary"
-                            className="brand-radius"
-                          >
-                            <Plus className="w-4 h-4 mr-2" />
-                            Adicionar Administradora
-                          </Button>
+                        <Button onClick={() => setShowCreateAdministratorModal(true)}
+                          variant="brandPrimaryToSecondary"
+                          className="brand-radius"
+                        >
+                          <Plus className="w-4 h-4 mr-2" />
+                          Adicionar Administradora
+                        </Button>
                         )}
                       </div>
                     </div>
@@ -318,12 +347,12 @@ export default function SettingsSimulator() {
                         <p className="text-muted-foreground mt-1">Gerencie os produtos de consórcio</p>
                       </div>
                       {canCreateSimulatorConfig() && (
-                        <Button onClick={() => { setSelectedProduct(null); setShowProductModal(true); }}
-                          variant="brandPrimaryToSecondary"
-                        >
-                          <Plus className="w-4 h-4 mr-2" />
-                          Adicionar Produto
-                        </Button>
+                      <Button onClick={() => { setSelectedProduct(null); setShowProductModal(true); }}
+                        variant="brandPrimaryToSecondary"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Adicionar Produto
+                      </Button>
                       )}
                     </div>
 
@@ -387,10 +416,10 @@ export default function SettingsSimulator() {
                         <p className="text-muted-foreground mt-1">Gerencie os tipos de parcela</p>
                       </div>
                       {canCreateSimulatorConfig() && (
-                        <Button onClick={() => { setSelectedInstallmentType(null); setShowInstallmentTypeModal(true); }} variant="brandPrimaryToSecondary">
-                          <Plus className="w-4 h-4 mr-2" />
-                          Adicionar Tipo de Parcela
-                        </Button>
+                      <Button onClick={() => { setSelectedInstallmentType(null); setShowInstallmentTypeModal(true); }} variant="brandPrimaryToSecondary">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Adicionar Tipo de Parcela
+                      </Button>
                       )}
                     </div>
                     <div className="flex flex-col sm:flex-row gap-4">
@@ -450,14 +479,14 @@ export default function SettingsSimulator() {
                         <p className="text-muted-foreground mt-1">Gerencie as reduções de parcela</p>
                       </div>
                       {canCreateSimulatorConfig() && (
-                        <Button onClick={() => { 
-                          setSelectedReduction(null); 
-                          setShowReductionModal(true); 
-                          setIsCopyReduction(false);
-                        }} variant="brandPrimaryToSecondary">
-                          <Plus className="w-4 h-4 mr-2" />
-                          Adicionar Redução
-                        </Button>
+                      <Button onClick={() => { 
+                        setSelectedReduction(null); 
+                        setShowReductionModal(true); 
+                        setIsCopyReduction(false);
+                      }} variant="brandPrimaryToSecondary">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Adicionar Redução
+                      </Button>
                       )}
                     </div>
                     <div className="flex flex-col sm:flex-row gap-4">
@@ -523,14 +552,14 @@ export default function SettingsSimulator() {
                         <p className="text-muted-foreground mt-1">Gerencie as alavancas</p>
                       </div>
                       {canCreateSimulatorConfig() && (
-                        <Button onClick={() => { 
-                          console.log('[SettingsSimulator] Adicionar Alavanca clicado');
-                          setSelectedLeverage(null); 
-                          setShowLeverageModal(true); 
-                        }} variant="brandPrimaryToSecondary">
-                          <Plus className="w-4 h-4 mr-2" />
-                          Adicionar Alavanca
-                        </Button>
+                      <Button onClick={() => { 
+                        console.log('[SettingsSimulator] Adicionar Alavanca clicado');
+                        setSelectedLeverage(null); 
+                        setShowLeverageModal(true); 
+                      }} variant="brandPrimaryToSecondary">
+                        <Plus className="w-4 h-4 mr-2" />
+                        Adicionar Alavanca
+                      </Button>
                       )}
                     </div>
 

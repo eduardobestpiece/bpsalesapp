@@ -50,11 +50,9 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
   error
 }) => {
   const [selectedCountry, setSelectedCountry] = useState<Country>(countries[0]); // Brasil como padrão
-  const [isOpen, setIsOpen] = useState(false);
 
   const handleCountrySelect = (country: Country) => {
     setSelectedCountry(country);
-    setIsOpen(false);
   };
 
   const formatPhoneNumber = (value: string) => {
@@ -99,31 +97,38 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
   const isValid = value ? validatePhone(value) : true;
 
   return (
-    <div className={`relative ${className}`}>
-      <div className="flex">
+    <div className={`relative z-50 ${className}`}>
+      <div className="flex h-10 phone-input-container">
         {/* Seletor de País */}
-        <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+        <DropdownMenu modal={false}>
           <DropdownMenuTrigger asChild>
             <Button
+              type="button"
               variant="outline"
-              className="rounded-r-none border-r-0 h-12 px-3 flex items-center space-x-2 bg-[#2A2A2A] border-white/20 text-white hover:bg-[#3A3A3A] hover:border-white/40"
+              className="border-r-0 h-10 px-3 flex items-center space-x-2 bg-background border-input text-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground phone-selector"
             >
-              <span className="text-lg">{selectedCountry.flag}</span>
-              <span className="text-base md:text-lg font-medium">{selectedCountry.ddi}</span>
+              <span className="text-sm">{selectedCountry.flag}</span>
+              <span className="text-sm font-medium">{selectedCountry.ddi}</span>
               <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-64 max-h-60 overflow-y-auto bg-[#2A2A2A] border-white/20">
+          <DropdownMenuContent 
+            align="start"
+            side="bottom"
+            sideOffset={4}
+            className="w-64 max-h-60 overflow-y-auto bg-popover border border-border text-popover-foreground shadow-lg"
+            style={{ zIndex: 999999 }}
+          >
             {countries.map((country) => (
               <DropdownMenuItem
                 key={country.code}
-                onClick={() => handleCountrySelect(country)}
-                className="flex items-center space-x-3 p-3 hover:bg-[#e50f5f] data-[highlighted]:bg-[#e50f5f] data-[highlighted]:text-white data-[state=checked]:bg-[#7c032e] data-[state=checked]:text-white text-white cursor-pointer"
+                onSelect={() => handleCountrySelect(country)}
+                className="flex items-center space-x-3 p-3 dropdown-item-primary cursor-pointer"
               >
-                <span className="text-lg">{country.flag}</span>
+                <span className="text-sm">{country.flag}</span>
                 <div className="flex-1">
-                  <div className="font-medium">{country.name}</div>
-                  <div className="text-sm text-gray-400">{country.ddi}</div>
+                  <div className="font-medium text-sm">{country.name}</div>
+                  <div className="text-xs text-muted-foreground">{country.ddi}</div>
                 </div>
               </DropdownMenuItem>
             ))}
@@ -135,7 +140,7 @@ export const PhoneInput: React.FC<PhoneInputProps> = ({
           value={value}
           onChange={handlePhoneChange}
           placeholder={placeholder}
-          className={`flex-1 rounded-l-none h-12 text-base md:text-lg bg-[#2A2A2A] border-white/20 text-white placeholder:text-gray-400 focus:border-white/40 focus:ring-white/20 ${
+          className={`flex-1 h-10 text-sm bg-background border-input text-foreground placeholder:text-muted-foreground campo-primary-focus phone-input ${
             !isValid && value ? 'border-red-500 focus:border-red-500' : ''
           }`}
         />

@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { MultiSelect } from '@/components/ui/multiselect';
 import { useCreateTeam, useUpdateTeam } from '@/hooks/useTeams';
-import { useCrmUsers } from '@/hooks/useCrmUsers';
+import { useCrmUsersByCompany } from '@/hooks/useCrmUsers';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
 import { toast } from 'sonner';
@@ -32,13 +32,13 @@ export const TeamModal = ({ isOpen, onClose, team, onSuccess }: TeamModalProps) 
   const { selectedCompanyId } = useCompany();
   const queryClient = useQueryClient();
   const effectiveCompanyId = selectedCompanyId || companyId;
-  const { data: users = [] } = useCrmUsers();
-  const filteredUsers = users.filter(u => u.company_id === effectiveCompanyId);
-  const availableMembers = filteredUsers.filter(u => u.id !== formData.leader_id && u.first_name && u.last_name);
+  
+  console.log('[TeamModal] effectiveCompanyId:', effectiveCompanyId);
+  
+  const { data: users = [] } = useCrmUsersByCompany(effectiveCompanyId);
+  const availableMembers = users.filter(u => u.id !== formData.leader_id && u.first_name && u.last_name);
   const createTeamMutation = useCreateTeam();
   const updateTeamMutation = useUpdateTeam();
-
-  const allUsers = users;
 
   const [members, setMembers] = useState<string[]>([]);
 
@@ -228,7 +228,7 @@ export const TeamModal = ({ isOpen, onClose, team, onSuccess }: TeamModalProps) 
                 <SelectValue placeholder="Selecione o líder" />
               </SelectTrigger>
               <SelectContent>
-                {filteredUsers.map(user => (
+                {users.map(user => (
                   <SelectItem key={user.id} value={user.id} className="dropdown-item-brand">
                     {user.first_name} {user.last_name} ({user.role})
                   </SelectItem>

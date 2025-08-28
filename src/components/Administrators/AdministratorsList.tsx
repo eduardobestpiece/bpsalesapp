@@ -272,26 +272,26 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
               <TableCell className="text-right">
                 <div className="flex justify-end space-x-2">
                   {canEdit && (
-                    <Button
-                      variant="brandOutlineSecondaryHover"
-                      size="sm"
-                      onClick={() => onEdit(admin)}
-                      disabled={isSubMaster}
-                      className="brand-radius"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
+                  <Button
+                    variant="brandOutlineSecondaryHover"
+                    size="sm"
+                    onClick={() => onEdit(admin)}
+                    disabled={isSubMaster}
+                    className="brand-radius"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </Button>
                   )}
                   {canArchive && (
-                    <Button
-                      variant="brandOutlineSecondaryHover"
-                      size="sm"
-                      onClick={() => handleArchive(admin.id, admin.is_archived)}
-                      disabled={isSubMaster}
-                      className="brand-radius"
-                    >
-                      <Archive className="w-4 h-4" />
-                    </Button>
+                  <Button
+                    variant="brandOutlineSecondaryHover"
+                    size="sm"
+                    onClick={() => handleArchive(admin.id, admin.is_archived)}
+                    disabled={isSubMaster}
+                    className="brand-radius"
+                  >
+                    <Archive className="w-4 h-4" />
+                  </Button>
                   )}
                 </div>
               </TableCell>
