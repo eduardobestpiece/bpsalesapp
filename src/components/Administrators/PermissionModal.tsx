@@ -721,7 +721,7 @@ export const CreatePermissionModal: React.FC<{
         }
       >
         <Form {...form}>
-          <form id="create-permission-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form id="create-permission-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 bg-[#1F1F1F] p-6 rounded-lg">
             {/* Linha 1: Nome da Permissão */}
             <FormField
               control={form.control}
@@ -1072,7 +1072,7 @@ export const EditPermissionModal: React.FC<{
         }
       >
         <Form {...form}>
-          <form id="edit-permission-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form id="edit-permission-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 bg-[#1F1F1F] p-6 rounded-lg">
             {/* Linha 1: Nome da Permissão */}
             <FormField
               control={form.control}

@@ -89,7 +89,7 @@ export const SourceModal = ({ isOpen, onClose, source }: SourceModalProps) => {
       title={source ? 'Editar Origem' : 'Nova Origem'}
       actions={<Button type="submit" form="source-form" variant="brandPrimaryToSecondary" className="brand-radius">{isLoading ? 'Salvando...' : (source ? 'Atualizar' : 'Criar')}</Button>}
     >
-        <form id="source-form" onSubmit={handleSubmit} className="space-y-4">
+        <form id="source-form" onSubmit={handleSubmit} className="space-y-6 bg-[#1F1F1F] p-6 rounded-lg">
           <div>
             <Label htmlFor="name">Nome da Origem *</Label>
             <Input

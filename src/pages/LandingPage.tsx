@@ -8,7 +8,9 @@ import { Play, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Logo } from "@/components/ui/Logo";
 import { useDefaultBranding } from "@/hooks/useDefaultBranding";
+import { useGlobalColors } from "@/hooks/useGlobalColors";
 import { PhoneInput } from "@/components/ui/PhoneInput";
+import { LandingPhoneInput } from "@/components/ui/LandingPhoneInput";
 import { useUserInfo } from "@/hooks/useUserInfo";
 
 export default function LandingPage() {
@@ -37,6 +39,7 @@ export default function LandingPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
   const { branding: defaultBranding, isLoading: brandingLoading } = useDefaultBranding();
+  const { globalDefaultColor } = useGlobalColors();
   const userInfo = useUserInfo();
 
   // Opções para os dropdowns
@@ -77,7 +80,7 @@ export default function LandingPage() {
   // Debug: Log do branding
   useEffect(() => {
     // logs removidos
-  }, [defaultBranding]);
+  }, [defaultBranding, brandingLoading]);
 
   // Atualizar formData com as informações do usuário quando disponíveis
   useEffect(() => {
@@ -174,16 +177,12 @@ export default function LandingPage() {
         {/* Header */}
         <header className="flex items-center justify-between mb-16">
           <div className="flex items-center space-x-3">
-            {brandingLoading ? (
-              <div className="h-10 w-32 bg-gray-700 animate-pulse rounded"></div>
-            ) : (
-              <Logo 
-                className="h-10 w-auto max-w-[140px]"
-                lightUrl={defaultBranding?.logo_horizontal_url || null}
-                darkUrl={defaultBranding?.logo_horizontal_dark_url || defaultBranding?.logo_horizontal_url || null}
-                alt="BP Sales"
-              />
-            )}
+            <Logo 
+              className="h-10 w-auto max-w-[140px]"
+              lightUrl={defaultBranding?.logo_horizontal_url || 'https://jbhocghbieqxjwsdstgm.supabase.co/storage/v1/object/public/branding/334bf60e-ad45-4d1e-a4dc-8f09a8c5a12b/horizontal.png?v=1754695770366'}
+              darkUrl={defaultBranding?.logo_horizontal_dark_url || defaultBranding?.logo_horizontal_url || 'https://jbhocghbieqxjwsdstgm.supabase.co/storage/v1/object/public/branding/334bf60e-ad45-4d1e-a4dc-8f09a8c5a12b/horizontal_dark.png?v=1754695673945'}
+              alt="BP Sales"
+            />
           </div>
           <Button 
             variant="outline" 
@@ -191,8 +190,8 @@ export default function LandingPage() {
             className="transition-all duration-300 shadow-sm"
             style={{ 
               backgroundColor: 'transparent',
-              borderColor: defaultBranding?.primary_color || '#e50f5f',
-              color: defaultBranding?.primary_color || '#e50f5f',
+                      borderColor: defaultBranding?.primary_color || '#E50F5E',
+        color: defaultBranding?.primary_color || '#E50F5E',
               borderWidth: '2px'
             }}
             onMouseEnter={(e) => {
@@ -202,8 +201,8 @@ export default function LandingPage() {
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.borderColor = defaultBranding?.primary_color || '#e50f5f';
-              e.currentTarget.style.color = defaultBranding?.primary_color || '#e50f5f';
+                      e.currentTarget.style.borderColor = defaultBranding?.primary_color || '#E50F5E';
+        e.currentTarget.style.color = defaultBranding?.primary_color || '#E50F5E';
             }}
             onMouseDown={(e) => {
               e.currentTarget.style.backgroundColor = defaultBranding?.secondary_color || '#7c032e';
@@ -279,7 +278,7 @@ export default function LandingPage() {
                       placeholder="Nome e sobrenome"
                       value={formData.name}
                       onChange={handleChange}
-                      className={`h-12 text-base md:text-lg bg-[#2A2A2A] border-white/20 text-white placeholder:text-gray-400 focus:border-white/40 focus:ring-white/20 ${
+                      className={`h-12 text-base md:text-lg bg-[#2A2A2A] border-white/20 text-white placeholder:text-gray-400 focus:ring-white/20 landing-page-input ${
                         errors.name ? 'border-red-500 focus:border-red-500' : ''
                       }`}
                     />
@@ -296,7 +295,7 @@ export default function LandingPage() {
                       placeholder="E-mail"
                       value={formData.email}
                       onChange={handleChange}
-                      className={`h-12 text-base md:text-lg bg-[#2A2A2A] border-white/20 text-white placeholder:text-gray-400 focus:border-white/40 focus:ring-white/20 ${
+                      className={`h-12 text-base md:text-lg bg-[#2A2A2A] border-white/20 text-white placeholder:text-gray-400 focus:ring-white/20 landing-page-input ${
                         errors.email ? 'border-red-500 focus:border-red-500' : ''
                       }`}
                     />
@@ -307,11 +306,12 @@ export default function LandingPage() {
 
                   {/* Telefone */}
                   <div className="space-y-2">
-                    <PhoneInput
+                    <LandingPhoneInput
                       value={formData.phone}
                       onChange={handlePhoneChange}
                       placeholder="Telefone"
                       error={errors.phone}
+                      globalDefaultColor={globalDefaultColor}
                     />
                   </div>
 
@@ -326,7 +326,7 @@ export default function LandingPage() {
                         }));
                       }}
                     >
-                      <SelectTrigger className={`${!formData.consortiumExperience ? 'text-[#9BA3AF]' : 'text-white'} h-12 text-base md:text-lg bg-[#2A2A2A] border-white/20 focus:border-white/40 focus:ring-white/20`}>
+                      <SelectTrigger className={`${!formData.consortiumExperience ? 'text-[#9BA3AF]' : 'text-white'} h-12 text-base md:text-lg bg-[#2A2A2A] border-white/20 focus:ring-white/20 landing-page-input`}>
                         <SelectValue placeholder="A quanto tempo trabalha com consórcio?" />
                       </SelectTrigger>
                       <SelectContent className="bg-[#2A2A2A] border-white/20 text-white">
@@ -354,7 +354,7 @@ export default function LandingPage() {
                         }));
                       }}
                     >
-                      <SelectTrigger className={`${!formData.teamSize ? 'text-[#9BA3AF]' : 'text-white'} h-12 text-base md:text-lg bg-[#2A2A2A] border-white/20 focus:border-white/40 focus:ring-white/20`}>
+                      <SelectTrigger className={`${!formData.teamSize ? 'text-[#9BA3AF]' : 'text-white'} h-12 text-base md:text-lg bg-[#2A2A2A] border-white/20 focus:ring-white/20 landing-page-input`}>
                         <SelectValue placeholder="Quantos vendedores você tem?" />
                       </SelectTrigger>
                       <SelectContent className="bg-[#2A2A2A] border-white/20 text-white">

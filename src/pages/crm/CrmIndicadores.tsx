@@ -105,13 +105,13 @@ const CrmIndicadores = () => {
 
   // DEBUG: dados carregados
   useEffect(() => {
-    console.log('[INDICADORES] carregados', {
-      indicatorsCount: indicators?.length,
-      teamsCount: teams?.length,
-      usersCount: crmUsers?.length,
-      isIndicatorsLoading,
-      indicatorsError
-    });
+    // console.log('[INDICADORES] carregados', {
+    //   indicatorsCount: indicators?.length,
+    //   teamsCount: teams?.length,
+    //   usersCount: crmUsers?.length,
+    //   isIndicatorsLoading,
+    //   indicatorsError
+    // });
   }, [indicators, teams, crmUsers, isIndicatorsLoading, indicatorsError]);
 
   // Estados simplificados com memoização

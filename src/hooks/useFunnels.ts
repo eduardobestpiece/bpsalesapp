@@ -225,9 +225,9 @@ export const usePermanentlyDeleteFunnel = () => {
   });
 };
 
-// Debug function
+// Debug function - Comentado para melhorar performance
 const debugLog = (message: string, data?: any) => {
-  console.log(`[FUNNELS_HOOK_DEBUG] ${message}`, data || '');
+  // console.log(`[FUNNELS_HOOK_DEBUG] ${message}`, data || '');
 };
 
 // Funções utilitárias para manipular etapas do funil

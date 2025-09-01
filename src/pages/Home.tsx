@@ -23,7 +23,7 @@ function HomeContent() {
   if (permissionsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#131313] via-[#1E1E1E] to-[#161616]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: defaultBranding?.primary_color || '#e50f5f' }}></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: defaultBranding?.primary_color || '#E50F5E' }}></div>
       </div>
     );
   }
@@ -59,7 +59,7 @@ function HomeContent() {
             onClick={handleGoToSimulator}
             className="w-full bg-[#1F1F1F] rounded-2xl shadow-xl p-6 flex items-center hover:bg-[#161616] transition border border-white/10 group focus:outline-none focus:ring-2 focus:ring-[#e50f5f]/50"
           >
-            <Calculator className="h-12 w-12 mr-6 group-hover:scale-110 transition" style={{ color: defaultBranding?.primary_color || '#e50f5f' }} />
+            <Calculator className="h-12 w-12 mr-6 group-hover:scale-110 transition" style={{ color: defaultBranding?.primary_color || '#E50F5E' }} />
             <div className="flex-1 text-left">
               <span className="text-xl font-semibold text-white block mb-1">Simulador</span>
               <span className="text-gray-300 text-sm">Acesse o simulador de propostas.</span>
@@ -72,7 +72,7 @@ function HomeContent() {
             onClick={() => navigate('/crm/indicadores')}
             className="w-full bg-[#1F1F1F] rounded-2xl shadow-xl p-6 flex items-center hover:bg-[#161616] transition border border-white/10 group focus:outline-none focus:ring-2 focus:ring-[#e50f5f]/50"
           >
-            <BarChart2 className="h-12 w-12 mr-6 group-hover:scale-110 transition" style={{ color: defaultBranding?.primary_color || '#e50f5f' }} />
+            <BarChart2 className="h-12 w-12 mr-6 group-hover:scale-110 transition" style={{ color: defaultBranding?.primary_color || '#E50F5E' }} />
             <div className="flex-1 text-left">
               <span className="text-xl font-semibold text-white block mb-1">CRM</span>
               <span className="text-gray-300 text-sm">Acesse o CRM e veja os indicadores de vendas.</span>
@@ -85,7 +85,7 @@ function HomeContent() {
             onClick={() => navigate('/configuracoes/gestao')}
             className="w-full bg-[#1F1F1F] rounded-2xl shadow-xl p-6 flex items-center hover:bg-[#161616] transition border border-white/10 group focus:outline-none focus:ring-2 focus:ring-[#e50f5f]/50"
           >
-            <Settings className="h-12 w-12 mr-6 group-hover:scale-110 transition" style={{ color: defaultBranding?.primary_color || '#e50f5f' }} />
+            <Settings className="h-12 w-12 mr-6 group-hover:scale-110 transition" style={{ color: defaultBranding?.primary_color || '#E50F5E' }} />
             <div className="flex-1 text-left">
               <span className="text-xl font-semibold text-white block mb-1">Configurações</span>
               <span className="text-gray-300 text-sm">Gerencie seu perfil, empresa e usuários.</span>

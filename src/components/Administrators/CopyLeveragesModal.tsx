@@ -175,7 +175,7 @@ export const CopyLeveragesModal: React.FC<CopyLeveragesModalProps> = ({ open, on
         <DialogHeader>
           <DialogTitle>Copiar alavancas para outras empresas</DialogTitle>
         </DialogHeader>
-        <div className="space-y-6">
+        <form onSubmit={(e) => { e.preventDefault(); handleCopy(); }} className="space-y-6 bg-[#1F1F1F] p-6 rounded-lg">
           {loading && (
             <div className="space-y-2">
               <div className="text-sm text-muted-foreground">{progressText}</div>
@@ -265,7 +265,7 @@ export const CopyLeveragesModal: React.FC<CopyLeveragesModalProps> = ({ open, on
               {loading ? 'Copiando...' : 'Copiar'}
             </Button>
           </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   )

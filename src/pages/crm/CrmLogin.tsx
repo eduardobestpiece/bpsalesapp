@@ -172,7 +172,7 @@ const CrmLogin = () => {
                   className="text-sm hover:text-foreground"
                   onClick={() => setShowForgotModal(true)}
                   style={{ 
-                    color: defaultBranding?.primary_color || '#e50f5f'
+                    color: defaultBranding?.primary_color || '#E50F5E'
                   }}
                 >
                   Esqueci a senha

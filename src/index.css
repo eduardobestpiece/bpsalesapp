@@ -381,6 +381,158 @@ All colors MUST be HSL.
   .select-text-left {
     text-align: left !important;
   }
+
+  /* Campo com foco na cor primária da empresa */
+  .field-primary-focus:focus {
+    border-color: var(--brand-primary) !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Campos da landing page com foco na cor global */
+  .landing-page-input:focus {
+    border-color: #E50F5E !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Selects da landing page com foco na cor global */
+  .landing-page-input[data-state="open"] {
+    border-color: #E50F5E !important;
+  }
+
+  /* PhoneInput na landing page com cor global */
+  .landing-phone-input .phone-input:focus {
+    border-color: #E50F5E !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+
+  /* LandingPhoneInput - novo componente para landing page */
+  .landing-phone-container {
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  
+  .landing-phone-selector {
+    border-top-left-radius: 6px !important;
+    border-bottom-left-radius: 6px !important;
+  }
+  
+  .landing-phone-input {
+    border-top-right-radius: 6px !important;
+    border-bottom-right-radius: 6px !important;
+  }
+
+  /* Dropdown do LandingPhoneInput com cor global */
+  .landing-phone-container [data-radix-dropdown-menu-content] [data-highlighted] {
+    background-color: #E50F5E !important;
+    color: white !important;
+  }
+  
+  .landing-phone-container [data-radix-dropdown-menu-content] [data-state="checked"] {
+    background-color: #E50F5E !important;
+    color: white !important;
+  }
+
+  /* Hover e focus do dropdown do LandingPhoneInput */
+  .landing-phone-container [data-radix-dropdown-menu-content] [data-radix-dropdown-menu-item]:hover {
+    background-color: #E50F5E !important;
+    color: white !important;
+  }
+  
+  .landing-phone-container [data-radix-dropdown-menu-content] [data-radix-dropdown-menu-item]:focus {
+    background-color: #E50F5E !important;
+    color: white !important;
+  }
+
+  /* CSS mais abrangente para todos os estados do dropdown */
+  .landing-phone-container [data-radix-dropdown-menu-content] *:hover {
+    background-color: #E50F5E !important;
+    color: white !important;
+  }
+  
+  .landing-phone-container [data-radix-dropdown-menu-content] *:focus {
+    background-color: #E50F5E !important;
+    color: white !important;
+  }
+  
+  .landing-phone-container [data-radix-dropdown-menu-content] *:focus-visible {
+    background-color: #E50F5E !important;
+    color: white !important;
+  }
+  
+  /* Forçar cor em todos os elementos do dropdown */
+  .landing-phone-container [data-radix-dropdown-menu-content] .flex:hover {
+    background-color: #E50F5E !important;
+    color: white !important;
+  }
+
+  /* CSS específico para DropdownMenuItem do Radix UI */
+  .landing-phone-container [data-radix-dropdown-menu-item] {
+    background-color: transparent !important;
+  }
+  
+  .landing-phone-container [data-radix-dropdown-menu-item]:hover {
+    background-color: #E50F5E !important;
+    color: white !important;
+  }
+  
+  .landing-phone-container [data-radix-dropdown-menu-item]:focus {
+    background-color: #E50F5E !important;
+    color: white !important;
+  }
+  
+  .landing-phone-container [data-radix-dropdown-menu-item]:focus-visible {
+    background-color: #E50F5E !important;
+    color: white !important;
+  }
+
+  /* CSS mais específico e direto para o dropdown do LandingPhoneInput */
+  .landing-phone-container [data-radix-dropdown-menu-content] [data-radix-dropdown-menu-item] {
+    background-color: transparent !important;
+  }
+  
+  .landing-phone-container [data-radix-dropdown-menu-content] [data-radix-dropdown-menu-item]:hover {
+    background-color: #E50F5E !important;
+    color: white !important;
+  }
+  
+  .landing-phone-container [data-radix-dropdown-menu-content] [data-radix-dropdown-menu-item]:focus {
+    background-color: #E50F5E !important;
+    color: white !important;
+  }
+  
+  .landing-phone-container [data-radix-dropdown-menu-content] [data-radix-dropdown-menu-item]:focus-visible {
+    background-color: #E50F5E !important;
+    color: white !important;
+  }
+
+  /* CSS universal para qualquer elemento dentro do dropdown */
+  .landing-phone-container [data-radix-dropdown-menu-content] *:hover {
+    background-color: #E50F5E !important;
+    color: white !important;
+  }
+
+  /* CSS específico para a classe landing-phone-dropdown-item */
+  .landing-phone-dropdown-item {
+    background-color: transparent !important;
+  }
+  
+  .landing-phone-dropdown-item:hover {
+    background-color: #E50F5E !important;
+    color: white !important;
+  }
+  
+  .landing-phone-dropdown-item:focus {
+    background-color: #E50F5E !important;
+    color: white !important;
+  }
+  
+  .landing-phone-dropdown-item:focus-visible {
+    background-color: #E50F5E !important;
+    color: white !important;
+  }
   .select-text-left [data-radix-select-trigger] {
     justify-content: flex-start !important;
   }
@@ -454,5 +606,38 @@ All colors MUST be HSL.
   .module-switcher-button:active {
     background-color: var(--brand-secondary) !important;
     color: #fff !important;
+  }
+
+  /* CSS específico para campos de nome e sobrenome no LeadModal */
+  .editable-title-input {
+    border: 1px solid rgb(75 85 99) !important;
+    outline: none !important;
+  }
+  
+  .editable-title-input:focus {
+    border: 1px solid rgb(75 85 99) !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+  
+  .editable-title-input:hover {
+    border: 1px solid rgb(75 85 99) !important;
+  }
+
+  /* CSS específico para o campo de seleção de funil */
+  .funnel-select-trigger {
+    background-color: #131313 !important;
+    border: 1px solid rgb(75 85 99) !important;
+    outline: none !important;
+  }
+  
+  .funnel-select-trigger:focus {
+    border-color: var(--brand-primary) !important;
+    outline: none !important;
+    box-shadow: none !important;
+  }
+  
+  .funnel-select-trigger:hover {
+    border-color: var(--brand-primary) !important;
   }
 }

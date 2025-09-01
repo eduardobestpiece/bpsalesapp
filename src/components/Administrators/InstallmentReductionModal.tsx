@@ -191,11 +191,7 @@ export const InstallmentReductionModal: React.FC<InstallmentReductionModalProps>
       </Button>}
     >
       <Form {...form}>
-        <form id="reduction-form" onSubmit={form.handleSubmit((data) => {
-          onSubmit(data);
-        }, (errors) => {
-          // Erro de validação tratado silenciosamente
-        })} className="space-y-4">
+        <form onSubmit={handleSaveClick} className="space-y-6 bg-[#1F1F1F] p-6 rounded-lg">
             <div className="space-y-4">
               <FormField
                 control={form.control}

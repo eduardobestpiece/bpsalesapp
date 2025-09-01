@@ -304,7 +304,7 @@ export const ProductModal: React.FC<ProductModalProps> = ({
       actions={<Button type="submit" form="product-form" variant="brandPrimaryToSecondary">{product ? 'Atualizar' : 'Criar'}</Button>}
     >
       <Form {...form}>
-        <form id="product-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form id="product-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 bg-[#1F1F1F] p-6 rounded-lg">
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}

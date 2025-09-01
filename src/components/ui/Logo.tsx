@@ -9,7 +9,7 @@ interface LogoProps {
 }
 
 export const Logo = ({ className = "h-10 w-auto max-w-[140px]", onClick, lightUrl, darkUrl, alt = 'Logo' }: LogoProps) => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(true); // Forçar dark mode
   
   useEffect(() => {
     // Detectar tema inicial
@@ -34,10 +34,13 @@ export const Logo = ({ className = "h-10 w-auto max-w-[140px]", onClick, lightUr
     };
   }, []);
 
-  // Se não há URLs fornecidas, não mostrar nada
+  // Se não há URLs fornecidas, usar fallback
   if (!lightUrl && !darkUrl) {
-    console.warn('Logo: Nenhuma URL fornecida para a logo');
-    return null;
+    return (
+      <div className={`${className} bg-gray-700 text-white flex items-center justify-center rounded px-4 py-2`}>
+        BP Sales
+      </div>
+    );
   }
 
   // Usar as URLs fornecidas, sem fallbacks
@@ -57,6 +60,7 @@ export const Logo = ({ className = "h-10 w-auto max-w-[140px]", onClick, lightUr
             console.error('Erro ao carregar logo light:', resolvedLight);
             e.currentTarget.style.display = 'none';
           }}
+
         />
       )}
       {/* Logo para modo escuro */}
@@ -70,6 +74,7 @@ export const Logo = ({ className = "h-10 w-auto max-w-[140px]", onClick, lightUr
             console.error('Erro ao carregar logo dark:', resolvedDark);
             e.currentTarget.style.display = 'none';
           }}
+
         />
       )}
     </div>

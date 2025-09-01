@@ -207,7 +207,7 @@ export const IndicatorModal = ({ isOpen, onClose, companyId, indicator }: Indica
         </>
       }
     >
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6 bg-[#1F1F1F] p-6 rounded-lg">
         {/* Linha 1: Funil */}
         {!isEditing && (
           <div className="space-y-2">

@@ -112,7 +112,7 @@ export const CreateAdministratorModal: React.FC<{
       }
     >
       <Form {...form}>
-        <form id="create-admin-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form id="create-admin-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 bg-[#1F1F1F] p-6 rounded-lg">
             <FormField
               control={form.control}
               name="name"
@@ -503,7 +503,7 @@ export const EditAdministratorModal: React.FC<{
       actions={<Button type="submit" form="edit-admin-form" variant="brandPrimaryToSecondary">Salvar</Button>}
     >
       <Form {...form}>
-        <form id="edit-admin-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form id="edit-admin-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 bg-[#1F1F1F] p-6 rounded-lg">
             <FormField
               control={form.control}
               name="name"

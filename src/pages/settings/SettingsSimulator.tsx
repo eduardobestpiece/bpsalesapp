@@ -100,9 +100,9 @@ export default function SettingsSimulator() {
     queryKey: ['role_page_permissions', companyId, userRole],
     enabled: !!companyId && !!userRole,
     queryFn: async () => {
-      console.log('[DEBUG] SettingsSimulator - Buscando permissões das abas...');
-      console.log('[DEBUG] SettingsSimulator - companyId:', companyId);
-      console.log('[DEBUG] SettingsSimulator - userRole:', userRole);
+          // console.log('[DEBUG] SettingsSimulator - Buscando permissões das abas...');
+    // console.log('[DEBUG] SettingsSimulator - companyId:', companyId);
+    // console.log('[DEBUG] SettingsSimulator - userRole:', userRole);
       
       const { data, error } = await supabase
         .from('role_page_permissions')

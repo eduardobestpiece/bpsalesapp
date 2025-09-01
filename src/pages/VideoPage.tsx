@@ -245,8 +245,8 @@ export default function VideoPage() {
             className="transition-all duration-300 shadow-sm"
             style={{ 
               backgroundColor: 'transparent',
-              borderColor: defaultBranding?.primary_color || '#e50f5f',
-              color: defaultBranding?.primary_color || '#e50f5f',
+                      borderColor: defaultBranding?.primary_color || '#E50F5E',
+        color: defaultBranding?.primary_color || '#E50F5E',
               borderWidth: '2px'
             }}
             onMouseEnter={(e) => {
@@ -256,8 +256,8 @@ export default function VideoPage() {
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.backgroundColor = 'transparent';
-              e.currentTarget.style.borderColor = defaultBranding?.primary_color || '#e50f5f';
-              e.currentTarget.style.color = defaultBranding?.primary_color || '#e50f5f';
+                      e.currentTarget.style.borderColor = defaultBranding?.primary_color || '#E50F5E';
+        e.currentTarget.style.color = defaultBranding?.primary_color || '#E50F5E';
             }}
             onMouseDown={(e) => {
               e.currentTarget.style.backgroundColor = defaultBranding?.secondary_color || '#7c032e';
@@ -1507,7 +1507,7 @@ export default function VideoPage() {
                 <Button 
                   className="w-full font-semibold"
                   style={{ 
-                    backgroundColor: defaultBranding?.primary_color || '#e50f5f',
+                    backgroundColor: defaultBranding?.primary_color || '#E50F5E',
                     color: 'white'
                   }}
                   onClick={() => window.open('https://buy.stripe.com/test_4gMcN5aDZ7PJ3vr1Km6Vq01', '_blank')}

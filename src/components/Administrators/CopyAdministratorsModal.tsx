@@ -423,7 +423,7 @@ export const CopyAdministratorsModal: React.FC<CopyAdministratorsModalProps> = (
           <DialogTitle>Copiar administradoras e dados vinculados</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-6">
+        <form onSubmit={handleCopyAdministrators} className="space-y-6 bg-[#1F1F1F] p-6 rounded-lg">
           {loading && (
             <div className="space-y-2">
               <div className="text-sm text-muted-foreground">{progressText}</div>
@@ -542,7 +542,7 @@ export const CopyAdministratorsModal: React.FC<CopyAdministratorsModalProps> = (
               {loading ? 'Copiando...' : 'Copiar'}
             </Button>
           </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

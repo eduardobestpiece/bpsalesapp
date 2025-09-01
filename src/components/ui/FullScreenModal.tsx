@@ -107,7 +107,7 @@ export const FullScreenModal: React.FC<FullScreenModalProps> = ({
         {/* Conteúdo scrollável do modal */}
         <div className="h-[calc(100vh-4rem)] overflow-y-auto bg-[#131313]">
           <div className="p-0 flex justify-center">
-            <div className="bg-[#1F1F1F] rounded-lg p-0 my-6 w-full md:w-[70%] lg:w-[70%] xl:w-[70%] 2xl:w-[70%] max-w-[95%] min-w-[70%] sm:w-[95%]">
+            <div className="bg-[#131313] rounded-lg p-0 my-6 w-full md:w-[70%] lg:w-[70%] xl:w-[70%] 2xl:w-[70%] max-w-[95%] min-w-[70%] sm:w-[95%]">
               {children}
             </div>
           </div>

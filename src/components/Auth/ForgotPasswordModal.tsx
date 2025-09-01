@@ -66,7 +66,7 @@ const ForgotPasswordModal: React.FC<ForgotPasswordModalProps> = ({ open, onOpenC
         </DialogHeader>
 
         {!success ? (
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="space-y-6 bg-[#1F1F1F] p-6 rounded-lg">
             <div className="space-y-4">
               {error && (
                 <Alert variant="destructive">

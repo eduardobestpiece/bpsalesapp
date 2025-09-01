@@ -203,7 +203,7 @@ export const TeamModal = ({ isOpen, onClose, team, onSuccess }: TeamModalProps) 
       title={team ? 'Editar Time' : 'Novo Time'}
       actions={<Button type="submit" form="team-form" variant="brandPrimaryToSecondary" className="brand-radius">{isLoading ? 'Salvando...' : (team ? 'Atualizar' : 'Criar')}</Button>}
     >
-        <form id="team-form" onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6 bg-[#1F1F1F] p-6 rounded-lg">
           <div>
             <Label htmlFor="name">Nome do Time *</Label>
             <Input

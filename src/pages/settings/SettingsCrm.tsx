@@ -7,18 +7,39 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Plus, Edit, Archive, Search, Trash2 } from 'lucide-react';
+import { Plus, Edit, Archive, Search, Trash2, GripVertical } from 'lucide-react';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useFunnels, useDeleteFunnel, usePermanentlyDeleteFunnel } from '@/hooks/useFunnels';
 import { useSources, useDeleteSource } from '@/hooks/useSources';
 import { useTeams, useDeleteTeam } from '@/hooks/useTeams';
+import { useLossReasons, useDeleteLossReason } from '@/hooks/useLossReasons';
+import { useCustomFields, useDeleteCustomField } from '@/hooks/useCustomFields';
 import { toast } from 'sonner';
 import { FunnelModal } from '@/components/CRM/Configuration/FunnelModal';
 import { SourceModal } from '@/components/CRM/Configuration/SourceModal';
 import { TeamModal } from '@/components/CRM/Configuration/TeamModal';
+import { LossReasonModal } from '@/components/CRM/Configuration/LossReasonModal';
+import { CustomFieldModal } from '@/components/CRM/Configuration/CustomFieldModal';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+
+const FIELD_TYPES = [
+  { value: 'text', label: 'Texto' },
+  { value: 'textarea', label: 'Área de texto' },
+  { value: 'number', label: 'Número' },
+  { value: 'email', label: 'E-mail' },
+  { value: 'phone', label: 'Telefone' },
+  { value: 'date', label: 'Data' },
+  { value: 'select', label: 'Seleção única' },
+  { value: 'multiselect', label: 'Seleção múltipla' },
+  { value: 'checkbox', label: 'Caixa de seleção' },
+  { value: 'radio', label: 'Botão de rádio' }
+];
 
 export default function SettingsCrm() {
   const { userRole, companyId } = useCrmAuth();
@@ -28,32 +49,70 @@ export default function SettingsCrm() {
   const [showFunnelModal, setShowFunnelModal] = useState(false);
   const [showSourceModal, setShowSourceModal] = useState(false);
   const [showTeamModal, setShowTeamModal] = useState(false);
+  const [showLossReasonModal, setShowLossReasonModal] = useState(false);
+  const [showCustomFieldModal, setShowCustomFieldModal] = useState(false);
   
   // Estados para itens selecionados
   const [selectedFunnel, setSelectedFunnel] = useState<any>(null);
   const [selectedSource, setSelectedSource] = useState<any>(null);
   const [selectedTeam, setSelectedTeam] = useState<any>(null);
+  const [selectedLossReason, setSelectedLossReason] = useState<any>(null);
+  const [selectedCustomField, setSelectedCustomField] = useState<any>(null);
   
   // Estados para busca
   const [funnelSearchTerm, setFunnelSearchTerm] = useState('');
   const [sourceSearchTerm, setSourceSearchTerm] = useState('');
   const [teamSearchTerm, setTeamSearchTerm] = useState('');
+  const [lossReasonSearchTerm, setLossReasonSearchTerm] = useState('');
+  const [customFieldSearchTerm, setCustomFieldSearchTerm] = useState('');
   
   // Estados para filtros de situação
   const [funnelStatusFilter, setFunnelStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
   const [sourceStatusFilter, setSourceStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
   const [teamStatusFilter, setTeamStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
+  const [lossReasonStatusFilter, setLossReasonStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
+  const [customFieldStatusFilter, setCustomFieldStatusFilter] = useState<'all' | 'active' | 'inactive'>('active');
+  const [orderedCustomFields, setOrderedCustomFields] = useState<any[]>([]);
 
   // Dados
   const { data: funnels = [], isLoading: funnelsLoading } = useFunnels(selectedCompanyId || companyId);
   const { data: sources = [], isLoading: sourcesLoading } = useSources();
   const { data: teams = [], isLoading: teamsLoading } = useTeams();
+  const { data: lossReasons = [], isLoading: lossReasonsLoading } = useLossReasons();
+  const { data: customFields = [], isLoading: customFieldsLoading } = useCustomFields();
+
+  // Inicializar ordenação dos campos personalizados
+  useEffect(() => {
+    if (customFields.length > 0) {
+      // Tentar carregar ordenação salva do localStorage
+      const savedOrder = localStorage.getItem('customFieldsOrder');
+      
+      if (savedOrder) {
+        try {
+          const orderData = JSON.parse(savedOrder);
+          const orderedFields = [...customFields].sort((a, b) => {
+            const aOrder = orderData.find((item: any) => item.id === a.id)?.order ?? 999;
+            const bOrder = orderData.find((item: any) => item.id === b.id)?.order ?? 999;
+            return aOrder - bOrder;
+          });
+          setOrderedCustomFields(orderedFields);
+        } catch (error) {
+          console.error('Erro ao carregar ordenação salva:', error);
+          setOrderedCustomFields([...customFields]);
+        }
+      } else {
+        setOrderedCustomFields([...customFields]);
+      }
+    }
+  }, [customFields]);
 
   // Mutations
   const deleteFunnelMutation = useDeleteFunnel();
   const permanentlyDeleteFunnelMutation = usePermanentlyDeleteFunnel();
   const deleteSourceMutation = useDeleteSource();
   const deleteTeamMutation = useDeleteTeam();
+  const deleteLossReasonMutation = useDeleteLossReason();
+  const deleteCustomFieldMutation = useDeleteCustomField();
   
   // Verificar se o usuário é Master
   const isMaster = userRole === 'master';
@@ -61,6 +120,70 @@ export default function SettingsCrm() {
   // Debug para verificar permissões
   console.log('[SETTINGS_CRM_DEBUG] userRole:', userRole);
   console.log('[SETTINGS_CRM_DEBUG] isMaster:', isMaster);
+
+  // Componente para linha arrastável da tabela
+  const SortableTableRow = ({ customField, onEdit, onArchive }: { 
+    customField: any; 
+    onEdit: (field: any) => void; 
+    onArchive: (id: string) => void; 
+  }) => {
+    const {
+      attributes,
+      listeners,
+      setNodeRef,
+      transform,
+      transition,
+      isDragging,
+    } = useSortable({ id: customField.id });
+
+    const style = {
+      transform: CSS.Transform.toString(transform),
+      transition,
+      opacity: isDragging ? 0.5 : 1,
+    };
+
+    return (
+      <TableRow ref={setNodeRef} style={style} className={isDragging ? 'opacity-50' : ''}>
+        <TableCell className="py-2">
+          <div className="flex items-center space-x-2">
+            <div
+              {...attributes}
+              {...listeners}
+              className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
+            >
+              <GripVertical className="w-4 h-4 text-muted-foreground" />
+            </div>
+            <span className="font-medium">{customField.name}</span>
+          </div>
+        </TableCell>
+        <TableCell className="py-2">
+          {FIELD_TYPES.find(type => type.value === customField.field_type)?.label || customField.field_type}
+        </TableCell>
+        <TableCell className="text-right py-2">
+          <div className="flex justify-end space-x-2">
+            <Button
+              variant="brandOutlineSecondaryHover"
+              size="sm"
+              onClick={() => onEdit(customField)}
+              className="brand-radius"
+            >
+              <Edit className="w-4 h-4" />
+            </Button>
+            {customField.status === 'active' && isMaster && (
+              <Button
+                variant="brandOutlineSecondaryHover"
+                size="sm"
+                onClick={() => onArchive(customField.id)}
+                className="brand-radius"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
+        </TableCell>
+      </TableRow>
+    );
+  };
 
   const { data: perms = {} } = useQuery({
     queryKey: ['role_page_permissions', companyId, userRole],
@@ -94,18 +217,22 @@ export default function SettingsCrm() {
   const primaryColor = branding?.primary_color || '#A86F57';
   
   // Debug para verificar cores
-  console.log('[SETTINGS_CRM_DEBUG] Branding:', branding);
-  console.log('[SETTINGS_CRM_DEBUG] Primary Color:', primaryColor);
-  console.log('[SETTINGS_CRM_DEBUG] Secondary Color:', branding?.secondary_color);
+      // console.log('[SETTINGS_CRM_DEBUG] Branding:', branding);
+    // console.log('[SETTINGS_CRM_DEBUG] Primary Color:', primaryColor);
+    // console.log('[SETTINGS_CRM_DEBUG] Secondary Color:', branding?.secondary_color);
 
   const canFunnels = perms['crm_config_funnels'] !== false;
   const canSources = perms['crm_config_sources'] !== false;
   const canTeams = perms['crm_config_teams'] !== false;
+  const canLossReasons = perms['crm_config_loss_reasons'] !== false;
+  const canCustomFields = perms['crm_config_custom_fields'] !== false;
 
   const allowedOrder: { key: string; allowed: boolean }[] = [
     { key: 'funnels', allowed: canFunnels },
     { key: 'sources', allowed: canSources },
     { key: 'teams', allowed: canTeams },
+    { key: 'loss_reasons', allowed: canLossReasons },
+    { key: 'custom_fields', allowed: canCustomFields },
   ];
   const firstAllowed = allowedOrder.find(i => i.allowed)?.key;
   const [tabValue, setTabValue] = useState<string>(firstAllowed || 'funnels');
@@ -115,7 +242,7 @@ export default function SettingsCrm() {
       setTabValue(next);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [canFunnels, canSources, canTeams]);
+  }, [canFunnels, canSources, canTeams, canLossReasons, canCustomFields]);
 
   // Handlers para funis
   const handleFunnelEdit = (funnel: any) => {
@@ -201,6 +328,78 @@ export default function SettingsCrm() {
     }
   };
 
+  // Handlers para motivos de perda
+  const handleLossReasonEdit = (lossReason: any) => {
+    setSelectedLossReason(lossReason);
+    setShowLossReasonModal(true);
+  };
+
+  const handleLossReasonCloseModal = () => {
+    setShowLossReasonModal(false);
+    setSelectedLossReason(null);
+  };
+
+  const handleLossReasonArchive = async (lossReasonId: string) => {
+    try {
+      await deleteLossReasonMutation.mutateAsync(lossReasonId);
+      toast.success('Motivo de perda arquivado com sucesso!');
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao arquivar motivo de perda');
+    }
+  };
+
+  // Handlers para campos personalizados
+  const handleCustomFieldEdit = (customField: any) => {
+    setSelectedCustomField(customField);
+    setShowCustomFieldModal(true);
+  };
+
+  const handleCustomFieldCloseModal = () => {
+    setShowCustomFieldModal(false);
+    setSelectedCustomField(null);
+  };
+
+  const handleCustomFieldArchive = async (customFieldId: string) => {
+    // Verificar se o usuário é master
+    if (!isMaster) {
+      toast.error('Apenas usuários Master podem excluir campos personalizados');
+      return;
+    }
+
+    try {
+      await deleteCustomFieldMutation.mutateAsync(customFieldId);
+      toast.success('Campo personalizado arquivado com sucesso!');
+    } catch (error: any) {
+      toast.error(error.message || 'Erro ao arquivar campo personalizado');
+    }
+  };
+
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
+
+    if (active.id !== over.id) {
+      setOrderedCustomFields((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+
+        const newOrder = arrayMove(items, oldIndex, newIndex);
+        
+        // Salvar a nova ordenação no localStorage para persistir entre sessões
+        localStorage.setItem('customFieldsOrder', JSON.stringify(newOrder.map((item, index) => ({ id: item.id, order: index }))));
+        
+        return newOrder;
+      });
+    }
+  };
+
+  // Configurar sensores para drag and drop
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   // Funções auxiliares
   const getVerificationTypeLabel = (type: string) => {
     const labels = {
@@ -230,16 +429,28 @@ export default function SettingsCrm() {
     return matchesSearch && matchesStatus;
   });
 
+  const filteredLossReasons = lossReasons.filter(lossReason => {
+    const matchesSearch = lossReason.name?.toLowerCase().includes(lossReasonSearchTerm.toLowerCase());
+    const matchesStatus = lossReasonStatusFilter === 'all' || lossReason.status === lossReasonStatusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const filteredCustomFields = orderedCustomFields.filter(customField => {
+    const matchesSearch = customField.name?.toLowerCase().includes(customFieldSearchTerm.toLowerCase());
+    const matchesStatus = customFieldStatusFilter === 'all' || customField.status === customFieldStatusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">Configurações CRM</h1>
-                  <p className="text-muted-foreground">Gerencie funis, times e origens</p>
-                </div>
+        <p className="text-muted-foreground">Gerencie funis, times, origens e motivos de perda</p>
+      </div>
 
       <Card className="shadow-xl border-0 bg-card">
         <CardContent className="p-0">
-                <Tabs value={tabValue} onValueChange={setTabValue} className="w-full">
+          <Tabs value={tabValue} onValueChange={setTabValue} className="w-full">
             <TabsList className="flex items-end border-b border-border/30 bg-transparent p-0 rounded-none justify-start w-fit">
               {canFunnels && (
                 <>
@@ -266,17 +477,49 @@ export default function SettingsCrm() {
                 </>
               )}
               {canTeams && (
+                <>
+                  <TabsTrigger 
+                    value="teams" 
+                    className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
+                    style={{ '--tab-active-color': primaryColor } as React.CSSProperties}
+                  >
+                    Times
+                  </TabsTrigger>
+                  <div className="w-px h-6 bg-border/30 self-center"></div>
+                </>
+              )}
+              <TabsTrigger 
+                value="formularios" 
+                className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
+                style={{ '--tab-active-color': primaryColor } as React.CSSProperties}
+              >
+                Formulários
+              </TabsTrigger>
+              <div className="w-px h-6 bg-border/30 self-center"></div>
+              {canLossReasons && (
+                <>
+                  <TabsTrigger 
+                    value="loss_reasons" 
+                    className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
+                    style={{ '--tab-active-color': primaryColor } as React.CSSProperties}
+                  >
+                    Motivos de Perda
+                  </TabsTrigger>
+                  <div className="w-px h-6 bg-border/30 self-center"></div>
+                </>
+              )}
+              {canCustomFields && (
                 <TabsTrigger 
-                  value="teams" 
+                  value="custom_fields" 
                   className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
                   style={{ '--tab-active-color': primaryColor } as React.CSSProperties}
                 >
-                  Times
+                  Campos Personalizados
                 </TabsTrigger>
               )}
-                  </TabsList>
+            </TabsList>
 
-                  {canFunnels && (
+            {canFunnels && (
               <TabsContent value="funnels" className="p-6">
                 <div className="space-y-6">
                   <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -300,30 +543,16 @@ export default function SettingsCrm() {
                         className="pl-10 field-secondary-focus no-ring-focus brand-radius"
                       />
                     </div>
-                    <div className="w-full sm:w-48">
-                      <Select value={funnelStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setFunnelStatusFilter(value)}>
-                        <SelectTrigger 
-                          className="field-secondary-focus no-ring-focus brand-radius status-filter-dropdown"
-                          style={{ 
-                            '--brand-primary': primaryColor,
-                            '--brand-secondary': branding?.secondary_color || '#6B7280'
-                          } as React.CSSProperties}
-                        >
-                          <SelectValue placeholder="Filtrar por situação" />
-                        </SelectTrigger>
-                        <SelectContent 
-                          className="status-filter-dropdown"
-                          style={{ 
-                            '--brand-primary': primaryColor,
-                            '--brand-secondary': branding?.secondary_color || '#6B7280'
-                          } as React.CSSProperties}
-                        >
-                          <SelectItem value="all">Todos</SelectItem>
-                          <SelectItem value="active">Ativo</SelectItem>
-                          <SelectItem value="inactive">Inativo</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <Select value={funnelStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setFunnelStatusFilter(value)}>
+                      <SelectTrigger className="w-48 field-secondary-focus no-ring-focus brand-radius">
+                        <SelectValue placeholder="Filtrar por status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        <SelectItem value="active">Ativos</SelectItem>
+                        <SelectItem value="inactive">Inativos</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <Table>
@@ -331,8 +560,8 @@ export default function SettingsCrm() {
                       <TableRow>
                         <TableHead className="text-left py-2">Nome</TableHead>
                         <TableHead className="text-left py-2">Status</TableHead>
-                        <TableHead className="text-left py-2">Verificação</TableHead>
-                        <TableHead className="text-left py-2">Etapas</TableHead>
+                        <TableHead className="text-left py-2">Descrição</TableHead>
+                        <TableHead className="text-left py-2">Fases</TableHead>
                         <TableHead className="text-right py-2">Ações</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -367,11 +596,8 @@ export default function SettingsCrm() {
                                 </Badge>
                               )}
                             </TableCell>
-                            <TableCell className="py-2">
-                              {getVerificationTypeLabel(funnel.verification_type)}
-                              {funnel.verification_day && ` - Dia ${funnel.verification_day}`}
-                            </TableCell>
-                            <TableCell className="py-2">{funnel.stages?.length || 0} etapas</TableCell>
+                            <TableCell className="py-2">{funnel.description || 'Sem descrição'}</TableCell>
+                            <TableCell className="py-2">{funnel.stages?.length || 0} fases</TableCell>
                             <TableCell className="text-right py-2">
                               <div className="flex justify-end space-x-2">
                                 <Button
@@ -392,13 +618,12 @@ export default function SettingsCrm() {
                                     <Archive className="w-4 h-4" />
                                   </Button>
                                 )}
-                                {isMaster && (
+                                {funnel.status === 'inactive' && isMaster && (
                                   <Button
                                     variant="brandOutlineSecondaryHover"
                                     size="sm"
                                     onClick={() => handleFunnelPermanentlyDelete(funnel.id, funnel.name)}
                                     className="brand-radius"
-                                    style={{ borderColor: '#ef4444', color: '#ef4444' }}
                                   >
                                     <Trash2 className="w-4 h-4" />
                                   </Button>
@@ -411,9 +636,10 @@ export default function SettingsCrm() {
                     </TableBody>
                   </Table>
                 </div>
-                    </TabsContent>
-                  )}
-                  {canSources && (
+              </TabsContent>
+            )}
+
+            {canSources && (
               <TabsContent value="sources" className="p-6">
                 <div className="space-y-6">
                   <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -437,30 +663,16 @@ export default function SettingsCrm() {
                         className="pl-10 field-secondary-focus no-ring-focus brand-radius"
                       />
                     </div>
-                    <div className="w-full sm:w-48">
-                      <Select value={sourceStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setSourceStatusFilter(value)}>
-                        <SelectTrigger 
-                          className="field-secondary-focus no-ring-focus brand-radius status-filter-dropdown"
-                          style={{ 
-                            '--brand-primary': primaryColor,
-                            '--brand-secondary': branding?.secondary_color || '#6B7280'
-                          } as React.CSSProperties}
-                        >
-                          <SelectValue placeholder="Filtrar por situação" />
-                        </SelectTrigger>
-                        <SelectContent 
-                          className="status-filter-dropdown"
-                          style={{ 
-                            '--brand-primary': primaryColor,
-                            '--brand-secondary': branding?.secondary_color || '#6B7280'
-                          } as React.CSSProperties}
-                        >
-                          <SelectItem value="all">Todos</SelectItem>
-                          <SelectItem value="active">Ativo</SelectItem>
-                          <SelectItem value="inactive">Inativo</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <Select value={sourceStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setSourceStatusFilter(value)}>
+                      <SelectTrigger className="w-48 field-secondary-focus no-ring-focus brand-radius">
+                        <SelectValue placeholder="Filtrar por status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        <SelectItem value="active">Ativos</SelectItem>
+                        <SelectItem value="inactive">Inativos</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <Table>
@@ -532,9 +744,10 @@ export default function SettingsCrm() {
                     </TableBody>
                   </Table>
                 </div>
-                    </TabsContent>
-                  )}
-                  {canTeams && (
+              </TabsContent>
+            )}
+
+            {canTeams && (
               <TabsContent value="teams" className="p-6">
                 <div className="space-y-6">
                   <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
@@ -558,30 +771,16 @@ export default function SettingsCrm() {
                         className="pl-10 field-secondary-focus no-ring-focus brand-radius"
                       />
                     </div>
-                    <div className="w-full sm:w-48">
-                      <Select value={teamStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setTeamStatusFilter(value)}>
-                        <SelectTrigger 
-                          className="field-secondary-focus no-ring-focus brand-radius status-filter-dropdown"
-                          style={{ 
-                            '--brand-primary': primaryColor,
-                            '--brand-secondary': branding?.secondary_color || '#6B7280'
-                          } as React.CSSProperties}
-                        >
-                          <SelectValue placeholder="Filtrar por situação" />
-                        </SelectTrigger>
-                        <SelectContent 
-                          className="status-filter-dropdown"
-                          style={{ 
-                            '--brand-primary': primaryColor,
-                            '--brand-secondary': branding?.secondary_color || '#6B7280'
-                          } as React.CSSProperties}
-                        >
-                          <SelectItem value="all">Todos</SelectItem>
-                          <SelectItem value="active">Ativo</SelectItem>
-                          <SelectItem value="inactive">Inativo</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <Select value={teamStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setTeamStatusFilter(value)}>
+                      <SelectTrigger className="w-48 field-secondary-focus no-ring-focus brand-radius">
+                        <SelectValue placeholder="Filtrar por status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        <SelectItem value="active">Ativos</SelectItem>
+                        <SelectItem value="inactive">Inativos</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
 
                   <Table>
@@ -655,9 +854,207 @@ export default function SettingsCrm() {
                     </TableBody>
                   </Table>
                 </div>
-                    </TabsContent>
-                  )}
-                </Tabs>
+              </TabsContent>
+            )}
+
+            <TabsContent value="formularios" className="p-6">
+              <div className="text-center text-muted-foreground py-8">
+                <p>Funcionalidade de Formulários em breve...</p>
+              </div>
+            </TabsContent>
+
+            {canLossReasons && (
+              <TabsContent value="loss_reasons" className="p-6">
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-semibold text-foreground">Motivos de Perda</h2>
+                      <p className="text-muted-foreground mt-1">Gerencie os motivos de perda de leads da empresa</p>
+                    </div>
+                    <Button onClick={() => setShowLossReasonModal(true)} variant="brandPrimaryToSecondary" className="brand-radius">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Novo Motivo
+                    </Button>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                      <Input
+                        placeholder="Pesquisar por nome..."
+                        value={lossReasonSearchTerm}
+                        onChange={(e) => setLossReasonSearchTerm(e.target.value)}
+                        className="pl-10 field-secondary-focus no-ring-focus brand-radius"
+                      />
+                    </div>
+                    <Select value={lossReasonStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setLossReasonStatusFilter(value)}>
+                      <SelectTrigger className="w-48 field-secondary-focus no-ring-focus brand-radius">
+                        <SelectValue placeholder="Filtrar por status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        <SelectItem value="active">Ativos</SelectItem>
+                        <SelectItem value="inactive">Inativos</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="text-left py-2">Nome</TableHead>
+                        <TableHead className="text-left py-2">Status</TableHead>
+                        <TableHead className="text-left py-2">Descrição</TableHead>
+                        <TableHead className="text-right py-2">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {lossReasonsLoading ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center py-2">
+                            Carregando motivos de perda...
+                          </TableCell>
+                        </TableRow>
+                      ) : filteredLossReasons.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={4} className="text-center py-4 text-muted-foreground">
+                            {lossReasonSearchTerm ? 'Nenhum motivo de perda encontrado com este termo.' : 'Nenhum motivo de perda encontrado. Crie o primeiro motivo para começar.'}
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        filteredLossReasons.map((lossReason) => (
+                          <TableRow key={lossReason.id}>
+                            <TableCell className="font-medium py-2">{lossReason.name}</TableCell>
+                            <TableCell className="py-2">
+                              {lossReason.status === 'active' ? (
+                                <Badge
+                                  className="text-white"
+                                  style={{ backgroundColor: 'var(--brand-primary, #A86F57)', borderRadius: 'var(--brand-radius, 8px)' }}
+                                >
+                                  Ativo
+                                </Badge>
+                              ) : (
+                                <Badge variant="destructive" style={{ borderRadius: 'var(--brand-radius, 8px)' }}>
+                                  Inativo
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="py-2">{lossReason.description || 'Sem descrição'}</TableCell>
+                            <TableCell className="text-right py-2">
+                              <div className="flex justify-end space-x-2">
+                                <Button
+                                  variant="brandOutlineSecondaryHover"
+                                  size="sm"
+                                  onClick={() => handleLossReasonEdit(lossReason)}
+                                  className="brand-radius"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                {lossReason.status === 'active' && (
+                                  <Button
+                                    variant="brandOutlineSecondaryHover"
+                                    size="sm"
+                                    onClick={() => handleLossReasonArchive(lossReason.id)}
+                                    className="brand-radius"
+                                  >
+                                    <Archive className="w-4 h-4" />
+                                  </Button>
+                                )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </TabsContent>
+            )}
+
+            {canCustomFields && (
+              <TabsContent value="custom_fields" className="p-6">
+                <div className="space-y-6">
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                    <div>
+                      <h2 className="text-2xl font-semibold text-foreground">Campos Personalizados</h2>
+                      <p className="text-muted-foreground mt-1">Gerencie campos obrigatórios para avançar de fase nos funis</p>
+                    </div>
+                    <Button onClick={() => setShowCustomFieldModal(true)} variant="brandPrimaryToSecondary" className="brand-radius">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Novo Campo
+                    </Button>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+                      <Input
+                        placeholder="Pesquisar por nome..."
+                        value={customFieldSearchTerm}
+                        onChange={(e) => setCustomFieldSearchTerm(e.target.value)}
+                        className="pl-10 field-secondary-focus no-ring-focus brand-radius"
+                      />
+                    </div>
+                    <Select value={customFieldStatusFilter} onValueChange={(value: 'all' | 'active' | 'inactive') => setCustomFieldStatusFilter(value)}>
+                      <SelectTrigger className="w-48 field-secondary-focus no-ring-focus brand-radius">
+                        <SelectValue placeholder="Filtrar por status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">Todos</SelectItem>
+                        <SelectItem value="active">Ativos</SelectItem>
+                        <SelectItem value="inactive">Inativos</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="text-left py-2">Nome</TableHead>
+                          <TableHead className="text-left py-2">Tipo</TableHead>
+                          <TableHead className="text-right py-2">Ações</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        <SortableContext
+                          items={filteredCustomFields.map(item => item.id)}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          {customFieldsLoading ? (
+                            <TableRow>
+                              <TableCell colSpan={3} className="text-center py-2">
+                                Carregando campos personalizados...
+                              </TableCell>
+                            </TableRow>
+                          ) : filteredCustomFields.length === 0 ? (
+                            <TableRow>
+                              <TableCell colSpan={3} className="text-center py-4 text-muted-foreground">
+                                {customFieldSearchTerm ? 'Nenhum campo personalizado encontrado com este termo.' : 'Nenhum campo personalizado encontrado. Crie o primeiro campo para começar.'}
+                              </TableCell>
+                            </TableRow>
+                          ) : (
+                            filteredCustomFields.map((customField) => (
+                              <SortableTableRow
+                                key={customField.id}
+                                customField={customField}
+                                onEdit={handleCustomFieldEdit}
+                                onArchive={handleCustomFieldArchive}
+                              />
+                            ))
+                          )}
+                        </SortableContext>
+                      </TableBody>
+                    </Table>
+                  </DndContext>
+                </div>
+              </TabsContent>
+            )}
+          </Tabs>
         </CardContent>
       </Card>
 
@@ -678,6 +1075,18 @@ export default function SettingsCrm() {
         isOpen={showTeamModal}
         onClose={handleTeamCloseModal}
         team={selectedTeam}
+      />
+
+      <LossReasonModal
+        isOpen={showLossReasonModal}
+        onClose={handleLossReasonCloseModal}
+        lossReason={selectedLossReason}
+      />
+
+      <CustomFieldModal
+        isOpen={showCustomFieldModal}
+        onClose={handleCustomFieldCloseModal}
+        customField={selectedCustomField}
       />
     </>
   );

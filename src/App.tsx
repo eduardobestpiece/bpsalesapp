@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ModuleProvider } from "@/contexts/ModuleContext";
 import { CrmAuthProvider, useCrmAuth } from "@/contexts/CrmAuthContext";
+import { CompanyProvider } from "@/contexts/CompanyContext";
 import { ProtectedRoute } from "@/components/CRM/ProtectedRoute";
 import { ProtectedRoute as CustomProtectedRoute } from "@/components/ProtectedRoute";
 import { CrmLayout } from "@/components/Layout/CrmLayout";
@@ -41,8 +42,24 @@ import { TestPermissions } from "./components/TestPermissions";
 import { DebugPermissions } from "./components/DebugPermissions";
 import { DebugTabPermissions } from "./components/DebugTabPermissions";
 
+// Hook para gerenciar cores globais
+import { useGlobalColors } from "@/hooks/useGlobalColors";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+      staleTime: 5 * 60 * 1000, // 5 minutos
+    },
+  },
+});
+
+// Componente para aplicar cores globais
+function GlobalColorsProvider({ children }: { children: React.ReactNode }) {
+  useGlobalColors(); // Aplica as cores globais automaticamente
+  return <>{children}</>;
+}
 
 function AppContent() {
   const { user, crmUser, companyId, loading } = useCrmAuth();
@@ -214,14 +231,18 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <ModuleProvider>
-          <CrmAuthProvider>
-            <Toaster />
-            <BrowserRouter>
-              <AppContent />
-            </BrowserRouter>
-          </CrmAuthProvider>
-        </ModuleProvider>
+        <CompanyProvider>
+          <ModuleProvider>
+            <CrmAuthProvider>
+              <GlobalColorsProvider>
+                <Toaster />
+                <BrowserRouter>
+                  <AppContent />
+                </BrowserRouter>
+              </GlobalColorsProvider>
+            </CrmAuthProvider>
+          </ModuleProvider>
+        </CompanyProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

@@ -155,7 +155,7 @@ export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageMod
       title={leverage ? 'Editar Alavanca' : 'Adicionar Alavanca'}
       actions={<Button onClick={handleSave} disabled={loading} variant="brandPrimaryToSecondary">{loading ? 'Salvando...' : leverage ? 'Atualizar' : 'Criar'}</Button>}
     >
-      <div className="space-y-6">
+      <form onSubmit={handleSave} className="space-y-6 bg-[#1F1F1F] p-6 rounded-lg">
           <div className="space-y-2">
             <Label htmlFor="name">Nome da Alavanca *</Label>
             <Input
@@ -338,7 +338,7 @@ export const LeverageModal = ({ isOpen, onClose, leverage, onSave }: LeverageMod
             </div>
           )}
 
-      </div>
+      </form>
     </FullScreenModal>
   );
 };

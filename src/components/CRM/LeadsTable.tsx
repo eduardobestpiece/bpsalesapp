@@ -2,12 +2,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Calendar, Edit, Archive, MoreHorizontal } from 'lucide-react';
+import { Calendar, Edit, Archive, MoreHorizontal, Trash2 } from 'lucide-react';
 import { useLeads } from '@/hooks/useLeads';
 import { useCrmUsers } from '@/hooks/useCrmUsers';
 import { useFunnels } from '@/hooks/useFunnels';
 import { useSources } from '@/hooks/useSources';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
+import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface LeadsTableProps {
   searchTerm: string;
@@ -21,6 +23,7 @@ export const LeadsTable = ({ searchTerm, onEdit }: LeadsTableProps) => {
   const { data: sources = [] } = useSources();
   const { userRole } = useCrmAuth();
   const isSubMaster = userRole === 'submaster';
+  const isMaster = userRole === 'master';
 
   // Função para formatar data para horário de Brasília
   const formatDateToBrasilia = (dateString: string) => {
@@ -38,12 +41,51 @@ export const LeadsTable = ({ searchTerm, onEdit }: LeadsTableProps) => {
 
   // Função para obter dados relacionados
   const getRelatedData = (lead: any) => {
+    console.log('[LeadsTable] getRelatedData chamado para lead:', {
+      leadId: lead.id,
+      currentStageId: lead.current_stage_id,
+      leadName: `${lead.first_name} ${lead.last_name}`,
+      lead: JSON.stringify(lead, null, 2)
+    });
+    
     const responsible = crmUsers.find(u => u.id === lead.responsible_id);
     const funnel = funnels.find(f => f.id === lead.funnel_id);
     const stage = funnel?.stages?.find((s: any) => s.id === lead.current_stage_id);
     const source = sources.find(s => s.id === lead.source_id);
 
+    console.log('[LeadsTable] Dados relacionados encontrados:', {
+      responsible: responsible ? `${responsible.first_name} ${responsible.last_name}` : 'não encontrado',
+      funnel: funnel?.name || 'não encontrado',
+      stage: stage?.name || 'não encontrado',
+      stageId: stage?.id || 'não encontrado',
+      source: source?.name || 'não encontrado',
+      funnels: JSON.stringify(funnels, null, 2),
+      stages: funnel?.stages ? JSON.stringify(funnel.stages, null, 2) : 'não encontrado'
+    });
+
     return { responsible, funnel, stage, source };
+  };
+
+  // Função para excluir lead permanentemente
+  const handleDeleteLead = async (lead: any) => {
+    try {
+      const { error } = await supabase
+        .from('leads')
+        .delete()
+        .eq('id', lead.id);
+
+      if (error) {
+        throw error;
+      }
+
+      toast.success('Lead excluído permanentemente!');
+      
+      // Recarregar a lista de leads
+      window.location.reload();
+    } catch (error: any) {
+      console.error('Erro ao excluir lead:', error);
+      toast.error(error.message || 'Erro ao excluir lead');
+    }
   };
 
   const filteredLeads = leads.filter(lead =>
@@ -154,6 +196,15 @@ export const LeadsTable = ({ searchTerm, onEdit }: LeadsTableProps) => {
                         <Archive className="mr-2 h-4 w-4" />
                         Arquivar
                       </DropdownMenuItem>
+                      {isMaster && (
+                        <DropdownMenuItem
+                          onClick={() => handleDeleteLead(lead)}
+                          className="lead-dropdown-item text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Excluir
+                        </DropdownMenuItem>
+                      )}
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

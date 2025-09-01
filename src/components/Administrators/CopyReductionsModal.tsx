@@ -179,7 +179,7 @@ export const CopyReductionsModal: React.FC<CopyReductionsModalProps> = ({
           <DialogTitle>Copiar Redução de Parcela</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-6">
+        <form onSubmit={handleCopyReductions} className="space-y-6 bg-[#1F1F1F] p-6 rounded-lg">
           {/* Reduções de Parcela */}
           <div className="space-y-3">
             <Label>Redução de Parcela</Label>
@@ -289,13 +289,14 @@ export const CopyReductionsModal: React.FC<CopyReductionsModalProps> = ({
               Cancelar
             </Button>
             <Button 
+              type="submit"
               onClick={handleCopyReductions} 
               disabled={selectedReductions.length === 0 || selectedCompanies.length === 0 || loading}
             >
               {loading ? 'Copiando...' : 'Copiar'}
             </Button>
           </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

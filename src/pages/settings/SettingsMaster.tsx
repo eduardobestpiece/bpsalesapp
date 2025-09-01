@@ -957,7 +957,7 @@ export default function SettingsMaster() {
             } catch (error: any) {
               toast.error('Erro ao atualizar empresa: ' + error.message);
             }
-          }} className="space-y-4">
+          }} className="space-y-4 bg-[#1F1F1F] p-6 rounded-lg">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="editCompanyName">Nome da Empresa *</Label>
@@ -1144,7 +1144,7 @@ export default function SettingsMaster() {
             </Button>
           }
         >
-          <form id="create-company-form" onSubmit={handleCreateCompany} className="space-y-4">
+          <form id="create-company-form" onSubmit={handleCreateCompany} className="space-y-4 bg-[#1F1F1F] p-6 rounded-lg">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="companyName">Nome da Empresa *</Label>

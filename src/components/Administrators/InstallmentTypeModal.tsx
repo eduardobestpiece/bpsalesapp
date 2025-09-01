@@ -140,21 +140,26 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
   }, [form]);
 
   const onSubmit = async (data: any) => {
+    console.log('[InstallmentTypeModal] onSubmit iniciado com dados:', data);
     try {
       if (!selectedCompanyId) {
+        console.log('[InstallmentTypeModal] Erro: Empresa não selecionada');
         toast({ title: 'Empresa não selecionada!', variant: 'destructive' });
         return;
       }
       if (!data.administrator_id) {
+        console.log('[InstallmentTypeModal] Erro: Administradora é obrigatória');
         toast({ title: 'Administradora é obrigatória!', variant: 'destructive' });
         return;
       }
       if (!data.installment_count || data.installment_count < 1) {
+        console.log('[InstallmentTypeModal] Erro: Número de parcelas deve ser maior que zero');
         toast({ title: 'Número de parcelas deve ser maior que zero!', variant: 'destructive' });
         return;
       }
       // Definir o nome automaticamente
       const name = String(data.installment_count);
+      console.log('[InstallmentTypeModal] Verificando duplicidade...');
       // Verificar duplicidade para a mesma administradora
       const { data: existing, error: dupError } = await supabase
         .from('installment_types')
@@ -167,6 +172,7 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
         .eq('optional_insurance', data.optional_insurance)
         .eq('is_archived', false);
       if (!dupError && existing && existing.length > 0 && (!installmentType || existing[0].id !== installmentType.id)) {
+        console.log('[InstallmentTypeModal] Erro: Parcela duplicada');
         toast({ title: 'Já existe uma parcela com esses dados para esta administradora.', variant: 'destructive' });
         return;
       }
@@ -181,30 +187,43 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
         is_default: data.is_default,
         company_id: selectedCompanyId,
       };
+      console.log('[InstallmentTypeModal] Dados limpos para salvar:', cleanData);
       let result, installmentTypeId;
       if (installmentType) {
+        console.log('[InstallmentTypeModal] Atualizando parcela existente...');
         result = await supabase
           .from('installment_types')
           .update({ ...cleanData, updated_at: new Date().toISOString() })
           .eq('id', installmentType.id)
           .select('id');
-        if (result.error) throw result.error;
+        if (result.error) {
+          console.error('[InstallmentTypeModal] Erro ao atualizar:', result.error);
+          throw result.error;
+        }
+        console.log('[InstallmentTypeModal] Parcela atualizada com sucesso');
         installmentTypeId = installmentType.id;
         // Remover relações antigas
+        console.log('[InstallmentTypeModal] Removendo relações antigas...');
         await supabase
           .from('installment_type_reductions')
           .delete()
           .eq('installment_type_id', installmentTypeId);
       } else {
+        console.log('[InstallmentTypeModal] Criando nova parcela...');
         result = await supabase
           .from('installment_types')
           .insert(cleanData)
           .select('id');
-        if (result.error) throw result.error;
+        if (result.error) {
+          console.error('[InstallmentTypeModal] Erro ao criar:', result.error);
+          throw result.error;
+        }
+        console.log('[InstallmentTypeModal] Parcela criada com sucesso');
         installmentTypeId = result.data[0].id;
       }
       // Inserir novas relações
       if (data.reduction_ids && data.reduction_ids.length > 0) {
+        console.log('[InstallmentTypeModal] Inserindo relações com reduções:', data.reduction_ids);
         const relations = data.reduction_ids.map((reductionId: string) => ({
           installment_type_id: installmentTypeId,
           installment_reduction_id: reductionId,
@@ -212,12 +231,23 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
         const relResult = await supabase
           .from('installment_type_reductions')
           .insert(relations);
-        if (relResult.error) throw relResult.error;
+        if (relResult.error) {
+          console.error('[InstallmentTypeModal] Erro ao inserir relações:', relResult.error);
+          throw relResult.error;
+        }
+        console.log('[InstallmentTypeModal] Relações inseridas com sucesso');
       }
+      console.log('[InstallmentTypeModal] Operação concluída com sucesso!');
       toast({ title: installmentType ? 'Parcela atualizada com sucesso!' : 'Parcela cadastrada com sucesso!' });
       form.reset();
+      console.log('[InstallmentTypeModal] Chamando onSuccess callback...');
       onSuccess();
+      console.log('[InstallmentTypeModal] onSuccess callback executado');
+      console.log('[InstallmentTypeModal] Fechando modal...');
+      onOpenChange(false);
+      console.log('[InstallmentTypeModal] Modal fechado programaticamente');
     } catch (error: any) {
+      console.error('[InstallmentTypeModal] Erro capturado:', error);
       toast({ title: 'Erro ao salvar parcela', description: error?.message || JSON.stringify(error), variant: 'destructive' });
     }
   };
@@ -225,12 +255,15 @@ export const InstallmentTypeModal: React.FC<InstallmentTypeModalProps> = ({
   return (
     <FullScreenModal
       isOpen={open}
-      onClose={() => onOpenChange(false)}
+      onClose={() => {
+        console.log('[InstallmentTypeModal] Modal fechado pelo usuário');
+        onOpenChange(false);
+      }}
       title={installmentType ? 'Editar Parcela' : 'Nova Parcela'}
       actions={<Button type="submit" form="installment-type-form" variant="brandPrimaryToSecondary">{installmentType ? 'Salvar' : 'Cadastrar'}</Button>}
     >
       <Form {...form}>
-        <form id="installment-type-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form id="installment-type-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 bg-[#1F1F1F] p-6 rounded-lg">
             <FormField
               control={form.control}
               name="administrator_id"
