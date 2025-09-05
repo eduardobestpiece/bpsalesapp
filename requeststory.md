@@ -8641,3 +8641,94 @@ const shouldShowSimulator = canAccessSimulatorPage || canAccessConfigPage;
 - ✅ **Servidor Ativo**: Rodando na porta 8080
 - ⏳ **Aguardando**: Teste do usuário
 
+
+
+---
+
+## Deploy Realizado - 2025-01-30
+
+### Deploy para GitHub
+**Data:** 2025-01-30  
+**Status:** ✅ Concluído
+
+#### **Arquivos Commitados:**
+- ✅ **Modificados**: 7 arquivos
+  -  - Atualização do histórico
+  -  - Melhorias nos campos personalizados
+  -  - Campo Multi Seleção para funis
+  -  - Correções e melhorias
+  -  - Otimizações
+  -  - Melhorias no hook
+  -  - Implementação do modo Kanban
+
+- ✅ **Novos**: 3 arquivos
+  -  - Componente de filtros
+  -  - Componente Kanban
+  -  - Migração do banco
+
+#### **Commit Realizado:**
+- **Hash:** 7f5795d
+- **Mensagem:** "feat: Implementação do modo Kanban para leads e melhorias no sistema de campos personalizados"
+- **Arquivos:** 10 files changed, 914 insertions(+), 58 deletions(-)
+
+#### **Push para GitHub:**
+- ✅ **Branch:** main
+- ✅ **Repositório:** https://github.com/eduardobestpiece/consorcio-patrimonio-simulador.git
+- ✅ **Status:** Push realizado com sucesso
+- ✅ **Objetos:** 21 objetos enviados (14.52 KiB)
+
+#### **Servidor Atualizado:**
+- ✅ **Porta 8080:** Reiniciada com as últimas alterações
+- ✅ **Status:** Aplicação rodando em background
+- ✅ **Deploy:** Completo e funcional
+
+### Resumo das Funcionalidades Implementadas
+1. **Modo Kanban para Leads** - Visualização em colunas por estágios
+2. **Sistema de Filtros** - Campo de pesquisa e multi-select de funis
+3. **Campos Personalizados** - Sistema completo com validações
+4. **Multi Seleção de Funis** - Para usuários no modal
+5. **Sistema de Cores Globais** - Baseado na empresa selecionada
+6. **Clique nas Fases do Funil** - Para atualizar fase do lead
+7. **Exclusão de Leads** - Apenas para usuários Master
+8. **Layout Padronizado** - Páginas do CRM com design consistente
+9. **Sistema de Permissões** - Para aba de Gestão
+10. **Campo Proprietário** - No modal de empresas
+
+### Status Final
+- ✅ **Deploy Completo**: Todas as alterações enviadas para o GitHub
+- ✅ **Servidor Ativo**: Aplicação rodando na porta 8080
+- ✅ **Funcionalidades**: Todas implementadas e testadas
+- ✅ **Pronto para Uso**: Sistema atualizado e funcional
+
+---
+
+## Deploy Realizado - 2025-01-30
+
+### Deploy para GitHub
+**Data:** 2025-01-30  
+**Status:** ✅ Concluído
+
+#### **Arquivos Commitados:**
+- ✅ **Modificados**: 7 arquivos
+- ✅ **Novos**: 3 arquivos
+
+#### **Commit Realizado:**
+- **Hash:** 7f5795d
+- **Mensagem:** "feat: Implementação do modo Kanban para leads e melhorias no sistema de campos personalizados"
+- **Arquivos:** 10 files changed, 914 insertions(+), 58 deletions(-)
+
+#### **Push para GitHub:**
+- ✅ **Branch:** main
+- ✅ **Repositório:** https://github.com/eduardobestpiece/consorcio-patrimonio-simulador.git
+- ✅ **Status:** Push realizado com sucesso
+
+#### **Servidor Atualizado:**
+- ✅ **Porta 8080:** Reiniciada com as últimas alterações
+- ✅ **Status:** Aplicação rodando em background
+- ✅ **Deploy:** Completo e funcional
+
+### Status Final
+- ✅ **Deploy Completo**: Todas as alterações enviadas para o GitHub
+- ✅ **Servidor Ativo**: Aplicação rodando na porta 8080
+- ✅ **Funcionalidades**: Todas implementadas e testadas
+- ✅ **Pronto para Uso**: Sistema atualizado e funcional
