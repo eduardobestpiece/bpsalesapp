@@ -527,9 +527,27 @@ export const LeadModal = ({ isOpen, onClose, companyId, lead }: LeadModalProps) 
                         />
                       ) : fieldConfig.type === 'number' ? (
                         <Input
-                          type="number"
+                          type="text"
                           value={group[fieldIndex]?.value || ''}
-                          onChange={(e) => updateMultifieldValue(groupIndex, fieldIndex, e.target.value)}
+                          onChange={(e) => {
+                            const inputValue = e.target.value;
+                            // Validar entrada de números (apenas números e uma vírgula)
+                            const regex = /^[0-9]*[,]?[0-9]*$/;
+                            if (inputValue === '' || regex.test(inputValue)) {
+                              updateMultifieldValue(groupIndex, fieldIndex, inputValue);
+                            } else {
+                              // Formatar entrada inválida
+                              const formattedValue = inputValue.replace(/[^0-9,]/g, '');
+                              updateMultifieldValue(groupIndex, fieldIndex, formattedValue);
+                            }
+                          }}
+                          onKeyPress={(e) => {
+                            // Permitir apenas números, vírgula, backspace, delete, setas
+                            const allowedKeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ',', 'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
+                            if (!allowedKeys.includes(e.key)) {
+                              e.preventDefault();
+                            }
+                          }}
                           placeholder="0"
                           className="brand-radius campo-primary-focus mt-1"
                         />

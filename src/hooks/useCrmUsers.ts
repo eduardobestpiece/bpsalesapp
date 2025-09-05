@@ -39,6 +39,36 @@ export const useCrmUsers = (companyId?: string) => {
   });
 };
 
+// Hook para buscar funis de um usuário específico
+export const useUserFunnels = (userId?: string) => {
+  return useQuery({
+    queryKey: ['user-funnels', userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      
+      const { data, error } = await supabase
+        .from('crm_user_funnels')
+        .select(`
+          funnel_id,
+          funnels(
+            id,
+            name
+          )
+        `)
+        .eq('user_id', userId);
+
+      if (error) {
+        console.error('[useUserFunnels] Erro na query:', error);
+        throw error;
+      }
+
+      return data || [];
+    },
+    enabled: !!userId,
+    staleTime: 1000 * 60 * 5, // 5 minutos
+  });
+};
+
 export const useCrmUsersByCompany = (companyId?: string | null) => {
       // console.log('[useCrmUsersByCompany] Hook chamado com companyId:', companyId);
   
@@ -52,7 +82,16 @@ export const useCrmUsersByCompany = (companyId?: string | null) => {
       simInfoLog('[USERS-QUERY] fetching by company', { companyId });
       const { data, error } = await supabase
         .from('crm_users')
-        .select('*')
+        .select(`
+          *,
+          crm_user_funnels(
+            funnel_id,
+            funnels(
+              id,
+              name
+            )
+          )
+        `)
         .eq('status', 'active')
         .eq('company_id', companyId as string)
         .order('created_at', { ascending: false });

@@ -3,9 +3,11 @@ import { useEffect, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Table, Kanban } from 'lucide-react';
 import { LeadsList } from '@/components/CRM/LeadsList';
 import { LeadsTable } from '@/components/CRM/LeadsTable';
+import { LeadsFilters } from '@/components/CRM/LeadsFilters';
+import { LeadsKanban } from '@/components/CRM/LeadsKanban';
 import { SalesList } from '@/components/CRM/SalesList';
 import { LeadModal } from '@/components/CRM/LeadModal';
 
@@ -24,8 +26,17 @@ const CrmDashboard = () => {
   const [tabsLoading, setTabsLoading] = useState(true);
   const [tabsError, setTabsError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFunnelIds, setSelectedFunnelIds] = useState<string[]>([]);
   const [selectedLead, setSelectedLead] = useState<any>(null);
   const [showLeadModal, setShowLeadModal] = useState(false);
+  const [viewMode, setViewMode] = useState<'table' | 'kanban'>('table');
+
+  // Auto-switch para tabela quando múltiplos funis são selecionados
+  useEffect(() => {
+    if (selectedFunnelIds.length > 1 && viewMode === 'kanban') {
+      setViewMode('table');
+    }
+  }, [selectedFunnelIds.length, viewMode]);
 
   const handleEditLead = (lead: any) => {
     setSelectedLead(lead);
@@ -155,21 +166,60 @@ const CrmDashboard = () => {
                       <h2 className="text-2xl font-semibold text-foreground">Leads</h2>
                       <p className="text-muted-foreground mt-1">Gerencie seus leads e oportunidades</p>
                     </div>
-                    <Button 
-                      onClick={() => setShowLeadModal(true)} 
-                      disabled={userRole === 'submaster'}
-                      variant="brandPrimaryToSecondary"
-                      className="brand-radius"
-                    >
-                      <Plus className="w-4 h-4 mr-2" /> Adicionar Lead
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      {/* Toggle de visualização */}
+                      <div className="flex items-center border border-border rounded-lg p-1">
+                        <Button
+                          variant={viewMode === 'table' ? 'default' : 'ghost'}
+                          size="sm"
+                          onClick={() => setViewMode('table')}
+                          className="h-8 px-3 text-xs"
+                        >
+                          <Table className="w-3 h-3 mr-1" />
+                          Lista
+                        </Button>
+                        <Button
+                          variant={viewMode === 'kanban' ? 'default' : 'ghost'}
+                          size="sm"
+                          onClick={() => setViewMode('kanban')}
+                          disabled={selectedFunnelIds.length !== 1}
+                          className="h-8 px-3 text-xs"
+                          title={selectedFunnelIds.length !== 1 ? 'Selecione exatamente um funil para usar o Kanban' : ''}
+                        >
+                          <Kanban className="w-3 h-3 mr-1" />
+                          Kanban
+                        </Button>
+                      </div>
+                      
+                      <Button 
+                        onClick={() => setShowLeadModal(true)} 
+                        disabled={userRole === 'submaster'}
+                        variant="brandPrimaryToSecondary"
+                        className="brand-radius"
+                      >
+                        <Plus className="w-4 h-4 mr-2" /> Adicionar Lead
+                      </Button>
+                    </div>
                   </div>
-                  <LeadsList 
-                    companyId={effectiveCompanyId} 
-                    showTable={false} 
+                  <LeadsFilters
+                    searchTerm={searchTerm}
                     onSearchTermChange={setSearchTerm}
+                    selectedFunnelIds={selectedFunnelIds}
+                    onSelectedFunnelIdsChange={setSelectedFunnelIds}
                   />
-                  <LeadsTable searchTerm={searchTerm} onEdit={handleEditLead} />
+                  {viewMode === 'table' ? (
+                    <LeadsTable 
+                      searchTerm={searchTerm} 
+                      selectedFunnelIds={selectedFunnelIds}
+                      onEdit={handleEditLead} 
+                    />
+                  ) : (
+                    <LeadsKanban
+                      searchTerm={searchTerm}
+                      selectedFunnelIds={selectedFunnelIds}
+                      onEdit={handleEditLead}
+                    />
+                  )}
                 </div>
               </TabsContent>
             )}

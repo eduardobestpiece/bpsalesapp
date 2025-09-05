@@ -4,41 +4,48 @@ import { supabase } from '@/integrations/supabase/client';
 import { LeadWithRelations } from '@/types/crm';
 import { useCompany } from '@/contexts/CompanyContext';
 
-export const useLeads = () => {
+interface UseLeadsFilters {
+  searchTerm?: string;
+  selectedFunnelIds?: string[];
+}
+
+export const useLeads = (filters?: UseLeadsFilters) => {
   const { selectedCompanyId } = useCompany();
-  
-  // console.log('[useLeads] Hook chamado:', {
-  //   selectedCompanyId,
-  //   timestamp: new Date().toISOString()
-  // });
+  const { searchTerm = '', selectedFunnelIds = [] } = filters || {};
   
   const result = useQuery({
-    queryKey: ['leads', selectedCompanyId],
+    queryKey: ['leads', selectedCompanyId, searchTerm, selectedFunnelIds],
     queryFn: async () => {
       if (!selectedCompanyId) return [];
-      // console.log('[useLeads] Executando query para buscar leads...');
-      const { data, error } = await supabase
+      
+      let query = supabase
         .from('leads')
         .select(`*, responsible:crm_users!responsible_id(first_name, last_name), funnel:funnels(name), current_stage:funnel_stages(name), source:sources(name)`)
         .eq('status', 'active')
-        .eq('company_id', selectedCompanyId)
-        .order('created_at', { ascending: false });
+        .eq('company_id', selectedCompanyId);
+
+      // Aplicar filtro de pesquisa por nome
+      if (searchTerm) {
+        // Buscar por first_name, last_name ou name - usando abordagem mais simples
+        query = query.or(`first_name.ilike.%${searchTerm}%,last_name.ilike.%${searchTerm}%,name.ilike.%${searchTerm}%`);
+      }
+
+      // Aplicar filtro por funis selecionados
+      if (selectedFunnelIds.length > 0) {
+        query = query.in('funnel_id', selectedFunnelIds);
+      }
+
+      query = query.order('created_at', { ascending: false });
+
+      const { data, error } = await query;
+      
       if (error) {
         if (error.code === 'PGRST301' || error.message.includes('RLS')) {
           return [];
         }
         throw error;
       }
-      // console.log('[useLeads] Dados retornados:', {
-      //   companyId: selectedCompanyId,
-      //   leadsCount: data?.length || 0,
-      //   leads: data?.map((l: any) => ({
-      //     id: l.id,
-      //     name: l.name,
-      //     current_stage_id: l.current_stage_id,
-      //     current_stage_name: l.current_stage?.name
-      //   }))
-      // });
+      
       return data;
     },
     enabled: !!selectedCompanyId

@@ -6,12 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useUpdateCrmUser } from '@/hooks/useCrmUsers';
+import { useUpdateCrmUser, useUserFunnels } from '@/hooks/useCrmUsers';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useTeams } from '@/hooks/useTeams';
+import { useFunnels } from '@/hooks/useFunnels';
 import { TeamModal } from './TeamModal';
+import { MultiSelect } from '@/components/ui/multiselect';
+import { useQueryClient } from '@tanstack/react-query';
 
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -34,6 +37,7 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
     role: 'user' as 'master' | 'admin' | 'leader' | 'user',
     team_id: '',
   });
+  const [selectedFunnels, setSelectedFunnels] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>('');
   const [showTeamModal, setShowTeamModal] = useState(false);
@@ -41,6 +45,9 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
   const { companyId, crmUser } = useCrmAuth();
   const updateUserMutation = useUpdateCrmUser();
   const { data: teams = [] } = useTeams();
+  const { data: funnels = [] } = useFunnels(companyId || '');
+  const { data: userFunnels = [] } = useUserFunnels(user?.id);
+  const queryClient = useQueryClient();
   
   // Buscar empresas
   const { data: companies = [], isLoading: companiesLoading } = useQuery({
@@ -70,6 +77,16 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
         role: user.role,
         team_id: user.team_id || '',
       });
+      
+      // Carregar funis atribuídos ao usuário
+      if (userFunnels && Array.isArray(userFunnels)) {
+        const funnelIds = userFunnels
+          .filter((uf: any) => uf.funnel_id)
+          .map((uf: any) => uf.funnel_id);
+        setSelectedFunnels(funnelIds);
+      } else {
+        setSelectedFunnels([]);
+      }
     } else {
       setFormData({
         first_name: '',
@@ -79,8 +96,9 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
         role: 'user',
         team_id: '',
       });
+      setSelectedFunnels([]);
     }
-  }, [user]);
+  }, [user, userFunnels]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,6 +164,41 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
             console.error('[UserModal] Erro ao atualizar líder do time:', teamError);
           }
         }
+
+        // Atualizar funis atribuídos ao usuário
+        console.log('[UserModal] Atualizando funis atribuídos...');
+        try {
+          // Remover todos os funis atuais
+          await supabase
+            .from('crm_user_funnels')
+            .delete()
+            .eq('user_id', user.id);
+
+          // Adicionar novos funis selecionados
+          if (selectedFunnels.length > 0) {
+            const funnelData = selectedFunnels.map(funnelId => ({
+              user_id: user.id,
+              funnel_id: funnelId
+            }));
+
+            const { error: funnelError } = await supabase
+              .from('crm_user_funnels')
+              .insert(funnelData);
+
+            if (funnelError) {
+              console.error('[UserModal] Erro ao atualizar funis:', funnelError);
+              throw funnelError;
+            }
+          }
+
+          console.log(`[UserModal] Funis atualizados: ${selectedFunnels.length} funis atribuídos`);
+        } catch (funnelError) {
+          console.error('[UserModal] Erro ao atualizar funis:', funnelError);
+          // Não interromper o fluxo se falhar a atualização dos funis
+        }
+
+        // Invalidar cache dos funis do usuário
+        queryClient.invalidateQueries({ queryKey: ['user-funnels', user.id] });
         
         toast({
           title: "Sucesso",
@@ -370,6 +423,30 @@ export const UserModal = ({ isOpen, onClose, user }: UserModalProps) => {
                 </Select>
               </div>
             )}
+
+            {/* Seleção de funis de vendas */}
+            <div>
+              <Label htmlFor="funnels">Funis de Vendas</Label>
+              <MultiSelect
+                key={`funnels-${user?.id}-${selectedFunnels.join(',')}`}
+                options={funnels.map(funnel => ({ 
+                  value: funnel.id, 
+                  label: funnel.name 
+                }))}
+                value={selectedFunnels}
+                onChange={(vals) => {
+                  console.log('[UserModal] Funnels selecionados:', vals);
+                  setSelectedFunnels(vals);
+                }}
+                placeholder="Selecione os funis de vendas"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Selecione os funis de vendas aos quais este usuário terá acesso
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Funis selecionados: {selectedFunnels.length} | IDs: {selectedFunnels.join(', ')}
+              </p>
+            </div>
 
           <div className="flex justify-end space-x-2 pt-4"></div>
         </form>

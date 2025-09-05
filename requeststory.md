@@ -1,25 +1,167 @@
 # Request Story - Projeto Monteo
 
-## Requisição Atual (Última Atualização: 2025-01-29)
+## Requisição Atual (Última Atualização: 2025-01-30)
 
 ### Problema Reportado
-**Usuário**: "O console está dando um looping infinto, quando eu tento salvar o campo adicional aparece o que eu coloquei no arquivo /Users/eduardocosta/Downloads/Projeto Monteo/src/lib/console.md"
+**Usuário**: "Boa, agora quero que crie o modo de visualização Kanban, ele será um ícone de um kanban no mesmo estilo do botão data-lov-id='src/components/Layout/CrmLayout.tsx:21:14'. Esse ícone ficará localizado a esquerda do botão de Adicionar Lead. Porém esse modo de visualização só será permitido quando apenas 1 filtro estiver selecionado, se dois filtros forem selecionados o modo de visualização será automaticamente modificado para lista (que é a tabela que temos). Quando ativado o Kanban, a visualização da tabela será trocada para o Kanban e vice e versa"
 
 ### Análise Realizada
-1. **Causa Identificada**: Loop infinito no `LeadModal.tsx` relacionado ao `useEffect` que carrega valores dos campos personalizados
-2. **Principal Culpado**: `useEffect` que depende de `existingCustomFieldValues` sendo executado constantemente
-3. **Impacto**: Console sendo sobrecarregado com logs, causando lentidão extrema
-4. **Sintoma**: Logs repetitivos de `[useCrmUsers] Hook chamado com companyId` e erro "Maximum update depth exceeded"
-5. **Ciclo do Loop**: 
-   - `useEffect` carrega valores dos campos personalizados
-   - Usuário salva campos personalizados
-   - `saveCustomFieldValuesMutation` invalida query
-   - `useLeadCustomFieldValues` é executada novamente
-   - `useEffect` é disparado novamente
-   - Loop infinito
+1. **Funcionalidade Solicitada**:
+   - Modo de visualização Kanban para leads
+   - Ícone de kanban no estilo do botão referenciado
+   - Posicionamento à esquerda do botão "Adicionar Lead"
+   - Restrição: só funciona com 1 funil selecionado
+   - Auto-switch para lista quando múltiplos funis selecionados
 
-### Correções Implementadas
-1. **Loop Infinito Corrigido**:
+2. **Estrutura necessária**:
+   - Componente KanbanView para visualização em colunas por estágios
+   - Toggle de visualização (Lista/Kanban)
+   - Lógica condicional baseada na quantidade de funis selecionados
+   - Integração com os filtros existentes
+
+3. **Componentes a modificar**:
+   - `CrmDashboard.tsx`: Adicionar controle de visualização
+   - Criar `LeadsKanban.tsx`: Novo componente para visualização Kanban
+   - Modificar interface para incluir toggle de visualização
+
+4. **Estrutura do banco de dados**:
+   - Tabela `leads`: contém `current_stage_id` para agrupar no Kanban
+   - Tabela `funnel_stages`: contém estágios ordenados por `stage_order`
+   - Relacionamento: leads.current_stage_id → funnel_stages.id
+
+5. **Funcionalidades necessárias**:
+   - Campo de pesquisa por nome (busca em first_name + last_name)
+   - Multi-select para seleção de funis
+   - Filtros aplicados em tempo real na tabela
+   - Interface intuitiva e responsiva
+
+### Implementação Planejada
+
+#### **1. Interface de Filtros**
+- **Campo de pesquisa**: Input com ícone de lupa para buscar por nome
+- **Multi-select de funis**: Componente que permite selecionar múltiplos funis
+- **Layout**: Filtros posicionados acima da tabela de leads
+- **Responsividade**: Design adaptável para diferentes tamanhos de tela
+
+#### **2. Lógica de Filtros**
+- **Pesquisa por nome**: Filtro que busca em `first_name` e `last_name`
+- **Filtro por funis**: Filtro que considera apenas leads dos funis selecionados
+- **Combinação**: Filtros funcionam em conjunto (AND)
+- **Tempo real**: Filtros aplicados conforme o usuário digita/seleciona
+
+#### **3. Componentes a Modificar**
+- **LeadsTable.tsx**: Adicionar props para receber filtros
+- **CrmDashboard.tsx**: Adicionar interface de filtros na aba Leads
+- **Hooks**: Modificar `useLeads` para suportar filtros
+- **Estado**: Gerenciar estado dos filtros no componente pai
+
+### Checklist de Implementação
+- [x] Analisar estrutura atual dos componentes de leads
+- [x] Criar componente LeadsKanban
+- [x] Implementar visualização em colunas por estágios
+- [x] Adicionar toggle de visualização (Lista/Kanban)
+- [x] Posicionar botões à esquerda do "Adicionar Lead"
+- [x] Implementar lógica de restrição (só 1 funil para Kanban)
+- [x] Auto-switch para lista quando múltiplos funis
+- [x] Integrar com filtros existentes
+- [x] Testar funcionalidade completa
+- [x] Atualizar porta 8080
+- [ ] Solicitar teste do usuário
+
+### Status
+- ✅ **Implementação Concluída**: Modo Kanban implementado
+- ✅ **Toggle de Visualização**: Lista/Kanban funcional
+- ✅ **Restrições Aplicadas**: Kanban só com 1 funil selecionado
+- ✅ **Servidor Ativo**: Rodando na porta 8080
+- ⏳ **Aguardando**: Teste do usuário
+
+### Implementação Realizada
+
+#### **1. Criação do Componente LeadsKanban**
+- **Funcionalidades Implementadas**:
+  - Visualização em colunas por estágios do funil
+  - Cards de leads com informações principais (nome, email, telefone, responsável)
+  - Avatar com iniciais do lead
+  - Badge com contador de leads por estágio
+  - Scroll horizontal para múltiplas colunas
+  - Scroll vertical dentro de cada coluna
+  - Botão de edição em cada card
+  - Formatação de datas em português
+- **Componentes UI Utilizados**: Card, Badge, Button, Avatar
+- **Resultado**: Visualização Kanban funcional e intuitiva
+
+#### **2. Toggle de Visualização**
+- **Posicionamento**: À esquerda do botão "Adicionar Lead"
+- **Estilo**: Botões em grupo com border arredondado
+- **Ícones**: Table (Lista) e Kanban (Kanban)
+- **Estados**: Ativo/Inativo com visual diferenciado
+- **Restrição**: Kanban desabilitado quando != 1 funil selecionado
+- **Tooltip**: Mensagem explicativa quando desabilitado
+- **Resultado**: Interface clara para alternar entre modos
+
+#### **3. Lógica de Auto-Switch**
+- **Trigger**: useEffect monitora `selectedFunnelIds.length`
+- **Comportamento**: Auto-switch para 'table' quando > 1 funil
+- **Preservação**: Mantém preferência quando possível
+- **Resultado**: UX fluida sem quebras de funcionalidade
+
+#### **4. Modificação do Hook useLeads (Anterior)**
+- **Problema**: Hook original não suportava filtros
+- **Solução**: Adicionada interface `UseLeadsFilters` com `searchTerm` e `selectedFunnelIds`
+- **Implementação**:
+  - Filtro de pesquisa: `or('first_name.ilike.%term%,last_name.ilike.%term%,name.ilike.%term%')`
+  - Filtro por funis: `in('funnel_id', selectedFunnelIds)`
+  - Query key atualizada para incluir filtros no cache
+- **Resultado**: Filtros aplicados diretamente na query do Supabase
+
+#### **5. Correção do Erro de Sintaxe SQL (Anterior)**
+- **Problema Reportado**: Erro "ERROR: 42601: syntax error at or near 'OR'" na query
+- **Causa Identificada**: Sintaxe incorreta do `.or()` no Supabase JavaScript
+- **Solução Aplicada**: 
+  - Query SQL funcionava: `(first_name ILIKE '%termo%' OR last_name ILIKE '%termo%' OR name ILIKE '%termo%')`
+  - Sintaxe Supabase corrigida: `.or('first_name.ilike.%termo%,last_name.ilike.%termo%,name.ilike.%termo%')`
+- **Resultado**: Query executando sem erros de sintaxe
+
+#### **6. Criação do Componente LeadsFilters (Anterior)**
+- **Funcionalidades Implementadas**:
+  - Campo de pesquisa com ícone de lupa
+  - Multi-select de funis com popover e checkboxes
+  - Badges para mostrar funis selecionados
+  - Botão para limpar todos os filtros
+  - Interface responsiva (mobile/desktop)
+- **Componentes UI Utilizados**: Input, Button, Badge, Popover, Command, Checkbox
+- **Resultado**: Interface intuitiva e funcional para filtros
+
+#### **7. Atualização dos Componentes Existentes (Anterior)**
+- **LeadsTable.tsx**: 
+  - Adicionada prop `selectedFunnelIds`
+  - Removido filtro manual (agora feito no hook)
+  - Hook `useLeads` agora recebe filtros como parâmetro
+- **CrmDashboard.tsx**:
+  - Adicionado estado `selectedFunnelIds`
+  - Substituído `LeadsList` por `LeadsFilters`
+  - Props passadas para `LeadsTable` incluem filtros
+- **Resultado**: Integração completa entre filtros e tabela
+
+#### **8. Funcionalidades dos Filtros (Anterior)**
+- **Pesquisa por Nome**:
+  - Busca em `first_name`, `last_name` e `name`
+  - Case-insensitive (ilike)
+  - Filtro aplicado em tempo real
+- **Seleção de Funis**:
+  - Multi-select com checkboxes
+  - Busca dentro do popover
+  - Badges visuais dos funis selecionados
+  - Remoção individual de funis
+- **Combinação**: Filtros funcionam em conjunto (AND)
+- **Limpeza**: Botão para limpar todos os filtros
+
+#### **9. Melhorias de UX (Anterior)**
+- **Responsividade**: Layout adaptável para mobile e desktop
+- **Feedback Visual**: Badges, ícones e estados visuais claros
+- **Performance**: Filtros aplicados no backend (Supabase)
+- **Cache**: React Query com cache inteligente baseado nos filtros
+- **Acessibilidade**: Componentes acessíveis com labels apropriados
    - **Problema**: `useEffect` no `LeadModal.tsx` estava sendo executado constantemente
    - **Causa**: Dependência de `existingCustomFieldValues` sem verificação de mudanças reais
    - **Solução**: Adicionada verificação para só atualizar estado se valores realmente mudaram
@@ -473,6 +615,32 @@
       - Ícones utilizados no campo multifield para adicionar/remover grupos
       - Servidor reiniciado para aplicar correção
     - **Resultado**: Modal de edição de lead agora funciona corretamente sem erros
+
+42. **Validação de Campos Numéricos**:
+    - **Problema**: Campos do tipo "Número" aceitavam letras e caracteres especiais
+    - **Causa**: Falta de validação específica para entrada numérica
+    - **Solução**: Implementar validação que aceita apenas números e uma vírgula
+    - **Implementação**:
+      - Criada função `validateNumberInput` com regex `/^[0-9]*[,]?[0-9]*$/`
+      - Função `formatNumberInput` para remover caracteres inválidos
+      - Validação aplicada em `onChange` e `onKeyPress`
+      - Aplicada em CustomFieldModal (preview) e LeadModal (uso real)
+      - Suporte a campos number em multifield
+      - Mensagem informativa sobre restrições de entrada
+    - **Resultado**: Campos numéricos agora aceitam apenas números e uma vírgula
+
+43. **Campo Multi Seleção para Funis no Modal de Usuários**:
+    - **Problema**: Usuários não podiam ser atribuídos a funis de vendas específicos
+    - **Causa**: Falta de interface para gerenciar relacionamento usuário-funis
+    - **Solução**: Adicionar campo de multi seleção para funis no modal de edição
+    - **Implementação**:
+      - Criada tabela `crm_user_funnels` para relacionamento N:N
+      - Campo MultiSelect para seleção de funis no UserModal
+      - Hook useCrmUsers atualizado para incluir funis atribuídos
+      - Lógica de atualização de funis no handleSubmit
+      - Políticas RLS para segurança dos dados
+      - Interface similar ao campo "Usuários do Time"
+    - **Resultado**: Usuários agora podem ser atribuídos a múltiplos funis de vendas
 
 2. **Logs de Debug Removidos**:
    - **Problema**: Hook `useCrmUsers` com logs executados constantemente
@@ -8382,3 +8550,94 @@ const shouldShowSimulator = canAccessSimulatorPage || canAccessConfigPage;
 4. **Testar com usuário comum** (eduardocostav4@...) acessando `/debug-permissions`
 5. **Verificar comportamento** - Ambos devem ver tanto Simulador quanto Configurações no menu
 6. **Confirmar funcionamento** igual ao Administrador
+### Ajustes no Card do Kanban (Última Atualização: 2025-01-30)
+
+#### **Problema Reportado**
+**Usuário**: "Vamos ajustar a estrutura do card. Coloque na ordem: Nome e sobrenome, Origem, Email, Telefone, Data que foi criado. A direita do nome e sobrenome, remova o botão de editar e coloque a foto ou avatar do usuário que está como responsável. Ao clicar no card abrirá o modal de edição. O card deve poder ser movido de uma fase para outra com drag and drop"
+
+#### **Modificações Implementadas**
+
+##### **1. Nova Estrutura do Card**
+- **Ordem das informações**:
+  1. Nome e sobrenome (primeira linha)
+  2. Origem (badge com source)
+  3. Email (com ícone de envelope)
+  4. Telefone (com ícone de telefone)
+  5. Data de criação (com ícone de calendário)
+
+##### **2. Avatar do Responsável**
+- **Posicionamento**: À direita do nome e sobrenome
+- **Remoção**: Botão de editar removido do card
+- **Avatar**: Mostra iniciais do responsável pelo lead
+- **Estilo**: Avatar circular com fundo brand-primary
+
+##### **3. Interação do Card**
+- **Clique**: Todo o card é clicável para abrir modal de edição
+- **Hover**: Efeito de sombra ao passar o mouse
+- **Cursor**: Pointer para indicar que é clicável
+
+##### **4. Drag and Drop**
+- **Funcionalidade**: Cards podem ser arrastados entre estágios
+- **Atualização**: Mudança de estágio salva automaticamente no banco
+- **Feedback**: UI atualiza em tempo real após o drop
+- **Validação**: Só permite drop se o lead não estiver já no estágio
+
+##### **5. Implementação Técnica**
+- **React DnD**: Usando eventos nativos de drag and drop
+- **Mutation**: useMutation para atualizar current_stage_id
+- **Cache**: Invalidação automática do React Query
+- **Performance**: Atualização otimizada da UI
+
+#### **Status**
+- ✅ **Estrutura do Card**: Reorganizada conforme solicitado
+- ✅ **Avatar do Responsável**: Implementado à direita do nome
+- ✅ **Clique para Editar**: Todo card é clicável
+- ✅ **Drag and Drop**: Funcional entre estágios
+- ✅ **Servidor Ativo**: Rodando na porta 8080
+- ⏳ **Aguardando**: Teste do usuário
+
+
+### Ajustes na Ordem das Colunas da Tabela (Última Atualização: 2025-01-30)
+
+#### **Problema Reportado**
+**Usuário**: "No modelo lista as informações estão assim: Informações, Contato, Funil, Fase do Funil, Responsável, Ações. Quero que as colunas fiquem na seguinte ordem: Contato, Informações, Funil, Fase do Funil, Responsável, Ações. E tire o texto da headline Ações, a coluna estará lá porém somente sem o texto Ações"
+
+#### **Modificações Implementadas**
+
+##### **1. Nova Ordem das Colunas**
+**Ordem anterior:**
+1. Informações (source + data)
+2. Contato (nome + email + telefone)
+3. Funil
+4. Fase do Funil
+5. Responsável
+6. Ações
+
+**Nova ordem implementada:**
+1. **Contato** (nome + email + telefone)
+2. **Informações** (source + data)
+3. **Funil**
+4. **Fase do Funil**
+5. **Responsável**
+6. **Ações** (sem texto no cabeçalho)
+
+##### **2. Remoção do Texto "Ações"**
+- **Cabeçalho**: Coluna mantida mas sem texto "Ações"
+- **Funcionalidade**: Menu de ações continua funcionando normalmente
+- **Visual**: Apenas o ícone de três pontos (MoreHorizontal) visível
+
+##### **3. Reorganização das Células**
+- **Contato**: Primeira coluna com nome, email e telefone
+- **Informações**: Segunda coluna com origem (source) e data de criação
+- **Funil**: Terceira coluna com nome do funil
+- **Fase do Funil**: Quarta coluna com nome do estágio atual
+- **Responsável**: Quinta coluna com avatar e nome do responsável
+- **Ações**: Sexta coluna com menu dropdown (sem texto no cabeçalho)
+
+#### **Status**
+- ✅ **Ordem das Colunas**: Reorganizada conforme solicitado
+- ✅ **Texto "Ações"**: Removido do cabeçalho
+- ✅ **Funcionalidade**: Mantida integralmente
+- ✅ **Servidor Ativo**: Rodando na porta 8080
+- ⏳ **Aguardando**: Teste do usuário
+

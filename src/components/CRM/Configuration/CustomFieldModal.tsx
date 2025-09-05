@@ -279,6 +279,19 @@ export function CustomFieldModal({ isOpen, onClose, customField }: CustomFieldMo
     ));
   };
 
+  // Função para validar entrada de números (apenas números e uma vírgula)
+  const validateNumberInput = (value: string) => {
+    // Permitir apenas números e uma vírgula
+    const regex = /^[0-9]*[,]?[0-9]*$/;
+    return regex.test(value);
+  };
+
+  // Função para formatar entrada de números
+  const formatNumberInput = (value: string) => {
+    // Remover caracteres inválidos, mantendo apenas números e uma vírgula
+    return value.replace(/[^0-9,]/g, '');
+  };
+
   const renderFieldPreview = () => {
     const options = formData.options.split('\n').filter(option => option.trim());
     
@@ -304,11 +317,26 @@ export function CustomFieldModal({ isOpen, onClose, customField }: CustomFieldMo
       case 'number':
         return (
           <Input
-            type="number"
+            type="text"
             placeholder="0"
-            min={formData.min_value || undefined}
-            max={formData.max_value || undefined}
             className="campo-brand brand-radius"
+            onChange={(e) => {
+              const inputValue = e.target.value;
+              if (inputValue === '' || validateNumberInput(inputValue)) {
+                // Permitir entrada vazia ou valores válidos
+                e.target.value = inputValue;
+              } else {
+                // Formatar entrada inválida
+                e.target.value = formatNumberInput(inputValue);
+              }
+            }}
+            onKeyPress={(e) => {
+              // Permitir apenas números, vírgula, backspace, delete, setas
+              const allowedKeys = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', ',', 'Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
+              if (!allowedKeys.includes(e.key)) {
+                e.preventDefault();
+              }
+            }}
           />
         );
       
