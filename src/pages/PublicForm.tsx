@@ -322,7 +322,7 @@ export default function PublicForm() {
             try {
               const { data: leadFieldConfig, error: configError } = await supabase
                 .from('lead_fields' as any)
-                .select('checkbox_options, checkbox_button_mode, multiselect, checkbox_limit, name')
+                .select('checkbox_options, checkbox_button_mode, multiselect, checkbox_limit, checkbox_columns, name')
                 .eq('id', field.field_id)
                 .single();
 
@@ -334,7 +334,8 @@ export default function PublicForm() {
                   checkbox_style: leadFieldConfig.checkbox_button_mode ? 'button' : 'checkbox',
                   multiselect: leadFieldConfig.multiselect || field.multiselect,
                   checkbox_limit: leadFieldConfig.checkbox_limit || field.checkbox_limit,
-                  field_name: leadFieldConfig.name || field.field_name
+                  field_name: leadFieldConfig.name || field.field_name,
+                  checkbox_columns: (leadFieldConfig as any).checkbox_columns || (field as any).checkbox_columns || 2
                 };
               }
             } catch (error) {
@@ -1074,7 +1075,13 @@ export default function PublicForm() {
               <Label className="text-sm font-medium" style={{ color: cfg.fieldTextColor || '#FFFFFF' }}>
                 {label}
               </Label>
-              <div className="flex gap-2 w-full">
+              <div
+                className="w-full gap-2"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: `repeat(${Math.max(1, Math.min(10, Number((field as any).checkbox_columns) || 2))}, 1fr)`
+                }}
+              >
                 {checkboxOptions.map((option: string, index: number) => {
                   const isSelected = isCheckboxMultiselect ? 
                     (Array.isArray(currentValue) && currentValue.includes(option)) : 
@@ -1116,7 +1123,7 @@ export default function PublicForm() {
                         updateFieldValue((field as any).field_id, currentValue === option ? '' : option);
                       }
                     }}
-                      className={`h-12 px-4 text-base flex-1 transition-all duration-200 ${!canSelect ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                      className={`h-12 px-4 text-base transition-all duration-200 ${!canSelect ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     style={{
                         // Estágio 1 - Estado normal / Estágio 3 - Campo selecionado
                         backgroundColor: isSelected ? 
