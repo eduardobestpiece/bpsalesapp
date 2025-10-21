@@ -483,20 +483,20 @@ export default function PublicForm() {
   };
 
   // Função para ir para próxima etapa
-  const goToNextStep = () => {
+  const goToNextStep = (options?: { skipValidation?: boolean }) => {
     if (currentStep < totalSteps) {
-      const validation = validateCurrentStep();
-      
-      if (!validation.isValid) {
-        toast({
-          title: 'Campos obrigatórios',
-          description: `Por favor, preencha os seguintes campos: ${validation.missingFields.join(', ')}`,
-          variant: 'destructive'
-        });
-        return;
+      if (!options?.skipValidation) {
+        const validation = validateCurrentStep();
+        if (!validation.isValid) {
+          toast({
+            title: 'Campos obrigatórios',
+            description: `Por favor, preencha os seguintes campos: ${validation.missingFields.join(', ')}`,
+            variant: 'destructive'
+          });
+          return;
+        }
       }
-      
-      setCurrentStep(currentStep + 1);
+      setCurrentStep(prev => Math.min(prev + 1, totalSteps));
     }
   };
 
@@ -1124,9 +1124,7 @@ export default function PublicForm() {
                           updateFieldValue((field as any).field_id, nextArray);
                           // Avançar automaticamente se for campo isolado em modo botão e não for multiseleção
                           if (isIsolatedButtonCheckbox && !isCheckboxMultiselect && currentStep < totalSteps) {
-                            setTimeout(() => {
-                              goToNextStep();
-                            }, 0);
+                            goToNextStep({ skipValidation: true });
                           }
                         }
                       } else {
@@ -1135,9 +1133,7 @@ export default function PublicForm() {
                         updateFieldValue((field as any).field_id, nextValue);
                         // Avançar automaticamente apenas quando houver seleção (não ao desselecionar)
                         if (nextValue && isIsolatedButtonCheckbox && currentStep < totalSteps) {
-                          setTimeout(() => {
-                            goToNextStep();
-                          }, 0);
+                          goToNextStep({ skipValidation: true });
                         }
                       }
                     }}
