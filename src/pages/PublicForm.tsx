@@ -1075,6 +1075,10 @@ export default function PublicForm() {
               <Label className="text-sm font-medium" style={{ color: cfg.fieldTextColor || '#FFFFFF' }}>
                 {label}
               </Label>
+              {(() => {
+                const stepFields = getFieldsForCurrentStep();
+                const isIsolatedButtonCheckbox = stepFields.length === 1 && (stepFields[0] as any).field_id === (field as any).field_id;
+                return (
               <div
                 className="w-full gap-2"
                 style={{
@@ -1116,11 +1120,25 @@ export default function PublicForm() {
                           updateFieldValue((field as any).field_id, current.filter((item: string) => item !== option));
                         } else {
                             // Adicionar opção se não estiver selecionada
-                          updateFieldValue((field as any).field_id, [...current, option]);
+                          const nextArray = [...current, option];
+                          updateFieldValue((field as any).field_id, nextArray);
+                          // Avançar automaticamente se for campo isolado em modo botão e não for multiseleção
+                          if (isIsolatedButtonCheckbox && !isCheckboxMultiselect && currentStep < totalSteps) {
+                            setTimeout(() => {
+                              goToNextStep();
+                            }, 0);
+                          }
                         }
                       } else {
                           // Modo single select - apenas uma opção pode ser selecionada
-                        updateFieldValue((field as any).field_id, currentValue === option ? '' : option);
+                        const nextValue = currentValue === option ? '' : option;
+                        updateFieldValue((field as any).field_id, nextValue);
+                        // Avançar automaticamente apenas quando houver seleção (não ao desselecionar)
+                        if (nextValue && isIsolatedButtonCheckbox && currentStep < totalSteps) {
+                          setTimeout(() => {
+                            goToNextStep();
+                          }, 0);
+                        }
                       }
                     }}
                       className={`h-12 px-4 text-base transition-all duration-200 ${!canSelect ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
@@ -1164,6 +1182,8 @@ export default function PublicForm() {
                   );
                 })}
               </div>
+                );
+              })()}
               {/* Mensagem informativa sobre limite */}
               {isCheckboxMultiselect && (field as any).checkbox_limit > 0 && (
                 <div className="text-xs text-gray-400 mt-2">
