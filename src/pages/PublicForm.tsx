@@ -121,6 +121,8 @@ export default function PublicForm() {
   // Estados para controle de etapas
   const [currentStep, setCurrentStep] = useState(1);
   const [totalSteps, setTotalSteps] = useState(1);
+  // Animação de seleção (efeito piscar) antes de avançar
+  const [animatingSelection, setAnimatingSelection] = useState<{ fieldId: string; option: string } | null>(null);
   
   // Estados para valores dos campos
   const [fieldValues, setFieldValues] = useState<Record<string, any>>({});
@@ -1075,6 +1077,18 @@ export default function PublicForm() {
               <Label className="text-sm font-medium" style={{ color: cfg.fieldTextColor || '#FFFFFF' }}>
                 {label}
               </Label>
+              {/* CSS do efeito "piscar" */}
+              <style>{`
+                @keyframes pulse-select {
+                  0% { transform: scale(1); filter: brightness(1); }
+                  40% { transform: scale(1.03); filter: brightness(1.35); }
+                  70% { transform: scale(1.02); filter: brightness(1.15); }
+                  100% { transform: scale(1); filter: brightness(1); }
+                }
+                .pulse-selected {
+                  animation: pulse-select 0.7s ease-in-out;
+                }
+              `}</style>
               {(() => {
                 const stepFields = getFieldsForCurrentStep();
                 const isIsolatedButtonCheckbox = stepFields.length === 1 && (stepFields[0] as any).field_id === (field as any).field_id;
@@ -1112,6 +1126,11 @@ export default function PublicForm() {
                           return;
                         }
                         
+                      // Ativar animação de seleção
+                      if (isIsolatedButtonCheckbox) {
+                        setAnimatingSelection({ fieldId: (field as any).field_id, option });
+                      }
+
                       if (isCheckboxMultiselect) {
                         const current = Array.isArray(currentValue) ? currentValue : [];
                           
@@ -1124,7 +1143,11 @@ export default function PublicForm() {
                           updateFieldValue((field as any).field_id, nextArray);
                           // Avançar automaticamente se for campo isolado em modo botão e não for multiseleção
                           if (isIsolatedButtonCheckbox && !isCheckboxMultiselect && currentStep < totalSteps) {
-                            goToNextStep({ skipValidation: true });
+                            // Espera ~700ms da animação e avança até 1s total
+                            setTimeout(() => {
+                              goToNextStep({ skipValidation: true });
+                              setAnimatingSelection(null);
+                            }, 700);
                           }
                         }
                       } else {
@@ -1133,11 +1156,15 @@ export default function PublicForm() {
                         updateFieldValue((field as any).field_id, nextValue);
                         // Avançar automaticamente apenas quando houver seleção (não ao desselecionar)
                         if (nextValue && isIsolatedButtonCheckbox && currentStep < totalSteps) {
-                          goToNextStep({ skipValidation: true });
+                          // Espera ~700ms da animação e avança até 1s total
+                          setTimeout(() => {
+                            goToNextStep({ skipValidation: true });
+                            setAnimatingSelection(null);
+                          }, 700);
                         }
                       }
                     }}
-                      className={`h-12 px-4 text-base transition-all duration-200 ${!canSelect ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                      className={`h-12 px-4 text-base transition-all duration-200 ${!canSelect ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${animatingSelection && animatingSelection.fieldId === (field as any).field_id && animatingSelection.option === option ? 'pulse-selected' : ''}`}
                     style={{
                         // Estágio 1 - Estado normal / Estágio 3 - Campo selecionado
                         backgroundColor: isSelected ? 
