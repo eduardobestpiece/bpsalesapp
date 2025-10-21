@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Archive } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
@@ -128,6 +128,13 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
     }
   };
 
+  // Permitir refresh externo opcional via evento customizado
+  useEffect(() => {
+    const handler = () => fetchAdministrators();
+    window.addEventListener('refresh-administrators', handler as any);
+    return () => window.removeEventListener('refresh-administrators', handler as any);
+  }, []);
+
   const handleArchive = async (id: string, isArchived: boolean) => {
     try {
       const { error } = await supabase
@@ -235,12 +242,12 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
             <TableHead className="text-left">Entrada especial</TableHead>
             <TableHead className="text-left">Ajuste de contemplação</TableHead>
             <TableHead className="text-left">Agio de compra</TableHead>
-            <TableHead className="text-right">Ações</TableHead>
+            <TableHead className="text-right"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {administrators.map((admin) => (
-            <TableRow key={admin.id}>
+            <TableRow key={admin.id} className="cursor-pointer" onClick={() => onEdit(admin)}>
               <TableCell>
                 <input
                   type="radio"
@@ -259,7 +266,7 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
                 ) : (
                   <Badge
                     className="text-white"
-                    style={{ backgroundColor: 'var(--brand-primary, #A86F57)', borderRadius: 'var(--brand-radius, 8px)' }}
+                    style={{ backgroundColor: 'var(--brand-primary, #E50F5E)', borderRadius: 'var(--brand-radius, 8px)' }}
                   >
                     Ativo
                   </Badge>
@@ -269,31 +276,16 @@ export const AdministratorsList: React.FC<AdministratorsListProps> = ({
               <TableCell>{formatSpecialEntry(admin)}</TableCell>
               <TableCell>{admin.post_contemplation_adjustment ? `${admin.post_contemplation_adjustment}%` : '-'}</TableCell>
               <TableCell>{admin.agio_purchase_percentage ? `${admin.agio_purchase_percentage}%` : '-'}</TableCell>
-              <TableCell className="text-right">
-                <div className="flex justify-end space-x-2">
-                  {canEdit && (
-                  <Button
-                    variant="brandOutlineSecondaryHover"
-                    size="sm"
-                    onClick={() => onEdit(admin)}
-                    disabled={isSubMaster}
-                    className="brand-radius"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  )}
-                  {canArchive && (
-                  <Button
-                    variant="brandOutlineSecondaryHover"
-                    size="sm"
-                    onClick={() => handleArchive(admin.id, admin.is_archived)}
-                    disabled={isSubMaster}
-                    className="brand-radius"
-                  >
-                    <Archive className="w-4 h-4" />
-                  </Button>
-                  )}
-                </div>
+              <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                <Button
+                  variant="brandOutlineSecondaryHover"
+                  size="sm"
+                  onClick={() => handleDelete(admin.id)}
+                  className="brand-radius"
+                  title="Excluir"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
               </TableCell>
             </TableRow>
           ))}

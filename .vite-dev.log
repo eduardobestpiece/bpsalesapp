@@ -1,0 +1,563 @@
+
+> vite_react_shadcn_ts@0.0.0 dev
+> vite --host --port 8080
+
+
+  VITE v5.4.10  ready in 159 ms
+
+  ➜  Local:   http://localhost:8080/
+  ➜  Network: http://192.168.18.162:8080/
+Browserslist: browsers data (caniuse-lite) is 11 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+20:04:51 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+20:04:53 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+20:04:53 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+20:16:33 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+20:16:35 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+20:16:35 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+20:20:47 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+20:20:49 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+20:20:49 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+20:40:04 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+20:40:06 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+20:40:07 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+20:40:38 [vite] hmr update /src/components/ui/Logo.tsx, /src/index.css
+20:40:39 [vite] hmr update /src/components/ui/Logo.tsx, /src/index.css
+20:48:10 [vite] hmr update /src/components/Layout/CrmSidebar.tsx, /src/index.css
+20:48:12 [vite] hmr update /src/components/Layout/CrmSidebar.tsx, /src/index.css
+20:48:12 [vite] hmr update /src/components/Layout/CrmSidebar.tsx, /src/index.css
+20:48:34 [vite] hmr update /src/components/Layout/SimulatorSidebar.tsx, /src/index.css
+20:48:35 [vite] hmr update /src/components/Layout/SimulatorSidebar.tsx, /src/index.css
+20:48:35 [vite] hmr update /src/components/Layout/SimulatorSidebar.tsx, /src/index.css
+20:48:53 [vite] hmr update /src/components/Layout/SettingsSidebar.tsx, /src/index.css
+20:48:54 [vite] hmr update /src/components/Layout/SettingsSidebar.tsx, /src/index.css
+20:48:54 [vite] hmr update /src/components/Layout/SettingsSidebar.tsx, /src/index.css
+20:55:17 [vite] hmr update /src/pages/crm/CrmLogin.tsx, /src/index.css
+21:01:52 [vite] hmr update /src/components/Layout/CrmSidebar.tsx, /src/index.css
+21:01:53 [vite] hmr update /src/components/Layout/CrmSidebar.tsx, /src/index.css
+21:01:54 [vite] hmr update /src/components/Layout/CrmSidebar.tsx, /src/index.css
+21:02:29 [vite] hmr update /src/components/Layout/SimulatorSidebar.tsx, /src/index.css
+21:02:30 [vite] hmr update /src/components/Layout/SimulatorSidebar.tsx, /src/index.css
+21:02:30 [vite] hmr update /src/components/Layout/SimulatorSidebar.tsx, /src/index.css
+21:02:51 [vite] hmr update /src/components/Layout/SettingsSidebar.tsx, /src/index.css
+21:02:52 [vite] hmr update /src/components/Layout/SettingsSidebar.tsx, /src/index.css
+21:02:52 [vite] hmr update /src/components/Layout/SettingsSidebar.tsx, /src/index.css
+21:03:26 [vite] hmr update /src/pages/Home.tsx, /src/index.css
+21:03:26 [vite] hmr update /src/pages/Home.tsx, /src/index.css
+21:03:58 [vite] hmr update /src/pages/crm/CrmLogin.tsx, /src/index.css
+21:03:58 [vite] hmr update /src/pages/crm/CrmLogin.tsx, /src/index.css
+21:04:29 [vite] hmr update /src/components/Simulator/InstallmentsChart.tsx, /src/index.css
+21:04:30 [vite] hmr update /src/components/Simulator/InstallmentsChart.tsx, /src/index.css
+21:09:39 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+21:09:42 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+21:09:42 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+21:14:39 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+21:14:39 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+21:23:28 [vite] hmr update /src/contexts/CrmAuthContext.tsx, /src/index.css
+21:23:28 [vite] hmr invalidate /src/contexts/CrmAuthContext.tsx Could not Fast Refresh ("useCrmAuth" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react-swc#consistent-components-exports
+21:23:28 [vite] hmr update /src/App.tsx, /src/index.css, /src/pages/crm/CrmDashboard.tsx, /src/pages/crm/CrmPerfil.tsx, /src/pages/crm/CrmLogin.tsx, /src/pages/Home.tsx, /src/pages/crm/CrmIndicadores.tsx, /src/pages/settings/SettingsEmpresa.tsx, /src/pages/settings/SettingsMaster.tsx, /src/pages/settings/SettingsSimulator.tsx, /src/components/CRM/ProtectedRoute.tsx, /src/components/Layout/SimulatorLayout.tsx, /src/components/Simulator/NewSimulatorLayout.tsx, /src/components/CRM/LeadsList.tsx, /src/components/CRM/SalesList.tsx, /src/components/CRM/Configuration/UsersList.tsx, /src/components/CRM/Configuration/FunnelsList.tsx, /src/components/CRM/Configuration/SourcesList.tsx, /src/components/CRM/Configuration/TeamsList.tsx, /src/pages/crm/CrmPerformance.tsx, /src/components/CRM/IndicatorModal.tsx, /src/components/Administrators/AdministratorsList.tsx, /src/pages/crm/CrmMasterConfig.tsx, /src/components/Administrators/ProductsList.tsx, /src/components/Administrators/InstallmentTypesList.tsx, /src/components/Administrators/LeveragesList.tsx, /src/components/Administrators/LeverageModal.tsx, /src/components/Administrators/InstallmentReductionsList.tsx, /src/components/Layout/CrmSidebar.tsx, /src/components/Layout/SimulatorSidebar.tsx, /src/components/Simulator/SimulatorConfigModal.tsx, /src/components/Simulator/CreditAccessPanel.tsx, /src/components/Layout/SettingsSidebar.tsx, /src/components/CRM/Configuration/UserModal.tsx, /src/components/CRM/Configuration/SourceModal.tsx, /src/components/CRM/Configuration/TeamModal.tsx, /src/components/Layout/CrmHeader.tsx, /src/components/CRM/Configuration/FunnelModal.tsx, /src/components/CRM/Performance/PerformanceFilters.tsx, /src/components/Layout/CrmUserMenu.tsx
+21:23:28 [vite] hmr invalidate /src/components/Layout/SimulatorLayout.tsx Could not Fast Refresh ("useSimulatorContext" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react-swc#consistent-components-exports
+21:23:28 [vite] hmr update /src/pages/Simulador.tsx, /src/index.css, /src/components/Simulator/NewSimulatorLayout.tsx, /src/components/Simulator/SimulatorConfigModal.tsx, /src/components/Simulator/NovaAlavancagemPatrimonial.tsx
+21:23:29 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+21:23:30 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+21:41:27 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+21:41:28 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+21:43:45 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+21:43:45 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+21:51:36 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+21:51:37 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+21:55:29 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+21:55:33 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+21:55:33 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+21:57:56 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+21:57:59 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+21:57:59 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+22:02:43 [vite] hmr update /src/components/Layout/CrmSidebar.tsx, /src/index.css
+22:02:44 [vite] hmr update /src/components/Layout/CrmSidebar.tsx, /src/index.css
+22:03:27 [vite] hmr update /src/components/Layout/SimulatorSidebar.tsx, /src/index.css
+22:03:28 [vite] hmr update /src/components/Layout/SimulatorSidebar.tsx, /src/index.css
+22:04:01 [vite] hmr update /src/components/Layout/SettingsSidebar.tsx, /src/index.css
+22:11:14 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+22:11:15 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+22:14:46 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+22:19:14 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+22:19:18 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+22:19:19 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+22:27:41 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+22:27:45 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+22:27:45 [vite] hmr update /src/pages/settings/SettingsEmpresa.tsx, /src/index.css
+22:30:03 [vite] hmr update /src/components/Layout/SettingsLayout.tsx, /src/index.css
+22:30:04 [vite] hmr update /src/components/Layout/SettingsLayout.tsx, /src/index.css
+22:38:49 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+22:41:37 [vite] hmr update /src/components/Administrators/AdministratorsList.tsx, /src/index.css
+22:41:37 [vite] hmr update /src/components/Administrators/AdministratorsList.tsx, /src/index.css
+22:45:37 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+22:45:40 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+22:45:40 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+22:46:07 [vite] hmr update /src/components/Administrators/AdministratorsList.tsx, /src/index.css
+22:46:08 [vite] hmr update /src/components/Administrators/AdministratorsList.tsx, /src/index.css
+22:46:08 [vite] hmr update /src/components/Administrators/AdministratorsList.tsx, /src/index.css
+23:04:55 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+23:04:58 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+23:05:10 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+23:05:16 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+23:05:17 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+23:11:54 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+23:11:57 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+23:11:58 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+23:15:33 [vite] hmr update /src/index.css
+23:16:04 [vite] hmr update /src/components/ui/button.tsx, /src/index.css
+23:16:04 [vite] hmr invalidate /src/components/ui/button.tsx Could not Fast Refresh ("buttonVariants" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react-swc#consistent-components-exports
+23:16:04 [vite] hmr update /src/pages/crm/CrmPerfil.tsx, /src/index.css, /src/pages/crm/CrmLogin.tsx, /src/pages/crm/CrmResetPasswordInvite.tsx, /src/pages/crm/CrmResetPassword.tsx, /src/pages/crm/CrmIndicadores.tsx, /src/pages/settings/SettingsEmpresa.tsx, /src/pages/settings/SettingsSimulator.tsx, /src/components/Layout/SimulatorLayout.tsx, /src/components/CRM/LeadsList.tsx, /src/components/CRM/SalesList.tsx, /src/components/Auth/ForgotPasswordModal.tsx, /src/components/CRM/AvatarUpload.tsx, /src/components/CRM/Configuration/UsersList.tsx, /src/components/CRM/Configuration/FunnelsList.tsx, /src/components/CRM/Configuration/SourcesList.tsx, /src/components/CRM/Configuration/TeamsList.tsx, /src/components/CRM/IndicatorModal.tsx, /src/components/Administrators/AdministratorsList.tsx, /src/pages/crm/CrmMasterConfig.tsx, /src/components/Administrators/ProductsList.tsx, /src/components/Administrators/AdministratorModal.tsx, /src/components/Administrators/InstallmentTypesList.tsx, /src/components/Administrators/InstallmentTypeModal.tsx, /src/components/Administrators/LeveragesList.tsx, /src/components/Administrators/LeverageModal.tsx, /src/components/Administrators/InstallmentReductionsList.tsx, /src/components/Administrators/InstallmentReductionModal.tsx, /src/components/Administrators/CopyAdministratorsModal.tsx, /src/components/Administrators/ProductModal.tsx, /src/components/ui/sidebar.tsx, /src/components/Simulator/SimulatorConfigModal.tsx, /src/components/Simulator/SimulatorMenu.tsx, /src/components/Simulator/DetailTable.tsx, /src/components/Simulator/CreditAccessPanel.tsx, /src/components/CRM/LeadModal.tsx, /src/components/CRM/SaleModal.tsx, /src/components/Simulator/NovaAlavancagemPatrimonial.tsx, /src/components/CRM/AvatarCropper.tsx, /src/components/CRM/Configuration/UserModal.tsx, /src/components/CRM/Configuration/SourceModal.tsx, /src/components/CRM/Configuration/TeamModal.tsx, /src/components/Layout/CrmHeader.tsx, /src/components/CRM/Configuration/FunnelModal.tsx, /src/components/CRM/Performance/PerformanceFilters.tsx, /src/components/ui/FullScreenModal.tsx, /src/components/ui/alert-dialog.tsx, /src/components/Layout/CrmUserMenu.tsx
+23:16:05 [vite] hmr invalidate /src/components/Layout/SimulatorLayout.tsx Could not Fast Refresh ("useSimulatorContext" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react-swc#consistent-components-exports
+23:16:05 [vite] hmr update /src/pages/Simulador.tsx, /src/index.css, /src/components/Simulator/NewSimulatorLayout.tsx, /src/components/Simulator/SimulatorConfigModal.tsx, /src/components/Simulator/NovaAlavancagemPatrimonial.tsx
+23:16:05 [vite] hmr invalidate /src/components/ui/sidebar.tsx Could not Fast Refresh ("useSidebar" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react-swc#consistent-components-exports
+23:16:05 [vite] hmr update /src/components/Layout/CrmLayout.tsx, /src/index.css, /src/components/Layout/SimulatorLayout.tsx, /src/components/Layout/SettingsLayout.tsx, /src/components/Layout/CrmSidebar.tsx, /src/components/Layout/SimulatorSidebar.tsx, /src/components/Layout/SettingsSidebar.tsx
+23:16:05 [vite] hmr invalidate /src/components/ui/FullScreenModal.tsx Could not Fast Refresh ("useFullScreenModal" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react-swc#consistent-components-exports
+23:16:05 [vite] hmr update /src/index.css, /src/components/CRM/IndicatorModal.tsx, /src/components/Simulator/SimulatorConfigModal.tsx, /src/components/Simulator/NovaAlavancagemPatrimonial.tsx
+23:16:19 [vite] hmr update /src/components/ui/input.tsx, /src/index.css
+23:16:19 [vite] hmr update /src/components/ui/input.tsx, /src/index.css
+23:16:46 [vite] hmr update /src/components/ui/select.tsx, /src/index.css
+23:16:46 [vite] hmr update /src/components/ui/select.tsx, /src/index.css
+23:18:45 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+23:18:49 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+23:18:49 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+23:19:01 [vite] hmr update /src/components/Administrators/AdministratorsList.tsx, /src/index.css
+23:19:03 [vite] hmr update /src/components/Administrators/AdministratorsList.tsx, /src/index.css
+23:19:03 [vite] hmr update /src/components/Administrators/AdministratorsList.tsx, /src/index.css
+23:45:38 [vite] hmr update /src/components/Administrators/InstallmentReductionsList.tsx, /src/index.css
+23:45:39 [vite] hmr update /src/components/Administrators/InstallmentReductionsList.tsx, /src/index.css
+23:46:05 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+23:46:07 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+23:46:07 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+23:48:00 [vite] hmr update /src/index.css
+23:48:00 [vite] hmr update /src/index.css
+23:48:09 [vite] hmr update /src/components/ui/button.tsx, /src/index.css
+23:48:10 [vite] hmr invalidate /src/components/ui/button.tsx Could not Fast Refresh ("buttonVariants" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react-swc#consistent-components-exports
+23:48:10 [vite] hmr update /src/pages/crm/CrmPerfil.tsx, /src/index.css, /src/pages/crm/CrmLogin.tsx, /src/pages/crm/CrmResetPasswordInvite.tsx, /src/pages/crm/CrmResetPassword.tsx, /src/pages/crm/CrmIndicadores.tsx, /src/pages/settings/SettingsEmpresa.tsx, /src/pages/settings/SettingsSimulator.tsx, /src/components/Layout/SimulatorLayout.tsx, /src/components/CRM/LeadsList.tsx, /src/components/CRM/SalesList.tsx, /src/components/Auth/ForgotPasswordModal.tsx, /src/components/CRM/AvatarUpload.tsx, /src/components/CRM/Configuration/UsersList.tsx, /src/components/CRM/Configuration/FunnelsList.tsx, /src/components/CRM/Configuration/SourcesList.tsx, /src/components/CRM/Configuration/TeamsList.tsx, /src/components/CRM/IndicatorModal.tsx, /src/components/Administrators/AdministratorsList.tsx, /src/pages/crm/CrmMasterConfig.tsx, /src/components/Administrators/ProductsList.tsx, /src/components/Administrators/AdministratorModal.tsx, /src/components/Administrators/InstallmentTypesList.tsx, /src/components/Administrators/InstallmentTypeModal.tsx, /src/components/Administrators/LeveragesList.tsx, /src/components/Administrators/LeverageModal.tsx, /src/components/Administrators/InstallmentReductionsList.tsx, /src/components/Administrators/InstallmentReductionModal.tsx, /src/components/Administrators/CopyAdministratorsModal.tsx, /src/components/Administrators/ProductModal.tsx, /src/components/ui/sidebar.tsx, /src/components/Simulator/SimulatorConfigModal.tsx, /src/components/Simulator/SimulatorMenu.tsx, /src/components/Simulator/DetailTable.tsx, /src/components/Simulator/CreditAccessPanel.tsx, /src/components/CRM/LeadModal.tsx, /src/components/CRM/SaleModal.tsx, /src/components/Simulator/NovaAlavancagemPatrimonial.tsx, /src/components/CRM/AvatarCropper.tsx, /src/components/CRM/Configuration/UserModal.tsx, /src/components/CRM/Configuration/SourceModal.tsx, /src/components/CRM/Configuration/TeamModal.tsx, /src/components/Layout/CrmHeader.tsx, /src/components/CRM/Configuration/FunnelModal.tsx, /src/components/CRM/Performance/PerformanceFilters.tsx, /src/components/ui/FullScreenModal.tsx, /src/components/ui/alert-dialog.tsx, /src/components/Layout/CrmUserMenu.tsx
+23:48:10 [vite] hmr invalidate /src/components/Layout/SimulatorLayout.tsx Could not Fast Refresh ("useSimulatorContext" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react-swc#consistent-components-exports
+23:48:10 [vite] hmr update /src/pages/Simulador.tsx, /src/index.css, /src/components/Simulator/NewSimulatorLayout.tsx, /src/components/Simulator/SimulatorConfigModal.tsx, /src/components/Simulator/NovaAlavancagemPatrimonial.tsx
+23:48:10 [vite] hmr invalidate /src/components/ui/sidebar.tsx Could not Fast Refresh ("useSidebar" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react-swc#consistent-components-exports
+23:48:10 [vite] hmr update /src/components/Layout/CrmLayout.tsx, /src/index.css, /src/components/Layout/SimulatorLayout.tsx, /src/components/Layout/SettingsLayout.tsx, /src/components/Layout/CrmSidebar.tsx, /src/components/Layout/SimulatorSidebar.tsx, /src/components/Layout/SettingsSidebar.tsx
+23:48:10 [vite] hmr invalidate /src/components/ui/FullScreenModal.tsx Could not Fast Refresh ("useFullScreenModal" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react-swc#consistent-components-exports
+23:48:10 [vite] hmr update /src/index.css, /src/components/CRM/IndicatorModal.tsx, /src/components/Simulator/SimulatorConfigModal.tsx, /src/components/Simulator/NovaAlavancagemPatrimonial.tsx
+23:48:11 [vite] hmr update /src/components/ui/button.tsx, /src/index.css
+23:48:11 [vite] hmr invalidate /src/components/ui/button.tsx Could not Fast Refresh ("buttonVariants" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react-swc#consistent-components-exports
+23:48:11 [vite] hmr update /src/pages/crm/CrmPerfil.tsx, /src/index.css, /src/pages/crm/CrmLogin.tsx, /src/pages/crm/CrmResetPasswordInvite.tsx, /src/pages/crm/CrmResetPassword.tsx, /src/pages/crm/CrmIndicadores.tsx, /src/pages/settings/SettingsEmpresa.tsx, /src/pages/settings/SettingsSimulator.tsx, /src/components/Layout/SimulatorLayout.tsx, /src/components/CRM/LeadsList.tsx, /src/components/CRM/SalesList.tsx, /src/components/Auth/ForgotPasswordModal.tsx, /src/components/CRM/AvatarUpload.tsx, /src/components/CRM/Configuration/UsersList.tsx, /src/components/CRM/Configuration/FunnelsList.tsx, /src/components/CRM/Configuration/SourcesList.tsx, /src/components/CRM/Configuration/TeamsList.tsx, /src/components/CRM/IndicatorModal.tsx, /src/components/Administrators/AdministratorsList.tsx, /src/pages/crm/CrmMasterConfig.tsx, /src/components/Administrators/ProductsList.tsx, /src/components/Administrators/AdministratorModal.tsx, /src/components/Administrators/InstallmentTypesList.tsx, /src/components/Administrators/InstallmentTypeModal.tsx, /src/components/Administrators/LeveragesList.tsx, /src/components/Administrators/LeverageModal.tsx, /src/components/Administrators/InstallmentReductionsList.tsx, /src/components/Administrators/InstallmentReductionModal.tsx, /src/components/Administrators/CopyAdministratorsModal.tsx, /src/components/Administrators/ProductModal.tsx, /src/components/ui/sidebar.tsx, /src/components/Simulator/SimulatorConfigModal.tsx, /src/components/Simulator/SimulatorMenu.tsx, /src/components/Simulator/DetailTable.tsx, /src/components/Simulator/CreditAccessPanel.tsx, /src/components/CRM/LeadModal.tsx, /src/components/CRM/SaleModal.tsx, /src/components/Simulator/NovaAlavancagemPatrimonial.tsx, /src/components/CRM/AvatarCropper.tsx, /src/components/CRM/Configuration/UserModal.tsx, /src/components/CRM/Configuration/SourceModal.tsx, /src/components/CRM/Configuration/TeamModal.tsx, /src/components/Layout/CrmHeader.tsx, /src/components/CRM/Configuration/FunnelModal.tsx, /src/components/CRM/Performance/PerformanceFilters.tsx, /src/components/ui/FullScreenModal.tsx, /src/components/ui/alert-dialog.tsx, /src/components/Layout/CrmUserMenu.tsx
+23:48:12 [vite] hmr invalidate /src/components/Layout/SimulatorLayout.tsx Could not Fast Refresh ("useSimulatorContext" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react-swc#consistent-components-exports
+23:48:12 [vite] hmr update /src/pages/Simulador.tsx, /src/index.css, /src/components/Simulator/NewSimulatorLayout.tsx, /src/components/Simulator/SimulatorConfigModal.tsx, /src/components/Simulator/NovaAlavancagemPatrimonial.tsx
+23:48:12 [vite] hmr invalidate /src/components/ui/sidebar.tsx Could not Fast Refresh ("useSidebar" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react-swc#consistent-components-exports
+23:48:12 [vite] hmr update /src/components/Layout/CrmLayout.tsx, /src/index.css, /src/components/Layout/SimulatorLayout.tsx, /src/components/Layout/SettingsLayout.tsx, /src/components/Layout/CrmSidebar.tsx, /src/components/Layout/SimulatorSidebar.tsx, /src/components/Layout/SettingsSidebar.tsx
+23:48:12 [vite] hmr invalidate /src/components/ui/FullScreenModal.tsx Could not Fast Refresh ("useFullScreenModal" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react-swc#consistent-components-exports
+23:48:12 [vite] hmr update /src/index.css, /src/components/CRM/IndicatorModal.tsx, /src/components/Simulator/SimulatorConfigModal.tsx, /src/components/Simulator/NovaAlavancagemPatrimonial.tsx
+23:48:12 [vite] hmr update /src/components/ui/button.tsx, /src/index.css
+23:48:12 [vite] hmr invalidate /src/components/ui/button.tsx Could not Fast Refresh ("buttonVariants" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react-swc#consistent-components-exports
+23:48:12 [vite] hmr update /src/pages/crm/CrmPerfil.tsx, /src/index.css, /src/pages/crm/CrmLogin.tsx, /src/pages/crm/CrmResetPasswordInvite.tsx, /src/pages/crm/CrmResetPassword.tsx, /src/pages/crm/CrmIndicadores.tsx, /src/pages/settings/SettingsEmpresa.tsx, /src/pages/settings/SettingsSimulator.tsx, /src/components/Layout/SimulatorLayout.tsx, /src/components/CRM/LeadsList.tsx, /src/components/CRM/SalesList.tsx, /src/components/Auth/ForgotPasswordModal.tsx, /src/components/CRM/AvatarUpload.tsx, /src/components/CRM/Configuration/UsersList.tsx, /src/components/CRM/Configuration/FunnelsList.tsx, /src/components/CRM/Configuration/SourcesList.tsx, /src/components/CRM/Configuration/TeamsList.tsx, /src/components/CRM/IndicatorModal.tsx, /src/components/Administrators/AdministratorsList.tsx, /src/pages/crm/CrmMasterConfig.tsx, /src/components/Administrators/ProductsList.tsx, /src/components/Administrators/AdministratorModal.tsx, /src/components/Administrators/InstallmentTypesList.tsx, /src/components/Administrators/InstallmentTypeModal.tsx, /src/components/Administrators/LeveragesList.tsx, /src/components/Administrators/LeverageModal.tsx, /src/components/Administrators/InstallmentReductionsList.tsx, /src/components/Administrators/InstallmentReductionModal.tsx, /src/components/Administrators/CopyAdministratorsModal.tsx, /src/components/Administrators/ProductModal.tsx, /src/components/ui/sidebar.tsx, /src/components/Simulator/SimulatorConfigModal.tsx, /src/components/Simulator/SimulatorMenu.tsx, /src/components/Simulator/DetailTable.tsx, /src/components/Simulator/CreditAccessPanel.tsx, /src/components/CRM/LeadModal.tsx, /src/components/CRM/SaleModal.tsx, /src/components/Simulator/NovaAlavancagemPatrimonial.tsx, /src/components/CRM/AvatarCropper.tsx, /src/components/CRM/Configuration/UserModal.tsx, /src/components/CRM/Configuration/SourceModal.tsx, /src/components/CRM/Configuration/TeamModal.tsx, /src/components/Layout/CrmHeader.tsx, /src/components/CRM/Configuration/FunnelModal.tsx, /src/components/CRM/Performance/PerformanceFilters.tsx, /src/components/ui/FullScreenModal.tsx, /src/components/ui/alert-dialog.tsx, /src/components/Layout/CrmUserMenu.tsx
+23:48:13 [vite] hmr invalidate /src/components/Layout/SimulatorLayout.tsx Could not Fast Refresh ("useSimulatorContext" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react-swc#consistent-components-exports
+23:48:13 [vite] hmr update /src/pages/Simulador.tsx, /src/index.css, /src/components/Simulator/NewSimulatorLayout.tsx, /src/components/Simulator/SimulatorConfigModal.tsx, /src/components/Simulator/NovaAlavancagemPatrimonial.tsx
+23:48:13 [vite] hmr invalidate /src/components/ui/sidebar.tsx Could not Fast Refresh ("useSidebar" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react-swc#consistent-components-exports
+23:48:13 [vite] hmr update /src/components/Layout/CrmLayout.tsx, /src/index.css, /src/components/Layout/SimulatorLayout.tsx, /src/components/Layout/SettingsLayout.tsx, /src/components/Layout/CrmSidebar.tsx, /src/components/Layout/SimulatorSidebar.tsx, /src/components/Layout/SettingsSidebar.tsx
+23:48:13 [vite] hmr invalidate /src/components/ui/FullScreenModal.tsx Could not Fast Refresh ("useFullScreenModal" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react-swc#consistent-components-exports
+23:48:13 [vite] hmr update /src/index.css, /src/components/CRM/IndicatorModal.tsx, /src/components/Simulator/SimulatorConfigModal.tsx, /src/components/Simulator/NovaAlavancagemPatrimonial.tsx
+23:48:32 [vite] hmr update /src/components/Administrators/InstallmentReductionsList.tsx, /src/index.css
+23:48:32 [vite] hmr update /src/components/Administrators/InstallmentReductionsList.tsx, /src/index.css
+23:48:45 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+23:48:47 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+23:48:47 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+00:01:25 [vite] hmr update /src/components/Administrators/InstallmentTypesList.tsx, /src/index.css
+00:02:38 [vite] hmr update /src/components/Administrators/InstallmentTypesList.tsx, /src/index.css
+00:05:20 [vite] hmr update /src/components/Administrators/ProductsList.tsx, /src/index.css
+00:05:20 [vite] hmr update /src/components/Administrators/ProductsList.tsx, /src/index.css
+00:05:20 [vite] hmr update /src/components/Administrators/ProductsList.tsx, /src/index.css
+00:05:42 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+00:05:43 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+00:14:35 [vite] hmr update /src/index.css
+00:14:35 [vite] hmr update /src/index.css
+00:15:57 [vite] hmr update /src/index.css
+00:15:59 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+00:15:59 [vite] hmr update /src/components/Administrators/ProductsList.tsx, /src/index.css
+00:16:00 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+00:16:00 [vite] hmr update /src/components/Administrators/ProductsList.tsx, /src/index.css
+00:16:49 [vite] hmr update /src/index.css
+00:16:49 [vite] hmr update /src/index.css
+00:19:02 [vite] hmr update /src/components/Administrators/InstallmentTypesList.tsx, /src/index.css
+00:19:39 [vite] hmr update /src/components/Administrators/InstallmentTypesList.tsx, /src/index.css
+00:19:40 [vite] hmr update /src/index.css
+00:19:40 [vite] hmr update /src/components/Administrators/ProductsList.tsx, /src/index.css
+00:19:40 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+00:19:42 [vite] hmr update /src/components/Administrators/ProductsList.tsx, /src/index.css
+00:19:42 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+00:19:42 [vite] hmr update /src/index.css
+00:19:43 [vite] hmr update /src/components/Administrators/ProductsList.tsx, /src/index.css
+00:19:43 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+00:21:21 [vite] hmr update /src/components/Administrators/InstallmentTypesList.tsx, /src/index.css
+00:24:36 [vite] hmr update /src/components/Administrators/LeveragesList.tsx, /src/index.css
+00:24:36 [vite] hmr update /src/components/Administrators/LeveragesList.tsx, /src/index.css
+00:24:57 [vite] hmr update /src/components/Administrators/InstallmentTypesList.tsx, /src/index.css
+00:25:03 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+00:25:04 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+00:27:48 [vite] hmr update /src/components/Administrators/InstallmentReductionsList.tsx, /src/index.css
+00:27:49 [vite] hmr update /src/components/Administrators/InstallmentReductionsList.tsx, /src/index.css
+00:28:05 [vite] hmr update /src/components/Administrators/LeveragesList.tsx, /src/index.css
+00:28:06 [vite] hmr update /src/components/Administrators/LeveragesList.tsx, /src/index.css
+00:33:00 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+00:33:01 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+00:33:42 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+00:33:43 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+00:37:41 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+00:37:42 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+00:37:42 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+01:21:59 [vite] hmr update /src/index.css
+01:21:59 [vite] hmr update /src/components/Administrators/InstallmentReductionsList.tsx, /src/index.css
+01:21:59 [vite] hmr update /src/components/Administrators/ProductsList.tsx, /src/index.css
+01:21:59 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+01:21:59 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+01:21:59 [vite] hmr update /src/components/Administrators/LeveragesList.tsx, /src/index.css
+01:22:01 [vite] hmr update /src/index.css
+01:22:01 [vite] hmr update /src/components/Administrators/InstallmentReductionsList.tsx, /src/index.css
+01:22:01 [vite] hmr update /src/components/Administrators/ProductsList.tsx, /src/index.css
+01:22:01 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+01:22:01 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+01:22:01 [vite] hmr update /src/components/Administrators/LeveragesList.tsx, /src/index.css
+01:23:16 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+01:23:17 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+01:26:43 [vite] hmr update /src/components/Administrators/AdministratorsList.tsx, /src/index.css
+01:26:44 [vite] hmr update /src/components/Administrators/AdministratorsList.tsx, /src/index.css
+01:26:59 [vite] hmr update /src/components/Administrators/InstallmentReductionsList.tsx, /src/index.css
+01:27:00 [vite] hmr update /src/components/Administrators/InstallmentReductionsList.tsx, /src/index.css
+01:27:48 [vite] hmr update /src/components/Administrators/InstallmentTypesList.tsx, /src/index.css
+01:28:02 [vite] hmr update /src/components/Administrators/ProductsList.tsx, /src/index.css
+01:28:03 [vite] hmr update /src/components/Administrators/ProductsList.tsx, /src/index.css
+01:28:49 [vite] hmr update /src/components/Administrators/LeveragesList.tsx, /src/index.css
+01:28:51 [vite] hmr update /src/components/Administrators/LeveragesList.tsx, /src/index.css
+01:28:52 [vite] hmr update /src/components/Administrators/LeveragesList.tsx, /src/index.css
+01:33:19 [vite] hmr update /src/components/Administrators/InstallmentTypesList.tsx, /src/index.css
+01:53:11 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+01:53:19 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+01:53:20 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+01:57:32 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+01:57:33 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+02:00:41 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+02:00:42 [vite] ✨ new dependencies optimized: @radix-ui/react-progress
+02:00:42 [vite] ✨ optimized dependencies changed. reloading
+02:00:42 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+02:05:13 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+02:05:13 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+02:07:10 [vite] hmr update /src/components/Layout/SimulatorSidebar.tsx, /src/index.css
+02:07:11 [vite] hmr update /src/components/Layout/SimulatorSidebar.tsx, /src/index.css
+02:08:29 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+02:08:30 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+02:10:01 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+02:10:02 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+02:12:41 [vite] hmr update /src/components/Layout/SimulatorSidebar.tsx, /src/index.css
+02:12:43 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+02:12:43 [vite] hmr update /src/components/Administrators/CopyLeveragesModal.tsx, /src/index.css
+02:12:43 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+02:12:43 [vite] hmr update /src/index.css
+02:12:44 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+02:12:44 [vite] hmr update /src/components/Administrators/CopyLeveragesModal.tsx, /src/index.css
+02:12:44 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+02:12:44 [vite] hmr update /src/index.css
+02:15:11 [vite] hmr update /src/components/Layout/SimulatorSidebar.tsx, /src/index.css
+02:15:12 [vite] hmr update /src/components/Layout/SimulatorSidebar.tsx, /src/index.css
+02:16:51 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+02:16:56 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+02:16:58 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+02:19:13 [vite] hmr update /src/components/Layout/SimulatorSidebar.tsx, /src/index.css
+02:19:14 [vite] hmr update /src/components/Layout/SimulatorSidebar.tsx, /src/index.css
+02:21:36 [vite] hmr update /src/components/Layout/SimulatorSidebar.tsx, /src/index.css
+02:21:37 [vite] hmr update /src/components/Layout/SimulatorSidebar.tsx, /src/index.css
+02:26:35 [vite] hmr update /src/components/Layout/SimulatorSidebar.tsx, /src/index.css
+02:26:38 [vite] hmr update /src/components/Layout/SimulatorSidebar.tsx, /src/index.css
+02:26:40 [vite] hmr update /src/components/Layout/SimulatorSidebar.tsx, /src/index.css
+02:27:26 [vite] hmr update /src/components/Layout/SimulatorSidebar.tsx, /src/index.css
+02:27:28 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+02:27:28 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+02:27:28 [vite] hmr update /src/index.css
+02:27:28 [vite] hmr update /src/components/Administrators/CopyLeveragesModal.tsx, /src/index.css
+02:27:29 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+02:27:29 [vite] hmr update /src/components/Administrators/CopyLeveragesModal.tsx, /src/index.css
+02:27:29 [vite] hmr update /src/index.css
+02:27:29 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+02:31:57 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+02:31:58 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+02:38:58 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+02:38:59 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+02:40:26 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+02:40:29 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+02:40:30 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+02:40:30 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+02:45:18 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+02:45:22 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+02:45:23 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+02:50:44 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+02:50:45 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+02:51:22 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+02:51:23 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+02:53:44 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+02:53:45 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+02:53:46 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+02:57:34 [vite] hmr update /src/components/Administrators/InstallmentReductionModal.tsx, /src/index.css
+02:57:51 [vite] hmr update /src/components/Administrators/InstallmentTypeModal.tsx, /src/index.css
+02:57:59 [vite] hmr update /src/components/Administrators/ProductModal.tsx, /src/index.css
+02:58:00 [vite] hmr update /src/components/Administrators/ProductModal.tsx, /src/index.css
+02:58:21 [vite] hmr update /src/components/Administrators/LeverageModal.tsx, /src/index.css
+02:58:22 [vite] hmr update /src/components/Administrators/LeverageModal.tsx, /src/index.css
+03:00:24 [vite] hmr update /src/components/Administrators/InstallmentReductionModal.tsx, /src/index.css
+03:00:26 [vite] hmr update /src/components/Administrators/InstallmentReductionModal.tsx, /src/index.css
+03:00:27 [vite] hmr update /src/components/Administrators/InstallmentReductionModal.tsx, /src/index.css
+03:00:47 [vite] hmr update /src/components/Administrators/InstallmentTypeModal.tsx, /src/index.css
+03:00:50 [vite] hmr update /src/components/Administrators/InstallmentTypeModal.tsx, /src/index.css
+03:00:51 [vite] hmr update /src/components/Administrators/InstallmentTypeModal.tsx, /src/index.css
+03:03:36 [vite] hmr update /src/components/ui/multiselect.tsx, /src/index.css
+03:03:36 [vite] hmr update /src/components/ui/multiselect.tsx, /src/index.css
+03:07:28 [vite] hmr update /src/components/Administrators/ProductModal.tsx, /src/index.css
+03:07:33 [vite] hmr update /src/components/Administrators/ProductModal.tsx, /src/index.css
+03:07:34 [vite] hmr update /src/components/Administrators/ProductModal.tsx, /src/index.css
+03:11:20 [vite] hmr update /src/components/ui/switch.tsx, /src/index.css
+03:13:39 [vite] hmr update /src/components/ui/checkbox.tsx, /src/index.css
+03:13:40 [vite] hmr update /src/components/ui/checkbox.tsx, /src/index.css
+03:13:57 [vite] hmr update /src/components/Administrators/ProductModal.tsx, /src/index.css
+03:13:58 [vite] hmr update /src/components/Administrators/ProductModal.tsx, /src/index.css
+03:15:48 [vite] hmr update /src/components/Administrators/AdministratorsList.tsx, /src/index.css
+03:15:50 [vite] hmr update /src/components/Administrators/AdministratorsList.tsx, /src/index.css
+03:19:59 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+03:20:04 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+03:20:05 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+03:20:31 [vite] hmr update /src/components/Administrators/AdministratorsList.tsx, /src/index.css
+03:20:34 [vite] hmr update /src/index.css
+03:20:34 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+03:20:34 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+03:20:34 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+03:20:34 [vite] hmr update /src/components/Administrators/LeverageModal.tsx, /src/index.css
+03:20:34 [vite] hmr update /src/components/Administrators/InstallmentTypeModal.tsx, /src/index.css
+03:20:34 [vite] hmr update /src/components/ui/switch.tsx, /src/index.css
+03:20:34 [vite] hmr update /src/components/ui/checkbox.tsx, /src/index.css
+03:20:34 [vite] hmr update /src/components/Administrators/ProductModal.tsx, /src/index.css
+03:20:34 [vite] hmr update /src/components/Administrators/CopyLeveragesModal.tsx, /src/index.css
+03:20:34 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+03:20:34 [vite] hmr update /src/components/ui/multiselect.tsx, /src/index.css
+03:20:34 [vite] hmr update /src/components/Administrators/InstallmentReductionModal.tsx, /src/index.css
+03:20:36 [vite] hmr update /src/components/Administrators/InstallmentReductionModal.tsx, /src/index.css
+03:20:36 [vite] hmr update /src/index.css
+03:20:36 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+03:20:36 [vite] hmr update /src/components/Administrators/LeverageModal.tsx, /src/index.css
+03:20:36 [vite] hmr update /src/components/ui/switch.tsx, /src/index.css
+03:20:36 [vite] hmr update /src/components/Administrators/InstallmentTypeModal.tsx, /src/index.css
+03:20:36 [vite] hmr update /src/components/Administrators/CopyLeveragesModal.tsx, /src/index.css
+03:20:36 [vite] hmr update /src/components/Administrators/ProductModal.tsx, /src/index.css
+03:20:36 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+03:20:36 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+03:20:36 [vite] hmr update /src/components/ui/multiselect.tsx, /src/index.css
+03:20:36 [vite] hmr update /src/components/ui/checkbox.tsx, /src/index.css
+03:20:42 [vite] hmr update /src/components/Administrators/AdministratorsList.tsx, /src/index.css
+03:20:42 [vite] hmr update /src/index.css
+03:20:42 [vite] hmr update /src/components/Administrators/InstallmentReductionModal.tsx, /src/index.css
+03:20:42 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+03:20:42 [vite] hmr update /src/components/Administrators/ProductModal.tsx, /src/index.css
+03:20:42 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+03:20:42 [vite] hmr update /src/components/Administrators/CopyLeveragesModal.tsx, /src/index.css
+03:20:42 [vite] hmr update /src/components/ui/switch.tsx, /src/index.css
+03:20:42 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+03:20:42 [vite] hmr update /src/components/ui/multiselect.tsx, /src/index.css
+03:20:42 [vite] hmr update /src/components/Administrators/LeverageModal.tsx, /src/index.css
+03:20:42 [vite] hmr update /src/components/ui/checkbox.tsx, /src/index.css
+03:20:42 [vite] hmr update /src/components/Administrators/InstallmentTypeModal.tsx, /src/index.css
+03:20:43 [vite] hmr update /src/components/Administrators/AdministratorsList.tsx, /src/index.css
+03:20:43 [vite] hmr update /src/index.css
+03:20:43 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+03:20:43 [vite] hmr update /src/components/Administrators/InstallmentReductionModal.tsx, /src/index.css
+03:20:43 [vite] hmr update /src/components/Administrators/ProductModal.tsx, /src/index.css
+03:20:43 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+03:20:43 [vite] hmr update /src/components/Administrators/CopyLeveragesModal.tsx, /src/index.css
+03:20:43 [vite] hmr update /src/components/ui/switch.tsx, /src/index.css
+03:20:43 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+03:20:43 [vite] hmr update /src/components/ui/multiselect.tsx, /src/index.css
+03:20:43 [vite] hmr update /src/components/Administrators/LeverageModal.tsx, /src/index.css
+03:20:43 [vite] hmr update /src/components/ui/checkbox.tsx, /src/index.css
+03:20:43 [vite] hmr update /src/components/Administrators/InstallmentTypeModal.tsx, /src/index.css
+03:20:49 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+03:20:49 [vite] hmr update /src/index.css
+03:20:49 [vite] hmr update /src/components/Administrators/CopyLeveragesModal.tsx, /src/index.css
+03:20:49 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+03:20:49 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+03:20:49 [vite] hmr update /src/components/Administrators/InstallmentReductionModal.tsx, /src/index.css
+03:20:49 [vite] hmr update /src/components/Administrators/AdministratorsList.tsx, /src/index.css
+03:20:49 [vite] hmr update /src/components/Administrators/InstallmentTypeModal.tsx, /src/index.css
+03:20:49 [vite] hmr update /src/components/Administrators/LeverageModal.tsx, /src/index.css
+03:20:49 [vite] hmr update /src/components/Administrators/ProductModal.tsx, /src/index.css
+03:20:49 [vite] hmr update /src/components/ui/switch.tsx, /src/index.css
+03:20:49 [vite] hmr update /src/components/ui/checkbox.tsx, /src/index.css
+03:20:49 [vite] hmr update /src/components/ui/multiselect.tsx, /src/index.css
+03:20:49 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+03:20:49 [vite] hmr update /src/index.css
+03:20:49 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+03:20:49 [vite] hmr update /src/components/Administrators/InstallmentTypeModal.tsx, /src/index.css
+03:20:49 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+03:20:49 [vite] hmr update /src/components/Administrators/LeverageModal.tsx, /src/index.css
+03:20:49 [vite] hmr update /src/components/Administrators/AdministratorsList.tsx, /src/index.css
+03:20:49 [vite] hmr update /src/components/Administrators/ProductModal.tsx, /src/index.css
+03:20:49 [vite] hmr update /src/components/Administrators/CopyLeveragesModal.tsx, /src/index.css
+03:20:49 [vite] hmr update /src/components/ui/checkbox.tsx, /src/index.css
+03:20:49 [vite] hmr update /src/components/Administrators/InstallmentReductionModal.tsx, /src/index.css
+03:20:49 [vite] hmr update /src/components/ui/switch.tsx, /src/index.css
+03:20:49 [vite] hmr update /src/components/ui/multiselect.tsx, /src/index.css
+03:20:50 [vite] hmr update /src/index.css
+03:20:50 [vite] hmr update /src/components/Administrators/InstallmentReductionModal.tsx, /src/index.css
+03:20:50 [vite] hmr update /src/components/Administrators/AdministratorsList.tsx, /src/index.css
+03:20:50 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+03:20:50 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+03:20:50 [vite] hmr update /src/components/Administrators/CopyLeveragesModal.tsx, /src/index.css
+03:20:50 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+03:20:50 [vite] hmr update /src/components/Administrators/InstallmentTypeModal.tsx, /src/index.css
+03:20:50 [vite] hmr update /src/components/ui/switch.tsx, /src/index.css
+03:20:50 [vite] hmr update /src/components/Administrators/ProductModal.tsx, /src/index.css
+03:20:50 [vite] hmr update /src/components/Administrators/LeverageModal.tsx, /src/index.css
+03:20:50 [vite] hmr update /src/components/ui/multiselect.tsx, /src/index.css
+03:20:50 [vite] hmr update /src/components/ui/checkbox.tsx, /src/index.css
+12:50:10 [vite] hmr update /src/components/Administrators/ProductModal.tsx, /src/index.css
+12:50:12 [vite] hmr update /src/components/Administrators/ProductModal.tsx, /src/index.css
+12:50:12 [vite] hmr update /src/components/Administrators/ProductModal.tsx, /src/index.css
+12:50:13 [vite] hmr update /src/components/Administrators/ProductModal.tsx, /src/index.css
+13:04:40 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+13:04:40 [vite] hmr update /src/components/Administrators/AdministratorsList.tsx, /src/index.css
+13:04:40 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+13:04:40 [vite] hmr update /src/components/Administrators/CopyLeveragesModal.tsx, /src/index.css
+13:04:40 [vite] hmr update /src/index.css
+13:04:40 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+13:04:40 [vite] hmr update /src/components/Administrators/InstallmentTypeModal.tsx, /src/index.css
+13:04:40 [vite] hmr update /src/components/Administrators/ProductModal.tsx, /src/index.css
+13:04:40 [vite] hmr update /src/components/ui/switch.tsx, /src/index.css
+13:04:40 [vite] hmr update /src/components/Administrators/InstallmentReductionModal.tsx, /src/index.css
+13:04:41 [vite] hmr update /src/components/Administrators/LeverageModal.tsx, /src/index.css
+13:04:41 [vite] hmr update /src/components/ui/multiselect.tsx, /src/index.css
+13:04:41 [vite] hmr update /src/components/ui/checkbox.tsx, /src/index.css
+13:04:41 [vite] hmr update /src/index.css
+13:04:41 [vite] hmr update /src/components/Administrators/CopyLeveragesModal.tsx, /src/index.css
+13:04:41 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+13:04:41 [vite] hmr update /src/components/Administrators/AdministratorsList.tsx, /src/index.css
+13:04:41 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+13:04:41 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+13:04:41 [vite] hmr update /src/components/Administrators/ProductModal.tsx, /src/index.css
+13:04:41 [vite] hmr update /src/components/Administrators/InstallmentReductionModal.tsx, /src/index.css
+13:04:42 [vite] hmr update /src/components/ui/switch.tsx, /src/index.css
+13:04:42 [vite] hmr update /src/components/ui/checkbox.tsx, /src/index.css
+13:04:42 [vite] hmr update /src/components/Administrators/LeverageModal.tsx, /src/index.css
+13:04:42 [vite] hmr update /src/components/ui/multiselect.tsx, /src/index.css
+13:04:42 [vite] hmr update /src/components/Administrators/InstallmentTypeModal.tsx, /src/index.css
+13:06:51 [vite] hmr update /src/components/Administrators/ProductModal.tsx, /src/index.css
+13:06:53 [vite] hmr update /src/components/Administrators/ProductModal.tsx, /src/index.css
+13:06:53 [vite] hmr update /src/components/Administrators/ProductModal.tsx, /src/index.css
+13:07:09 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+13:07:12 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+13:07:12 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+13:07:32 [vite] hmr update /src/components/Administrators/ProductsList.tsx, /src/index.css
+16:03:39 [vite] hmr update /src/components/CRM/Configuration/FunnelsList.tsx, /src/index.css
+16:03:40 [vite] hmr update /src/components/CRM/Configuration/FunnelsList.tsx, /src/index.css
+16:05:01 [vite] hmr update /src/components/CRM/Configuration/FunnelModal.tsx, /src/index.css
+16:05:01 [vite] hmr update /src/components/CRM/Configuration/FunnelModal.tsx, /src/index.css
+16:10:56 [vite] hmr update /src/components/CRM/Configuration/FunnelsList.tsx, /src/index.css
+16:10:58 [vite] hmr update /src/components/CRM/Configuration/FunnelsList.tsx, /src/index.css
+16:10:59 [vite] hmr update /src/components/CRM/Configuration/FunnelsList.tsx, /src/index.css
+16:11:39 [vite] hmr update /src/components/Administrators/CopyLeveragesModal.tsx, /src/index.css
+16:11:40 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+16:11:40 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+16:11:40 [vite] hmr update /src/components/Administrators/InstallmentReductionModal.tsx, /src/index.css
+16:11:40 [vite] hmr update /src/components/Administrators/AdministratorsList.tsx, /src/index.css
+16:11:40 [vite] hmr update /src/components/Administrators/InstallmentTypeModal.tsx, /src/index.css
+16:11:40 [vite] hmr update /src/components/ui/checkbox.tsx, /src/index.css
+16:11:40 [vite] hmr update /src/index.css
+16:11:40 [vite] hmr update /src/components/ui/switch.tsx, /src/index.css
+16:11:40 [vite] hmr update /src/components/Administrators/ProductModal.tsx, /src/index.css
+16:11:40 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+16:11:40 [vite] hmr update /src/components/Administrators/ProductsList.tsx, /src/index.css
+16:11:40 [vite] hmr update /src/components/CRM/Configuration/FunnelsList.tsx, /src/index.css
+16:11:40 [vite] hmr update /src/components/Administrators/LeverageModal.tsx, /src/index.css
+16:11:40 [vite] hmr update /src/components/CRM/Configuration/FunnelModal.tsx, /src/index.css
+16:11:40 [vite] hmr update /src/components/ui/multiselect.tsx, /src/index.css
+16:11:40 [vite] hmr update /src/components/Administrators/InstallmentReductionModal.tsx, /src/index.css
+16:11:40 [vite] hmr update /src/components/Administrators/CopyLeveragesModal.tsx, /src/index.css
+16:11:40 [vite] hmr update /src/components/Administrators/CopyAdministratorsModal.tsx, /src/index.css
+16:11:40 [vite] hmr update /src/pages/settings/SettingsSimulator.tsx, /src/index.css
+16:11:40 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+16:11:41 [vite] hmr update /src/components/Administrators/AdministratorModal.tsx, /src/index.css
+16:11:41 [vite] hmr update /src/components/Administrators/AdministratorsList.tsx, /src/index.css
+16:11:41 [vite] hmr update /src/components/Administrators/LeverageModal.tsx, /src/index.css
+16:11:41 [vite] hmr update /src/components/Administrators/ProductsList.tsx, /src/index.css
+16:11:41 [vite] hmr update /src/components/Administrators/InstallmentTypeModal.tsx, /src/index.css
+16:11:41 [vite] hmr update /src/components/ui/checkbox.tsx, /src/index.css
+16:11:41 [vite] hmr update /src/index.css
+16:11:41 [vite] hmr update /src/components/Administrators/InstallmentReductionModal.tsx, /src/index.css
+16:11:41 [vite] hmr update /src/components/CRM/Configuration/FunnelsList.tsx, /src/index.css
+16:11:41 [vite] hmr update /src/components/Administrators/ProductModal.tsx, /src/index.css
+16:11:41 [vite] hmr update /src/components/ui/switch.tsx, /src/index.css
+16:11:41 [vite] hmr update /src/components/ui/multiselect.tsx, /src/index.css
+16:11:41 [vite] hmr update /src/components/CRM/Configuration/FunnelModal.tsx, /src/index.css
+16:12:46 [vite] hmr update /src/components/CRM/Configuration/FunnelsList.tsx, /src/index.css
+16:12:48 [vite] hmr update /src/components/CRM/Configuration/FunnelsList.tsx, /src/index.css
+16:16:53 [vite] hmr update /src/components/CRM/Configuration/SourcesList.tsx, /src/index.css
+16:17:16 [vite] hmr update /src/components/CRM/Configuration/SourceModal.tsx, /src/index.css
+16:19:37 [vite] hmr update /src/components/CRM/Configuration/TeamsList.tsx, /src/index.css
+16:19:38 [vite] hmr update /src/components/CRM/Configuration/TeamsList.tsx, /src/index.css
+16:20:04 [vite] hmr update /src/components/CRM/Configuration/TeamModal.tsx, /src/index.css
+16:25:00 [vite] hmr update /src/components/CRM/Configuration/FunnelModal.tsx, /src/index.css
+16:25:03 [vite] hmr update /src/components/CRM/Configuration/FunnelModal.tsx, /src/index.css
+16:25:03 [vite] hmr update /src/components/CRM/Configuration/FunnelModal.tsx, /src/index.css
+16:25:29 [vite] hmr update /src/components/CRM/Configuration/SourceModal.tsx, /src/index.css
+16:25:29 [vite] hmr update /src/components/CRM/Configuration/SourceModal.tsx, /src/index.css
+16:25:49 [vite] hmr update /src/components/CRM/Configuration/TeamModal.tsx, /src/index.css
+16:25:53 [vite] hmr update /src/components/CRM/Configuration/TeamModal.tsx, /src/index.css
+16:25:55 [vite] hmr update /src/components/CRM/Configuration/TeamModal.tsx, /src/index.css
+16:32:46 [vite] hmr update /src/components/CRM/Configuration/UsersList.tsx, /src/index.css
+16:32:48 [vite] hmr update /src/components/CRM/Configuration/UsersList.tsx, /src/index.css
+16:33:37 [vite] hmr update /src/components/CRM/Configuration/UserModal.tsx, /src/index.css
+16:33:38 [vite] hmr update /src/components/CRM/Configuration/UserModal.tsx, /src/index.css
+16:38:02 [vite] hmr update /src/components/CRM/Configuration/UserModal.tsx, /src/index.css
+16:38:04 [vite] hmr update /src/components/CRM/Configuration/UserModal.tsx, /src/index.css
+16:38:04 [vite] hmr update /src/components/CRM/Configuration/UserModal.tsx, /src/index.css
+16:41:31 [vite] hmr update /src/components/Simulator/InstallmentsChart.tsx, /src/index.css
+16:42:01 [vite] hmr update /src/components/Simulator/SimulatorMenu.tsx, /src/index.css
+16:42:48 [vite] hmr update /src/components/Simulator/SimulatorMenu.tsx, /src/index.css
+16:42:49 [vite] hmr update /src/components/Simulator/SimulatorMenu.tsx, /src/index.css
+16:43:15 [vite] hmr update /src/components/Simulator/CapitalGainSection.tsx, /src/index.css
+16:45:28 [vite] page reload src/components/Simulator/PatrimonyChart.tsx
+16:45:28 [vite] page reload src/components/Simulator/PatrimonyChart.tsx
+16:45:55 [vite] page reload src/components/Simulator/AdvancedResultsPanel.tsx
+16:45:55 [vite] page reload src/components/Simulator/AdvancedResultsPanel.tsx
+16:45:56 [vite] page reload src/components/Simulator/AdvancedResultsPanel.tsx
+16:46:14 [vite] page reload src/components/Simulator/EnhancedResultsPanel.tsx
+16:46:15 [vite] page reload src/components/Simulator/EnhancedResultsPanel.tsx
+16:47:15 [vite] hmr update /src/components/Simulator/CreditAccessPanel.tsx, /src/index.css
+16:47:15 [vite] hmr update /src/components/Simulator/CreditAccessPanel.tsx, /src/index.css
+16:53:23 [vite] page reload src/components/Simulator/SingleLeverage.tsx
+16:53:23 [vite] page reload src/components/Simulator/SingleLeverage.tsx
+16:55:16 [vite] hmr update /src/components/Simulator/CapitalGainSection.tsx, /src/index.css
+16:55:19 [vite] hmr update /src/components/Simulator/CapitalGainSection.tsx, /src/index.css
+16:55:19 [vite] hmr update /src/components/Simulator/CapitalGainSection.tsx, /src/index.css
+16:58:15 [vite] hmr update /src/components/Simulator/CreditAccessPanel.tsx, /src/index.css
+16:58:20 [vite] hmr update /src/components/Simulator/CreditAccessPanel.tsx, /src/index.css
+16:58:20 [vite] hmr update /src/components/Simulator/CreditAccessPanel.tsx, /src/index.css
+17:01:20 [vite] hmr update /src/components/Simulator/NovaAlavancagemPatrimonial.tsx, /src/index.css
+17:01:20 [vite] hmr update /src/components/Simulator/NovaAlavancagemPatrimonial.tsx, /src/index.css
+19:31:58 [vite] hmr update /src/components/Simulator/CapitalGainSection.tsx, /src/index.css
+19:32:04 [vite] hmr update /src/components/Simulator/CapitalGainSection.tsx, /src/index.css
+19:32:05 [vite] hmr update /src/components/Simulator/CapitalGainSection.tsx, /src/index.css
+19:37:07 [vite] hmr update /src/components/Simulator/CapitalGainSection.tsx, /src/index.css
+19:37:13 [vite] hmr update /src/components/Simulator/CapitalGainSection.tsx, /src/index.css
+19:37:13 [vite] hmr update /src/components/Simulator/CapitalGainSection.tsx, /src/index.css
+20:13:27 [vite] hmr update /src/components/Simulator/CreditAccessPanel.tsx, /src/index.css
+20:13:30 [vite] hmr update /src/components/Simulator/CreditAccessPanel.tsx, /src/index.css
+20:13:32 [vite] hmr update /src/components/Simulator/CreditAccessPanel.tsx, /src/index.css
+20:13:32 [vite] hmr update /src/components/Simulator/CreditAccessPanel.tsx, /src/index.css
+20:20:17 [vite] hmr update /src/components/Simulator/CreditAccessPanel.tsx, /src/index.css
+20:20:17 [vite] hmr update /src/components/Simulator/CreditAccessPanel.tsx, /src/index.css
+20:33:40 [vite] hmr update /src/components/Simulator/CreditAccessPanel.tsx, /src/index.css
+20:33:47 [vite] hmr update /src/components/Simulator/CreditAccessPanel.tsx, /src/index.css
+20:33:48 [vite] hmr update /src/components/Simulator/CreditAccessPanel.tsx, /src/index.css
+20:36:32 [vite] hmr update /src/components/Simulator/CapitalGainSection.tsx, /src/index.css
+20:36:33 [vite] hmr update /src/components/Simulator/CapitalGainSection.tsx, /src/index.css
+20:37:37 [vite] hmr update /src/components/Simulator/NovaAlavancagemPatrimonial.tsx, /src/index.css
+20:37:38 [vite] hmr update /src/components/Simulator/NovaAlavancagemPatrimonial.tsx, /src/index.css
+20:38:11 [vite] hmr update /src/components/Simulator/DetailTable.tsx, /src/index.css
+20:38:12 [vite] hmr update /src/components/Simulator/DetailTable.tsx, /src/index.css

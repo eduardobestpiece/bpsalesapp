@@ -1,6 +1,6 @@
 
 import { useNavigate } from 'react-router-dom';
-import { Calculator, BarChart2, Settings } from 'lucide-react';
+import { Calculator, Settings } from 'lucide-react';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useEffect } from 'react';
 import { useDefaultBranding } from '@/hooks/useDefaultBranding';
@@ -67,18 +67,6 @@ function HomeContent() {
           </button>
         )}
         
-        {/* Botão CRM */}
-          <button
-            onClick={() => navigate('/crm/indicadores')}
-            className="w-full bg-[#1F1F1F] rounded-2xl shadow-xl p-6 flex items-center hover:bg-[#161616] transition border border-white/10 group focus:outline-none focus:ring-2 focus:ring-[#e50f5f]/50"
-          >
-            <BarChart2 className="h-12 w-12 mr-6 group-hover:scale-110 transition" style={{ color: defaultBranding?.primary_color || '#E50F5E' }} />
-            <div className="flex-1 text-left">
-              <span className="text-xl font-semibold text-white block mb-1">CRM</span>
-              <span className="text-gray-300 text-sm">Acesse o CRM e veja os indicadores de vendas.</span>
-            </div>
-          </button>
-
         {/* Botão Configurações */}
         {canAccessSettingsModule && (
           <button

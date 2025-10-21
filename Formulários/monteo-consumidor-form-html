@@ -1,0 +1,511 @@
+<!-- Elementor: Widget HTML -->
+<div id="bp-landing-form-wrapper" style="max-width:720px;margin:0 auto;">
+  <style>
+    :root {
+      --bp-accent: #A86F57;
+      --bp-accent-hover: #81503b;
+      --bp-text-muted: #9BA3AF;
+      --bp-bg: #1E1E1E;
+      --bp-bg-input: #2A2A2A;
+      --bp-border: rgba(255,255,255,0.12);
+    }
+    #bp-landing-form-wrapper * { box-sizing: border-box; }
+
+    /* Card */
+    #bp-card {
+      background: var(--bp-bg);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 16px;
+      padding: 24px;
+      color: #fff;
+      font-family: Effra, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    }
+
+    /* Campos */
+    .bp-field { margin-bottom:16px; }
+    .bp-input {
+      width: 100%;
+      height: 48px;
+      background: var(--bp-bg-input);
+      color: #fff;
+      border: 1px solid var(--bp-border);
+      border-radius: 8px;
+      padding: 0 12px;
+      font-size: 16px;
+      outline: none;
+    }
+    /* Email: borda #444 e radius 10px */
+    #bp-email.bp-input { border-color:#444444; border-radius:10px; }
+    #bp-email.bp-input:focus { border-color: var(--bp-accent) !important; }
+    .bp-input::placeholder { color: var(--bp-text-muted); }
+    .bp-input:focus { border-color: var(--bp-accent) !important; outline: none !important; }
+
+    .bp-error { color:#ef4444; font-size:13px; margin-top:6px; }
+
+    /* Telefone + DDI */
+    .bp-phone-row { display:flex; gap:5px; }
+    .bp-ddi-wrap { position:relative; }
+    .bp-btn-like {
+      display:flex; align-items:center; gap:8px; cursor:pointer;
+      height: 48px; padding: 0 12px; border-radius: 8px;
+      background: var(--bp-bg-input); color:#fff; border:1px solid var(--bp-border);
+      font-size:16px; outline: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .bp-btn-like:hover { background: var(--bp-accent-hover); }
+    .bp-btn-like:focus, .bp-btn-like:focus-visible, .bp-btn-like:active {
+      outline: none !important; box-shadow: none !important; border-color: var(--bp-accent) !important;
+      background: var(--bp-bg-input) !important; /* evita pink */
+    }
+    .bp-menu {
+      position:absolute; z-index: 999999; width: 280px; max-height:260px; overflow:auto;
+      background: var(--bp-bg-input); border: 1px solid var(--bp-border); border-radius:8px;
+      margin-top:4px; display:none;
+    }
+    .bp-item { display:flex; gap:12px; padding:10px 12px; cursor:pointer; color:#fff; }
+    .bp-item:hover, .bp-item:focus { background: #A86E57; color:#fff; }
+
+    /* Objetivo */
+    .bp-label { color:#fff; font-size:18px; margin:8px 0; font-family: Effra, system-ui; }
+    .bp-toggle-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+    .bp-toggle {
+      background: var(--bp-bg-input); border:1px solid var(--bp-border);
+      color: var(--bp-text-muted); border-radius:8px; height: 44px;
+      display:flex; align-items:center; justify-content:center; cursor:pointer;
+      font-size:16px; font-family: Effra, system-ui; font-weight:400;
+      transition: background .15s ease, color .15s ease, border-color .15s ease;
+    }
+    .bp-toggle:hover { background: var(--bp-accent-hover); color:#fff; }
+    .bp-toggle.active { background: var(--bp-accent); color:#fff; }
+
+    /* Dropdown de Aporte com MESMO estilo do DDI */
+    .bp-aporte-wrap { position:relative; }
+    .bp-select-btn {
+      display:flex; align-items:center; justify-content:flex-start; gap:8px;
+      width:100%;
+      height:48px; padding:0 12px; border-radius:8px; cursor:pointer;
+      background: var(--bp-bg-input); color:#fff; border:1px solid var(--bp-border);
+      font-size:16px; outline:none;
+    }
+    .bp-select-btn:hover { background: var(--bp-accent-hover); }
+    .bp-select-btn:focus { border-color: var(--bp-accent); outline:none; background: var(--bp-bg-input) !important; }
+    .bp-select-placeholder { color: var(--bp-text-muted); }
+    .bp-aporte-menu {
+      position:absolute; z-index:999999; width:100%;
+      background: #2A2A2A; border:1px solid var(--bp-border); border-radius:8px; margin-top:4px;
+      display:none;
+    }
+    .bp-aporte-menu .bp-item:hover { background:#A86E57; }
+
+    /* Slider de crédito */
+    .bp-range { -webkit-appearance:none; appearance:none; width:100%; height:4px; border-radius:2px; background: var(--bp-border); outline:none; }
+    .bp-range::-webkit-slider-thumb { -webkit-appearance:none; appearance:none; width:20px; height:20px; border-radius:50%; background: var(--bp-accent); border:2px solid #fff; cursor:pointer; }
+    .bp-range::-moz-range-thumb { width:20px; height:20px; border-radius:50%; background: var(--bp-accent); border:2px solid #fff; cursor:pointer; }
+
+    .bp-credito-wrap { position:relative; padding-bottom:28px; }
+    .bp-credito-bubble {
+      position:absolute; top:28px; transform:translateX(-50%);
+      background: transparent; color:#fff; font-weight:600; font-size:14px;
+      pointer-events:none; white-space:nowrap;
+    }
+
+    /* Botão principal */
+    .bp-btn {
+      width:100%; height:48px; border:none; border-radius:8px; cursor:pointer;
+      background: #FF6B00; color:#fff;
+      font-weight:700; font-size:18px;
+    }
+    .bp-btn:hover, .bp-btn:active { background: #81503B; }
+
+    /* Rodapé com cadeado */
+    .bp-footer { margin-top:12px; text-align:center; color:var(--bp-text-muted); display:flex; gap:8px; justify-content:center; align-items:center; font-size:14px; }
+    .bp-footer svg { width:16px; height:16px; }
+  </style>
+
+  <div id="bp-card">
+    <form id="bp-form">
+      <!-- Hidden -->
+      <input type="hidden" name="browser">
+      <input type="hidden" name="device">
+      <input type="hidden" name="ip">
+      <input type="hidden" name="fullUrl">
+      <input type="hidden" name="urlWithoutParams">
+      <input type="hidden" name="urlParams">
+      <input type="hidden" name="utm_campaign">
+      <input type="hidden" name="utm_medium">
+      <input type="hidden" name="utm_content">
+      <input type="hidden" name="utm_source">
+      <input type="hidden" name="utm_term">
+      <input type="hidden" name="gclid">
+      <input type="hidden" name="fbclid">
+      <input type="hidden" name="fbp">
+      <input type="hidden" name="fbc">
+
+      <!-- Nome -->
+      <div class="bp-field">
+        <input class="bp-input" id="bp-name" placeholder="Nome e sobrenome" required>
+        <div class="bp-error" id="err-name" style="display:none;"></div>
+      </div>
+
+      <!-- Email -->
+      <div class="bp-field">
+        <input class="bp-input" id="bp-email" type="email" placeholder="E-mail" required>
+        <div class="bp-error" id="err-email" style="display:none;"></div>
+      </div>
+
+      <!-- Telefone com DDI -->
+      <div class="bp-field">
+        <div class="bp-phone-row">
+          <div class="bp-ddi-wrap">
+            <button type="button" class="bp-btn-like" id="bp-ddi-btn"><span id="bp-ddi-flag">🇧🇷</span><span id="bp-ddi-code">+55</span></button>
+            <div class="bp-menu" id="bp-ddi-menu"></div>
+          </div>
+          <input class="bp-input" id="bp-phone" placeholder="Telefone (WhatsApp)" inputmode="tel" required>
+        </div>
+        <div class="bp-error" id="err-phone" style="display:none;"></div>
+      </div>
+
+      <!-- Objetivo (dropdown estilo DDI) -->
+      <div class="bp-field">
+        <div class="bp-label">Qual o seu objetivo?</div>
+        <div class="bp-aporte-wrap" id="bp-objetivo-wrap">
+          <button type="button" class="bp-select-btn" id="bp-objetivo-btn" aria-required="true">
+            <span id="bp-objetivo-label" class="bp-select-placeholder">Selecione uma opção</span>
+          </button>
+          <div class="bp-aporte-menu" id="bp-objetivo-menu" style="display:none;">
+            <div class="bp-item" data-value="Sair do aluguel">Sair do aluguel</div>
+            <div class="bp-item" data-value="Trocar de imóvel">Trocar de imóvel</div>
+            <div class="bp-item" data-value="Investimento">Investimento</div>
+            <div class="bp-item" data-value="Construção">Construção</div>
+            <div class="bp-item" data-value="Quitar financiamento">Quitar financiamento</div>
+          </div>
+        </div>
+        <div class="bp-error" id="err-objetivo" style="display:none;"></div>
+      </div>
+
+            <!-- Crédito (slider) -->
+      <div class="bp-field">
+        <div class="bp-label">Escolha o valor desejado</div>
+        <div class="bp-credito-wrap">
+          <input type="range" id="bp-credito-range" class="bp-range" min="140000" max="1010000" step="10000" value="140000">
+          <div id="bp-credito-bubble" class="bp-credito-bubble">R$ 140.000,00</div>
+        </div>
+        <div class="bp-error" id="err-credito" style="display:none;"></div>
+      </div>
+
+      <!-- Botão -->
+      <button class="bp-btn" type="submit">Simular grátis</button>
+
+      <div class="bp-footer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#9BA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        <span>Seus dados estão 100% protegidos</span>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    // Config
+    const WEBHOOK_URL = "https://n8n-n8n-start.1u8ncb.easypanel.host/webhook/4aa6dbaa-0f86-4cfc-8651-aaa34a300a90";
+    const THANKYOU_URL = "https://monteo.com.br/cadastroconfirmado-i/";
+    const META_PIXELS = [
+      { id: "283575840992045", token: "EAAVZApIpVEiIBPY6RAlB2WOp1tNouhFLcDL4oGa4lDAZCJvBEkCy6pFdVhuJqcZAht4kLJT0qJEUYCHGEUV6HPsdAZCt9xd6bXkxdTSfnoogRaMuJonbMFEmoNTgip9tbnvvsB1kzwZCLTZAdRiLKbVZCqnSh9NCmDaM9ZAMHrroyeGJd5FLmaQYpGiO1Q6LztgQEQZDZD", test: "TEST54855" },
+      { id: "1890417031518550", token: "EAAVZApIpVEiIBPY6RAlB2WOp1tNouhFLcDL4oGa4lDAZCJvBEkCy6pFdVhuJqcZAht4kLJT0qJEUYCHGEUV6HPsdAZCt9xd6bXkxdTSfnoogRaMuJonbMFEmoNTgip9tbnvvsB1kzwZCLTZAdRiLKbVZCqnSh9NCmDaM9ZAMHrroyeGJd5FLmaQYpGiO1Q6LztgQEQZDZD", test: "TEST24318" },
+    ];
+    const GOOGLE_SEND_TO = "AW-327587117/QAS5CNShopwbEK2qmpwB";
+    const GOOGLE_TAG = "AW-327587117";
+
+    // Utils
+    const $ = sel => document.querySelector(sel);
+    const setError = (id, msg) => { const el = $(id); if (!el) return; if (msg) { el.textContent = msg; el.style.display="block"; } else { el.textContent=""; el.style.display="none"; } };
+    const titleCase = s => s.toLowerCase().split(/\s+/).filter(Boolean).map(w => w[0]?.toUpperCase()+w.slice(1)).join(" ");
+    const firstName = full => titleCase((full.trim().split(/\s+/)[0]||""));
+    const lastName = full => { const p = full.trim().split(/\s+/).filter(Boolean); return titleCase(p.slice(1).join(" ")); };
+    const emailValid = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e||"").trim());
+    const digits = s => (s||"").replace(/\D/g,"");
+
+    // Browser/Device
+    function getBrowserInfo(ua) {
+      let b="Unknown", v="";
+      if (ua.includes("Firefox/")) { b="Firefox"; v=(ua.match(/Firefox\/(\d+)/)||[])[1]||""; }
+      else if (ua.includes("Chrome/")) { b="Chrome"; v=(ua.match(/Chrome\/(\d+)/)||[])[1]||""; }
+      else if (ua.includes("Safari/") && !ua.includes("Chrome/")) { b="Safari"; v=(ua.match(/Version\/(\d+)/)||[])[1]||""; }
+      else if (ua.includes("Edge/")) { b="Edge"; v=(ua.match(/Edge\/(\d+)/)||[])[1]||""; }
+      else if (ua.includes("OPR/")||ua.includes("Opera/")) { b="Opera"; v=(ua.match(/(?:Opera|OPR)\/(\d+)/)||[])[1]||""; }
+      return v ? `${b} ${v}` : b;
+    }
+    function getDeviceInfo(ua) {
+      if (/Android/i.test(ua)) { const m=ua.match(/Android\s([^;]+)/); return `Android ${(m&&m[1])||""}`.trim(); }
+      if (/iPhone|iPad|iPod/i.test(ua)) { const m=ua.match(/OS\s+(\d+_\d+)/); return `iOS ${(m&&m[1]||"").replace("_",".")}`.trim(); }
+      if (/Windows/i.test(ua)) { const m=ua.match(/Windows NT (\d+\.\d+)/); return `Windows ${(m&&m[1])||""}`.trim(); }
+      if (/Mac OS X/i.test(ua)) { const m=ua.match(/Mac OS X (\d+[._]\d+)/); return `macOS ${(m&&m[1]||"").replace("_",".")}`.trim(); }
+      if (/Linux/i.test(ua)) return "Linux";
+      return "Desktop";
+    }
+    function getCookie(name) {
+      const value = `; ${document.cookie}`; const parts = value.split(`; ${name}=`); if (parts.length===2) return (parts.pop().split(';').shift()||"");
+      return "";
+    }
+    async function sha256Hex(str) {
+      const enc = new TextEncoder().encode(str||"");
+      const buf = await crypto.subtle.digest("SHA-256", enc);
+      return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+    }
+
+    // DDI
+    const COUNTRIES = [
+      { code:'BR', name:'Brasil', ddi:'+55', flag:'🇧🇷' }, { code:'US', name:'Estados Unidos', ddi:'+1', flag:'🇺🇸' },
+      { code:'AR', name:'Argentina', ddi:'+54', flag:'🇦🇷' }, { code:'CL', name:'Chile', ddi:'+56', flag:'🇨🇱' },
+      { code:'CO', name:'Colômbia', ddi:'+57', flag:'🇨🇴' }, { code:'MX', name:'México', ddi:'+52', flag:'🇲🇽' },
+      { code:'PE', name:'Peru', ddi:'+51', flag:'🇵🇪' }, { code:'UY', name:'Uruguai', ddi:'+598', flag:'🇺🇾' },
+      { code:'VE', name:'Venezuela', ddi:'+58', flag:'🇻🇪' }, { code:'PT', name:'Portugal', ddi:'+351', flag:'🇵🇹' },
+      { code:'ES', name:'Espanha', ddi:'+34', flag:'🇪🇸' }, { code:'IT', name:'Itália', ddi:'+39', flag:'🇮🇹' },
+      { code:'FR', name:'França', ddi:'+33', flag:'🇫🇷' }, { code:'DE', name:'Alemanha', ddi:'+49', flag:'🇩🇪' },
+      { code:'GB', name:'Reino Unido', ddi:'+44', flag:'🇬🇧' },
+    ];
+    let selectedCountry = COUNTRIES[0]; // BR
+
+    function renderDdiMenu() {
+      const menu = $("#bp-ddi-menu"); menu.innerHTML="";
+      COUNTRIES.forEach(c=>{
+        const item = document.createElement("div");
+        item.className="bp-item";
+        item.innerHTML=`<span>${c.flag}</span><div style="flex:1"><div style="font-weight:600">${c.name}</div><div style="color:#9BA3AF">${c.ddi}</div></div>`;
+        item.onclick=()=>{ selectedCountry=c; $("#bp-ddi-flag").textContent=c.flag; $("#bp-ddi-code").textContent=c.ddi; menu.style.display="none"; };
+        menu.appendChild(item);
+      });
+    }
+
+    // Máscara de telefone BR para layout quando DDI=55
+    function formatBrPhoneForDisplay(d) {
+      const n = d.replace(/\D/g,"");
+      const ddd = n.slice(0,2);
+      const first = n.slice(2,7);
+      const last = n.slice(7,11);
+      if (!ddd) return "";
+      if (!last) return `(${ddd}) ${n.slice(2)}`;
+      return `(${ddd}) ${first}-${last}`;
+    }
+
+    // Validação para BR (DDI 55): 11 dígitos, DDD válido e primeiro dígito do número = 9
+    const VALID_DDD = [11,12,13,14,15,16,17,18,19,21,22,24,27,28,31,32,33,34,35,37,38,41,42,43,44,45,46,47,48,49,51,53,54,55,61,62,63,64,65,66,67,68,69,71,73,74,75,77,79,81,82,83,84,85,86,87,88,89,91,92,93,94,95,96,97,98,99];
+    function isValidBrPhone(digitsStr) {
+      const n = (digitsStr||'').replace(/\D/g,'');
+      if (n.length !== 11) return false;
+      const ddd = parseInt(n.slice(0,2),10);
+      const localFirst = n.charAt(2);
+      if (!VALID_DDD.includes(ddd)) return false;
+      if (localFirst !== '9') return false;
+      return true;
+    }
+
+    // Util: abrir/fechar menus
+    function openClose(el, show) { el.style.display = show ? "block" : "none"; }
+
+    // Objetivo dropdown (reutiliza estilos de aporte)
+    let objetivoValue = "";
+    function setupObjetivoMenu() {
+      const menu = $("#bp-objetivo-menu");
+      menu.querySelectorAll(".bp-item").forEach(it=>{
+        it.addEventListener("click", ()=>{
+          objetivoValue = it.getAttribute("data-value")||"";
+          $("#bp-objetivo-label").textContent = it.textContent.trim();
+          $("#bp-objetivo-label").classList.remove("bp-select-placeholder");
+          openClose(menu, false);
+        });
+      });
+      $("#bp-objetivo-btn").addEventListener("click", ()=> openClose(menu, menu.style.display!=="block"));
+      document.addEventListener("click",(e)=>{ if (!e.target.closest("#bp-objetivo-wrap") && !e.target.closest("#bp-objetivo-menu") && !e.target.closest("#bp-objetivo-btn")) openClose(menu, false); });
+    }
+
+    // User info + UTMs
+    const userInfo = {
+      browser: getBrowserInfo(navigator.userAgent),
+      device: getDeviceInfo(navigator.userAgent),
+      ip: "",
+      fullUrl: location.href,
+      urlWithoutParams: location.origin + location.pathname,
+      urlParams: location.search,
+      utm_campaign: new URLSearchParams(location.search).get("utm_campaign")||"",
+      utm_medium: new URLSearchParams(location.search).get("utm_medium")||"",
+      utm_content: new URLSearchParams(location.search).get("utm_content")||"",
+      utm_source: new URLSearchParams(location.search).get("utm_source")||"",
+      utm_term: new URLSearchParams(location.search).get("utm_term")||"",
+      gclid: new URLSearchParams(location.search).get("gclid")||"",
+      fbclid: new URLSearchParams(location.search).get("fbclid")||"",
+      fbp: new URLSearchParams(location.search).get("fbp") || getCookie("_fbp") || "",
+      fbc: new URLSearchParams(location.search).get("fbc") || getCookie("_fbc") || "",
+    };
+    function syncHidden() {
+      const map = { browser:userInfo.browser, device:userInfo.device, ip:userInfo.ip, fullUrl:userInfo.fullUrl, urlWithoutParams:userInfo.urlWithoutParams, urlParams:userInfo.urlParams, utm_campaign:userInfo.utm_campaign, utm_medium:userInfo.utm_medium, utm_content:userInfo.utm_content, utm_source:userInfo.utm_source, utm_term:userInfo.utm_term, gclid:userInfo.gclid, fbclid:userInfo.fbclid, fbp:userInfo.fbp, fbc:userInfo.fbc };
+      Object.entries(map).forEach(([k,v])=>{ const el = document.querySelector(`input[name="${k}"]`); if (el) el.value = v||""; });
+    }
+    syncHidden();
+
+    // IP + País
+    let countryByIp = "";
+    fetch("https://api.ipify.org?format=json").then(r=>r.json()).then(j=>{
+      userInfo.ip = j.ip || ""; syncHidden();
+      if (userInfo.ip) fetch(`https://ipapi.co/${userInfo.ip}/json/`).then(r=>r.json()).then(d=>{ countryByIp = d && d.country_name || ""; });
+    }).catch(()=>{});
+
+    // Menus
+    renderDdiMenu();
+    $("#bp-ddi-btn").addEventListener("click", ()=> {
+      const menu = $("#bp-ddi-menu");
+      openClose(menu, menu.style.display!=="block");
+    });
+    document.addEventListener("click", (e)=> {
+      if (!e.target.closest("#bp-ddi-btn") && !e.target.closest("#bp-ddi-menu")) openClose($("#bp-ddi-menu"), false);
+    });
+          // Objetivo menu
+      setupObjetivoMenu();
+
+    // Máscara dinâmica no input de telefone
+    const phoneInput = document.getElementById('bp-phone');
+    phoneInput.addEventListener('input', ()=>{
+      const ddi = digits(selectedCountry.ddi);
+      const rawDigits = digits(phoneInput.value);
+      if (ddi === '55') {
+        const masked = formatBrPhoneForDisplay(rawDigits);
+        phoneInput.value = masked;
+        // limpar tooltip nativo se 11 dígitos válidos
+        if (isValidBrPhone(rawDigits)) phoneInput.setCustomValidity("");
+      }
+    });
+
+    // Submit
+    $("#bp-form").addEventListener("submit", async (e)=>{
+      e.preventDefault();
+      setError("#err-name"); setError("#err-email"); setError("#err-phone"); setError("#err-aporte");
+
+      const name = $("#bp-name").value||"";
+      const email = ($("#bp-email").value||"").trim().toLowerCase();
+      const ddiDigits = digits(($("#bp-ddi-code").textContent)||"");
+      const phoneRaw = $("#bp-phone").value||"";
+
+      // Validações
+      if (!name.trim()) { setError("#err-name","Nome é obrigatório"); return; }
+      const parts = name.trim().split(/\s+/).filter(Boolean);
+      if (parts.length < 2) { setError("#err-name","Digite seu primeiro nome e pelo menos um sobrenome"); return; }
+      if (!email) { setError("#err-email","E-mail é obrigatório"); return; }
+      if (!emailValid(email)) { setError("#err-email","Digite um e-mail válido"); return; }
+      let phoneDigits = digits(phoneRaw);
+      if (digits(selectedCountry.ddi)==='55') {
+        if (!isValidBrPhone(phoneDigits)) {
+          setError("#err-phone","Digite um telefone válido com 11 dígitos (DDD válido e iniciando com 9)");
+          phoneInput.setCustomValidity("Digite um telefone válido com 11 dígitos");
+          phoneInput.reportValidity();
+          return;
+        } else {
+          phoneInput.setCustomValidity("");
+        }
+      } else {
+        if (phoneDigits.length < 10 || phoneDigits.length > 14) {
+          setError("#err-phone","Digite um telefone válido (10 a 14 dígitos)");
+          phoneInput.setCustomValidity("Digite um telefone válido (10 a 14 dígitos)");
+          phoneInput.reportValidity();
+          return;
+        } else {
+          phoneInput.setCustomValidity("");
+        }
+      }
+      if (!objetivoValue) { setError("#err-objetivo","Selecione seu objetivo"); return; }
+
+      const objetivo = objetivoValue;
+      const first = firstName(name);
+      const last  = lastName(name);
+      const full  = titleCase(name);
+      if (phoneDigits.startsWith(ddiDigits)) phoneDigits = phoneDigits.slice(ddiDigits.length);
+      const phoneFull = `${ddiDigits}${phoneDigits}`;
+
+      // Webhook
+      let creditoNumber = parseInt($("#bp-credito-range").value,10) || 140000;
+      if (creditoNumber >= 1010000) creditoNumber = 1000000;
+
+      const payload = {
+        primeiro_nome: first, sobrenome: last, nome_completo: full, email,
+        telefone: phoneFull, DDI: ddiDigits, telefone_sem_ddd: phoneDigits,
+        pais: countryByIp || "", objetivo, credito: creditoNumber,
+        form_name: "Consumo",
+        full_url: userInfo.fullUrl, urlWithoutParams: userInfo.urlWithoutParams, urlParams: userInfo.urlParams,
+        utm_campaign: userInfo.utm_campaign, utm_medium: userInfo.utm_medium, utm_content: userInfo.utm_content, utm_source: userInfo.utm_source, utm_term: userInfo.utm_term,
+        gclid: userInfo.gclid, fbclid: userInfo.fbclid, fbp: userInfo.fbp, fbc: userInfo.fbc,
+        ip: userInfo.ip, browser: userInfo.browser, device: userInfo.device,
+      };
+      try { await fetch(WEBHOOK_URL, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(payload) }); } catch(e){}
+
+      // Pixels
+      (function(f,b,e,v,n,t,s){ if(f.fbq)return; n=f.fbq=function(){ n.callMethod? n.callMethod.apply(n,arguments) : n.queue.push(arguments)}; if(!f._fbq)f._fbq=n; n.push=n; n.loaded=!0; n.version='2.0'; n.queue=[]; t=b.createElement(e); t.async=!0; t.src=v; s=b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t,s) })(window, document, 'script','https://connect.facebook.net/en_US/fbevents.js');
+      const eventId = `evt_${Date.now()}_${Math.random().toString(36).slice(2,10)}`;
+      META_PIXELS.forEach(p => {
+        try {
+          window.fbq('init', p.id, { em: email, fn: first.toLowerCase(), ln: last.toLowerCase(), ph: phoneFull, country: (payload.pais||"").toLowerCase(), external_id: eventId });
+          window.fbq('track', 'Lead', { content_name: 'Consumo', objetivo, credito: creditoNumber }, { eventID: eventId });
+        } catch(e){}
+      });
+      for (const p of META_PIXELS) {
+        try {
+          const user_data = {
+            em: await sha256Hex(email), ph: await sha256Hex(phoneFull),
+            fn: await sha256Hex(first.toLowerCase()), ln: await sha256Hex(last.toLowerCase()),
+            country: await sha256Hex((payload.pais||"").toLowerCase()),
+            external_id: await sha256Hex(eventId),
+            client_ip_address: userInfo.ip, client_user_agent: navigator.userAgent,
+            fbp: userInfo.fbp || undefined, fbc: userInfo.fbc || undefined,
+          };
+          const capi = { data: [{ event_name:"Lead", event_time: Math.floor(Date.now()/1000), event_id: eventId, event_source_url: userInfo.fullUrl, action_source:"website", user_data, custom_data:{ form_name:"Consumo", objetivo, credito: creditoNumber } }], test_event_code: p.test };
+          fetch(`https://graph.facebook.com/v18.0/${p.id}/events?access_token=${encodeURIComponent(p.token)}`, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(capi) }).catch(()=>{});
+        } catch(e){}
+      }
+      (function(){ if (window.gtag) return; var s=document.createElement('script'); s.async=true; s.src=`https://www.googletagmanager.com/gtag/js?id=${GOOGLE_TAG}`; document.head.appendChild(s); window.dataLayer=window.dataLayer||[]; window.gtag=function(){ dataLayer.push(arguments); }; window.gtag('js', new Date()); window.gtag('config', GOOGLE_TAG); })();
+      window.gtag('set','user_data',{ email, phone_number: phoneFull, first_name:first.toLowerCase(), last_name:last.toLowerCase(), address:{ country:(payload.pais||"").toLowerCase() } });
+      window.gtag('event','conversion',{ send_to: GOOGLE_SEND_TO, value:1.0, currency:'BRL' });
+
+      setTimeout(()=>{ window.location.href = THANKYOU_URL; }, 700);
+    });
+
+    // Inicialização
+    (function init(){
+      // Placeholder visual do aporte
+      // Slider crédito - exibir valor inicial
+      const creditoRange = document.getElementById('bp-credito-range');
+      const creditoBubble = document.getElementById('bp-credito-bubble');
+      const fmt = (n)=> new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL'}).format(n);
+      const capMaxLabel = '+', capMaxValue = 1010000; // valor extra para representar o "+"
+      const getPercent = ()=>{
+        const min = parseInt(creditoRange.min,10);
+        const max = parseInt(creditoRange.max,10);
+        const val = parseInt(creditoRange.value,10);
+        return ((val - min) / (max - min));
+      };
+      const updateCredito = ()=>{
+        const val = parseInt(creditoRange.value,10) || 140000;
+        const isPlus = val >= capMaxValue;
+        const shown = isPlus ? 1000000 : val;
+        creditoBubble.textContent = isPlus ? `${fmt(shown)} ${capMaxLabel}` : fmt(shown);
+        const percent = getPercent();
+        const wrap = creditoRange.closest('.bp-credito-wrap');
+        const wrapRect = wrap.getBoundingClientRect();
+        const sliderRect = creditoRange.getBoundingClientRect();
+        const sliderWidth = sliderRect.width;
+        const wrapPaddingLeft = parseFloat(getComputedStyle(wrap).paddingLeft)||0;
+        const wrapPaddingRight = parseFloat(getComputedStyle(wrap).paddingRight)||0;
+        const thumbWidth = 20; // igual ao CSS
+        const bubbleWidth = creditoBubble.getBoundingClientRect().width;
+        const xInSlider = percent * (sliderWidth - thumbWidth) + (thumbWidth/2);
+        let x = xInSlider + (sliderRect.left - wrapRect.left);
+        const minX = wrapPaddingLeft + (bubbleWidth/2);
+        const maxX = wrapRect.width - wrapPaddingRight - (bubbleWidth/2);
+        if (x < minX) x = minX;
+        if (x > maxX) x = maxX;
+        creditoBubble.style.left = `${x}px`;
+      };
+      window.addEventListener('resize', updateCredito);
+      creditoRange.addEventListener('input', updateCredito);
+      setTimeout(updateCredito, 0);
+    })();
+  </script>
+</div>

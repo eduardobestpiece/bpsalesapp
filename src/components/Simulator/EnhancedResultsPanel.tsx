@@ -52,7 +52,7 @@ export const EnhancedResultsPanel = ({ data, showResults }: EnhancedResultsPanel
 
   // Dados para o gráfico de pizza dos custos
   const costBreakdown = consortiumData ? [
-    { name: 'Principal', value: consortiumData.creditValue - (consortiumData.creditValue * (consortiumData.administrationTax + consortiumData.insurance + consortiumData.reserveFund) / 100), color: '#A86F57' },
+    { name: 'Principal', value: consortiumData.creditValue - (consortiumData.creditValue * (consortiumData.administrationTax + consortiumData.insurance + consortiumData.reserveFund) / 100), color: 'var(--brand-primary)' },
     { name: 'Taxa Admin', value: consortiumData.creditValue * consortiumData.administrationTax / 100, color: 'var(--brand-primary)' },
     { name: 'Seguro', value: consortiumData.creditValue * consortiumData.insurance / 100, color: '#fbbf24' },
     { name: 'Fundo Reserva', value: consortiumData.creditValue * consortiumData.reserveFund / 100, color: '#fcd34d' }

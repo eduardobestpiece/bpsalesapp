@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Archive, RotateCcw } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
@@ -101,24 +101,24 @@ export const InstallmentReductionsList: React.FC<InstallmentReductionsListProps>
     setLoading(false);
   };
 
-  const handleArchive = async (reduction: InstallmentReduction) => {
+  const handleDelete = async (reduction: InstallmentReduction) => {
+    if (!confirm('Tem certeza que deseja excluir esta redução?')) return;
     try {
+      // Remover relações com installment_type_reductions
+      await supabase
+        .from('installment_type_reductions')
+        .delete()
+        .eq('installment_reduction_id', reduction.id);
+
       const { error } = await supabase
         .from('installment_reductions')
-        .update({ is_archived: !reduction.is_archived, updated_at: new Date().toISOString() })
+        .delete()
         .eq('id', reduction.id);
       if (error) throw error;
-      toast({
-        title: 'Sucesso',
-        description: reduction.is_archived ? 'Redução restaurada!' : 'Redução arquivada!'
-      });
+      toast({ title: 'Redução excluída com sucesso!' });
       fetchReductions();
     } catch (error) {
-      toast({
-        title: 'Erro',
-        description: 'Erro ao arquivar/restaurar redução',
-        variant: 'destructive'
-      });
+      toast({ title: 'Erro ao excluir redução', variant: 'destructive' });
     }
   };
 
@@ -168,7 +168,7 @@ export const InstallmentReductionsList: React.FC<InstallmentReductionsListProps>
             <TableHead className="text-left">Percentual reduzido</TableHead>
             <TableHead className="text-left">Nº de aplicações</TableHead>
             <TableHead className="text-left">Status</TableHead>
-            <TableHead className="text-right">Ações</TableHead>
+            <TableHead className="text-right"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -180,7 +180,7 @@ export const InstallmentReductionsList: React.FC<InstallmentReductionsListProps>
             </TableRow>
           ) : (
             reductions.map((reduction) => (
-              <TableRow key={reduction.id}>
+              <TableRow key={reduction.id} className="cursor-pointer" onClick={() => onEdit(reduction)}>
                 <TableCell className="font-medium">{reduction.name}</TableCell>
                 <TableCell>{reduction.administrators?.name || 'N/A'}</TableCell>
                 <TableCell>{reduction.reduction_percent}%</TableCell>
@@ -189,32 +189,19 @@ export const InstallmentReductionsList: React.FC<InstallmentReductionsListProps>
                   {reduction.is_archived ? (
                     <Badge variant="destructive" className="brand-radius">Arquivado</Badge>
                   ) : (
-                    <Badge className="brand-radius text-white" style={{ backgroundColor: 'var(--brand-primary, #A86F57)' }}>Ativo</Badge>
+                    <Badge className="brand-radius text-white" style={{ backgroundColor: 'var(--brand-primary, #E50F5E)' }}>Ativo</Badge>
                   )}
                 </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex gap-2 justify-end">
-                    {canEdit && (
-                    <Button
-                      variant="brandOutlineSecondaryHover"
-                      size="sm"
-                      onClick={() => onEdit(reduction)}
-                      className="brand-radius"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    )}
-                    {canArchive && (
-                    <Button
-                      variant="brandOutlineSecondaryHover"
-                      size="sm"
-                      onClick={() => handleArchive(reduction)}
-                      className="brand-radius"
-                    >
-                      {reduction.is_archived ? <RotateCcw className="w-4 h-4" /> : <Archive className="w-4 h-4" />}
-                    </Button>
-                    )}
-                  </div>
+                <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                  <Button
+                    variant="brandOutlineSecondaryHover"
+                    size="sm"
+                    onClick={() => handleDelete(reduction)}
+                    className="brand-radius"
+                    title="Excluir"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
                 </TableCell>
               </TableRow>
             ))

@@ -15,7 +15,7 @@ const SettingsHeader = () => {
   const isCollapsed = state === 'collapsed';
   return (
     <header
-      className="flex min-h-16 shrink-0 items-center gap-4 border-b border-border dark:border-[#A86F57]/20 px-4 bg-background dark:bg-[#1E1E1E] fixed top-0 z-40"
+      className="flex min-h-16 shrink-0 items-center gap-4 border-b border-border dark:border-[#E50F5E]/30 px-4 bg-background dark:bg-[#1E1E1E] fixed top-0 z-40"
       style={{ left: isCollapsed ? '0' : '16rem', right: '0', transition: 'left 0.2s ease-linear' }}
     >
       <SidebarTrigger className="-ml-1 text-foreground dark:text-white brand-radius hover:bg-[var(--brand-secondary)] active:bg-[var(--brand-secondary)] focus:bg-[var(--brand-secondary)] transition-colors" />
@@ -34,10 +34,10 @@ export const SettingsLayout = ({ children }: SettingsLayoutProps) => {
       <SidebarProvider>
         <div className="settings-layout min-h-screen flex w-full bg-background dark:bg-[#131313]">
           <SettingsSidebar />
-          <SidebarInset className="flex-1 overflow-x-hidden pt-12">
+          <SidebarInset className="flex-1 overflow-x-auto pt-12">
             <SettingsHeader />
             <main className="flex-1 p-0 bg-background dark:bg-[#131313] max-w-full my-16 mx-8">
-              <div className="max-w-5xl mx-0 space-y-8">
+              <div className="w-full max-w-[1400px] mx-0 space-y-8 transition-[width]">
               {children}
               </div>
             </main>

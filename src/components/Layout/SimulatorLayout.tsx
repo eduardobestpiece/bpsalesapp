@@ -94,7 +94,7 @@ const SimulatorHeader = () => {
   
   return (
     <header 
-      className="flex min-h-16 shrink-0 items-center gap-4 border-b border-border dark:border-[#A86F57]/20 px-4 bg-background dark:bg-[#1E1E1E] fixed top-0 z-40 w-full"
+      className="flex min-h-16 shrink-0 items-center gap-4 border-b border-border dark:border-[#E50F5E]/30 px-4 bg-background dark:bg-[#1E1E1E] fixed top-0 z-40 w-full"
       style={{
         left: isMobile ? '0' : (isCollapsed ? '0' : '16rem'),
         right: '0',

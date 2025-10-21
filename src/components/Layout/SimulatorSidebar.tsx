@@ -163,9 +163,7 @@ export const SimulatorSidebar = () => {
 
   const isActivePath = (path: string) => location.pathname === path;
 
-  const handleGoToCrm = () => {
-    navigate('/crm/indicadores');
-  };
+  // Removido: handleGoToCrm
 
   const handleUserFooterClick = () => {
     navigate('/configuracoes/perfil');
@@ -173,7 +171,7 @@ export const SimulatorSidebar = () => {
 
   const handleLogout = async () => {
     await signOut();
-    // Redireciona para a página de login do CRM após logout
+    // Redireciona para a página de login após logout
     window.location.href = '/crm/login';
   };
 

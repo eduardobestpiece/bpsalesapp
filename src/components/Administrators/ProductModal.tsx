@@ -19,7 +19,8 @@ const formSchema = z.object({
   type: z.enum(['property', 'car', 'service']),
   administrator_id: z.string().optional(),
   credit_value: z.number().min(1, 'Valor do crédito é obrigatório'),
-  installment_types: z.array(z.string()).min(1, 'Selecione pelo menos uma parcela'),
+  // Tornar opcional para não bloquear o submit quando o seletor está oculto
+  installment_types: z.array(z.string()).optional().default([]),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -184,7 +185,8 @@ export const ProductModal: React.FC<ProductModalProps> = ({
         }
       }
       toast.success(product?.id ? 'Produto atualizado com sucesso!' : 'Produto criado com sucesso!');
-      onSuccess();
+      onSuccess && onSuccess();
+      onOpenChange(false);
       form.reset();
     } catch (error) {
       toast.error('Erro ao salvar produto');

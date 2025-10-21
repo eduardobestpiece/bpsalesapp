@@ -6,41 +6,43 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ModuleProvider } from "@/contexts/ModuleContext";
 import { CrmAuthProvider, useCrmAuth } from "@/contexts/CrmAuthContext";
 import { CompanyProvider } from "@/contexts/CompanyContext";
-import { ProtectedRoute } from "@/components/CRM/ProtectedRoute";
-import { ProtectedRoute as CustomProtectedRoute } from "@/components/ProtectedRoute";
-import { CrmLayout } from "@/components/Layout/CrmLayout";
 import { SimulatorLayout } from "@/components/Layout/SimulatorLayout";
 import { SettingsLayout } from "@/components/Layout/SettingsLayout";
 import Index from "./pages/Index";
 import Simulador from "./pages/Simulador";
 // import Configuracoes from "./pages/Configuracoes"; // removido: agora em módulo próprio
-import CrmLogin from "./pages/crm/CrmLogin";
-import CrmDashboard from "./pages/crm/CrmDashboard";
-// import CrmConfiguracoes from "./pages/crm/CrmConfiguracoes"; // removido: agora em módulo próprio
-import CrmIndicadores from "./pages/crm/CrmIndicadores";
-import CrmPerfil from "./pages/crm/CrmPerfil";
-// import CrmMasterConfig from "./pages/crm/CrmMasterConfig"; // acessado apenas via módulo Configurações
 import NotFound from "./pages/NotFound";
-import CrmResetPasswordInvite from "./pages/crm/CrmResetPasswordInvite";
-import CrmResetPassword from "./pages/crm/CrmResetPassword";
 import Home from "./pages/Home";
 import LandingPage from "./pages/LandingPage";
 import VideoPage from "./pages/VideoPage";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancel from "./pages/PaymentCancel";
+import LandingTeste from "./pages/LandingTeste";
+import GestaoIndex from "./pages/gestao/Index";
+import GestaoLeads from "./pages/gestao/Leads";
+import GestaoAgendamentos from "./pages/gestao/Agendamentos";
+import GestaoVendas from "./pages/gestao/Vendas";
 import { Loader2 } from "lucide-react";
 
 // Novas páginas do módulo Configurações
 import SettingsSimulator from "./pages/settings/SettingsSimulator";
-import SettingsCrm from "./pages/settings/SettingsCrm";
+// Removido: SettingsCrm por exclusão do módulo CRM
 import SettingsGestao from "./pages/settings/SettingsGestao";
 import SettingsUsers from "./pages/settings/SettingsUsers";
 import SettingsMaster from "./pages/settings/SettingsMaster";
 import SettingsEmpresa from "./pages/settings/SettingsEmpresa";
 import SettingsPerfil from "./pages/settings/SettingsPerfil";
+import SettingsForms from "./pages/settings/SettingsForms";
+import PublicForm from "./pages/PublicForm";
 import { TestPermissions } from "./components/TestPermissions";
 import { DebugPermissions } from "./components/DebugPermissions";
 import { DebugTabPermissions } from "./components/DebugTabPermissions";
+
+// Removido: Módulo Marketing
+// Removido: Páginas e layouts do CRM (Dashboard, Indicadores, Leads, Perfil, Layout)
+
+// Nova página de Login genérica
+import Login from "./pages/Login";
 
 // Hook para gerenciar cores globais
 import { useGlobalColors } from "@/hooks/useGlobalColors";
@@ -62,7 +64,7 @@ function GlobalColorsProvider({ children }: { children: React.ReactNode }) {
 }
 
 function AppContent() {
-  const { user, crmUser, companyId, loading } = useCrmAuth();
+  const { user, crmUser, companyId, loading, userRole } = useCrmAuth();
   
   // Loading state
   if (loading) {
@@ -98,16 +100,19 @@ function AppContent() {
         <Routes>
           {/* Landing Pages */}
           <Route path="/landing" element={<LandingPage />} />
+          <Route path="/landing-teste" element={<LandingTeste />} />
           <Route path="/video" element={<VideoPage />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/payment-cancel" element={<PaymentCancel />} />
           
+          {/* Public Form - accessible without authentication */}
+          <Route path="/form/:formId" element={<PublicForm />} />
+          
           {/* Public routes */}
           <Route path="/crm/login" element={
-            user ? (crmUser ? <Navigate to="/home" replace /> : <CrmLogin />) : <CrmLogin />
+            user ? (crmUser ? <Navigate to="/home" replace /> : <Login />) : <Login />
           } />
-          <Route path="/crm/redefinir-senha-convite" element={<CrmResetPasswordInvite />} />
-          <Route path="/crm/redefinir-senha" element={<CrmResetPassword />} />
+          {/* Removidas: rotas de redefinição de senha dentro de /crm */}
           
           {/* Protected routes */}
           <Route path="/" element={
@@ -118,18 +123,36 @@ function AppContent() {
           } />
           <Route path="/simulador" element={
             user ? (
-              <CustomProtectedRoute requiredModule="simulator" requiredAction="view" fallbackPath="/simulador/configuracoes">
-                <Simulador />
-              </CustomProtectedRoute>
+              <Simulador />
+            ) : <Navigate to="/crm/login" replace />
+          } />
+
+          {/* Novo módulo: Gestão */}
+          <Route path="/gestao" element={
+            user ? (
+              <GestaoIndex />
+            ) : <Navigate to="/crm/login" replace />
+          } />
+          <Route path="/gestao/leads" element={
+            user ? (
+              <GestaoLeads />
+            ) : <Navigate to="/crm/login" replace />
+          } />
+          <Route path="/gestao/agendamentos" element={
+            user ? (
+              <GestaoAgendamentos />
+            ) : <Navigate to="/crm/login" replace />
+          } />
+          <Route path="/gestao/vendas" element={
+            user ? (
+              <GestaoVendas />
             ) : <Navigate to="/crm/login" replace />
           } />
 
           {/* Configurações do Simulador agora dentro do módulo Simulador */}
           <Route path="/simulador/configuracoes" element={
             user ? (
-              <CustomProtectedRoute requiredModule="simulator-config" requiredAction="view">
-                <SettingsSimulator />
-              </CustomProtectedRoute>
+              <SettingsSimulator />
             ) : <Navigate to="/crm/login" replace />
           } />
 
@@ -145,53 +168,34 @@ function AppContent() {
               </SettingsLayout>
             ) : <Navigate to="/crm/login" replace />
           } />
+
+          {/* Nova página: Formulários */}
+          <Route path="/configuracoes/formularios" element={
+            user ? (
+              <SettingsLayout>
+                <SettingsForms />
+              </SettingsLayout>
+            ) : <Navigate to="/crm/login" replace />
+          } />
           
           {/* Redirecionamentos das páginas antigas para a nova página de Gestão */}
           <Route path="/configuracoes/perfil" element={<Navigate to="/configuracoes/gestao" replace />} />
           <Route path="/configuracoes/empresa" element={<Navigate to="/configuracoes/gestao" replace />} />
           <Route path="/configuracoes/usuarios" element={<Navigate to="/configuracoes/gestao" replace />} />
           
-          <Route path="/configuracoes/crm" element={
-            user ? (
-              <SettingsLayout>
-              <SettingsCrm />
-              </SettingsLayout>
-            ) : <Navigate to="/crm/login" replace />
-          } />
+          {/* Removida: página de configurações do CRM */}
+          
           <Route path="/configuracoes/master" element={
             user ? (
-              <ProtectedRoute requiredRole="master">
+              userRole === 'master' ? (
                 <SettingsLayout>
-                <SettingsMaster />
+                  <SettingsMaster />
                 </SettingsLayout>
-              </ProtectedRoute>
+              ) : <Navigate to="/configuracoes/gestao" replace />
             ) : <Navigate to="/crm/login" replace />
           } />
 
-          
-          {/* CRM Routes */}
-          <Route path="/crm" element={
-            user ? (
-              <CrmLayout>
-                <CrmDashboard />
-              </CrmLayout>
-            ) : <Navigate to="/crm/login" replace />
-          } />
-          {/* Antigas rotas de configurações e master do CRM foram removidas */}
-          <Route path="/crm/indicadores" element={
-            user ? (
-              <CrmLayout>
-                <CrmIndicadores />
-              </CrmLayout>
-            ) : <Navigate to="/crm/login" replace />
-          } />
-          <Route path="/crm/perfil" element={
-            user ? (
-              <CrmLayout>
-                <CrmPerfil />
-              </CrmLayout>
-            ) : <Navigate to="/crm/login" replace />
-          } />
+          {/* Removidas: rotas do CRM e do Marketing */}
           
           {/* Rota temporária para testar permissões */}
           <Route path="/test-permissions" element={

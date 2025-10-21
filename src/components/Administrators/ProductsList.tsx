@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Edit, Archive } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
@@ -162,13 +162,19 @@ export const ProductsList: React.FC<ProductsListProps> = ({
     product.type.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleArchive = async (product: Product) => {
+  const handleDelete = async (product: Product) => {
+    if (!confirm('Tem certeza que deseja excluir este produto?')) return;
     try {
+      // Remover relações primeiro
+      await supabase
+        .from('product_installment_types')
+        .delete()
+        .eq('product_id', product.id);
+
       const { error } = await supabase
         .from('products')
-        .update({ is_archived: !product.is_archived })
+        .delete()
         .eq('id', product.id);
-
       if (error) throw error;
       fetchProducts();
     } catch (error) {
@@ -213,7 +219,7 @@ export const ProductsList: React.FC<ProductsListProps> = ({
                 <TableHead className="text-left">Administradora</TableHead>
                 <TableHead className="text-left">Tipo</TableHead>
                 <TableHead className="text-left">Valor</TableHead>
-                <TableHead className="text-right">Ações</TableHead>
+                <TableHead className="text-right"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -225,33 +231,20 @@ export const ProductsList: React.FC<ProductsListProps> = ({
                 </TableRow>
               ) : (
                 filteredProducts.map((product) => (
-                  <TableRow key={product.id}>
+                  <TableRow key={product.id} className="cursor-pointer" onClick={() => handleEdit(product)}>
                     <TableCell>{product.administrators?.name || 'N/A'}</TableCell>
                     <TableCell>{formatProductType(product.type)}</TableCell>
                     <TableCell>{formatCurrency(product.credit_value)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex gap-2 justify-end">
-                        {canEdit && (
-                        <Button
-                          variant="brandOutlineSecondaryHover"
-                          size="sm"
-                          onClick={() => handleEdit(product)}
-                          className="brand-radius"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        )}
-                        {canArchive && (
-                        <Button
-                          variant="brandOutlineSecondaryHover"
-                          size="sm"
-                          onClick={() => handleArchive(product)}
-                          className="brand-radius"
-                        >
-                          <Archive className="w-4 h-4" />
-                        </Button>
-                        )}
-                      </div>
+                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                      <Button
+                        variant="brandOutlineSecondaryHover"
+                        size="sm"
+                        onClick={() => handleDelete(product)}
+                        className="brand-radius"
+                        title="Excluir"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </TableCell>
                   </TableRow>
                 ))

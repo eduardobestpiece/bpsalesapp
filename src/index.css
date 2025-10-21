@@ -19,7 +19,7 @@ All colors MUST be HSL.
     --popover-foreground: 0 0% 7.45%;
 
     /* Primary colors - Usar cor primária da empresa */
-    --primary: var(--brand-primary-hsl, 18 32% 51%);
+    --primary: var(--brand-primary-hsl, 338 88% 48%);
     --primary-foreground: 0 0% 100%;
     --primary-50: var(--brand-primary-hsl, 18 32% 95%);
     --primary-100: var(--brand-primary-hsl, 18 32% 90%);
@@ -38,7 +38,7 @@ All colors MUST be HSL.
     --success: 142 76% 36%;
     --success-foreground: 0 0% 100%;
 
-    /* Accent colors - Marrom #A86F57 (para consistência entre temas) */
+    /* Accent colors - Rosa #E50F5E (para consistência entre temas) */
     --accent: 18 32% 51%;
     --accent-foreground: 0 0% 100%;
     --warning: 45 93% 47%;
@@ -54,18 +54,18 @@ All colors MUST be HSL.
 
     --border: 0 0% 90%;
     --input: 0 0% 90%;
-    --ring: 18 32% 51%;
+    --ring: 338 88% 48%;
 
     --radius: 0.75rem;
 
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(18, 32%, 51%) 0%, hsl(18, 32%, 41%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(338, 88%, 48%) 0%, hsl(338, 88%, 38%) 100%);
     --gradient-success: linear-gradient(135deg, hsl(142, 76%, 36%) 0%, hsl(142, 76%, 26%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(18, 32%, 51%) 0%, hsl(18, 32%, 41%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(338, 88%, 48%) 0%, hsl(338, 88%, 38%) 100%);
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 0 0% 11.76%;
-    --sidebar-primary: 18 32% 51%;
+    --sidebar-primary: 338 88% 48%;
     --sidebar-primary-foreground: 0 0% 98%;
     --sidebar-accent: 0 0% 95%;
     --sidebar-accent-foreground: 0 0% 11.76%;
@@ -84,7 +84,7 @@ All colors MUST be HSL.
     --popover: 0 0% 12.16%; /* #1F1F1F */
     --popover-foreground: 0 0% 100%;
 
-    --primary: var(--brand-primary-hsl, 18 32% 51%); /* Usar cor primária da empresa */
+    --primary: var(--brand-primary-hsl, 338 88% 48%); /* Usar cor primária da empresa */
     --primary-foreground: 0 0% 100%;
 
     --secondary: 0 0% 11.76%; /* #1E1E1E */
@@ -93,7 +93,7 @@ All colors MUST be HSL.
     --muted: 0 0% 8.63%; /* #161616 */
     --muted-foreground: 0 0% 70%; /* Texto secundário mais claro para melhor contraste */
 
-    --accent: 18 32% 51%; /* #A86F57 convertido para HSL */
+    --accent: 338 88% 48%; /* #E50F5E convertido para HSL */
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 62.8% 30.6%;
@@ -101,11 +101,11 @@ All colors MUST be HSL.
 
     --border: 0 0% 20%; /* Bordas mais visíveis no dark mode */
     --input: 0 0% 12.16%; /* #1F1F1F para inputs */
-    --ring: 18 32% 51%; /* Cor de foco mantém o marrom */
+    --ring: 338 88% 48%; /* Cor de foco da marca */
 
     --sidebar-background: 0 0% 7.45%; /* #131313 */
     --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 18 32% 51%;
+    --sidebar-primary: 338 88% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 11.76%; /* #1E1E1E */
     --sidebar-accent-foreground: 0 0% 100%;
@@ -165,7 +165,7 @@ All colors MUST be HSL.
 
   /* Botão com fundo primário que muda para secundário em hover/active/focus */
   .btn-primary-to-secondary {
-    background-color: var(--brand-primary, #A86F57);
+    background-color: var(--brand-primary, #E50F5E);
     color: #fff;
     border-radius: var(--brand-radius, 8px);
     transition: background-color 0.2s ease, color 0.2s ease;
@@ -261,7 +261,7 @@ All colors MUST be HSL.
     height: 2.5rem; /* mesma altura */
     min-height: 2.5rem;
     padding: 0 1rem;
-    background-color: var(--brand-primary, #A86F57);
+    background-color: var(--brand-primary, #E50F5E);
     color: #fff;
     border: 1px solid transparent;
     border-radius: var(--brand-radius, 8px);
@@ -553,7 +553,7 @@ All colors MUST be HSL.
 
   /* Cor da barrinha das abas ativas */
   [data-state="active"]:after {
-    background-color: var(--tab-active-color, #A86F57) !important;
+    background-color: var(--tab-active-color, #E50F5E) !important;
   }
 
   /* Estilos para dropdowns de situação */

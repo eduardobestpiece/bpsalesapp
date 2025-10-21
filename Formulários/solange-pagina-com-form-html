@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+
+<script>
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+  n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}
+  (window, document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  fbq('init', '1096398454202097');
+  fbq('track', 'PageView');
+</script>
+<noscript>
+  <img height="1" width="1" style="display:none"
+       src="https://www.facebook.com/tr?id=1096398454202097&ev=PageView&noscript=1"/>
+</noscript>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tipos de Liderança - Descubra seu Tipo</title>
+
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #1A353B;
+    color: white;
+    line-height: 1.4;
+    padding: 15px;
+  }
+  .container { width: 100%; max-width: 600px; margin: 0 auto; }
+  .header-image { width: 100%; display: block; margin-bottom: 25px; }
+  .form-container { background-color: #1A353B; padding: 25px; border-radius: 10px; }
+
+  /* Responsivo */
+  @media (min-width: 769px) {
+    .container { max-width: 650px; }
+    .form-container { padding: 35px; }
+  }
+  @media (max-width: 768px) {
+    body { padding: 10px; }
+    .header-image { margin-bottom: 20px; }
+    .form-container { padding: 20px; }
+  }
+  @media (max-width: 480px) {
+    .form-container { padding: 15px; }
+  }
+</style>
+</head>
+
+<body>
+  <div class="container">
+    <img src="divulgar_alfa_final.png" alt="Tipos de Liderança" class="header-image">
+  </div>
+
+  <div class="form-container">
+    <!-- Elementor: Widget HTML (SEU FORM NOVO) -->
+    <div id="bp-landing-form-wrapper" style="max-width:720px;margin:0 auto;">
+      <style>
+        :root {
+          --bp-accent: #B8916F;
+          --bp-accent-hover: #B8916F;
+          --bp-text-muted: #2A2A2A;
+          --bp-bg: #1E1E1E;
+          --bp-bg-input: #FFFFFF;
+          --bp-border: rgba(255,255,255,0.12);
+        }
+        #bp-landing-form-wrapper * { box-sizing: border-box; }
+
+        /* Card */
+        #bp-card {
+          background: transparent;
+          border: none;
+          border-radius: 0;
+          padding: 0;
+          color: #fff;
+          font-family: Effra, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        }
+
+        /* Campos */
+        .bp-field { margin-bottom:16px; }
+        .bp-input {
+          width: 100%;
+          height: 48px;
+          background: var(--bp-bg-input);
+          color: #2A2A2A;
+          border: 1px solid var(--bp-border);
+          border-radius: 8px;
+          padding: 0 12px;
+          font-size: 16px;
+          outline: none;
+        }
+        /* Email: borda #444 e radius 10px */
+        #bp-email.bp-input { border-color:#444444; border-radius:10px; }
+        #bp-email.bp-input:focus { border-color: var(--bp-accent) !important; }
+        .bp-input::placeholder { color: var(--bp-text-muted); }
+        .bp-input:focus { border-color: var(--bp-accent) !important; outline: none !important; }
+
+        .bp-error { color:#ef4444; font-size:13px; margin-top:6px; }
+
+        /* Telefone + DDI */
+        .bp-phone-row { display:flex; gap:5px; }
+        .bp-ddi-wrap { position:relative; }
+        .bp-btn-like {
+          display:flex; align-items:center; gap:8px; cursor:pointer;
+          height: 48px; padding: 0 12px; border-radius: 8px;
+          background: var(--bp-bg-input); color:#2A2A2A; border:1px solid var(--bp-border);
+          font-size:16px; outline: none;
+          -webkit-tap-highlight-color: transparent;
+        }
+        .bp-btn-like:hover { background: var(--bp-accent-hover); color:#fff; }
+        .bp-btn-like:focus, .bp-btn-like:focus-visible, .bp-btn-like:active {
+          outline: none !important; box-shadow: none !important; border-color: var(--bp-accent) !important;
+          background: var(--bp-bg-input) !important; color:#2A2A2A !important;
+        }
+        .bp-menu {
+          position:absolute; z-index: 999999; width: 280px; max-height:260px; overflow:auto;
+          background: var(--bp-bg-input); border: 1px solid var(--bp-border); border-radius:8px;
+          margin-top:4px; display:none;
+        }
+        .bp-item { display:flex; gap:12px; padding:10px 12px; cursor:pointer; color:#2A2A2A; }
+        .bp-item:hover, .bp-item:focus, .bp-item:active { background: #B8916F; color:#fff; }
+
+        /* Liderança */
+        .bp-label { color:#fff; font-size:18px; margin:8px 0; font-family: Effra, system-ui; }
+        .bp-toggle-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+        .bp-toggle-col { display:grid; grid-template-columns:1fr; gap:12px; }
+        .bp-toggle {
+          background: var(--bp-bg-input); border:1px solid var(--bp-border);
+          color: var(--bp-text-muted); border-radius:8px; height: 44px;
+          display:flex; align-items:center; justify-content:center; cursor:pointer;
+          font-size:16px; font-family: Effra, system-ui; font-weight:400;
+          transition: background .15s ease, color .15s ease, border-color .15s ease;
+          -webkit-tap-highlight-color: transparent;
+        }
+        .bp-toggle:hover { background: var(--bp-accent-hover); color:#fff; }
+        .bp-toggle:focus, .bp-toggle:focus-visible, .bp-toggle:active { outline:none !important; box-shadow:none !important; border-color: var(--bp-accent) !important; }
+        .bp-toggle:focus:not(.active) { background: var(--bp-bg-input); color: var(--bp-text-muted); }
+        .bp-toggle.active { background: var(--bp-accent); color:#fff; }
+
+        /* Dropdown de Aporte com MESMO estilo do DDI */
+        .bp-aporte-wrap { position:relative; }
+        .bp-select-btn {
+          display:flex; align-items:center; justify-content:flex-start; gap:8px;
+          width:100%;
+          height:48px; padding:0 12px; border-radius:8px; cursor:pointer;
+          background: var(--bp-bg-input); color:#fff; border:1px solid var(--bp-border);
+          font-size:16px; outline:none;
+        }
+        .bp-select-btn:hover { background: var(--bp-accent-hover); }
+        .bp-select-btn:focus { border-color: var(--bp-accent); outline:none; background: var(--bp-bg-input) !important; }
+        .bp-select-placeholder { color: var(--bp-text-muted); }
+        .bp-aporte-menu {
+          position:absolute; z-index:999999; width:100%;
+          background: #2A2A2A; border:1px solid var(--bp-border); border-radius:8px; margin-top:4px;
+          display:none;
+        }
+        .bp-aporte-menu .bp-item:hover { background:#A86E57; }
+
+        /* Botão principal */
+        .bp-btn {
+          width:100%; min-height:48px; height:auto; border:none; border-radius:8px; cursor:pointer;
+          background: #C39C88; color:#1B343B;
+          font-weight:700; font-size:18px; text-align:center;
+          padding: 12px; white-space: normal; overflow-wrap: anywhere; word-wrap: break-word;
+          transition: background .15s ease;
+        }
+        .bp-btn:hover { background: #b8916f; }
+        .bp-btn:active, .bp-btn.active { background: #b8916f; }
+        .bp-btn:focus { outline:none; box-shadow:none; }
+
+        /* Rodapé com cadeado */
+        .bp-footer { margin-top:12px; text-align:center; color:#FFFFFF; display:flex; gap:8px; justify-content:center; align-items:center; font-size:14px; }
+        .bp-footer svg { width:16px; height:16px; }
+      </style>
+
+      <div id="bp-card">
+        <form id="bp-form">
+          <!-- Hidden -->
+          <input type="hidden" name="browser">
+          <input type="hidden" name="device">
+          <input type="hidden" name="ip">
+          <input type="hidden" name="fullUrl">
+          <input type="hidden" name="urlWithoutParams">
+          <input type="hidden" name="urlParams">
+          <input type="hidden" name="utm_campaign">
+          <input type="hidden" name="utm_medium">
+          <input type="hidden" name="utm_content">
+          <input type="hidden" name="utm_source">
+          <input type="hidden" name="utm_term">
+          <input type="hidden" name="gclid">
+          <input type="hidden" name="fbclid">
+          <input type="hidden" name="fbp">
+          <input type="hidden" name="fbc">
+          <input type="hidden" name="fb_login_id">
+
+          <!-- Nome -->
+          <div class="bp-field">
+            <input class="bp-input" id="bp-name" placeholder="Nome e sobrenome" required>
+            <div class="bp-error" id="err-name" style="display:none;"></div>
+          </div>
+
+          <!-- Email -->
+          <div class="bp-field">
+            <input class="bp-input" id="bp-email" type="email" placeholder="E-mail" required>
+            <div class="bp-error" id="err-email" style="display:none;"></div>
+          </div>
+
+          <!-- Telefone com DDI -->
+          <div class="bp-field">
+            <div class="bp-phone-row">
+              <div class="bp-ddi-wrap">
+                <button type="button" class="bp-btn-like" id="bp-ddi-btn"><span id="bp-ddi-flag">🇧🇷</span><span id="bp-ddi-code">+55</span></button>
+                <div class="bp-menu" id="bp-ddi-menu"></div>
+              </div>
+              <input class="bp-input" id="bp-phone" placeholder="Telefone (WhatsApp)" inputmode="tel" required>
+            </div>
+            <div class="bp-error" id="err-phone" style="display:none;"></div>
+          </div>
+
+          <!-- Liderança -->
+          <div class="bp-field">
+            <div class="bp-label">Há quanto tempo ocupa cargos de liderança?</div>
+            <div class="bp-toggle-col">
+              <button type="button" class="bp-toggle" data-value="ainda-nao" aria-required="true">Ainda não lidero</button>
+              <button type="button" class="bp-toggle" data-value="menos-1" aria-required="true">A menos de 1 ano</button>
+              <button type="button" class="bp-toggle" data-value="1-2" aria-required="true">De 1 a 2 anos</button>
+              <button type="button" class="bp-toggle" data-value="2-5" aria-required="true">De 2 a 5 anos</button>
+              <button type="button" class="bp-toggle" data-value="5+" aria-required="true">A mais de 5 anos</button>
+            </div>
+          </div>
+
+          <!-- Botão -->
+          <button class="bp-btn" type="submit">Quero meu e-book com questionário gratuito</button>
+
+          <div class="bp-footer">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#9BA3AF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="11" width="18" height="10" rx="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            <span>Seus dados estão 100% protegidos</span>
+          </div>
+        </form>
+      </div>
+
+      <script>
+        // Config
+        const WEBHOOK_URL = "https://n8n-n8n-start.1u8ncb.easypanel.host/webhook/8140d633-073e-4e90-b309-a20611f78b13";
+        const THANKYOU_URL = "https://caminhosdalideranca.com.br/Lider_Alfa/Obrigada.html";
+        const META_PIXELS = [
+          { id: "1352250359334960", token: "EAAWigDheA88BPQFG4W9AEELaWT9zzxfzn91baHhFNG6Ln34PCPIgG46AWdppkMiyvyBC4DhZBRyru7qVq0q8LmnZAdsfbzX9g7dEKGxBbyEf3PJVfr8OHNyrMLI0u00hrSXoRWAoT2AyxFWseZBsUsDXEdc6PYczz7yJ5fPVFkXuP1mZBUAz2Q4cBZAZCsWiUX0wZDZD", test: "TEST86720" },
+        ];
+
+        // Utils
+        const $ = sel => document.querySelector(sel);
+        const setError = (id, msg) => { const el = $(id); if (!el) return; if (msg) { el.textContent = msg; el.style.display="block"; } else { el.textContent=""; el.style.display="none"; } };
+        const titleCase = s => s.toLowerCase().split(/\s+/).filter(Boolean).map(w => w[0]?.toUpperCase()+w.slice(1)).join(" ");
+        const firstName = full => titleCase((full.trim().split(/\s+/)[0]||""));
+        const lastName = full => { const p = full.trim().split(/\s+/).filter(Boolean); return titleCase(p.slice(1).join(" ")); };
+        const emailValid = e => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((e||"").trim());
+        const digits = s => (s||"").replace(/\D/g,"");
+
+        // Browser/Device
+        function getBrowserInfo(ua) {
+          let b="Unknown", v="";
+          if (ua.includes("Firefox/")) { b="Firefox"; v=(ua.match(/Firefox\/(\d+)/)||[])[1]||""; }
+          else if (ua.includes("Chrome/")) { b="Chrome"; v=(ua.match(/Chrome\/(\d+)/)||[])[1]||""; }
+          else if (ua.includes("Safari/") && !ua.includes("Chrome/")) { b="Safari"; v=(ua.match(/Version\/(\d+)/)||[])[1]||""; }
+          else if (ua.includes("Edge/")) { b="Edge"; v=(ua.match(/Edge\/(\d+)/)||[])[1]||""; }
+          else if (ua.includes("OPR/")||ua.includes("Opera/")) { b="Opera"; v=(ua.match(/(?:Opera|OPR)\/(\d+)/)||[])[1]||""; }
+          return v ? `${b} ${v}` : b;
+        }
+        function getDeviceInfo(ua) {
+          if (/Android/i.test(ua)) { const m=ua.match(/Android\s([^;]+)/); return `Android ${(m&&m[1])||""}`.trim(); }
+          if (/iPhone|iPad|iPod/i.test(ua)) { const m=ua.match(/OS\s+(\d+_\d+)/); return `iOS ${(m&&m[1]||"").replace("_",".")}`.trim(); }
+          if (/Windows/i.test(ua)) { const m=ua.match(/Windows NT (\d+\.\d+)/); return `Windows ${(m&&m[1])||""}`.trim(); }
+          if (/Mac OS X/i.test(ua)) { const m=ua.match(/Mac OS X (\d+[._]\d+)/); return `macOS ${(m&&m[1]||"").replace("_",".")}`.trim(); }
+          if (/Linux/i.test(ua)) return "Linux";
+          return "Desktop";
+        }
+        function getCookie(name) {
+          const value = `; ${document.cookie}`; const parts = value.split(`; ${name}=`); if (parts.length===2) return (parts.pop().split(';').shift()||"");
+          return "";
+        }
+        async function sha256Hex(str) {
+          const enc = new TextEncoder().encode(str||"");
+          const buf = await crypto.subtle.digest("SHA-256", enc);
+          return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,"0")).join("");
+        }
+
+        // DDI
+        const COUNTRIES = [
+          { code:'BR', name:'Brasil', ddi:'+55', flag:'🇧🇷' }, { code:'US', name:'Estados Unidos', ddi:'+1', flag:'🇺🇸' },
+          { code:'AR', name:'Argentina', ddi:'+54', flag:'🇦🇷' }, { code:'CL', name:'Chile', ddi:'+56', flag:'🇨🇱' },
+          { code:'CO', name:'Colômbia', ddi:'+57', flag:'🇨🇴' }, { code:'MX', name:'México', ddi:'+52', flag:'🇲🇽' },
+          { code:'PE', name:'Peru', ddi:'+51', flag:'🇵🇪' }, { code:'UY', name:'Uruguai', ddi:'+598', flag:'🇺🇾' },
+          { code:'VE', name:'Venezuela', ddi:'+58', flag:'🇻🇪' }, { code:'PT', name:'Portugal', ddi:'+351', flag:'🇵🇹' },
+          { code:'ES', name:'Espanha', ddi:'+34', flag:'🇪🇸' }, { code:'IT', name:'Itália', ddi:'+39', flag:'🇮🇹' },
+          { code:'FR', name:'França', ddi:'+33', flag:'🇫🇷' }, { code:'DE', name:'Alemanha', ddi:'+49', flag:'🇩🇪' },
+          { code:'GB', name:'Reino Unido', ddi:'+44', flag:'🇬🇧' },
+        ];
+        let selectedCountry = COUNTRIES[0]; // BR
+
+        function renderDdiMenu() {
+          const menu = $("#bp-ddi-menu"); menu.innerHTML="";
+          COUNTRIES.forEach(c=>{
+            const item = document.createElement("div");
+            item.className="bp-item";
+            item.innerHTML=`<span>${c.flag}</span><div style="flex:1"><div style="font-weight:600">${c.name}</div><div style="color:#2A2A2A">${c.ddi}</div></div>`;
+            item.addEventListener('click', (ev)=>{ ev.preventDefault(); ev.stopPropagation(); selectedCountry=c; $("#bp-ddi-flag").textContent=c.flag; $("#bp-ddi-code").textContent=c.ddi; menu.style.display="none"; });
+            menu.appendChild(item);
+          });
+        }
+
+        // Máscara de telefone BR para layout quando DDI=55
+        function formatBrPhoneForDisplay(d) {
+          const n = d.replace(/\D/g,"");
+          const ddd = n.slice(0,2);
+          const first = n.slice(2,7);
+          const last = n.slice(7,11);
+          if (!ddd) return "";
+          if (!last) return `(${ddd}) ${n.slice(2)}`;
+          return `(${ddd}) ${first}-${last}`;
+        }
+
+        // Validação para BR (DDI 55): 11 dígitos, DDD válido e primeiro dígito do número = 9
+        const VALID_DDD = [11,12,13,14,15,16,17,18,19,21,22,24,27,28,31,32,33,34,35,37,38,41,42,43,44,45,46,47,48,49,51,53,54,55,61,62,63,64,65,66,67,68,69,71,73,74,75,77,79,81,82,83,84,85,86,87,88,89,91,92,93,94,95,96,97,98,99];
+        function isValidBrPhone(digitsStr) {
+          const n = (digitsStr||'').replace(/\D/g,'');
+          if (n.length !== 11) return false;
+          const ddd = parseInt(n.slice(0,2),10);
+          const localFirst = n.charAt(2);
+          if (!VALID_DDD.includes(ddd)) return false;
+          if (localFirst !== '9') return false;
+          return true;
+        }
+
+        // Funções utilitárias
+        function openClose(el, show) { el.style.display = show ? "block" : "none"; }
+
+        // Invest toggles (reuso do state)
+        let investeValue = "";
+        function setInveste(v) {
+          investeValue = v||"";
+          [$("#bp-invest-sim"), $("#bp-invest-nao")].forEach(btn => {
+            if (!btn) return;
+            if (btn.dataset.value===v) btn.classList.add("active"); else btn.classList.remove("active");
+          });
+        }
+        // Liderança: coluna de opções; manter apenas uma ativa
+        document.addEventListener('click', (evt) => {
+          const btn = evt.target.closest('.bp-toggle-col .bp-toggle');
+          if (!btn) return;
+          evt.preventDefault();
+          document.querySelectorAll('.bp-toggle-col .bp-toggle').forEach(b=>b.classList.remove('active'));
+          btn.classList.add('active');
+          investeValue = btn.getAttribute('data-value') || '';
+        });
+
+        // User info + UTMs
+        const userInfo = {
+          browser: getBrowserInfo(navigator.userAgent),
+          device: getDeviceInfo(navigator.userAgent),
+          ip: "",
+          fullUrl: location.href,
+          urlWithoutParams: location.origin + location.pathname,
+          urlParams: location.search,
+          utm_campaign: new URLSearchParams(location.search).get("utm_campaign")||"",
+          utm_medium: new URLSearchParams(location.search).get("utm_medium")||"",
+          utm_content: new URLSearchParams(location.search).get("utm_content")||"",
+          utm_source: new URLSearchParams(location.search).get("utm_source")||"",
+          utm_term: new URLSearchParams(location.search).get("utm_term")||"",
+          gclid: new URLSearchParams(location.search).get("gclid")||"",
+          fbclid: new URLSearchParams(location.search).get("fbclid")||"",
+          fbp: new URLSearchParams(location.search).get("fbp") || getCookie("_fbp") || "",
+          fbc: new URLSearchParams(location.search).get("fbc") || getCookie("_fbc") || "",
+          fb_login_id: new URLSearchParams(location.search).get("fb_login_id") || sessionStorage.getItem('fb_login_id') || "",
+        };
+        function syncHidden() {
+          const map = { browser:userInfo.browser, device:userInfo.device, ip:userInfo.ip, fullUrl:userInfo.fullUrl, urlWithoutParams:userInfo.urlWithoutParams, urlParams:userInfo.urlParams, utm_campaign:userInfo.utm_campaign, utm_medium:userInfo.utm_medium, utm_content:userInfo.utm_content, utm_source:userInfo.utm_source, utm_term:userInfo.utm_term, gclid:userInfo.gclid, fbclid:userInfo.fbclid, fbp:userInfo.fbp, fbc:userInfo.fbc, fb_login_id:userInfo.fb_login_id };
+          Object.entries(map).forEach(([k,v])=>{ const el = document.querySelector(`input[name="${k}"]`); if (el) el.value = v||""; });
+        }
+        syncHidden();
+
+        // IP + País
+        let countryByIp = "";
+        fetch("https://api.ipify.org?format=json").then(r=>r.json()).then(j=>{
+          userInfo.ip = j.ip || ""; syncHidden();
+          if (userInfo.ip) fetch(`https://ipapi.co/${userInfo.ip}/json/`).then(r=>r.json()).then(d=>{ countryByIp = d && d.country_name || ""; });
+        }).catch(()=>{});
+
+        // Menus
+        renderDdiMenu();
+        $("#bp-ddi-btn").addEventListener("click", (ev)=> {
+          ev.preventDefault();
+          ev.stopPropagation();
+          const menu = $("#bp-ddi-menu");
+          openClose(menu, menu.style.display!=="block");
+        });
+        document.addEventListener("click", (e)=> {
+          if (!e.target.closest("#bp-ddi-btn") && !e.target.closest("#bp-ddi-menu")) openClose($("#bp-ddi-menu"), false);
+        });
+
+        // Máscara dinâmica no input de telefone
+        const phoneInput = document.getElementById('bp-phone');
+        phoneInput.addEventListener('input', ()=>{
+          const ddi = digits(selectedCountry.ddi);
+          const rawDigits = digits(phoneInput.value);
+          if (ddi === '55') {
+            const masked = formatBrPhoneForDisplay(rawDigits);
+            phoneInput.value = masked;
+            if (isValidBrPhone(rawDigits)) phoneInput.setCustomValidity("");
+          }
+        });
+
+        // Submit
+        const submitBtn = document.querySelector('.bp-btn');
+        $("#bp-form").addEventListener("submit", async (e)=>{
+          e.preventDefault();
+          if (submitBtn) submitBtn.classList.add('active');
+          setError("#err-name"); setError("#err-email"); setError("#err-phone");
+
+          const name = $("#bp-name").value||"";
+          const email = ($("#bp-email").value||"").trim().toLowerCase();
+          const ddiDigits = digits(($("#bp-ddi-code").textContent)||"");
+          const phoneRaw = $("#bp-phone").value||"";
+
+          // Validações
+          if (!name.trim()) { setError("#err-name","Nome é obrigatório"); return; }
+          const parts = name.trim().split(/\s+/).filter(Boolean);
+          if (parts.length < 2) { setError("#err-name","Digite seu primeiro nome e pelo menos um sobrenome"); return; }
+          if (!email) { setError("#err-email","E-mail é obrigatório"); return; }
+          if (!emailValid(email)) { setError("#err-email","Digite um e-mail válido"); return; }
+          let phoneDigits = digits(phoneRaw);
+          if (digits(selectedCountry.ddi)==='55') {
+            if (!isValidBrPhone(phoneDigits)) {
+              setError("#err-phone","Digite um telefone válido com 11 dígitos (DDD válido e iniciando com 9)");
+              phoneInput.setCustomValidity("Digite um telefone válido com 11 dígitos");
+              phoneInput.reportValidity();
+              return;
+            } else {
+              phoneInput.setCustomValidity("");
+            }
+          } else {
+            if (phoneDigits.length < 10 || phoneDigits.length > 14) {
+              setError("#err-phone","Digite um telefone válido (10 a 14 dígitos)");
+              phoneInput.setCustomValidity("Digite um telefone válido (10 a 14 dígitos)");
+              phoneInput.reportValidity();
+              return;
+            } else {
+              phoneInput.setCustomValidity("");
+            }
+          }
+
+          const investe = investeValue || (document.querySelector('.bp-toggle-col .bp-toggle.active')?.getAttribute('data-value') || '');
+          const first = firstName(name);
+          const last  = lastName(name);
+          const full  = titleCase(name);
+          if (phoneDigits.startsWith(ddiDigits)) phoneDigits = phoneDigits.slice(ddiDigits.length);
+          const phoneFull = `${ddiDigits}${phoneDigits}`;
+
+          // Webhook
+          const payload = {
+            primeiro_nome: first, sobrenome: last, nome_completo: full, email,
+            telefone: phoneFull, DDI: ddiDigits, telefone_sem_ddd: phoneDigits,
+            pais: countryByIp || "", tempolideranca: investe,
+            form_name: "E-book Tipo de Liderança",
+            full_url: userInfo.fullUrl, urlWithoutParams: userInfo.urlWithoutParams, urlParams: userInfo.urlParams,
+            utm_campaign: userInfo.utm_campaign, utm_medium: userInfo.utm_medium, utm_content: userInfo.utm_content, utm_source: userInfo.utm_source, utm_term: userInfo.utm_term,
+            gclid: userInfo.gclid, fbclid: userInfo.fbclid, fbp: userInfo.fbp, fbc: userInfo.fbc, fb_login_id: userInfo.fb_login_id,
+            ip: userInfo.ip, browser: userInfo.browser, device: userInfo.device,
+          };
+          try { localStorage.setItem('bp_form_payload', JSON.stringify(payload)); } catch(e){}
+          try { await fetch(WEBHOOK_URL, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(payload) }); } catch(e){}
+          finally { if (submitBtn) submitBtn.classList.add('active'); }
+
+          // Pixels
+          (function(f,b,e,v,n,t,s){ if(f.fbq)return; n=f.fbq=function(){ n.callMethod? n.callMethod.apply(n,arguments) : n.queue.push(arguments)}; if(!f._fbq)f._fbq=n; n.push=n; n.loaded=!0; n.version='2.0'; n.queue=[]; t=b.createElement(e); t.async=!0; t.src=v; s=b.getElementsByTagName(e)[0]; s.parentNode.insertBefore(t,s) })(window, document, 'script','https://connect.facebook.net/en_US/fbevents.js');
+          const eventId = `evt_${Date.now()}_${Math.random().toString(36).slice(2,10)}`;
+          META_PIXELS.forEach(p => {
+            try {
+              window.fbq('init', p.id, { em: email, fn: first.toLowerCase(), ln: last.toLowerCase(), ph: phoneFull, country: (payload.pais||"").toLowerCase(), external_id: eventId });
+              window.fbq('track', 'Lead', { content_name: 'E-book Tipo de Liderança', tempolideranca: investe, fbc: userInfo.fbc || undefined, fbp: userInfo.fbp || undefined, fb_login_id: userInfo.fb_login_id || undefined }, { eventID: eventId });
+            } catch(e){}
+          });
+          for (const p of META_PIXELS) {
+            try {
+              const user_data = {
+                em: await sha256Hex(email), ph: await sha256Hex(phoneFull),
+                fn: await sha256Hex(first.toLowerCase()), ln: await sha256Hex(last.toLowerCase()),
+                country: await sha256Hex((payload.pais||"").toLowerCase()),
+                external_id: await sha256Hex(eventId),
+                client_ip_address: userInfo.ip, client_user_agent: navigator.userAgent,
+                fbp: userInfo.fbp || undefined, fbc: userInfo.fbc || undefined,
+              };
+              const capi = { data: [{ event_name:"Lead", event_time: Math.floor(Date.now()/1000), event_id: eventId, event_source_url: userInfo.fullUrl, action_source:"website", user_data, custom_data:{ form_name:"E-book Tipo de Liderança", tempolideranca: investe, fbc: userInfo.fbc || undefined, fbp: userInfo.fbp || undefined, fb_login_id: userInfo.fb_login_id || undefined } }], test_event_code: p.test };
+              fetch(`https://graph.facebook.com/v18.0/${p.id}/events?access_token=${encodeURIComponent(p.token)}`, { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify(capi) }).catch(()=>{});
+            } catch(e){}
+          }
+
+          setTimeout(()=>{ window.location.href = THANKYOU_URL; }, 300);
+        });
+      </script>
+    </div>
+    <!-- /Widget HTML -->
+  </div>
+</body>
+</html>

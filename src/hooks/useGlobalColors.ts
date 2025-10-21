@@ -7,7 +7,7 @@ import { useCompany } from '@/contexts/CompanyContext';
 const GLOBAL_DEFAULT_COLOR = '#E50F5E';
 
 // Cor padrão para módulos (quando não há empresa selecionada)
-const MODULE_DEFAULT_COLOR = '#A86F57';
+const MODULE_DEFAULT_COLOR = '#E50F5E';
 
 export const useGlobalColors = () => {
   const { selectedCompanyId } = useCompany();

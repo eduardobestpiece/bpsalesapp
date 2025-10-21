@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Edit, Archive, RotateCcw } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
@@ -84,32 +84,18 @@ export const LeveragesList: React.FC<LeveragesListProps> = ({
     loadLeverages();
   }, [searchTerm, statusFilter, selectedCompanyId]);
 
-  const handleArchiveToggle = async (leverage: any) => {
+  const handleDelete = async (leverage: any) => {
+    if (!confirm('Tem certeza que deseja excluir esta alavanca?')) return;
     try {
       const { error } = await supabase
         .from('leverages')
-        .update({ 
-          is_archived: !leverage.is_archived,
-          updated_at: new Date().toISOString()
-        })
+        .delete()
         .eq('id', leverage.id);
-
-      if (error) {
-        throw error;
-      }
-
-      toast({
-        title: 'Sucesso!',
-        description: `Alavanca ${leverage.is_archived ? 'restaurada' : 'arquivada'} com sucesso.`,
-      });
-
+      if (error) throw error;
+      toast({ title: 'Alavanca excluída com sucesso!' });
       loadLeverages();
     } catch (error) {
-      toast({
-        title: 'Erro',
-        description: 'Erro ao arquivar/restaurar alavanca.',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erro ao excluir alavanca', variant: 'destructive' });
     }
   };
 
@@ -162,7 +148,7 @@ export const LeveragesList: React.FC<LeveragesListProps> = ({
             <TableHead className="text-left">Administração</TableHead>
             <TableHead className="text-left">Despesas</TableHead>
             <TableHead className="text-left">Status</TableHead>
-            <TableHead className="text-right">Ações</TableHead>
+            <TableHead className="text-right"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -174,7 +160,7 @@ export const LeveragesList: React.FC<LeveragesListProps> = ({
             </TableRow>
                   ) : (
             leverages.map((leverage) => (
-              <TableRow key={leverage.id}>
+              <TableRow key={leverage.id} className="cursor-pointer" onClick={() => onEdit(leverage)}>
                 <TableCell className="font-medium">{leverage.name}</TableCell>
                 <TableCell>
                   <Badge variant="outline" className="brand-radius">
@@ -203,37 +189,19 @@ export const LeveragesList: React.FC<LeveragesListProps> = ({
                   {leverage.is_archived ? (
                     <Badge variant="destructive" className="brand-radius">Arquivada</Badge>
                   ) : (
-                    <Badge className="brand-radius text-white" style={{ backgroundColor: 'var(--brand-primary, #A86F57)' }}>Ativa</Badge>
+                    <Badge className="brand-radius text-white" style={{ backgroundColor: 'var(--brand-primary, #E50F5E)' }}>Ativa</Badge>
                   )}
                 </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex gap-2 justify-end">
-                    {canEdit && (
-                <Button
-                  variant="brandOutlineSecondaryHover"
-                  size="sm"
-                  onClick={() => onEdit(leverage)}
-                  className="brand-radius"
-                  disabled={isSubMaster}
-                >
-                  <Edit className="w-4 h-4" />
-                </Button>
-                    )}
-                    {canArchive && (
+                <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
                   <Button
                     variant="brandOutlineSecondaryHover"
                     size="sm"
-                    onClick={() => handleArchiveToggle(leverage)}
+                    onClick={() => handleDelete(leverage)}
                     className="brand-radius"
+                    title="Excluir"
                   >
-                    {leverage.is_archived ? (
-                      <RotateCcw className="w-4 h-4" />
-                    ) : (
-                      <Archive className="w-4 h-4" />
-                    )}
+                    <Trash2 className="w-4 h-4" />
                   </Button>
-                )}
-              </div>
                 </TableCell>
               </TableRow>
             ))

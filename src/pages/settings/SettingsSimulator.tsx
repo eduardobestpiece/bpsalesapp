@@ -78,7 +78,7 @@ export default function SettingsSimulator() {
     }
   });
 
-  const primaryColor = branding?.primary_color || '#A86F57';
+  const primaryColor = branding?.primary_color || '#E50F5E';
 
   const handleRefresh = () => setRefreshKey(prev => prev + 1);
 
@@ -613,7 +613,12 @@ export default function SettingsSimulator() {
           <CreateAdministratorModal
             open={showCreateAdministratorModal}
             onOpenChange={setShowCreateAdministratorModal}
-            onClose={closeModals}
+            onSuccess={() => {
+              // Atualiza lista imediatamente e fecha o modal
+              window.dispatchEvent(new Event('refresh-administrators'));
+              setRefreshKey(prev => prev + 1);
+              setShowCreateAdministratorModal(false);
+            }}
           />
           <EditAdministratorModal
             administrator={selectedAdministrator}
@@ -625,7 +630,11 @@ export default function SettingsSimulator() {
             product={selectedProduct}
             open={showProductModal}
             onOpenChange={setShowProductModal}
-            onClose={closeModals}
+            onSuccess={() => {
+              setShowProductModal(false);
+              setSelectedProduct(null);
+              setRefreshKey(prev => prev + 1);
+            }}
           />
           <InstallmentTypeModal
             installmentType={selectedInstallmentType}

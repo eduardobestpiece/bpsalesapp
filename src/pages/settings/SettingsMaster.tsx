@@ -1,6 +1,6 @@
 
 // import { SettingsLayout } from '@/components/Layout/SettingsLayout';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,7 +20,6 @@ import { FullScreenModal } from '@/components/ui/FullScreenModal';
 import { Switch } from '@/components/ui/switch';
 import { MultiSelect } from '@/components/ui/multiselect';
 import { useCrmUsersByCompany } from '@/hooks/useCrmUsers';
-import { UserModal } from '@/components/CRM/Configuration/UserModal';
 
 
 interface Company {
@@ -67,6 +66,7 @@ export default function SettingsMaster() {
   const [newTimezone, setNewTimezone] = useState('America/Sao_Paulo');
   const [newOwnerId, setNewOwnerId] = useState<string>('');
   const [isCreating, setIsCreating] = useState(false);
+  const [isLoadingCep, setIsLoadingCep] = useState(false);
   
   // Estados para modal de criar usuário
   const [showCreateUserModal, setShowCreateUserModal] = useState(false);
@@ -85,7 +85,7 @@ export default function SettingsMaster() {
     }
   });
 
-  const primaryColor = branding?.primary_color || '#A86F57';
+  const primaryColor = branding?.primary_color || '#E50F5E';
   const secondaryColor = branding?.secondary_color || '#6B7280';
 
     // Buscar usuários da empresa para o campo proprietário
@@ -108,6 +108,53 @@ export default function SettingsMaster() {
     setNewCountry('');
     setNewTimezone('America/Sao_Paulo');
     setNewOwnerId('');
+  };
+
+  // Função para aplicar máscara do CEP
+  const applyCepMask = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 5) {
+      return numbers;
+    }
+    return numbers.slice(0, 5) + '-' + numbers.slice(5, 8);
+  };
+
+  // Função para buscar dados do CEP
+  const fetchCepData = async (cep: string) => {
+    const cleanCep = cep.replace(/\D/g, '');
+    if (cleanCep.length !== 8) return;
+
+    setIsLoadingCep(true);
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+      const data = await response.json();
+      
+      if (!data.erro) {
+        setNewStreet(data.logradouro || '');
+        setNewNeighborhood(data.bairro || '');
+        setNewCity(data.localidade || '');
+        setNewStateUF(data.uf || '');
+        setNewCountry('Brasil');
+      } else {
+        toast.error('CEP não encontrado');
+      }
+    } catch (error) {
+      console.error('Erro ao buscar CEP:', error);
+      toast.error('Erro ao buscar dados do CEP');
+    } finally {
+      setIsLoadingCep(false);
+    }
+  };
+
+  // Handler para mudança do CEP
+  const handleCepChange = (value: string) => {
+    const maskedValue = applyCepMask(value);
+    setNewCep(maskedValue);
+    
+    // Buscar dados quando CEP estiver completo
+    if (maskedValue.length === 9) {
+      fetchCepData(maskedValue);
+    }
   };
 
  
@@ -754,7 +801,7 @@ export default function SettingsMaster() {
     <>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-foreground mb-2">Master Config</h1>
-        <p className="text-muted-foreground">Gerencie todas as empresas do sistema</p>
+        <p className="text-muted-foreground">Configurações avançadas da plataforma.</p>
       </div>
 
       <Card className="shadow-xl border-0 bg-card">
@@ -834,7 +881,7 @@ export default function SettingsMaster() {
                               {company.status === 'active' ? (
                                 <Badge
                                   className="text-white"
-                                  style={{ backgroundColor: 'var(--brand-primary, #A86F57)', borderRadius: 'var(--brand-radius, 8px)' }}
+                                  style={{ backgroundColor: 'var(--brand-primary, #E50F5E)', borderRadius: 'var(--brand-radius, 8px)' }}
                                 >
                                   Ativa
                                 </Badge>
@@ -1221,10 +1268,16 @@ export default function SettingsMaster() {
                 <Input
                   id="cep"
                   value={newCep}
-                  onChange={(e) => setNewCep(e.target.value)}
+                  onChange={(e) => handleCepChange(e.target.value)}
                   placeholder="00000-000"
                   className="campo-brand brand-radius"
+                  maxLength={9}
                 />
+                {isLoadingCep && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Buscando dados do CEP...
+                  </p>
+                )}
               </div>
               <div>
                 <Label htmlFor="street">Endereço</Label>
@@ -1310,33 +1363,7 @@ export default function SettingsMaster() {
         </FullScreenModal>
       )}
 
-      {/* Modal de Criar Usuário */}
-      {showCreateUserModal && (
-        <UserModal
-          isOpen={showCreateUserModal}
-          onClose={() => setShowCreateUserModal(false)}
-          onSuccess={(newUser) => {
-            setNewOwnerId(newUser.id);
-            setShowCreateUserModal(false);
-            toast.success('Usuário criado com sucesso!');
-          }}
-        />
-      )}
-
-      {/* Modal de Criar Usuário para Edição */}
-      {showEditCreateUserModal && (
-        <UserModal
-          isOpen={showEditCreateUserModal}
-          onClose={() => setShowEditCreateUserModal(false)}
-          onSuccess={(newUser) => {
-            setSelectedOwnerId(newUser.id);
-            setShowEditCreateUserModal(false);
-            toast.success('Usuário criado com sucesso!');
-          }}
-        />
-      )}
-
-
+      {/* Removidos: modais de criação de usuário baseados no CRM */}
     </>
   );
 } 

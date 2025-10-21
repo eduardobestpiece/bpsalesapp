@@ -1,4 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useCompany } from '@/contexts/CompanyContext';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
 
 interface LogoProps {
   className?: string;
@@ -10,6 +14,23 @@ interface LogoProps {
 
 export const Logo = ({ className = "h-10 w-auto max-w-[140px]", onClick, lightUrl, darkUrl, alt = 'Logo' }: LogoProps) => {
   const [isDarkMode, setIsDarkMode] = useState(true); // Forçar dark mode
+  const { selectedCompanyId } = useCompany();
+  const { companyId } = useCrmAuth();
+  const effectiveCompanyId = selectedCompanyId || companyId || null;
+
+  // Buscar branding da empresa para obter logos
+  const { data: branding } = useQuery({
+    queryKey: ['company_branding_logo', effectiveCompanyId],
+    enabled: !!effectiveCompanyId,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('company_branding')
+        .select('logo_square_url, logo_horizontal_url, logo_horizontal_dark_url, primary_color')
+        .eq('company_id', effectiveCompanyId as string)
+        .maybeSingle();
+      return data as { logo_square_url?: string | null; logo_horizontal_url?: string | null; logo_horizontal_dark_url?: string | null; primary_color?: string | null } | null;
+    }
+  });
   
   useEffect(() => {
     // Detectar tema inicial
@@ -34,18 +55,34 @@ export const Logo = ({ className = "h-10 w-auto max-w-[140px]", onClick, lightUr
     };
   }, []);
 
-  // Se não há URLs fornecidas, usar fallback
-  if (!lightUrl && !darkUrl) {
+  // Resolver URLs a partir de props ou branding
+  const { resolvedLight, resolvedDark } = useMemo(() => {
+    // Preferir props se fornecidas
+    let light: string | undefined | null = lightUrl;
+    let dark: string | undefined | null = darkUrl || lightUrl;
+
+    if (!light || !dark) {
+      const square = branding?.logo_square_url || undefined;
+      const horizontal = branding?.logo_horizontal_url || undefined;
+      const horizontalDark = branding?.logo_horizontal_dark_url || undefined;
+
+      // Para modo claro, priorizar horizontal; se não, usar square
+      if (!light) light = horizontal || square;
+      // Para modo escuro, priorizar horizontal_dark; depois horizontal; depois square
+      if (!dark) dark = horizontalDark || horizontal || square || light || undefined;
+    }
+
+    return { resolvedLight: light, resolvedDark: dark };
+  }, [lightUrl, darkUrl, branding]);
+
+  // Se não há URLs resolvidas, usar fallback
+  if (!resolvedLight && !resolvedDark) {
     return (
       <div className={`${className} bg-gray-700 text-white flex items-center justify-center rounded px-4 py-2`}>
         BP Sales
       </div>
     );
   }
-
-  // Usar as URLs fornecidas, sem fallbacks
-  const resolvedLight = lightUrl;
-  const resolvedDark = darkUrl || lightUrl; // Se não há dark, usar light
 
   return (
     <div className="cursor-pointer" onClick={onClick}>

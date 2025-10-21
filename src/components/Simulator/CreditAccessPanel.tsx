@@ -2053,7 +2053,7 @@ export const CreditAccessPanel = ({ data, onCreditoAcessado, onSelectedCreditsCh
               )}
               {cotas.map((cota, idx) => (
                 <div key={idx} className={`flex items-center justify-between p-3 border border-border brand-radius bg-card dark:bg-[#1F1F1F] ${selectedCotas.includes(idx) ? 'bg-accent/20' : ''}`} style={selectedCotas.includes(idx) ? { borderColor: '#333333' } : { borderColor: 'var(--brand-secondary)' }}>
-                  <Checkbox checked={selectedCotas.includes(idx)} onCheckedChange={() => toggleCotaSelecionada(idx)} className="dark:border-[#A86F57]/30" />
+                  <Checkbox checked={selectedCotas.includes(idx)} onCheckedChange={() => toggleCotaSelecionada(idx)} className="dark:border-[#E50F5E]/30" />
                   <div className="flex-1 ml-2">
                     <div className="font-medium text-foreground dark:text-white">{cota.nome}</div>
                     <div className="text-sm text-muted-foreground dark:text-gray-300">

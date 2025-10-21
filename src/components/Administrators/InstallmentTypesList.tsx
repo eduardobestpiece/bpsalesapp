@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Edit, Archive, RotateCcw, Search } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -123,28 +123,25 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
 
   // Removido: função de cópia
 
-  const handleArchiveToggle = async (installmentType: any) => {
+  const handleDelete = async (installmentType: any) => {
+    if (!confirm('Tem certeza que deseja excluir este tipo de parcela?')) return;
     try {
+      // Remover relações primeiro
+      await supabase
+        .from('installment_type_reductions')
+        .delete()
+        .eq('installment_type_id', installmentType.id);
+
       const { error } = await supabase
         .from('installment_types')
-        .update({ 
-          is_archived: !installmentType.is_archived,
-          updated_at: new Date().toISOString()
-        })
+        .delete()
         .eq('id', installmentType.id);
 
       if (error) throw error;
-
-      toast({
-        title: installmentType.is_archived ? 'Tipo de parcela reativado!' : 'Tipo de parcela arquivado!',
-      });
-
+      toast({ title: 'Tipo de parcela excluído com sucesso!' });
       refetch();
     } catch (error) {
-      toast({
-        title: 'Erro ao atualizar tipo de parcela',
-        variant: 'destructive',
-      });
+      toast({ title: 'Erro ao excluir tipo de parcela', variant: 'destructive' });
     }
   };
 
@@ -246,12 +243,12 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
             <TableHead className="text-left">Seguro (%)</TableHead>
             <TableHead className="text-left">Seguro opcional</TableHead>
             <TableHead className="text-left">Parcela reduzida</TableHead>
-            <TableHead className="text-right">Ações</TableHead>
+            <TableHead className="text-right"></TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {installmentTypes.map((installmentType) => (
-            <TableRow key={installmentType.id}>
+            <TableRow key={installmentType.id} className="cursor-pointer" onClick={() => handleEdit(installmentType)}>
               <TableCell>{installmentType.administrators?.name}</TableCell>
               <TableCell>{installmentType.installment_count}</TableCell>
               <TableCell>{installmentType.admin_tax_percent ?? '-'}</TableCell>
@@ -259,54 +256,16 @@ export const InstallmentTypesList: React.FC<InstallmentTypesListProps> = ({
               <TableCell>{installmentType.insurance_percent ?? '-'}</TableCell>
               <TableCell>{installmentType.optional_insurance ? 'Sim' : 'Não'}</TableCell>
               <TableCell>{reductionsMap[installmentType.id] ? 'Sim' : 'Não'}</TableCell>
-              <TableCell>
-                <div className="flex space-x-2">
-                  {canEdit && (
-                  <Button
-                    variant="brandOutlineSecondaryHover"
-                    size="sm"
-                    onClick={() => handleEdit(installmentType)}
-                    className="brand-radius"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </Button>
-                  )}
-                  {canArchive && (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="brandOutlineSecondaryHover"
-                        size="sm"
-                        className="brand-radius"
-                      >
-                        {installmentType.is_archived ? (
-                          <RotateCcw className="w-4 h-4" />
-                        ) : (
-                          <Archive className="w-4 h-4" />
-                        )}
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>
-                          {installmentType.is_archived ? 'Reativar' : 'Arquivar'} Parcela
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Tem certeza que deseja {installmentType.is_archived ? 'reativar' : 'arquivar'} a parcela?
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => handleArchiveToggle(installmentType)}
-                        >
-                          {installmentType.is_archived ? 'Reativar' : 'Arquivar'}
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                  )}
-                </div>
+              <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                <Button
+                  variant="brandOutlineSecondaryHover"
+                  size="sm"
+                  onClick={() => handleDelete(installmentType)}
+                  className="brand-radius"
+                  title="Excluir"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
               </TableCell>
             </TableRow>
           ))}

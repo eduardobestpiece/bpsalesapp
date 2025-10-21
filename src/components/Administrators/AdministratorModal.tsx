@@ -70,10 +70,16 @@ export const CreateAdministratorModal: React.FC<{
 
   const onSubmit = async (data: FormData) => {
     try {
+      if (!selectedCompanyId) {
+        toast.error('Selecione uma empresa antes de salvar');
+        return;
+      }
+      const monthIdx = MONTHS.indexOf(data.update_month || '');
+      const resolvedUpdateMonth = (data.update_type === 'specific_month' && monthIdx >= 0) ? (monthIdx + 1) : null;
       const cleanedData = {
         name: data.name,
         update_type: data.update_type,
-        update_month: data.update_type === 'specific_month' ? (MONTHS.indexOf(data.update_month || '') + 1) : null,
+        update_month: resolvedUpdateMonth,
         grace_period_days: data.grace_period_days ?? null,
         max_embedded_percentage: data.max_embedded_percentage ?? null,
         special_entry_type: data.special_entry_type ?? null,
@@ -84,17 +90,30 @@ export const CreateAdministratorModal: React.FC<{
         post_contemplation_adjustment: data.post_contemplation_adjustment ?? null,
         agio_purchase_percentage: data.agio_purchase_percentage ?? null,
         // CORRIGIDO: credit_update_type deve ser 'monthly' ou 'annual'
-        credit_update_type: data.update_type === 'specific_month' ? 'monthly' : 'annual',
+        credit_update_type: (data.update_type === 'specific_month' && resolvedUpdateMonth) ? 'monthly' : 'annual',
         is_default: data.is_default || false,
         company_id: selectedCompanyId,
       };
-        const { error } = await supabase
+      // Checar duplicidade por nome na empresa
+      const { data: existing, error: checkErr } = await supabase
+        .from('administrators')
+        .select('id')
+        .eq('company_id', selectedCompanyId)
+        .ilike('name', cleanedData.name.trim())
+        .limit(1);
+      if (checkErr) throw checkErr;
+      if (existing && existing.length > 0) {
+        toast.error('Já existe uma administradora com este nome.');
+        return;
+      }
+
+      const { error } = await supabase
           .from('administrators')
           .insert(cleanedData);
         if (error) throw error;
         toast.success('Administradora criada com sucesso!');
-      onSuccess();
-      form.reset();
+        onSuccess();
+        form.reset();
     } catch (error) {
       toast.error('Erro ao salvar administradora');
     }
@@ -106,7 +125,7 @@ export const CreateAdministratorModal: React.FC<{
       onClose={() => onOpenChange(false)}
       title="Nova Administradora"
       actions={
-        <Button type="submit" form="create-admin-form" variant="brandPrimaryToSecondary">
+        <Button type="submit" form="create-admin-form" variant="brandPrimaryToSecondary" disabled={form.formState.isSubmitting}>
           Cadastrar
         </Button>
       }

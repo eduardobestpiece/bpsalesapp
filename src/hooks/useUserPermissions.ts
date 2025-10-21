@@ -39,97 +39,25 @@ export const useUserPermissions = () => {
   const { data: userPermissions = [], isLoading, error } = useQuery({
     queryKey: ['user_permissions', effectiveCompanyId, crmUser?.id],
     queryFn: async () => {
-      if (!effectiveCompanyId || !crmUser?.id) return [];
-
-      // Obter o nome de exibição da função do usuário atual
-      const currentUserRoleDisplayName = roleMapping.find(r => r.key === crmUser.role)?.name;
-      // console.log(`[DEBUG] Função do usuário (key): ${crmUser.role}, Nome de exibição: ${currentUserRoleDisplayName}`);
-
-      const { data, error } = await supabase
-        .from('custom_permissions')
-        .select(`
-          *,
-          permission_details (
-            module_name,
-            can_view,
-            can_edit,
-            can_create,
-            can_archive,
-            can_deactivate
-          )
-        `)
-        .eq('company_id', effectiveCompanyId);
-
-      if (error) {
-        console.error('Erro ao buscar permissões do usuário:', error);
-        return [];
-      }
-
-      // console.log('[DEBUG] Permissões brutas do Supabase:', data);
-
-      // Filtrar permissões que se aplicam ao usuário atual
-      const applicablePermissions = data.filter(permission => {
-        // console.log(`[DEBUG] Verificando permissão:`, permission);
-        // console.log(`[DEBUG] userRole (key): ${crmUser.role}, detail_value (DB): ${permission.detail_value}`);
-        
-        switch (permission.level) {
-          case 'Função':
-            // Verificar se o nome de exibição da função do usuário corresponde ao detail_value da permissão
-            const hasRole = permission.detail_value === currentUserRoleDisplayName;
-            // console.log(`[DEBUG] Função - Comparando '${permission.detail_value}' com '${currentUserRoleDisplayName}'. Resultado: ${hasRole}`);
-            return hasRole;
-          
-          case 'Time':
-            // Verificar se o usuário pertence ao time especificado
-            const hasTeam = permission.team_id === crmUser?.team_id;
-            // console.log(`[DEBUG] Time - hasTeam: ${hasTeam}`);
-            return hasTeam;
-
-          case 'Usuário':
-            // Verificar se a permissão é para o usuário específico
-            const hasUser = permission.user_id === crmUser?.id;
-            // console.log(`[DEBUG] Usuário - hasUser: ${hasUser}`);
-            return hasUser;
-          
-          default:
-            return false;
-        }
-      });
-
-      // console.log('[DEBUG] Permissões aplicáveis (após filtro):', applicablePermissions);
-
-      // Mapear os detalhes das permissões para um formato mais fácil de usar
-      const mappedPermissions = applicablePermissions.flatMap(p => 
-        p.permission_details.map(detail => ({
-          module_name: detail.module_name,
-          can_view: detail.can_view,
-          can_edit: detail.can_edit,
-          can_create: detail.can_create,
-          can_archive: detail.can_archive,
-          can_deactivate: detail.can_deactivate,
-        }))
-      );
-      
-      return mappedPermissions;
+      // Permissões desativadas na plataforma: retornar vazio e liberar acesso
+      return [];
     },
     enabled: !!effectiveCompanyId && !!crmUser?.id,
   });
 
   // Função para verificar se o usuário pode acessar um módulo
   const canAccessModule = (moduleName: string, action: 'view' | 'edit' | 'create' | 'archive' | 'deactivate' = 'view'): boolean => {
+    // Se o sistema de permissões estiver desativado/indisponível, liberar tudo
+    const permissionsDisabled = !!error || userPermissions.length === 0;
+    if (permissionsDisabled) return true;
     // Master sempre tem acesso total
     if (userRole === 'master') return true;
     
     // Para admin e outros roles, verificar permissões customizadas
     const modulePermission = userPermissions.find(p => p.module_name === moduleName);
     if (!modulePermission) {
-      // console.log(`[DEBUG] Nenhuma permissão encontrada para módulo: ${moduleName}`);
-      // Se não há permissão customizada definida, master, submaster e admin têm acesso por padrão
-      if (userRole === 'master' || userRole === 'submaster' || userRole === 'admin') {
-        // console.log(`[DEBUG] ${userRole} sem permissão customizada para ${moduleName}. Acesso concedido por padrão.`);
-        return true;
-      }
-      return false;
+      // Sem registro específico => permitir por padrão
+      return true;
     }
 
     const permissionValue = modulePermission[`can_${action}` as keyof UserPermission] as string;

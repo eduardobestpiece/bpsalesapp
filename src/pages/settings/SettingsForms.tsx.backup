@@ -1,0 +1,1349 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Card, CardContent } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { LandingPhoneInput } from '@/components/ui/LandingPhoneInput';
+import { supabase } from '@/integrations/supabase/client';
+import { useCompany } from '@/contexts/CompanyContext';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Checkbox } from '@/components/ui/checkbox';
+
+export default function SettingsForms() {
+  const [tab, setTab] = useState<'leads' | 'agendamentos' | 'resultados' | 'vendas'>('leads');
+  const [previewFont, setPreviewFont] = useState<string>('');
+  const [spacingFieldsPx, setSpacingFieldsPx] = useState<number>(16);
+  // Removido conforme pedido do usuário: controle de espaçamento de rótulo
+  // Mantemos fixo um espaçamento padrão suave
+  const [spacingLabelPx] = useState<number>(8);
+  const [fontSizeLabelPx, setFontSizeLabelPx] = useState<number>(14);
+  const [fontSizeInputPx, setFontSizeInputPx] = useState<number>(16);
+  const [fontSizeButtonPx, setFontSizeButtonPx] = useState<number>(16);
+  // Campos - aparência
+  const [fieldBgColor, setFieldBgColor] = useState<string>('#2A2A2A');
+  const [fieldTextColor, setFieldTextColor] = useState<string>('#FFFFFF');
+  const [selectBgColor, setSelectBgColor] = useState<string>('#E50F5E');
+  const [selectTextColor, setSelectTextColor] = useState<string>('#FFFFFF');
+  const [borderRadiusPx, setBorderRadiusPx] = useState<number>(12);
+  const [borderWidthNormalPx, setBorderWidthNormalPx] = useState<number>(1);
+  const [borderWidthFocusPx, setBorderWidthFocusPx] = useState<number>(2);
+  const [borderColorNormal, setBorderColorNormal] = useState<string>('#FFFFFF33');
+  const [borderColorActive, setBorderColorActive] = useState<string>('#E50F5E');
+  // Botão - aparência
+  const [buttonSpacingPx, setButtonSpacingPx] = useState<number>(16);
+  const [btnBg1, setBtnBg1] = useState<string>('#E50F5E');
+  const [btnBg2, setBtnBg2] = useState<string>('#7c032e');
+  const [btnAngle, setBtnAngle] = useState<number>(90);
+  const [btnBgActive1, setBtnBgActive1] = useState<string>('#c80d52');
+  const [btnBgActive2, setBtnBgActive2] = useState<string>('#630226');
+  const [btnAngleActive, setBtnAngleActive] = useState<number>(90);
+  const [btnText, setBtnText] = useState<string>('#FFFFFF');
+  const [btnTextActive, setBtnTextActive] = useState<string>('#FFFFFF');
+  const [btnRadius, setBtnRadius] = useState<number>(12);
+  const [btnBorderWidth, setBtnBorderWidth] = useState<number>(0);
+  const [btnBorderWidthActive, setBtnBorderWidthActive] = useState<number>(0);
+  const [btnBorderColor, setBtnBorderColor] = useState<string>('#FFFFFF00');
+  const [btnBorderColorActive, setBtnBorderColorActive] = useState<string>('#FFFFFF00');
+  // Estados de edição para permitir digitação contínua sem perder foco
+  const [editFieldBg, setEditFieldBg] = useState<string>(fieldBgColor);
+  const [editFieldText, setEditFieldText] = useState<string>(fieldTextColor);
+  const [editSelBg, setEditSelBg] = useState<string>(selectBgColor);
+  const [editSelText, setEditSelText] = useState<string>(selectTextColor);
+  const [editBorderNorm, setEditBorderNorm] = useState<string>(borderColorNormal);
+  const [editBorderActive, setEditBorderActive] = useState<string>(borderColorActive);
+
+  const debounceRef = useRef<any>();
+  const isValidHex = (v: string) => /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(v.trim());
+  const commitColor = (target: 'fieldBg'|'fieldText'|'selBg'|'selText'|'borderNorm'|'borderActive', value: string) => {
+    if (!isValidHex(value)) return;
+    switch (target) {
+      case 'fieldBg': setFieldBgColor(value); break;
+      case 'fieldText': setFieldTextColor(value); break;
+      case 'selBg': setSelectBgColor(value); break;
+      case 'selText': setSelectTextColor(value); break;
+      case 'borderNorm': setBorderColorNormal(value); break;
+      case 'borderActive': setBorderColorActive(value); break;
+    }
+  };
+  const scheduleCommit = (target: Parameters<typeof commitColor>[0], value: string) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => commitColor(target, value), 300);
+  };
+  // Sincronizar editores quando estado real muda por outro meio
+  useEffect(()=>setEditFieldBg(fieldBgColor),[fieldBgColor]);
+  useEffect(()=>setEditFieldText(fieldTextColor),[fieldTextColor]);
+  useEffect(()=>setEditSelBg(selectBgColor),[selectBgColor]);
+  useEffect(()=>setEditSelText(selectTextColor),[selectTextColor]);
+  useEffect(()=>setEditBorderNorm(borderColorNormal),[borderColorNormal]);
+  useEffect(()=>setEditBorderActive(borderColorActive),[borderColorActive]);
+  const [subTabs, setSubTabs] = useState<{ leads: 'campos' | 'visual' | 'integracoes'; agendamentos: 'visual' | 'integracoes'; resultados: 'etapas' | 'motivos' | 'visual' | 'integracoes'; vendas: 'campos' | 'produtos' | 'visual' | 'integracoes'; }>({
+    leads: 'campos',
+    agendamentos: 'visual',
+    resultados: 'etapas',
+    vendas: 'campos',
+  });
+  // Controlar tipo de agendamento no nível superior para não resetar durante edições de visual
+  const [agTypeGlobal, setAgTypeGlobal] = useState<'novo' | 'continuacao' | 'negociacao' | 'remarcacao'>('novo');
+  // Controlar seção aberta de Visual (Agendamentos) no nível superior para evitar recolher ao editar
+  const [agOpenSection, setAgOpenSection] = useState<'form'|'fields'|'button'|null>('form');
+
+  // Estilo compartilhado para outras abas (Leads, Resultados, Vendas)
+  type StyleCfg = {
+    spacingFieldsPx: number;
+    previewFont: string;
+    fontSizeLabelPx: number;
+    fontSizeInputPx: number;
+    fontSizeButtonPx: number;
+    fieldBgColor: string;
+    fieldTextColor: string;
+    selectBgColor: string;
+    selectTextColor: string;
+    borderRadiusPx: number;
+    borderWidthNormalPx: number;
+    borderWidthFocusPx: number;
+    borderColorNormal: string;
+    borderColorActive: string;
+    buttonSpacingPx: number;
+    btnBg1: string; btnBg2: string; btnAngle: number;
+    btnBgActive1: string; btnBgActive2: string; btnAngleActive: number;
+    btnText: string; btnTextActive: string;
+    btnRadius: number; btnBorderWidth: number; btnBorderWidthActive: number;
+    btnBorderColor: string; btnBorderColorActive: string;
+    // Novos campos para configuração do iframe
+    iframePaddingPx: number;
+    iframeBackgroundColor: string;
+    iframeShadowEnabled: boolean;
+  };
+  const defaultStyle = (): StyleCfg => ({
+    spacingFieldsPx: 16,
+    previewFont: '',
+    fontSizeLabelPx: 14,
+    fontSizeInputPx: 16,
+    fontSizeButtonPx: 16,
+    fieldBgColor: '#2A2A2A',
+    fieldTextColor: '#FFFFFF',
+    selectBgColor: '#E50F5E',
+    selectTextColor: '#FFFFFF',
+    borderRadiusPx: 12,
+    borderWidthNormalPx: 1,
+    borderWidthFocusPx: 2,
+    borderColorNormal: '#FFFFFF33',
+    borderColorActive: '#E50F5E',
+    buttonSpacingPx: 16,
+    btnBg1: '#E50F5E', btnBg2: '#7c032e', btnAngle: 90,
+    btnBgActive1: '#c80d52', btnBgActive2: '#630226', btnAngleActive: 90,
+    btnText: '#FFFFFF', btnTextActive: '#FFFFFF',
+    btnRadius: 12, btnBorderWidth: 0, btnBorderWidthActive: 0,
+    btnBorderColor: '#FFFFFF00', btnBorderColorActive: '#FFFFFF00',
+    // Novos campos para configuração do iframe
+    iframePaddingPx: 20,
+    iframeBackgroundColor: '#FFFFFF',
+    iframeShadowEnabled: true,
+  });
+  const [leadsStyle, setLeadsStyle] = useState<StyleCfg>(defaultStyle());
+  const [agendamentosStyle, setAgendamentosStyle] = useState<StyleCfg>(defaultStyle());
+  const [resultsStyle, setResultsStyle] = useState<StyleCfg>(defaultStyle());
+  const [salesStyle, setSalesStyle] = useState<StyleCfg>(defaultStyle());
+  const [leadsOpenSection, setLeadsOpenSection] = useState<'form'|'fields'|'button'|null>('form');
+  const [resultsOpenSection, setResultsOpenSection] = useState<'form'|'fields'|'button'|null>('form');
+  const [salesOpenSection, setSalesOpenSection] = useState<'form'|'fields'|'button'|null>('form');
+  // Etapas (Resultados)
+  const [resultStages, setResultStages] = useState<string[]>([]);
+  const [qualifiedStageIdx, setQualifiedStageIdx] = useState<number | null>(null);
+  const newStageRef = useRef<HTMLInputElement | null>(null);
+  const [newStage, setNewStage] = useState<string>('');
+
+  // Funções para salvar estilos no Supabase
+  const saveLeadsStyle = async () => {
+    try {
+      // TODO: Implementar salvamento no Supabase
+      console.log('Salvando estilo de Leads:', leadsStyle);
+      // Aqui será implementada a lógica de salvamento
+    } catch (error) {
+      console.error('Erro ao salvar estilo de Leads:', error);
+    }
+  };
+
+  const saveAgendamentosStyle = async () => {
+    try {
+      // TODO: Implementar salvamento no Supabase
+      console.log('Salvando estilo de Agendamentos:', agendamentosStyle);
+      // Aqui será implementada a lógica de salvamento
+    } catch (error) {
+      console.error('Erro ao salvar estilo de Agendamentos:', error);
+    }
+  };
+
+  const saveResultsStyle = async () => {
+    try {
+      // TODO: Implementar salvamento no Supabase
+      console.log('Salvando estilo de Resultados:', resultsStyle);
+      // Aqui será implementada a lógica de salvamento
+    } catch (error) {
+      console.error('Erro ao salvar estilo de Resultados:', error);
+    }
+  };
+
+  const saveSalesStyle = async () => {
+    try {
+      // TODO: Implementar salvamento no Supabase
+      console.log('Salvando estilo de Vendas:', salesStyle);
+      // Aqui será implementada a lógica de salvamento
+    } catch (error) {
+      console.error('Erro ao salvar estilo de Vendas:', error);
+    }
+  };
+
+  const TwoColumns = ({ left, right }: { left: React.ReactNode; right: React.ReactNode }) => (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div>{left}</div>
+      <div>{right}</div>
+    </div>
+  );
+
+  // Editor reutilizável de estilo (Formulário, Campos, Botão)
+  const StyleEditor = ({ style, setStyle, openSection, setOpenSection, onSave }: {
+    style: StyleCfg;
+    setStyle: React.Dispatch<React.SetStateAction<StyleCfg>>;
+    openSection: 'form'|'fields'|'button'|null;
+    setOpenSection: (s: 'form'|'fields'|'button'|null) => void;
+    onSave: () => void;
+  }) => (
+    <div className="space-y-6">
+      {/* Formulário */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between rounded-md px-2 py-1 cursor-pointer hover:bg-[#2A2A2A]" onClick={() => setOpenSection(openSection === 'form' ? null : 'form')}>
+          <h4 className="text-sm font-medium text-muted-foreground">Formulário</h4>
+          {openSection === 'form' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </div>
+        {openSection === 'form' && (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Espaço entre campos (px)</Label>
+                <Input type="number" min={0} value={style.spacingFieldsPx} onChange={(e)=> setStyle(s=>({ ...s, spacingFieldsPx: Number(e.target.value||0) }))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+              </div>
+              <div className="space-y-1">
+                <Label>Fonte</Label>
+                <Select value={style.previewFont} onValueChange={(v)=> setStyle(s=>({ ...s, previewFont: v }))}>
+                  <SelectTrigger className="h-10 bg-[#1F1F1F] border-white/20 text-white">
+                    <SelectValue placeholder="Escolha a fonte" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#2A2A2A] border-white/20 text-white max-h-80">
+                    {['Arial','Athelas','DM Sans','Effra','Facebook Sans','Google Sans','Gotham','Graphique','Inter','Klavika','Lato','Montserrat','Nunito','Open Sans','Poppins','Roboto','SF Pro','Times New Roman'].map(f => (
+                      <SelectItem key={f} value={f} className="text-sm" style={{ fontFamily: `${f}, sans-serif` }}>{f}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="space-y-1">
+                <Label>Tamanho da fonte fora do campo (px)</Label>
+                <Input type="number" min={10} value={style.fontSizeLabelPx} onChange={(e)=> setStyle(s=>({ ...s, fontSizeLabelPx: Number(e.target.value||0) }))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+              </div>
+              <div className="space-y-1">
+                <Label>Tamanho da fonte dentro do campo (px)</Label>
+                <Input type="number" min={10} value={style.fontSizeInputPx} onChange={(e)=> setStyle(s=>({ ...s, fontSizeInputPx: Number(e.target.value||0) }))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+              </div>
+              <div className="space-y-1">
+                <Label>Tamanho da fonte no botão (px)</Label>
+                <Input type="number" min={10} value={style.fontSizeButtonPx} onChange={(e)=> setStyle(s=>({ ...s, fontSizeButtonPx: Number(e.target.value||0) }))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+
+      {/* Campos */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between rounded-md px-2 py-1 cursor-pointer hover:bg-[#2A2A2A]" onClick={() => setOpenSection(openSection === 'fields' ? null : 'fields')}>
+          <h4 className="text-sm font-medium text-muted-foreground">Campos</h4>
+          {openSection === 'fields' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </div>
+        {openSection === 'fields' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label>Cor do fundo do campo</Label>
+              <div className="flex items-center gap-2">
+                <input type="color" defaultValue={style.fieldBgColor} onChange={(e)=> setStyle(s=>({ ...s, fieldBgColor: e.target.value }))} className="h-10 w-14 border border-white/20 bg-transparent" />
+                <Input value={style.fieldBgColor} onChange={(e)=> setStyle(s=>({ ...s, fieldBgColor: e.target.value }))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Cor da fonte do campo</Label>
+              <div className="flex items-center gap-2">
+                <input type="color" defaultValue={style.fieldTextColor} onChange={(e)=> setStyle(s=>({ ...s, fieldTextColor: e.target.value }))} className="h-10 w-14 border border-white/20 bg-transparent" />
+                <Input value={style.fieldTextColor} onChange={(e)=> setStyle(s=>({ ...s, fieldTextColor: e.target.value }))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Cor de fundo dos seletores</Label>
+              <div className="flex items-center gap-2">
+                <input type="color" defaultValue={style.selectBgColor} onChange={(e)=> setStyle(s=>({ ...s, selectBgColor: e.target.value }))} className="h-10 w-14 border border-white/20 bg-transparent" />
+                <Input value={style.selectBgColor} onChange={(e)=> setStyle(s=>({ ...s, selectBgColor: e.target.value }))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Cor da fonte dos seletores</Label>
+              <div className="flex items-center gap-2">
+                <input type="color" defaultValue={style.selectTextColor} onChange={(e)=> setStyle(s=>({ ...s, selectTextColor: e.target.value }))} className="h-10 w-14 border border-white/20 bg-transparent" />
+                <Input value={style.selectTextColor} onChange={(e)=> setStyle(s=>({ ...s, selectTextColor: e.target.value }))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Raio da borda (px)</Label>
+              <Input type="number" min={0} value={style.borderRadiusPx} onChange={(e)=> setStyle(s=>({ ...s, borderRadiusPx: Number(e.target.value||0) }))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+            </div>
+            <div className="space-y-1">
+              <Label>Espessura da borda normal (px)</Label>
+              <Input type="number" min={0} value={style.borderWidthNormalPx} onChange={(e)=> setStyle(s=>({ ...s, borderWidthNormalPx: Number(e.target.value||0) }))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+            </div>
+            <div className="space-y-1">
+              <Label>Espessura da borda selecionada (px)</Label>
+              <Input type="number" min={0} value={style.borderWidthFocusPx} onChange={(e)=> setStyle(s=>({ ...s, borderWidthFocusPx: Number(e.target.value||0) }))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+            </div>
+            <div className="space-y-1">
+              <Label>Cor da borda normal</Label>
+              <div className="flex items-center gap-2">
+                <input type="color" defaultValue={style.borderColorNormal} onChange={(e)=> setStyle(s=>({ ...s, borderColorNormal: e.target.value }))} className="h-10 w-14 border border-white/20 bg-transparent" />
+                <Input value={style.borderColorNormal} onChange={(e)=> setStyle(s=>({ ...s, borderColorNormal: e.target.value }))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Cor da borda pressionado</Label>
+              <div className="flex items-center gap-2">
+                <input type="color" defaultValue={style.borderColorActive} onChange={(e)=> setStyle(s=>({ ...s, borderColorActive: e.target.value }))} className="h-10 w-14 border border-white/20 bg-transparent" />
+                <Input value={style.borderColorActive} onChange={(e)=> setStyle(s=>({ ...s, borderColorActive: e.target.value }))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Botão */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between rounded-md px-2 py-1 cursor-pointer hover:bg-[#2A2A2A]" onClick={() => setOpenSection(openSection === 'button' ? null : 'button')}>
+          <h4 className="text-sm font-medium text-muted-foreground">Botão</h4>
+          {openSection === 'button' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+        </div>
+        {openSection === 'button' && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label>Espaçamento do botão (px)</Label>
+              <Input type="number" min={0} value={style.buttonSpacingPx} onChange={(e)=> setStyle(s=>({ ...s, buttonSpacingPx: Number(e.target.value||0) }))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+            </div>
+            <div className="space-y-1">
+              <Label>Raio da borda do botão (px)</Label>
+              <Input type="number" min={0} value={style.btnRadius} onChange={(e)=> setStyle(s=>({ ...s, btnRadius: Number(e.target.value||0) }))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+            </div>
+            <div className="space-y-1">
+              <Label>Cor da fonte do botão (normal)</Label>
+              <div className="flex items-center gap-2">
+                <input type="color" defaultValue={style.btnText} onChange={(e)=> setStyle(s=>({ ...s, btnText: e.target.value }))} className="h-10 w-14 border border-white/20 bg-transparent" />
+                <Input value={style.btnText} onChange={(e)=> setStyle(s=>({ ...s, btnText: e.target.value }))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Cor da fonte do botão (pressionado)</Label>
+              <div className="flex items-center gap-2">
+                <input type="color" defaultValue={style.btnTextActive} onChange={(e)=> setStyle(s=>({ ...s, btnTextActive: e.target.value }))} className="h-10 w-14 border border-white/20 bg-transparent" />
+                <Input value={style.btnTextActive} onChange={(e)=> setStyle(s=>({ ...s, btnTextActive: e.target.value }))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Cor do fundo do botão normal</Label>
+              <div className="grid grid-cols-3 gap-2 items-center">
+                <input type="color" defaultValue={style.btnBg1} onChange={(e)=> setStyle(s=>({ ...s, btnBg1: e.target.value }))} className="h-10 w-full border border-white/20 bg-transparent" />
+                <input type="color" defaultValue={style.btnBg2} onChange={(e)=> setStyle(s=>({ ...s, btnBg2: e.target.value }))} className="h-10 w-full border border-white/20 bg-transparent" />
+                <Input type="number" value={style.btnAngle} onChange={(e)=> setStyle(s=>({ ...s, btnAngle: Number(e.target.value||0) }))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Cor do fundo do botão pressionado</Label>
+              <div className="grid grid-cols-3 gap-2 items-center">
+                <input type="color" defaultValue={style.btnBgActive1} onChange={(e)=> setStyle(s=>({ ...s, btnBgActive1: e.target.value }))} className="h-10 w-full border border-white/20 bg-transparent" />
+                <input type="color" defaultValue={style.btnBgActive2} onChange={(e)=> setStyle(s=>({ ...s, btnBgActive2: e.target.value }))} className="h-10 w-full border border-white/20 bg-transparent" />
+                <Input type="number" value={style.btnAngleActive} onChange={(e)=> setStyle(s=>({ ...s, btnAngleActive: Number(e.target.value||0) }))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Espessura da borda do botão (normal) (px)</Label>
+              <Input type="number" min={0} value={style.btnBorderWidth} onChange={(e)=> setStyle(s=>({ ...s, btnBorderWidth: Number(e.target.value||0) }))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+            </div>
+            <div className="space-y-1">
+              <Label>Espessura da borda do botão (pressionado) (px)</Label>
+              <Input type="number" min={0} value={style.btnBorderWidthActive} onChange={(e)=> setStyle(s=>({ ...s, btnBorderWidthActive: Number(e.target.value||0) }))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+            </div>
+            <div className="space-y-1">
+              <Label>Cor da borda do botão (normal)</Label>
+              <div className="flex items-center gap-2">
+                <input type="color" defaultValue={style.btnBorderColor} onChange={(e)=> setStyle(s=>({ ...s, btnBorderColor: e.target.value }))} className="h-10 w-14 border border-white/20 bg-transparent" />
+                <Input value={style.btnBorderColor} onChange={(e)=> setStyle(s=>({ ...s, btnBorderColor: e.target.value }))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label>Cor da borda do botão (pressionado)</Label>
+              <div className="flex items-center gap-2">
+                <input type="color" defaultValue={style.btnBorderColorActive} onChange={(e)=> setStyle(s=>({ ...s, btnBorderColorActive: e.target.value }))} className="h-10 w-14 border border-white/20 bg-transparent" />
+                <Input value={style.btnBorderColorActive} onChange={(e)=> setStyle(s=>({ ...s, btnBorderColorActive: e.target.value }))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+      
+      {/* Botão de Salvar */}
+      <div className="pt-4 border-t border-white/10">
+        <Button onClick={onSave} className="w-full bg-[#E50F5E] hover:bg-[#C40E52] text-white">
+          Salvar Configurações
+        </Button>
+      </div>
+    </div>
+  );
+
+  const LeftConfig = ({ title, main, openSectionAg, setOpenSectionAg }: { title: string; main: 'leads' | 'agendamentos' | 'resultados' | 'vendas'; openSectionAg?: 'form'|'fields'|'button'|null; setOpenSectionAg?: (s: 'form'|'fields'|'button'|null) => void }) => {
+    const SectionHeaderAg = ({ label, section }: { label: string; section: 'form'|'fields'|'button' }) => (
+      <div className={`flex items-center justify-between rounded-md px-2 py-1 cursor-pointer hover:bg-[#2A2A2A]`} onClick={() => setOpenSectionAg && setOpenSectionAg(openSectionAg === section ? null : section)}>
+        <h4 className="text-sm font-medium text-muted-foreground">{label}</h4>
+        {openSectionAg === section ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+      </div>
+    );
+    return (
+    <div className="space-y-6">
+      <h3 className="text-lg font-semibold">Configurações do formulário</h3>
+
+      {/* Sub-Abas específicas por formulário */}
+      {main === 'leads' && (
+        <Tabs value={subTabs.leads} onValueChange={(v: any) => setSubTabs(prev => ({ ...prev, leads: v }))} className="w-full">
+          <TabsList className="flex gap-2 bg-transparent p-0 rounded-none w-fit">
+            <TabsTrigger value="campos" className="px-3 py-2 text-sm rounded-md border border-white/10 bg-[#1F1F1F] text-muted-foreground hover:text-white hover:bg-[#262626] data-[state=active]:bg-[var(--brand-primary,#E50F5E)] data-[state=active]:text-white">Campos</TabsTrigger>
+            <TabsTrigger value="visual" className="px-3 py-2 text-sm rounded-md border border-white/10 bg-[#1F1F1F] text-muted-foreground hover:text-white hover:bg-[#262626] data-[state=active]:bg-[var(--brand-primary,#E50F5E)] data-[state=active]:text-white">Estilo</TabsTrigger>
+            <TabsTrigger value="integracoes" className="px-3 py-2 text-sm rounded-md border border-white/10 bg-[#1F1F1F] text-muted-foreground hover:text-white hover:bg-[#262626] data-[state=active]:bg-[var(--brand-primary,#E50F5E)] data-[state=active]:text-white">Integrações</TabsTrigger>
+          </TabsList>
+          <TabsContent value="campos" className="pt-4">
+            <div className="text-sm text-muted-foreground">Gerencie os campos exibidos no formulário de Leads.</div>
+          </TabsContent>
+          <TabsContent value="visual" className="pt-4 space-y-6">
+            <StyleEditor style={leadsStyle} setStyle={setLeadsStyle} openSection={leadsOpenSection} setOpenSection={setLeadsOpenSection} onSave={saveLeadsStyle} />
+          </TabsContent>
+          <TabsContent value="integracoes" className="pt-4">
+            <div className="text-sm text-muted-foreground">Integrações com webhooks, pixels e APIs.</div>
+          </TabsContent>
+        </Tabs>
+      )}
+
+      {main === 'agendamentos' && (
+        <Tabs value={subTabs.agendamentos} onValueChange={(v: any) => setSubTabs(prev => ({ ...prev, agendamentos: v }))} className="w-full">
+          <TabsList className="flex gap-2 bg-transparent p-0 rounded-none w-fit">
+            <TabsTrigger value="visual" className="px-3 py-2 text-sm rounded-md border border-white/10 bg-[#1F1F1F] text-muted-foreground hover:text-white hover:bg-[#262626] data-[state=active]:bg-[var(--brand-primary,#E50F5E)] data-[state=active]:text-white">Estilo</TabsTrigger>
+            <TabsTrigger value="integracoes" className="px-3 py-2 text-sm rounded-md border border-white/10 bg-[#1F1F1F] text-muted-foreground hover:text-white hover:bg-[#262626] data-[state=active]:bg-[var(--brand-primary,#E50F5E)] data-[state=active]:text-white">Integrações</TabsTrigger>
+          </TabsList>
+          <TabsContent value="visual" className="pt-4 space-y-6">
+            <StyleEditor style={agendamentosStyle} setStyle={setAgendamentosStyle} openSection={agOpenSection} setOpenSection={setAgOpenSection} onSave={saveAgendamentosStyle} />
+                  <div className="space-y-3">
+                    <SectionHeaderAg label="Formulário" section="form" />
+                    {openSectionAg === 'form' && (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label>Espaço entre campos (px)</Label>
+                            <Input type="number" min={0} value={spacingFieldsPx}
+                              onChange={(e) => setSpacingFieldsPx(Number(e.target.value || 0))}
+                              className="h-10 bg-[#1F1F1F] border-white/20 text-white focus:border-[var(--brand-primary,#E50F5E)] focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label>Fonte</Label>
+                            <Select value={previewFont} onValueChange={setPreviewFont}>
+                              <SelectTrigger className="h-10 bg-[#1F1F1F] border-white/20 text-white focus:border-[var(--brand-primary,#E50F5E)] focus:ring-0">
+                                <SelectValue placeholder="Escolha a fonte" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-[#2A2A2A] border-white/20 text-white max-h-80">
+                                <div className="p-2 sticky top-0 z-10 bg-[#2A2A2A] border-b border-white/10">
+                                  <Input placeholder="Pesquisar fontes" className="h-9 bg-[#1f1f1f] border-white/20 text-white placeholder:text-gray-400 focus:ring-0 focus:ring-offset-0 outline-none" onChange={(e) => {
+                                    const q = e.target.value.toLowerCase();
+                                    const nodes = Array.from((e.currentTarget.parentElement?.parentElement as HTMLElement).querySelectorAll('[data-font-option]')) as HTMLElement[];
+                                    nodes.forEach(el => { el.style.display = el.dataset.fontOption?.toLowerCase().includes(q) ? '' : 'none'; });
+                                  }} />
+                                </div>
+                                {['Arial','Athelas','DM Sans','Effra','Facebook Sans','Google Sans','Gotham','Graphique','Inter','Klavika','Lato','Montserrat','Nunito','Open Sans','Poppins','Roboto','SF Pro','Times New Roman'].map(f => (
+                                  <SelectItem key={f} value={f} data-font-option={f} className="text-sm" style={{ fontFamily: `${f}, sans-serif` }}>{f}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                        <p className="text-xs text-muted-foreground">A fonte selecionada será aplicada aos campos e botões da prévia.</p>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div className="space-y-1">
+                            <Label>Tamanho da fonte fora do campo (px)</Label>
+                            <Input type="number" min={10} value={fontSizeLabelPx}
+                              onChange={(e) => setFontSizeLabelPx(Number(e.target.value || 0))}
+                              className="h-10 bg-[#1F1F1F] border-white/20 text-white focus:border-[var(--brand-primary,#E50F5E)] focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label>Tamanho da fonte dentro do campo (px)</Label>
+                            <Input type="number" min={10} value={fontSizeInputPx}
+                              onChange={(e) => setFontSizeInputPx(Number(e.target.value || 0))}
+                              className="h-10 bg-[#1F1F1F] border-white/20 text-white focus:border-[var(--brand-primary,#E50F5E)] focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label>Tamanho da fonte no botão (px)</Label>
+                            <Input type="number" min={10} value={fontSizeButtonPx}
+                              onChange={(e) => setFontSizeButtonPx(Number(e.target.value || 0))}
+                              className="h-10 bg-[#1F1F1F] border-white/20 text-white focus:border-[var(--brand-primary,#E50F5E)] focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none" />
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Campos */}
+                  <div className="space-y-3">
+                    <SectionHeaderAg label="Campos" section="fields" />
+                    {openSectionAg === 'fields' && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <Label>Cor do fundo do campo</Label>
+                          <div className="flex items-center gap-2">
+                            <input key={`fieldBg-${fieldBgColor}`} type="color" defaultValue={fieldBgColor} onChange={(e) => { setFieldBgColor(e.target.value); setEditFieldBg(e.target.value); }} className="h-10 w-14 border border-white/20 bg-transparent" />
+                            <Input value={editFieldBg} onChange={(e) => { const v = e.target.value; setEditFieldBg(v); scheduleCommit('fieldBg', v); }} onBlur={(e)=>commitColor('fieldBg', e.target.value)} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label>Cor da fonte do campo</Label>
+                          <div className="flex items-center gap-2">
+                            <input key={`fieldText-${fieldTextColor}`} type="color" defaultValue={fieldTextColor} onChange={(e) => { setFieldTextColor(e.target.value); setEditFieldText(e.target.value); }} className="h-10 w-14 border border-white/20 bg-transparent" />
+                            <Input value={editFieldText} onChange={(e) => { const v = e.target.value; setEditFieldText(v); scheduleCommit('fieldText', v); }} onBlur={(e)=>commitColor('fieldText', e.target.value)} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label>Cor de fundo dos seletores</Label>
+                          <div className="flex items-center gap-2">
+                            <input key={`selBg-${selectBgColor}`} type="color" defaultValue={selectBgColor} onChange={(e) => { setSelectBgColor(e.target.value); setEditSelBg(e.target.value); }} className="h-10 w-14 border border-white/20 bg-transparent" />
+                            <Input value={editSelBg} onChange={(e) => { const v = e.target.value; setEditSelBg(v); scheduleCommit('selBg', v); }} onBlur={(e)=>commitColor('selBg', e.target.value)} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label>Cor da fonte dos seletores</Label>
+                          <div className="flex items-center gap-2">
+                            <input key={`selText-${selectTextColor}`} type="color" defaultValue={selectTextColor} onChange={(e) => { setSelectTextColor(e.target.value); setEditSelText(e.target.value); }} className="h-10 w-14 border border-white/20 bg-transparent" />
+                            <Input value={editSelText} onChange={(e) => { const v = e.target.value; setEditSelText(v); scheduleCommit('selText', v); }} onBlur={(e)=>commitColor('selText', e.target.value)} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label>Raio da borda (px)</Label>
+                          <Input type="number" min={0} value={borderRadiusPx} onChange={(e)=> setBorderRadiusPx(Number(e.target.value || 0))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label>Espessura da borda normal (px)</Label>
+                          <Input type="number" min={0} value={borderWidthNormalPx} onChange={(e)=> setBorderWidthNormalPx(Number(e.target.value || 0))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label>Espessura da borda selecionada (px)</Label>
+                          <Input type="number" min={0} value={borderWidthFocusPx} onChange={(e)=> setBorderWidthFocusPx(Number(e.target.value || 0))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label>Cor da borda normal</Label>
+                          <div className="flex items-center gap-2">
+                            <input key={`borderNorm-${borderColorNormal}`} type="color" defaultValue={borderColorNormal} onChange={(e)=> { setBorderColorNormal(e.target.value); setEditBorderNorm(e.target.value); }} className="h-10 w-14 border border-white/20 bg-transparent" />
+                            <Input value={editBorderNorm} onChange={(e)=> { const v = e.target.value; setEditBorderNorm(v); scheduleCommit('borderNorm', v); }} onBlur={(e)=>commitColor('borderNorm', e.target.value)} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label>Cor da borda pressionado</Label>
+                          <div className="flex items-center gap-2">
+                            <input key={`borderActive-${borderColorActive}`} type="color" defaultValue={borderColorActive} onChange={(e)=> { setBorderColorActive(e.target.value); setEditBorderActive(e.target.value); }} className="h-10 w-14 border border-white/20 bg-transparent" />
+                            <Input value={editBorderActive} onChange={(e)=> { const v = e.target.value; setEditBorderActive(v); scheduleCommit('borderActive', v); }} onBlur={(e)=>commitColor('borderActive', e.target.value)} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Botão */}
+                  <div className="space-y-3">
+                    <SectionHeaderAg label="Botão" section="button" />
+                    {openSectionAg === 'button' && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <Label>Espaçamento do botão (px)</Label>
+                          <Input type="number" min={0} value={buttonSpacingPx} onChange={(e)=> setButtonSpacingPx(Number(e.target.value||0))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label>Raio da borda do botão (px)</Label>
+                          <Input type="number" min={0} value={btnRadius} onChange={(e)=> setBtnRadius(Number(e.target.value||0))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label>Cor da fonte do botão (normal)</Label>
+                          <div className="flex items-center gap-2">
+                            <input type="color" defaultValue={btnText} onChange={(e)=> setBtnText(e.target.value)} className="h-10 w-14 border border-white/20 bg-transparent" />
+                            <Input value={btnText} onChange={(e)=> setBtnText(e.target.value)} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label>Cor da fonte do botão (pressionado)</Label>
+                          <div className="flex items-center gap-2">
+                            <input type="color" defaultValue={btnTextActive} onChange={(e)=> setBtnTextActive(e.target.value)} className="h-10 w-14 border border-white/20 bg-transparent" />
+                            <Input value={btnTextActive} onChange={(e)=> setBtnTextActive(e.target.value)} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <Label>Cor do fundo do botão normal</Label>
+                          <div className="grid grid-cols-3 gap-2 items-center">
+                            <input type="color" defaultValue={btnBg1} onChange={(e)=> setBtnBg1(e.target.value)} className="h-10 w-full border border-white/20 bg-transparent" />
+                            <input type="color" defaultValue={btnBg2} onChange={(e)=> setBtnBg2(e.target.value)} className="h-10 w-full border border-white/20 bg-transparent" />
+                            <Input type="number" value={btnAngle} onChange={(e)=> setBtnAngle(Number(e.target.value||0))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label>Cor do fundo do botão pressionado</Label>
+                          <div className="grid grid-cols-3 gap-2 items-center">
+                            <input type="color" defaultValue={btnBgActive1} onChange={(e)=> setBtnBgActive1(e.target.value)} className="h-10 w-full border border-white/20 bg-transparent" />
+                            <input type="color" defaultValue={btnBgActive2} onChange={(e)=> setBtnBgActive2(e.target.value)} className="h-10 w-full border border-white/20 bg-transparent" />
+                            <Input type="number" value={btnAngleActive} onChange={(e)=> setBtnAngleActive(Number(e.target.value||0))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                          </div>
+                        </div>
+
+                        <div className="space-y-1">
+                          <Label>Espessura da borda do botão (normal) (px)</Label>
+                          <Input type="number" min={0} value={btnBorderWidth} onChange={(e)=> setBtnBorderWidth(Number(e.target.value||0))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label>Espessura da borda do botão (pressionado) (px)</Label>
+                          <Input type="number" min={0} value={btnBorderWidthActive} onChange={(e)=> setBtnBorderWidthActive(Number(e.target.value||0))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label>Cor da borda do botão (normal)</Label>
+                          <div className="flex items-center gap-2">
+                            <input type="color" defaultValue={btnBorderColor} onChange={(e)=> setBtnBorderColor(e.target.value)} className="h-10 w-14 border border-white/20 bg-transparent" />
+                            <Input value={btnBorderColor} onChange={(e)=> setBtnBorderColor(e.target.value)} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <Label>Cor da borda do botão (pressionado)</Label>
+                          <div className="flex items-center gap-2">
+                            <input type="color" defaultValue={btnBorderColorActive} onChange={(e)=> setBtnBorderColorActive(e.target.value)} className="h-10 w-14 border border-white/20 bg-transparent" />
+                            <Input value={btnBorderColorActive} onChange={(e)=> setBtnBorderColorActive(e.target.value)} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+            
+
+            {/* Campos (removido duplicado - já existe acima com SectionHeader) */}
+            {false && (() => {
+              const [openFields, setOpenFields] = useState(true);
+              return (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium text-muted-foreground">Campos</h4>
+                    <button type="button" onClick={() => setOpenFields(o => !o)} className="p-1 text-muted-foreground hover:text-foreground">
+                      {openFields ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {openFields && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label>Cor do fundo do campo</Label>
+                  <div className="flex items-center gap-2">
+                    <input key={`fieldBg-${fieldBgColor}`} type="color" defaultValue={fieldBgColor} onChange={(e) => { setFieldBgColor(e.target.value); setEditFieldBg(e.target.value); }} className="h-10 w-14 border border-white/20 bg-transparent" />
+                    <Input value={editFieldBg} onChange={(e) => { const v = e.target.value; setEditFieldBg(v); scheduleCommit('fieldBg', v); }} onBlur={(e)=>commitColor('fieldBg', e.target.value)} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label>Cor da fonte do campo</Label>
+                  <div className="flex items-center gap-2">
+                    <input key={`fieldText-${fieldTextColor}`} type="color" defaultValue={fieldTextColor} onChange={(e) => { setFieldTextColor(e.target.value); setEditFieldText(e.target.value); }} className="h-10 w-14 border border-white/20 bg-transparent" />
+                    <Input value={editFieldText} onChange={(e) => { const v = e.target.value; setEditFieldText(v); scheduleCommit('fieldText', v); }} onBlur={(e)=>commitColor('fieldText', e.target.value)} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label>Cor de fundo dos seletores</Label>
+                  <div className="flex items-center gap-2">
+                    <input key={`selBg-${selectBgColor}`} type="color" defaultValue={selectBgColor} onChange={(e) => { setSelectBgColor(e.target.value); setEditSelBg(e.target.value); }} className="h-10 w-14 border border-white/20 bg-transparent" />
+                    <Input value={editSelBg} onChange={(e) => { const v = e.target.value; setEditSelBg(v); scheduleCommit('selBg', v); }} onBlur={(e)=>commitColor('selBg', e.target.value)} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label>Cor da fonte dos seletores</Label>
+                  <div className="flex items-center gap-2">
+                    <input key={`selText-${selectTextColor}`} type="color" defaultValue={selectTextColor} onChange={(e) => { setSelectTextColor(e.target.value); setEditSelText(e.target.value); }} className="h-10 w-14 border border-white/20 bg-transparent" />
+                    <Input value={editSelText} onChange={(e) => { const v = e.target.value; setEditSelText(v); scheduleCommit('selText', v); }} onBlur={(e)=>commitColor('selText', e.target.value)} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label>Raio da borda (px)</Label>
+                  <Input type="number" min={0} value={borderRadiusPx} onChange={(e)=> setBorderRadiusPx(Number(e.target.value || 0))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                </div>
+                <div className="space-y-1">
+                  <Label>Espessura da borda normal (px)</Label>
+                  <Input type="number" min={0} value={borderWidthNormalPx} onChange={(e)=> setBorderWidthNormalPx(Number(e.target.value || 0))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                </div>
+                <div className="space-y-1">
+                  <Label>Espessura da borda selecionada (px)</Label>
+                  <Input type="number" min={0} value={borderWidthFocusPx} onChange={(e)=> setBorderWidthFocusPx(Number(e.target.value || 0))} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                </div>
+                <div className="space-y-1">
+                  <Label>Cor da borda normal</Label>
+                  <div className="flex items-center gap-2">
+                    <input key={`borderNorm-${borderColorNormal}`} type="color" defaultValue={borderColorNormal} onChange={(e)=> { setBorderColorNormal(e.target.value); setEditBorderNorm(e.target.value); }} className="h-10 w-14 border border-white/20 bg-transparent" />
+                    <Input value={editBorderNorm} onChange={(e)=> { const v = e.target.value; setEditBorderNorm(v); scheduleCommit('borderNorm', v); }} onBlur={(e)=>commitColor('borderNorm', e.target.value)} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label>Cor da borda pressionado</Label>
+                  <div className="flex items-center gap-2">
+                    <input key={`borderActive-${borderColorActive}`} type="color" defaultValue={borderColorActive} onChange={(e)=> { setBorderColorActive(e.target.value); setEditBorderActive(e.target.value); }} className="h-10 w-14 border border-white/20 bg-transparent" />
+                    <Input value={editBorderActive} onChange={(e)=> { const v = e.target.value; setEditBorderActive(v); scheduleCommit('borderActive', v); }} onBlur={(e)=>commitColor('borderActive', e.target.value)} className="h-10 bg-[#1F1F1F] border-white/20 text-white" />
+                  </div>
+                </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </TabsContent>
+          <TabsContent value="integracoes" className="pt-4">
+            <div className="text-sm text-muted-foreground">Integrações com calendários e webhooks.</div>
+          </TabsContent>
+        </Tabs>
+      )}
+
+      {main === 'resultados' && (
+        <Tabs value={subTabs.resultados} onValueChange={(v: any) => setSubTabs(prev => ({ ...prev, resultados: v }))} className="w-full">
+          <TabsList className="flex gap-2 bg-transparent p-0 rounded-none w-fit">
+            <TabsTrigger value="etapas" className="px-3 py-2 text-sm rounded-md border border-white/10 bg-[#1F1F1F] text-muted-foreground hover:text-white hover:bg-[#262626] data-[state=active]:bg-[var(--brand-primary,#E50F5E)] data-[state=active]:text-white">Etapas</TabsTrigger>
+            <TabsTrigger value="visual" className="px-3 py-2 text-sm rounded-md border border-white/10 bg-[#1F1F1F] text-muted-foreground hover:text-white hover:bg-[#262626] data-[state=active]:bg-[var(--brand-primary,#E50F5E)] data-[state=active]:text-white">Estilo</TabsTrigger>
+            <TabsTrigger value="integracoes" className="px-3 py-2 text-sm rounded-md border border-white/10 bg-[#1F1F1F] text-muted-foreground hover:text-white hover:bg-[#262626] data-[state=active]:bg-[var(--brand-primary,#E50F5E)] data-[state=active]:text-white">Integrações</TabsTrigger>
+          </TabsList>
+          <TabsContent value="etapas" className="pt-4 space-y-3">
+            <div className="space-y-2">
+              <Label>Etapas da venda</Label>
+              <div className="flex gap-2" onClick={(e)=> e.stopPropagation()}>
+                <input ref={(el)=> (newStageRef.current = el)} value={newStage} onChange={(e)=> setNewStage(e.currentTarget.value)} placeholder="Nome da etapa" className="h-10 bg-[#1F1F1F] border border-white/20 text-white px-3 rounded-md w-full" />
+                <Button onClick={(e)=> { e.stopPropagation(); if (newStage.trim()) { setResultStages(s=>[...s, newStage.trim()]); setNewStage(''); newStageRef.current?.focus(); } }} className="h-10">Adicionar</Button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm text-muted-foreground">Arraste para reordenar</Label>
+              <div className="space-y-2">
+                {resultStages.map((stage, idx) => (
+                  <div key={idx} draggable onDragStart={(e)=> e.dataTransfer.setData('text/plain', String(idx))} onDragOver={(e)=> e.preventDefault()} onDrop={(e)=> { const from = Number(e.dataTransfer.getData('text/plain')); const to = idx; if (!Number.isNaN(from)) { setResultStages(s=>{ const arr=[...s]; const [it]=arr.splice(from,1); arr.splice(to,0,it); return arr; }); } }} className="flex items-center justify-between px-3 py-2 rounded-md border border-white/20 bg-[#1F1F1F] select-none">
+                    <div className="flex items-center gap-3">
+                      <Checkbox checked={qualifiedStageIdx === idx} onCheckedChange={(v)=> setQualifiedStageIdx(v ? idx : null)} />
+                      <span className="cursor-move">{stage}</span>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={()=> { setResultStages(s=> s.filter((_,i)=> i!==idx)); if (qualifiedStageIdx === idx) setQualifiedStageIdx(null); }}>Remover</Button>
+                  </div>
+                ))}
+                {resultStages.length===0 && <div className="text-sm text-muted-foreground">Nenhuma etapa adicionada.</div>}
+              </div>
+            </div>
+          </TabsContent>
+          <TabsContent value="visual" className="pt-4 space-y-6">
+            <StyleEditor style={resultsStyle} setStyle={setResultsStyle} openSection={resultsOpenSection} setOpenSection={setResultsOpenSection} onSave={saveResultsStyle} />
+          </TabsContent>
+          <TabsContent value="integracoes" className="pt-4">
+            <div className="text-sm text-muted-foreground">Integrações com serviços externos.</div>
+          </TabsContent>
+        </Tabs>
+      )}
+
+      {main === 'vendas' && (
+        <Tabs value={subTabs.vendas} onValueChange={(v: any) => setSubTabs(prev => ({ ...prev, vendas: v }))} className="w-full">
+          <TabsList className="flex gap-2 bg-transparent p-0 rounded-none w-fit">
+            <TabsTrigger value="campos" className="px-3 py-2 text-sm rounded-md border border-white/10 bg-[#1F1F1F] text-muted-foreground hover:text-white hover:bg-[#262626] data-[state=active]:bg-[var(--brand-primary,#E50F5E)] data-[state=active]:text-white">Campos</TabsTrigger>
+            <TabsTrigger value="produtos" className="px-3 py-2 text-sm rounded-md border border-white/10 bg-[#1F1F1F] text-muted-foreground hover:text-white hover:bg-[#262626] data-[state=active]:bg-[var(--brand-primary,#E50F5E)] data-[state=active]:text-white">Produtos</TabsTrigger>
+            <TabsTrigger value="visual" className="px-3 py-2 text-sm rounded-md border border-white/10 bg-[#1F1F1F] text-muted-foreground hover:text-white hover:bg-[#262626] data-[state=active]:bg-[var(--brand-primary,#E50F5E)] data-[state=active]:text-white">Estilo</TabsTrigger>
+            <TabsTrigger value="integracoes" className="px-3 py-2 text-sm rounded-md border border-white/10 bg-[#1F1F1F] text-muted-foreground hover:text-white hover:bg-[#262626] data-[state=active]:bg-[var(--brand-primary,#E50F5E)] data-[state=active]:text-white">Integrações</TabsTrigger>
+          </TabsList>
+          <TabsContent value="campos" className="pt-4">
+            <div className="text-sm text-muted-foreground">Defina os campos do formulário de Vendas.</div>
+          </TabsContent>
+          <TabsContent value="produtos" className="pt-4">
+            <div className="text-sm text-muted-foreground">Selecione produtos e vínculos obrigatórios.</div>
+          </TabsContent>
+          <TabsContent value="visual" className="pt-4 space-y-6">
+            <StyleEditor style={salesStyle} setStyle={setSalesStyle} openSection={salesOpenSection} setOpenSection={setSalesOpenSection} onSave={saveSalesStyle} />
+          </TabsContent>
+          <TabsContent value="integracoes" className="pt-4">
+            <div className="text-sm text-muted-foreground">Integrações com ERPs, webhooks e pixels.</div>
+          </TabsContent>
+        </Tabs>
+      )}
+    </div>
+  );
+};
+
+  const PreviewRight = ({ title, agType: agTypeProp, setAgType: setAgTypeProp }: { title: string; agType?: 'novo'|'continuacao'|'negociacao'|'remarcacao'; setAgType?: (v: 'novo'|'continuacao'|'negociacao'|'remarcacao') => void }) => {
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
+    const [range, setRange] = useState('');
+    const { selectedCompanyId } = useCompany();
+    const [leads, setLeads] = useState<any[]>([]);
+    const [users, setUsers] = useState<any[]>([]);
+    const [meetings, setMeetings] = useState<any[]>([]);
+
+    const [leadQuery, setLeadQuery] = useState('');
+    const [userQuery, setUserQuery] = useState('');
+    const [meetingQuery, setMeetingQuery] = useState('');
+
+    const isControlledAg = typeof agTypeProp !== 'undefined' && typeof setAgTypeProp !== 'undefined';
+    const [agTypeInternal, setAgTypeInternal] = useState<'novo' | 'continuacao' | 'negociacao' | 'remarcacao'>('novo');
+    const agType = (isControlledAg ? agTypeProp : agTypeInternal) as 'novo'|'continuacao'|'negociacao'|'remarcacao';
+    const setAgType = (v: 'novo'|'continuacao'|'negociacao'|'remarcacao') => {
+      if (isControlledAg && setAgTypeProp) return setAgTypeProp(v);
+      setAgTypeInternal(v);
+    };
+    const [selectedLead, setSelectedLead] = useState<string>('');
+    const [selectedUser, setSelectedUser] = useState<string>('');
+    const [selectedMeeting, setSelectedMeeting] = useState<string>('');
+    const [sameHost, setSameHost] = useState<'sim' | 'nao'>('sim');
+    const [meetingWhen, setMeetingWhen] = useState<string>(''); // datetime-local
+    const [info, setInfo] = useState('');
+
+    // Carregar dados para selects (empresa atual)
+    useEffect(() => {
+      const load = async () => {
+        if (!selectedCompanyId) { setLeads([]); setUsers([]); setMeetings([]); return; }
+        try {
+          const [{ data: leadsData }, { data: usersData }] = await Promise.all([
+            supabase.from('leads').select('id, nome, email, telefone').eq('company_id', selectedCompanyId).limit(200),
+            supabase.from('crm_users').select('id, first_name, last_name, email, phone, company_id').eq('company_id', selectedCompanyId).limit(200),
+          ]);
+          setLeads(leadsData || []);
+          setUsers(usersData || []);
+          // Reuniões - usando dados mockados por enquanto
+          setMeetings([]);
+        } catch {
+          setLeads([]); setUsers([]); setMeetings([]);
+        }
+      };
+      load();
+    }, [selectedCompanyId]);
+
+    // Determinar o conjunto de estilo conforme a aba
+    const cfg = title === 'Agendamentos'
+      ? {
+          spacingFieldsPx,
+          previewFont,
+          fontSizeLabelPx,
+          fontSizeInputPx,
+          fontSizeButtonPx,
+          fieldBgColor,
+          fieldTextColor,
+          selectBgColor,
+          selectTextColor,
+          borderRadiusPx,
+          borderWidthNormalPx,
+          borderWidthFocusPx,
+          borderColorNormal,
+          borderColorActive,
+          buttonSpacingPx,
+          btnBg1, btnBg2, btnAngle,
+          btnBgActive1, btnBgActive2, btnAngleActive,
+          btnText, btnTextActive,
+          btnRadius, btnBorderWidth, btnBorderWidthActive,
+          btnBorderColor, btnBorderColorActive,
+        }
+      : (title === 'Leads' ? leadsStyle : (title === 'Resultados' ? resultsStyle : salesStyle));
+
+    const fontStyle = cfg.previewFont ? { fontFamily: `${cfg.previewFont}, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, 'Apple Color Emoji', 'Segoe UI Emoji'` } : undefined;
+    const labelStyle = { ...(fontStyle || {}), fontSize: `${cfg.fontSizeLabelPx}px`, marginBottom: `${spacingLabelPx}px` } as React.CSSProperties;
+    const inputStyle = { ...(fontStyle || {}), fontSize: `${cfg.fontSizeInputPx}px` } as React.CSSProperties;
+    const fieldStyle = {
+      ...inputStyle,
+      backgroundColor: cfg.fieldBgColor,
+      color: cfg.fieldTextColor,
+      borderColor: cfg.borderColorNormal,
+      borderWidth: cfg.borderWidthNormalPx,
+      borderStyle: 'solid',
+      borderRadius: cfg.borderRadiusPx,
+    } as React.CSSProperties;
+    const selectorVars = ({ ['--selBg']: cfg.selectBgColor, ['--selFg']: cfg.selectTextColor, ['--active-bc']: cfg.borderColorActive, ['--baseBg']: cfg.fieldBgColor, ['--baseFg']: cfg.fieldTextColor } as unknown) as React.CSSProperties;
+    const selectorBaseStyle = {
+      borderColor: cfg.borderColorNormal,
+      borderWidth: cfg.borderWidthNormalPx,
+      borderStyle: 'solid',
+      borderRadius: cfg.borderRadiusPx,
+      fontSize: `${cfg.fontSizeInputPx}px`,
+    } as React.CSSProperties;
+    const normalButtonBg = `linear-gradient(${cfg.btnAngle}deg, ${cfg.btnBg1}, ${cfg.btnBg2})`;
+    const activeButtonBg = `linear-gradient(${cfg.btnAngleActive}deg, ${cfg.btnBgActive1}, ${cfg.btnBgActive2})`;
+    const buttonStyle = {
+      ...(fontStyle || {}),
+      fontSize: `${cfg.fontSizeButtonPx}px`,
+      marginTop: `${cfg.buttonSpacingPx}px`,
+      backgroundImage: normalButtonBg,
+      color: cfg.btnText,
+      borderRadius: cfg.btnRadius,
+      borderWidth: cfg.btnBorderWidth,
+      borderColor: cfg.btnBorderColor,
+      borderStyle: 'solid',
+    } as React.CSSProperties;
+    return (
+      <div className="space-y-4">
+        <h3 className="text-lg font-semibold">Prévia do formulário</h3>
+        <div className="w-full bg-[#1F1F1F]/95 backdrop-blur-sm shadow-xl border border-white/10 rounded-md">
+          <div className="p-6">
+            {/* CSS auxiliar para borda de foco com variável controlada */}
+            <style>{`
+              .focus-border:focus { border-color: var(--active-bc) !important; border-width: var(--focus-bw, 2px) !important; }
+            `}</style>
+            <div className="flex flex-col">
+              {/* Caso especial: Agendamentos - mostrar estrutura de agendamento */}
+              {title === 'Agendamentos' ? (
+                <>
+                  {/* Tipo de agendamento somente dropdown */}
+                  <div className="space-y-2" style={{ marginBottom: `${spacingFieldsPx}px` }}>
+                    <Label style={labelStyle}>Selecione o tipo de Reunião</Label>
+                    <Select value={agType} onValueChange={(v: any) => setAgType(v)}>
+                      <SelectTrigger className="h-12 text-base focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-border focus-border" style={{ ...fieldStyle, ['--active-bc' as any]: borderColorActive, ['--focus-bw' as any]: `${borderWidthFocusPx}px` }}>
+                        <SelectValue placeholder="Selecione o tipo de Reunião" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#2A2A2A] border-white/20 text-white" style={{ ['--selBg' as any]: selectBgColor, ['--selFg' as any]: selectTextColor, fontSize: `${fontSizeInputPx}px` }}>
+                        <SelectItem value="novo" className="data-[highlighted]:bg-[var(--selBg)] data-[highlighted]:text-[var(--selFg)] data-[state=checked]:bg-[var(--selBg)] data-[state=checked]:text-[var(--selFg)]" style={{ fontSize: `${fontSizeInputPx}px` }}>Novo</SelectItem>
+                        <SelectItem value="continuacao" className="data-[highlighted]:bg-[var(--selBg)] data-[highlighted]:text-[var(--selFg)] data-[state=checked]:bg-[var(--selBg)] data-[state=checked]:text-[var(--selFg)]" style={{ fontSize: `${fontSizeInputPx}px` }}>Continuação</SelectItem>
+                        <SelectItem value="negociacao" className="data-[highlighted]:bg-[var(--selBg)] data-[highlighted]:text-[var(--selFg)] data-[state=checked]:bg-[var(--selBg)] data-[state=checked]:text-[var(--selFg)]" style={{ fontSize: `${fontSizeInputPx}px` }}>Negociação</SelectItem>
+                        <SelectItem value="remarcacao" className="data-[highlighted]:bg-[var(--selBg)] data-[highlighted]:text-[var(--selFg)] data-[state=checked]:bg-[var(--selBg)] data-[state=checked]:text-[var(--selFg)]" style={{ fontSize: `${fontSizeInputPx}px` }}>Remarcação</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Novo */}
+                  {agType === 'novo' && (
+                    <>
+                      {/* Lead com busca + botão + */}
+                      <div className="space-y-2" style={{ marginBottom: `${spacingFieldsPx}px` }}>
+                        <div className="flex gap-2" style={{ ...(selectorVars as any) }}>
+                          <Select value={selectedLead} onValueChange={setSelectedLead}>
+                          <SelectTrigger className="flex-1 h-12 text-base focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-border" style={{ ...fieldStyle, ['--active-bc' as any]: borderColorActive, ['--focus-bw' as any]: `${borderWidthFocusPx}px` }}>
+                              <SelectValue placeholder="Selecione ou Adicione um Lead" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-[#2A2A2A] border-white/20 text-white max-h-80" style={{ ['--selBg' as any]: selectBgColor, ['--selFg' as any]: selectTextColor }}>
+                              <div className="p-2" style={{ borderRadius: borderRadiusPx }}>
+                                <Input
+                                  placeholder="Pesquisar nome, e-mail ou telefone"
+                                  value={leadQuery}
+                                  onChange={(e) => setLeadQuery(e.target.value)}
+                                  className="h-9 bg-[#1f1f1f] border-white/20 text-white placeholder:text-gray-400 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none focus-border"
+                                  style={{ borderRadius: borderRadiusPx, ['--active-bc' as any]: borderColorActive, ['--focus-bw' as any]: `${borderWidthFocusPx}px` }}
+                                />
+                              </div>
+                              {(leads || [])
+                                .filter((l) => {
+                                  const q = leadQuery.toLowerCase();
+                                  return (
+                                    !q ||
+                                    (l.nome || '').toLowerCase().includes(q) ||
+                                    (l.email || '').toLowerCase().includes(q) ||
+                                    (l.telefone || '').toLowerCase().includes(q)
+                                  );
+                                })
+                                .slice(0, 50)
+                                .map((l) => (
+                                  <SelectItem key={l.id} value={l.id} className="text-base data-[highlighted]:bg-[var(--selBg)] data-[highlighted]:text-[var(--selFg)] data-[state=checked]:bg-[var(--selBg)] data-[state=checked]:text-[var(--selFg)]" style={{ fontSize: `${fontSizeInputPx}px` }}>
+                                    {l.nome || l.email || l.telefone}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                          <Button type="button" className="h-12 px-3 border hover:bg-[var(--selBg)] hover:text-[var(--selFg)]" variant="ghost" title="Adicionar lead" style={{ backgroundColor: fieldBgColor, color: fieldTextColor, borderColor: borderColorNormal, borderWidth: borderWidthNormalPx, borderRadius: borderRadiusPx }}>
+                            +
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Anfitrião com busca */}
+                      <div className="space-y-2" style={{ marginBottom: `${spacingFieldsPx}px` }}>
+                        <Select value={selectedUser} onValueChange={setSelectedUser}>
+                          <SelectTrigger className="h-12 text-base focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-border" style={{ ...fieldStyle, ['--active-bc' as any]: borderColorActive, ['--focus-bw' as any]: `${borderWidthFocusPx}px` }}>
+                            <SelectValue placeholder="Selecione o Anfitrião" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-[#2A2A2A] border-white/20 text-white max-h-80" style={{ ['--selBg' as any]: selectBgColor, ['--selFg' as any]: selectTextColor, fontSize: `${fontSizeInputPx}px` }}>
+                            <div className="p-2" style={{ borderRadius: borderRadiusPx }}>
+                              <Input
+                                placeholder="Pesquisar usuário"
+                                value={userQuery}
+                                onChange={(e) => setUserQuery(e.target.value)}
+                                className="h-9 bg-[#1f1f1f] border-white/20 text-white placeholder:text-gray-400 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none focus-border"
+                                style={{ borderRadius: borderRadiusPx, ['--active-bc' as any]: borderColorActive, ['--focus-bw' as any]: `${borderWidthFocusPx}px` }}
+                              />
+                            </div>
+                            {(users || [])
+                              .filter((u) => {
+                                const q = userQuery.toLowerCase();
+                                const name = `${u.first_name || ''} ${u.last_name || ''}`.trim();
+                                return (
+                                  !q ||
+                                  name.toLowerCase().includes(q) ||
+                                  (u.email || '').toLowerCase().includes(q) ||
+                                  (u.phone || '').toLowerCase().includes(q)
+                                );
+                              })
+                              .slice(0, 50)
+                              .map((u) => (
+                                <SelectItem key={u.id} value={u.id} className="text-base data-[highlighted]:bg-[var(--selBg)] data-[highlighted]:text-[var(--selFg)] data-[state=checked]:bg-[var(--selBg)] data-[state=checked]:text-[var(--selFg)]" style={{ fontSize: `${fontSizeInputPx}px` }}>
+                                  {(u.first_name || '') + ' ' + (u.last_name || '') || u.email || u.phone}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Data e hora */}
+                      <div className="space-y-1" style={{ marginBottom: `${spacingFieldsPx}px` }}>
+                        <Label style={labelStyle}>Informe a data e hora da reunião</Label>
+                        <Input
+                          type="datetime-local"
+                          value={meetingWhen}
+                          onChange={(e) => setMeetingWhen(e.target.value)}
+                          className="h-12 text-base focus-ring-0 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none focus-border" style={{ ...fieldStyle, ['--active-bc' as any]: borderColorActive, ['--focus-bw' as any]: `${borderWidthFocusPx}px` }}
+                        />
+                      </div>
+
+                      {/* Informações */}
+                      <Textarea
+                        placeholder="Informações da reunião"
+                        value={info}
+                        onChange={(e) => setInfo(e.target.value)}
+                        className="min-h-24 placeholder:text-gray-400 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none focus-border" style={{ ...fieldStyle, ['--active-bc' as any]: borderColorActive, ['--focus-bw' as any]: `${borderWidthFocusPx}px` }}
+                      />
+                      <Button type="button" className="w-full h-12 font-semibold transition-all duration-300 shadow-lg" style={buttonStyle}
+                        onMouseDown={(e)=>{ (e.currentTarget.style as any).backgroundImage = activeButtonBg; (e.currentTarget.style as any).color = btnTextActive; (e.currentTarget.style as any).borderWidth = `${btnBorderWidthActive}px`; (e.currentTarget.style as any).borderColor = btnBorderColorActive; }}
+                        onMouseUp={(e)=>{ (e.currentTarget.style as any).backgroundImage = normalButtonBg; (e.currentTarget.style as any).color = btnText; (e.currentTarget.style as any).borderWidth = `${btnBorderWidth}px`; (e.currentTarget.style as any).borderColor = btnBorderColor; }}
+                        onMouseLeave={(e)=>{ (e.currentTarget.style as any).backgroundImage = normalButtonBg; (e.currentTarget.style as any).color = btnText; (e.currentTarget.style as any).borderWidth = `${btnBorderWidth}px`; (e.currentTarget.style as any).borderColor = btnBorderColor; }}
+                      >
+                        Agendar Reunião
+                      </Button>
+                    </>
+                  )}
+
+                  {/* Negociação, Continuação e Remarcação compartilham estrutura */}
+                  {(agType === 'negociacao' || agType === 'continuacao' || agType === 'remarcacao') && (
+                    <>
+                      {/* Reunião com busca */}
+                      <div style={{ display: 'grid', rowGap: `${spacingLabelPx}px`, marginBottom: `${spacingFieldsPx}px` }}>
+                        <Select value={selectedMeeting} onValueChange={setSelectedMeeting}>
+                          <SelectTrigger className="h-12 text-base focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-border" style={{ ...fieldStyle, ['--active-bc' as any]: borderColorActive, ['--focus-bw' as any]: `${borderWidthFocusPx}px` }}>
+                            <SelectValue placeholder="Selecione a Reunião" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-[#2A2A2A] border-white/20 text-white max-h-80" style={{ fontSize: `${fontSizeInputPx}px` }}>
+                            <div className="p-2" style={{ borderRadius: borderRadiusPx }}>
+                              <Input
+                                placeholder="Pesquisar reunião (lead)"
+                                value={meetingQuery}
+                                onChange={(e) => setMeetingQuery(e.target.value)}
+                                className="h-9 bg-[#1f1f1f] border-white/20 text-white placeholder:text-gray-400 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none focus-border"
+                                style={{ borderRadius: borderRadiusPx, ['--active-bc' as any]: borderColorActive, ['--focus-bw' as any]: `${borderWidthFocusPx}px` }}
+                              />
+                            </div>
+                            {(meetings || [])
+                              .filter((m) => {
+                                const q = meetingQuery.toLowerCase();
+                                return (
+                                  !q ||
+                                  (m.title || '').toLowerCase().includes(q) ||
+                                  (m.lead_name || '').toLowerCase().includes(q) ||
+                                  (m.lead_email || '').toLowerCase().includes(q) ||
+                                  (m.lead_phone || '').toLowerCase().includes(q)
+                                );
+                              })
+                              .slice(0, 50)
+                              .map((m) => (
+                                <SelectItem key={m.id} value={m.id} className="text-base" style={{ fontSize: `${fontSizeInputPx}px` }}>
+                                  {m.title || m.lead_name || m.lead_email || m.lead_phone}
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Manteve o mesmo anfitrião */}
+                      <div className="space-y-2" style={{ ...(selectorVars as any), marginBottom: `${spacingFieldsPx}px` }}>
+                        <Label style={labelStyle}>Será feita pelo mesmo anfitrião?</Label>
+                        <ToggleGroup type="single" value={sameHost} onValueChange={(v) => setSameHost((v as any) || sameHost)} className="grid grid-cols-2 gap-3" style={selectorVars}>
+                          <ToggleGroupItem
+                            value="sim"
+                            aria-label="Sim"
+                            className="font-normal text-base bg-[var(--baseBg)] text-[var(--baseFg)] hover:bg-[var(--selBg)] hover:text-[var(--selFg)] data-[state=on]:bg-[var(--selBg)] data-[state=on]:text-[var(--selFg)] data-[state=on]:border-[var(--active-bc)]"
+                            style={{ ...selectorBaseStyle }}
+                          >
+                            Sim
+                          </ToggleGroupItem>
+                          <ToggleGroupItem
+                            value="nao"
+                            aria-label="Não"
+                            className="font-normal text-base bg-[var(--baseBg)] text-[var(--baseFg)] hover:bg-[var(--selBg)] hover:text-[var(--selFg)] data-[state=on]:bg-[var(--selBg)] data-[state=on]:text-[var(--selFg)] data-[state=on]:border-[var(--active-bc)]"
+                            style={{ ...selectorBaseStyle }}
+                          >
+                            Não
+                          </ToggleGroupItem>
+                        </ToggleGroup>
+                      </div>
+
+                      {/* Anfitrião (apenas quando não manteve) */}
+                      {sameHost === 'nao' && (
+                        <div className="space-y-2" style={{ marginBottom: `${spacingFieldsPx}px` }}>
+                          <Select value={selectedUser} onValueChange={setSelectedUser}>
+                            <SelectTrigger className="h-12 text-base focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-border" style={{ ...fieldStyle, ['--active-bc' as any]: borderColorActive, ['--focus-bw' as any]: `${borderWidthFocusPx}px` }}>
+                              <SelectValue placeholder="Selecione o Anfitrião" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-[#2A2A2A] border-white/20 text-white max-h-80" style={selectorVars}>
+                              <div className="p-2" style={{ borderRadius: borderRadiusPx }}>
+                                <Input
+                                  placeholder="Pesquisar usuário"
+                                  value={userQuery}
+                                  onChange={(e) => setUserQuery(e.target.value)}
+                                  className="h-9 bg-[#1f1f1f] border-white/20 text-white placeholder:text-gray-400 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none focus-border"
+                                  style={{ borderRadius: borderRadiusPx, ['--active-bc' as any]: borderColorActive, ['--focus-bw' as any]: `${borderWidthFocusPx}px` }}
+                                />
+                              </div>
+                              {(users || [])
+                                .filter((u) => {
+                                  const q = userQuery.toLowerCase();
+                                  const name = `${u.first_name || ''} ${u.last_name || ''}`.trim();
+                                  return (
+                                    !q ||
+                                    name.toLowerCase().includes(q) ||
+                                    (u.email || '').toLowerCase().includes(q) ||
+                                    (u.phone || '').toLowerCase().includes(q)
+                                  );
+                                })
+                                .slice(0, 50)
+                                .map((u) => (
+                                  <SelectItem key={u.id} value={u.id} className="text-base data-[highlighted]:bg-[var(--selBg)] data-[highlighted]:text-[var(--selFg)] data-[state=checked]:bg-[var(--selBg)] data-[state=checked]:text-[var(--selFg)]">
+                                    {(u.first_name || '') + ' ' + (u.last_name || '') || u.email || u.phone}
+                                  </SelectItem>
+                                ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+
+                      {/* Data e hora */}
+                      <div className="space-y-1" style={{ marginBottom: `${spacingFieldsPx}px` }}>
+                        <Label style={labelStyle}>Informe a data e hora da reunião</Label>
+                        <Input
+                          type="datetime-local"
+                          value={meetingWhen}
+                          onChange={(e) => setMeetingWhen(e.target.value)}
+                          className="h-12 text-base focus-ring-0 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none focus-border" style={{ ...fieldStyle, ['--active-bc' as any]: borderColorActive, ['--focus-bw' as any]: `${borderWidthFocusPx}px` }}
+                        />
+                      </div>
+
+                      {/* Informações - aparece também para os demais tipos, mas obrigatória apenas em 'novo' (validação virá depois) */}
+                      <Textarea
+                        placeholder="Informações da reunião"
+                        value={info}
+                        onChange={(e) => setInfo(e.target.value)}
+                        className="min-h-24 placeholder:text-gray-400 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none focus-border" style={{ ...fieldStyle, ['--active-bc' as any]: borderColorActive, ['--focus-bw' as any]: `${borderWidthFocusPx}px` }}
+                      />
+                      <Button type="button" className="w-full h-12 font-semibold transition-all duration-300 shadow-lg" style={buttonStyle}
+                        onMouseDown={(e)=>{ (e.currentTarget.style as any).backgroundImage = activeButtonBg; (e.currentTarget.style as any).color = btnTextActive; (e.currentTarget.style as any).borderWidth = `${btnBorderWidthActive}px`; (e.currentTarget.style as any).borderColor = btnBorderColorActive; }}
+                        onMouseUp={(e)=>{ (e.currentTarget.style as any).backgroundImage = normalButtonBg; (e.currentTarget.style as any).color = btnText; (e.currentTarget.style as any).borderWidth = `${btnBorderWidth}px`; (e.currentTarget.style as any).borderColor = btnBorderColor; }}
+                        onMouseLeave={(e)=>{ (e.currentTarget.style as any).backgroundImage = normalButtonBg; (e.currentTarget.style as any).color = btnText; (e.currentTarget.style as any).borderWidth = `${btnBorderWidth}px`; (e.currentTarget.style as any).borderColor = btnBorderColor; }}
+                      >
+                        Agendar Reunião
+                      </Button>
+                    </>
+                  )}
+                </>
+              ) : title === 'Resultados' ? (
+                <>
+                  {/* Selecionar reunião (com busca) */}
+                  <div style={{ display: 'grid', rowGap: `${spacingLabelPx}px`, marginBottom: `${cfg.spacingFieldsPx}px` }}>
+                    <Label style={labelStyle}>Selecione a Reunião</Label>
+                    <Select value={selectedMeeting} onValueChange={setSelectedMeeting}>
+                      <SelectTrigger className="h-12 text-base focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-border" style={{ ...fieldStyle, ['--active-bc' as any]: cfg.borderColorActive, ['--focus-bw' as any]: `${cfg.borderWidthFocusPx}px` }}>
+                        <SelectValue placeholder="Selecione a Reunião" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-[#2A2A2A] border-white/20 text-white max-h-80" style={{ fontSize: `${cfg.fontSizeInputPx}px` }}>
+                        <div className="p-2" style={{ borderRadius: cfg.borderRadiusPx }}>
+                          <Input
+                            placeholder="Pesquisar reunião (lead)"
+                            value={meetingQuery}
+                            onChange={(e) => setMeetingQuery(e.target.value)}
+                            className="h-9 bg-[#1f1f1f] border-white/20 text-white placeholder:text-gray-400 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none focus-border"
+                            style={{ borderRadius: cfg.borderRadiusPx, ['--active-bc' as any]: cfg.borderColorActive, ['--focus-bw' as any]: `${cfg.borderWidthFocusPx}px` }}
+                          />
+                        </div>
+                        {(meetings || [])
+                          .filter((m) => {
+                            const q = meetingQuery.toLowerCase();
+                            return (
+                              !q ||
+                              (m.title || '').toLowerCase().includes(q) ||
+                              (m.lead_name || '').toLowerCase().includes(q) ||
+                              (m.lead_email || '').toLowerCase().includes(q) ||
+                              (m.lead_phone || '').toLowerCase().includes(q)
+                            );
+                          })
+                          .slice(0, 50)
+                          .map((m) => (
+                            <SelectItem key={m.id} value={m.id} className="text-base" style={{ fontSize: `${cfg.fontSizeInputPx}px` }}>
+                              {m.title || m.lead_name || m.lead_email || m.lead_phone}
+                            </SelectItem>
+                          ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {/* Cliente entrou na reunião? */}
+                  {(() => {
+                    const [state, setState] = [sameHost, setSameHost] as unknown as ['sim'|'nao', (v: 'sim'|'nao')=>void];
+                    return (
+                      <div className="space-y-2" style={{ ...(selectorVars as any), marginBottom: `${cfg.spacingFieldsPx}px` }}>
+                        <Label style={labelStyle}>Cliente entrou na reunião?</Label>
+                        <ToggleGroup type="single" value={state} onValueChange={(v) => setState((v as any) || state)} className="grid grid-cols-2 gap-3" style={selectorVars}>
+                          <ToggleGroupItem value="sim" aria-label="Sim" className="font-normal text-base bg-[var(--baseBg)] text-[var(--baseFg)] hover:bg-[var(--selBg)] hover:text-[var(--selFg)] data-[state=on]:bg-[var(--selBg)] data-[state=on]:text-[var(--selFg)] data-[state=on]:border-[var(--active-bc)]" style={{ ...selectorBaseStyle }}>
+                            Sim
+                          </ToggleGroupItem>
+                          <ToggleGroupItem value="nao" aria-label="Não" className="font-normal text-base bg-[var(--baseBg)] text-[var(--baseFg)] hover:bg-[var(--selBg)] hover:text-[var(--selFg)] data-[state=on]:bg-[var(--selBg)] data-[state=on]:text-[var(--selFg)] data-[state=on]:border-[var(--active-bc)]" style={{ ...selectorBaseStyle }}>
+                            Não
+                          </ToggleGroupItem>
+                        </ToggleGroup>
+                      </div>
+                    );
+                  })()}
+
+                  {/* Agendou nova reunião? (aparece apenas quando cliente não entrou) */}
+                  {sameHost === 'nao' && (
+                    <div className="space-y-2" style={{ ...(selectorVars as any), marginBottom: `${cfg.spacingFieldsPx}px` }}>
+                      <Label style={labelStyle}>Agendou nova reunião?</Label>
+                      <ToggleGroup type="single" value={selectedUser ? 'sim' : 'nao'} onValueChange={() => {}} className="grid grid-cols-2 gap-3" style={selectorVars}>
+                        <ToggleGroupItem value="sim" aria-label="Sim" className="font-normal text-base bg-[var(--baseBg)] text-[var(--baseFg)] hover:bg-[var(--selBg)] hover:text-[var(--selFg)] data-[state=on]:bg-[var(--selBg)] data-[state=on]:text-[var(--selFg)] data-[state=on]:border-[var(--active-bc)]" style={{ ...selectorBaseStyle }}>
+                          Sim
+                        </ToggleGroupItem>
+                        <ToggleGroupItem value="nao" aria-label="Não" className="font-normal text-base bg-[var(--baseBg)] text-[var(--baseFg)] hover:bg-[var(--selBg)] hover:text-[var(--selFg)] data-[state=on]:bg-[var(--selBg)] data-[state=on]:text-[var(--selFg)] data-[state=on]:border-[var(--active-bc)]" style={{ ...selectorBaseStyle }}>
+                          Não
+                        </ToggleGroupItem>
+                      </ToggleGroup>
+                    </div>
+                  )}
+
+                  {/* Fase em que a reunião finalizou (aparece quando cliente entrou) */}
+                  {sameHost === 'sim' && (
+                    <div className="space-y-2" style={{ marginBottom: `${cfg.spacingFieldsPx}px` }}>
+                      <Label style={labelStyle}>Fase em que a reunião finalizou</Label>
+                      <Select>
+                        <SelectTrigger className="h-12 text-base focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-border" style={{ ...fieldStyle, ['--active-bc' as any]: cfg.borderColorActive, ['--focus-bw' as any]: `${cfg.borderWidthFocusPx}px` }}>
+                          <SelectValue placeholder="Selecione a fase" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-[#2A2A2A] border-white/20 text-white max-h-80" style={{ fontSize: `${cfg.fontSizeInputPx}px` }}>
+                          <div className="p-2" style={{ borderRadius: cfg.borderRadiusPx }}>
+                            <Input
+                              placeholder="Pesquisar fase"
+                              className="h-9 bg-[#1f1f1f] border-white/20 text-white placeholder:text-gray-400 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none focus-border"
+                              style={{ borderRadius: cfg.borderRadiusPx, ['--active-bc' as any]: cfg.borderColorActive, ['--focus-bw' as any]: `${cfg.borderWidthFocusPx}px` }}
+                            />
+                          </div>
+                          {(resultStages || []).map((stage, i) => (
+                            <SelectItem key={`${stage}-${i}`} value={`${i}`} className="text-base" style={{ fontSize: `${cfg.fontSizeInputPx}px` }}>{stage}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <>
+                  {/* Prévia padrão (Leads/Resultados/Vendas) mantida */}
+              <Input
+                placeholder="Nome e sobrenome"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="h-12 text-base bg-[#2A2A2A] border-white/20 text-white placeholder:text-gray-400 focus:ring-white/20 landing-page-input font-[Effra] focus:border-[var(--brand-primary,#E50F5E)]"
+              />
+              <Input
+                type="email"
+                placeholder="E-mail"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="h-12 text-base bg-[#2A2A2A] border-white/20 text-white placeholder:text-gray-400 focus:ring-white/20 landing-page-input font-[Effra] focus:border-[var(--brand-primary,#E50F5E)]"
+              />
+              <LandingPhoneInput
+                value={phone}
+                onChange={setPhone}
+                placeholder="Telefone (WhatsApp)"
+                globalDefaultColor={undefined}
+                accentFocus
+              />
+              <Select value={range} onValueChange={setRange}>
+                <SelectTrigger className={`${!range ? 'text-[#9BA3AF]' : 'text-white'} h-12 text-base bg-[#2A2A2A] border-white/20 landing-page-input font-[Effra] focus:border-[var(--brand-primary,#E50F5E)] focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0`}>
+                  <SelectValue placeholder="Quanto poderia investir mensalmente hoje?" />
+                </SelectTrigger>
+                <SelectContent className="bg-[#2A2A2A] border-white/20 text-white">
+                  <SelectItem value="1" className="text-base">Entre R$ 400 e R$ 1.000,00</SelectItem>
+                  <SelectItem value="2" className="text-base">De R$ 1.000,00 a 2.500,00</SelectItem>
+                  <SelectItem value="3" className="text-base">De R$ 2.500,00 a R$ 5.000,00</SelectItem>
+                  <SelectItem value="4" className="text-base">Acima de R$ 5.000,00</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button type="button" className="w-full h-12 text-base font-semibold bg-gradient-to-r from-[var(--brand-primary,#E50F5E)] to-[#7c032e] hover:opacity-90 transition-all duration-300 shadow-lg text-white">
+                Enviar
+              </Button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h1 className="text-3xl font-bold text-foreground">Formulários</h1>
+        <p className="text-muted-foreground">Configure e visualize formulários da plataforma.</p>
+      </div>
+
+      <Card className="shadow-xl border-0 bg-card">
+        <CardContent className="p-0">
+          <Tabs value={tab} onValueChange={(v) => setTab(v as any)} className="w-full">
+            <TabsList className="flex items-end border-b border-border/30 bg-transparent p-0 rounded-none justify-start w-fit">
+              <TabsTrigger value="leads" className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5">
+                Leads
+              </TabsTrigger>
+              <div className="w-px h-6 bg-border/30 self-center"></div>
+              <TabsTrigger value="agendamentos" className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5">
+                Agendamentos
+              </TabsTrigger>
+              <div className="w-px h-6 bg-border/30 self-center"></div>
+              <TabsTrigger value="resultados" className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5">
+                Resultados
+              </TabsTrigger>
+              <div className="w-px h-6 bg-border/30 self-center"></div>
+              <TabsTrigger value="vendas" className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5">
+                Vendas
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="leads" className="p-6">
+              <TwoColumns left={<LeftConfig title="Leads" main="leads" />} right={<PreviewRight title="Leads" />} />
+            </TabsContent>
+            <TabsContent value="agendamentos" className="p-6">
+              <TwoColumns left={<LeftConfig title="Agendamentos" main="agendamentos" openSectionAg={agOpenSection} setOpenSectionAg={setAgOpenSection} />} right={<PreviewRight title="Agendamentos" agType={agTypeGlobal} setAgType={setAgTypeGlobal} />} />
+            </TabsContent>
+            <TabsContent value="resultados" className="p-6">
+              <TwoColumns left={<LeftConfig title="Resultados" main="resultados" />} right={<PreviewRight title="Resultados" />} />
+            </TabsContent>
+            <TabsContent value="vendas" className="p-6">
+              <TwoColumns left={<LeftConfig title="Vendas" main="vendas" />} right={<PreviewRight title="Vendas" />} />
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

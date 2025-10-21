@@ -96,7 +96,7 @@ function SettingsEmpresaInner() {
   const [squarePreview, setSquarePreview] = useState<string>('');
   const [horizontalPreview, setHorizontalPreview] = useState<string>('');
   const [horizontalDarkPreview, setHorizontalDarkPreview] = useState<string>('');
-  const [primaryColor, setPrimaryColor] = useState<string>('#A86F57');
+  const [primaryColor, setPrimaryColor] = useState<string>('#E50F5E');
   const [secondaryColor, setSecondaryColor] = useState<string>('#6B7280');
   const [borderRadiusPx, setBorderRadiusPx] = useState<number>(8);
   const lastSecondaryRef = useRef<string>('#6B7280');
@@ -111,7 +111,7 @@ function SettingsEmpresaInner() {
         square: branding.logo_square_url || '',
         horiz: branding.logo_horizontal_url || branding.logo_vertical_url || '',
         horizDark: branding.logo_horizontal_dark_url || '',
-        primary: branding.primary_color || '#A86F57',
+        primary: branding.primary_color || '#E50F5E',
         secondary: (branding.secondary_color ?? lastSecondaryRef.current ?? '#6B7280'),
         radius: (typeof branding.border_radius_px === 'number' ? branding.border_radius_px : (lastRadiusRef.current ?? 8)),
       };
@@ -411,7 +411,7 @@ function SettingsEmpresaInner() {
               </div>
               <Button onClick={() => upsertProfile.mutate()} disabled={!canEdit || upsertProfile.isPending}
                 className="text-white"
-                style={{ backgroundColor: 'var(--brand-primary, #A86F57)', borderRadius: 'var(--brand-radius, 8px)' }}
+                style={{ backgroundColor: 'var(--brand-primary, #E50F5E)', borderRadius: 'var(--brand-radius, 8px)' }}
               >
                 {upsertProfile.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                 Salvar dados da empresa
@@ -509,7 +509,7 @@ function SettingsEmpresaInner() {
               </div>
               <Button onClick={handlePrimaryColorSave} disabled={!canEdit || upsertBranding.isPending}
                 className="text-white"
-                style={{ backgroundColor: 'var(--brand-primary, #A86F57)', borderRadius: 'var(--brand-radius, 8px)' }}
+                style={{ backgroundColor: 'var(--brand-primary, #E50F5E)', borderRadius: 'var(--brand-radius, 8px)' }}
               >
                 {upsertBranding.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                 Salvar
@@ -614,7 +614,7 @@ function SettingsEmpresaInner() {
                     value={primaryColor}
                     onChange={(e) => setPrimaryColor(e.target.value)}
                     className="w-40"
-                    placeholder="#A86F57"
+                    placeholder="#E50F5E"
                     style={{ borderRadius: 'var(--brand-radius, 8px)' }}
                     disabled={!canEdit}
                   />

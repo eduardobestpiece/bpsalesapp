@@ -249,9 +249,9 @@ export const PatrimonialLeverageNew = ({
     <div className="space-y-6">
       {/* Exibir Crédito Recomendado no topo, apenas se embutido estiver ativado */}
       {embutidoState === 'com' && creditoRecomendado && (
-        <div className="bg-muted/50 dark:bg-[#161616] border border-border dark:border-[#A86F57]/20 rounded-lg p-3 mb-2">
+        <div className="bg-muted/50 dark:bg-[#161616] border border-border dark:border-[#E50F5E]/20 rounded-lg p-3 mb-2">
           <span className="text-foreground font-semibold">Crédito Recomendado: </span>
-          <span className="text-primary dark:text-[#A86F57] font-bold text-lg">{creditoRecomendado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
+          <span className="text-primary dark:text-[#E50F5E] font-bold text-lg">{creditoRecomendado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</span>
         </div>
       )}
       {/* Novo layout agrupado */}

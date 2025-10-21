@@ -1,5 +1,5 @@
 
-import { User, Settings, LogOut, Users } from 'lucide-react';
+import { User, Settings, LogOut } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useModule } from '@/contexts/ModuleContext';
 import {
@@ -17,10 +17,7 @@ export const UserMenu = () => {
   const { setModule } = useModule();
   const navigate = useNavigate();
 
-  const handleGoToCrm = () => {
-    setModule('crm');
-    navigate('/crm/indicadores');
-  };
+  // Removido: handleGoToCrm
 
   // Exemplo de logout para referência futura:
   // const handleLogout = async () => {
@@ -69,10 +66,7 @@ export const UserMenu = () => {
             <span className="font-medium text-secondary">Configurações</span>
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem className="p-3 cursor-pointer hover:bg-blue-50/70 rounded-lg" onClick={handleGoToCrm}>
-          <Users className="mr-3 h-5 w-5 text-blue-600" />
-          <span className="font-medium text-secondary">CRM</span>
-        </DropdownMenuItem>
+        {/* Removido: opção CRM */}
         <DropdownMenuSeparator />
         <DropdownMenuItem className="p-3 cursor-pointer hover:bg-destructive-50 text-destructive rounded-lg">
           <LogOut className="mr-3 h-5 w-5" />

@@ -169,7 +169,7 @@ export const SettingsSidebar = () => {
   };
 
   const goToSimulator = () => navigate('/simulador');
-  const goToCrm = () => navigate('/crm/indicadores');
+  // Removido: goToCrm
   const goToSettings = () => navigate('/configuracoes/simulador');
 
   return (
@@ -212,33 +212,27 @@ export const SettingsSidebar = () => {
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {/* 1. Gestão */}
+              {/* 1. Definições */}
               <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/gestao')}>
                   <Link to="/configuracoes/gestao">
                     <Settings className="h-4 w-4" />
-                    <span>Gestão</span>
+                    <span>Definições</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
-              {/* 4. CRM */}
-              {(((userRole === 'admin' || userRole === 'master') ||
-                 (pagePermissions['crm_config'] !== false ||
-                  pagePermissions['crm_config_funnels'] !== false ||
-                  pagePermissions['crm_config_sources'] !== false ||
-                  pagePermissions['crm_config_teams'] !== false))) && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/crm')}>
-                    <Link to="/configuracoes/crm">
-                      <Settings className="h-4 w-4" />
-                      <span>CRM</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
+              {/* 2. Formulários */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/formularios')}>
+                  <Link to="/configuracoes/formularios">
+                    <SlidersHorizontal className="h-4 w-4" />
+                    <span>Formulários</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
 
-
+              {/* Removido: item de menu CRM */}
 
               {/* 6. Master Config */}
               {userRole === 'master' && (

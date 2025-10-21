@@ -8,7 +8,7 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ModuleSwitcherProps {
-  current: 'simulator' | 'crm' | 'settings';
+  current: 'simulator' | 'settings' | 'gestao';
 }
 
 export const ModuleSwitcher = ({ current }: ModuleSwitcherProps) => {
@@ -34,7 +34,7 @@ export const ModuleSwitcher = ({ current }: ModuleSwitcherProps) => {
     },
   });
 
-  const primaryColor = branding?.primary_color || '#A86F57';
+  const primaryColor = branding?.primary_color || '#E50F5E';
   const secondaryColor = branding?.secondary_color || '#6B7280';
 
   const effectiveCompanyId =
@@ -54,10 +54,10 @@ export const ModuleSwitcher = ({ current }: ModuleSwitcherProps) => {
       } else if (canAccessConfigPage) {
         navigate('/simulador/configuracoes');
       }
-    } else if (module === 'crm') {
-      navigate(computeCrmPath());
     } else if (module === 'settings') {
       navigate(computeSettingsPath());
+    } else if (module === 'gestao') {
+      navigate('/gestao');
     }
   };
 
@@ -97,7 +97,7 @@ export const ModuleSwitcher = ({ current }: ModuleSwitcherProps) => {
       return currentPath; // Manter na página atual
     }
     
-    // Ordem de prioridade conforme solicitado:
+    // Ordem de prioridade
     // 1. Gestão (unifica Meu Perfil, Empresa e Usuários)
     if (allowed('settings_profile') || allowed('settings_profile_info') || allowed('settings_profile_security') ||
         allowed('settings_company') || allowed('settings_company_data') || allowed('settings_company_branding') ||
@@ -105,19 +105,12 @@ export const ModuleSwitcher = ({ current }: ModuleSwitcherProps) => {
       return '/configuracoes/gestao';
     }
     
-    // 4. CRM
-    if (allowed('crm_config') || allowed('crm_config_funnels') || allowed('crm_config_sources') || allowed('crm_config_teams')) {
-      return '/configuracoes/crm';
-    }
-    
-
-    
-    // 6. Master Config (apenas para master)
+    // 2. Master Config (apenas para master)
     if (userRole === 'master') {
       return '/configuracoes/master';
     }
     
-    // 7. Simulador (configurações do simulador)
+    // 3. Simulador (configurações do simulador)
     if (allowed('simulator_config') || allowed('simulator_config_administrators') || allowed('simulator_config_reductions') || allowed('simulator_config_installments') || allowed('simulator_config_products') || allowed('simulator_config_leverages')) {
       return '/configuracoes/simulador';
     }
@@ -131,28 +124,22 @@ export const ModuleSwitcher = ({ current }: ModuleSwitcherProps) => {
     return '/configuracoes/gestao';
   };
 
-  const computeCrmPath = (): string => {
-    if (perms['indicadores'] !== false) return '/crm/indicadores';
-    if (perms['comercial'] !== false) return '/crm';
-    return '/crm/indicadores';
-  };
-
   const modules = useMemo(() => {
     const allowedSettings = (
       canAccessSimulatorConfig() ||
       userRole === 'admin' || userRole === 'master'
     );
 
-    const list: { key: 'simulator'|'crm'|'settings'; label: string; path: string; allowed: boolean }[] = [
+    const list: { key: 'simulator'|'settings'|'gestao'; label: string; path: string; allowed: boolean }[] = [
       { key: 'simulator', label: 'Simulador', path: '/simulador', allowed: canAccessSimulator() || canAccessSimulatorConfig() },
-      { key: 'crm', label: 'CRM', path: computeCrmPath(), allowed: (perms['indicadores'] !== false) || (perms['comercial'] !== false) },
       { key: 'settings', label: 'Configurações', path: computeSettingsPath(), allowed: allowedSettings },
+      { key: 'gestao', label: 'Gestão', path: '/gestao', allowed: true },
     ];
 
     return list.filter(m => m.allowed);
   }, [perms, userRole, settingsPageKeys, canAccessSimulator, canAccessSimulatorConfig]);
 
-  const currentLabel = modules.find(m => m.key === current)?.label || (current === 'crm' ? 'CRM' : current === 'settings' ? 'Configurações' : 'Simulador');
+  const currentLabel = modules.find(m => m.key === current)?.label || (current === 'settings' ? 'Configurações' : 'Simulador');
 
   return (
     <DropdownMenu>

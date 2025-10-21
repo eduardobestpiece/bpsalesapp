@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Iframe Responsivo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .iframe-container {
+            margin: 20px 0;
+            border: 2px dashed #ccc;
+            padding: 10px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Teste de Iframe Responsivo</h1>
+        <p>Este iframe deve se ajustar automaticamente ao tamanho do conteúdo do formulário:</p>
+        
+        <div class="iframe-container">
+            <!-- Aqui será inserido o código do iframe gerado -->
+            <iframe 
+                src="http://localhost:8080/form/test-form-id" 
+                width="100%" 
+                height="auto" 
+                frameborder="0" 
+                style="border: none; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); background-color: transparent; background: transparent; padding: 20px; min-height: 300px;"
+                title="Formulário de Contato"
+                id="form-iframe">
+            </iframe>
+
+            <script>
+            // Função para redimensionar o iframe automaticamente
+            function resizeIframe(height) {
+                const iframe = document.getElementById('form-iframe');
+                if (iframe) {
+                    // Altura mínima para evitar iframe muito pequeno
+                    const minHeight = 300;
+                    const finalHeight = Math.max(minHeight, height);
+                    iframe.style.height = finalHeight + 'px';
+                    iframe.style.minHeight = finalHeight + 'px';
+                    iframe.style.maxHeight = finalHeight + 'px';
+                }
+            }
+
+            // Escutar mensagens do iframe filho
+            window.addEventListener('message', function(event) {
+                if (event.data && event.data.type === 'resize') {
+                    resizeIframe(event.data.height);
+                }
+            });
+
+            // Aplicar redimensionamento quando o iframe carregar
+            document.addEventListener('DOMContentLoaded', function() {
+                const iframe = document.getElementById('form-iframe');
+                if (iframe) {
+                    iframe.onload = function() {
+                        // Tentar redimensionar imediatamente após carregar
+                        setTimeout(function() {
+                            try {
+                                const height = iframe.contentWindow.document.body.scrollHeight;
+                                resizeIframe(height);
+                            } catch (e) {
+                                // Fallback para casos de CORS
+                                console.log('Usando comunicação por postMessage para redimensionamento');
+                            }
+                        }, 100);
+                    };
+                    
+                    // Redimensionar também quando a janela for redimensionada
+                    window.addEventListener('resize', function() {
+                        try {
+                            const height = iframe.contentWindow.document.body.scrollHeight;
+                            resizeIframe(height);
+                        } catch (e) {
+                            // Fallback para casos de CORS
+                            console.log('Redimensionamento via postMessage');
+                        }
+                    });
+                }
+            });
+
+            // Função para detectar mudanças no conteúdo do iframe
+            function observeIframeContent() {
+                const iframe = document.getElementById('form-iframe');
+                if (iframe && iframe.contentWindow) {
+                    try {
+                        // Observar mudanças no DOM do iframe
+                        const observer = new MutationObserver(function() {
+                            try {
+                                // Calcular altura considerando todos os elementos
+                                const bodyHeight = iframe.contentWindow.document.body.scrollHeight;
+                                const documentHeight = iframe.contentWindow.document.documentElement.scrollHeight;
+                                const windowHeight = iframe.contentWindow.innerHeight;
+                                
+                                // Encontrar o elemento com fundo colorido (container principal)
+                                const rootElement = iframe.contentWindow.document.getElementById('root') || iframe.contentWindow.document.body;
+                                const rootHeight = rootElement.scrollHeight;
+                                
+                                // Usar a maior altura entre todos os elementos
+                                const calculatedHeight = Math.max(bodyHeight, documentHeight, windowHeight, rootHeight);
+                                
+                                // Adicionar margem mínima para garantir que tudo seja visível
+                                const finalHeight = Math.max(300, calculatedHeight + 20);
+                                
+                                resizeIframe(finalHeight);
+                            } catch (e) {
+                                // Fallback para casos de CORS
+                            }
+                        });
+                        
+                        observer.observe(iframe.contentWindow.document.body, {
+                            childList: true,
+                            subtree: true,
+                            attributes: true
+                        });
+                        
+                        // Observador específico para mudanças de etapa
+                        const stepObserver = new MutationObserver(function(mutations) {
+                            let shouldResize = false;
+                            
+                            mutations.forEach(function(mutation) {
+                                // Detectar mudanças em elementos de formulário
+                                if (mutation.type === 'childList') {
+                                    mutation.addedNodes.forEach(function(node) {
+                                        if (node.nodeType === 1) { // Element node
+                                            if (node.tagName === 'INPUT' || node.tagName === 'SELECT' || 
+                                                node.tagName === 'BUTTON' || node.tagName === 'DIV' ||
+                                                node.classList?.contains('step') || node.classList?.contains('form-step')) {
+                                                shouldResize = true;
+                                            }
+                                        }
+                                    });
+                                    
+                                    mutation.removedNodes.forEach(function(node) {
+                                        if (node.nodeType === 1) { // Element node
+                                            if (node.tagName === 'INPUT' || node.tagName === 'SELECT' || 
+                                                node.tagName === 'BUTTON' || node.tagName === 'DIV' ||
+                                                node.classList?.contains('step') || node.classList?.contains('form-step')) {
+                                                shouldResize = true;
+                                            }
+                                        }
+                                    });
+                                }
+                                
+                                // Detectar mudanças de estilo que podem indicar mudança de etapa
+                                if (mutation.type === 'attributes' && 
+                                    (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
+                                    shouldResize = true;
+                                }
+                            });
+                            
+                            if (shouldResize) {
+                                setTimeout(function() {
+                                    try {
+                                        // Calcular altura considerando todos os elementos
+                                        const bodyHeight = iframe.contentWindow.document.body.scrollHeight;
+                                        const documentHeight = iframe.contentWindow.document.documentElement.scrollHeight;
+                                        const windowHeight = iframe.contentWindow.innerHeight;
+                                        
+                                        // Encontrar o elemento com fundo colorido (container principal)
+                                        const rootElement = iframe.contentWindow.document.getElementById('root') || iframe.contentWindow.document.body;
+                                        const rootHeight = rootElement.scrollHeight;
+                                        
+                                        // Usar a maior altura entre todos os elementos
+                                        const calculatedHeight = Math.max(bodyHeight, documentHeight, windowHeight, rootHeight);
+                                        
+                                        // Adicionar margem mínima para garantir que tudo seja visível
+                                        const finalHeight = Math.max(300, calculatedHeight + 20);
+                                        
+                                        resizeIframe(finalHeight);
+                                    } catch (e) {
+                                        // Fallback para casos de CORS
+                                    }
+                                }, 100);
+                            }
+                        });
+                        
+                        // Observar mudanças mais específicas para formulários multi-etapa
+                        stepObserver.observe(iframe.contentWindow.document.body, {
+                            childList: true,
+                            subtree: true,
+                            attributes: true,
+                            attributeFilter: ['style', 'class', 'data-step']
+                        });
+                        
+                    } catch (e) {
+                        // Fallback para casos de CORS
+                        console.log('Observador de mudanças não disponível devido a CORS');
+                    }
+                }
+            }
+
+            // Iniciar observação após carregamento
+            setTimeout(observeIframeContent, 500);
+            
+            // Múltiplas tentativas de redimensionamento para garantir funcionamento
+            const resizeAttempts = [500, 1000, 1500, 2000, 3000];
+            resizeAttempts.forEach(delay => {
+                setTimeout(function() {
+                    try {
+                        const iframe = document.getElementById('form-iframe');
+                        if (iframe && iframe.contentWindow) {
+                            // Encontrar todos os elementos visíveis
+                            const allElements = iframe.contentWindow.document.querySelectorAll('*');
+                            let maxBottom = 0;
+                            
+                            // Calcular a posição do último pixel visível
+                            allElements.forEach(function(element) {
+                                const rect = element.getBoundingClientRect();
+                                const elementBottom = rect.bottom;
+                                if (elementBottom > maxBottom) {
+                                    maxBottom = elementBottom;
+                                }
+                            });
+                            
+                            // Calcular altura do body e document
+                            const bodyHeight = iframe.contentWindow.document.body.scrollHeight;
+                            const documentHeight = iframe.contentWindow.document.documentElement.scrollHeight;
+                            
+                            // Encontrar o elemento com fundo colorido
+                            const rootElement = iframe.contentWindow.document.getElementById('root') || iframe.contentWindow.document.body;
+                            const rootRect = rootElement.getBoundingClientRect();
+                            const rootBottom = rootRect.bottom;
+                            
+                            // Usar a maior altura encontrada
+                            const calculatedHeight = Math.max(
+                                bodyHeight, 
+                                documentHeight, 
+                                maxBottom,
+                                rootBottom
+                            );
+                            
+                            // Usar altura exata sem margem extra
+                            const finalHeight = Math.max(150, Math.ceil(calculatedHeight));
+                            
+                            resizeIframe(finalHeight);
+                        }
+                    } catch (e) {
+                        console.log('Tentativa de redimensionamento via postMessage');
+                    }
+                }, delay);
+            });
+            </script>
+        </div>
+        
+        <p><strong>Como funciona:</strong></p>
+        <ul>
+            <li>O iframe inicia com altura de 400px</li>
+            <li>Quando o conteúdo carrega, ele detecta a altura real do formulário</li>
+            <li>O iframe se redimensiona automaticamente para acomodar todo o conteúdo</li>
+            <li>Se o formulário tiver muitas perguntas, o iframe cresce verticalmente</li>
+            <li>Se o formulário for pequeno, o iframe se ajusta ao tamanho mínimo</li>
+        </ul>
+    </div>
+</body>
+</html>

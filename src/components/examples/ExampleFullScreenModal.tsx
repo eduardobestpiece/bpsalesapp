@@ -84,7 +84,7 @@ export const ExampleFullScreenModal = () => {
                   value={formData.description}
                   onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
                   placeholder="Digite uma descrição"
-                  className="w-full p-3 border border-border dark:border-[#A86F57]/30 rounded-md bg-background dark:bg-[#131313] text-foreground dark:text-white resize-none"
+                  className="w-full p-3 border border-border dark:border-[#E50F5E]/30 rounded-md bg-background dark:bg-[#131313] text-foreground dark:text-white resize-none"
                   rows={4}
                 />
               </div>
