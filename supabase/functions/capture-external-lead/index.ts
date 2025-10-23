@@ -84,9 +84,9 @@ Deno.serve(async (req: Request) => {
       nome: leadData.fieldValues.nome || leadData.fieldValues.name || 'Lead Externo',
       email: leadData.fieldValues.email || '',
       telefone: leadData.fieldValues.telefone || leadData.fieldValues.phone || '',
-      origem: 'Formulário Externo',
+      origem: 'formulario',
       status: 'novo',
-      fonte: leadData.source || 'iframe',
+      fonte: 'external_form',
       dados_extras: {
         formId: leadData.formId,
         formName: form.name,

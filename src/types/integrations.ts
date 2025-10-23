@@ -24,6 +24,7 @@ export interface MetaAdsConfig {
   pixel_code: string;
   api_token: string;
   event_type: string;
+  custom_event_name?: string;
   test_code?: string;
   enabled: boolean;
 }
@@ -66,7 +67,8 @@ export type FacebookEventType =
   | 'Schedule'
   | 'StartTrial'
   | 'SubmitApplication'
-  | 'Subscribe';
+  | 'Subscribe'
+  | 'Custom';
 
 // Dados que serão enviados para as integrações
 export interface IntegrationData {

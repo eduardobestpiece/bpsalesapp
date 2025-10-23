@@ -43,6 +43,7 @@ type Lead = {
   fbp?: string;
   fbid?: string;
   crm_id?: string;
+  fonte?: string;
 };
 
 const ALL_COLUMNS: { key: keyof Lead | 'trash'; label: string }[] = [
@@ -55,23 +56,8 @@ const ALL_COLUMNS: { key: keyof Lead | 'trash'; label: string }[] = [
   { key: 'reunioes', label: 'Reuniões' },
   { key: 'vendas', label: 'Vendas' },
   { key: 'valor', label: 'Valor' },
-  { key: 'ip', label: 'IP' },
-  { key: 'browser', label: 'Browser' },
-  { key: 'device', label: 'Device' },
-  { key: 'pais', label: 'País' },
+  { key: 'fonte', label: 'Fonte' },
   { key: 'url', label: 'URL' },
-  { key: 'parametros', label: 'Parametros' },
-  { key: 'utm_campaign', label: 'utm_campaign' },
-  { key: 'utm_medium', label: 'utm_medium' },
-  { key: 'utm_content', label: 'utm_content' },
-  { key: 'utm_source', label: 'utm_source' },
-  { key: 'utm_term', label: 'utm_term' },
-  { key: 'gclid', label: 'gclid' },
-  { key: 'fbclid', label: 'fbclid' },
-  { key: 'fbc', label: 'fbc' },
-  { key: 'fbp', label: 'fbp' },
-  { key: 'fbid', label: 'fbid' },
-  { key: 'crm_id', label: 'CRM ID' },
   { key: 'trash', label: 'Excluir' },
 ];
 
@@ -82,29 +68,34 @@ const DEFAULT_VISIBLE: (keyof Lead | 'trash')[] = [
   'telefone',
   'email',
   'responsavel',
-  'reunioes',
-  'vendas',
   'valor',
+  'fonte',
 ];
 
-export default function GestaoLeads() {
+export default function GestaoLeadsNew() {
   const { selectedCompanyId } = useCompany();
   const queryClient = useQueryClient();
+
   const { data: leads = [] } = useQuery<Lead[]>({
-    queryKey: ['leads', selectedCompanyId],
+    queryKey: ['leads-new', selectedCompanyId],
     enabled: !!selectedCompanyId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      // Filtra somente leads capturados por formulários (origem padronizada ou legada)
+      let query = supabase
         .from('leads')
         .select('*')
         .eq('company_id', selectedCompanyId as string)
         .order('created_at', { ascending: false });
+
+      // Origem pode ter sido salva como 'Formulário', 'Formulário Externo' (legado) ou nova 'formulario'
+      query = query.or("origem.eq.Formulário,origem.eq.Formulário Externo,origem.eq.formulario");
+
+      const { data, error } = await query;
       if (error) throw error;
       return (data || []) as Lead[];
     }
   });
 
-  // Carregar campos dinâmicos de lead
   const { data: leadFields = [], isLoading: loadingFields } = useLeadFields();
   const [visibleColumns, setVisibleColumns] = useState<(keyof Lead | 'trash')[]>(DEFAULT_VISIBLE);
   const [openModal, setOpenModal] = useState(false);
@@ -115,26 +106,12 @@ export default function GestaoLeads() {
     id: '',
     created_at: '',
     responsavel: '',
-    ip: '',
-    browser: '',
-    device: '',
-    pais: '',
+    origem: 'formulario',
+    fonte: 'internal_form',
     url: '',
     parametros: '',
-    utm_campaign: '',
-    utm_medium: '',
-    utm_content: '',
-    utm_source: '',
-    utm_term: '',
-    gclid: '',
-    fbclid: '',
-    fbc: '',
-    fbp: '',
-    fbid: '',
-    crm_id: '',
   });
 
-  // Estado para campos dinâmicos
   const [dynamicFields, setDynamicFields] = useState<Record<string, any>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -146,7 +123,7 @@ export default function GestaoLeads() {
 
   const startCreate = () => {
     setEditingLead(null);
-    setForm({ id: '', created_at: '', responsavel: '', ip: '', browser: '', device: '', pais: '', url: '', parametros: '', utm_campaign: '', utm_medium: '', utm_content: '', utm_source: '', utm_term: '', gclid: '', fbclid: '', fbc: '', fbp: '', fbid: '', crm_id: '' });
+    setForm({ id: '', created_at: '', responsavel: '', origem: 'formulario', fonte: 'internal_form', url: '', parametros: '' });
     setDynamicFields({});
     setFieldErrors({});
     setShowAdvanced(false);
@@ -156,7 +133,6 @@ export default function GestaoLeads() {
   const startEdit = (lead: Lead) => {
     setEditingLead(lead);
     setForm({ ...lead });
-    // Carregar campos dinâmicos do lead se existirem
     setDynamicFields({});
     setFieldErrors({});
     setShowAdvanced(false);
@@ -165,8 +141,7 @@ export default function GestaoLeads() {
 
   const saveLead = async () => {
     if (!selectedCompanyId) return;
-    
-    // Validar campos obrigatórios
+
     const errors: Record<string, string> = {};
     leadFields.forEach(field => {
       if (field.required) {
@@ -176,38 +151,24 @@ export default function GestaoLeads() {
         }
       }
     });
-    
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       return;
     }
-    
+
     try {
       let leadId: string;
-      
+
       if (editingLead) {
         const { error } = await supabase
           .from('leads')
           .update({
             created_at: form.created_at || null,
             responsavel: form.responsavel || null,
-            ip: form.ip || null,
-            browser: form.browser || null,
-            device: form.device || null,
-            pais: form.pais || null,
+            origem: form.origem || 'formulario',
+            fonte: form.fonte || 'internal_form',
             url: form.url || null,
             parametros: form.parametros || null,
-            utm_campaign: form.utm_campaign || null,
-            utm_medium: form.utm_medium || null,
-            utm_content: form.utm_content || null,
-            utm_source: form.utm_source || null,
-            utm_term: form.utm_term || null,
-            gclid: form.gclid || null,
-            fbclid: form.fbclid || null,
-            fbc: form.fbc || null,
-            fbp: form.fbp || null,
-            fbid: form.fbid || null,
-            crm_id: form.crm_id || null,
           })
           .eq('id', editingLead.id);
         if (error) throw error;
@@ -217,30 +178,16 @@ export default function GestaoLeads() {
           company_id: selectedCompanyId,
           created_at: form.created_at || null,
           responsavel: form.responsavel || null,
-          ip: form.ip || null,
-          browser: form.browser || null,
-          device: form.device || null,
-          pais: form.pais || null,
+          origem: 'formulario',
+          fonte: 'internal_form',
           url: form.url || null,
           parametros: form.parametros || null,
-          utm_campaign: form.utm_campaign || null,
-          utm_medium: form.utm_medium || null,
-          utm_content: form.utm_content || null,
-          utm_source: form.utm_source || null,
-          utm_term: form.utm_term || null,
-          gclid: form.gclid || null,
-          fbclid: form.fbclid || null,
-          fbc: form.fbc || null,
-          fbp: form.fbp || null,
-          fbid: form.fbid || null,
-          crm_id: form.crm_id || null,
         };
         const { data, error } = await supabase.from('leads').insert(payload).select().single();
         if (error) throw error;
         leadId = data.id;
       }
-      
-      // Salvar campos dinâmicos se existirem
+
       if (Object.keys(dynamicFields).length > 0) {
         const customValues = Object.entries(dynamicFields).map(([fieldId, value]) => {
           const baseRecord = {
@@ -248,8 +195,6 @@ export default function GestaoLeads() {
             field_id: fieldId,
             created_at: new Date().toISOString()
           };
-          
-          // Determinar o tipo de valor e salvar na coluna apropriada
           if (typeof value === 'string') {
             return { ...baseRecord, value_text: value };
           } else if (typeof value === 'number') {
@@ -262,7 +207,7 @@ export default function GestaoLeads() {
             return { ...baseRecord, value_text: String(value) };
           }
         });
-        
+
         if (customValues.length > 0) {
           const { error: customError } = await supabase
             .from('lead_custom_values')
@@ -270,8 +215,8 @@ export default function GestaoLeads() {
           if (customError) throw customError;
         }
       }
-      
-      await queryClient.invalidateQueries({ queryKey: ['leads', selectedCompanyId] });
+
+      await queryClient.invalidateQueries({ queryKey: ['leads-new', selectedCompanyId] });
       setOpenModal(false);
     } catch (error) {
       console.error('Erro ao salvar lead:', error);
@@ -281,7 +226,7 @@ export default function GestaoLeads() {
   const deleteLead = async (id: string) => {
     const { error } = await supabase.from('leads').delete().eq('id', id);
     if (error) throw error;
-    await queryClient.invalidateQueries({ queryKey: ['leads', selectedCompanyId] });
+    await queryClient.invalidateQueries({ queryKey: ['leads-new', selectedCompanyId] });
   };
 
   const toggleColumn = (key: keyof Lead | 'trash') => {
@@ -289,7 +234,6 @@ export default function GestaoLeads() {
       const exists = prev.includes(key);
       if (exists) {
         const next = prev.filter(k => k !== key);
-        // assegurar ao menos 1 coluna
         return next.length > 0 ? next : prev;
       } else {
         return [...prev, key];
@@ -304,7 +248,7 @@ export default function GestaoLeads() {
       <div className="max-w-[1200px] mx-auto space-y-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <CardTitle>Leads (Legado)</CardTitle>
+            <CardTitle>Leads</CardTitle>
             <div className="flex items-center gap-2">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -337,7 +281,6 @@ export default function GestaoLeads() {
                   </DialogHeader>
 
                   <div className="space-y-4 py-2">
-                    {/* Campos dinâmicos baseados na configuração da empresa */}
                     {loadingFields ? (
                       <div className="flex items-center justify-center py-8">
                         <div className="text-sm text-muted-foreground">Carregando campos...</div>
@@ -354,8 +297,7 @@ export default function GestaoLeads() {
                         Nenhum campo personalizado configurado. Configure campos em Definições → Campos Lead.
                       </div>
                     )}
-                    
-                    {/* Campos adicionais sempre presentes */}
+
                     <div className="border-t pt-4">
                       <h4 className="text-sm font-medium mb-4">Campos Adicionais</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -371,7 +313,6 @@ export default function GestaoLeads() {
                     </div>
                   </div>
 
-                  {/* Toggle avançado */}
                   <div className="py-2">
                     <label className="flex items-center gap-2 text-sm cursor-pointer">
                       <Checkbox checked={showAdvanced} onCheckedChange={(v) => setShowAdvanced(Boolean(v))} />
@@ -382,20 +323,12 @@ export default function GestaoLeads() {
                   {showAdvanced && (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-2">
                       <div>
-                        <Label className="text-sm">IP</Label>
-                        <Input value={form.ip || ''} onChange={e => setForm(prev => ({ ...prev, ip: e.target.value }))} />
+                        <Label className="text-sm">Origem</Label>
+                        <Input value={form.origem || ''} onChange={e => setForm(prev => ({ ...prev, origem: e.target.value }))} />
                       </div>
                       <div>
-                        <Label className="text-sm">Browser</Label>
-                        <Input value={form.browser || ''} onChange={e => setForm(prev => ({ ...prev, browser: e.target.value }))} />
-                      </div>
-                      <div>
-                        <Label className="text-sm">Device</Label>
-                        <Input value={form.device || ''} onChange={e => setForm(prev => ({ ...prev, device: e.target.value }))} />
-                      </div>
-                      <div>
-                        <Label className="text-sm">País</Label>
-                        <Input value={form.pais || ''} onChange={e => setForm(prev => ({ ...prev, pais: e.target.value }))} />
+                        <Label className="text-sm">Fonte</Label>
+                        <Input value={form.fonte || ''} onChange={e => setForm(prev => ({ ...prev, fonte: e.target.value }))} />
                       </div>
                       <div className="md:col-span-2">
                         <Label className="text-sm">URL</Label>
@@ -404,50 +337,6 @@ export default function GestaoLeads() {
                       <div className="md:col-span-2">
                         <Label className="text-sm">Parâmetros</Label>
                         <Input value={form.parametros || ''} onChange={e => setForm(prev => ({ ...prev, parametros: e.target.value }))} />
-                      </div>
-                      <div>
-                        <Label className="text-sm">utm_campaign</Label>
-                        <Input value={form.utm_campaign || ''} onChange={e => setForm(prev => ({ ...prev, utm_campaign: e.target.value }))} />
-                      </div>
-                      <div>
-                        <Label className="text-sm">utm_medium</Label>
-                        <Input value={form.utm_medium || ''} onChange={e => setForm(prev => ({ ...prev, utm_medium: e.target.value }))} />
-                      </div>
-                      <div>
-                        <Label className="text-sm">utm_content</Label>
-                        <Input value={form.utm_content || ''} onChange={e => setForm(prev => ({ ...prev, utm_content: e.target.value }))} />
-                      </div>
-                      <div>
-                        <Label className="text-sm">utm_source</Label>
-                        <Input value={form.utm_source || ''} onChange={e => setForm(prev => ({ ...prev, utm_source: e.target.value }))} />
-                      </div>
-                      <div>
-                        <Label className="text-sm">utm_term</Label>
-                        <Input value={form.utm_term || ''} onChange={e => setForm(prev => ({ ...prev, utm_term: e.target.value }))} />
-                      </div>
-                      <div>
-                        <Label className="text-sm">gclid</Label>
-                        <Input value={form.gclid || ''} onChange={e => setForm(prev => ({ ...prev, gclid: e.target.value }))} />
-                      </div>
-                      <div>
-                        <Label className="text-sm">fbclid</Label>
-                        <Input value={form.fbclid || ''} onChange={e => setForm(prev => ({ ...prev, fbclid: e.target.value }))} />
-                      </div>
-                      <div>
-                        <Label className="text-sm">fbc</Label>
-                        <Input value={form.fbc || ''} onChange={e => setForm(prev => ({ ...prev, fbc: e.target.value }))} />
-                      </div>
-                      <div>
-                        <Label className="text-sm">fbp</Label>
-                        <Input value={form.fbp || ''} onChange={e => setForm(prev => ({ ...prev, fbp: e.target.value }))} />
-                      </div>
-                      <div>
-                        <Label className="text-sm">fbid</Label>
-                        <Input value={form.fbid || ''} onChange={e => setForm(prev => ({ ...prev, fbid: e.target.value }))} />
-                      </div>
-                      <div>
-                        <Label className="text-sm">CRM ID</Label>
-                        <Input value={form.crm_id || ''} onChange={e => setForm(prev => ({ ...prev, crm_id: e.target.value }))} />
                       </div>
                     </div>
                   )}
@@ -475,7 +364,7 @@ export default function GestaoLeads() {
                   {leads.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={visibleColumns.length} className="text-center text-muted-foreground py-6">
-                        Nenhum lead cadastrado.
+                        Nenhum lead de formulário encontrado.
                       </TableCell>
                     </TableRow>
                   ) : (
@@ -508,6 +397,5 @@ export default function GestaoLeads() {
     </GestaoLayout>
   );
 }
-
 
 

@@ -605,7 +605,8 @@ export class IntegrationService {
   async triggerMetaAds(metaAd: BaseIntegration, data: IntegrationData): Promise<void> {
     const pixelId = (metaAd as any).meta_pixel_id;
     const accessToken = (metaAd as any).meta_pixel_token;
-    const eventType = (metaAd as any).meta_pixel_event;
+    let eventType = (metaAd as any).meta_pixel_event;
+    const customEventName = (metaAd as any).meta_event_name || (metaAd as any).meta_pixel_custom_event;
     const testCode = (metaAd as any).meta_capi_test;
     const isActive = metaAd.is_active;
     
@@ -661,7 +662,7 @@ export class IntegrationService {
             userData,
             trackingData,
             data,
-            eventType || 'Lead',
+            (eventType === 'Custom' && customEventName) ? customEventName : (eventType || 'Lead'),
             eventId
           );
           
@@ -680,7 +681,7 @@ export class IntegrationService {
       // Pixel cliente-side (sempre executar junto com CAPI) com eventID para dedupe
       if (pixelId) {
         console.log('🎯 META PIXEL - Disparando pixel cliente-side');
-        this.loadPixelAndTrack(pixelId, eventType || 'Lead', data, eventId);
+        this.loadPixelAndTrack(pixelId, (eventType === 'Custom' && customEventName) ? customEventName : (eventType || 'Lead'), data, eventId);
       }
     } catch (error) {
       console.log('🎯 META PIXEL - ❌ Erro geral:', error);

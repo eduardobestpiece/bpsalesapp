@@ -30,7 +30,8 @@ const FACEBOOK_EVENTS: { value: FacebookEventType; label: string }[] = [
   { value: 'Schedule', label: 'Schedule' },
   { value: 'StartTrial', label: 'Start Trial' },
   { value: 'SubmitApplication', label: 'Submit Application' },
-  { value: 'Subscribe', label: 'Subscribe' }
+  { value: 'Subscribe', label: 'Subscribe' },
+  { value: 'Custom', label: 'Personalizado (Custom Event)' }
 ];
 
 export function MetaAdsIntegration({ formId }: MetaAdsIntegrationProps) {
@@ -49,6 +50,7 @@ export function MetaAdsIntegration({ formId }: MetaAdsIntegrationProps) {
           pixel_code: '',
           api_token: '',
           event_type: 'Lead',
+          custom_event_name: '',
           test_code: '',
           enabled: true
         };
@@ -58,6 +60,7 @@ export function MetaAdsIntegration({ formId }: MetaAdsIntegrationProps) {
       pixel_code: '',
       api_token: '',
       event_type: 'Lead',
+      custom_event_name: '',
       test_code: '',
       enabled: true
     };
@@ -95,11 +98,18 @@ export function MetaAdsIntegration({ formId }: MetaAdsIntegrationProps) {
       return;
     }
 
+    // Validação: Evento Custom requer Nome do Evento Personalizado
+    if ((newConfig.event_type === 'Custom') && !newConfig.custom_event_name?.trim()) {
+      toast.error('Informe o Nome do Evento Personalizado para usar evento Custom');
+      return;
+    }
+
     try {
       const config: MetaAdsConfig = {
         pixel_code: newConfig.pixel_code.trim(),
         api_token: newConfig.api_token.trim(),
         event_type: newConfig.event_type || 'Lead',
+        custom_event_name: newConfig.custom_event_name?.trim(),
         test_code: newConfig.test_code?.trim() || '',
         enabled: true
       };
@@ -111,6 +121,7 @@ export function MetaAdsIntegration({ formId }: MetaAdsIntegrationProps) {
         meta_pixel_token: config.api_token,
         meta_pixel_event: config.event_type,
         meta_capi_test: config.test_code,
+        meta_event_name: config.custom_event_name || null,
         is_active: true
       });
 
@@ -118,6 +129,7 @@ export function MetaAdsIntegration({ formId }: MetaAdsIntegrationProps) {
         pixel_code: '',
         api_token: '',
         event_type: 'Lead',
+        custom_event_name: '',
         test_code: '',
         enabled: true
       });
@@ -142,6 +154,7 @@ export function MetaAdsIntegration({ formId }: MetaAdsIntegrationProps) {
       if (updates.pixel_code !== undefined) updateData.meta_pixel_id = updates.pixel_code;
       if (updates.api_token !== undefined) updateData.meta_pixel_token = updates.api_token;
       if (updates.event_type !== undefined) updateData.meta_pixel_event = updates.event_type;
+      if ((updates as any).custom_event_name !== undefined) updateData.meta_event_name = (updates as any).custom_event_name;
       if (updates.test_code !== undefined) updateData.meta_capi_test = updates.test_code;
       if (updates.enabled !== undefined) updateData.is_active = updates.enabled;
 
@@ -165,6 +178,14 @@ export function MetaAdsIntegration({ formId }: MetaAdsIntegrationProps) {
   };
 
   const handleToggleMetaAds = async (id: string, enabled: boolean) => {
+    const metaAd = metaAds.find(m => m.id === id) as any;
+    if (!metaAd) return;
+    const isCustom = (metaAd?.meta_pixel_event === 'Custom');
+    const hasCustomName = !!(metaAd?.meta_event_name && String(metaAd.meta_event_name).trim());
+    if (enabled && isCustom && !hasCustomName) {
+      toast.error('Defina o Nome do Evento Personalizado antes de ativar quando Evento = Custom');
+      return;
+    }
     await handleUpdateMetaAds(id, { enabled });
   };
 
@@ -244,6 +265,21 @@ export function MetaAdsIntegration({ formId }: MetaAdsIntegrationProps) {
                     </SelectContent>
                   </Select>
                 </div>
+                {newConfig.event_type === 'Custom' && (
+                  <div>
+                    <Label htmlFor="custom-event-name">Nome do Evento Personalizado</Label>
+                    <Input
+                      id="custom-event-name"
+                      placeholder="Ex.: LeadQualificado, OrcamentoEnviado"
+                      value={newConfig.custom_event_name || ''}
+                      onChange={(e) => setNewConfig(prev => ({ ...prev, custom_event_name: e.target.value }))}
+                      className="mt-1"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Use nomes seguindo o padrão do Meta (camelCase ou PascalCase). Evite espaços e caracteres especiais.
+                    </p>
+                  </div>
+                )}
                 <div>
                   <Label htmlFor="test-code">Código de Teste (Opcional)</Label>
                   <Input
@@ -257,7 +293,11 @@ export function MetaAdsIntegration({ formId }: MetaAdsIntegrationProps) {
               </div>
 
               <div className="flex gap-2">
-                <Button onClick={handleAddMetaAds} size="sm">
+                <Button 
+                  onClick={handleAddMetaAds} 
+                  size="sm"
+                  disabled={!newConfig.pixel_code?.trim() || !newConfig.api_token?.trim() || (newConfig.event_type === 'Custom' && !newConfig.custom_event_name?.trim())}
+                >
                   Adicionar
                 </Button>
                 <Button 
@@ -295,6 +335,7 @@ export function MetaAdsIntegration({ formId }: MetaAdsIntegrationProps) {
               pixel_code: (metaAd as any).meta_pixel_id || '',
               api_token: (metaAd as any).meta_pixel_token || '',
               event_type: (metaAd as any).meta_pixel_event || 'Lead',
+              custom_event_name: (metaAd as any).meta_event_name || '',
               test_code: (metaAd as any).meta_capi_test || '',
               enabled: metaAd.is_active
             };
@@ -365,6 +406,20 @@ export function MetaAdsIntegration({ formId }: MetaAdsIntegrationProps) {
                           </SelectContent>
                         </Select>
                       </div>
+                      {config.event_type === 'Custom' && (
+                        <div>
+                          <Label className="text-xs">Nome do Evento Personalizado</Label>
+                          <Input
+                            value={config.custom_event_name}
+                            onChange={(e) => handleUpdateMetaAds(metaAd.id, { custom_event_name: e.target.value } as any)}
+                            className="mt-1"
+                            disabled={!config.enabled}
+                          />
+                          <p className="text-[10px] text-muted-foreground mt-1">
+                            Utilize nomes válidos segundo o Meta (ex.: QualifiedLead). Evite espaços.
+                          </p>
+                        </div>
+                      )}
                       <div>
                         <Label className="text-xs">Código de Teste</Label>
                         <Input

@@ -2063,18 +2063,20 @@ export default function PublicForm() {
     
     try {
       // Salvar lead diretamente no Supabase
+      const formId = (formData as any)?.id || (formData as any)?.form_id || (fieldValues as any)?.formId || '';
       const leadData = {
         company_id: (formData as any).company_id,
         nome: fieldValues.nome || fieldValues.name || '',
         email: fieldValues.email || '',
         telefone: fieldValues.telefone || fieldValues.phone || '',
-        origem: fieldValues.origem || fieldValues.connection || 'Formulário',
-        ip: '', // Não temos acesso ao IP no frontend
+        origem: 'formulario',
+        fonte: 'internal_form',
+        ip: '',
         browser: navigator.userAgent || '',
         device: 'Desktop',
         pais: 'Brasil',
         url: window.location.href,
-        parametros: JSON.stringify(fieldValues),
+        parametros: JSON.stringify({ ...fieldValues, formId }),
         created_at: new Date().toISOString()
       };
 

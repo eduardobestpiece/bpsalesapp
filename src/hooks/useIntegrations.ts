@@ -65,6 +65,7 @@ export function useIntegrations(formId: string): UseIntegrationsReturn {
         insertData.meta_pixel_token = (integration as any).meta_pixel_token;
         insertData.meta_pixel_event = (integration as any).meta_pixel_event;
         insertData.meta_capi_test = (integration as any).meta_capi_test;
+        insertData.meta_event_name = (integration as any).meta_event_name;
       } else if (integration.integration_type === 'google_ads') {
         insertData.google_ads_tag = (integration as any).google_ads_tag;
         insertData.google_ads_event = (integration as any).google_ads_event;

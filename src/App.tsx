@@ -20,6 +20,7 @@ import PaymentCancel from "./pages/PaymentCancel";
 import LandingTeste from "./pages/LandingTeste";
 import GestaoIndex from "./pages/gestao/Index";
 import GestaoLeads from "./pages/gestao/Leads";
+import GestaoLeadsNew from "./pages/gestao/LeadsNew";
 import GestaoAgendamentos from "./pages/gestao/Agendamentos";
 import GestaoVendas from "./pages/gestao/Vendas";
 import { Loader2 } from "lucide-react";
@@ -134,6 +135,11 @@ function AppContent() {
             ) : <Navigate to="/crm/login" replace />
           } />
           <Route path="/gestao/leads" element={
+            user ? (
+              <GestaoLeadsNew />
+            ) : <Navigate to="/crm/login" replace />
+          } />
+          <Route path="/gestao/leads-legado" element={
             user ? (
               <GestaoLeads />
             ) : <Navigate to="/crm/login" replace />
