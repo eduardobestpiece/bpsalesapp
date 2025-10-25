@@ -78,24 +78,106 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    // Buscar origem correta do formulário
+    let origemFinal = 'formulario'; // Valor padrão
+    
+    try {
+      // Buscar informações do formulário incluindo origem padrão e se é base
+      const { data: formInfo, error: formError } = await supabase
+        .from('lead_forms')
+        .select(`
+          id,
+          name,
+          default_origin_id,
+          is_base_form,
+          lead_origins!lead_forms_default_origin_id_fkey (
+            id,
+            name
+          )
+        `)
+        .eq('id', leadData.formId)
+        .single();
+      
+      if (!formError && formInfo) {
+        // Se é formulário base, priorizar campo de conexão
+        if (formInfo.is_base_form) {
+          // Para formulário base, buscar campo de conexão com origens
+          const originFieldValue = Object.entries(leadData.fieldValues).find(([key, value]) => {
+            // Buscar por campos que podem ser de origem (conexão com origens)
+            return key.toLowerCase().includes('origem') || 
+                   key.toLowerCase().includes('origin') ||
+                   (typeof value === 'string' && value.length > 0 && !['nome', 'email', 'telefone', 'phone'].includes(key.toLowerCase()));
+          });
+          
+          if (originFieldValue && originFieldValue[1]) {
+            // Se encontrou um campo de conexão, buscar o nome da origem pelo ID
+            try {
+              const originId = originFieldValue[1] as string;
+              const { data: originData, error: originError } = await supabase
+                .from('lead_origins')
+                .select('name')
+                .eq('id', originId)
+                .eq('company_id', form.company_id)
+                .single();
+              
+              if (!originError && originData?.name) {
+                origemFinal = originData.name;
+              } else {
+                // Se não encontrou a origem pelo ID, usar o valor direto
+                origemFinal = originFieldValue[1] as string;
+              }
+            } catch (error) {
+              console.error('Erro ao buscar origem pelo ID:', error);
+              // Fallback para o valor direto
+              origemFinal = originFieldValue[1] as string;
+            }
+          } else {
+            // Se não tem campo de conexão preenchido, usar origem padrão do formulário
+            if (formInfo.lead_origins?.name) {
+              origemFinal = formInfo.lead_origins.name;
+            } else if (formInfo.name) {
+              origemFinal = formInfo.name;
+            }
+          }
+        } else {
+          // Para formulário normal, usar origem padrão do formulário
+          if (formInfo.lead_origins?.name) {
+            origemFinal = formInfo.lead_origins.name;
+          } else if (formInfo.name) {
+            origemFinal = formInfo.name;
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Erro ao buscar informações do formulário:', error);
+    }
+    
+    // Verificar se há um campo de conexão com origens nos valores do formulário (fallback)
+    if (origemFinal === 'formulario') {
+      const originFieldValue = Object.entries(leadData.fieldValues).find(([key, value]) => {
+        // Buscar por campos que podem ser de origem (conexão com origens)
+        return key.toLowerCase().includes('origem') || 
+               key.toLowerCase().includes('origin') ||
+               (typeof value === 'string' && value.length > 0 && !['nome', 'email', 'telefone', 'phone'].includes(key.toLowerCase()));
+      });
+      
+      // Se encontrou um valor de origem nos campos, usar ele
+      if (originFieldValue && originFieldValue[1]) {
+        origemFinal = originFieldValue[1] as string;
+      }
+    }
+
     // Preparar dados do lead
     const leadRecord = {
       company_id: form.company_id,
       nome: leadData.fieldValues.nome || leadData.fieldValues.name || 'Lead Externo',
       email: leadData.fieldValues.email || '',
       telefone: leadData.fieldValues.telefone || leadData.fieldValues.phone || '',
-      origem: 'formulario',
+      origem: origemFinal,
       status: 'novo',
       fonte: 'external_form',
-      dados_extras: {
-        formId: leadData.formId,
-        formName: form.name,
-        fieldValues: leadData.fieldValues,
-        timestamp: leadData.timestamp,
-        userAgent,
-        ip
-      },
-      created_at: new Date().toISOString()
+      form_id: leadData.formId, // Adicionar form_id para relacionamento
+      created_at: leadData.timestamp ? new Date(leadData.timestamp).toISOString() : undefined
     };
 
     // Inserir o lead no banco de dados
@@ -114,6 +196,69 @@ Deno.serve(async (req: Request) => {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
+    }
+
+    // Salvar campos customizados em lead_custom_values
+    if (newLead && leadData.fieldValues) {
+      const customValues = [];
+      
+      for (const [fieldName, fieldValue] of Object.entries(leadData.fieldValues)) {
+        // Pular campos básicos que já estão na tabela leads
+        if (['nome', 'name', 'email', 'telefone', 'phone', 'origem', 'origin'].includes(fieldName.toLowerCase())) {
+          continue;
+        }
+        
+        // Buscar ou criar campo customizado
+        let { data: customField, error: fieldError } = await supabase
+          .from('lead_custom_fields')
+          .select('id')
+          .eq('company_id', form.company_id)
+          .eq('name', fieldName)
+          .single();
+        
+        if (fieldError && fieldError.code === 'PGRST116') {
+          // Campo não existe, criar um novo
+          const { data: newField, error: createFieldError } = await supabase
+            .from('lead_custom_fields')
+            .insert({
+              company_id: form.company_id,
+              name: fieldName,
+              type: 'texto',
+              created_at: new Date().toISOString()
+            })
+            .select('id')
+            .single();
+          
+          if (createFieldError) {
+            console.error('Erro ao criar campo customizado:', createFieldError);
+            continue;
+          }
+          customField = newField;
+        } else if (fieldError) {
+          console.error('Erro ao buscar campo customizado:', fieldError);
+          continue;
+        }
+        
+        if (customField?.id) {
+          customValues.push({
+            lead_id: newLead.id,
+            field_id: customField.id,
+            value_text: String(fieldValue),
+            created_at: new Date().toISOString()
+          });
+        }
+      }
+      
+      // Inserir todos os valores customizados
+      if (customValues.length > 0) {
+        const { error: customValuesError } = await supabase
+          .from('lead_custom_values')
+          .insert(customValues);
+        
+        if (customValuesError) {
+          console.error('Erro ao inserir valores customizados:', customValuesError);
+        }
+      }
     }
 
     // Log da captura (opcional)

@@ -1402,7 +1402,6 @@ window.addEventListener('message', function(event) {
               resizeIframe(finalHeight);
             } catch (e) {
               // Fallback para casos de CORS
-              console.log('Usando comunicação por postMessage para redimensionamento');
             }
           }, 100);
         };
@@ -1446,7 +1445,6 @@ window.addEventListener('message', function(event) {
             resizeIframe(finalHeight);
           } catch (e) {
             // Fallback para casos de CORS
-            console.log('Redimensionamento via postMessage');
           }
         });
         
@@ -1490,7 +1488,7 @@ window.addEventListener('message', function(event) {
               
               resizeIframe(finalHeight);
             } catch (e) {
-              console.log('Tentativa de redimensionamento via postMessage');
+              // Tentativa de redimensionamento via postMessage
             }
           }, delay);
         });
@@ -1603,7 +1601,6 @@ function observeIframeContent() {
       
     } catch (e) {
       // Fallback para casos de CORS
-      console.log('Observador de mudanças não disponível devido a CORS');
     }
   }
 }

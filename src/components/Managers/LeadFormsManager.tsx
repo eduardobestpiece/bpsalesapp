@@ -3,19 +3,24 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
-import { Trash2, Loader2, Plus, Edit } from 'lucide-react';
+import { Trash2, Loader2, Plus, Edit, UserPlus } from 'lucide-react';
 import { useCompany } from '@/contexts/CompanyContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
+import PublicForm from '@/pages/PublicForm';
 
 // Componente para gerenciar formulários de leads
 export function LeadFormsManager() {
   const { selectedCompanyId } = useCompany();
+  const queryClient = useQueryClient();
   const [forms, setForms] = useState<{ id: string; name: string }[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [editing, setEditing] = useState<{ id: string; name: string } | null>(null);
   const [formName, setFormName] = useState('');
   const [loading, setLoading] = useState(false);
+  const [openAddLeadModal, setOpenAddLeadModal] = useState(false);
+  const [baseFormId, setBaseFormId] = useState<string | null>(null);
 
   // Carregar formulários de leads do Supabase
   const loadForms = async () => {
@@ -42,6 +47,26 @@ export function LeadFormsManager() {
 
   useEffect(() => {
     loadForms();
+  }, [selectedCompanyId]);
+
+  // Carregar formulário base da empresa
+  useEffect(() => {
+    const loadBaseForm = async () => {
+      if (!selectedCompanyId) return;
+      try {
+        const { data } = await supabase
+          .from('lead_forms')
+          .select('id')
+          .eq('company_id', selectedCompanyId)
+          .eq('is_base_form', true)
+          .eq('status', 'active')
+          .maybeSingle();
+        setBaseFormId(data?.id || null);
+      } catch (error) {
+        console.error('Erro ao carregar formulário base:', error);
+      }
+    };
+    loadBaseForm();
   }, [selectedCompanyId]);
 
   const deleteForm = async (id: string) => {
@@ -130,16 +155,26 @@ export function LeadFormsManager() {
 
   return (
     <div className="space-y-6">
-      {/* Cabeçalho com botão de criar */}
+      {/* Cabeçalho com botões */}
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-lg font-semibold">Formulários de Leads</h3>
           <p className="text-sm text-muted-foreground">Gerencie os formulários de captura de leads</p>
         </div>
-        <Button onClick={startCreate}>
-          <Plus className="h-4 w-4 mr-2" />
-          Criar formulário
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => setOpenAddLeadModal(true)}
+            disabled={!baseFormId}
+          >
+            <UserPlus className="h-4 w-4 mr-2" />
+            Adicionar Lead
+          </Button>
+          <Button onClick={startCreate}>
+            <Plus className="h-4 w-4 mr-2" />
+            Criar formulário
+          </Button>
+        </div>
       </div>
 
       {/* Modal de criação/edição */}
@@ -168,6 +203,41 @@ export function LeadFormsManager() {
             <Button onClick={saveForm} disabled={loading}>
               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Adicionar Lead */}
+      <Dialog open={openAddLeadModal} onOpenChange={setOpenAddLeadModal}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Adicionar Lead</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            {!baseFormId ? (
+              <div className="text-center py-8 space-y-4">
+                <div className="text-sm text-muted-foreground">Nenhum formulário base definido para esta empresa.</div>
+                <Button variant="outline" onClick={() => setOpenAddLeadModal(false)}>
+                  Fechar
+                </Button>
+              </div>
+            ) : (
+              <PublicForm 
+                overrideFormId={baseFormId} 
+                embedded 
+                onSubmitted={async () => {
+                  setOpenAddLeadModal(false);
+                  await queryClient.invalidateQueries({ queryKey: ['leads-new', selectedCompanyId] });
+                }} 
+              />
+            )}
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setOpenAddLeadModal(false)}>
+              Fechar
             </Button>
           </DialogFooter>
         </DialogContent>

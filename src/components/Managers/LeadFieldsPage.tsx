@@ -145,6 +145,7 @@ interface LeadField {
   type: string;
   required: boolean;
   order: number;
+  is_fixed?: boolean;
   document_cpf?: boolean; // Se é campo de CPF
   document_cnpj?: boolean; // Se é campo de CNPJ
   // Configurações específicas por tipo de campo
@@ -933,6 +934,7 @@ export function LeadFieldsPage() {
           type: field.type,
           required: field.required,
           order: field.order,
+          is_fixed: field.is_fixed || false,
           placeholder: field.placeholder || false,
           placeholder_text: field.placeholder_text || defaultPlaceholder,
           max_length: field.max_length || 0,
@@ -1089,6 +1091,11 @@ export function LeadFieldsPage() {
   // Remover campo
   const removeField = async (fieldId: string) => {
     try {
+      const toRemove = fields.find(f => f.id === fieldId);
+      if (toRemove?.is_fixed) {
+        toast({ title: 'Ação não permitida', description: 'Este é um campo obrigatório e não pode ser excluído.', variant: 'destructive' });
+        return;
+      }
       setLoading(true);
       const { error } = await supabase
         .from('lead_fields' as any)
@@ -2044,6 +2051,7 @@ export function LeadFieldsPage() {
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => removeField(field.id)}
+                                    disabled={!!field.is_fixed}
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </Button>

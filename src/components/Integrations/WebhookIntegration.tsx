@@ -23,6 +23,9 @@ export function WebhookIntegration({ formId }: WebhookIntegrationProps) {
     return localStorage.getItem(storageKey) || '';
   });
 
+  // Estado de edição por linha para evitar sobrescrever com string vazia
+  const [editUrls, setEditUrls] = useState<Record<string, string>>({});
+
   // Auto-save para dados não salvos
   useEffect(() => {
     const storageKey = `webhook-draft-${formId}`;
@@ -190,8 +193,9 @@ export function WebhookIntegration({ formId }: WebhookIntegrationProps) {
           </div>
         ) : (
           webhooks.map((webhook) => {
+            const currentUrl = editUrls[webhook.id] ?? ((webhook as any).webhook_url || '');
             const config = {
-              url: (webhook as any).webhook_url || '',
+              url: currentUrl,
               enabled: webhook.is_active
             };
             return (
@@ -228,8 +232,8 @@ export function WebhookIntegration({ formId }: WebhookIntegrationProps) {
                         id={`webhook-url-${webhook.id}`}
                         type="url"
                         value={config.url}
-                        onChange={(e) => setNewWebhookUrl(e.target.value)}
-                        onBlur={() => handleUpdateWebhook(webhook.id, newWebhookUrl)}
+                        onChange={(e) => setEditUrls(prev => ({ ...prev, [webhook.id]: e.target.value }))}
+                        onBlur={(e) => handleUpdateWebhook(webhook.id, e.currentTarget.value.trim())}
                         className="mt-1"
                         disabled={!config.enabled}
                       />

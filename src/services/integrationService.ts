@@ -58,23 +58,6 @@ export class IntegrationService {
     const fbcCookie = this.getCookieValue('_fbc');
     const fbidCookie = this.getCookieValue('_fbid');
     
-    console.log('🎯 META PIXEL - Debug - Cookies coletados:', {
-      fbp: fbpCookie,
-      fbc: fbcCookie,
-      fbid: fbidCookie
-    });
-    
-    console.log('🎯 META PIXEL - Debug - document.cookie completo:', document.cookie);
-    console.log('🎯 META PIXEL - Debug - URL atual:', window.location.href);
-    console.log('🎯 META PIXEL - Debug - URL pai:', parentParams);
-    console.log('🎯 META PIXEL - Debug - Parâmetros da URL atual:', {
-      utm_campaign: this.getUrlParam('utm_campaign'),
-      utm_medium: this.getUrlParam('utm_medium'),
-      utm_source: this.getUrlParam('utm_source'),
-      fbclid: this.getUrlParam('fbclid'),
-      fbc: this.getUrlParam('fbc'),
-      fbp: this.getUrlParam('fbp')
-    });
     
     const systemData = {
       platform: 'Web',

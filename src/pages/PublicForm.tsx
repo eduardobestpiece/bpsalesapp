@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -109,14 +109,141 @@ interface FormData {
   company_id: string;
 }
 
-export default function PublicForm() {
-  const { formId } = useParams<{ formId: string }>();
+interface PublicFormProps {
+  overrideFormId?: string;
+  embedded?: boolean;
+  onSubmitted?: (leadId: string) => void;
+}
+
+export default function PublicForm(props?: PublicFormProps) {
+  const route = useParams<{ formId: string }>();
+  const formId = props?.overrideFormId || route.formId;
   const [formData, setFormData] = useState<FormData | null>(null);
   const [formFields, setFormFields] = useState<FormField[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [companyCurrency, setCompanyCurrency] = useState<string>('BRL');
+  const [selectSpacerHeight, setSelectSpacerHeight] = useState<number>(0);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [lastResizeTime, setLastResizeTime] = useState<number>(0);
+  
+  // Função para redimensionar o iframe automaticamente
+  const resizeIframe = useCallback(() => {
+    try {
+      if (window.parent && window.parent !== window) {
+        // Evitar redimensionamentos muito frequentes
+        const now = Date.now();
+        const minInterval = selectSpacerHeight > 0 ? 2000 : 1000; // Mais tempo quando dropdown está aberto
+        if (now - lastResizeTime < minInterval) {
+          return;
+        }
+        
+        setLastResizeTime(now);
+        
+        // Aguardar um frame para garantir que o DOM foi atualizado
+        requestAnimationFrame(() => {
+          // Encontrar o container principal do formulário
+          const formContainer = document.querySelector('.bp-form-root, form, [class*="form"]');
+          // Encontrar a mensagem de segurança no final
+          const securityMessage = document.querySelector('.text-gray-500, [class*="text-gray"], [class*="seguro"], [class*="protegido"]');
+          // Encontrar o botão "Próxima" ou último botão
+          const lastButton = document.querySelector('button[type="submit"], button:last-of-type, [class*="button"]:last-of-type');
+          
+          let calculatedHeight = 300; // Altura mínima
+          
+          // Prioridade 1: Usar o container do formulário
+          if (formContainer) {
+            const containerRect = formContainer.getBoundingClientRect();
+            // Se o dropdown está aberto, usar altura fixa mais estável
+            if (selectSpacerHeight > 0) {
+              calculatedHeight = Math.max(300, Math.ceil(containerRect.height + 200));
+            } else {
+              calculatedHeight = Math.max(300, Math.ceil(containerRect.height + 50));
+            }
+          }
+          // Prioridade 2: Usar a mensagem de segurança
+          else if (securityMessage) {
+            const securityRect = securityMessage.getBoundingClientRect();
+            calculatedHeight = Math.max(300, Math.ceil(securityRect.bottom + 30));
+          }
+          // Prioridade 3: Usar o último botão
+          else if (lastButton) {
+            const buttonRect = lastButton.getBoundingClientRect();
+            calculatedHeight = Math.max(300, Math.ceil(buttonRect.bottom + 40));
+          }
+          // Fallback: usar altura do body com margem maior
+          else {
+            calculatedHeight = Math.max(300, document.body.scrollHeight + 80);
+          }
+          
+          // Usar altura calculada diretamente (já inclui espaçador quando necessário)
+          const finalHeight = calculatedHeight;
+          
+          // Evitar redimensionamentos desnecessários
+          const lastHeight = (window as any).lastIframeHeight || 0;
+          const heightDifference = Math.abs(finalHeight - lastHeight);
+          
+          if (heightDifference < 10 && lastHeight > 0) {
+            return;
+          }
+          
+          (window as any).lastIframeHeight = finalHeight;
+          
+          // Debug: log dos elementos encontrados
+          console.log('Elementos encontrados:', {
+            formContainer: !!formContainer,
+            securityMessage: !!securityMessage,
+            lastButton: !!lastButton,
+            calculatedHeight,
+            finalHeight,
+            selectSpacerHeight
+          });
+          
+          window.parent.postMessage({ type: 'resize', height: finalHeight }, '*');
+        });
+      }
+    } catch (e) {
+      console.error('Erro ao redimensionar iframe:', e);
+    }
+  }, [selectSpacerHeight, lastResizeTime]);
+  
+  // Monitorar mudanças no conteúdo e redimensionar automaticamente
+  useEffect(() => {
+    // Redimensionar imediatamente quando o componente carrega
+    const timer1 = setTimeout(() => {
+      resizeIframe();
+    }, 100);
+    
+    const timer2 = setTimeout(() => {
+      resizeIframe();
+    }, 500);
+    
+    // Redimensionar quando a janela muda de tamanho
+    const handleResize = () => {
+      setTimeout(() => resizeIframe(), 100);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    
+    // Redimensionar quando imagens carregam
+    const handleImageLoad = () => {
+      setTimeout(() => resizeIframe(), 100);
+    };
+    
+    return () => {
+      clearTimeout(timer1);
+      clearTimeout(timer2);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('load', handleImageLoad);
+    };
+  }, []); // Removido resizeIframe da dependência para evitar loop infinito
+  
+  // Redimensionar quando o formulário é renderizado completamente
+  useEffect(() => {
+    if (!loading && formData && formFields.length > 0) {
+      setTimeout(() => resizeIframe(), 300);
+    }
+  }, [loading, formData, formFields]); // Removido resizeIframe da dependência
   
   // Estados para controle de etapas
   const [currentStep, setCurrentStep] = useState(1);
@@ -127,6 +254,136 @@ export default function PublicForm() {
   // Estados para valores dos campos
   const [fieldValues, setFieldValues] = useState<Record<string, any>>({});
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const debugLog = (event: string, payload?: any) => {
+    try {
+      const debugEnabled = typeof window !== 'undefined' && (window as any)?.localStorage?.getItem('BP_DEBUG_FORM') === '1';
+      if (process.env.NODE_ENV === 'development' || debugEnabled) {
+        // eslint-disable-next-line no-console
+        console.log('[PublicForm]', event, payload || null);
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'BP_FORM_DEBUG', event, payload }, '*');
+        }
+      }
+    } catch {}
+  };
+  
+  // Expor variáveis CSS globais usadas pelo portal do Radix (sempre executa, mesmo em loading)
+  useEffect(() => {
+    try {
+      const sc: any = (formData as any)?.style_config || {};
+      const root = document.documentElement;
+      root.style.setProperty('--selBg', String(sc.selectBgColor || '#FFFFFF'));
+      root.style.setProperty('--selFg', String(sc.selectTextColor || '#000000'));
+      root.style.setProperty('--active-bc', String(sc.borderColorActive || '#E50F5E'));
+      root.style.setProperty('--baseBg', String(sc.fieldBgColor || '#FFFFFF'));
+      root.style.setProperty('--baseFg', String(sc.fieldTextColor || '#000000'));
+    } catch {}
+  }, [formData]);
+
+  // Debug do fundo #131313 - SEMPRE executa
+  useEffect(() => {
+    console.log('🔍 [DEBUG] useEffect executado - props?.embedded:', props?.embedded);
+    console.log('🔍 [DEBUG] Iniciando análise de fundo #131313...');
+      
+    // 1. Verificar fundo do body e document
+    console.log('📋 [DEBUG] Body background:', document.body.style.backgroundColor, 'computed:', window.getComputedStyle(document.body).backgroundColor);
+    console.log('📋 [DEBUG] Document background:', document.documentElement.style.backgroundColor, 'computed:', window.getComputedStyle(document.documentElement).backgroundColor);
+    
+    // 2. Verificar todos os elementos com fundo #131313
+    const allElements = document.querySelectorAll('*');
+    const elementsWithDarkBg = [];
+    
+    allElements.forEach((el, index) => {
+      const computedStyle = window.getComputedStyle(el);
+      const inlineBg = el.style.backgroundColor;
+      const inlineBgShort = el.style.background;
+      
+      // Verificar se tem fundo escuro
+      if (computedStyle.backgroundColor === 'rgb(19, 19, 19)' || 
+          computedStyle.backgroundColor === '#131313' ||
+          inlineBg === '#131313' ||
+          inlineBgShort === '#131313' ||
+          computedStyle.backgroundColor.includes('19, 19, 19') ||
+          el.className.includes('dark') ||
+          el.className.includes('bg-background')) {
+        
+        elementsWithDarkBg.push({
+          element: el,
+          tagName: el.tagName,
+          className: el.className,
+          id: el.id,
+          computedBg: computedStyle.backgroundColor,
+          inlineBg: inlineBg,
+          inlineBgShort: inlineBgShort,
+          index: index
+        });
+      }
+    });
+    
+    console.log('🎯 [DEBUG] Elementos com fundo escuro encontrados:', elementsWithDarkBg.length);
+    elementsWithDarkBg.forEach((item, i) => {
+      console.log('🔍 [DEBUG] Elemento ' + (i + 1) + ':', {
+        tag: item.tagName,
+        class: item.className,
+        id: item.id,
+        computed: item.computedBg,
+        inline: item.inlineBg,
+        inlineShort: item.inlineBgShort
+      });
+    });
+    
+    // 3. Forçar transparência no iframe
+    console.log('🔧 [DEBUG] Aplicando transparência forçada...');
+    document.body.style.backgroundColor = 'transparent';
+    document.body.style.background = 'transparent';
+    document.documentElement.style.backgroundColor = 'transparent';
+    document.documentElement.style.background = 'transparent';
+    
+    // 4. Aplicar transparência em todos os elementos
+    allElements.forEach((el, index) => {
+      if (!el.matches('input, textarea, select, button')) {
+        const beforeBg = window.getComputedStyle(el).backgroundColor;
+        el.style.backgroundColor = 'transparent';
+        el.style.background = 'transparent';
+        const afterBg = window.getComputedStyle(el).backgroundColor;
+        
+        if (beforeBg !== afterBg) {
+          console.log('🔧 [DEBUG] Elemento ' + index + ' alterado: ' + beforeBg + ' -> ' + afterBg, el);
+        }
+      }
+    });
+    
+    // 5. Forçar transparência em elementos com classes dark
+    const darkElements = document.querySelectorAll('.dark, [class*="dark:"], .bg-background');
+    console.log('🌙 [DEBUG] Elementos dark encontrados:', darkElements.length);
+    darkElements.forEach((el, index) => {
+      console.log('🌙 [DEBUG] Elemento dark ' + (index + 1) + ':', el.tagName, el.className);
+      el.style.backgroundColor = 'transparent';
+      el.style.background = 'transparent';
+    });
+    
+    // 6. Verificar resultado final
+    setTimeout(() => {
+      console.log('✅ [DEBUG] Verificação final:');
+      console.log('📋 [DEBUG] Body final:', window.getComputedStyle(document.body).backgroundColor);
+      console.log('📋 [DEBUG] Document final:', window.getComputedStyle(document.documentElement).backgroundColor);
+      
+      const finalCheck = document.querySelectorAll('*');
+      const stillDark = [];
+      finalCheck.forEach(el => {
+        const bg = window.getComputedStyle(el).backgroundColor;
+        if (bg === 'rgb(19, 19, 19)' || bg === '#131313') {
+          stillDark.push({element: el, bg: bg});
+        }
+      });
+      
+      if (stillDark.length > 0) {
+        console.log('❌ [DEBUG] Ainda há elementos com fundo escuro:', stillDark);
+      } else {
+        console.log('✅ [DEBUG] Todos os fundos escuros foram removidos!');
+      }
+    }, 1000);
+  }, []);
   
   // Carregar dados do formulário
   useEffect(() => {
@@ -200,6 +457,11 @@ export default function PublicForm() {
         });
 
         setFormData(formWithStyle as unknown as FormData);
+        try {
+          if ((form as any)?.company_id) {
+            debugLog('loadForm:loaded', { company_id: (form as any)?.company_id, name: (form as any)?.name });
+          }
+        } catch {}
 
         // Carregar campos do formulário
         const { data: fields, error: fieldsError } = await supabase
@@ -356,27 +618,76 @@ export default function PublicForm() {
         );
 
         if (connectionFields.length > 0) {
+          debugLog('connection:detected', { count: connectionFields.length, fields: connectionFields.map((f: any) => ({ id: f.field_id, options: f.options, name: f.field_name })) });
           const updatedConnectionFields = await Promise.all(connectionFields.map(async (field: any) => {
-            if (field.options && field.options !== '') {
-              try {
-                const { data: listData, error: listError } = await supabase
-                  .from(field.options as any)
-                  .select('*')
-                  .eq('company_id', (form as any)?.company_id)
-                  .limit(100);
-                
-                if (!listError && listData && listData.length > 0) {
-                  const connectionData = listData.map((item: any) => 
-                    item.name || item.title || item.nome || item.titulo || JSON.stringify(item)
-                  );
-                  return {
-                    ...field,
-                    options: connectionData.join(',')
-                  };
-                }
-              } catch (listError) {
-                console.warn('Erro ao carregar dados da lista:', listError);
+            try {
+              // Mapear alias de listas para nomes reais de tabelas (mesmo quando options vier vazio)
+              const listAliasRaw = (field as any).options ?? '';
+              const listAlias = String(listAliasRaw || '').toLowerCase().trim();
+              const fname = String((field as any).field_name || '').toLowerCase();
+              let listTable = listAlias;
+              if (!listTable || listTable === 'undefined' || listTable === 'null' || listTable === '') {
+                if (fname.includes('origem')) listTable = 'lead_origins';
+                else if (fname.includes('motivo') && fname.includes('perda')) listTable = 'loss_reasons';
               }
+              if (listTable === 'origens') listTable = 'lead_origins';
+              if (listTable === 'motivos-perda') listTable = 'loss_reasons';
+
+              debugLog('connection:infer', { field_id: field.field_id, listAlias, fname, listTable });
+              if (!listTable) return field;
+
+              const companyId = (form as any)?.company_id;
+              let listData: any[] | null = null;
+              let listError: any = null;
+
+              try {
+                if (listTable === 'lead_origins' || listTable === 'loss_reasons') {
+                  // Essas tabelas possuem (id, name[, company_id]) — buscar e filtrar por company_id no cliente
+                  const resp = await supabase
+                    .from(listTable as any)
+                    .select('id, name, company_id')
+                    .limit(200);
+                  listData = resp.data as any[] | null;
+                  listError = resp.error;
+                  debugLog('connection:query:no-company-filter', { field_id: field.field_id, listTable, rows: listData?.length || 0, error: listError || null });
+                  // Filtrar apenas as origens da empresa do formulário
+                  if (!listError && listData) {
+                    const filtered = (listData as any[]).filter((it: any) => String(it.company_id || '').toLowerCase() === String(companyId || '').toLowerCase());
+                    debugLog('connection:filter-company', { listTable, before: listData.length, after: filtered.length, companyId });
+                    listData = filtered;
+                  }
+                } else {
+                  // Tentar com filtro por company_id, se falhar, fazer fallback sem filtro
+                  let resp = await supabase
+                    .from(listTable as any)
+                    .select('id, name, title, nome, titulo')
+                    .eq('company_id', companyId)
+                    .limit(200);
+                  listData = resp.data as any[] | null;
+                  listError = resp.error;
+                  if (listError) {
+                    debugLog('connection:query:company-filter-error', { field_id: field.field_id, listTable, error: listError });
+                    resp = await supabase
+                      .from(listTable as any)
+                      .select('id, name, title, nome, titulo')
+                      .limit(200);
+                    listData = resp.data as any[] | null;
+                    listError = resp.error;
+                    debugLog('connection:query:fallback-no-filter', { field_id: field.field_id, listTable, rows: listData?.length || 0, error: listError || null });
+                  } else {
+                    debugLog('connection:query:company-filter', { field_id: field.field_id, listTable, rows: listData?.length || 0 });
+                  }
+                }
+              } catch (err) {
+                listError = err;
+              }
+
+              if (!listError && listData && listData.length > 0) {
+                const items = listData.map((item: any) => ({ id: item.id, label: item.name || item.title || item.nome || item.titulo || String(item.id) }));
+                return { ...field, connection_items: items };
+              }
+            } catch (err) {
+              debugLog('connection:error', { field_id: field.field_id, error: String(err) });
             }
             return field;
           }));
@@ -406,6 +717,8 @@ export default function PublicForm() {
         });
       } finally {
         setLoading(false);
+        // Redimensionar após carregar o formulário
+        setTimeout(() => resizeIframe(), 500);
       }
     };
 
@@ -488,17 +801,19 @@ export default function PublicForm() {
   const goToNextStep = (options?: { skipValidation?: boolean }) => {
     if (currentStep < totalSteps) {
       if (!options?.skipValidation) {
-        const validation = validateCurrentStep();
-        if (!validation.isValid) {
-          toast({
-            title: 'Campos obrigatórios',
-            description: `Por favor, preencha os seguintes campos: ${validation.missingFields.join(', ')}`,
-            variant: 'destructive'
-          });
-          return;
-        }
+      const validation = validateCurrentStep();
+      if (!validation.isValid) {
+        toast({
+          title: 'Campos obrigatórios',
+          description: `Por favor, preencha os seguintes campos: ${validation.missingFields.join(', ')}`,
+          variant: 'destructive'
+        });
+        return;
+      }
       }
       setCurrentStep(prev => Math.min(prev + 1, totalSteps));
+      // Redimensionar após mudança de etapa
+      setTimeout(() => resizeIframe(), 300);
     }
   };
 
@@ -544,6 +859,9 @@ export default function PublicForm() {
         return updated;
       });
     }
+    
+    // Redimensionar após mudança no campo
+    setTimeout(() => resizeIframe(), 200);
   };
 
   // Função para renderizar campo baseado no tipo
@@ -792,16 +1110,7 @@ export default function PublicForm() {
         const isRequired = (field as any).is_required || false;
         const disqualifyEnabled = (field as any).disqualify_enabled || false;
         const disqualifySelectedOption = (field as any).disqualify_selected_option || null;
-        // Logs detalhados para debug (apenas em desenvolvimento)
-        if (process.env.NODE_ENV === 'development') {
-          console.log('🔍 Debug - Campo de seleção:', {
-            field_id: (field as any).field_id,
-            field_name: (field as any).field_name,
-            placeholder_enabled: (field as any).placeholder_enabled,
-            placeholder_text: (field as any).placeholder_text,
-            field_type: (field as any).field_type
-          });
-        }
+        // Logs de debug removidos para evitar spam no console
         
         // NOVA LÓGICA CORRETA baseada nas regras definidas:
         // 1. Toggle LIGADO: Título = oculto, Placeholder = lead_form_fields.placeholder_text
@@ -820,16 +1129,7 @@ export default function PublicForm() {
           ? null // Toggle ON: sem título
           : ((field as any).placeholder_text || (field as any).field_name); // Toggle OFF: usar lead_form_fields.placeholder_text como título
         
-        if (process.env.NODE_ENV === 'development') {
-          console.log('🔍 Debug - selectPlaceholderText calculado:', selectPlaceholderText);
-          console.log('🔍 Debug - selectFinalLabel calculado:', selectFinalLabel);
-          console.log('🔍 Debug - Condições de renderização:', {
-            placeholder_enabled: (field as any).placeholder_enabled,
-            selectFinalLabel_exists: !!selectFinalLabel,
-            selectLeadFieldPlaceholder: selectLeadFieldPlaceholder,
-            form_placeholder_text: (field as any).placeholder_text
-          });
-        }
+        // Logs de debug removidos para evitar spam no console
         
         
         
@@ -927,7 +1227,6 @@ export default function PublicForm() {
           <div className="space-y-2">
             {/* Mostrar o label apenas quando toggle estiver desligado */}
             {selectFinalLabel && (
-              process.env.NODE_ENV === 'development' && console.log('🔍 Debug - Renderizando label do select:', selectFinalLabel),
               <Label className="text-sm font-medium" style={{ color: cfg.fieldTextColor || '#FFFFFF' }}>
                 {selectFinalLabel} {isRequired && <span className="text-red-500">*</span>}
               </Label>
@@ -942,6 +1241,15 @@ export default function PublicForm() {
                   // Aqui você pode implementar lógica de desqualificação
                 }
               }}
+                onOpenChange={(open) => {
+                  // Ao abrir o dropdown, solicitar aumento temporário do iframe
+                  try {
+                    const extra = open ? 300 : 0; // espaço reduzido para o menu
+                    setSelectSpacerHeight(extra);
+                    // Redimensionar com delay para evitar oscilações
+                    setTimeout(() => resizeIframe(), 100);
+                  } catch {}
+                }}
             >
               <SelectTrigger 
                 className="h-12 text-base focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-border select-trigger" 
@@ -950,7 +1258,7 @@ export default function PublicForm() {
                   ...(fontStyle||{}), 
                   ['--active-bc' as any]: cfg.borderColorActive, 
                   ['--focus-bw' as any]: `${cfg.borderWidthFocusPx || 2}px`,
-                  backgroundColor: `${cfg.fieldBgColor || '#FFFFFF'} !important`,
+                  backgroundColor: cfg.fieldBgColor || '#FFFFFF',
                   padding: '12px',
                   width: '100%'
                 }}
@@ -963,7 +1271,7 @@ export default function PublicForm() {
                   e.currentTarget.style.borderWidth = `${cfg.borderWidthNormalPx || 1}px`;
                   
                   // Validação obrigatória
-                  if (isRequired && !currentValue) {
+                  if (connectionIsRequired && !currentValue) {
                     e.currentTarget.setCustomValidity('Este campo é obrigatório');
                   } else {
                     e.currentTarget.setCustomValidity('');
@@ -973,10 +1281,7 @@ export default function PublicForm() {
                        <SelectValue 
                          placeholder={selectPlaceholderText}
                          ref={(el) => {
-                           if (el && process.env.NODE_ENV === 'development') {
-                             console.log('🔍 Debug - SelectValue renderizado com placeholder:', selectPlaceholderText);
-                             console.log('🔍 Debug - SelectValue element:', el);
-                           }
+                           // Ref removido para evitar logs de debug
                          }}
                        />
               </SelectTrigger>
@@ -984,22 +1289,25 @@ export default function PublicForm() {
                 className="border-white/20 text-white select-content" 
                 style={{ 
                   ...(fontStyle||{}), 
-                  backgroundColor: `${cfg.fieldBgColor || '#2A2A2A'} !important`,
+                  backgroundColor: cfg.fieldBgColor || '#FFFFFF',
                   ['--selBg' as any]: cfg.selectBgColor, 
                   ['--selFg' as any]: cfg.selectTextColor, 
-                  fontSize: `${cfg.fontSizeInputPx || 16}px` 
+                  fontSize: `${cfg.fontSizeInputPx || 16}px`,
+                  zIndex: 2147483647,
+                  position: 'relative',
+                  overflow: 'visible'
                 }}
               >
                 {/* Área de pesquisa se habilitada */}
                 {isSearchable && (
-                  <div className="p-2 border-b border-white/10" style={{ backgroundColor: `${cfg.fieldBgColor || '#2A2A2A'} !important` }}>
+                  <div className="p-2 border-b border-white/10" style={{ backgroundColor: cfg.fieldBgColor || '#FFFFFF' }}>
                     <Input
                       placeholder="Pesquisar opções..."
                       value={fieldValues[`${(field as any).field_id}_search`] || ''}
                       onChange={(e) => updateFieldValue(`${(field as any).field_id}_search`, e.target.value)}
                       className="h-9 border-white/20 text-white placeholder:text-gray-400 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
                       style={{
-                        backgroundColor: `${cfg.fieldBgColor || '#1f1f1f'} !important`,
+                        backgroundColor: cfg.fieldBgColor || '#FFFFFF',
                         fontSize: `${cfg.fontSizeInputPx || 16}px`,
                         color: cfg.fieldTextColor || '#FFFFFF',
                         borderColor: cfg.borderColorActive || '#E50F5E'
@@ -1129,8 +1437,8 @@ export default function PublicForm() {
                       // Ativar animação de seleção
                       if (isIsolatedButtonCheckbox) {
                         setAnimatingSelection({ fieldId: (field as any).field_id, option });
-                      }
-
+                        }
+                        
                       if (isCheckboxMultiselect) {
                         const current = Array.isArray(currentValue) ? currentValue : [];
                           
@@ -1687,8 +1995,13 @@ export default function PublicForm() {
         
         const connectionOptions = (field as any).options?.split(',').map((opt: string) => opt.trim()).filter((opt: string) => opt.length > 0) || [];
         
-        // Se não há opções configuradas, mostrar dropdown vazio
-        if (connectionOptions.length === 0) {
+        // Preferir itens carregados do banco (connection_items)
+        const connectionItems = (field as any).connection_items as { id: string; label: string }[] | undefined;
+        const hasItems = Array.isArray(connectionItems) && connectionItems.length > 0;
+
+        // Se não há opções/itens configurados, mostrar dropdown vazio
+        if (!hasItems && connectionOptions.length === 0) {
+          debugLog('connection:render-empty', { field_id: (field as any).field_id, options: connectionOptions.length });
           return (
             <div className="space-y-2">
               {/* Mostrar o label apenas quando toggle estiver desligado */}
@@ -1708,7 +2021,8 @@ export default function PublicForm() {
                     ...(fontStyle||{}), 
                     ['--active-bc' as any]: cfg.borderColorActive, 
                     ['--focus-bw' as any]: `${cfg.borderWidthFocusPx || 2}px`,
-                  backgroundColor: `${cfg.fieldBgColor || '#FFFFFF'} !important`,
+                    backgroundColor: cfg.fieldBgColor || '#FFFFFF',
+                    color: cfg.fieldTextColor || '#000000',
                     padding: '12px',
                     width: '100%'
                   }}
@@ -1739,24 +2053,14 @@ export default function PublicForm() {
                     fontSize: `${cfg.fontSizeInputPx || 16}px` 
                   }}
                 >
-                  <SelectItem 
-                    value="nenhuma" 
-                    className="data-[highlighted]:bg-[var(--selBg)] data-[highlighted]:text-[var(--selFg)] data-[state=checked]:bg-[var(--selBg)] data-[state=checked]:text-[var(--selFg)] select-item" 
-                    style={{ 
-                      ...(fontStyle||{}), 
-                      fontSize: `${cfg.fontSizeInputPx || 16}px`,
-                      '--selBg': cfg.selectBgColor || '#FFFFFF',
-                      '--selFg': cfg.selectTextColor || '#000000'
-                    } as React.CSSProperties}
-                  >
-                    Nenhuma opção disponível
-                  </SelectItem>
+                  <div className="p-2 text-sm text-center text-muted-foreground">Nenhuma opção disponível</div>
                 </SelectContent>
               </Select>
             </div>
           );
         }
         
+        debugLog('connection:render', { field_id: (field as any).field_id, hasItems, items: hasItems ? connectionItems!.length : connectionOptions.length });
         return (
           <div className="space-y-2">
             {/* Mostrar o label apenas quando toggle estiver desligado */}
@@ -1776,7 +2080,8 @@ export default function PublicForm() {
                   ...(fontStyle||{}), 
                   ['--active-bc' as any]: cfg.borderColorActive, 
                   ['--focus-bw' as any]: `${cfg.borderWidthFocusPx || 2}px`,
-                  backgroundColor: `${cfg.fieldBgColor || '#FFFFFF'} !important`,
+                  backgroundColor: cfg.fieldBgColor || '#FFFFFF',
+                  color: cfg.fieldTextColor || '#000000',
                   padding: '12px',
                   width: '100%'
                 }}
@@ -1789,7 +2094,7 @@ export default function PublicForm() {
                   e.currentTarget.style.borderWidth = `${cfg.borderWidthNormalPx || 1}px`;
                   
                   // Validação obrigatória
-                  if (isRequired && !currentValue) {
+                  if (connectionIsRequired && !currentValue) {
                     e.currentTarget.setCustomValidity('Este campo é obrigatório');
                   } else {
                     e.currentTarget.setCustomValidity('');
@@ -1802,42 +2107,40 @@ export default function PublicForm() {
                 className="border-white/20 text-white select-content" 
                 style={{ 
                   ...(fontStyle||{}), 
-                  backgroundColor: `${cfg.fieldBgColor || '#2A2A2A'} !important`,
+                  backgroundColor: cfg.fieldBgColor || '#FFFFFF',
                   ['--selBg' as any]: cfg.selectBgColor, 
                   ['--selFg' as any]: cfg.selectTextColor, 
-                  fontSize: `${cfg.fontSizeInputPx || 16}px` 
+                  fontSize: `${cfg.fontSizeInputPx || 16}px`,
+                  zIndex: 2147483647,
+                  position: 'relative',
+                  overflow: 'visible'
                 }}
               >
                 {/* Área de pesquisa para campos de conexão */}
-                <div className="p-2 border-b border-white/10" style={{ backgroundColor: `${cfg.fieldBgColor || '#2A2A2A'} !important` }}>
-                  <Input
+                <div className="p-2 border-b border-white/10 flex" style={{ backgroundColor: cfg.fieldBgColor || '#FFFFFF' }}>
+                  <input
+                    type="text"
                     placeholder="Pesquisar opções..."
                     value={fieldValues[`${(field as any).field_id}_search`] || ''}
                     onChange={(e) => updateFieldValue(`${(field as any).field_id}_search`, e.target.value)}
-                    className="h-9 border-white/20 text-white placeholder:text-gray-400 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none"
+                    className="flex-1 h-9 px-3 rounded-md border focus:outline-none"
                     style={{
-                      backgroundColor: `${cfg.fieldBgColor || '#1f1f1f'} !important`,
+                      backgroundColor: cfg.fieldBgColor || '#FFFFFF',
                       fontSize: `${cfg.fontSizeInputPx || 16}px`,
-                      color: cfg.fieldTextColor || '#FFFFFF',
+                      color: cfg.fieldTextColor || '#000000',
                       borderColor: cfg.borderColorActive || '#E50F5E'
-                    }}
-                    onFocus={(e) => {
-                      e.target.style.borderColor = cfg.borderColorActive || '#E50F5E';
-                      e.target.style.borderWidth = `${cfg.borderWidthFocusPx || 2}px`;
-                    }}
-                    onBlur={(e) => {
-                      e.target.style.borderColor = 'rgba(255, 255, 255, 0.2)';
-                      e.target.style.borderWidth = '1px';
                     }}
                   />
                 </div>
-                {connectionOptions.filter((option: string) => 
+                {(hasItems ? connectionItems! : connectionOptions.map((label: string, i: number) => ({ id: String(i), label })))
+                  .filter((item) => 
                   !fieldValues[`${(field as any).field_id}_search`] || 
-                  option.toLowerCase().includes(fieldValues[`${(field as any).field_id}_search`]?.toLowerCase() || '')
-                ).map((option: string, index: number) => (
+                    item.label.toLowerCase().includes(fieldValues[`${(field as any).field_id}_search`]?.toLowerCase() || '')
+                  )
+                  .map((item) => (
                   <SelectItem 
-                    key={index} 
-                    value={option} 
+                      key={item.id} 
+                      value={item.id} 
                     className="data-[highlighted]:bg-[var(--selBg)] data-[highlighted]:text-[var(--selFg)] data-[state=checked]:bg-[var(--selBg)] data-[state=checked]:text-[var(--selFg)] select-item" 
                     style={{ 
                       ...(fontStyle||{}), 
@@ -1846,7 +2149,7 @@ export default function PublicForm() {
                       '--selFg': cfg.selectTextColor || '#000000'
                     } as React.CSSProperties}
                   >
-                    {option}
+                      {item.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -2064,20 +2367,71 @@ export default function PublicForm() {
     try {
       // Salvar lead diretamente no Supabase
       const formId = (formData as any)?.id || (formData as any)?.form_id || (fieldValues as any)?.formId || '';
+      
+      // Buscar informações do formulário para determinar a origem
+      let origemFinal = 'formulario'; // fallback padrão
+      
+      if (formId) {
+        const { data: formInfo } = await supabase
+          .from('lead_forms')
+          .select('is_base_form, default_origin_id, lead_origins!lead_forms_default_origin_id_fkey(name)')
+          .eq('id', formId)
+          .single();
+        
+        if (formInfo) {
+          if (formInfo.is_base_form) {
+            // Regra 2: Formulário base - usar origem do campo "Conexão" tipo "origens"
+            const connectionField = formFields.find(f => 
+              f.field_type === 'connection' && 
+              f.connection_list === 'origens'
+            );
+            
+            if (connectionField && fieldValues[connectionField.field_id]) {
+              // Buscar nome da origem pelo ID
+              const { data: originData } = await supabase
+                .from('lead_origins')
+                .select('name')
+                .eq('id', fieldValues[connectionField.field_id])
+                .eq('company_id', (formData as any).company_id)
+                .single();
+              
+              if (originData?.name) {
+                origemFinal = originData.name;
+              }
+            }
+          } else {
+            // Regra 1: Formulário normal - usar origem definida em "Definir origem"
+            if (formInfo.lead_origins?.name) {
+              origemFinal = formInfo.lead_origins.name;
+            } else if (formInfo.default_origin_id) {
+              // Fallback para default_origin_id se não tiver nome
+              const { data: originData } = await supabase
+                .from('lead_origins')
+                .select('name')
+                .eq('id', formInfo.default_origin_id)
+                .single();
+              
+              if (originData?.name) {
+                origemFinal = originData.name;
+              }
+            }
+          }
+        }
+      }
+      
       const leadData = {
         company_id: (formData as any).company_id,
         nome: fieldValues.nome || fieldValues.name || '',
         email: fieldValues.email || '',
         telefone: fieldValues.telefone || fieldValues.phone || '',
-        origem: 'formulario',
+        origem: origemFinal,
         fonte: 'internal_form',
         ip: '',
         browser: navigator.userAgent || '',
         device: 'Desktop',
         pais: 'Brasil',
-        url: window.location.href,
-        parametros: JSON.stringify({ ...fieldValues, formId }),
-        created_at: new Date().toISOString()
+        url: window.location.href
+        // parametros removido: dados customizados agora vão para lead_field_values
       };
 
       const { data: lead, error: leadError } = await supabase
@@ -2102,7 +2456,7 @@ export default function PublicForm() {
 
         if (customFields.length > 0) {
           const { error: customError } = await supabase
-            .from('lead_custom_values')
+            .from('lead_field_values')
             .insert(customFields);
 
           if (customError) {
@@ -2234,7 +2588,7 @@ export default function PublicForm() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className={props?.embedded ? "p-2" : "min-h-screen flex items-center justify-center bg-gray-50"}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Carregando formulário...</p>
@@ -2245,7 +2599,7 @@ export default function PublicForm() {
 
   if (!formData) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className={props?.embedded ? "p-2" : "min-h-screen flex items-center justify-center bg-gray-50"}>
         <div className="text-center">
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Formulário não encontrado</h1>
           <p className="text-gray-600">O formulário solicitado não existe ou está inativo.</p>
@@ -2297,6 +2651,8 @@ export default function PublicForm() {
     ['--button-border-width-active']: `${cfg.btnBorderWidthActive || cfg.btnBorderWidth || 0}px`,
     ['--button-border-color-active']: cfg.btnBorderColorActive || cfg.btnBorderColor || 'transparent'
   } as unknown) as React.CSSProperties;
+
+  // (removido) efeito duplicado — agora feito apenas no topo para manter ordem estável
   const buttonStyle = {
     ...(fontStyle || {}),
     fontSize: `${cfg.fontSizeButtonPx || 16}px`,
@@ -2311,44 +2667,117 @@ export default function PublicForm() {
 
   return (
     <div 
-      className="w-full"
+      className={props?.embedded ? "embedded-form-root w-full" : "w-full"}
       style={{
         backgroundColor: 'transparent',
         background: 'transparent',
         fontFamily: cfg.fontFamily || 'inherit',
-        padding: `${cfg.iframePaddingPx || 20}px`,
-        boxShadow: cfg.iframeShadowEnabled !== false ? '0 4px 6px rgba(0, 0, 0, 0.1)' : 'none',
+        padding: '0px',
+        boxShadow: 'none',
         minHeight: 'auto'
       }}
     >
-      <div className="w-full" style={{ backgroundColor: 'transparent', background: 'transparent' }}>
-        <div className="p-6" style={{ ...fontStyle, ...selectorVars, backgroundColor: 'transparent', background: 'transparent' }}>
+      <div className="w-full bp-form-root" style={{ backgroundColor: 'transparent', background: 'transparent', backgroundImage: 'none' }}>
+        <div style={{ ...fontStyle, ...selectorVars, backgroundColor: 'transparent', background: 'transparent', backgroundImage: 'none', color: 'inherit', padding: '0px' }}>
           {/* CSS auxiliar para borda de foco com variável controlada */}
           <style>{`
             .focus-border:focus { border-color: var(--active-bc) !important; border-width: var(--focus-bw, 2px) !important; }
             
-            /* Remover TODOS os fundos do iframe - forçar transparência total */
-            body, html, #root, .w-full, .p-6, .flex, .flex-col, form, div {
+            /* Escopo embed: neutralizar fundos apenas no wrapper local */
+            .embedded-form-root, .embedded-form-root * {
               background-color: transparent !important;
               background: transparent !important;
+              background-image: none !important;
+              overflow: visible !important; /* evitar recorte do dropdown por containers */
             }
             
-            /* Preservar APENAS o fundo dos campos de entrada */
-            input[type="text"],
-            input[type="email"], 
-            input[type="tel"],
-            input[type="number"],
-            textarea,
-            select,
-            input[class*="focus-border"],
-            [class*="SelectTrigger"],
-            [class*="select"],
-            button[type="submit"] {
+            /* Forçar transparência e padding zero no container principal */
+            .embedded-form-root {
+              background-color: transparent !important;
+              background: transparent !important;
+              background-image: none !important;
+              padding: 0px !important;
+            }
+            
+            /* Sobrescrever qualquer cor de fundo específica */
+            .embedded-form-root[style*="background-color"],
+            .embedded-form-root[style*="background"],
+            .embedded-form-root *[style*="background-color"],
+            .embedded-form-root *[style*="background"] {
+              background-color: transparent !important;
+              background: transparent !important;
+              background-image: none !important;
+            }
+            
+            /* Forçar transparência em todos os containers */
+            .embedded-form-root .bp-form-root,
+            .embedded-form-root .p-6,
+            .embedded-form-root .space-y-2,
+            .embedded-form-root .space-y-4,
+            .embedded-form-root .space-y-6,
+            .embedded-form-root div,
+            .embedded-form-root form,
+            .embedded-form-root section,
+            .embedded-form-root article {
+              background-color: transparent !important;
+              background: transparent !important;
+              padding: 0px !important;
+            }
+            
+            /* Forçar transparência em elementos específicos */
+            .embedded-form-root .w-full,
+            .embedded-form-root .bp-form-root,
+            .embedded-form-root [class*="space-y"],
+            .embedded-form-root [class*="p-"] {
+              background-color: transparent !important;
+              background: transparent !important;
+              background-image: none !important;
+              padding: 0px !important;
+            }
+            
+            /* Sobrescrever especificamente a cor #131313 */
+            .embedded-form-root *[style*="#131313"],
+            .embedded-form-root *[style*="rgb(19, 19, 19)"],
+            .embedded-form-root *[style*="background-color: #131313"],
+            .embedded-form-root *[style*="background: #131313"] {
+              background-color: transparent !important;
+              background: transparent !important;
+              background-image: none !important;
+            }
+            
+            /* Forçar transparência em elementos com classes dark */
+            .embedded-form-root .dark,
+            .embedded-form-root [class*="dark:"],
+            .embedded-form-root .bg-background,
+            .embedded-form-root .dark\\:bg-\\[\\#131313\\] {
+              background-color: transparent !important;
+              background: transparent !important;
+              background-image: none !important;
+            }
+            
+            /* Forçar transparência em elementos com CSS variables */
+            .embedded-form-root * {
+              background-color: transparent !important;
+              background: transparent !important;
+              background-image: none !important;
+            }
+            
+            /* Preservar APENAS o fundo dos campos de entrada (somente dentro do embed) */
+            .embedded-form-root input[type="text"],
+            .embedded-form-root input[type="email"], 
+            .embedded-form-root input[type="tel"],
+            .embedded-form-root input[type="number"],
+            .embedded-form-root textarea,
+            .embedded-form-root select,
+            .embedded-form-root input[class*="focus-border"],
+            .embedded-form-root [class*="SelectTrigger"],
+            .embedded-form-root [class*="select"],
+            .embedded-form-root button[type="submit"] {
               background-color: var(--baseBg, #FFFFFF) !important;
             }
             
             /* Preservar fundo dos botões com gradiente */
-            button[type="submit"] {
+            .embedded-form-root button[type="submit"] {
               background: var(--button-bg, linear-gradient(180deg, #E50F5E, #7c032e)) !important;
               background-image: var(--button-bg, linear-gradient(180deg, #E50F5E, #7c032e)) !important;
               color: var(--button-text, #FFFFFF) !important;
@@ -2359,7 +2788,7 @@ export default function PublicForm() {
             }
             
             /* Estados do botão */
-            button[type="submit"]:hover {
+            .embedded-form-root button[type="submit"]:hover {
               background: var(--button-bg-hover, var(--button-bg, linear-gradient(180deg, #E50F5E, #7c032e))) !important;
               background-image: var(--button-bg-hover, var(--button-bg, linear-gradient(180deg, #E50F5E, #7c032e))) !important;
               color: var(--button-text-hover, var(--button-text, #FFFFFF)) !important;
@@ -2367,7 +2796,7 @@ export default function PublicForm() {
               border-color: var(--button-border-color-hover, var(--button-border-color, transparent)) !important;
             }
             
-            button[type="submit"]:active {
+            .embedded-form-root button[type="submit"]:active {
               background: var(--button-bg-active, var(--button-bg, linear-gradient(180deg, #E50F5E, #7c032e))) !important;
               background-image: var(--button-bg-active, var(--button-bg, linear-gradient(180deg, #E50F5E, #7c032e))) !important;
               color: var(--button-text-active, var(--button-text, #FFFFFF)) !important;
@@ -2376,63 +2805,134 @@ export default function PublicForm() {
             }
             
             /* Estilo específico para barra de progresso */
-            .progress-bar-container {
+            .embedded-form-root .progress-bar-container {
               background-color: var(--progress-bg, #E5E7EB) !important;
             }
             
-            .progress-bar-fill {
+            .embedded-form-root .progress-bar-fill {
               background-color: var(--progress-fill, #E50F5E) !important;
             }
             
             /* Estilo específico para campos de seleção */
-            [data-radix-select-trigger] {
+            .embedded-form-root [data-radix-select-trigger] {
               background-color: var(--baseBg, #FFFFFF) !important;
             }
             
-            .select-trigger {
+            .embedded-form-root .select-trigger {
               background-color: var(--baseBg, #FFFFFF) !important;
             }
             
             /* Estilo específico para menu dropdown */
-            [data-radix-select-content] {
-              background-color: var(--baseBg, #2A2A2A) !important;
+            .embedded-form-root [data-radix-select-content] {
+              background-color: var(--baseBg, #FFFFFF) !important;
+              z-index: 2147483647 !important; /* sempre por cima */
+              overflow: visible !important;
+              /* Alinhar dropdown com o campo */
+              position: absolute !important;
+              left: 0 !important;
+              right: auto !important;
+              width: 100% !important;
+              min-width: 100% !important;
+              transform: none !important;
             }
             
-            .select-content {
-              background-color: var(--baseBg, #2A2A2A) !important;
+            .embedded-form-root .select-content {
+              background-color: var(--baseBg, #FFFFFF) !important;
+              overflow: visible !important;
             }
             
             /* Estilo específico para área de pesquisa */
-            .select-content .p-2 {
-              background-color: var(--baseBg, #2A2A2A) !important;
+            .embedded-form-root .select-content .p-2 {
+              background-color: var(--baseBg, #FFFFFF) !important;
             }
             
-            .select-content input {
-              background-color: var(--baseBg, #1f1f1f) !important;
+            .embedded-form-root .select-content input {
+              background-color: var(--baseBg, #FFFFFF) !important;
+              color: var(--baseFg, #000000) !important;
             }
             
             /* Estilo específico para container de opções */
-            .select-content > div:not(.p-2) {
-              background-color: var(--baseBg, #2A2A2A) !important;
+            .embedded-form-root .select-content > div:not(.p-2) {
+              background-color: var(--baseBg, #FFFFFF) !important;
             }
             
             /* Estilo específico para opções do dropdown */
-            [data-radix-select-item] {
-              background-color: var(--baseBg, #2A2A2A) !important;
+            .embedded-form-root [data-radix-select-item] {
+              background-color: var(--baseBg, #FFFFFF) !important;
+              color: var(--baseFg, #000000) !important;
             }
             
-            [data-radix-select-item]:hover,
-            [data-radix-select-item][data-highlighted] {
+            .embedded-form-root [data-radix-select-item]:hover,
+            .embedded-form-root [data-radix-select-item][data-highlighted] {
               background-color: var(--selBg, #E50F5E) !important;
               color: var(--selFg, #FFFFFF) !important;
             }
             
-            .select-item {
+            .embedded-form-root .select-item {
               background-color: var(--baseBg, #2A2A2A) !important;
             }
             
-            .select-item:hover,
-            .select-item[data-highlighted] {
+            .embedded-form-root .select-item:hover,
+            .embedded-form-root .select-item[data-highlighted] {
+              background-color: var(--selBg, #E50F5E) !important;
+              color: var(--selFg, #FFFFFF) !important;
+            }
+
+            /* Regras GLOBAIS para o portal do Radix (fora do escopo do embed) */
+            [data-radix-select-content] { 
+              background-color: var(--baseBg, #FFFFFF) !important; 
+              color: var(--baseFg, #000000) !important;
+              z-index: 2147483647 !important;
+              overflow: visible !important;
+              /* Alinhar dropdown com o campo de origem */
+              position: absolute !important;
+              left: 0 !important;
+              right: auto !important;
+              width: 100% !important;
+              min-width: 100% !important;
+            }
+            
+            /* Regras GLOBAIS para forçar transparência em iframes */
+            iframe[src*="/form/"] {
+              background-color: transparent !important;
+              background: transparent !important;
+              background-image: none !important;
+            }
+            
+            /* Sobrescrever qualquer fundo escuro global */
+            body.dark iframe[src*="/form/"],
+            html.dark iframe[src*="/form/"],
+            .dark iframe[src*="/form/"] {
+              background-color: transparent !important;
+              background: transparent !important;
+              background-image: none !important;
+            }
+            
+            /* DEBUG: Log CSS aplicado */
+            .embedded-form-root::before {
+              content: "DEBUG: CSS carregado";
+              position: fixed;
+              top: 0;
+              left: 0;
+              background: red;
+              color: white;
+              padding: 2px;
+              font-size: 10px;
+              z-index: 999999;
+            }
+            [data-radix-select-content] .p-2 { 
+              background-color: var(--baseBg, #FFFFFF) !important; 
+            }
+            [data-radix-select-content] input { 
+              background-color: var(--baseBg, #FFFFFF) !important; 
+              color: var(--baseFg, #000000) !important; 
+              border-color: var(--active-bc, #E50F5E) !important;
+            }
+            [data-radix-select-content] [data-radix-select-item] { 
+              background-color: var(--baseBg, #FFFFFF) !important; 
+              color: var(--baseFg, #000000) !important; 
+            }
+            [data-radix-select-content] [data-radix-select-item][data-highlighted] { 
               background-color: var(--selBg, #E50F5E) !important;
               color: var(--selFg, #FFFFFF) !important;
             }
@@ -2698,6 +3198,11 @@ export default function PublicForm() {
            <div className="flex flex-col" style={{ backgroundColor: 'transparent', background: 'transparent' }}>
              <form onSubmit={handleSubmit} className="space-y-6" style={{ backgroundColor: 'transparent', background: 'transparent' }}>
 
+            {/* Espaçador dinâmico para abrir espaço ao dropdown quando necessário */}
+            {selectSpacerHeight > 0 && (
+              <div style={{ height: `${selectSpacerHeight}px` }}></div>
+            )}
+
           {/* Indicador de progresso */}
           {totalSteps > 1 && (
             <div className="mb-6" style={{ backgroundColor: 'transparent', background: 'transparent' }}>
@@ -2913,6 +3418,134 @@ export default function PublicForm() {
             </div>
           </div>
         )}
+        
+        {/* Script para debug e forçar transparência */}
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              console.log('🔍 [DEBUG] Iniciando análise de fundo #131313...');
+              
+              // 1. Verificar fundo do body e document
+              console.log('📋 [DEBUG] Body background:', document.body.style.backgroundColor, 'computed:', window.getComputedStyle(document.body).backgroundColor);
+              console.log('📋 [DEBUG] Document background:', document.documentElement.style.backgroundColor, 'computed:', window.getComputedStyle(document.documentElement).backgroundColor);
+              
+              // 2. Verificar todos os elementos com fundo #131313
+              const allElements = document.querySelectorAll('*');
+              const elementsWithDarkBg = [];
+              
+              allElements.forEach((el, index) => {
+                const computedStyle = window.getComputedStyle(el);
+                const inlineBg = el.style.backgroundColor;
+                const inlineBgShort = el.style.background;
+                
+                // Verificar se tem fundo escuro
+                if (computedStyle.backgroundColor === 'rgb(19, 19, 19)' || 
+                    computedStyle.backgroundColor === '#131313' ||
+                    inlineBg === '#131313' ||
+                    inlineBgShort === '#131313' ||
+                    computedStyle.backgroundColor.includes('19, 19, 19') ||
+                    el.className.includes('dark') ||
+                    el.className.includes('bg-background')) {
+                  
+                  elementsWithDarkBg.push({
+                    element: el,
+                    tagName: el.tagName,
+                    className: el.className,
+                    id: el.id,
+                    computedBg: computedStyle.backgroundColor,
+                    inlineBg: inlineBg,
+                    inlineBgShort: inlineBgShort,
+                    index: index
+                  });
+                }
+              });
+              
+              console.log('🎯 [DEBUG] Elementos com fundo escuro encontrados:', elementsWithDarkBg.length);
+              elementsWithDarkBg.forEach((item, i) => {
+                console.log('🔍 [DEBUG] Elemento ' + (i + 1) + ':', {
+                  tag: item.tagName,
+                  class: item.className,
+                  id: item.id,
+                  computed: item.computedBg,
+                  inline: item.inlineBg,
+                  inlineShort: item.inlineBgShort
+                });
+              });
+              
+              // 3. Verificar CSS aplicado
+              console.log('🎨 [DEBUG] Verificando CSS aplicado...');
+              const styleSheets = document.styleSheets;
+              for (let i = 0; i < styleSheets.length; i++) {
+                try {
+                  const sheet = styleSheets[i];
+                  if (sheet.cssRules) {
+                    for (let j = 0; j < sheet.cssRules.length; j++) {
+                      const rule = sheet.cssRules[j];
+                      if (rule.style && (rule.style.backgroundColor === '#131313' || rule.style.backgroundColor === 'rgb(19, 19, 19)' || rule.selectorText?.includes('dark'))) {
+                        console.log('🎨 [DEBUG] CSS Rule encontrada:', rule.selectorText, 'background:', rule.style.backgroundColor);
+                      }
+                    }
+                  }
+                } catch (e) {
+                  console.log('🎨 [DEBUG] Erro ao acessar stylesheet:', e);
+                }
+              }
+              
+              // 4. Forçar transparência no iframe
+              console.log('🔧 [DEBUG] Aplicando transparência forçada...');
+              document.body.style.backgroundColor = 'transparent';
+              document.body.style.background = 'transparent';
+              document.documentElement.style.backgroundColor = 'transparent';
+              document.documentElement.style.background = 'transparent';
+              
+              // 5. Aplicar transparência em todos os elementos
+              allElements.forEach((el, index) => {
+                if (!el.matches('input, textarea, select, button')) {
+                  const beforeBg = window.getComputedStyle(el).backgroundColor;
+                  el.style.backgroundColor = 'transparent';
+                  el.style.background = 'transparent';
+                  const afterBg = window.getComputedStyle(el).backgroundColor;
+                  
+                  if (beforeBg !== afterBg) {
+                    console.log('🔧 [DEBUG] Elemento ' + index + ' alterado: ' + beforeBg + ' -> ' + afterBg, el);
+                  }
+                }
+              });
+              
+              // 6. Forçar transparência em elementos com classes dark
+              const darkElements = document.querySelectorAll('.dark, [class*="dark:"], .bg-background');
+              console.log('🌙 [DEBUG] Elementos dark encontrados:', darkElements.length);
+              darkElements.forEach((el, index) => {
+                console.log('🌙 [DEBUG] Elemento dark ' + (index + 1) + ':', el.tagName, el.className);
+                el.style.backgroundColor = 'transparent';
+                el.style.background = 'transparent';
+              });
+              
+              // 7. Verificar resultado final
+              setTimeout(() => {
+                console.log('✅ [DEBUG] Verificação final:');
+                console.log('📋 [DEBUG] Body final:', window.getComputedStyle(document.body).backgroundColor);
+                console.log('📋 [DEBUG] Document final:', window.getComputedStyle(document.documentElement).backgroundColor);
+                
+                const finalCheck = document.querySelectorAll('*');
+                const stillDark = [];
+                finalCheck.forEach(el => {
+                  const bg = window.getComputedStyle(el).backgroundColor;
+                  if (bg === 'rgb(19, 19, 19)' || bg === '#131313') {
+                    stillDark.push({element: el, bg: bg});
+                  }
+                });
+                
+                if (stillDark.length > 0) {
+                  console.log('❌ [DEBUG] Ainda há elementos com fundo escuro:', stillDark);
+                } else {
+                  console.log('✅ [DEBUG] Todos os fundos escuros foram removidos!');
+                }
+              }, 1000);
+              
+            })();
+          `
+        }} />
     </div>
   );
 }
