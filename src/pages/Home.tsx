@@ -1,6 +1,6 @@
 
 import { useNavigate } from 'react-router-dom';
-import { Calculator, Settings, Users } from 'lucide-react';
+import { Calculator, Settings, Users, LogOut } from 'lucide-react';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useEffect } from 'react';
 import { useDefaultBranding } from '@/hooks/useDefaultBranding';
@@ -10,7 +10,7 @@ import { CompanyProvider } from '@/contexts/CompanyContext';
 
 function HomeContent() {
   const navigate = useNavigate();
-  const { userRole } = useCrmAuth();
+  const { userRole, signOut } = useCrmAuth();
   const { branding: defaultBranding, isLoading: brandingLoading } = useDefaultBranding();
   
   // Hook para verificar permissões customizadas do usuário
@@ -33,13 +33,22 @@ function HomeContent() {
   // Verificar permissões usando o novo sistema
   const canAccessSimulatorPage = canAccessSimulator() && canAccessSimulatorByRole;
   const canAccessConfigPage = canAccessSimulatorConfig() && canAccessSimulatorByRole;
-  const canAccessSettingsModule = canAccessConfigPage || userRole === 'admin' || userRole === 'master';
+  const canAccessSettingsModule = canAccessConfigPage || userRole === 'admin' || userRole === 'master' || permissions.canAccessPerfil;
 
   const handleGoToSimulator = () => {
     if (canAccessSimulatorPage) {
       navigate('/simulador');
     } else if (canAccessConfigPage) {
       navigate('/simulador/configuracoes');
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigate('/crm/login');
+    } catch (error) {
+      console.error('Erro ao fazer logout:', error);
     }
   };
 
@@ -96,6 +105,17 @@ function HomeContent() {
             </div>
           </button>
         )}
+      </div>
+
+      {/* Botão de Logout - discreto */}
+      <div className="mt-8">
+        <button
+          onClick={handleLogout}
+          className="flex items-center gap-2 px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
+        >
+          <LogOut className="h-4 w-4" />
+          Sair
+        </button>
       </div>
     </div>
   );

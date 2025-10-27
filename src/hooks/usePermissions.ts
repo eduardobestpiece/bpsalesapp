@@ -55,8 +55,8 @@ export function usePermissions(): PermissionConfig {
   // Colaborador: acesso limitado
   if (userRole === 'user') {
     return {
-      canAccessConfigurations: false,
-      canAccessGestao: false,
+      canAccessConfigurations: true, // Acesso limitado - apenas aba Perfil
+      canAccessGestao: true, // Acesso limitado - apenas página de Leads
       canAccessMasterConfig: false,
       canManageUsers: false,
       canAccessPerfil: true, // Apenas aba Perfil em Configurações
