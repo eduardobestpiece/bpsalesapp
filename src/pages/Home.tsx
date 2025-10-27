@@ -22,16 +22,6 @@ function HomeContent() {
   // Hook para verificar permissões gerais
   const permissions = usePermissions();
 
-  // Debug: Log das permissões e dados do usuário
-  useEffect(() => {
-    console.log('🔍 DEBUG HOME - Dados do usuário:', {
-      userRole,
-      crmUser: crmUser ? { id: crmUser.id, email: crmUser.email, role: crmUser.role } : null,
-      permissions,
-      canAccessGestao: permissions.canAccessGestao
-    });
-  }, [userRole, crmUser, permissions]);
-
   if (permissionsLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#131313] via-[#1E1E1E] to-[#161616]">
@@ -63,14 +53,6 @@ function HomeContent() {
       <h1 className="text-[28px] md:text-[44px] font-bold text-white mb-4 text-center">
         Bem-vindo à Plataforma
       </h1>
-      
-      {/* Debug Info */}
-      <div className="mb-4 p-4 bg-black/20 rounded-lg text-xs text-gray-300">
-        <div>Role: {userRole || 'N/A'}</div>
-        <div>canAccessGestao: {permissions.canAccessGestao ? '✅' : '❌'}</div>
-        <div>canAccessConfigurations: {permissions.canAccessConfigurations ? '✅' : '❌'}</div>
-        <div>canAccessSimulator: {permissions.canAccessSimulator ? '✅' : '❌'}</div>
-      </div>
       
       <div className="flex flex-col gap-6 w-full max-w-2xl">
         {/* Botão Simulador */}
