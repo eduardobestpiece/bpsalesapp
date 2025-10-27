@@ -3000,11 +3000,15 @@ export default function PublicForm(props?: PublicFormProps) {
         fbclid: trackingData.fbclid,
         fbc: trackingData.fbc,
         fbp: trackingData.fbp,
-        fbid: trackingData.fbid
+        fbid: trackingData.fbid,
+        formulario_cadastro: (formData as any).name || 'Formulário',
+        form_id: formId
         // parametros removido: dados customizados agora vão para lead_field_values
       };
 
       console.log('💾 ===== SALVANDO DADOS NO BANCO DE DADOS =====');
+      console.log('💾 ID do formulário:', leadData.form_id || 'N/A');
+      console.log('💾 Nome do formulário:', leadData.formulario_cadastro || 'N/A');
       console.log('💾 Telefone original:', fieldValues.telefone || fieldValues.phone || 'N/A');
       console.log('💾 Telefone limpo:', leadData.telefone || 'N/A');
       console.log('💾 URL:', leadData.url || 'N/A');
@@ -3032,6 +3036,8 @@ export default function PublicForm(props?: PublicFormProps) {
 
       console.log('✅ Lead salvo no banco de dados com sucesso!');
       console.log('✅ Lead ID:', lead.id);
+      console.log('✅ ID do formulário:', leadData.form_id);
+      console.log('✅ Nome do formulário:', leadData.formulario_cadastro);
       console.log('✅ Dados de tracking salvos:', {
         url: leadData.url,
         utm_source: leadData.utm_source,
