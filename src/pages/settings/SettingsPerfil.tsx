@@ -30,7 +30,20 @@ export default function SettingsPerfil() {
 
   useEffect(() => {
     if (!crmUser) return;
+    console.log('🔍 Debug - crmUser carregado:', crmUser);
+    console.log('🔍 Debug - avatar_url do crmUser:', (crmUser as any).avatar_url);
+    
     setFormData({
+      first_name: crmUser.first_name || '',
+      last_name: crmUser.last_name || '',
+      email: crmUser.email || '',
+      phone: crmUser.phone || '',
+      birth_date: (crmUser as any).birth_date || '',
+      bio: (crmUser as any).bio || '',
+      avatar_url: (crmUser as any).avatar_url || '',
+    });
+    
+    console.log('🔍 Debug - formData atualizado:', {
       first_name: crmUser.first_name || '',
       last_name: crmUser.last_name || '',
       email: crmUser.email || '',
@@ -45,28 +58,203 @@ export default function SettingsPerfil() {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleImageSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
+      console.log('🔍 Debug - Arquivo selecionado:', file.name, file.size, file.type);
       setSelectedImage(file);
-      // Removido: AvatarCropper; upload direto
+      
+      // Fazer upload automaticamente após seleção
+      await handleUploadAvatar(file);
     }
   };
 
-  const handleUploadAvatar = async () => {
-    if (!selectedImage) return;
+  const handleUploadAvatar = async (file?: File) => {
+    const imageToUpload = file || selectedImage;
+    
+    console.log('🔍 Debug - handleUploadAvatar chamado!');
+    console.log('🔍 Debug - imageToUpload:', imageToUpload);
+    console.log('🔍 Debug - crmUser:', crmUser);
+    
+    if (!imageToUpload || !crmUser) {
+      console.log('❌ Debug - Condições não atendidas para upload');
+      return;
+    }
+    
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Usuário não autenticado');
-      const fileExt = selectedImage.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-      const { error } = await supabase.storage.from('avatars').upload(fileName, selectedImage);
-      if (error) throw error;
-      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
-      setFormData(prev => ({ ...prev, avatar_url: publicUrl }));
-      toast.success('Avatar enviado com sucesso!');
+      console.log('🔍 Debug - Tamanho do arquivo:', imageToUpload.size, 'bytes');
+      console.log('🔍 Debug - Tipo do arquivo:', imageToUpload.type);
+      
+      // Verificar se o arquivo é muito grande (limite de 2MB para Base64)
+      if (imageToUpload.size > 2 * 1024 * 1024) {
+        throw new Error('Arquivo muito grande. Máximo 2MB para avatar.');
+      }
+      
+      // Verificar se o arquivo é válido
+      if (!imageToUpload.type.startsWith('image/')) {
+        throw new Error('Arquivo deve ser uma imagem válida.');
+      }
+      
+      // Verificar se o arquivo não está corrompido
+      if (imageToUpload.size === 0) {
+        throw new Error('Arquivo está vazio ou corrompido.');
+      }
+      
+      console.log('🔍 Debug - Validações do arquivo passaram!');
+      
+      // Converter imagem para Base64 usando múltiplas estratégias
+      console.log('🔍 Debug - Convertendo imagem para Base64 usando múltiplas estratégias...');
+      
+      const base64String = await new Promise<string>(async (resolve, reject) => {
+        try {
+          // Estratégia 1: Criar Blob e usar ArrayBuffer
+          console.log('🔍 Debug - Estratégia 1: Criando Blob do arquivo...');
+          const blob = new Blob([imageToUpload], { type: imageToUpload.type });
+          console.log('🔍 Debug - Blob criado com sucesso! Tamanho:', blob.size, 'bytes');
+          
+          const arrayBuffer = await blob.arrayBuffer();
+          console.log('🔍 Debug - ArrayBuffer do Blob obtido! Tamanho:', arrayBuffer.byteLength, 'bytes');
+          
+          // Converter ArrayBuffer para Base64
+          console.log('🔍 Debug - Convertendo ArrayBuffer para Base64...');
+          const bytes = new Uint8Array(arrayBuffer);
+          let binary = '';
+          for (let i = 0; i < bytes.byteLength; i++) {
+            binary += String.fromCharCode(bytes[i]);
+          }
+          
+          const base64 = btoa(binary);
+          const mimeType = imageToUpload.type || 'image/png';
+          const dataUrl = `data:${mimeType};base64,${base64}`;
+          
+          console.log('🔍 Debug - Base64 gerado com sucesso via Blob! Tamanho:', dataUrl.length, 'caracteres');
+          resolve(dataUrl);
+          
+        } catch (blobError) {
+          console.error('❌ Debug - Erro na estratégia Blob:', blobError);
+          
+          try {
+            // Estratégia 2: URL.createObjectURL + fetch
+            console.log('🔍 Debug - Estratégia 2: Usando URL.createObjectURL...');
+            const objectUrl = URL.createObjectURL(imageToUpload);
+            console.log('🔍 Debug - ObjectURL criado:', objectUrl);
+            
+            const response = await fetch(objectUrl);
+            console.log('🔍 Debug - Fetch response obtido!');
+            
+            const arrayBuffer = await response.arrayBuffer();
+            console.log('🔍 Debug - ArrayBuffer via fetch obtido! Tamanho:', arrayBuffer.byteLength, 'bytes');
+            
+            // Converter ArrayBuffer para Base64
+            const bytes = new Uint8Array(arrayBuffer);
+            let binary = '';
+            for (let i = 0; i < bytes.byteLength; i++) {
+              binary += String.fromCharCode(bytes[i]);
+            }
+            
+            const base64 = btoa(binary);
+            const mimeType = imageToUpload.type || 'image/png';
+            const dataUrl = `data:${mimeType};base64,${base64}`;
+            
+            // Limpar ObjectURL
+            URL.revokeObjectURL(objectUrl);
+            
+            console.log('🔍 Debug - Base64 gerado com sucesso via ObjectURL! Tamanho:', dataUrl.length, 'caracteres');
+            resolve(dataUrl);
+            
+          } catch (objectUrlError) {
+            console.error('❌ Debug - Erro na estratégia ObjectURL:', objectUrlError);
+            
+            try {
+              // Estratégia 3: FileReader tradicional (último recurso)
+              console.log('🔍 Debug - Estratégia 3: Tentando FileReader tradicional...');
+              const reader = new FileReader();
+              
+              reader.onload = () => {
+                console.log('🔍 Debug - FileReader: Sucesso!');
+                const result = reader.result as string;
+                console.log('🔍 Debug - FileReader: Resultado obtido, tamanho:', result.length, 'caracteres');
+                resolve(result);
+              };
+              
+              reader.onerror = (event) => {
+                console.error('❌ Debug - FileReader: Erro:', event);
+                console.error('❌ Debug - FileReader: Erro details:', reader.error);
+                reject(new Error(`Todas as estratégias falharam. Último erro: ${reader.error?.message || 'Erro desconhecido'}`));
+              };
+              
+              reader.readAsDataURL(imageToUpload);
+              
+            } catch (readerError) {
+              console.error('❌ Debug - FileReader: Erro ao chamar readAsDataURL:', readerError);
+              reject(new Error(`Todas as estratégias falharam. Erro final: ${readerError}`));
+            }
+          }
+        }
+      });
+      
+      console.log('🔍 Debug - Base64 gerado com sucesso! Tamanho:', base64String.length, 'caracteres');
+      
+      // Atualizar estado local
+      setFormData(prev => ({ ...prev, avatar_url: base64String }));
+      
+      // Salvar automaticamente no banco de dados
+      const { error: updateError } = await supabase
+        .from('crm_users')
+        .update({ 
+          avatar_url: base64String,
+          avatar_base64: base64String 
+        })
+        .eq('id', crmUser.id);
+      
+      if (updateError) {
+        console.error('❌ Debug - Erro ao salvar avatar:', updateError);
+        throw updateError;
+      }
+      
+      console.log('✅ Debug - Avatar salvo com sucesso no banco!');
+      
+      // Atualizar contexto do usuário com o avatar_url
+      await updateCrmUserInContext({ avatar_url: base64String });
+      
+      // Recarregar dados do usuário para garantir sincronização
+      await refreshCrmUser();
+      
+      toast.success('Avatar enviado e salvo com sucesso!');
     } catch (e) {
-      toast.error('Erro ao enviar avatar');
+      console.error('❌ Debug - Erro no upload do avatar:', e);
+      
+      let errorMessage = 'Erro ao enviar avatar';
+      let showRetryOption = true;
+      
+      if (e instanceof Error) {
+        if (e.message.includes('muito grande')) {
+          errorMessage = 'Arquivo muito grande. Máximo 2MB para avatar.';
+        } else if (e.message.includes('Todas as estratégias falharam')) {
+          errorMessage = 'Não foi possível processar este arquivo. Pode ser um problema de permissão ou formato.';
+          showRetryOption = false;
+        } else if (e.message.includes('ler arquivo')) {
+          errorMessage = 'Erro ao processar arquivo. Tente novamente.';
+        } else {
+          errorMessage = `Erro: ${e.message}`;
+        }
+      }
+      
+      // Mostrar toast com opção de continuar sem avatar
+      if (showRetryOption) {
+        toast.error(errorMessage);
+      } else {
+        toast.error(errorMessage, {
+          duration: 8000,
+          action: {
+            label: 'Continuar sem foto',
+            onClick: () => {
+              console.log('🔍 Debug - Usuário escolheu continuar sem avatar');
+              toast.success('Perfil salvo sem foto. Você pode tentar adicionar uma foto mais tarde.');
+            }
+          }
+        });
+      }
     }
   };
 
@@ -74,23 +262,34 @@ export default function SettingsPerfil() {
     if (!crmUser) return;
     setIsSaving(true);
     try {
+      // Preparar dados para atualização, convertendo strings vazias para null
+      const updateData = {
+        first_name: formData.first_name || null,
+        last_name: formData.last_name || null,
+        phone: formData.phone || null,
+        birth_date: formData.birth_date || null,
+        bio: formData.bio || null,
+        avatar_url: formData.avatar_url || null, // Manter avatar_url mesmo se vazio
+      };
+
+      console.log('🔍 Debug - Dados sendo enviados:', updateData);
+      console.log('🔍 Debug - ID do usuário:', crmUser.id);
+
       const { error } = await supabase
         .from('crm_users')
-        .update({
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          phone: formData.phone,
-          birth_date: formData.birth_date,
-          bio: formData.bio,
-          avatar_url: formData.avatar_url,
-        })
+        .update(updateData)
         .eq('id', crmUser.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Debug - Erro do Supabase:', error);
+        throw error;
+      }
 
+      console.log('✅ Debug - Perfil atualizado com sucesso!');
       await updateCrmUserInContext();
       toast.success('Perfil atualizado com sucesso!');
     } catch (error) {
+      console.error('❌ Debug - Erro ao atualizar perfil:', error);
       toast.error('Erro ao atualizar perfil');
     } finally {
       setIsSaving(false);
@@ -124,6 +323,9 @@ export default function SettingsPerfil() {
                   <Camera size={16} />
                 </Button>
               </div>
+              <p className="text-xs text-muted-foreground">
+                💡 Dica: Se houver problemas com o upload, você pode continuar sem foto e tentar novamente mais tarde.
+              </p>
             </div>
           </div>
 

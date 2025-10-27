@@ -31,6 +31,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { toast } from '@/hooks/use-toast';
 import { integrationService } from '@/services/integrationService';
+import { distributeLead } from '@/utils/leadDistribution';
 
 // Funções de validação
 const validateCPF = (cpf: string): boolean => {
@@ -3023,6 +3024,25 @@ export default function PublicForm(props?: PublicFormProps) {
       console.log('💾 fbp:', leadData.fbp || 'N/A');
       console.log('💾 fbid:', leadData.fbid || 'N/A');
 
+      // Distribuição automática de leads
+      let distributionResult = null;
+      if (formData.company_id) {
+        try {
+          distributionResult = await distributeLead(formId, formData.company_id);
+          if (distributionResult) {
+            leadData.responsible_id = distributionResult.responsible_id;
+            leadData.responsavel = distributionResult.responsible_name;
+            console.log('🎯 Lead distribuído para:', distributionResult.responsible_name);
+            console.log('🎯 ID do responsável:', distributionResult.responsible_id);
+          } else {
+            console.log('ℹ️ Nenhuma distribuição configurada para este formulário');
+          }
+        } catch (error) {
+          console.error('❌ Erro na distribuição automática:', error);
+          // Continua sem distribuição em caso de erro
+        }
+      }
+
       const { data: lead, error: leadError } = await supabase
         .from('leads')
         .insert([leadData])
@@ -3126,13 +3146,22 @@ export default function PublicForm(props?: PublicFormProps) {
         console.log('📊 fbp:', trackingData.fbp || 'N/A');
         console.log('📊 fbid:', trackingData.fbid || 'N/A');
         
+        // Adicionar origem aos dados de tracking
+        const trackingDataWithOrigin = {
+          ...trackingData,
+          origem: origemFinal,
+          responsible_id: distributionResult?.responsible_id || '',
+          responsible_name: distributionResult?.responsible_name || ''
+        };
+
         await integrationService.processFormIntegrations(
           formId,
           fieldValues,
           (formData as any).company_name || 'Empresa',
           (formData as any).name || 'Formulário',
-          trackingData,
-          companyTimezone
+          trackingDataWithOrigin,
+          companyTimezone,
+          lead.id // NOVO: Passar ID do lead
         );
         
         console.log('✅ Debug - Processamento de integrações concluído');

@@ -78,6 +78,7 @@ export interface IntegrationData {
   // Dados do sistema
   company_name: string;
   form_name: string;
+  lead_id?: string; // NOVO: ID do lead no backend
   platform: string;
   device: string;
   ip: string;
@@ -97,6 +98,10 @@ export interface IntegrationData {
   fbc?: string;
   fbp?: string;
   gclid?: string;
+  
+  // Dados de responsável
+  responsible_id?: string;
+  responsible_name?: string;
   
   // Dados do usuário
   user_agent: string;

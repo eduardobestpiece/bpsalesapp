@@ -140,14 +140,6 @@ export const GestaoSidebar = () => {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActivePath('/gestao/leads-legado')}>
-                  <Link to="/gestao/leads-legado">
-                    <ListChecks className="h-4 w-4" />
-                    <span>Leads (Legado)</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
                 <SidebarMenuButton asChild isActive={isActivePath('/gestao/agendamentos')}>
                   <Link to="/gestao/agendamentos">
                     <Calendar className="h-4 w-4" />

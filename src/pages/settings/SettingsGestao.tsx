@@ -14,17 +14,14 @@ import { Loader2, ImageIcon, Trash2, Plus } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { LossReasonsManager, OriginsManager } from '@/components/Managers/DefinicoesManagers';
-import { ClientFieldsPage } from '@/components/Managers/ClientFieldsPage';
-import { CompanyFieldsPage } from '@/components/Managers/CompanyFieldsPage';
-import { SaleFieldsPage } from '@/components/Managers/SaleFieldsPage';
-import { LeadFieldsPage } from '@/components/Managers/LeadFieldsPage';
+import SettingsPerfil from './SettingsPerfil';
 
 export default function SettingsGestao() {
   const { companyId } = useCrmAuth();
   const { selectedCompanyId } = useCompany();
   const effectiveCompanyId = selectedCompanyId || companyId;
 
-  const [tabValue, setTabValue] = useState<'company' | 'users' | 'origens' | 'motivos-perda' | 'campos-cliente' | 'campos-empresa' | 'campos-venda' | 'campos-lead'>('company');
+  const [tabValue, setTabValue] = useState<'company' | 'users' | 'origens' | 'motivos-perda' | 'perfil'>('company');
 
   // Estado do formulário da empresa
   const [companyName, setCompanyName] = useState('');
@@ -279,31 +276,10 @@ export default function SettingsGestao() {
                   </TabsTrigger>
                   <div className="w-px h-6 bg-border/30 self-center"></div>
                   <TabsTrigger 
-                    value="campos-cliente" 
+                    value="perfil" 
                     className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
                   >
-                    Campos Cliente
-                  </TabsTrigger>
-                  <div className="w-px h-6 bg-border/30 self-center"></div>
-                  <TabsTrigger 
-                    value="campos-empresa" 
-                    className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
-                  >
-                    Campos Empresa
-                  </TabsTrigger>
-                  <div className="w-px h-6 bg-border/30 self-center"></div>
-                  <TabsTrigger 
-                    value="campos-venda" 
-                    className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
-                  >
-                    Campos Venda
-                  </TabsTrigger>
-                  <div className="w-px h-6 bg-border/30 self-center"></div>
-                  <TabsTrigger 
-                    value="campos-lead" 
-                    className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
-                  >
-                    Campos Lead
+                    Perfil
                   </TabsTrigger>
             </TabsList>
 
@@ -558,20 +534,8 @@ export default function SettingsGestao() {
               </div>
             </TabsContent>
 
-            <TabsContent value="campos-cliente" className="p-6">
-              <ClientFieldsPage />
-            </TabsContent>
-
-            <TabsContent value="campos-empresa" className="p-6">
-              <CompanyFieldsPage />
-            </TabsContent>
-
-            <TabsContent value="campos-venda" className="p-6">
-              <SaleFieldsPage />
-            </TabsContent>
-
-            <TabsContent value="campos-lead" className="p-6">
-              <LeadFieldsPage />
+            <TabsContent value="perfil" className="p-6">
+              <SettingsPerfil />
             </TabsContent>
 
           </Tabs>

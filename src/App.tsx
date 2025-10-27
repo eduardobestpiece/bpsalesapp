@@ -18,8 +18,6 @@ import VideoPage from "./pages/VideoPage";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentCancel from "./pages/PaymentCancel";
 import LandingTeste from "./pages/LandingTeste";
-import GestaoIndex from "./pages/gestao/Index";
-import GestaoLeads from "./pages/gestao/Leads";
 import GestaoLeadsNew from "./pages/gestao/LeadsNew";
 import GestaoAgendamentos from "./pages/gestao/Agendamentos";
 import GestaoVendas from "./pages/gestao/Vendas";
@@ -34,6 +32,7 @@ import SettingsMaster from "./pages/settings/SettingsMaster";
 import SettingsEmpresa from "./pages/settings/SettingsEmpresa";
 import SettingsPerfil from "./pages/settings/SettingsPerfil";
 import SettingsForms from "./pages/settings/SettingsForms";
+import SettingsFields from "./pages/settings/SettingsFields";
 import PublicForm from "./pages/PublicForm";
 import IframeGeneratorPage from "./pages/IframeGeneratorPage";
 import { TestPermissions } from "./components/TestPermissions";
@@ -135,17 +134,12 @@ function AppContent() {
           {/* Novo módulo: Gestão */}
           <Route path="/gestao" element={
             user ? (
-              <GestaoIndex />
+              <GestaoLeadsNew />
             ) : <Navigate to="/crm/login" replace />
           } />
           <Route path="/gestao/leads" element={
             user ? (
               <GestaoLeadsNew />
-            ) : <Navigate to="/crm/login" replace />
-          } />
-          <Route path="/gestao/leads-legado" element={
-            user ? (
-              <GestaoLeads />
             ) : <Navigate to="/crm/login" replace />
           } />
           <Route path="/gestao/agendamentos" element={
@@ -184,6 +178,15 @@ function AppContent() {
             user ? (
               <SettingsLayout>
                 <SettingsForms />
+              </SettingsLayout>
+            ) : <Navigate to="/crm/login" replace />
+          } />
+
+          {/* Nova página: Campos */}
+          <Route path="/configuracoes/campos" element={
+            user ? (
+              <SettingsLayout>
+                <SettingsFields />
               </SettingsLayout>
             ) : <Navigate to="/crm/login" replace />
           } />

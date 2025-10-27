@@ -1,5 +1,5 @@
 
-import { Settings, SlidersHorizontal, Users, Building2, Shield, ChevronDown, LogOut } from 'lucide-react';
+import { Settings, SlidersHorizontal, Users, Building2, Shield, ChevronDown, LogOut, CheckSquare } from 'lucide-react';
 import { User as UserIcon } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
@@ -212,12 +212,12 @@ export const SettingsSidebar = () => {
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {/* 1. Definições */}
+              {/* 1. Campos */}
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/gestao')}>
-                  <Link to="/configuracoes/gestao">
-                    <Settings className="h-4 w-4" />
-                    <span>Definições</span>
+                <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/campos')}>
+                  <Link to="/configuracoes/campos">
+                    <CheckSquare className="h-4 w-4" />
+                    <span>Campos</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -232,9 +232,19 @@ export const SettingsSidebar = () => {
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
+              {/* 3. Definições */}
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/gestao')}>
+                  <Link to="/configuracoes/gestao">
+                    <Settings className="h-4 w-4" />
+                    <span>Definições</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+
               {/* Removido: item de menu CRM */}
 
-              {/* 6. Master Config */}
+              {/* 4. Master Config */}
               {userRole === 'master' && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/master')}>

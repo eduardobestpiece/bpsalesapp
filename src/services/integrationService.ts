@@ -99,7 +99,10 @@ export class IntegrationService {
       fbid: parentParams.fbid || referrerParams.fbid || this.getUrlParam('fbid') || fbidCookie || '',
       fbc: parentParams.fbc || referrerParams.fbc || this.getUrlParam('fbc') || fbcCookie || '',
       fbp: parentParams.fbp || referrerParams.fbp || this.getUrlParam('fbp') || fbpCookie || '',
-      gclid: parentParams.gclid || referrerParams.gclid || this.getUrlParam('gclid') || ''
+      gclid: parentParams.gclid || referrerParams.gclid || this.getUrlParam('gclid') || '',
+      // Campos de responsável (serão preenchidos quando disponíveis)
+      responsible_id: '',
+      responsible_name: ''
     };
     
     return systemData;
@@ -325,7 +328,8 @@ export class IntegrationService {
       // Mapear campos do formulário
       const mappedFields: Record<string, any> = {};
       
-      Object.keys(formFields).forEach(fieldId => {
+      // Usar for...of para permitir await
+      for (const fieldId of Object.keys(formFields)) {
         const senderName = fieldMapping[fieldId];
         const fieldValue = formFields[fieldId];
         
@@ -340,18 +344,140 @@ export class IntegrationService {
           }
           // Campo normal
           else {
-            mappedFields[senderName] = fieldValue;
+            // Verificar se é campo de conexão (origem) e converter ID para nome
+            const convertedValue = await this.convertConnectionFieldValue(fieldId, fieldValue);
+            mappedFields[senderName] = convertedValue;
           }
         } else {
           // Manter campo original se não houver mapeamento
           mappedFields[fieldId] = fieldValue;
         }
-      });
+      }
 
       return mappedFields;
 
     } catch (error) {
       return formFields; // Retornar campos originais em caso de erro
+    }
+  }
+
+  private async convertConnectionFieldValue(fieldId: string, fieldValue: any): Promise<any> {
+    try {
+      console.log('🔍 Debug - convertConnectionFieldValue:', { fieldId, fieldValue });
+      
+      // Verificar se é um ID de origem (UUID format)
+      if (typeof fieldValue === 'string' && fieldValue.length > 8 && fieldValue.includes('-')) {
+        console.log('🔍 Debug - Valor parece ser UUID, verificando campo...');
+        
+        // Buscar se é um campo de conexão com origens
+        const { data: fieldConfig } = await supabase
+          .from('lead_fields')
+          .select('type, connection_list')
+          .eq('id', fieldId)
+          .single();
+
+        console.log('🔍 Debug - Configuração do campo:', fieldConfig);
+
+        if (fieldConfig?.type === 'connection' && fieldConfig?.connection_list === 'origens') {
+          console.log('🔍 Debug - Campo é conexão com origens, buscando nome...');
+          
+          // Buscar nome da origem pelo ID
+          const { data: originData } = await supabase
+            .from('lead_origins')
+            .select('name')
+            .eq('id', fieldValue)
+            .single();
+
+          console.log('🔍 Debug - Dados da origem:', originData);
+
+          if (originData?.name) {
+            console.log('✅ Debug - Convertido ID para nome:', fieldValue, '->', originData.name);
+            return originData.name;
+          }
+        }
+      }
+      
+      console.log('🔍 Debug - Retornando valor original:', fieldValue);
+      // Retornar valor original se não for campo de conexão ou não encontrar nome
+      return fieldValue;
+    } catch (error) {
+      console.error('❌ Debug - Erro na conversão:', error);
+      // Em caso de erro, retornar valor original
+      return fieldValue;
+    }
+  }
+
+  private async getOriginValue(formId: string, formFields: Record<string, any>): Promise<string> {
+    try {
+      console.log('🔍 Debug - getOriginValue:', { formId, formFields });
+      
+      // 1. Verificar se há um campo de conexão com origens nos campos do formulário
+      for (const [fieldId, fieldValue] of Object.entries(formFields)) {
+        if (typeof fieldValue === 'string' && fieldValue.length > 8 && fieldValue.includes('-')) {
+          console.log('🔍 Debug - Encontrado possível ID de origem:', fieldId, fieldValue);
+          
+          // Buscar campos de conexão com origens do formulário
+          const { data: connectionFields } = await supabase
+            .from('lead_form_fields')
+            .select('field_id, field_name')
+            .eq('lead_form_id', formId)
+            .eq('field_type', 'connection');
+
+          if (connectionFields && connectionFields.length > 0) {
+            // Verificar se algum desses campos é de conexão com origens
+            for (const formField of connectionFields) {
+              const { data: fieldConfig } = await supabase
+                .from('lead_fields')
+                .select('type, connection_list')
+                .eq('id', formField.field_id)
+                .single();
+
+              if (fieldConfig?.type === 'connection' && fieldConfig?.connection_list === 'origens') {
+                console.log('🔍 Debug - Campo de conexão com origens encontrado:', formField.field_name);
+                
+                // Buscar nome da origem pelo ID
+                const { data: originData } = await supabase
+                  .from('lead_origins')
+                  .select('name')
+                  .eq('id', fieldValue)
+                  .single();
+
+                if (originData?.name) {
+                  console.log('✅ Debug - Origem do campo de conexão:', originData.name);
+                  return originData.name;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // 2. Se não encontrou campo de conexão, usar origem padrão do formulário
+      console.log('🔍 Debug - Não encontrou campo de conexão, buscando origem padrão...');
+      
+      const { data: formData } = await supabase
+        .from('lead_forms')
+        .select(`
+          default_origin_id,
+          lead_origins!lead_forms_default_origin_id_fkey (
+            name
+          )
+        `)
+        .eq('id', formId)
+        .single();
+
+      if (formData?.lead_origins?.name) {
+        console.log('✅ Debug - Origem padrão do formulário:', formData.lead_origins.name);
+        return formData.lead_origins.name;
+      }
+
+      // 3. Fallback
+      console.log('🔍 Debug - Usando fallback: formulario');
+      return 'formulario';
+      
+    } catch (error) {
+      console.error('❌ Debug - Erro ao obter origem:', error);
+      return 'formulario';
     }
   }
 
@@ -881,12 +1007,13 @@ export class IntegrationService {
 
   // Processar todas as integrações de um formulário
   async processFormIntegrations(
-    formId: string, 
+    formId: string,
     formFields: Record<string, any>,
     companyName: string,
     formName: string,
     trackingData?: any,
-    companyTimezone?: string
+    companyTimezone?: string,
+    leadId?: string // NOVO: ID do lead
   ): Promise<void> {
     console.log('🔍 Debug - processFormIntegrations chamado com:', {
       formId,
@@ -898,7 +1025,7 @@ export class IntegrationService {
     // Processar integrações sem timeout excessivo
     try {
       console.log('🔍 Debug - Chamando processIntegrationsInternal');
-      await this.processIntegrationsInternal(formId, formFields, companyName, formName, trackingData, companyTimezone);
+      await this.processIntegrationsInternal(formId, formFields, companyName, formName, trackingData, companyTimezone, leadId);
       console.log('✅ Debug - processIntegrationsInternal concluído com sucesso');
     } catch (error) {
       console.error('❌ Debug - Erro no processamento de integrações:', error);
@@ -907,12 +1034,13 @@ export class IntegrationService {
   }
 
   private async processIntegrationsInternal(
-    formId: string, 
+    formId: string,
     formFields: Record<string, any>,
     companyName: string,
     formName: string,
     trackingData?: any,
-    companyTimezone?: string
+    companyTimezone?: string,
+    leadId?: string // NOVO: ID do lead
   ): Promise<void> {
     try {
       // Gerar ID único para esta sessão
@@ -951,6 +1079,10 @@ export class IntegrationService {
         fbc: trackingData.fbc || '',
         fbp: trackingData.fbp || '',
         fbid: trackingData.fbid || '',
+        origem: trackingData.origem || '',
+        // Campos de responsável
+        responsible_id: trackingData.responsible_id || '',
+        responsible_name: trackingData.responsible_name || '',
         // Dados adicionais do sistema
         platform: 'Web',
         device: this.getDeviceType(),
@@ -963,15 +1095,21 @@ export class IntegrationService {
       // Mapear campos do formulário para nomes do webhook
       const mappedFormFields = await this.mapFormFieldsToWebhookNames(formId, formFields);
 
+      // Adicionar campo "Origem" para todos os formulários (ANTES do mapeamento)
+      const originValue = await this.getOriginValue(formId, formFields);
+      mappedFormFields['Origem'] = originValue;
+
       // Preparar dados completos
       const integrationData: IntegrationData = {
         form_fields: mappedFormFields,
         company_name: companyName,
         form_name: formName,
+        lead_id: leadId || '', // NOVO: ID do lead
         ...systemData
       } as IntegrationData;
 
       console.log('📊 ===== DADOS FINAIS PARA INTEGRAÇÕES =====');
+      console.log('📊 Lead ID:', integrationData.lead_id || 'N/A');
       console.log('📊 URL:', integrationData.url || 'N/A');
       console.log('📊 utm_source:', integrationData.utm_source || 'N/A');
       console.log('📊 utm_medium:', integrationData.utm_medium || 'N/A');

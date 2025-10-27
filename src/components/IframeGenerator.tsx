@@ -136,7 +136,7 @@ export default function IframeGenerator({ formId }: IframeGeneratorProps) {
   };
 
   if (loading) {
-    return (
+  return (
       <div className="flex items-center justify-center p-8">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
@@ -183,9 +183,9 @@ export default function IframeGenerator({ formId }: IframeGeneratorProps) {
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 {copied ? 'Copiado!' : 'Copiar'}
               </Button>
-            </div>
-          </div>
-          
+        </div>
+      </div>
+
           <div className="bg-blue-50 p-4 rounded-lg">
             <h3 className="font-semibold text-blue-900 mb-2">Como usar:</h3>
             <ol className="text-sm text-blue-800 space-y-1 list-decimal list-inside">
@@ -193,8 +193,8 @@ export default function IframeGenerator({ formId }: IframeGeneratorProps) {
               <li>Cole o código no HTML da sua página</li>
               <li>O iframe capturará automaticamente os UTMs e dados de tracking da página pai</li>
               <li>O iframe se redimensionará automaticamente conforme o conteúdo</li>
-            </ol>
-          </div>
+        </ol>
+      </div>
 
           <div className="bg-green-50 p-4 rounded-lg">
             <h3 className="font-semibold text-green-900 mb-2">Recursos incluídos:</h3>

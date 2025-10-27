@@ -8,8 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Plus, Trash2, RotateCcw, RefreshCw, Copy, Check, ChevronLeft, ChevronRight, Pencil } from 'lucide-react';
+import { Plus, Trash2, RotateCcw, RefreshCw, Copy, Check, ChevronLeft, ChevronRight, Pencil, X, Search, Filter } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -82,6 +83,22 @@ export default function GestaoLeadsNew() {
           status,
           fonte,
           form_id,
+          formulario_cadastro,
+          url,
+          utm_campaign,
+          utm_medium,
+          utm_content,
+          utm_source,
+          utm_term,
+          fbclid,
+          gclid,
+          fbc,
+          fbp,
+          fbid,
+          ip,
+          browser,
+          device,
+          pais,
           lead_forms!leads_form_id_fkey (
             id,
             name,
@@ -145,6 +162,15 @@ export default function GestaoLeadsNew() {
   const [editingValue, setEditingValue] = useState<string>('');
   const [emailError, setEmailError] = useState<string>('');
   const [phoneError, setPhoneError] = useState<string>('');
+  const [editingLeadName, setEditingLeadName] = useState<boolean>(false);
+  const [leadNameValue, setLeadNameValue] = useState<string>('');
+  const [showNavigationData, setShowNavigationData] = useState<boolean>(false);
+  
+  // Estados para filtros
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [selectedOrigin, setSelectedOrigin] = useState<string>('');
+  const [selectedForm, setSelectedForm] = useState<string>('');
+  const [dateRange, setDateRange] = useState<{from: string, to: string}>({from: '', to: ''});
 
   // Função para gerar iframe quando um formulário é selecionado
   const handleFormSelect = (formId: string) => {
@@ -902,17 +928,80 @@ setTimeout(observeIframeContent, 500);
     }
   };
 
+  // Função para filtrar leads
+  const getFilteredLeads = () => {
+    let filteredLeads = leads;
+
+    // Filtro de pesquisa geral
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase();
+      filteredLeads = filteredLeads.filter(lead => {
+        // Buscar em campos básicos
+        const basicFields = [
+          lead.nome,
+          lead.email,
+          lead.telefone,
+          lead.origem,
+          (lead as any).formulario_cadastro
+        ].join(' ').toLowerCase();
+
+        // Buscar em campos customizados
+        const customValues = customValuesMap[lead.id] || {};
+        const customFields = Object.values(customValues).join(' ').toLowerCase();
+
+        return basicFields.includes(searchLower) || customFields.includes(searchLower);
+      });
+    }
+
+    // Filtro de origem
+    if (selectedOrigin) {
+      filteredLeads = filteredLeads.filter(lead => {
+        const originName = getOriginName(lead);
+        return originName === selectedOrigin;
+      });
+    }
+
+    // Filtro de formulário
+    if (selectedForm) {
+      filteredLeads = filteredLeads.filter(lead => {
+        const formName = getFormName(lead);
+        return formName === selectedForm;
+      });
+    }
+
+    // Filtro de data
+    if (dateRange.from || dateRange.to) {
+      filteredLeads = filteredLeads.filter(lead => {
+        if (!lead.created_at) return false;
+        
+        const leadDate = new Date(lead.created_at);
+        const fromDate = dateRange.from ? new Date(dateRange.from) : null;
+        const toDate = dateRange.to ? new Date(dateRange.to + 'T23:59:59') : null;
+
+        if (fromDate && leadDate < fromDate) return false;
+        if (toDate && leadDate > toDate) return false;
+        
+        return true;
+      });
+    }
+
+    return filteredLeads;
+  };
+
   // Função para limpar texto (remover espaços e caracteres especiais)
   const cleanText = (text: string) => {
     return text.replace(/[\s\-\(\)\+]/g, '');
   };
 
+  // Obter leads filtrados
+  const filteredLeads = getFilteredLeads();
+
   // Cálculos de paginação
-  const totalLeads = leads.length;
+  const totalLeads = filteredLeads.length;
   const totalPages = Math.ceil(totalLeads / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentLeads = leads.slice(startIndex, endIndex);
+  const currentLeads = filteredLeads.slice(startIndex, endIndex);
 
   // Funções de navegação
   const goToPage = (page: number) => {
@@ -1084,17 +1173,75 @@ setTimeout(observeIframeContent, 500);
     setPhoneError('');
   };
 
+  // Função para iniciar edição do nome do lead
+  const startEditingLeadName = () => {
+    if (!editingLead) return;
+    
+    // Buscar o nome do lead usando a mesma lógica da tabela
+    const leadNome = editingLead.nome || 
+      (leadFields.find((f: any) => f.type === 'name')?.id ? 
+        (customValuesMap[editingLead.id]?.[leadFields.find((f: any) => f.type === 'name')?.id] ?? 
+         getDynamicValue(editingLead as any, `custom_${leadFields.find((f: any) => f.type === 'name')?.id}`)) : 
+        '') || '';
+    
+    setLeadNameValue(leadNome);
+    setEditingLeadName(true);
+  };
+
+  // Função para salvar o nome do lead
+  const saveLeadName = async () => {
+    if (!editingLead || !leadNameValue.trim()) return;
+
+    try {
+      // Verificar se é um campo customizado ou campo básico
+      const nameField = leadFields.find((f: any) => f.type === 'name');
+      
+      if (nameField) {
+        // Campo customizado - atualizar em lead_field_values
+        const { error: customError } = await supabase
+          .from('lead_field_values' as any)
+          .upsert({
+            lead_id: editingLead.id,
+            field_id: nameField.id,
+            value_text: leadNameValue.trim()
+          }, { onConflict: 'lead_id,field_id' });
+
+        if (customError) throw customError;
+      } else {
+        // Campo básico - atualizar na tabela leads
+        const { error } = await supabase
+          .from('leads' as any)
+          .update({ nome: leadNameValue.trim() })
+          .eq('id', editingLead.id);
+
+        if (error) throw error;
+      }
+
+      // Atualizar cache
+      await queryClient.invalidateQueries({ queryKey: ['leads-new', selectedCompanyId] });
+      await queryClient.invalidateQueries({ queryKey: ['lead-field-values', selectedCompanyId] });
+      
+      // Atualizar o lead localmente
+      setEditingLead(prev => prev ? { ...prev, nome: leadNameValue.trim() } : null);
+      
+      // Sair do modo de edição
+      setEditingLeadName(false);
+    } catch (error) {
+      console.error('Erro ao salvar nome do lead:', error);
+    }
+  };
+
+  // Função para cancelar edição do nome
+  const cancelEditingLeadName = () => {
+    setEditingLeadName(false);
+    setLeadNameValue('');
+  };
+
   // Função para extrair todos os campos do lead
   const getAllLeadFields = (lead: Lead) => {
     const fields: Array<{name: string, value: string, key: string}> = [];
     
     // Usar a mesma lógica da tabela para extrair dados
-    const leadNome = (lead as any).nome || 
-      (leadFields.find((f: any) => f.type === 'name')?.id ? 
-        (customValuesMap[lead.id]?.[leadFields.find((f: any) => f.type === 'name')?.id] ?? 
-         getDynamicValue(lead as any, `custom_${leadFields.find((f: any) => f.type === 'name')?.id}`)) : 
-        '') || '-';
-    
     const leadEmail = (lead as any).email || 
       (leadFields.find((f: any) => f.type === 'email')?.id ? 
         (customValuesMap[lead.id]?.[leadFields.find((f: any) => f.type === 'email')?.id] ?? 
@@ -1107,9 +1254,8 @@ setTimeout(observeIframeContent, 500);
          getDynamicValue(lead as any, `custom_${leadFields.find((f: any) => f.type === 'phone')?.id}`)) : 
         '') || '-';
 
-    // Campos básicos usando os valores extraídos corretamente (ordem específica)
+    // Campos básicos (removido nome pois já está no título)
     const basicFields = [
-      { key: 'nome', name: 'Nome', value: leadNome },
       { key: 'email', name: 'E-mail', value: leadEmail },
       { key: 'telefone', name: 'Telefone', value: leadTelefone },
       { key: 'origem', name: 'Origem', value: getOriginName(lead) },
@@ -1117,12 +1263,17 @@ setTimeout(observeIframeContent, 500);
 
     fields.push(...basicFields);
 
-    // Campos customizados de lead_field_values
+    // Campos customizados de lead_field_values (excluindo nome, email, telefone e origem)
     const leadCustomValues = customValuesMap[lead.id] || {};
     Object.entries(leadCustomValues).forEach(([fieldId, value]) => {
       // Buscar nome do campo
       const field = leadFields.find(f => f.id === fieldId);
       if (field && value) {
+        // Pular campos de nome, email, telefone e origem para evitar duplicação
+        if (field.type === 'name' || field.type === 'email' || field.type === 'phone' || field.type === 'connection') {
+          return;
+        }
+        
         // Converter valor para string se não for
         const stringValue = typeof value === 'string' ? value : 
                           typeof value === 'object' ? JSON.stringify(value) : 
@@ -1141,12 +1292,119 @@ setTimeout(observeIframeContent, 500);
     return fields;
   };
 
+  // Função para obter dados de navegação do lead
+  const getNavigationData = (lead: Lead) => {
+    const navigationFields = [
+      { key: 'url', name: 'URL', value: lead.url && lead.url.trim() ? lead.url : '-' },
+      { key: 'utm_campaign', name: 'UTM Campaign', value: lead.utm_campaign && lead.utm_campaign.trim() ? lead.utm_campaign : '-' },
+      { key: 'utm_medium', name: 'UTM Medium', value: lead.utm_medium && lead.utm_medium.trim() ? lead.utm_medium : '-' },
+      { key: 'utm_content', name: 'UTM Content', value: lead.utm_content && lead.utm_content.trim() ? lead.utm_content : '-' },
+      { key: 'utm_source', name: 'UTM Source', value: lead.utm_source && lead.utm_source.trim() ? lead.utm_source : '-' },
+      { key: 'utm_term', name: 'UTM Term', value: lead.utm_term && lead.utm_term.trim() ? lead.utm_term : '-' },
+      { key: 'fbclid', name: 'Facebook Click ID', value: lead.fbclid && lead.fbclid.trim() ? lead.fbclid : '-' },
+      { key: 'gclid', name: 'Google Click ID', value: lead.gclid && lead.gclid.trim() ? lead.gclid : '-' },
+      { key: 'fbc', name: 'Facebook Browser', value: lead.fbc && lead.fbc.trim() ? lead.fbc : '-' },
+      { key: 'fbp', name: 'Facebook Pixel', value: lead.fbp && lead.fbp.trim() ? lead.fbp : '-' },
+      { key: 'fbid', name: 'Facebook ID', value: lead.fbid && lead.fbid.trim() ? lead.fbid : '-' },
+      { key: 'ip', name: 'IP', value: lead.ip && lead.ip.trim() ? lead.ip : '-' },
+      { key: 'browser', name: 'Browser', value: lead.browser && lead.browser.trim() ? lead.browser : '-' },
+      { key: 'device', name: 'Device', value: lead.device && lead.device.trim() ? lead.device : '-' },
+      { key: 'pais', name: 'País', value: lead.pais && lead.pais.trim() ? lead.pais : '-' },
+    ];
+
+    return navigationFields;
+  };
+
   return (
     <GestaoLayout>
       <div className="max-w-[1200px] mx-auto space-y-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <CardTitle>Leads</CardTitle>
+            <div className="flex flex-col space-y-4">
+              <CardTitle>Leads</CardTitle>
+              
+              {/* Filtros */}
+              <div className="flex flex-wrap gap-4 items-center">
+                {/* Campo de pesquisa geral */}
+                <div className="relative min-w-[200px]">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Pesquisar leads..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+
+                {/* Filtro de origem */}
+                <Select value={selectedOrigin || "all"} onValueChange={(value) => setSelectedOrigin(value === "all" ? "" : value)}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Todas as origens" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as origens</SelectItem>
+                    {origins.map((origin) => (
+                      <SelectItem key={origin.id} value={origin.name}>
+                        {origin.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Filtro de formulário */}
+                <Select value={selectedForm || "all"} onValueChange={(value) => setSelectedForm(value === "all" ? "" : value)}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Todos os formulários" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os formulários</SelectItem>
+                    {formsList.map((form) => (
+                      <SelectItem key={form.id} value={form.name}>
+                        {form.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Filtro de data */}
+                <div className="flex gap-2 items-center">
+                  <Input
+                    type="date"
+                    placeholder="Data inicial"
+                    value={dateRange.from}
+                    onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
+                    className="w-[140px]"
+                  />
+                  <span className="text-muted-foreground">até</span>
+                  <Input
+                    type="date"
+                    placeholder="Data final"
+                    value={dateRange.to}
+                    onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
+                    className="w-[140px]"
+                  />
+                </div>
+
+                {/* Botão para limpar filtros */}
+                {(searchTerm || selectedOrigin || selectedForm || dateRange.from || dateRange.to) && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSearchTerm('');
+                      setSelectedOrigin('');
+                      setSelectedForm('');
+                      setDateRange({from: '', to: ''});
+                    }}
+                    className="text-muted-foreground"
+                  >
+                    <Filter className="h-4 w-4 mr-2" />
+                    Limpar filtros
+                  </Button>
+                )}
+              </div>
+            </div>
+            
             <div className="flex items-center gap-2">
               <Button 
                 size="sm" 
@@ -1232,12 +1490,66 @@ setTimeout(observeIframeContent, 500);
               <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
                 <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle>
-                      {editingLead?.nome || 'Lead sem nome'}
+                    <DialogTitle className="flex items-center gap-2">
+                      {editingLeadName ? (
+                        <div className="flex items-center gap-2 flex-1">
+                          <Input
+                            value={leadNameValue}
+                            onChange={(e) => setLeadNameValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') saveLeadName();
+                              if (e.key === 'Escape') cancelEditingLeadName();
+                            }}
+                            autoFocus
+                            className="text-lg font-semibold"
+                          />
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={saveLeadName}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Check className="h-4 w-4 text-green-600" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={cancelEditingLeadName}
+                            className="h-8 w-8 p-0"
+                          >
+                            <X className="h-4 w-4 text-red-600" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <span>
+                            {editingLead ? (
+                              editingLead.nome || 
+                              (leadFields.find((f: any) => f.type === 'name')?.id ? 
+                                (customValuesMap[editingLead.id]?.[leadFields.find((f: any) => f.type === 'name')?.id] ?? 
+                                 getDynamicValue(editingLead as any, `custom_${leadFields.find((f: any) => f.type === 'name')?.id}`)) : 
+                                '') || 'Lead sem nome'
+                            ) : 'Lead sem nome'}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={startEditingLeadName}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                        </>
+                      )}
                     </DialogTitle>
                     <div className="text-sm text-muted-foreground">
                       Criado em: {formatDateTz(editingLead?.created_at)}
                     </div>
+                    {editingLead && (
+                      <div className="text-sm text-muted-foreground">
+                        Formulário de cadastro: {(editingLead as any).formulario_cadastro || 'Formulário'}
+                      </div>
+                    )}
                   </DialogHeader>
                   
                   {editingLead && (
@@ -1313,6 +1625,44 @@ setTimeout(observeIframeContent, 500);
                     </div>
                   )}
                   
+                  {/* Toggle e Tabela de Dados de Navegação */}
+                  {editingLead && (
+                    <div className="space-y-4 border-t pt-4">
+                      <div className="flex items-center space-x-2">
+                        <Switch
+                          id="navigation-data"
+                          checked={showNavigationData}
+                          onCheckedChange={setShowNavigationData}
+                        />
+                        <Label htmlFor="navigation-data" className="text-sm font-medium">
+                          Dados de navegação
+                        </Label>
+                      </div>
+                      
+                      {showNavigationData && (
+                        <div className="space-y-2">
+                          <h4 className="text-sm font-medium text-muted-foreground">Informações de navegação e tracking</h4>
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Campo</TableHead>
+                                <TableHead>Valor</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {getNavigationData(editingLead).map((field) => (
+                                <TableRow key={field.key}>
+                                  <TableCell className="font-medium">{field.name}</TableCell>
+                                  <TableCell className="text-muted-foreground">{field.value}</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  
                   <DialogFooter>
                     <Button variant="outline" onClick={() => setEditModalOpen(false)}>
                       Fechar
@@ -1354,7 +1704,9 @@ setTimeout(observeIframeContent, 500);
                   {currentLeads.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={visibleColumns.length} className="text-center text-muted-foreground py-6">
-                        Nenhum lead de formulário encontrado.
+                        {leads.length === 0 
+                          ? 'Nenhum lead de formulário encontrado.' 
+                          : 'Nenhum lead encontrado com os filtros aplicados.'}
                       </TableCell>
                     </TableRow>
                   ) : (

@@ -17,6 +17,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/hooks/use-toast';
 import { LeadFormsManager } from '@/components/Managers/LeadFormsManager';
+import { DistributionManager } from '@/components/Managers/DistributionManager';
 import { loadFormRedirectConfig, saveFormRedirectConfig, RedirectConfig } from '@/utils/redirectManager';
 import { IntegrationsManager } from '@/components/Integrations/IntegrationsManager';
 import { Trash2 } from 'lucide-react';
@@ -1325,18 +1326,12 @@ export default function SettingsForms() {
     const randomId = Math.random().toString(36).substring(7);
     const formUrl = `${baseUrl}/form/${selectedLeadForm.id}?v=${timestamp}&r=${randomId}`;
     
-    // Aplicar estilos do iframe baseados na configuração
-    const padding = leadFormStyle?.iframePaddingPx || 20;
-    const backgroundColor = leadFormStyle?.iframeBackgroundColor || '#FFFFFF';
-    const shadowEnabled = leadFormStyle?.iframeShadowEnabled !== false;
-    const shadowStyle = shadowEnabled ? '0 4px 6px rgba(0, 0, 0, 0.1)' : 'none';
-    
     const iframeHtml = `<iframe 
   src="${formUrl}" 
   width="100%" 
       height="auto" 
   frameborder="0" 
-      style="border: none; border-radius: 8px; box-shadow: ${shadowStyle}; background-color: transparent; padding: ${padding}px; min-height: 300px;"
+      style="border: none; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); background-color: transparent; padding: 20px; min-height: 300px;"
       title="Formulário de Contato"
       id="form-iframe">
     </iframe>
@@ -1843,10 +1838,10 @@ setTimeout(observeIframeContent, 500);
           .bp-form-container {
             max-width: 600px;
             margin: 0 auto;
-            padding: ${leadFormStyle?.iframePaddingPx || 20}px;
+            padding: 20px;
             background: transparent;
             border-radius: ${leadFormStyle?.btnRadius || 8}px; /* Usar raio da borda do botão */
-            box-shadow: ${leadFormStyle?.iframeShadowEnabled ? '0 4px 6px rgba(0, 0, 0, 0.1)' : 'none'};
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             border: none;
           }
           
@@ -2796,10 +2791,6 @@ setTimeout(observeIframeContent, 500);
           buttonBorderWidthPressedPx: 0,
           buttonBorderColorNormal: "#FFFFFF00",
           buttonBorderColorPressed: "#FFFFFF00",
-          // Novos campos para configuração do iframe
-          iframePaddingPx: 20,
-          iframeBackgroundColor: "#FFFFFF",
-          iframeShadowEnabled: true,
           // Configurações de redirecionamento
           redirectEnabled: redirectConfig.redirectEnabled,
           redirectUrl: redirectConfig.redirectUrl
@@ -3498,64 +3489,6 @@ setTimeout(observeIframeContent, 500);
               })()}
               
               {/* Novos campos para configuração do iframe */}
-              {(() => {
-                const [localVal, setLocalVal] = useState<string>(String(style.iframePaddingPx || 20));
-                const [isComp, setIsComp] = useState<boolean>(false);
-                useEffect(() => { if (!isComp) setLocalVal(String(style.iframePaddingPx || 20)); }, [style.iframePaddingPx]);
-                const commit = (val: string) => setStyle(s=>({ ...s, iframePaddingPx: Number(val || 20) }));
-                return (
-                  <FieldRow
-                    label={<>Padding da iframe (px)</>}
-                    control={
-                      <input type="number" min={0 as any} value={localVal}
-                        onChange={(e)=> setLocalVal(e.currentTarget.value)}
-                        onBlur={(e)=> commit(e.currentTarget.value)}
-                        onKeyDown={(e)=> { if (e.key === 'Enter') commit((e.target as HTMLInputElement).value); }}
-                        onCompositionStart={()=> setIsComp(true)}
-                        onCompositionEnd={(e)=> { setIsComp(false); commit((e.target as HTMLInputElement).value); }}
-                        className="h-10 w-[150px] bg-[#1F1F1F] border-white/20 text-white rounded-md border px-3" />
-                    }
-                  />
-                );
-              })()}
-              
-              <FieldRow
-                label={<>Cor do Fundo iframe</>}
-                control={
-                  <div className="flex items-center gap-2">
-                    <input 
-                      type="color" 
-                      value={style.iframeBackgroundColor || "#FFFFFF"} 
-                      onChange={(e)=> setStyle(s=>({ ...s, iframeBackgroundColor: e.target.value }))} 
-                      className="h-10 w-10 border border-white/20 bg-transparent" 
-                    />
-                    <input 
-                      type="text" 
-                      value={style.iframeBackgroundColor || "#FFFFFF"} 
-                      onChange={(e)=> setStyle(s=>({ ...s, iframeBackgroundColor: e.target.value }))} 
-                      className="h-10 w-[120px] bg-[#1F1F1F] border-white/20 text-white rounded-md border px-3" 
-                      placeholder="#FFFFFF"
-                    />
-                  </div>
-                }
-              />
-              
-              <FieldRow
-                label={<>Sombra do iframe</>}
-                control={
-                  <div className="flex items-center gap-2">
-                    <input 
-                      type="checkbox" 
-                      checked={style.iframeShadowEnabled !== false} 
-                      onChange={(e)=> setStyle(s=>({ ...s, iframeShadowEnabled: e.target.checked }))} 
-                      className="h-4 w-4 text-[var(--brand-primary,#E50F5E)] bg-[#1F1F1F] border-white/20 rounded focus:ring-[var(--brand-primary,#E50F5E)] focus:ring-2" 
-                    />
-                    <span className="text-sm text-white">
-                      {style.iframeShadowEnabled !== false ? 'Ativada' : 'Desativada'}
-                    </span>
-                  </div>
-                }
-              />
             </div>
           </div>
         )}
@@ -6590,6 +6523,10 @@ setTimeout(observeIframeContent, 500);
               <TabsTrigger value="vendas" className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5">
                 Vendas
               </TabsTrigger>
+              <div className="w-px h-6 bg-border/30 self-center"></div>
+              <TabsTrigger value="distribuicao" className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5">
+                Distribuição
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="leads" className="p-6">
@@ -6625,6 +6562,9 @@ setTimeout(observeIframeContent, 500);
             </TabsContent>
             <TabsContent value="vendas" className="p-6">
               <TwoColumns left={<LeftConfig title="Vendas" main="vendas" />} right={<PreviewRight title="Vendas" />} />
+            </TabsContent>
+            <TabsContent value="distribuicao" className="p-6">
+              <DistributionManager />
             </TabsContent>
           </Tabs>
         </CardContent>

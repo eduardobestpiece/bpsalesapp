@@ -3,8 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
-import { Trash2, Loader2, Plus, Edit, UserPlus } from 'lucide-react';
+import { Trash2, Loader2, Plus, Edit } from 'lucide-react';
 import { useCompany } from '@/contexts/CompanyContext';
+import { useGlobalColors } from '@/hooks/useGlobalColors';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
@@ -14,13 +15,13 @@ import PublicForm from '@/pages/PublicForm';
 export function LeadFormsManager() {
   const { selectedCompanyId } = useCompany();
   const queryClient = useQueryClient();
+  const { companyPrimaryColor, companySecondaryColor } = useGlobalColors();
   const [forms, setForms] = useState<{ id: string; name: string }[]>([]);
+  const [formsWithLeads, setFormsWithLeads] = useState<{ [formId: string]: number }>({});
   const [isOpen, setIsOpen] = useState(false);
   const [editing, setEditing] = useState<{ id: string; name: string } | null>(null);
   const [formName, setFormName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [openAddLeadModal, setOpenAddLeadModal] = useState(false);
-  const [baseFormId, setBaseFormId] = useState<string | null>(null);
 
   // Carregar formulários de leads do Supabase
   const loadForms = async () => {
@@ -37,6 +38,31 @@ export function LeadFormsManager() {
 
       if (error) throw error;
       setForms(data || []);
+
+      // Carregar contagem de leads para cada formulário
+      if (data && data.length > 0) {
+        const leadsCountPromises = data.map(async (form) => {
+          const { count, error: countError } = await supabase
+            .from('leads')
+            .select('*', { count: 'exact', head: true })
+            .eq('form_id', form.id);
+          
+          if (countError) {
+            console.error(`Erro ao contar leads do formulário ${form.id}:`, countError);
+            return { formId: form.id, count: 0 };
+          }
+          
+          return { formId: form.id, count: count || 0 };
+        });
+
+        const leadsCounts = await Promise.all(leadsCountPromises);
+        const leadsCountMap = leadsCounts.reduce((acc, { formId, count }) => {
+          acc[formId] = count;
+          return acc;
+        }, {} as { [formId: string]: number });
+
+        setFormsWithLeads(leadsCountMap);
+      }
     } catch (error) {
       console.error('Erro ao carregar formulários de leads:', error);
       toast.error('Erro ao carregar formulários de leads');
@@ -72,6 +98,17 @@ export function LeadFormsManager() {
   const deleteForm = async (id: string) => {
     try {
       setLoading(true);
+      
+      // Verificar se existem leads associados a este formulário usando o cache
+      const leadsCount = formsWithLeads[id] || 0;
+
+      // Se existirem leads associados, impedir a exclusão
+      if (leadsCount > 0) {
+        toast.error(`Não é possível excluir este formulário. Existem ${leadsCount} lead(s) associado(s) a ele. Remova todos os leads antes de excluir o formulário.`);
+        return;
+      }
+
+      // Se não há leads associados, proceder com a exclusão
       const { error } = await supabase
         .from('lead_forms')
         .update({ status: 'archived' })
@@ -162,14 +199,6 @@ export function LeadFormsManager() {
           <p className="text-sm text-muted-foreground">Gerencie os formulários de captura de leads</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            onClick={() => setOpenAddLeadModal(true)}
-            disabled={!baseFormId}
-          >
-            <UserPlus className="h-4 w-4 mr-2" />
-            Adicionar Lead
-          </Button>
           <Button onClick={startCreate}>
             <Plus className="h-4 w-4 mr-2" />
             Criar formulário
@@ -208,46 +237,12 @@ export function LeadFormsManager() {
         </DialogContent>
       </Dialog>
 
-      {/* Modal de Adicionar Lead */}
-      <Dialog open={openAddLeadModal} onOpenChange={setOpenAddLeadModal}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Adicionar Lead</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            {!baseFormId ? (
-              <div className="text-center py-8 space-y-4">
-                <div className="text-sm text-muted-foreground">Nenhum formulário base definido para esta empresa.</div>
-                <Button variant="outline" onClick={() => setOpenAddLeadModal(false)}>
-                  Fechar
-                </Button>
-              </div>
-            ) : (
-              <PublicForm 
-                overrideFormId={baseFormId} 
-                embedded 
-                onSubmitted={async () => {
-                  setOpenAddLeadModal(false);
-                  await queryClient.invalidateQueries({ queryKey: ['leads-new', selectedCompanyId] });
-                }} 
-              />
-            )}
-          </div>
-
-          <DialogFooter className="gap-2">
-            <Button variant="outline" onClick={() => setOpenAddLeadModal(false)}>
-              Fechar
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* Tabela de formulários */}
       <div className="border rounded-lg">
         <div className="grid grid-cols-12 gap-4 p-3 text-sm font-medium text-muted-foreground border-b">
-          <div className="col-span-10">Nome</div>
-          <div className="col-span-2 text-right">Ações</div>
+          <div className="col-span-6">Nome do Formulário</div>
+          <div className="col-span-3 text-center">Cadastros</div>
+          <div className="col-span-3 text-right">Ações</div>
         </div>
         {loading ? (
           <div className="p-8 text-center text-muted-foreground">
@@ -259,22 +254,53 @@ export function LeadFormsManager() {
             Nenhum formulário de leads cadastrado
           </div>
         ) : (
-          forms.map((form) => (
-            <div key={form.id} className="grid grid-cols-12 gap-4 p-3 text-sm border-b last:border-b-0 hover:bg-muted/50 transition-colors">
-              <div 
-                className="col-span-10 cursor-pointer flex items-center justify-between"
-                onClick={() => openFormConfig(form)}
-              >
-                <span className="font-medium">{form.name}</span>
-                <span className="text-xs text-muted-foreground">Clique para configurar</span>
-              </div>
-              <div className="col-span-2 flex justify-end">
-                <Button variant="ghost" size="sm" onClick={() => deleteForm(form.id)} disabled={loading}>
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          ))
+          <>
+            {forms.map((form) => {
+              const leadsCount = formsWithLeads[form.id] || 0;
+              const canDelete = leadsCount === 0;
+              
+              return (
+                <div key={form.id} className="grid grid-cols-12 gap-4 p-3 text-sm border-b last:border-b-0 hover:bg-muted/50 transition-colors">
+                  <div 
+                    className="col-span-6 cursor-pointer flex items-center"
+                    onClick={() => openFormConfig(form)}
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-medium">{form.name}</span>
+                      <span className="text-xs text-muted-foreground">Clique para configurar</span>
+                    </div>
+                  </div>
+                  <div className="col-span-3 flex items-center justify-center">
+                    <span 
+                      className="px-2 py-1 rounded-full text-xs font-medium"
+                      style={{
+                        backgroundColor: leadsCount > 0 ? companySecondaryColor : undefined,
+                        color: leadsCount > 0 ? companyPrimaryColor : undefined,
+                        ...(leadsCount === 0 && {
+                          backgroundColor: 'rgb(243 244 246)', // bg-gray-100
+                          color: 'rgb(75 85 99)' // text-gray-600
+                        })
+                      }}
+                    >
+                      {leadsCount}
+                    </span>
+                  </div>
+                  <div className="col-span-3 flex justify-end">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => deleteForm(form.id)} 
+                      disabled={loading || !canDelete}
+                      className={!canDelete ? "opacity-50 cursor-not-allowed" : ""}
+                      title={!canDelete ? `Não é possível excluir. Existem ${leadsCount} lead(s) associado(s).` : "Excluir formulário"}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              );
+            })}
+          </>
         )}
       </div>
     </div>
