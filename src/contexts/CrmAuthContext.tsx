@@ -78,6 +78,12 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   const ensureCrmUser = useCallback(async (authUser: User): Promise<CrmUser | null> => {
+    // Verificar se há setup em progresso - se sim, retornar null para evitar redirecionamento
+    const setupInProgress = localStorage.getItem('userSetupInProgress');
+    if (setupInProgress === 'true') {
+      return null;
+    }
+
     // 1) Tenta buscar por email (fonte de verdade) pegando o registro mais recente
     if (authUser.email) {
       const { data: byEmail, error: byEmailError } = await supabase
@@ -148,6 +154,12 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const fetchCrmUser = useCallback(async (authUser: User) => {
     try {
+      // Verificar se há setup em progresso - se sim, não buscar dados do CRM
+      const setupInProgress = localStorage.getItem('userSetupInProgress');
+      if (setupInProgress === 'true') {
+        return null;
+      }
+
       if (authUser.email) {
         const cached = getCrmUserCache(authUser.email);
         if (cached) {
@@ -181,6 +193,13 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   const refreshCrmUser = useCallback(async () => {
     if (!user) return;
+    
+    // Verificar se há setup em progresso - se sim, não atualizar dados do CRM
+    const setupInProgress = localStorage.getItem('userSetupInProgress');
+    if (setupInProgress === 'true') {
+      return;
+    }
+    
     try {
       let fresh: any = null;
       // Preferir id exato do crmUser quando existir

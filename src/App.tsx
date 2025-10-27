@@ -71,6 +71,9 @@ function AppContent() {
   const { user, crmUser, companyId, loading, userRole } = useCrmAuth();
   const { isSetupIncomplete, isChecking } = useSetupGuard();
   
+  // Verificação direta da flag de setup em progresso
+  const setupInProgress = localStorage.getItem('userSetupInProgress') === 'true';
+  
   // Loading state
   if (loading) {
     return (
@@ -118,7 +121,7 @@ function AppContent() {
           
           {/* Public routes */}
           <Route path="/crm/login" element={
-            user ? (crmUser && !isSetupIncomplete ? <Navigate to="/home" replace /> : <Login />) : <Login />
+            user ? (crmUser && !isSetupIncomplete && !setupInProgress ? <Navigate to="/home" replace /> : <Login />) : <Login />
           } />
           <Route path="/user-setup" element={
             user ? <UserSetup /> : <Navigate to="/crm/login" replace />
@@ -127,10 +130,10 @@ function AppContent() {
           
           {/* Protected routes */}
           <Route path="/" element={
-            user ? (isSetupIncomplete ? <Navigate to="/user-setup" replace /> : <Navigate to="/home" replace />) : <Navigate to="/landing" replace />
+            user ? (isSetupIncomplete || setupInProgress ? <Navigate to="/user-setup" replace /> : <Navigate to="/home" replace />) : <Navigate to="/landing" replace />
           } />
           <Route path="/home" element={
-            user ? (isSetupIncomplete ? <Navigate to="/user-setup" replace /> : <Home />) : <Navigate to="/crm/login" replace />
+            user ? (isSetupIncomplete || setupInProgress ? <Navigate to="/user-setup" replace /> : <Home />) : <Navigate to="/crm/login" replace />
           } />
           <Route path="/simulador" element={
             user ? (
