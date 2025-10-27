@@ -1,73 +1,113 @@
-# Welcome to your Lovable project
+# BP Sales App - Plataforma de Simulação de Consórcio Patrimonial
 
-## Project info
+## 📋 Sobre o Projeto
 
-**URL**: https://lovable.dev/projects/152d99a3-6e37-403c-b1e1-bc7a04060978
+Esta é uma plataforma completa para simulação e gestão de consórcios patrimoniais, desenvolvida com tecnologias modernas e interface responsiva.
 
-## How can I edit this code?
+## 🚀 Tecnologias Utilizadas
 
-There are several ways of editing your application.
+- **Frontend**: React 18 + TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS + shadcn/ui
+- **Backend**: Supabase (PostgreSQL + Auth + Storage)
+- **Deploy**: Vercel + GitHub Actions
+- **State Management**: React Query + Context API
 
-**Use Lovable**
+## 🛠️ Como Executar Localmente
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/152d99a3-6e37-403c-b1e1-bc7a04060978) and start prompting.
+### Pré-requisitos
+- Node.js 18+ 
+- npm ou yarn
+- Conta Supabase configurada
 
-Changes made via Lovable will be committed automatically to this repo.
+### Instalação
 
-**Use your preferred IDE**
+```bash
+# Clone o repositório
+git clone https://github.com/eduardobestpiece/bpsalesapp.git
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+# Entre no diretório
+cd bpsalesapp
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+# Instale as dependências
+npm install
 
-Follow these steps:
+# Configure as variáveis de ambiente
+cp .env.example .env.local
+# Edite o arquivo .env.local com suas credenciais do Supabase
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Execute o servidor de desenvolvimento
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+A aplicação estará disponível em `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## 📦 Scripts Disponíveis
 
-**Use GitHub Codespaces**
+- `npm run dev` - Servidor de desenvolvimento (porta 8080)
+- `npm run build` - Build de produção
+- `npm run preview` - Preview do build de produção
+- `npm run lint` - Executa o linter
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🌐 Deploy Automático
 
-## What technologies are used for this project?
+### Via Vercel (Recomendado)
 
-This project is built with:
+1. **Conecte o repositório ao Vercel**:
+   - Acesse [vercel.com](https://vercel.com)
+   - Importe o repositório GitHub
+   - Configure as variáveis de ambiente
+   - Deploy automático será feito a cada push na branch `main`
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+2. **Configuração GitHub Actions**:
+   - Configure os secrets no GitHub:
+     - `VERCEL_TOKEN`: Token do Vercel
+     - `ORG_ID`: ID da organização Vercel
+     - `PROJECT_ID`: ID do projeto Vercel
 
-## How can I deploy this project?
+### Via GitHub Pages
 
-Simply open [Lovable](https://lovable.dev/projects/152d99a3-6e37-403c-b1e1-bc7a04060978) and click on Share -> Publish.
+O projeto está configurado para deploy automático via GitHub Actions. A cada push na branch `main`, o deploy será executado automaticamente.
 
-## Can I connect a custom domain to my Lovable project?
+## 🔧 Configuração do Supabase
 
-Yes, you can!
+1. Crie um projeto no [Supabase](https://supabase.com)
+2. Configure as tabelas necessárias usando as migrações em `/supabase/migrations/`
+3. Configure as políticas RLS (Row Level Security)
+4. Adicione as credenciais no arquivo `.env.local`
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+## 📁 Estrutura do Projeto
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+```
+src/
+├── components/          # Componentes React
+│   ├── ui/             # Componentes base (shadcn/ui)
+│   ├── Layout/         # Componentes de layout
+│   ├── Simulator/      # Componentes do simulador
+│   └── ...
+├── pages/              # Páginas da aplicação
+├── hooks/              # Custom hooks
+├── contexts/           # Contextos React
+├── services/           # Serviços e integrações
+├── types/              # Definições TypeScript
+└── utils/              # Utilitários
+```
+
+## 🔐 Funcionalidades Principais
+
+- ✅ Sistema de autenticação completo
+- ✅ Simulador de consórcio patrimonial
+- ✅ Dashboard administrativo
+- ✅ Gestão de usuários e permissões
+- ✅ CRM integrado
+- ✅ Relatórios e analytics
+- ✅ Interface responsiva
+- ✅ Modo escuro/claro
+
+## 📞 Suporte
+
+Para dúvidas ou suporte, entre em contato através do repositório GitHub.
+
+## 📄 Licença
+
+Este projeto é proprietário e confidencial.

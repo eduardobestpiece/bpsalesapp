@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,9 +24,17 @@ export default function SettingsGestao() {
   const { selectedCompanyId } = useCompany();
   const effectiveCompanyId = selectedCompanyId || companyId;
   const permissions = usePermissions();
+  const [searchParams] = useSearchParams();
 
-  // Determinar aba padrão baseado nas permissões
+  // Determinar aba padrão baseado nas permissões ou parâmetro da URL
   const getDefaultTab = () => {
+    // Verificar se há parâmetro 'tab' na URL
+    const urlTab = searchParams.get('tab');
+    if (urlTab && ['company', 'users', 'origens', 'motivos-perda', 'perfil'].includes(urlTab)) {
+      return urlTab as 'company' | 'users' | 'origens' | 'motivos-perda' | 'perfil';
+    }
+    
+    // Fallback para lógica baseada em permissões
     if (permissions.canAccessConfigurations) {
       return 'company';
     } else if (permissions.canAccessPerfil) {
@@ -35,6 +44,14 @@ export default function SettingsGestao() {
   };
 
   const [tabValue, setTabValue] = useState<'company' | 'users' | 'origens' | 'motivos-perda' | 'perfil'>(getDefaultTab());
+
+  // Atualizar aba quando o parâmetro da URL mudar
+  useEffect(() => {
+    const urlTab = searchParams.get('tab');
+    if (urlTab && ['company', 'users', 'origens', 'motivos-perda', 'perfil'].includes(urlTab)) {
+      setTabValue(urlTab as 'company' | 'users' | 'origens' | 'motivos-perda' | 'perfil');
+    }
+  }, [searchParams]);
 
   // Estado do formulário da empresa
   const [companyName, setCompanyName] = useState('');
