@@ -1,11 +1,11 @@
 
 import { useNavigate } from 'react-router-dom';
-import { Calculator, Settings } from 'lucide-react';
+import { Calculator, Settings, Users } from 'lucide-react';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useEffect } from 'react';
 import { useDefaultBranding } from '@/hooks/useDefaultBranding';
 import { useUserPermissions } from '@/hooks/useUserPermissions';
-import { useCanAccessSimulator } from '@/hooks/usePermissions';
+import { useCanAccessSimulator, usePermissions } from '@/hooks/usePermissions';
 import { CompanyProvider } from '@/contexts/CompanyContext';
 
 function HomeContent() {
@@ -18,6 +18,9 @@ function HomeContent() {
   
   // Hook para verificar permissões do Simulador baseadas em role
   const canAccessSimulatorByRole = useCanAccessSimulator();
+  
+  // Hook para verificar permissões gerais
+  const permissions = usePermissions();
 
   // Debug: Log do branding
   useEffect(() => {
@@ -67,6 +70,20 @@ function HomeContent() {
             <div className="flex-1 text-left">
               <span className="text-xl font-semibold text-white block mb-1">Simulador</span>
               <span className="text-gray-300 text-sm">Acesse o simulador de propostas.</span>
+            </div>
+          </button>
+        )}
+        
+        {/* Botão Gestão */}
+        {permissions.canAccessGestao && (
+          <button
+            onClick={() => navigate('/gestao/leads')}
+            className="w-full bg-[#1F1F1F] rounded-2xl shadow-xl p-6 flex items-center hover:bg-[#161616] transition border border-white/10 group focus:outline-none focus:ring-2 focus:ring-[#e50f5f]/50"
+          >
+            <Users className="h-12 w-12 mr-6 group-hover:scale-110 transition" style={{ color: defaultBranding?.primary_color || '#E50F5E' }} />
+            <div className="flex-1 text-left">
+              <span className="text-xl font-semibold text-white block mb-1">Gestão</span>
+              <span className="text-gray-300 text-sm">Gerencie leads, agendamentos e vendas.</span>
             </div>
           </button>
         )}

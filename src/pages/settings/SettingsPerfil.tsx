@@ -5,10 +5,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AvatarCropModal } from '@/components/ui/AvatarCropModal';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Save, Loader2, ImageIcon } from 'lucide-react';
+import { Save, Loader2, ImageIcon, Lock, Eye, EyeOff } from 'lucide-react';
 
 export default function SettingsPerfil() {
   const { crmUser, updateCrmUserInContext, refreshCrmUser } = useCrmAuth();
@@ -18,6 +20,15 @@ export default function SettingsPerfil() {
   const [isCropModalOpen, setIsCropModalOpen] = useState(false);
   const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
   const avatarInputRef = useRef<HTMLInputElement>(null);
+  
+  // Estados para mudança de senha
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    newPassword: '',
+    confirmPassword: '',
+  });
   
   const [formData, setFormData] = useState({
     first_name: '',
@@ -156,6 +167,47 @@ export default function SettingsPerfil() {
     }
   };
 
+  const handlePasswordChange = async () => {
+    if (!passwordData.newPassword || !passwordData.confirmPassword) {
+      toast.error('Preencha todos os campos de senha');
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error('As senhas não coincidem');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      toast.error('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: passwordData.newPassword
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Limpar campos de senha
+      setPasswordData({
+        newPassword: '',
+        confirmPassword: '',
+      });
+
+      toast.success('Senha alterada com sucesso!');
+    } catch (error: any) {
+      console.error('Erro ao alterar senha:', error);
+      toast.error('Erro ao alterar senha: ' + (error?.message || 'Erro desconhecido'));
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
   const userInitials = `${(crmUser?.first_name?.[0] || 'U')}${(crmUser?.last_name?.[0] || '')}`;
 
   return (
@@ -266,6 +318,91 @@ export default function SettingsPerfil() {
           rows={4} 
         />
       </div>
+
+      {/* Separador */}
+      <Separator className="my-8" />
+
+      {/* Seção de Mudança de Senha */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Lock className="h-5 w-5" />
+            Alterar Senha
+          </CardTitle>
+          <CardDescription>
+            Digite uma nova senha para sua conta. A senha deve ter pelo menos 6 caracteres.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="newPassword">Nova Senha</Label>
+            <div className="relative">
+              <Input 
+                id="newPassword" 
+                type={showPassword ? 'text' : 'password'}
+                value={passwordData.newPassword} 
+                onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                placeholder="Digite sua nova senha"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <Eye className="h-4 w-4 text-muted-foreground" />
+                )}
+              </Button>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
+            <div className="relative">
+              <Input 
+                id="confirmPassword" 
+                type={showConfirmPassword ? 'text' : 'password'}
+                value={passwordData.confirmPassword} 
+                onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                placeholder="Confirme sua nova senha"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="h-4 w-4 text-muted-foreground" />
+                ) : (
+                  <Eye className="h-4 w-4 text-muted-foreground" />
+                )}
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <Button 
+              onClick={handlePasswordChange} 
+              disabled={isChangingPassword || !passwordData.newPassword || !passwordData.confirmPassword} 
+              variant="brandPrimaryToSecondary" 
+              className="brand-radius"
+            >
+              {isChangingPassword ? (
+                <Loader2 size={16} className="animate-spin mr-2" />
+              ) : (
+                <Lock size={16} className="mr-2" />
+              )}
+              <span>{isChangingPassword ? 'Alterando...' : 'Alterar Senha'}</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="flex justify-end">
         <Button 
