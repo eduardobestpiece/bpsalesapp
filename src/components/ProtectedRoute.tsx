@@ -1,6 +1,7 @@
 import React from 'react';
 import { useLocation, Navigate } from 'react-router-dom';
 import { useUserPermissions } from '@/hooks/useUserPermissions';
+import { useCanAccessSimulator } from '@/hooks/usePermissions';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { AccessDenied } from './AccessDenied';
 
@@ -19,6 +20,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 }) => {
   const { userRole } = useCrmAuth();
   const { canAccessModule, canAccessSimulatorModule, isLoading } = useUserPermissions();
+  const canAccessSimulatorByRole = useCanAccessSimulator();
   const location = useLocation();
 
   // Se for master, sempre permitir acesso
@@ -42,6 +44,12 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Caso especial para simulador: verificar se pode acessar o módulo
   if (requiredModule === 'simulator') {
+    // Primeiro verificar se tem permissão baseada em role
+    if (!canAccessSimulatorByRole) {
+      return <AccessDenied moduleName="o Simulador" action="acessar" />;
+    }
+    
+    // Depois verificar permissões customizadas
     const canAccessSimulatorModuleResult = canAccessSimulatorModule();
     if (!canAccessSimulatorModuleResult) {
       return <AccessDenied moduleName="o Simulador" action="acessar" />;

@@ -5,6 +5,7 @@ import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useEffect } from 'react';
 import { useDefaultBranding } from '@/hooks/useDefaultBranding';
 import { useUserPermissions } from '@/hooks/useUserPermissions';
+import { useCanAccessSimulator } from '@/hooks/usePermissions';
 import { CompanyProvider } from '@/contexts/CompanyContext';
 
 function HomeContent() {
@@ -14,6 +15,9 @@ function HomeContent() {
   
   // Hook para verificar permissões customizadas do usuário
   const { canAccessSimulator, canAccessSimulatorConfig, isLoading: permissionsLoading } = useUserPermissions();
+  
+  // Hook para verificar permissões do Simulador baseadas em role
+  const canAccessSimulatorByRole = useCanAccessSimulator();
 
   // Debug: Log do branding
   useEffect(() => {
@@ -29,8 +33,8 @@ function HomeContent() {
   }
 
   // Verificar permissões usando o novo sistema
-  const canAccessSimulatorPage = canAccessSimulator();
-  const canAccessConfigPage = canAccessSimulatorConfig();
+  const canAccessSimulatorPage = canAccessSimulator() && canAccessSimulatorByRole;
+  const canAccessConfigPage = canAccessSimulatorConfig() && canAccessSimulatorByRole;
   const canAccessSettingsModule = canAccessConfigPage || userRole === 'admin' || userRole === 'master';
 
   const handleGoToSimulator = () => {

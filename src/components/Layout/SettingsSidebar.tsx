@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useCompany } from '@/contexts/CompanyContext';
 import { useQuery } from '@tanstack/react-query';
+import { usePermissions } from '@/hooks/usePermissions';
 import {
   Sidebar,
   SidebarContent,
@@ -27,7 +28,7 @@ export const SettingsSidebar = () => {
   const navigate = useNavigate();
   const { userRole, companyId, crmUser, signOut } = useCrmAuth();
   const { selectedCompanyId, setSelectedCompanyId } = useCompany();
-  const [pagePermissions, setPagePermissions] = useState<any>({});
+  const permissions = usePermissions();
 
   const { data: companies = [], isLoading: companiesLoading } = useQuery({
     queryKey: ['companies'],
@@ -79,21 +80,7 @@ export const SettingsSidebar = () => {
     },
   });
 
-  useEffect(() => {
-    if (!companyId || !userRole) return;
-    supabase
-      .from('role_page_permissions')
-      .select('*')
-      .eq('company_id', companyId)
-      .eq('role', userRole as any)
-      .then(({ data }) => {
-        const perms: any = {};
-        data?.forEach((row: any) => {
-          perms[row.page] = row.allowed;
-        });
-        setPagePermissions(perms);
-      });
-  }, [companyId, userRole]);
+  // useEffect removido - usando hook usePermissions agora
 
   useEffect(() => {
     if (visibleCompanies.length > 0) {
@@ -212,40 +199,56 @@ export const SettingsSidebar = () => {
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {/* 1. Campos */}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/campos')}>
-                  <Link to="/configuracoes/campos">
-                    <CheckSquare className="h-4 w-4" />
-                    <span>Campos</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {/* 1. Campos - apenas para usuários com acesso a configurações */}
+              {permissions.canAccessConfigurations && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/campos')}>
+                    <Link to="/configuracoes/campos">
+                      <CheckSquare className="h-4 w-4" />
+                      <span>Campos</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
 
-              {/* 2. Formulários */}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/formularios')}>
-                  <Link to="/configuracoes/formularios">
-                    <SlidersHorizontal className="h-4 w-4" />
-                    <span>Formulários</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {/* 2. Formulários - apenas para usuários com acesso a configurações */}
+              {permissions.canAccessConfigurations && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/formularios')}>
+                    <Link to="/configuracoes/formularios">
+                      <SlidersHorizontal className="h-4 w-4" />
+                      <span>Formulários</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
 
-              {/* 3. Definições */}
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/gestao')}>
-                  <Link to="/configuracoes/gestao">
-                    <Settings className="h-4 w-4" />
-                    <span>Definições</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {/* 3. Definições - apenas para usuários com acesso a configurações */}
+              {permissions.canAccessConfigurations && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/gestao')}>
+                    <Link to="/configuracoes/gestao">
+                      <Settings className="h-4 w-4" />
+                      <span>Definições</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
 
-              {/* Removido: item de menu CRM */}
+              {/* 4. Perfil - apenas para usuários com acesso ao perfil */}
+              {permissions.canAccessPerfil && !permissions.canAccessConfigurations && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/gestao')}>
+                    <Link to="/configuracoes/gestao">
+                      <UserIcon className="h-4 w-4" />
+                      <span>Perfil</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
 
-              {/* 4. Master Config */}
-              {userRole === 'master' && (
+              {/* 5. Master Config - apenas para masters */}
+              {permissions.canAccessMasterConfig && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/master')}>
                     <Link to="/configuracoes/master">

@@ -2,7 +2,6 @@
 import { User, Settings, LogOut } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useModule } from '@/contexts/ModuleContext';
-import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,18 +15,9 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export const UserMenu = () => {
   const { setModule } = useModule();
-  const { crmUser } = useCrmAuth();
   const navigate = useNavigate();
 
-  // Gerar iniciais do usuário
-  const userInitials = crmUser 
-    ? `${(crmUser.first_name?.[0] || 'U')}${(crmUser.last_name?.[0] || '')}`
-    : 'U';
-
-  // Nome completo do usuário
-  const fullName = crmUser 
-    ? `${crmUser.first_name || ''} ${crmUser.last_name || ''}`.trim() || 'Usuário'
-    : 'Usuário';
+  // Removido: handleGoToCrm
 
   // Exemplo de logout para referência futura:
   // const handleLogout = async () => {
@@ -40,9 +30,9 @@ export const UserMenu = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-12 w-12 rounded-full ring-2 ring-primary-200 hover:ring-primary-300 transition-all duration-200">
           <Avatar className="h-10 w-10">
-            <AvatarImage src={crmUser?.avatar_url || ''} alt={fullName} />
+            <AvatarImage src="/placeholder-avatar.jpg" alt="User" />
             <AvatarFallback className="bg-gradient-primary text-white font-semibold">
-              {userInitials}
+              JS
             </AvatarFallback>
           </Avatar>
         </Button>
@@ -52,15 +42,14 @@ export const UserMenu = () => {
           <div className="flex flex-col space-y-2">
             <div className="flex items-center space-x-3">
               <Avatar className="h-10 w-10">
-                <AvatarImage src={crmUser?.avatar_url || ''} alt={fullName} />
                 <AvatarFallback className="bg-gradient-primary text-white font-semibold">
-                  {userInitials}
+                  JS
                 </AvatarFallback>
               </Avatar>
               <div>
-                <p className="text-base font-semibold leading-none text-secondary">{fullName}</p>
+                <p className="text-base font-semibold leading-none text-secondary">João Silva</p>
                 <p className="text-sm leading-none text-secondary/60 mt-1">
-                  {crmUser?.email || 'email@exemplo.com'}
+                  joao@exemplo.com
                 </p>
               </div>
             </div>

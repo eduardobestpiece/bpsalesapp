@@ -1,19 +1,24 @@
-import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEffect, useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { AvatarCropModal } from '@/components/ui/AvatarCropModal';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Camera, Save } from 'lucide-react';
+import { Save, Loader2, ImageIcon } from 'lucide-react';
 
 export default function SettingsPerfil() {
   const { crmUser, updateCrmUserInContext, refreshCrmUser } = useCrmAuth();
   const [isSaving, setIsSaving] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string>('');
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false);
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -30,9 +35,6 @@ export default function SettingsPerfil() {
 
   useEffect(() => {
     if (!crmUser) return;
-    console.log('🔍 Debug - crmUser carregado:', crmUser);
-    console.log('🔍 Debug - avatar_url do crmUser:', (crmUser as any).avatar_url);
-    
     setFormData({
       first_name: crmUser.first_name || '',
       last_name: crmUser.last_name || '',
@@ -42,219 +44,88 @@ export default function SettingsPerfil() {
       bio: (crmUser as any).bio || '',
       avatar_url: (crmUser as any).avatar_url || '',
     });
-    
-    console.log('🔍 Debug - formData atualizado:', {
-      first_name: crmUser.first_name || '',
-      last_name: crmUser.last_name || '',
-      email: crmUser.email || '',
-      phone: crmUser.phone || '',
-      birth_date: (crmUser as any).birth_date || '',
-      bio: (crmUser as any).bio || '',
-      avatar_url: (crmUser as any).avatar_url || '',
-    });
+    setAvatarPreview((crmUser as any).avatar_url || '');
   }, [crmUser]);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleImageSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      console.log('🔍 Debug - Arquivo selecionado:', file.name, file.size, file.type);
-      setSelectedImage(file);
-      
-      // Fazer upload automaticamente após seleção
-      await handleUploadAvatar(file);
-    }
-  };
-
-  const handleUploadAvatar = async (file?: File) => {
-    const imageToUpload = file || selectedImage;
-    
-    console.log('🔍 Debug - handleUploadAvatar chamado!');
-    console.log('🔍 Debug - imageToUpload:', imageToUpload);
-    console.log('🔍 Debug - crmUser:', crmUser);
-    
-    if (!imageToUpload || !crmUser) {
-      console.log('❌ Debug - Condições não atendidas para upload');
+  // Função para abrir modal de crop quando arquivo é selecionado
+  const handleFileSelect = (file: File) => {
+    if (!crmUser) {
+      toast.error('Usuário não encontrado');
       return;
     }
     
+    // Validar se é uma imagem
+    if (!file.type.startsWith('image/')) {
+      toast.error('Por favor, selecione apenas arquivos de imagem');
+      return;
+    }
+    
+    // Validar tamanho (máximo 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('A imagem deve ter no máximo 5MB');
+      return;
+    }
+    
+    setSelectedImageFile(file);
+    setIsCropModalOpen(true);
+  };
+
+  // Função de upload após crop
+  const handleUploadAvatar = async (croppedFile: File) => {
+    if (!crmUser) {
+      toast.error('Usuário não encontrado');
+      return;
+    }
+    
+    setIsUploadingAvatar(true);
     try {
-      console.log('🔍 Debug - Tamanho do arquivo:', imageToUpload.size, 'bytes');
-      console.log('🔍 Debug - Tipo do arquivo:', imageToUpload.type);
+      console.log('🔄 Iniciando upload do avatar...');
+      console.log('📁 Arquivo:', croppedFile.name, 'Tamanho:', croppedFile.size, 'bytes');
+      console.log('👤 Usuário ID:', crmUser.id);
       
-      // Verificar se o arquivo é muito grande (limite de 2MB para Base64)
-      if (imageToUpload.size > 2 * 1024 * 1024) {
-        throw new Error('Arquivo muito grande. Máximo 2MB para avatar.');
+      const ext = croppedFile.name.split('.').pop();
+      const fileName = `${crmUser.id}/avatar_${Date.now()}.${ext}`;
+      
+      console.log('📝 Nome do arquivo:', fileName);
+      
+      const { error: uploadError } = await supabase.storage
+        .from('company-logos')
+        .upload(fileName, croppedFile);
+        
+      if (uploadError) {
+        console.error('❌ Erro no upload:', uploadError);
+        throw uploadError;
       }
       
-      // Verificar se o arquivo é válido
-      if (!imageToUpload.type.startsWith('image/')) {
-        throw new Error('Arquivo deve ser uma imagem válida.');
-      }
+      console.log('✅ Upload concluído com sucesso!');
       
-      // Verificar se o arquivo não está corrompido
-      if (imageToUpload.size === 0) {
-        throw new Error('Arquivo está vazio ou corrompido.');
-      }
+      const { data: { publicUrl } } = await supabase.storage
+        .from('company-logos')
+        .getPublicUrl(fileName);
       
-      console.log('🔍 Debug - Validações do arquivo passaram!');
+      console.log('🔗 URL pública:', publicUrl);
+
+      // Atualizar preview local
+      setAvatarPreview(publicUrl);
+      setFormData(prev => ({ ...prev, avatar_url: publicUrl }));
       
-      // Converter imagem para Base64 usando múltiplas estratégias
-      console.log('🔍 Debug - Convertendo imagem para Base64 usando múltiplas estratégias...');
+      toast.success('Avatar enviado com sucesso!');
       
-      const base64String = await new Promise<string>(async (resolve, reject) => {
-        try {
-          // Estratégia 1: Criar Blob e usar ArrayBuffer
-          console.log('🔍 Debug - Estratégia 1: Criando Blob do arquivo...');
-          const blob = new Blob([imageToUpload], { type: imageToUpload.type });
-          console.log('🔍 Debug - Blob criado com sucesso! Tamanho:', blob.size, 'bytes');
-          
-          const arrayBuffer = await blob.arrayBuffer();
-          console.log('🔍 Debug - ArrayBuffer do Blob obtido! Tamanho:', arrayBuffer.byteLength, 'bytes');
-          
-          // Converter ArrayBuffer para Base64
-          console.log('🔍 Debug - Convertendo ArrayBuffer para Base64...');
-          const bytes = new Uint8Array(arrayBuffer);
-          let binary = '';
-          for (let i = 0; i < bytes.byteLength; i++) {
-            binary += String.fromCharCode(bytes[i]);
-          }
-          
-          const base64 = btoa(binary);
-          const mimeType = imageToUpload.type || 'image/png';
-          const dataUrl = `data:${mimeType};base64,${base64}`;
-          
-          console.log('🔍 Debug - Base64 gerado com sucesso via Blob! Tamanho:', dataUrl.length, 'caracteres');
-          resolve(dataUrl);
-          
-        } catch (blobError) {
-          console.error('❌ Debug - Erro na estratégia Blob:', blobError);
-          
-          try {
-            // Estratégia 2: URL.createObjectURL + fetch
-            console.log('🔍 Debug - Estratégia 2: Usando URL.createObjectURL...');
-            const objectUrl = URL.createObjectURL(imageToUpload);
-            console.log('🔍 Debug - ObjectURL criado:', objectUrl);
-            
-            const response = await fetch(objectUrl);
-            console.log('🔍 Debug - Fetch response obtido!');
-            
-            const arrayBuffer = await response.arrayBuffer();
-            console.log('🔍 Debug - ArrayBuffer via fetch obtido! Tamanho:', arrayBuffer.byteLength, 'bytes');
-            
-            // Converter ArrayBuffer para Base64
-            const bytes = new Uint8Array(arrayBuffer);
-            let binary = '';
-            for (let i = 0; i < bytes.byteLength; i++) {
-              binary += String.fromCharCode(bytes[i]);
-            }
-            
-            const base64 = btoa(binary);
-            const mimeType = imageToUpload.type || 'image/png';
-            const dataUrl = `data:${mimeType};base64,${base64}`;
-            
-            // Limpar ObjectURL
-            URL.revokeObjectURL(objectUrl);
-            
-            console.log('🔍 Debug - Base64 gerado com sucesso via ObjectURL! Tamanho:', dataUrl.length, 'caracteres');
-            resolve(dataUrl);
-            
-          } catch (objectUrlError) {
-            console.error('❌ Debug - Erro na estratégia ObjectURL:', objectUrlError);
-            
-            try {
-              // Estratégia 3: FileReader tradicional (último recurso)
-              console.log('🔍 Debug - Estratégia 3: Tentando FileReader tradicional...');
-              const reader = new FileReader();
-              
-              reader.onload = () => {
-                console.log('🔍 Debug - FileReader: Sucesso!');
-                const result = reader.result as string;
-                console.log('🔍 Debug - FileReader: Resultado obtido, tamanho:', result.length, 'caracteres');
-                resolve(result);
-              };
-              
-              reader.onerror = (event) => {
-                console.error('❌ Debug - FileReader: Erro:', event);
-                console.error('❌ Debug - FileReader: Erro details:', reader.error);
-                reject(new Error(`Todas as estratégias falharam. Último erro: ${reader.error?.message || 'Erro desconhecido'}`));
-              };
-              
-              reader.readAsDataURL(imageToUpload);
-              
-            } catch (readerError) {
-              console.error('❌ Debug - FileReader: Erro ao chamar readAsDataURL:', readerError);
-              reject(new Error(`Todas as estratégias falharam. Erro final: ${readerError}`));
-            }
-          }
-        }
+    } catch (error: any) {
+      console.error('❌ Erro ao enviar avatar:', error);
+      console.error('❌ Detalhes do erro:', {
+        message: error.message,
+        status: error.status,
+        statusText: error.statusText,
+        code: error.code
       });
-      
-      console.log('🔍 Debug - Base64 gerado com sucesso! Tamanho:', base64String.length, 'caracteres');
-      
-      // Atualizar estado local
-      setFormData(prev => ({ ...prev, avatar_url: base64String }));
-      
-      // Salvar automaticamente no banco de dados
-      const { error: updateError } = await supabase
-        .from('crm_users')
-        .update({ 
-          avatar_url: base64String,
-          avatar_base64: base64String 
-        })
-        .eq('id', crmUser.id);
-      
-      if (updateError) {
-        console.error('❌ Debug - Erro ao salvar avatar:', updateError);
-        throw updateError;
-      }
-      
-      console.log('✅ Debug - Avatar salvo com sucesso no banco!');
-      
-      // Atualizar contexto do usuário com o avatar_url
-      await updateCrmUserInContext({ avatar_url: base64String });
-      
-      // Recarregar dados do usuário para garantir sincronização
-      await refreshCrmUser();
-      
-      toast.success('Avatar enviado e salvo com sucesso!');
-    } catch (e) {
-      console.error('❌ Debug - Erro no upload do avatar:', e);
-      
-      let errorMessage = 'Erro ao enviar avatar';
-      let showRetryOption = true;
-      
-      if (e instanceof Error) {
-        if (e.message.includes('muito grande')) {
-          errorMessage = 'Arquivo muito grande. Máximo 2MB para avatar.';
-        } else if (e.message.includes('Todas as estratégias falharam')) {
-          errorMessage = 'Não foi possível processar este arquivo. Pode ser um problema de permissão ou formato.';
-          showRetryOption = false;
-        } else if (e.message.includes('ler arquivo')) {
-          errorMessage = 'Erro ao processar arquivo. Tente novamente.';
-        } else {
-          errorMessage = `Erro: ${e.message}`;
-        }
-      }
-      
-      // Mostrar toast com opção de continuar sem avatar
-      if (showRetryOption) {
-        toast.error(errorMessage);
-      } else {
-        toast.error(errorMessage, {
-          duration: 8000,
-          action: {
-            label: 'Continuar sem foto',
-            onClick: () => {
-              console.log('🔍 Debug - Usuário escolheu continuar sem avatar');
-              toast.success('Perfil salvo sem foto. Você pode tentar adicionar uma foto mais tarde.');
-            }
-          }
-        });
-      }
+      toast.error('Erro ao enviar avatar: ' + (error?.message || 'Erro desconhecido'));
+    } finally {
+      setIsUploadingAvatar(false);
     }
   };
 
@@ -262,34 +133,23 @@ export default function SettingsPerfil() {
     if (!crmUser) return;
     setIsSaving(true);
     try {
-      // Preparar dados para atualização, convertendo strings vazias para null
-      const updateData = {
-        first_name: formData.first_name || null,
-        last_name: formData.last_name || null,
-        phone: formData.phone || null,
-        birth_date: formData.birth_date || null,
-        bio: formData.bio || null,
-        avatar_url: formData.avatar_url || null, // Manter avatar_url mesmo se vazio
-      };
-
-      console.log('🔍 Debug - Dados sendo enviados:', updateData);
-      console.log('🔍 Debug - ID do usuário:', crmUser.id);
-
       const { error } = await supabase
         .from('crm_users')
-        .update(updateData)
+        .update({
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          phone: formData.phone,
+          birth_date: formData.birth_date,
+          bio: formData.bio,
+          avatar_url: formData.avatar_url,
+        })
         .eq('id', crmUser.id);
 
-      if (error) {
-        console.error('❌ Debug - Erro do Supabase:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log('✅ Debug - Perfil atualizado com sucesso!');
       await updateCrmUserInContext();
       toast.success('Perfil atualizado com sucesso!');
     } catch (error) {
-      console.error('❌ Debug - Erro ao atualizar perfil:', error);
       toast.error('Erro ao atualizar perfil');
     } finally {
       setIsSaving(false);
@@ -299,78 +159,145 @@ export default function SettingsPerfil() {
   const userInitials = `${(crmUser?.first_name?.[0] || 'U')}${(crmUser?.last_name?.[0] || '')}`;
 
   return (
-    <>
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Meu Perfil</h1>
-        <p className="text-muted-foreground">Gerencie suas informações pessoais e configurações</p>
+    <div className="space-y-6">
+      {/* Seção de Avatar */}
+      <div className="space-y-4">
+        <Label>Foto do Perfil</Label>
+        <div className="flex items-center space-x-6">
+          {/* Preview atual */}
+          <Avatar className="h-24 w-24">
+            <AvatarImage src={avatarPreview} alt="Avatar" />
+            <AvatarFallback className="text-2xl">{userInitials}</AvatarFallback>
+          </Avatar>
+          
+          {/* Upload area - baseado no sistema de logos */}
+          <div className="space-y-2">
+            <Label>Nova foto de perfil</Label>
+            <div
+              className="relative w-full border rounded-lg bg-muted/30 flex items-center justify-center overflow-hidden cursor-pointer p-3"
+              style={{ minHeight: 120, aspectRatio: '1/1' }}
+              onClick={() => avatarInputRef.current?.click()}
+            >
+              {avatarPreview ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img 
+                  src={avatarPreview} 
+                  alt="Avatar" 
+                  className="h-auto max-h-28 w-auto rounded-full object-cover" 
+                  style={{ aspectRatio: '1/1' }}
+                />
+              ) : (
+                <div className="text-muted-foreground flex flex-col items-center">
+                  <ImageIcon className="h-10 w-10 mb-2" />
+                  <span>Clique para enviar</span>
+                </div>
+              )}
+              {isUploadingAvatar && (
+                <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                  <Loader2 className="h-5 w-5 animate-spin text-white" />
+                </div>
+              )}
+            </div>
+            <Input 
+              type="file" 
+              accept="image/*" 
+              ref={avatarInputRef} 
+              className="hidden" 
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) handleFileSelect(file);
+              }} 
+            />
+          </div>
+        </div>
       </div>
 
-      <Card className="brand-radius">
-        <CardHeader>
-          <CardTitle className="text-foreground">Foto do Perfil</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center space-x-6">
-            <Avatar className="h-24 w-24">
-              <AvatarImage src={formData.avatar_url} alt="Avatar" />
-              <AvatarFallback className="text-2xl">{userInitials}</AvatarFallback>
-            </Avatar>
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">Selecione um arquivo para alterar sua foto</p>
-              <div className="flex items-center gap-2">
-                <Input type="file" accept="image/*" onChange={handleImageSelect} className="max-w-xs" />
-                <Button variant="outline" size="sm" onClick={handleUploadAvatar} disabled={!selectedImage}>
-                  <Camera size={16} />
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                💡 Dica: Se houver problemas com o upload, você pode continuar sem foto e tentar novamente mais tarde.
-              </p>
-            </div>
-          </div>
+      {/* Campos do formulário */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-2">
+          <Label htmlFor="first_name">Nome</Label>
+          <Input 
+            id="first_name" 
+            value={formData.first_name} 
+            onChange={(e) => handleInputChange('first_name', e.target.value)} 
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="last_name">Sobrenome</Label>
+          <Input 
+            id="last_name" 
+            value={formData.last_name} 
+            onChange={(e) => handleInputChange('last_name', e.target.value)} 
+          />
+        </div>
+      </div>
 
-          <div className="mt-8 space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="first_name">Nome</Label>
-                <Input id="first_name" value={formData.first_name} onChange={(e) => handleInputChange('first_name', e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="last_name">Sobrenome</Label>
-                <Input id="last_name" value={formData.last_name} onChange={(e) => handleInputChange('last_name', e.target.value)} />
-              </div>
-            </div>
+      <div className="space-y-2">
+        <Label htmlFor="email">E-mail</Label>
+        <Input id="email" value={formData.email} disabled />
+        <p className="text-xs text-muted-foreground">O e-mail não pode ser alterado.</p>
+      </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input id="email" value={formData.email} disabled />
-              <p className="text-xs text-muted-foreground">O e-mail não pode ser alterado.</p>
-            </div>
+      <div className="space-y-2">
+        <Label htmlFor="phone">Telefone</Label>
+        <Input 
+          id="phone" 
+          value={formData.phone} 
+          onChange={(e) => handleInputChange('phone', e.target.value)} 
+        />
+      </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="phone">Telefone</Label>
-              <Input id="phone" value={formData.phone} onChange={(e) => handleInputChange('phone', e.target.value)} />
-            </div>
+      <div className="space-y-2">
+        <Label htmlFor="birth_date">Data de Nascimento</Label>
+        <Input 
+          id="birth_date" 
+          type="date" 
+          value={formData.birth_date} 
+          onChange={(e) => handleInputChange('birth_date', e.target.value)} 
+        />
+      </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="birth_date">Data de Nascimento</Label>
-              <Input id="birth_date" type="date" value={formData.birth_date} onChange={(e) => handleInputChange('birth_date', e.target.value)} />
-            </div>
+      <div className="space-y-2">
+        <Label htmlFor="bio">Bio</Label>
+        <Textarea 
+          id="bio" 
+          value={formData.bio} 
+          onChange={(e) => handleInputChange('bio', e.target.value)} 
+          rows={4} 
+        />
+      </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="bio">Bio</Label>
-              <Textarea id="bio" value={formData.bio} onChange={(e) => handleInputChange('bio', e.target.value)} rows={4} />
-            </div>
+      <div className="flex justify-end">
+        <Button 
+          onClick={handleSave} 
+          disabled={isSaving} 
+          variant="brandPrimaryToSecondary" 
+          className="brand-radius"
+        >
+          {isSaving ? (
+            <Loader2 size={16} className="animate-spin mr-2" />
+          ) : (
+            <Save size={16} className="mr-2" />
+          )}
+          <span>{isSaving ? 'Salvando...' : 'Salvar Alterações'}</span>
+        </Button>
+      </div>
 
-            <div className="flex justify-end">
-              <Button onClick={handleSave} disabled={isSaving} variant="brandPrimaryToSecondary" className="brand-radius">
-                <Save size={16} />
-                <span>{isSaving ? 'Salvando...' : 'Salvar Alterações'}</span>
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </>
+      {/* Modal de Crop */}
+      <AvatarCropModal
+        isOpen={isCropModalOpen}
+        onClose={() => {
+          setIsCropModalOpen(false);
+          setSelectedImageFile(null);
+        }}
+        onCropComplete={(croppedFile) => {
+          setIsCropModalOpen(false);
+          setSelectedImageFile(null);
+          handleUploadAvatar(croppedFile);
+        }}
+        imageFile={selectedImageFile}
+        isUploading={isUploadingAvatar}
+      />
+    </div>
   );
-} 
+}

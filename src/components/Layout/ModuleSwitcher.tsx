@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useUserPermissions } from '@/hooks/useUserPermissions';
+import { useCanAccessSimulator } from '@/hooks/usePermissions';
 import { useCompany } from '@/contexts/CompanyContext';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -18,6 +19,9 @@ export const ModuleSwitcher = ({ current }: ModuleSwitcherProps) => {
   
   // Hook para verificar permissões customizadas do usuário
   const { canAccessSimulator, canAccessSimulatorConfig } = useUserPermissions();
+  
+  // Hook para verificar permissões do Simulador baseadas em role
+  const canAccessSimulatorByRole = useCanAccessSimulator();
 
   // Buscar branding da empresa
   const currentCompanyId = selectedCompanyId || companyId;
@@ -46,8 +50,8 @@ export const ModuleSwitcher = ({ current }: ModuleSwitcherProps) => {
   const handleModuleChange = (module: string) => {
     if (module === 'simulator') {
       // Verificar permissões para decidir para onde redirecionar
-      const canAccessSimulatorPage = canAccessSimulator();
-      const canAccessConfigPage = canAccessSimulatorConfig();
+      const canAccessSimulatorPage = canAccessSimulator() && canAccessSimulatorByRole;
+      const canAccessConfigPage = canAccessSimulatorConfig() && canAccessSimulatorByRole;
       
       if (canAccessSimulatorPage) {
         navigate('/simulador');
@@ -131,13 +135,18 @@ export const ModuleSwitcher = ({ current }: ModuleSwitcherProps) => {
     );
 
     const list: { key: 'simulator'|'settings'|'gestao'; label: string; path: string; allowed: boolean }[] = [
-      { key: 'simulator', label: 'Simulador', path: '/simulador', allowed: canAccessSimulator() || canAccessSimulatorConfig() },
+      { 
+        key: 'simulator', 
+        label: 'Simulador', 
+        path: '/simulador', 
+        allowed: (canAccessSimulator() || canAccessSimulatorConfig()) && canAccessSimulatorByRole 
+      },
       { key: 'settings', label: 'Configurações', path: computeSettingsPath(), allowed: allowedSettings },
       { key: 'gestao', label: 'Gestão', path: '/gestao', allowed: true },
     ];
 
     return list.filter(m => m.allowed);
-  }, [perms, userRole, settingsPageKeys, canAccessSimulator, canAccessSimulatorConfig]);
+  }, [perms, userRole, settingsPageKeys, canAccessSimulator, canAccessSimulatorConfig, canAccessSimulatorByRole]);
 
   const currentLabel = modules.find(m => m.key === current)?.label || (current === 'settings' ? 'Configurações' : 'Simulador');
 

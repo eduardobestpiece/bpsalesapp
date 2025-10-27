@@ -14,14 +14,27 @@ import { Loader2, ImageIcon, Trash2, Plus } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { LossReasonsManager, OriginsManager } from '@/components/Managers/DefinicoesManagers';
+import { UsersManager } from '@/components/Managers/UsersManager';
+import { usePermissions } from '@/hooks/usePermissions';
 import SettingsPerfil from './SettingsPerfil';
 
 export default function SettingsGestao() {
   const { companyId } = useCrmAuth();
   const { selectedCompanyId } = useCompany();
   const effectiveCompanyId = selectedCompanyId || companyId;
+  const permissions = usePermissions();
 
-  const [tabValue, setTabValue] = useState<'company' | 'users' | 'origens' | 'motivos-perda' | 'perfil'>('company');
+  // Determinar aba padrão baseado nas permissões
+  const getDefaultTab = () => {
+    if (permissions.canAccessConfigurations) {
+      return 'company';
+    } else if (permissions.canAccessPerfil) {
+      return 'perfil';
+    }
+    return 'company';
+  };
+
+  const [tabValue, setTabValue] = useState<'company' | 'users' | 'origens' | 'motivos-perda' | 'perfil'>(getDefaultTab());
 
   // Estado do formulário da empresa
   const [companyName, setCompanyName] = useState('');
@@ -247,6 +260,9 @@ export default function SettingsGestao() {
         <CardContent className="p-0">
           <Tabs value={tabValue} onValueChange={(v) => setTabValue(v as any)} className="w-full">
             <TabsList className="flex items-end border-b border-border/30 bg-transparent p-0 rounded-none justify-start w-fit">
+              {/* Aba Empresa - apenas para usuários com acesso a configurações */}
+              {permissions.canAccessConfigurations && (
+                <>
                   <TabsTrigger 
                     value="company" 
                     className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
@@ -254,6 +270,12 @@ export default function SettingsGestao() {
                     Empresa
                   </TabsTrigger>
                   <div className="w-px h-6 bg-border/30 self-center"></div>
+                </>
+              )}
+
+              {/* Aba Usuários - apenas para usuários que podem gerenciar usuários */}
+              {permissions.canManageUsers && (
+                <>
                   <TabsTrigger 
                     value="users" 
                     className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
@@ -261,6 +283,12 @@ export default function SettingsGestao() {
                     Usuários
                   </TabsTrigger>
                   <div className="w-px h-6 bg-border/30 self-center"></div>
+                </>
+              )}
+
+              {/* Aba Origens - apenas para usuários com acesso a configurações */}
+              {permissions.canAccessConfigurations && (
+                <>
                   <TabsTrigger 
                     value="origens" 
                     className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
@@ -268,6 +296,12 @@ export default function SettingsGestao() {
                     Origens
                   </TabsTrigger>
                   <div className="w-px h-6 bg-border/30 self-center"></div>
+                </>
+              )}
+
+              {/* Aba Motivos de Perda - apenas para usuários com acesso a configurações */}
+              {permissions.canAccessConfigurations && (
+                <>
                   <TabsTrigger 
                     value="motivos-perda" 
                     className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
@@ -275,15 +309,21 @@ export default function SettingsGestao() {
                     Motivos de perda
                   </TabsTrigger>
                   <div className="w-px h-6 bg-border/30 self-center"></div>
-                  <TabsTrigger 
-                    value="perfil" 
-                    className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
-                  >
-                    Perfil
-                  </TabsTrigger>
+                </>
+              )}
+
+              {/* Aba Perfil - sempre visível */}
+              <TabsTrigger 
+                value="perfil" 
+                className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
+              >
+                Perfil
+              </TabsTrigger>
             </TabsList>
 
-              <TabsContent value="company" className="p-6">
+              {/* Conteúdo da aba Empresa - apenas para usuários com acesso a configurações */}
+              {permissions.canAccessConfigurations && (
+                <TabsContent value="company" className="p-6">
               {!effectiveCompanyId ? (
                 <p className="text-muted-foreground">Selecione uma empresa para editar.</p>
               ) : (
@@ -508,18 +548,25 @@ export default function SettingsGestao() {
                     </div>
             )}
               </TabsContent>
+              )}
 
-              <TabsContent value="users" className="p-6">
-              <div className="text-muted-foreground">
-                A gestão de usuários integrada ao CRM foi removida desta plataforma. Em breve disponibilizaremos uma nova seção de usuários.
-                </div>
+              {/* Conteúdo da aba Usuários - apenas para usuários que podem gerenciar usuários */}
+              {permissions.canManageUsers && (
+                <TabsContent value="users" className="p-6">
+                <UsersManager companyId={effectiveCompanyId as string} />
               </TabsContent>
+              )}
 
-            <TabsContent value="origens" className="p-6">
-              <OriginsManager />
-            </TabsContent>
+              {/* Conteúdo da aba Origens - apenas para usuários com acesso a configurações */}
+              {permissions.canAccessConfigurations && (
+                <TabsContent value="origens" className="p-6">
+                  <OriginsManager />
+                </TabsContent>
+              )}
 
-            <TabsContent value="motivos-perda" className="p-6">
+              {/* Conteúdo da aba Motivos de Perda - apenas para usuários com acesso a configurações */}
+              {permissions.canAccessConfigurations && (
+                <TabsContent value="motivos-perda" className="p-6">
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -533,8 +580,10 @@ export default function SettingsGestao() {
                 <LossReasonsManager />
               </div>
             </TabsContent>
+              )}
 
-            <TabsContent value="perfil" className="p-6">
+              {/* Conteúdo da aba Perfil - sempre visível */}
+              <TabsContent value="perfil" className="p-6">
               <SettingsPerfil />
             </TabsContent>
 

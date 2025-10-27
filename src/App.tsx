@@ -38,6 +38,7 @@ import IframeGeneratorPage from "./pages/IframeGeneratorPage";
 import { TestPermissions } from "./components/TestPermissions";
 import { DebugPermissions } from "./components/DebugPermissions";
 import { DebugTabPermissions } from "./components/DebugTabPermissions";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 // Removido: Módulo Marketing
 // Removido: Páginas e layouts do CRM (Dashboard, Indicadores, Leads, Perfil, Layout)
@@ -127,7 +128,9 @@ function AppContent() {
           } />
           <Route path="/simulador" element={
             user ? (
-              <Simulador />
+              <ProtectedRoute requiredModule="simulator">
+                <Simulador />
+              </ProtectedRoute>
             ) : <Navigate to="/crm/login" replace />
           } />
 
