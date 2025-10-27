@@ -15,9 +15,11 @@ export default function UserSetup() {
   const { branding: defaultBranding } = useDefaultBranding();
   
   const [isLoading, setIsLoading] = useState(false);
+  const [isVerifyingToken, setIsVerifyingToken] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [userEmail, setUserEmail] = useState('');
   
   const [formData, setFormData] = useState({
     first_name: '',
@@ -40,9 +42,36 @@ export default function UserSetup() {
       return;
     }
 
-    // Verificar se o token é válido
+    // Verificar se o token é válido e obter dados do usuário
     const verifyToken = async () => {
       try {
+        setIsVerifyingToken(true);
+        
+        // Primeiro, verificar se o usuário já está autenticado
+        const { data: { user: currentUser } } = await supabase.auth.getUser();
+        
+        if (currentUser) {
+          // Se já está autenticado, verificar se já completou o setup
+          const { data: crmUser } = await supabase
+            .from('crm_users')
+            .select('first_name, last_name, phone, birth_date')
+            .eq('user_id', currentUser.id)
+            .single();
+          
+          // Se já tem dados completos, redirecionar para home
+          if (crmUser?.first_name && crmUser?.last_name) {
+            navigate('/home');
+            return;
+          }
+          
+          // Se não tem dados completos, permitir configuração
+          setUserEmail(currentUser.email || '');
+          setFormData(prev => ({ ...prev, email: currentUser.email || '' }));
+          setIsVerifyingToken(false);
+          return;
+        }
+
+        // Se não está autenticado, verificar o token
         const { data, error } = await supabase.auth.verifyOtp({
           token_hash: token,
           type: 'signup'
@@ -56,12 +85,16 @@ export default function UserSetup() {
         }
 
         if (data.user?.email) {
+          setUserEmail(data.user.email);
           setFormData(prev => ({ ...prev, email: data.user.email || '' }));
         }
+        
+        setIsVerifyingToken(false);
       } catch (error) {
         console.error('Erro ao verificar token:', error);
         toast.error('Erro ao verificar link de confirmação');
         navigate('/crm/login');
+        setIsVerifyingToken(false);
       }
     };
 
@@ -119,16 +152,11 @@ export default function UserSetup() {
     setIsLoading(true);
 
     try {
-      const token = searchParams.get('token');
+      // Verificar se o usuário está autenticado
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
       
-      // Confirmar o usuário com a senha
-      const { data: confirmData, error: confirmError } = await supabase.auth.verifyOtp({
-        token_hash: token!,
-        type: 'signup'
-      });
-
-      if (confirmError) {
-        throw confirmError;
+      if (!currentUser) {
+        throw new Error('Usuário não autenticado');
       }
 
       // Atualizar senha do usuário
@@ -149,7 +177,7 @@ export default function UserSetup() {
           phone: formData.phone || null,
           birth_date: formData.birth_date || null,
         })
-        .eq('user_id', confirmData.user?.id);
+        .eq('user_id', currentUser.id);
 
       if (updateError) {
         console.error('Erro ao atualizar dados do usuário:', updateError);
@@ -157,7 +185,11 @@ export default function UserSetup() {
       }
 
       toast.success('Conta configurada com sucesso!');
-      navigate('/home');
+      
+      // Aguardar um pouco antes de redirecionar para mostrar a mensagem
+      setTimeout(() => {
+        navigate('/home');
+      }, 1500);
 
     } catch (error: any) {
       console.error('Erro ao configurar conta:', error);
@@ -166,6 +198,22 @@ export default function UserSetup() {
       setIsLoading(false);
     }
   };
+
+  // Mostrar loading durante verificação do token
+  if (isVerifyingToken) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#131313] via-[#1E1E1E] to-[#161616] flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin mb-4" style={{ color: defaultBranding?.primary_color || '#E50F5E' }} />
+            <p className="text-muted-foreground text-center">
+              Verificando link de confirmação...
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#131313] via-[#1E1E1E] to-[#161616] flex items-center justify-center p-4">

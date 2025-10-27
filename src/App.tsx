@@ -118,7 +118,9 @@ function AppContent() {
           <Route path="/crm/login" element={
             user ? (crmUser ? <Navigate to="/home" replace /> : <Login />) : <Login />
           } />
-          <Route path="/user-setup" element={<UserSetup />} />
+          <Route path="/user-setup" element={
+            user ? <UserSetup /> : <Navigate to="/crm/login" replace />
+          } />
           {/* Removidas: rotas de redefinição de senha dentro de /crm */}
           
           {/* Protected routes */}
