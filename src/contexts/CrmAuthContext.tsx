@@ -124,11 +124,8 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
           .order('updated_at', { ascending: false });
           
         if (allUserCompanies && allUserCompanies.length > 0) {
-          // Se tem múltiplas empresas, retornar null para mostrar seletor
-          if (allUserCompanies.length > 1) {
-            return null;
-          }
-          // Se tem apenas uma empresa, usar ela
+          // Se tem múltiplas empresas, usar a primeira (mais recente) em vez de retornar null
+          // O sistema de seleção de empresa será tratado na interface
           return allUserCompanies[0] as any;
         }
       }
