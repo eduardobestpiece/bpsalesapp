@@ -102,6 +102,19 @@ export function UsersManager({ companyId }: UsersManagerProps) {
   // Mutação para alterar status do usuário
   const toggleUserStatusMutation = useMutation({
     mutationFn: async ({ userId, newStatus }: { userId: string; newStatus: 'active' | 'archived' }) => {
+      // Verificar se o usuário é Master antes de desativar
+      if (newStatus === 'archived') {
+        const { data: targetUser } = await supabase
+          .from('crm_users')
+          .select('role')
+          .eq('id', userId)
+          .single();
+
+        if (targetUser?.role === 'master') {
+          throw new Error('Usuários Master nunca podem ser desativados');
+        }
+      }
+
       const { error } = await supabase
         .from('crm_users')
         .update({ status: newStatus })
@@ -121,6 +134,23 @@ export function UsersManager({ companyId }: UsersManagerProps) {
   // Mutação para excluir usuário (completa: crm_users + auth.users)
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
+      // Obter ID do usuário atual para verificação de permissões
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (!currentUser) {
+        throw new Error('Usuário não autenticado');
+      }
+
+      // Buscar ID do usuário atual na tabela crm_users
+      const { data: currentCrmUser } = await supabase
+        .from('crm_users')
+        .select('id')
+        .eq('user_id', currentUser.id)
+        .single();
+
+      if (!currentCrmUser) {
+        throw new Error('Usuário atual não encontrado na tabela crm_users');
+      }
+
       // Chamar Edge Function para exclusão completa
       const response = await fetch(`${supabase.supabaseUrl}/functions/v1/delete-user`, {
         method: 'POST',
@@ -128,7 +158,10 @@ export function UsersManager({ companyId }: UsersManagerProps) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${supabase.supabaseKey}`,
         },
-        body: JSON.stringify({ user_id: userId }),
+        body: JSON.stringify({ 
+          user_id: userId,
+          requesting_user_id: currentCrmUser.id
+        }),
       });
 
       if (!response.ok) {
@@ -236,27 +269,48 @@ export function UsersManager({ companyId }: UsersManagerProps) {
                       <Switch
                         checked={user.status === 'active'}
                         onCheckedChange={() => handleToggleStatus(user.id, user.status)}
-                        disabled={toggleUserStatusMutation.isPending}
+                        disabled={user.role === 'master' || toggleUserStatusMutation.isPending}
                       />
                       <span className="text-sm">
                         {user.status === 'active' ? 'Ativo' : 'Inativo'}
                       </span>
+                      {user.role === 'master' && (
+                        <span className="text-xs text-muted-foreground">(Protegido)</span>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteUser(user.id)}
-                      disabled={isDeletingUserId === user.id}
-                      className="text-destructive hover:text-destructive"
-                    >
-                      {isDeletingUserId === user.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-4 w-4" />
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteUser(user.id)}
+                        disabled={
+                          isDeletingUserId === user.id || 
+                          user.role === 'master' ||
+                          user.id === crmUser?.id
+                        }
+                        className="text-destructive hover:text-destructive disabled:opacity-50"
+                        title={
+                          user.role === 'master' 
+                            ? 'Usuários Master não podem ser excluídos'
+                            : user.id === crmUser?.id
+                            ? 'Você não pode se excluir'
+                            : 'Excluir usuário'
+                        }
+                      >
+                        {isDeletingUserId === user.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" />
+                        )}
+                      </Button>
+                      {(user.role === 'master' || user.id === crmUser?.id) && (
+                        <span className="text-xs text-muted-foreground">
+                          {user.role === 'master' ? 'Protegido' : 'Você mesmo'}
+                        </span>
                       )}
-                    </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
