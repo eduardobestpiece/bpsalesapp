@@ -48,6 +48,9 @@ export default function UserSetup() {
       return;
     }
 
+    // Marcar que estamos em processo de setup
+    localStorage.setItem('userSetupInProgress', 'true');
+
     // Verificar se o token é válido e obter dados do usuário
     const verifyToken = async () => {
       try {
@@ -66,6 +69,7 @@ export default function UserSetup() {
           
           // Se já tem dados completos, marcar como setup completo
           if (crmUser?.first_name && crmUser?.last_name) {
+            localStorage.removeItem('userSetupInProgress');
             setSetupComplete(true);
             // Aguardar um pouco antes de redirecionar para mostrar a mensagem
             setTimeout(() => {
@@ -89,6 +93,7 @@ export default function UserSetup() {
 
         if (error) {
           console.error('Erro ao verificar token:', error);
+          localStorage.removeItem('userSetupInProgress');
           toast.error('Link de confirmação expirado ou inválido');
           navigate('/crm/login');
           return;
@@ -102,6 +107,7 @@ export default function UserSetup() {
         setIsVerifyingToken(false);
       } catch (error) {
         console.error('Erro ao verificar token:', error);
+        localStorage.removeItem('userSetupInProgress');
         toast.error('Erro ao verificar link de confirmação');
         navigate('/crm/login');
         setIsVerifyingToken(false);
@@ -110,6 +116,14 @@ export default function UserSetup() {
 
     verifyToken();
   }, [searchParams, navigate]);
+
+  // Cleanup ao desmontar o componente
+  useEffect(() => {
+    return () => {
+      // Se o componente for desmontado sem completar o setup, manter a flag
+      // para evitar redirecionamento prematuro
+    };
+  }, []);
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -187,13 +201,16 @@ export default function UserSetup() {
           phone: formData.phone || null,
           birth_date: formData.birth_date || null,
         })
-        .eq('user_id', currentUser.id);
+        .eq('user_id', currentUser.id) as { error: any };
 
       if (updateError) {
         console.error('Erro ao atualizar dados do usuário:', updateError);
         // Não falha a operação se não conseguir atualizar dados extras
       }
 
+      // Remover flag de setup em progresso
+      localStorage.removeItem('userSetupInProgress');
+      
       toast.success('Conta configurada com sucesso!');
       
       // Aguardar um pouco antes de redirecionar para mostrar a mensagem

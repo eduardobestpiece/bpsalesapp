@@ -10,6 +10,14 @@ export const useSetupGuard = () => {
   useEffect(() => {
     const checkSetupStatus = async () => {
       try {
+        // Verificar se há setup em progresso no localStorage
+        const setupInProgress = localStorage.getItem('userSetupInProgress');
+        if (setupInProgress === 'true') {
+          setIsSetupIncomplete(true);
+          setIsChecking(false);
+          return;
+        }
+
         // Só verificar se estiver na página de setup
         if (location.pathname !== '/user-setup') {
           setIsChecking(false);
@@ -43,6 +51,23 @@ export const useSetupGuard = () => {
     };
 
     checkSetupStatus();
+
+    // Listener para mudanças no localStorage
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'userSetupInProgress') {
+        if (e.newValue === 'true') {
+          setIsSetupIncomplete(true);
+        } else if (e.newValue === null) {
+          setIsSetupIncomplete(false);
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, [location.pathname]);
 
   return { isSetupIncomplete, isChecking };
