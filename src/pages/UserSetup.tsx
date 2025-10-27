@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,6 +13,7 @@ export default function UserSetup() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { branding: defaultBranding } = useDefaultBranding();
+  const hasInitialized = useRef(false);
   
   const [isLoading, setIsLoading] = useState(false);
   const [isVerifyingToken, setIsVerifyingToken] = useState(true);
@@ -20,6 +21,7 @@ export default function UserSetup() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [userEmail, setUserEmail] = useState('');
+  const [setupComplete, setSetupComplete] = useState(false);
   
   const [formData, setFormData] = useState({
     first_name: '',
@@ -33,6 +35,10 @@ export default function UserSetup() {
 
   // Verificar se há token de confirmação
   useEffect(() => {
+    // Evitar múltiplas execuções
+    if (hasInitialized.current) return;
+    hasInitialized.current = true;
+
     const token = searchParams.get('token');
     const type = searchParams.get('type');
     
@@ -51,16 +57,20 @@ export default function UserSetup() {
         const { data: { user: currentUser } } = await supabase.auth.getUser();
         
         if (currentUser) {
-          // Se já está autenticado, verificar se já completou o setup
+          // Verificar se já completou o setup verificando se tem dados completos
           const { data: crmUser } = await supabase
             .from('crm_users')
             .select('first_name, last_name, phone, birth_date')
             .eq('user_id', currentUser.id)
             .single();
           
-          // Se já tem dados completos, redirecionar para home
+          // Se já tem dados completos, marcar como setup completo
           if (crmUser?.first_name && crmUser?.last_name) {
-            navigate('/home');
+            setSetupComplete(true);
+            // Aguardar um pouco antes de redirecionar para mostrar a mensagem
+            setTimeout(() => {
+              navigate('/home');
+            }, 2000);
             return;
           }
           
@@ -208,6 +218,30 @@ export default function UserSetup() {
             <Loader2 className="h-8 w-8 animate-spin mb-4" style={{ color: defaultBranding?.primary_color || '#E50F5E' }} />
             <p className="text-muted-foreground text-center">
               Verificando link de confirmação...
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Mostrar mensagem de setup já completo
+  if (setupComplete) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#131313] via-[#1E1E1E] to-[#161616] flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-semibold mb-2">Setup Já Completo!</h2>
+            <p className="text-muted-foreground text-center mb-4">
+              Sua conta já foi configurada anteriormente.
+            </p>
+            <p className="text-sm text-muted-foreground text-center">
+              Redirecionando para a página inicial...
             </p>
           </CardContent>
         </Card>

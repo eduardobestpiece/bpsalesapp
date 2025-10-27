@@ -38,7 +38,7 @@ import IframeGeneratorPage from "./pages/IframeGeneratorPage";
 import { TestPermissions } from "./components/TestPermissions";
 import { DebugPermissions } from "./components/DebugPermissions";
 import { DebugTabPermissions } from "./components/DebugTabPermissions";
-import { ProtectedRoute } from "./components/ProtectedRoute";
+import { useSetupGuard } from '@/hooks/useSetupGuard';
 
 // Removido: Módulo Marketing
 // Removido: Páginas e layouts do CRM (Dashboard, Indicadores, Leads, Perfil, Layout)
@@ -68,6 +68,7 @@ function GlobalColorsProvider({ children }: { children: React.ReactNode }) {
 
 function AppContent() {
   const { user, crmUser, companyId, loading, userRole } = useCrmAuth();
+  const { isSetupIncomplete, isChecking } = useSetupGuard();
   
   // Loading state
   if (loading) {
@@ -116,7 +117,7 @@ function AppContent() {
           
           {/* Public routes */}
           <Route path="/crm/login" element={
-            user ? (crmUser ? <Navigate to="/home" replace /> : <Login />) : <Login />
+            user ? (crmUser && !isSetupIncomplete ? <Navigate to="/home" replace /> : <Login />) : <Login />
           } />
           <Route path="/user-setup" element={
             user ? <UserSetup /> : <Navigate to="/crm/login" replace />
@@ -125,10 +126,10 @@ function AppContent() {
           
           {/* Protected routes */}
           <Route path="/" element={
-            user ? <Navigate to="/home" replace /> : <Navigate to="/landing" replace />
+            user ? (isSetupIncomplete ? <Navigate to="/user-setup" replace /> : <Navigate to="/home" replace />) : <Navigate to="/landing" replace />
           } />
           <Route path="/home" element={
-            user ? <Home /> : <Navigate to="/crm/login" replace />
+            user ? (isSetupIncomplete ? <Navigate to="/user-setup" replace /> : <Home />) : <Navigate to="/crm/login" replace />
           } />
           <Route path="/simulador" element={
             user ? (
