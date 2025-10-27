@@ -35,6 +35,7 @@ import SettingsEmpresa from "./pages/settings/SettingsEmpresa";
 import SettingsPerfil from "./pages/settings/SettingsPerfil";
 import SettingsForms from "./pages/settings/SettingsForms";
 import PublicForm from "./pages/PublicForm";
+import IframeGeneratorPage from "./pages/IframeGeneratorPage";
 import { TestPermissions } from "./components/TestPermissions";
 import { DebugPermissions } from "./components/DebugPermissions";
 import { DebugTabPermissions } from "./components/DebugTabPermissions";
@@ -108,6 +109,9 @@ function AppContent() {
           
           {/* Public Form - accessible without authentication */}
           <Route path="/form/:formId" element={<PublicForm />} />
+          
+          {/* Iframe Generator - accessible without authentication */}
+          <Route path="/iframe-generator" element={<IframeGeneratorPage />} />
           
           {/* Public routes */}
           <Route path="/crm/login" element={

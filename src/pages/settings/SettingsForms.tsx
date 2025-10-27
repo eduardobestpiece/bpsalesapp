@@ -640,6 +640,10 @@ export default function SettingsForms() {
   const [showIframeDialog, setShowIframeDialog] = useState(false);
   const [iframeCode, setIframeCode] = useState('');
   
+  // Estados para HTML
+  const [showHtmlDialog, setShowHtmlDialog] = useState(false);
+  const [htmlCode, setHtmlCode] = useState('');
+  
   // Estados para formulário base e origem padrão
   const [isBaseForm, setIsBaseForm] = useState(false);
   const [defaultOrigin, setDefaultOrigin] = useState<string>('');
@@ -1338,6 +1342,159 @@ export default function SettingsForms() {
     </iframe>
     
     <script>
+    // ===== SISTEMA ROBUSTO DE CAPTURA DE UTMs DA PÁGINA PAI =====
+    (function() {
+      'use strict';
+      
+      
+      // Função para obter parâmetros da URL da página pai
+      function getParentUrlParams() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const params = {};
+        for (const [key, value] of urlParams.entries()) {
+          params[key] = value;
+        }
+        return params;
+      }
+      
+      // Função para obter cookies da página pai
+      function getParentCookie(name) {
+        const value = \`; \${document.cookie}\`;
+        const parts = value.split(\`; \${name}=\`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return '';
+      }
+      
+      // Função para capturar dados de tracking da página pai
+      function captureParentTrackingData() {
+        const urlParams = getParentUrlParams();
+        
+        const trackingData = {
+          parentUrl: window.location.href,
+          parentUrlParams: urlParams,
+          utmSource: urlParams.utm_source || '',
+          utmMedium: urlParams.utm_medium || '',
+          utmCampaign: urlParams.utm_campaign || '',
+          utmContent: urlParams.utm_content || '',
+          utmTerm: urlParams.utm_term || '',
+          gclid: urlParams.gclid || '',
+          fbclid: urlParams.fbclid || '',
+          fbc: getParentCookie('_fbc') || '',
+          fbp: getParentCookie('_fbp') || '',
+          fbid: getParentCookie('_fbid') || '',
+          referrer: document.referrer || '',
+          userAgent: navigator.userAgent,
+          timestamp: new Date().toISOString()
+        };
+        
+        
+        return trackingData;
+      }
+      
+      // Função para enviar dados de tracking para o iframe
+      function sendTrackingDataToIframe() {
+        const trackingData = captureParentTrackingData();
+        const iframe = document.getElementById('form-iframe');
+        
+        if (iframe && iframe.contentWindow) {
+          try {
+            // Enviar dados de tracking para o iframe
+            iframe.contentWindow.postMessage({
+              type: 'PARENT_TRACKING_DATA',
+              data: trackingData
+            }, '*');
+            
+          } catch (error) {
+            // Erro silencioso
+          }
+        } else {
+          // Iframe não encontrado
+        }
+      }
+      
+      // Função para responder a solicitações do iframe
+      function handleIframeRequests(event) {
+        if (event.data && typeof event.data === 'object') {
+          
+          if (event.data.type === 'REQUEST_PARENT_URL') {
+            // Responder com a URL da página pai
+            event.source.postMessage({
+              type: 'PARENT_URL_RESPONSE',
+              url: window.location.href
+            }, '*');
+          } else if (event.data.type === 'REQUEST_COOKIE') {
+            // Responder com o valor do cookie solicitado
+            const cookieValue = getParentCookie(event.data.cookieName);
+            event.source.postMessage({
+              type: 'PARENT_COOKIE_RESPONSE',
+              cookieName: event.data.cookieName,
+              cookieValue: cookieValue
+            }, '*');
+          } else if (event.data.type === 'REQUEST_TRACKING_DATA') {
+            // Responder com todos os dados de tracking
+            const trackingData = captureParentTrackingData();
+            event.source.postMessage({
+              type: 'PARENT_TRACKING_RESPONSE',
+              data: trackingData
+            }, '*');
+          }
+        }
+      }
+      
+      // Inicializar sistema de tracking
+      function initTracking() {
+        
+        // Escutar solicitações do iframe
+        window.addEventListener('message', handleIframeRequests);
+        
+        // Enviar dados imediatamente quando o iframe carregar
+        const iframe = document.getElementById('form-iframe');
+        if (iframe) {
+          iframe.onload = function() {
+            setTimeout(sendTrackingDataToIframe, 100);
+            setTimeout(sendTrackingDataToIframe, 500);
+            setTimeout(sendTrackingDataToIframe, 1000);
+          };
+          
+          // Se o iframe já estiver carregado
+          if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
+            setTimeout(sendTrackingDataToIframe, 100);
+          }
+        }
+        
+        // Enviar dados periodicamente (para garantir que o iframe receba)
+        setInterval(sendTrackingDataToIframe, 2000);
+        
+        // Enviar dados quando a página ganha foco (caso o usuário volte para a aba)
+        window.addEventListener('focus', () => {
+          setTimeout(sendTrackingDataToIframe, 100);
+        });
+        
+        // Enviar dados quando a URL mudar (SPA)
+        let currentUrl = window.location.href;
+        const urlObserver = new MutationObserver(() => {
+          if (window.location.href !== currentUrl) {
+            currentUrl = window.location.href;
+            setTimeout(sendTrackingDataToIframe, 100);
+          }
+        });
+        
+        urlObserver.observe(document.body, {
+          childList: true,
+          subtree: true
+        });
+        
+      }
+      
+      // Inicializar quando o DOM estiver pronto
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initTracking);
+      } else {
+        initTracking();
+      }
+    })();
+    
+    // ===== SISTEMA DE REDIMENSIONAMENTO DO IFRAME =====
     // Função para redimensionar o iframe automaticamente
     function resizeIframe(height) {
       const iframe = document.getElementById('form-iframe');
@@ -1539,6 +1696,14 @@ function observeIframeContent() {
           if (mutation.type === 'childList') {
             mutation.addedNodes.forEach(function(node) {
               if (node.nodeType === 1) { // Element node
+                // Ignorar elementos de dropdown
+                if (node.hasAttribute('data-radix-select-content') || 
+                    node.hasAttribute('data-radix-dropdown-menu-content') ||
+                    node.classList?.contains('select-content') ||
+                    node.classList?.contains('phone-dropdown-content')) {
+                  return; // Não redimensionar para dropdowns
+                }
+                
                 if (node.tagName === 'INPUT' || node.tagName === 'SELECT' || 
                     node.tagName === 'BUTTON' || node.tagName === 'DIV' ||
                     node.classList?.contains('step') || node.classList?.contains('form-step')) {
@@ -1549,6 +1714,14 @@ function observeIframeContent() {
             
             mutation.removedNodes.forEach(function(node) {
               if (node.nodeType === 1) { // Element node
+                // Ignorar elementos de dropdown
+                if (node.hasAttribute('data-radix-select-content') || 
+                    node.hasAttribute('data-radix-dropdown-menu-content') ||
+                    node.classList?.contains('select-content') ||
+                    node.classList?.contains('phone-dropdown-content')) {
+                  return; // Não redimensionar para dropdowns
+                }
+                
                 if (node.tagName === 'INPUT' || node.tagName === 'SELECT' || 
                     node.tagName === 'BUTTON' || node.tagName === 'DIV' ||
                     node.classList?.contains('step') || node.classList?.contains('form-step')) {
@@ -1561,6 +1734,15 @@ function observeIframeContent() {
           // Detectar mudanças de estilo que podem indicar mudança de etapa
           if (mutation.type === 'attributes' && 
               (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
+            // Ignorar mudanças em elementos de dropdown
+            const target = mutation.target;
+            if (target && (
+                target.hasAttribute('data-radix-select-content') || 
+                target.hasAttribute('data-radix-dropdown-menu-content') ||
+                target.classList?.contains('select-content') ||
+                target.classList?.contains('phone-dropdown-content'))) {
+              return; // Não redimensionar para dropdowns
+            }
             shouldResize = true;
           }
         });
@@ -1611,6 +1793,841 @@ setTimeout(observeIframeContent, 500);
 
     setIframeCode(iframeHtml);
     setShowIframeDialog(true);
+  };
+
+  // Função para gerar código HTML completo
+  const generateHtmlCode = () => {
+    if (!selectedLeadForm?.id) {
+      toast({
+        title: 'Erro',
+        description: 'Nenhum formulário selecionado',
+        variant: 'destructive'
+      });
+      return;
+    }
+
+    console.log('🔍 [DEBUG] Gerando HTML - leadFormStyle:', leadFormStyle);
+    console.log('🔍 [DEBUG] Configurações específicas:', {
+      borderColorNormal: leadFormStyle?.borderColorNormal,
+      borderColorActive: leadFormStyle?.borderColorActive,
+      btnRadius: leadFormStyle?.btnRadius,
+      borderWidthNormalPx: leadFormStyle?.borderWidthNormalPx,
+      borderWidthFocusPx: leadFormStyle?.borderWidthFocusPx
+    });
+
+    const baseUrl = window.location.origin;
+    const timestamp = Date.now();
+    const randomId = Math.random().toString(36).substring(7);
+    const formUrl = `${baseUrl}/form/${selectedLeadForm.id}?v=${timestamp}&r=${randomId}`;
+
+    // Gerar estilos CSS baseados na configuração do formulário
+    const generateStyles = () => {
+      const styles = `
+        <style>
+          /* Reset e estilos base */
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          
+          body {
+            font-family: ${leadFormStyle?.previewFont || leadFormStyle?.fontFamily || 'Poppins, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif'};
+            background-color: transparent;
+            color: ${leadFormStyle?.fieldTextColor || '#333333'};
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+          }
+          
+          .bp-form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: ${leadFormStyle?.iframePaddingPx || 20}px;
+            background: transparent;
+            border-radius: ${leadFormStyle?.btnRadius || 8}px; /* Usar raio da borda do botão */
+            box-shadow: ${leadFormStyle?.iframeShadowEnabled ? '0 4px 6px rgba(0, 0, 0, 0.1)' : 'none'};
+            border: none;
+          }
+          
+          .bp-form-title {
+            font-size: ${leadFormStyle?.fontSizeLabelPx || 24}px;
+            font-weight: bold;
+            color: ${leadFormStyle?.fieldTextColor || '#333333'};
+            margin-bottom: ${leadFormStyle?.spacingFieldsPx || 20}px;
+            text-align: left;
+          }
+          
+          .bp-form-description {
+            font-size: ${leadFormStyle?.fontSizeInputPx || 16}px;
+            color: ${leadFormStyle?.fieldTextColor || '#666666'};
+            margin-bottom: ${leadFormStyle?.spacingFieldsPx || 30}px;
+            text-align: left;
+          }
+          
+          .bp-form-field {
+            margin-bottom: ${leadFormStyle?.spacingFieldsPx || leadFormStyle?.fieldSpacingPx || 20}px;
+          }
+          
+          .bp-form-label {
+            display: block;
+            font-size: ${leadFormStyle?.fontSizeLabelPx || 14}px;
+            font-weight: medium;
+            color: ${leadFormStyle?.fieldTextColor || '#333333'};
+            margin-bottom: 8px;
+          }
+          
+          .bp-form-input,
+          .bp-form-select,
+          .bp-form-textarea {
+            width: 100%;
+            height: 48px; /* Altura fixa para todos os campos */
+            padding: 12px;
+            font-size: ${leadFormStyle?.fontSizeInputPx || 16}px;
+            border: ${leadFormStyle?.borderWidthNormalPx || 1}px solid ${leadFormStyle?.borderColorNormal || '#d1d5db'};
+            border-radius: ${leadFormStyle?.btnRadius || 6}px; /* Usar raio da borda do botão */
+            background-color: ${leadFormStyle?.fieldBgColor || 'rgba(255, 255, 255, 0.9)'};
+            color: ${leadFormStyle?.fieldTextColor || '#333333'};
+            transition: border-color 0.2s ease;
+          }
+          
+          /* Ajuste especial para textarea */
+          .bp-form-textarea {
+            height: auto;
+            min-height: 48px;
+            resize: vertical;
+          }
+          
+          .bp-form-input:focus,
+          .bp-form-select:focus,
+          .bp-form-textarea:focus {
+            outline: none;
+            border-color: ${leadFormStyle?.borderColorActive || '#3b82f6'};
+            border-width: ${leadFormStyle?.borderWidthFocusPx || 2}px;
+          }
+          
+          .bp-form-button {
+            width: 100%;
+            padding: 12px;
+            font-size: ${leadFormStyle?.fontSizeButtonPx || 16}px;
+            font-weight: medium;
+            color: ${leadFormStyle?.btnText || '#ffffff'};
+            background: linear-gradient(${leadFormStyle?.btnAngle || 180}deg, ${leadFormStyle?.btnBg1 || '#3b82f6'}, ${leadFormStyle?.btnBg2 || '#2563eb'});
+            border: ${leadFormStyle?.btnBorderWidth || 0}px solid ${leadFormStyle?.btnBorderColor || 'transparent'};
+            border-radius: ${leadFormStyle?.btnRadius || 6}px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: none;
+            margin-top: ${leadFormStyle?.buttonSpacingPx || 16}px;
+          }
+          
+          .bp-form-button:hover {
+            background: linear-gradient(${leadFormStyle?.btnAngleActive || 90}deg, ${leadFormStyle?.btnBgActive1 || '#2563eb'}, ${leadFormStyle?.btnBgActive2 || '#1d4ed8'});
+            color: ${leadFormStyle?.btnTextActive || '#ffffff'};
+            border-color: ${leadFormStyle?.btnBorderColorActive || 'transparent'};
+            border-width: ${leadFormStyle?.btnBorderWidthActive || 0}px;
+            transform: translateY(-1px);
+          }
+          
+          .bp-form-button:active {
+            transform: translateY(0);
+          }
+          
+          .bp-form-error {
+            color: #ef4444;
+            font-size: 14px;
+            margin-top: 4px;
+          }
+          
+          .bp-form-success {
+            color: #10b981;
+            font-size: 14px;
+            margin-top: 4px;
+          }
+          
+          /* Estilos para campo de seleção avançado */
+          .bp-select-container {
+            position: relative;
+            width: 100%;
+          }
+          
+          .bp-select-trigger {
+            width: 100%;
+            height: 48px;
+            padding: 12px;
+            font-size: ${leadFormStyle?.fontSizeInputPx || 16}px;
+            border: ${leadFormStyle?.borderWidthNormalPx || 1}px solid ${leadFormStyle?.borderColorNormal || '#d1d5db'};
+            border-radius: ${leadFormStyle?.btnRadius || 6}px;
+            background-color: ${leadFormStyle?.fieldBgColor || 'rgba(255, 255, 255, 0.9)'};
+            color: ${leadFormStyle?.fieldTextColor || '#333333'};
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: border-color 0.2s ease;
+          }
+          
+          .bp-select-trigger:hover {
+            border-color: ${leadFormStyle?.borderColorActive || '#3b82f6'};
+          }
+          
+          .bp-select-trigger.active {
+            border-color: ${leadFormStyle?.borderColorActive || '#3b82f6'};
+            border-width: ${leadFormStyle?.borderWidthFocusPx || 2}px;
+          }
+          
+          .bp-select-value {
+            flex: 1;
+            text-align: left;
+          }
+          
+          .bp-select-arrow {
+            font-size: 12px;
+            transition: transform 0.2s ease;
+          }
+          
+          .bp-select-trigger.active .bp-select-arrow {
+            transform: rotate(180deg);
+          }
+          
+          .bp-select-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: ${leadFormStyle?.fieldBgColor || 'rgba(255, 255, 255, 0.95)'};
+            border: ${leadFormStyle?.borderWidthNormalPx || 1}px solid ${leadFormStyle?.borderColorNormal || '#d1d5db'};
+            border-radius: ${leadFormStyle?.btnRadius || 6}px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            max-height: 200px;
+            overflow-y: auto;
+          }
+          
+          .bp-select-search {
+            padding: 8px;
+            border-bottom: 1px solid ${leadFormStyle?.borderColorNormal || '#e5e5e5'};
+          }
+          
+          .bp-select-search-input {
+            width: 100%;
+            padding: 8px;
+            font-size: ${leadFormStyle?.fontSizeInputPx || 16}px;
+            border: ${leadFormStyle?.borderWidthNormalPx || 1}px solid ${leadFormStyle?.borderColorNormal || '#d1d5db'};
+            border-radius: ${leadFormStyle?.btnRadius || 6}px;
+            background-color: ${leadFormStyle?.fieldBgColor || 'rgba(255, 255, 255, 0.9)'};
+            color: ${leadFormStyle?.fieldTextColor || '#333333'};
+            outline: none;
+            transition: border-color 0.2s ease;
+          }
+          
+          .bp-select-search-input:focus {
+            border-color: ${leadFormStyle?.borderColorActive || '#3b82f6'};
+            border-width: ${leadFormStyle?.borderWidthFocusPx || 2}px;
+          }
+          
+          .bp-select-options {
+            max-height: 150px;
+            overflow-y: auto;
+          }
+          
+          .bp-select-option {
+            padding: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: ${leadFormStyle?.fontSizeInputPx || 16}px;
+            color: ${leadFormStyle?.fieldTextColor || '#333333'};
+            transition: background-color 0.2s ease;
+          }
+          
+          .bp-select-option:hover {
+            background-color: ${leadFormStyle?.selectBgColor || '#f3f4f6'};
+            color: ${leadFormStyle?.selectTextColor || '#333333'};
+          }
+          
+          .bp-select-option.selected {
+            background-color: ${leadFormStyle?.selectBgColor || '#3b82f6'};
+            color: ${leadFormStyle?.selectTextColor || '#ffffff'};
+          }
+          
+          .bp-select-checkbox {
+            width: 16px;
+            height: 16px;
+            margin: 0;
+            cursor: pointer;
+          }
+          
+          .bp-select-option-text {
+            flex: 1;
+          }
+          
+          /* Estilos para checkbox e radio */
+          .checkbox-group,
+          .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+          }
+          
+          .checkbox-item,
+          .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-size: ${leadFormStyle?.fontSizeInputPx || 16}px;
+            color: ${leadFormStyle?.fieldTextColor || '#333333'};
+          }
+          
+          .checkbox-item input[type="checkbox"],
+          .radio-item input[type="radio"] {
+            width: auto;
+            margin: 0;
+            cursor: pointer;
+          }
+          
+          /* Estilos para divisões */
+          .division-field {
+            margin: 30px 0;
+          }
+          
+          .division-separator {
+            position: relative;
+            text-align: center;
+          }
+          
+          .division-separator hr {
+            border: none;
+            border-top: 1px solid ${leadFormStyle?.borderColorNormal || '#e5e5e5'};
+            margin: 20px 0;
+          }
+          
+          .division-label {
+            background: transparent;
+            padding: 0 15px;
+            color: ${leadFormStyle?.fieldTextColor || '#666666'};
+            font-size: ${leadFormStyle?.fontSizeInputPx || 16}px;
+            position: relative;
+            top: -12px;
+          }
+          
+          /* Responsividade */
+          @media (max-width: 768px) {
+            .bp-form-container {
+              margin: 10px;
+              padding: 15px;
+              background: transparent;
+            }
+            
+            .bp-form-title {
+              font-size: 20px;
+            }
+            
+            .bp-form-input,
+            .bp-form-select,
+            .bp-form-textarea {
+              font-size: 16px; /* Evita zoom no iOS */
+              background-color: ${leadFormStyle?.fieldBgColor || 'rgba(255, 255, 255, 0.9)'};
+            }
+            
+            .checkbox-group,
+            .radio-group {
+              gap: 6px;
+            }
+          }
+        </style>
+      `;
+      return styles;
+    };
+
+    // Função auxiliar para processar opções
+    const processOptions = (optionsString: string) => {
+      if (!optionsString) return [];
+      
+      try {
+        // Tentar fazer parse como JSON primeiro
+        const parsed = JSON.parse(optionsString);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        // Se falhar, tratar como string separada por vírgulas
+        console.log(`Processando opções como string separada por vírgulas: ${optionsString}`);
+        return optionsString.split(',').map(opt => opt.trim()).filter(opt => opt);
+      }
+    };
+
+    // Gerar campos do formulário
+    const generateFormFields = () => {
+      if (!selectedFields || selectedFields.length === 0) {
+        console.log('Nenhum campo selecionado para gerar HTML');
+        return '';
+      }
+      
+      console.log('Gerando campos HTML:', selectedFields);
+      console.log('Campos disponíveis:', availableFields);
+      
+      return selectedFields.map((fieldId, index) => {
+        try {
+          const field = availableFields.find(f => f.id === fieldId);
+          if (!field) {
+            console.warn(`Campo não encontrado: ${fieldId}`);
+            return '';
+          }
+          
+          console.log(`Gerando campo ${index}:`, field);
+          
+          const fieldIdAttr = `field_${index}`;
+          const isRequired = requiredFields.has(fieldId) || ['email', 'telefone'].includes(fieldId);
+          const placeholderText = placeholderFields.has(fieldId) ? placeholderTexts[fieldId] || '' : '';
+          
+                  switch (field.type) {
+                    case 'text':
+                    case 'email':
+                    case 'tel':
+                    case 'phone':
+                    case 'number':
+                    case 'money':
+                    case 'name':
+                      const inputType = field.type === 'phone' ? 'tel' : 
+                                      field.type === 'money' ? 'text' : 
+                                      field.type === 'name' ? 'text' : 
+                                      field.type;
+                      return `
+                        <div class="bp-form-field">
+                          <label for="${fieldIdAttr}" class="bp-form-label">
+                            ${field.name}${isRequired ? ' *' : ''}
+                          </label>
+                          <input 
+                            type="${inputType}" 
+                            id="${fieldIdAttr}" 
+                            name="${fieldId}" 
+                            class="bp-form-input"
+                            ${isRequired ? 'required' : ''}
+                            ${placeholderText ? `placeholder="${placeholderText}"` : ''}
+                            ${field.max_length ? `maxlength="${field.max_length}"` : ''}
+                            ${field.type === 'money' ? 'data-type="money"' : ''}
+                          />
+                          <div class="bp-form-error" id="${fieldIdAttr}_error"></div>
+                        </div>
+                      `;
+                      
+                    case 'select':
+                      const options = processOptions(field.options || '');
+                      const isSearchable = field.searchable || false;
+                      const isMultiselect = field.multiselect || false;
+                      const searchPlaceholder = field.search_placeholder || 'Pesquisar opções...';
+                      const selectPlaceholder = field.placeholder_text || field.name || 'Selecione uma opção';
+                      
+                      return `
+                        <div class="bp-form-field">
+                          <label for="${fieldIdAttr}" class="bp-form-label">
+                            ${field.name}${isRequired ? ' *' : ''}
+                          </label>
+                          <div class="bp-select-container" data-field-id="${fieldId}" data-searchable="${isSearchable}" data-multiselect="${isMultiselect}">
+                            <div class="bp-select-trigger" id="${fieldIdAttr}" ${isRequired ? 'data-required="true"' : ''}>
+                              <span class="bp-select-value">${selectPlaceholder}</span>
+                              <span class="bp-select-arrow">▼</span>
+                            </div>
+                            <div class="bp-select-dropdown" style="display: none;">
+                              ${isSearchable ? `
+                                <div class="bp-select-search">
+                                  <input type="text" placeholder="${searchPlaceholder}" class="bp-select-search-input" />
+                                </div>
+                              ` : ''}
+                              <div class="bp-select-options">
+                                ${options.map((option: any, index: number) => {
+                                  const optionValue = option.value || option;
+                                  const optionLabel = option.label || option;
+                                  return `
+                                    <div class="bp-select-option" data-value="${optionValue}" data-index="${index}">
+                                      ${isMultiselect ? '<input type="checkbox" class="bp-select-checkbox" />' : ''}
+                                      <span class="bp-select-option-text">${optionLabel}</span>
+                                    </div>
+                                  `;
+                                }).join('')}
+                              </div>
+                            </div>
+                          </div>
+                          <div class="bp-form-error" id="${fieldIdAttr}_error"></div>
+                        </div>
+                      `;
+                      
+                    case 'textarea':
+                      return `
+                        <div class="bp-form-field">
+                          <label for="${fieldIdAttr}" class="bp-form-label">
+                            ${field.name}${isRequired ? ' *' : ''}
+                          </label>
+                          <textarea 
+                            id="${fieldIdAttr}" 
+                            name="${fieldId}" 
+                            class="bp-form-textarea"
+                            rows="4"
+                            ${isRequired ? 'required' : ''}
+                            ${placeholderText ? `placeholder="${placeholderText}"` : ''}
+                            ${field.max_length ? `maxlength="${field.max_length}"` : ''}
+                          ></textarea>
+                          <div class="bp-form-error" id="${fieldIdAttr}_error"></div>
+                        </div>
+                      `;
+                      
+                    case 'checkbox':
+                      const checkboxOptions = processOptions(field.checkbox_options || '');
+                      return `
+                        <div class="bp-form-field">
+                          <label class="bp-form-label">
+                            ${field.name}${isRequired ? ' *' : ''}
+                          </label>
+                          <div class="checkbox-group">
+                            ${checkboxOptions.map((option: any, optIndex: number) => 
+                              `<label class="checkbox-item">
+                                <input type="checkbox" name="${fieldId}[]" value="${option.value || option}" />
+                                <span>${option.label || option}</span>
+                              </label>`
+                            ).join('')}
+                          </div>
+                          <div class="bp-form-error" id="${fieldIdAttr}_error"></div>
+                        </div>
+                      `;
+                      
+                    case 'radio':
+                      const radioOptions = processOptions(field.options || '');
+                      return `
+                        <div class="bp-form-field">
+                          <label class="bp-form-label">
+                            ${field.name}${isRequired ? ' *' : ''}
+                          </label>
+                          <div class="radio-group">
+                            ${radioOptions.map((option: any, optIndex: number) => 
+                              `<label class="radio-item">
+                                <input type="radio" name="${fieldId}" value="${option.value || option}" ${optIndex === 0 ? 'required' : ''} />
+                                <span>${option.label || option}</span>
+                              </label>`
+                            ).join('')}
+                          </div>
+                          <div class="bp-form-error" id="${fieldIdAttr}_error"></div>
+                        </div>
+                      `;
+                      
+                    case 'division':
+                      return `
+                        <div class="bp-form-field division-field">
+                          <div class="division-separator">
+                            <hr />
+                            <span class="division-label">${field.name}</span>
+                          </div>
+                        </div>
+                      `;
+                      
+                    default:
+                      return '';
+                  }
+                } catch (error) {
+                  console.error(`Erro ao gerar campo ${fieldId}:`, error);
+                  return '';
+                }
+              }).join('');
+    };
+
+    // Gerar JavaScript para funcionalidades
+    const generateJavaScript = () => {
+      return `
+        <script>
+          // Função para capturar UTMs da URL atual
+          function captureUTMs() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return {
+              utm_source: urlParams.get('utm_source') || '',
+              utm_medium: urlParams.get('utm_medium') || '',
+              utm_campaign: urlParams.get('utm_campaign') || '',
+              utm_content: urlParams.get('utm_content') || '',
+              utm_term: urlParams.get('utm_term') || '',
+              gclid: urlParams.get('gclid') || '',
+              fbclid: urlParams.get('fbclid') || ''
+            };
+          }
+          
+          // Função para capturar cookies
+          function captureCookies() {
+            const cookies = {};
+            document.cookie.split(';').forEach(cookie => {
+              const [name, value] = cookie.trim().split('=');
+              if (name && value) {
+                cookies[name] = value;
+              }
+            });
+            return cookies;
+          }
+          
+          // Função para validar formulário
+          function validateForm() {
+            const form = document.getElementById('bp-form');
+            const fields = form.querySelectorAll('[required]');
+            let isValid = true;
+            
+            fields.forEach(field => {
+              const errorElement = document.getElementById(field.id + '_error');
+              let hasValue = false;
+              
+              if (field.type === 'checkbox' || field.type === 'radio') {
+                // Para checkbox e radio, verificar se pelo menos um está selecionado
+                const name = field.name;
+                const sameNameFields = form.querySelectorAll(\`[name="\${name}"]\`);
+                hasValue = Array.from(sameNameFields).some(f => f.checked);
+              } else {
+                // Para outros campos, verificar se tem valor
+                hasValue = field.value.trim() !== '';
+              }
+              
+              if (!hasValue) {
+                errorElement.textContent = 'Este campo é obrigatório';
+                isValid = false;
+              } else {
+                errorElement.textContent = '';
+              }
+            });
+            
+            return isValid;
+          }
+          
+          // Função para enviar formulário
+          async function submitForm(event) {
+            event.preventDefault();
+            
+            if (!validateForm()) {
+              return;
+            }
+            
+            const form = document.getElementById('bp-form');
+            const formData = new FormData(form);
+            const utms = captureUTMs();
+            const cookies = captureCookies();
+            
+            // Adicionar UTMs aos dados do formulário
+            Object.keys(utms).forEach(key => {
+              if (utms[key]) {
+                formData.append(key, utms[key]);
+              }
+            });
+            
+            // Adicionar cookies aos dados do formulário
+            Object.keys(cookies).forEach(key => {
+              if (cookies[key]) {
+                formData.append('cookie_' + key, cookies[key]);
+              }
+            });
+            
+            try {
+              const response = await fetch('${formUrl}', {
+                method: 'POST',
+                body: formData
+              });
+              
+              if (response.ok) {
+                // Sucesso
+                const successElement = document.getElementById('form-success');
+                successElement.style.display = 'block';
+                form.style.display = 'none';
+              } else {
+                throw new Error('Erro ao enviar formulário');
+              }
+            } catch (error) {
+              console.error('Erro:', error);
+              alert('Erro ao enviar formulário. Tente novamente.');
+            }
+          }
+          
+          // Função para controlar campos de seleção avançados
+          function initializeSelectFields() {
+            const selectContainers = document.querySelectorAll('.bp-select-container');
+            
+            selectContainers.forEach(container => {
+              const trigger = container.querySelector('.bp-select-trigger');
+              const dropdown = container.querySelector('.bp-select-dropdown');
+              const options = container.querySelectorAll('.bp-select-option');
+              const searchInput = container.querySelector('.bp-select-search-input');
+              const isSearchable = container.dataset.searchable === 'true';
+              const isMultiselect = container.dataset.multiselect === 'true';
+              const fieldId = container.dataset.fieldId;
+              
+              let selectedValues = [];
+              let selectedOptions = [];
+              
+              // Função para atualizar o valor exibido
+              function updateDisplayValue() {
+                const valueSpan = trigger.querySelector('.bp-select-value');
+                if (selectedOptions.length === 0) {
+                  valueSpan.textContent = trigger.dataset.placeholder || 'Selecione uma opção';
+                } else if (isMultiselect) {
+                  valueSpan.textContent = selectedOptions.length === 1 
+                    ? selectedOptions[0].textContent 
+                    : \`\${selectedOptions.length} opções selecionadas\`;
+                } else {
+                  valueSpan.textContent = selectedOptions[0].textContent;
+                }
+              }
+              
+              // Função para filtrar opções
+              function filterOptions(searchTerm) {
+                options.forEach(option => {
+                  const text = option.querySelector('.bp-select-option-text').textContent.toLowerCase();
+                  const matches = !searchTerm || text.includes(searchTerm.toLowerCase());
+                  option.style.display = matches ? 'flex' : 'none';
+                });
+              }
+              
+              // Função para selecionar opção
+              function selectOption(option) {
+                const value = option.dataset.value;
+                const text = option.querySelector('.bp-select-option-text').textContent;
+                
+                if (isMultiselect) {
+                  const checkbox = option.querySelector('.bp-select-checkbox');
+                  if (selectedValues.includes(value)) {
+                    // Desmarcar
+                    selectedValues = selectedValues.filter(v => v !== value);
+                    selectedOptions = selectedOptions.filter(o => o.value !== value);
+                    checkbox.checked = false;
+                    option.classList.remove('selected');
+                  } else {
+                    // Marcar
+                    selectedValues.push(value);
+                    selectedOptions.push({ value, textContent: text });
+                    checkbox.checked = true;
+                    option.classList.add('selected');
+                  }
+                } else {
+                  // Seleção única
+                  selectedValues = [value];
+                  selectedOptions = [{ value, textContent: text }];
+                  
+                  // Remover seleção anterior
+                  options.forEach(opt => {
+                    opt.classList.remove('selected');
+                    const cb = opt.querySelector('.bp-select-checkbox');
+                    if (cb) cb.checked = false;
+                  });
+                  
+                  // Marcar atual
+                  option.classList.add('selected');
+                  const cb = option.querySelector('.bp-select-checkbox');
+                  if (cb) cb.checked = true;
+                  
+                  // Fechar dropdown
+                  dropdown.style.display = 'none';
+                  trigger.classList.remove('active');
+                }
+                
+                updateDisplayValue();
+              }
+              
+              // Event listeners
+              trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const isOpen = dropdown.style.display === 'block';
+                
+                if (isOpen) {
+                  dropdown.style.display = 'none';
+                  trigger.classList.remove('active');
+                } else {
+                  dropdown.style.display = 'block';
+                  trigger.classList.add('active');
+                  
+                  // Focar no campo de pesquisa se existir
+                  if (searchInput) {
+                    setTimeout(() => searchInput.focus(), 100);
+                  }
+                }
+              });
+              
+              // Pesquisa
+              if (searchInput) {
+                searchInput.addEventListener('input', function(e) {
+                  filterOptions(e.target.value);
+                });
+              }
+              
+              // Seleção de opções
+              options.forEach(option => {
+                option.addEventListener('click', function(e) {
+                  e.stopPropagation();
+                  selectOption(option);
+                });
+              });
+              
+              // Fechar ao clicar fora
+              document.addEventListener('click', function(e) {
+                if (!container.contains(e.target)) {
+                  dropdown.style.display = 'none';
+                  trigger.classList.remove('active');
+                }
+              });
+              
+              // Adicionar campo hidden para envio do formulário
+              const hiddenInput = document.createElement('input');
+              hiddenInput.type = 'hidden';
+              hiddenInput.name = fieldId;
+              hiddenInput.id = fieldId + '_hidden';
+              container.appendChild(hiddenInput);
+              
+              // Atualizar campo hidden quando valores mudarem
+              const originalUpdateDisplayValue = updateDisplayValue;
+              updateDisplayValue = function() {
+                originalUpdateDisplayValue();
+                hiddenInput.value = isMultiselect ? JSON.stringify(selectedValues) : selectedValues[0] || '';
+              };
+            });
+          }
+          
+          // Inicializar quando a página carregar
+          document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('bp-form');
+            if (form) {
+              form.addEventListener('submit', submitForm);
+            }
+            
+            // Inicializar campos de seleção avançados
+            initializeSelectFields();
+          });
+        </script>
+      `;
+    };
+
+    // Gerar HTML completo
+    const completeHtml = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${selectedLeadForm.name || 'Formulário de Contato'}</title>
+    ${generateStyles()}
+</head>
+<body>
+    <div class="bp-form-container">
+        ${selectedLeadForm.title ? `<h1 class="bp-form-title">${selectedLeadForm.title}</h1>` : ''}
+        ${selectedLeadForm.description ? `<p class="bp-form-description">${selectedLeadForm.description}</p>` : ''}
+        
+        <form id="bp-form" method="POST" action="${formUrl}">
+            ${generateFormFields()}
+            
+            <button type="submit" class="bp-form-button">
+                ${buttonText || 'Enviar'}
+            </button>
+        </form>
+        
+        <div id="form-success" class="bp-form-success" style="display: none;">
+            <h3>Formulário enviado com sucesso!</h3>
+            <p>Obrigado pelo seu contato. Entraremos em contato em breve.</p>
+        </div>
+    </div>
+    
+    ${generateJavaScript()}
+</body>
+</html>`;
+
+    setHtmlCode(completeHtml);
+    setShowHtmlDialog(true);
   };
 
   // Função para remover campo da seleção
@@ -3942,14 +4959,24 @@ setTimeout(observeIframeContent, 500);
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Prévia do formulário</h3>
-        <Button 
-          type="button" 
-          variant="outline"
-          onClick={generateIframeCode}
-          className="border-white/20 text-white hover:bg-white/10"
-        >
-          Gerar Iframe
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            type="button" 
+            variant="outline"
+            onClick={generateIframeCode}
+            className="border-white/20 text-white hover:bg-white/10"
+          >
+            Gerar Iframe
+          </Button>
+          <Button 
+            type="button" 
+            variant="outline"
+            onClick={generateHtmlCode}
+            className="border-white/20 text-white hover:bg-white/10"
+          >
+            Gerar HTML
+          </Button>
+        </div>
       </div>
       <div className="w-full bg-[#1F1F1F]/95 backdrop-blur-sm shadow-xl border border-white/10 rounded-md">
         <div className="p-6" style={fontStyle}>
@@ -5719,6 +6746,64 @@ setTimeout(observeIframeContent, 500);
                   toast({
                     title: 'Sucesso',
                     description: 'Código copiado para a área de transferência!',
+                  });
+                }}
+              >
+                Copiar Código
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal do código HTML */}
+      {showHtmlDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1F1F1F] border border-white/20 rounded-lg p-6 w-[800px] max-w-[90vw] max-h-[90vh] flex flex-col">
+            <h3 className="text-lg font-semibold mb-4">Código HTML Completo</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Copie o código HTML abaixo e salve como arquivo .html para usar em qualquer site:
+            </p>
+            
+            <div className="bg-[#2A2A2A] border border-white/20 rounded-lg p-4 mb-4 overflow-y-auto max-h-[60vh]">
+              <pre className="text-sm text-white whitespace-pre-wrap overflow-x-auto">
+                {htmlCode}
+              </pre>
+            </div>
+
+            <div className="flex justify-end space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowHtmlDialog(false)}
+              >
+                Fechar
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const blob = new Blob([htmlCode], { type: 'text/html' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `formulario_${selectedLeadForm?.id || 'form'}.html`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                  toast({
+                    title: 'Sucesso',
+                    description: 'Arquivo HTML baixado com sucesso!',
+                  });
+                }}
+              >
+                Baixar HTML
+              </Button>
+              <Button
+                onClick={() => {
+                  navigator.clipboard.writeText(htmlCode);
+                  toast({
+                    title: 'Sucesso',
+                    description: 'Código HTML copiado para a área de transferência!',
                   });
                 }}
               >

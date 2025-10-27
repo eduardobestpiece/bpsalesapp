@@ -123,9 +123,31 @@ export default function PublicForm(props?: PublicFormProps) {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [companyCurrency, setCompanyCurrency] = useState<string>('BRL');
+  const [companyTimezone, setCompanyTimezone] = useState<string>('America/Sao_Paulo');
   const [selectSpacerHeight, setSelectSpacerHeight] = useState<number>(0);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [lastResizeTime, setLastResizeTime] = useState<number>(0);
+  
+  // Função para formatar data com fuso horário da empresa
+  const formatDateTimeWithTimezone = (isoString: string): string => {
+    try {
+      const date = new Date(isoString);
+      const parts = new Intl.DateTimeFormat('pt-BR', {
+        timeZone: companyTimezone,
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit',
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit'
+      }).formatToParts(date);
+      
+      const get = (type: string) => parts.find(p => p.type === type)?.value || '';
+      return `${get('day')}/${get('month')}/${get('year')} ${get('hour')}:${get('minute')}:${get('second')}`;
+    } catch (error) {
+      return isoString; // Fallback para a string original em caso de erro
+    }
+  };
   
   // Função para redimensionar o iframe automaticamente
   const resizeIframe = useCallback(() => {
@@ -189,16 +211,6 @@ export default function PublicForm(props?: PublicFormProps) {
           
           (window as any).lastIframeHeight = finalHeight;
           
-          // Debug: log dos elementos encontrados
-          console.log('Elementos encontrados:', {
-            formContainer: !!formContainer,
-            securityMessage: !!securityMessage,
-            lastButton: !!lastButton,
-            calculatedHeight,
-            finalHeight,
-            selectSpacerHeight
-          });
-          
           window.parent.postMessage({ type: 'resize', height: finalHeight }, '*');
         });
       }
@@ -248,6 +260,415 @@ export default function PublicForm(props?: PublicFormProps) {
   // Estados para controle de etapas
   const [currentStep, setCurrentStep] = useState(1);
   const [totalSteps, setTotalSteps] = useState(1);
+  
+  // Estados para dados de tracking da página pai
+  const [parentTrackingData, setParentTrackingData] = useState<{
+    url?: string;
+    cookies?: Record<string, string>;
+    utmSource?: string;
+    utmMedium?: string;
+    utmCampaign?: string;
+    utmContent?: string;
+    utmTerm?: string;
+    gclid?: string;
+    fbclid?: string;
+    fbc?: string;
+    fbp?: string;
+    fbid?: string;
+    referrer?: string;
+    userAgent?: string;
+    timestamp?: string;
+  }>({});
+  
+  // Controle para evitar execuções repetidas
+  const [trackingInitialized, setTrackingInitialized] = useState(false);
+  
+  // Sistema avançado de captura de dados da página pai
+  useEffect(() => {
+    
+    const handleParentMessage = (event: MessageEvent) => {
+      
+      if (event.data && typeof event.data === 'object') {
+        if (event.data.type === 'PARENT_TRACKING_DATA') {
+          setParentTrackingData(event.data.data);
+          setTrackingInitialized(true);
+        }
+      }
+    };
+    
+    // Escutar mensagens da página pai
+    window.addEventListener('message', handleParentMessage);
+    
+    // Estratégia 1: Solicitar dados via postMessage
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({ type: 'REQUEST_TRACKING_DATA' }, '*');
+    }
+    
+    // Estratégia 2: Tentar capturar via document.referrer (mais confiável)
+    const captureFromReferrer = () => {
+      if (document.referrer && document.referrer !== window.location.href) {
+        try {
+          const referrerUrl = new URL(document.referrer);
+          const referrerParams = new URLSearchParams(referrerUrl.search);
+          
+          
+          const referrerData = {
+            parentUrl: document.referrer,
+            utmSource: referrerParams.get('utm_source') || '',
+            utmMedium: referrerParams.get('utm_medium') || '',
+            utmCampaign: referrerParams.get('utm_campaign') || '',
+            utmContent: referrerParams.get('utm_content') || '',
+            utmTerm: referrerParams.get('utm_term') || '',
+            gclid: referrerParams.get('gclid') || '',
+            fbclid: referrerParams.get('fbclid') || '',
+            referrer: document.referrer,
+            userAgent: navigator.userAgent,
+            timestamp: new Date().toISOString()
+          };
+          
+          console.log('📊 ===== DADOS CAPTURADOS DO REFERRER =====');
+          console.log('📊 URL:', referrerData.parentUrl);
+          console.log('📊 utm_source:', referrerData.utmSource || 'N/A');
+          console.log('📊 utm_medium:', referrerData.utmMedium || 'N/A');
+          console.log('📊 utm_campaign:', referrerData.utmCampaign || 'N/A');
+          console.log('📊 utm_content:', referrerData.utmContent || 'N/A');
+          console.log('📊 utm_term:', referrerData.utmTerm || 'N/A');
+          console.log('📊 gclid:', referrerData.gclid || 'N/A');
+          console.log('📊 fbclid:', referrerData.fbclid || 'N/A');
+          
+          setParentTrackingData(referrerData);
+          setTrackingInitialized(true);
+          
+        } catch (e) {
+          console.log('⚠️ Erro ao processar document.referrer:', e.message);
+        }
+      }
+    };
+    
+    // Executar captura do referrer após um pequeno delay
+    setTimeout(captureFromReferrer, 100);
+    
+    // Estratégia 3: Tentar acessar window.parent.location (pode funcionar em alguns casos)
+    const tryParentLocation = () => {
+      try {
+        if (window.parent && window.parent !== window && window.parent.location) {
+          console.log('📡 Estratégia 3: Tentando acessar window.parent.location...');
+          const parentUrl = window.parent.location.href;
+          const parentParams = new URLSearchParams(window.parent.location.search);
+          
+          const parentData = {
+            parentUrl: parentUrl,
+            utmSource: parentParams.get('utm_source') || '',
+            utmMedium: parentParams.get('utm_medium') || '',
+            utmCampaign: parentParams.get('utm_campaign') || '',
+            utmContent: parentParams.get('utm_content') || '',
+            utmTerm: parentParams.get('utm_term') || '',
+            gclid: parentParams.get('gclid') || '',
+            fbclid: parentParams.get('fbclid') || '',
+            referrer: document.referrer,
+            userAgent: navigator.userAgent,
+            timestamp: new Date().toISOString()
+          };
+          
+          console.log('📊 ===== DADOS CAPTURADOS DO WINDOW.PARENT =====');
+          console.log('📊 URL:', parentData.parentUrl);
+          console.log('📊 utm_source:', parentData.utmSource || 'N/A');
+          console.log('📊 utm_medium:', parentData.utmMedium || 'N/A');
+          console.log('📊 utm_campaign:', parentData.utmCampaign || 'N/A');
+          console.log('📊 utm_content:', parentData.utmContent || 'N/A');
+          console.log('📊 utm_term:', parentData.utmTerm || 'N/A');
+          console.log('📊 gclid:', parentData.gclid || 'N/A');
+          console.log('📊 fbclid:', parentData.fbclid || 'N/A');
+          
+          setParentTrackingData(parentData);
+          setTrackingInitialized(true);
+          
+        }
+      } catch (e) {
+        console.log('⚠️ Estratégia 3 falhou (CORS):', e.message);
+      }
+    };
+    
+    // Executar tentativa de acesso ao parent após delay
+    setTimeout(tryParentLocation, 200);
+    
+    return () => {
+      window.removeEventListener('message', handleParentMessage);
+    };
+  }, []);
+
+  // Sistema completo de diagnóstico e captura de UTMs com logs detalhados
+  useEffect(() => {
+    // Evitar execução repetida se já foi inicializado
+    if (trackingInitialized) {
+      console.log('⚠️ Sistema de tracking já inicializado, pulando execução');
+      return;
+    }
+    
+    console.log('🚀 ===== SISTEMA DE DIAGNÓSTICO DE UTMs INICIADO =====');
+    console.log('🚀 Timestamp:', new Date().toISOString());
+    
+    // Função para obter cookies
+    const getCookie = (name: string) => {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop()?.split(';').shift() || '';
+      return '';
+    };
+
+    // Função para capturar todos os dados de tracking com logs detalhados
+    const captureAllTrackingData = () => {
+      console.log('🔍 ===== CAPTURANDO DADOS DE TRACKING =====');
+      
+      // 1. LOGS DA URL ATUAL DO IFRAME
+      console.log('📍 URL ATUAL DO IFRAME:', window.location.href);
+      console.log('📍 URL SEM PARÂMETROS:', window.location.origin + window.location.pathname);
+      
+      // 2. LOGS DO DOCUMENT.REFERRER
+      console.log('📍 DOCUMENT.REFERRER:', document.referrer);
+      console.log('📍 REFERRER DIFERENTE DA URL ATUAL:', document.referrer !== window.location.href);
+      
+      // 3. LOGS DE WINDOW.PARENT
+      console.log('📍 WINDOW.PARENT EXISTE:', !!window.parent);
+      console.log('📍 WINDOW.PARENT É DIFERENTE DE WINDOW:', window.parent !== window);
+      
+      try {
+        if (window.parent && window.parent !== window) {
+          console.log('📍 WINDOW.PARENT.LOCATION EXISTE:', !!window.parent.location);
+          if (window.parent.location) {
+            console.log('📍 URL DA PÁGINA PAI:', window.parent.location.href);
+            console.log('📍 SEARCH DA PÁGINA PAI:', window.parent.location.search);
+          }
+        }
+      } catch (e) {
+        console.log('⚠️ ERRO AO ACESSAR WINDOW.PARENT.LOCATION (CORS):', e.message);
+      }
+
+      // 4. CAPTURAR PARÂMETROS DA URL ATUAL DO IFRAME
+      const currentParams = new URLSearchParams(window.location.search);
+      console.log('📊 ===== PARÂMETROS DA URL ATUAL DO IFRAME =====');
+      console.log('📊 utm_source:', currentParams.get('utm_source') || 'NÃO ENCONTRADO');
+      console.log('📊 utm_medium:', currentParams.get('utm_medium') || 'NÃO ENCONTRADO');
+      console.log('📊 utm_campaign:', currentParams.get('utm_campaign') || 'NÃO ENCONTRADO');
+      console.log('📊 utm_content:', currentParams.get('utm_content') || 'NÃO ENCONTRADO');
+      console.log('📊 utm_term:', currentParams.get('utm_term') || 'NÃO ENCONTRADO');
+      console.log('📊 gclid:', currentParams.get('gclid') || 'NÃO ENCONTRADO');
+      console.log('📊 fbclid:', currentParams.get('fbclid') || 'NÃO ENCONTRADO');
+
+      // 5. CAPTURAR PARÂMETROS DO DOCUMENT.REFERRER
+      if (document.referrer && document.referrer !== window.location.href) {
+        try {
+          const referrerUrl = new URL(document.referrer);
+          const referrerParams = new URLSearchParams(referrerUrl.search);
+          console.log('📊 ===== PARÂMETROS DO DOCUMENT.REFERRER =====');
+          console.log('📊 utm_source:', referrerParams.get('utm_source') || 'NÃO ENCONTRADO');
+          console.log('📊 utm_medium:', referrerParams.get('utm_medium') || 'NÃO ENCONTRADO');
+          console.log('📊 utm_campaign:', referrerParams.get('utm_campaign') || 'NÃO ENCONTRADO');
+          console.log('📊 utm_content:', referrerParams.get('utm_content') || 'NÃO ENCONTRADO');
+          console.log('📊 utm_term:', referrerParams.get('utm_term') || 'NÃO ENCONTRADO');
+          console.log('📊 gclid:', referrerParams.get('gclid') || 'NÃO ENCONTRADO');
+          console.log('📊 fbclid:', referrerParams.get('fbclid') || 'NÃO ENCONTRADO');
+        } catch (e) {
+          console.log('⚠️ ERRO AO PARSEAR DOCUMENT.REFERRER:', e.message);
+        }
+      }
+
+      // 6. CAPTURAR PARÂMETROS DA PÁGINA PAI (se possível)
+      try {
+        if (window.parent && window.parent !== window && window.parent.location) {
+          const parentParams = new URLSearchParams(window.parent.location.search);
+          console.log('📊 ===== PARÂMETROS DA PÁGINA PAI =====');
+          console.log('📊 utm_source:', parentParams.get('utm_source') || 'NÃO ENCONTRADO');
+          console.log('📊 utm_medium:', parentParams.get('utm_medium') || 'NÃO ENCONTRADO');
+          console.log('📊 utm_campaign:', parentParams.get('utm_campaign') || 'NÃO ENCONTRADO');
+          console.log('📊 utm_content:', parentParams.get('utm_content') || 'NÃO ENCONTRADO');
+          console.log('📊 utm_term:', parentParams.get('utm_term') || 'NÃO ENCONTRADO');
+          console.log('📊 gclid:', parentParams.get('gclid') || 'NÃO ENCONTRADO');
+          console.log('📊 fbclid:', parentParams.get('fbclid') || 'NÃO ENCONTRADO');
+        }
+      } catch (e) {
+        console.log('⚠️ ERRO AO ACESSAR PARÂMETROS DA PÁGINA PAI (CORS):', e.message);
+      }
+
+      // 7. LOGS DE COOKIES
+      console.log('🍪 ===== COOKIES CAPTURADOS =====');
+      console.log('🍪 Todos os cookies:', document.cookie);
+      console.log('🍪 _fbc:', getCookie('_fbc') || 'NÃO ENCONTRADO');
+      console.log('🍪 _fbp:', getCookie('_fbp') || 'NÃO ENCONTRADO');
+      console.log('🍪 _fbid:', getCookie('_fbid') || 'NÃO ENCONTRADO');
+      console.log('🍪 _ga:', getCookie('_ga') || 'NÃO ENCONTRADO');
+      console.log('🍪 _gid:', getCookie('_gid') || 'NÃO ENCONTRADO');
+
+      // 8. RESUMO DOS DADOS CAPTURADOS
+      let finalData = {
+        url: window.location.href,
+        utmSource: '',
+        utmMedium: '',
+        utmCampaign: '',
+        utmContent: '',
+        utmTerm: '',
+        gclid: '',
+        fbclid: '',
+        fbc: '',
+        fbp: '',
+        fbid: ''
+      };
+
+      // Prioridade 1: Usar dados capturados pelas estratégias avançadas
+      if (parentTrackingData.utmSource || parentTrackingData.parentUrl) {
+        finalData.url = parentTrackingData.parentUrl || '';
+        finalData.utmSource = parentTrackingData.utmSource || '';
+        finalData.utmMedium = parentTrackingData.utmMedium || '';
+        finalData.utmCampaign = parentTrackingData.utmCampaign || '';
+        finalData.utmContent = parentTrackingData.utmContent || '';
+        finalData.utmTerm = parentTrackingData.utmTerm || '';
+        finalData.gclid = parentTrackingData.gclid || '';
+        finalData.fbclid = parentTrackingData.fbclid || '';
+        finalData.fbc = parentTrackingData.fbc || '';
+        finalData.fbp = parentTrackingData.fbp || '';
+        finalData.fbid = parentTrackingData.fbid || '';
+        console.log('✅ USANDO DADOS CAPTURADOS PELAS ESTRATÉGIAS AVANÇADAS');
+      }
+      // Prioridade 2: Tentar usar dados da página pai via window.parent.location (fallback)
+      else {
+        try {
+          if (window.parent && window.parent !== window && window.parent.location) {
+            const parentParams = new URLSearchParams(window.parent.location.search);
+            finalData.url = window.parent.location.href;
+            finalData.utmSource = parentParams.get('utm_source') || '';
+            finalData.utmMedium = parentParams.get('utm_medium') || '';
+            finalData.utmCampaign = parentParams.get('utm_campaign') || '';
+            finalData.utmContent = parentParams.get('utm_content') || '';
+            finalData.utmTerm = parentParams.get('utm_term') || '';
+            finalData.gclid = parentParams.get('gclid') || '';
+            finalData.fbclid = parentParams.get('fbclid') || '';
+            console.log('✅ USANDO DADOS DA PÁGINA PAI VIA WINDOW.PARENT.LOCATION (FALLBACK)');
+          }
+        } catch (e) {
+          console.log('⚠️ Não foi possível acessar dados da página pai via window.parent.location');
+        }
+      }
+
+      // Prioridade 3: Usar document.referrer se não conseguiu da página pai
+      if (!finalData.utmSource && document.referrer && document.referrer !== window.location.href) {
+        try {
+          const referrerUrl = new URL(document.referrer);
+          const referrerParams = new URLSearchParams(referrerUrl.search);
+          finalData.url = document.referrer;
+          finalData.utmSource = referrerParams.get('utm_source') || '';
+          finalData.utmMedium = referrerParams.get('utm_medium') || '';
+          finalData.utmCampaign = referrerParams.get('utm_campaign') || '';
+          finalData.utmContent = referrerParams.get('utm_content') || '';
+          finalData.utmTerm = referrerParams.get('utm_term') || '';
+          finalData.gclid = referrerParams.get('gclid') || '';
+          finalData.fbclid = referrerParams.get('fbclid') || '';
+          console.log('✅ USANDO DADOS DO DOCUMENT.REFERRER');
+        } catch (e) {
+          console.log('⚠️ Não foi possível usar document.referrer');
+        }
+      }
+
+      // Prioridade 4: Usar URL atual do iframe como fallback
+      if (!finalData.utmSource) {
+        finalData.url = window.location.href;
+        finalData.utmSource = currentParams.get('utm_source') || '';
+        finalData.utmMedium = currentParams.get('utm_medium') || '';
+        finalData.utmCampaign = currentParams.get('utm_campaign') || '';
+        finalData.utmContent = currentParams.get('utm_content') || '';
+        finalData.utmTerm = currentParams.get('utm_term') || '';
+        finalData.gclid = currentParams.get('gclid') || '';
+        finalData.fbclid = currentParams.get('fbclid') || '';
+        console.log('⚠️ USANDO URL ATUAL DO IFRAME COMO FALLBACK');
+      }
+
+      // Capturar cookies
+      finalData.fbc = getCookie('_fbc');
+      finalData.fbp = getCookie('_fbp');
+      finalData.fbid = getCookie('_fbid');
+
+      console.log('🎯 ===== DADOS FINAIS CAPTURADOS =====');
+      console.log('🎯 URL FINAL:', finalData.url);
+      console.log('🎯 utm_source:', finalData.utmSource || 'VAZIO');
+      console.log('🎯 utm_medium:', finalData.utmMedium || 'VAZIO');
+      console.log('🎯 utm_campaign:', finalData.utmCampaign || 'VAZIO');
+      console.log('🎯 utm_content:', finalData.utmContent || 'VAZIO');
+      console.log('🎯 utm_term:', finalData.utmTerm || 'VAZIO');
+      console.log('🎯 gclid:', finalData.gclid || 'VAZIO');
+      console.log('🎯 fbclid:', finalData.fbclid || 'VAZIO');
+      console.log('🎯 _fbc:', finalData.fbc || 'VAZIO');
+      console.log('🎯 _fbp:', finalData.fbp || 'VAZIO');
+      console.log('🎯 _fbid:', finalData.fbid || 'VAZIO');
+
+      return finalData;
+    };
+
+    // Executar captura imediatamente
+    const capturedData = captureAllTrackingData();
+    
+    // Atualizar estado com os dados capturados
+    setParentTrackingData({
+      url: capturedData.url,
+      cookies: {
+        _fbc: capturedData.fbc,
+        _fbp: capturedData.fbp,
+        _fbid: capturedData.fbid
+      }
+    });
+
+    // Listener para mensagens da página pai
+    const handleMessage = (event: MessageEvent) => {
+      console.log('📨 ===== MENSAGEM RECEBIDA DA PÁGINA PAI =====');
+      console.log('📨 Dados recebidos:', event.data);
+      
+      if (event.data && typeof event.data === 'object') {
+        if (event.data.type === 'PARENT_TRACKING_DATA') {
+          console.log('📨 DADOS COMPLETOS DE TRACKING RECEBIDOS:', event.data.data);
+          setParentTrackingData({
+            url: event.data.data.url,
+            cookies: {
+              _fbc: event.data.data.fbc,
+              _fbp: event.data.data.fbp,
+              _fbid: event.data.data.fbid
+            }
+          });
+        } else if (event.data.type === 'PARENT_URL_RESPONSE') {
+          console.log('📨 RESPOSTA DE URL DA PÁGINA PAI:', event.data.url);
+          setParentTrackingData(prev => ({
+            ...prev,
+            url: event.data.url
+          }));
+        } else if (event.data.type === 'PARENT_COOKIE_RESPONSE') {
+          console.log('📨 RESPOSTA DE COOKIE DA PÁGINA PAI:', event.data.cookieName, event.data.cookieValue);
+          setParentTrackingData(prev => ({
+            ...prev,
+            cookies: {
+              ...prev.cookies,
+              [event.data.cookieName]: event.data.cookieValue
+            }
+          }));
+        }
+      }
+    };
+    
+    window.addEventListener('message', handleMessage);
+
+    // Removido: Função de injeção de script que causava loop infinito
+
+    // Solicitar dados da página pai via postMessage
+    try {
+      window.parent.postMessage({ type: 'REQUEST_PARENT_URL' }, '*');
+      console.log('📤 Solicitação de URL enviada para página pai');
+    } catch (error) {
+      console.log('⚠️ ERRO AO SOLICITAR URL DA PÁGINA PAI:', error.message);
+    }
+
+    // Removido: Chamada da função de injeção que causava loop infinito
+    
+    // Removido: Re-execução da captura que causava loops desnecessários
+    
+    return () => window.removeEventListener('message', handleMessage);
+  }, [trackingInitialized]);
+  
   // Animação de seleção (efeito piscar) antes de avançar
   const [animatingSelection, setAnimatingSelection] = useState<{ fieldId: string; option: string } | null>(null);
   
@@ -405,7 +826,7 @@ export default function PublicForm(props?: PublicFormProps) {
         }
 
 
-        // Buscar moeda da empresa
+        // Buscar moeda e timezone da empresa
         const { data: company, error: companyError } = await supabase
           .from('companies' as any)
           .select('currency')
@@ -414,6 +835,17 @@ export default function PublicForm(props?: PublicFormProps) {
 
         if (!companyError && (company as any)?.currency) {
           setCompanyCurrency((company as any).currency);
+        }
+
+        // Buscar timezone da empresa
+        const { data: companyProfile, error: profileError } = await supabase
+          .from('company_profiles' as any)
+          .select('timezone')
+          .eq('company_id', (form as any).company_id)
+          .maybeSingle();
+
+        if (!profileError && (companyProfile as any)?.timezone) {
+          setCompanyTimezone((companyProfile as any).timezone);
         }
 
         // Carregar configuração de estilo
@@ -1223,6 +1655,8 @@ export default function PublicForm(props?: PublicFormProps) {
         }
 
         // Select simples com todas as funcionalidades
+        const connectionIsRequired = (field as any).is_required || false;
+        
         return (
           <div className="space-y-2">
             {/* Mostrar o label apenas quando toggle estiver desligado */}
@@ -1241,15 +1675,7 @@ export default function PublicForm(props?: PublicFormProps) {
                   // Aqui você pode implementar lógica de desqualificação
                 }
               }}
-                onOpenChange={(open) => {
-                  // Ao abrir o dropdown, solicitar aumento temporário do iframe
-                  try {
-                    const extra = open ? 300 : 0; // espaço reduzido para o menu
-                    setSelectSpacerHeight(extra);
-                    // Redimensionar com delay para evitar oscilações
-                    setTimeout(() => resizeIframe(), 100);
-                  } catch {}
-                }}
+              modal={false}
             >
               <SelectTrigger 
                 className="h-12 text-base focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-border select-trigger" 
@@ -1973,8 +2399,6 @@ export default function PublicForm(props?: PublicFormProps) {
       case 'connection':
       case 'conexao':
       case 'conexão':
-        const connectionIsRequired = (field as any).is_required || false;
-        
         // Detectar se o texto é realmente personalizado (não padrão)
         const hasCustomConnectionPlaceholder = (field as any).placeholder_text && 
           (field as any).placeholder_text !== "Selecione uma opção" && 
@@ -2013,6 +2437,7 @@ export default function PublicForm(props?: PublicFormProps) {
               <Select 
                 value={currentValue} 
                 onValueChange={(value) => updateFieldValue((field as any).field_id, value)}
+                modal={false}
               >
                 <SelectTrigger 
                 className="h-12 text-base focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-border select-trigger" 
@@ -2072,6 +2497,7 @@ export default function PublicForm(props?: PublicFormProps) {
             <Select 
               value={currentValue} 
               onValueChange={(value) => updateFieldValue((field as any).field_id, value)}
+              modal={false}
             >
               <SelectTrigger 
                 className="h-12 text-base focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-border select-trigger" 
@@ -2419,20 +2845,179 @@ export default function PublicForm(props?: PublicFormProps) {
         }
       }
       
+      // Sistema auto-contido de captura de dados de tracking
+      const captureTrackingData = () => {
+        console.log('🔍 Debug - parentTrackingData:', parentTrackingData);
+        
+        // Prioridade 1: Usar dados já capturados pelo sistema auto-contido
+        if (parentTrackingData.parentUrl || parentTrackingData.url) {
+          try {
+            const parentUrl = parentTrackingData.parentUrl || parentTrackingData.url;
+            const parentUrlObj = new URL(parentUrl);
+            const parentParams = new URLSearchParams(parentUrlObj.search);
+            
+            const trackingData = {
+              url: parentUrl,
+              urlParams: parentParams.toString(),
+              utmSource: parentTrackingData.utmSource || parentParams.get('utm_source') || '',
+              utmMedium: parentTrackingData.utmMedium || parentParams.get('utm_medium') || '',
+              utmCampaign: parentTrackingData.utmCampaign || parentParams.get('utm_campaign') || '',
+              utmContent: parentTrackingData.utmContent || parentParams.get('utm_content') || '',
+              utmTerm: parentTrackingData.utmTerm || parentParams.get('utm_term') || '',
+              gclid: parentTrackingData.gclid || parentParams.get('gclid') || '',
+              fbclid: parentTrackingData.fbclid || parentParams.get('fbclid') || '',
+              fbc: parentTrackingData.fbc || '',
+              fbp: parentTrackingData.fbp || '',
+              fbid: parentTrackingData.fbid || ''
+            };
+            
+            console.log('📊 Using auto-captured parent data:', trackingData);
+            return trackingData;
+          } catch (e) {
+            console.log('⚠️ Error parsing parent tracking data:', e);
+          }
+        }
+
+        // Prioridade 2: Tentar acessar window.parent.location diretamente
+        try {
+          if (window.parent && window.parent !== window && window.parent.location) {
+            const parentUrl = window.parent.location.href;
+            const parentParams = new URLSearchParams(window.parent.location.search);
+            
+            const trackingData = {
+              url: parentUrl,
+              urlParams: parentParams.toString(),
+              utmSource: parentParams.get('utm_source') || '',
+              utmMedium: parentParams.get('utm_medium') || '',
+              utmCampaign: parentParams.get('utm_campaign') || '',
+              utmContent: parentParams.get('utm_content') || '',
+              utmTerm: parentParams.get('utm_term') || '',
+              gclid: parentParams.get('gclid') || '',
+              fbclid: parentParams.get('fbclid') || '',
+              fbc: '',
+              fbp: '',
+              fbid: ''
+            };
+            
+            console.log('📊 Using direct parent.location access:', trackingData);
+            return trackingData;
+          }
+        } catch (e) {
+          console.log('⚠️ Cannot access parent.location (CORS):', e.message);
+        }
+
+        // Prioridade 3: Usar document.referrer como fallback
+        try {
+          if (document.referrer && document.referrer !== window.location.href) {
+            const referrerUrl = new URL(document.referrer);
+            const referrerParams = new URLSearchParams(referrerUrl.search);
+            
+            const trackingData = {
+              url: document.referrer,
+              urlParams: referrerParams.toString(),
+              utmSource: referrerParams.get('utm_source') || '',
+              utmMedium: referrerParams.get('utm_medium') || '',
+              utmCampaign: referrerParams.get('utm_campaign') || '',
+              utmContent: referrerParams.get('utm_content') || '',
+              utmTerm: referrerParams.get('utm_term') || '',
+              gclid: referrerParams.get('gclid') || '',
+              fbclid: referrerParams.get('fbclid') || '',
+              fbc: '',
+              fbp: '',
+              fbid: ''
+            };
+            
+            console.log('📊 Using document.referrer fallback:', trackingData);
+            return trackingData;
+          }
+        } catch (e) {
+          console.log('⚠️ Cannot parse document.referrer:', e.message);
+        }
+
+        // Fallback final: usar URL atual do iframe
+        const currentParams = new URLSearchParams(window.location.search);
+        const trackingData = {
+          url: window.location.href,
+          urlParams: currentParams.toString(),
+          utmSource: currentParams.get('utm_source') || '',
+          utmMedium: currentParams.get('utm_medium') || '',
+          utmCampaign: currentParams.get('utm_campaign') || '',
+          utmContent: currentParams.get('utm_content') || '',
+          utmTerm: currentParams.get('utm_term') || '',
+          gclid: currentParams.get('gclid') || '',
+          fbclid: currentParams.get('fbclid') || '',
+          fbc: '',
+          fbp: '',
+          fbid: ''
+        };
+        
+        console.log('📊 Using iframe URL as final fallback:', trackingData);
+        return trackingData;
+      };
+
+      const trackingData = captureTrackingData();
+
+      // Função para limpar telefone (remover formatação e manter apenas números com DDI)
+      const cleanPhoneNumber = (phone: string) => {
+        if (!phone) return '';
+        
+        // Remover todos os caracteres não numéricos
+        const cleanPhone = phone.replace(/\D/g, '');
+        
+        // Se o telefone já tem DDI (começa com 55 e tem pelo menos 12 dígitos)
+        if (cleanPhone.startsWith('55') && cleanPhone.length >= 12) {
+          return cleanPhone;
+        } else if (cleanPhone.length === 11) {
+          // Telefone brasileiro sem DDI - adicionar +55
+          return '55' + cleanPhone;
+        } else if (cleanPhone.length === 10) {
+          // Telefone brasileiro sem DDI - adicionar +55
+          return '55' + cleanPhone;
+        } else {
+          // Para outros casos, retornar como está
+          return cleanPhone;
+        }
+      };
+
       const leadData = {
         company_id: (formData as any).company_id,
         nome: fieldValues.nome || fieldValues.name || '',
         email: fieldValues.email || '',
-        telefone: fieldValues.telefone || fieldValues.phone || '',
+        telefone: cleanPhoneNumber(fieldValues.telefone || fieldValues.phone || ''),
         origem: origemFinal,
         fonte: 'internal_form',
         ip: '',
         browser: navigator.userAgent || '',
         device: 'Desktop',
         pais: 'Brasil',
-        url: window.location.href
+        url: trackingData.url,
+        utm_campaign: trackingData.utmCampaign,
+        utm_medium: trackingData.utmMedium,
+        utm_content: trackingData.utmContent,
+        utm_source: trackingData.utmSource,
+        utm_term: trackingData.utmTerm,
+        gclid: trackingData.gclid,
+        fbclid: trackingData.fbclid,
+        fbc: trackingData.fbc,
+        fbp: trackingData.fbp,
+        fbid: trackingData.fbid
         // parametros removido: dados customizados agora vão para lead_field_values
       };
+
+      console.log('💾 ===== SALVANDO DADOS NO BANCO DE DADOS =====');
+      console.log('💾 Telefone original:', fieldValues.telefone || fieldValues.phone || 'N/A');
+      console.log('💾 Telefone limpo:', leadData.telefone || 'N/A');
+      console.log('💾 URL:', leadData.url || 'N/A');
+      console.log('💾 utm_source:', leadData.utm_source || 'N/A');
+      console.log('💾 utm_medium:', leadData.utm_medium || 'N/A');
+      console.log('💾 utm_campaign:', leadData.utm_campaign || 'N/A');
+      console.log('💾 utm_content:', leadData.utm_content || 'N/A');
+      console.log('💾 utm_term:', leadData.utm_term || 'N/A');
+      console.log('💾 gclid:', leadData.gclid || 'N/A');
+      console.log('💾 fbclid:', leadData.fbclid || 'N/A');
+      console.log('💾 fbc:', leadData.fbc || 'N/A');
+      console.log('💾 fbp:', leadData.fbp || 'N/A');
+      console.log('💾 fbid:', leadData.fbid || 'N/A');
 
       const { data: lead, error: leadError } = await supabase
         .from('leads')
@@ -2445,14 +3030,40 @@ export default function PublicForm(props?: PublicFormProps) {
         throw new Error('Erro ao salvar lead');
       }
 
+      console.log('✅ Lead salvo no banco de dados com sucesso!');
+      console.log('✅ Lead ID:', lead.id);
+      console.log('✅ Dados de tracking salvos:', {
+        url: leadData.url,
+        utm_source: leadData.utm_source,
+        utm_medium: leadData.utm_medium,
+        utm_campaign: leadData.utm_campaign,
+        utm_content: leadData.utm_content,
+        utm_term: leadData.utm_term,
+        gclid: leadData.gclid,
+        fbclid: leadData.fbclid,
+        fbc: leadData.fbc,
+        fbp: leadData.fbp,
+        fbid: leadData.fbid
+      });
+
       // Salvar campos customizados se existirem
       if (Object.keys(fieldValues).length > 0) {
-        const customFields = Object.entries(fieldValues).map(([fieldId, value]) => ({
-          lead_id: lead.id,
-          field_id: fieldId,
-          value_text: typeof value === 'string' ? value : JSON.stringify(value),
-          created_at: new Date().toISOString()
-        }));
+        const customFields = Object.entries(fieldValues).map(([fieldId, value]) => {
+          // Limpar telefone se for um campo de telefone
+          let cleanValue = value;
+          if (fieldId === 'telefone' || fieldId === 'phone' || 
+              (typeof value === 'string' && /^[\d\s\(\)\-\+]+$/.test(value) && value.length >= 10)) {
+            cleanValue = cleanPhoneNumber(String(value));
+            console.log('📞 Campo de telefone customizado limpo:', { fieldId, original: value, cleaned: cleanValue });
+          }
+          
+          return {
+            lead_id: lead.id,
+            field_id: fieldId,
+            value_text: typeof cleanValue === 'string' ? cleanValue : JSON.stringify(cleanValue),
+            created_at: new Date().toISOString()
+          };
+        });
 
         if (customFields.length > 0) {
           const { error: customError } = await supabase
@@ -2493,11 +3104,29 @@ export default function PublicForm(props?: PublicFormProps) {
         console.log('🚀 Debug - company_name:', (formData as any).company_name || 'Empresa');
         console.log('🚀 Debug - form_name:', (formData as any).name || 'Formulário');
         
+        // Capturar dados de tracking para integrações usando dados da página pai
+        const trackingData = captureTrackingData();
+        
+        console.log('📊 ===== DADOS DE TRACKING PARA INTEGRAÇÕES =====');
+        console.log('📊 URL:', trackingData.url);
+        console.log('📊 utm_source:', trackingData.utmSource || 'N/A');
+        console.log('📊 utm_medium:', trackingData.utmMedium || 'N/A');
+        console.log('📊 utm_campaign:', trackingData.utmCampaign || 'N/A');
+        console.log('📊 utm_content:', trackingData.utmContent || 'N/A');
+        console.log('📊 utm_term:', trackingData.utmTerm || 'N/A');
+        console.log('📊 gclid:', trackingData.gclid || 'N/A');
+        console.log('📊 fbclid:', trackingData.fbclid || 'N/A');
+        console.log('📊 fbc:', trackingData.fbc || 'N/A');
+        console.log('📊 fbp:', trackingData.fbp || 'N/A');
+        console.log('📊 fbid:', trackingData.fbid || 'N/A');
+        
         await integrationService.processFormIntegrations(
           formId,
           fieldValues,
           (formData as any).company_name || 'Empresa',
-          (formData as any).name || 'Formulário'
+          (formData as any).name || 'Formulário',
+          trackingData,
+          companyTimezone
         );
         
         console.log('✅ Debug - Processamento de integrações concluído');
@@ -2825,14 +3454,14 @@ export default function PublicForm(props?: PublicFormProps) {
             /* Estilo específico para menu dropdown */
             .embedded-form-root [data-radix-select-content] {
               background-color: var(--baseBg, #FFFFFF) !important;
-              z-index: 2147483647 !important; /* sempre por cima */
+              z-index: 9999 !important; /* z-index menor para ficar dentro do iframe */
               overflow: visible !important;
-              /* Alinhar dropdown com o campo */
-              position: absolute !important;
-              left: 0 !important;
+              /* Manter dropdown dentro do iframe */
+              position: fixed !important;
+              left: auto !important;
               right: auto !important;
-              width: 100% !important;
-              min-width: 100% !important;
+              width: auto !important;
+              min-width: auto !important;
               transform: none !important;
             }
             
@@ -2882,14 +3511,14 @@ export default function PublicForm(props?: PublicFormProps) {
             [data-radix-select-content] { 
               background-color: var(--baseBg, #FFFFFF) !important; 
               color: var(--baseFg, #000000) !important;
-              z-index: 2147483647 !important;
+              z-index: 9999 !important; /* z-index menor para ficar dentro do iframe */
               overflow: visible !important;
-              /* Alinhar dropdown com o campo de origem */
-              position: absolute !important;
-              left: 0 !important;
+              /* Manter dropdown dentro do iframe */
+              position: fixed !important;
+              left: auto !important;
               right: auto !important;
-              width: 100% !important;
-              min-width: 100% !important;
+              width: auto !important;
+              min-width: auto !important;
             }
             
             /* Regras GLOBAIS para forçar transparência em iframes */
@@ -3118,6 +3747,14 @@ export default function PublicForm(props?: PublicFormProps) {
                 if (mutation.type === 'childList') {
                   mutation.addedNodes.forEach(function(node) {
                     if (node.nodeType === 1) { // Element node
+                      // Ignorar elementos de dropdown
+                      if (node.hasAttribute('data-radix-select-content') || 
+                          node.hasAttribute('data-radix-dropdown-menu-content') ||
+                          node.classList?.contains('select-content') ||
+                          node.classList?.contains('phone-dropdown-content')) {
+                        return; // Não redimensionar para dropdowns
+                      }
+                      
                       // Verificar se é um novo campo, botão ou etapa
                       if (node.tagName === 'INPUT' || node.tagName === 'SELECT' || 
                           node.tagName === 'BUTTON' || node.tagName === 'DIV' ||
@@ -3129,6 +3766,14 @@ export default function PublicForm(props?: PublicFormProps) {
                   
                   mutation.removedNodes.forEach(function(node) {
                     if (node.nodeType === 1) { // Element node
+                      // Ignorar elementos de dropdown
+                      if (node.hasAttribute('data-radix-select-content') || 
+                          node.hasAttribute('data-radix-dropdown-menu-content') ||
+                          node.classList?.contains('select-content') ||
+                          node.classList?.contains('phone-dropdown-content')) {
+                        return; // Não redimensionar para dropdowns
+                      }
+                      
                       // Verificar se um campo, botão ou etapa foi removido
                       if (node.tagName === 'INPUT' || node.tagName === 'SELECT' || 
                           node.tagName === 'BUTTON' || node.tagName === 'DIV' ||
@@ -3142,6 +3787,15 @@ export default function PublicForm(props?: PublicFormProps) {
                 // Detectar mudanças de estilo que podem indicar mudança de etapa
                 if (mutation.type === 'attributes' && 
                     (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
+                  // Ignorar mudanças em elementos de dropdown
+                  const target = mutation.target;
+                  if (target && (
+                      target.hasAttribute('data-radix-select-content') || 
+                      target.hasAttribute('data-radix-dropdown-menu-content') ||
+                      target.classList?.contains('select-content') ||
+                      target.classList?.contains('phone-dropdown-content'))) {
+                    return; // Não redimensionar para dropdowns
+                  }
                   shouldResize = true;
                 }
               });

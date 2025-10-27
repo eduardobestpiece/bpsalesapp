@@ -32,6 +32,27 @@ export class IntegrationService {
     return `${formId}-${userIdentifier}-${Date.now()}`;
   }
 
+  // Formatar data com fuso horário da empresa
+  private formatDateTimeWithTimezone(isoString: string, timezone: string = 'America/Sao_Paulo'): string {
+    try {
+      const date = new Date(isoString);
+      const parts = new Intl.DateTimeFormat('pt-BR', {
+        timeZone: timezone,
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit',
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit'
+      }).formatToParts(date);
+      
+      const get = (type: string) => parts.find(p => p.type === type)?.value || '';
+      return `${get('day')}/${get('month')}/${get('year')} ${get('hour')}:${get('minute')}:${get('second')}`;
+    } catch (error) {
+      return isoString; // Fallback para a string original em caso de erro
+    }
+  }
+
   // Coletar dados do sistema para envio
   private async collectSystemData(): Promise<Partial<IntegrationData>> {
     // Obter parâmetros da URL pai (iframe)
@@ -373,11 +394,22 @@ export class IntegrationService {
   private mapPhoneField(mappedFields: Record<string, any>, senderName: string, fieldValue: string): void {
     console.log('📞 Debug - Mapeando campo de telefone:', { senderName, fieldValue });
     
-    // Limpar o valor (remover caracteres especiais)
-    const cleanPhone = fieldValue.replace(/[^\d]/g, '');
+    // Limpar o valor (remover caracteres especiais e manter apenas números)
+    const cleanPhone = fieldValue.replace(/\D/g, '');
+    
+    // Adicionar DDI se necessário
+    let phoneWithDDI = cleanPhone;
+    if (cleanPhone.length === 11 && !cleanPhone.startsWith('55')) {
+      phoneWithDDI = '55' + cleanPhone;
+    } else if (cleanPhone.length === 10 && !cleanPhone.startsWith('55')) {
+      phoneWithDDI = '55' + cleanPhone;
+    }
+    
+    console.log('📞 Debug - Telefone limpo:', cleanPhone);
+    console.log('📞 Debug - Telefone com DDI:', phoneWithDDI);
     
     // Campo original
-    mappedFields[senderName] = cleanPhone;
+    mappedFields[senderName] = phoneWithDDI;
     
     // Verificar se o número já tem DDI (começa com 55 e tem pelo menos 12 dígitos)
     if (cleanPhone.startsWith('55') && cleanPhone.length >= 12) {
@@ -482,7 +514,7 @@ export class IntegrationService {
       // Tentar diferentes métodos para contornar CORS
       const webhookData = {
         ...data,
-        timestamp: new Date().toISOString(),
+        timestamp: this.formatDateTimeWithTimezone(new Date().toISOString(), data.companyTimezone || 'America/Sao_Paulo'),
         source: 'bp-app-form'
       };
 
@@ -852,7 +884,9 @@ export class IntegrationService {
     formId: string, 
     formFields: Record<string, any>,
     companyName: string,
-    formName: string
+    formName: string,
+    trackingData?: any,
+    companyTimezone?: string
   ): Promise<void> {
     console.log('🔍 Debug - processFormIntegrations chamado com:', {
       formId,
@@ -864,7 +898,7 @@ export class IntegrationService {
     // Processar integrações sem timeout excessivo
     try {
       console.log('🔍 Debug - Chamando processIntegrationsInternal');
-      await this.processIntegrationsInternal(formId, formFields, companyName, formName);
+      await this.processIntegrationsInternal(formId, formFields, companyName, formName, trackingData, companyTimezone);
       console.log('✅ Debug - processIntegrationsInternal concluído com sucesso');
     } catch (error) {
       console.error('❌ Debug - Erro no processamento de integrações:', error);
@@ -876,7 +910,9 @@ export class IntegrationService {
     formId: string, 
     formFields: Record<string, any>,
     companyName: string,
-    formName: string
+    formName: string,
+    trackingData?: any,
+    companyTimezone?: string
   ): Promise<void> {
     try {
       // Gerar ID único para esta sessão
@@ -902,8 +938,27 @@ export class IntegrationService {
         return;
       }
 
-      // Coletar dados do sistema
-      const systemData = await this.collectSystemData();
+      // Usar dados de tracking fornecidos ou coletar do sistema
+      const systemData = trackingData ? {
+        url: trackingData.url || '',
+        utm_campaign: trackingData.utmCampaign || '',
+        utm_medium: trackingData.utmMedium || '',
+        utm_content: trackingData.utmContent || '',
+        utm_source: trackingData.utmSource || '',
+        utm_term: trackingData.utmTerm || '',
+        gclid: trackingData.gclid || '',
+        fbclid: trackingData.fbclid || '',
+        fbc: trackingData.fbc || '',
+        fbp: trackingData.fbp || '',
+        fbid: trackingData.fbid || '',
+        // Dados adicionais do sistema
+        platform: 'Web',
+        device: this.getDeviceType(),
+        browser: navigator.userAgent,
+        user_agent: navigator.userAgent,
+        timestamp: this.formatDateTimeWithTimezone(new Date().toISOString(), companyTimezone || 'America/Sao_Paulo'),
+        companyTimezone: companyTimezone || 'America/Sao_Paulo'
+      } : await this.collectSystemData();
 
       // Mapear campos do formulário para nomes do webhook
       const mappedFormFields = await this.mapFormFieldsToWebhookNames(formId, formFields);
@@ -915,6 +970,20 @@ export class IntegrationService {
         form_name: formName,
         ...systemData
       } as IntegrationData;
+
+      console.log('📊 ===== DADOS FINAIS PARA INTEGRAÇÕES =====');
+      console.log('📊 URL:', integrationData.url || 'N/A');
+      console.log('📊 utm_source:', integrationData.utm_source || 'N/A');
+      console.log('📊 utm_medium:', integrationData.utm_medium || 'N/A');
+      console.log('📊 utm_campaign:', integrationData.utm_campaign || 'N/A');
+      console.log('📊 utm_content:', integrationData.utm_content || 'N/A');
+      console.log('📊 utm_term:', integrationData.utm_term || 'N/A');
+      console.log('📊 gclid:', integrationData.gclid || 'N/A');
+      console.log('📊 fbclid:', integrationData.fbclid || 'N/A');
+      console.log('📊 fbc:', integrationData.fbc || 'N/A');
+      console.log('📊 fbp:', integrationData.fbp || 'N/A');
+      console.log('📊 fbid:', integrationData.fbid || 'N/A');
+      console.log('📊 Campos do formulário:', integrationData.form_fields);
 
       // Processar cada integração
       const promises = integrations.map(async (integration) => {

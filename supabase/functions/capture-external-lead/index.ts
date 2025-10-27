@@ -7,6 +7,17 @@ interface LeadData {
   source?: string;
   userAgent?: string;
   ip?: string;
+  url?: string;
+  utm_campaign?: string;
+  utm_medium?: string;
+  utm_content?: string;
+  utm_source?: string;
+  utm_term?: string;
+  gclid?: string;
+  fbclid?: string;
+  fbc?: string;
+  fbp?: string;
+  fbid?: string;
 }
 
 Deno.serve(async (req: Request) => {
@@ -177,6 +188,21 @@ Deno.serve(async (req: Request) => {
       status: 'novo',
       fonte: 'external_form',
       form_id: leadData.formId, // Adicionar form_id para relacionamento
+      ip: ip,
+      browser: userAgent,
+      device: 'Desktop',
+      pais: 'Brasil',
+      url: leadData.url || '',
+      utm_campaign: leadData.utm_campaign || '',
+      utm_medium: leadData.utm_medium || '',
+      utm_content: leadData.utm_content || '',
+      utm_source: leadData.utm_source || '',
+      utm_term: leadData.utm_term || '',
+      gclid: leadData.gclid || '',
+      fbclid: leadData.fbclid || '',
+      fbc: leadData.fbc || '',
+      fbp: leadData.fbp || '',
+      fbid: leadData.fbid || '',
       created_at: leadData.timestamp ? new Date(leadData.timestamp).toISOString() : undefined
     };
 
