@@ -38,6 +38,7 @@ import IframeGeneratorPage from "./pages/IframeGeneratorPage";
 import { TestPermissions } from "./components/TestPermissions";
 import { DebugPermissions } from "./components/DebugPermissions";
 import { DebugTabPermissions } from "./components/DebugTabPermissions";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 import { useSetupGuard } from '@/hooks/useSetupGuard';
 
 // Removido: Módulo Marketing
