@@ -38,8 +38,9 @@ export const useSetupGuard = () => {
           .eq('user_id', user.id)
           .single();
 
-        // Se não tem dados completos, marcar como setup incompleto
-        if (!crmUser?.first_name || !crmUser?.last_name) {
+        // Se não tem dados completos (null, undefined ou string vazia), marcar como setup incompleto
+        if (!crmUser?.first_name || !crmUser?.last_name || 
+            crmUser.first_name.trim() === '' || crmUser.last_name.trim() === '') {
           setIsSetupIncomplete(true);
         }
 

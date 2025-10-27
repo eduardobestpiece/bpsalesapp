@@ -67,8 +67,9 @@ export default function UserSetup() {
             .eq('user_id', currentUser.id)
             .single();
           
-          // Se já tem dados completos, marcar como setup completo
-          if (crmUser?.first_name && crmUser?.last_name) {
+          // Se já tem dados completos (não null, não undefined e não string vazia), marcar como setup completo
+          if (crmUser?.first_name && crmUser?.last_name && 
+              crmUser.first_name.trim() !== '' && crmUser.last_name.trim() !== '') {
             localStorage.removeItem('userSetupInProgress');
             setSetupComplete(true);
             // Aguardar um pouco antes de redirecionar para mostrar a mensagem
