@@ -263,6 +263,24 @@ export const LandingPhoneInput: React.FC<LandingPhoneInputProps> = ({
             border-color: ${borderColorActive} !important;
             border-width: ${borderWidthFocusPx}px !important;
           }
+          
+          /* Ajustes específicos para mobile */
+          @media (max-width: 640px) {
+            .landing-phone-container button {
+              padding-left: 0.5rem !important;
+              padding-right: 0.5rem !important;
+              margin-right: 0.25rem !important;
+            }
+            
+            .landing-phone-container button span {
+              font-size: 0.875rem !important;
+            }
+            
+            .landing-phone-container button svg {
+              width: 0.75rem !important;
+              height: 0.75rem !important;
+            }
+          }
         `}
       </style>
       <div className="flex h-12 landing-phone-container">
@@ -271,7 +289,7 @@ export const LandingPhoneInput: React.FC<LandingPhoneInputProps> = ({
             <Button
               type="button"
               variant="outline"
-              className="h-12 px-3 mr-[5px] flex items-center space-x-2 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0"
+              className="h-12 px-2 sm:px-3 mr-1 sm:mr-[5px] flex items-center space-x-1 sm:space-x-2 focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0"
               style={{
                 backgroundColor: `${fieldBgColor} !important`,
                 color: fieldTextColor,
@@ -307,8 +325,8 @@ export const LandingPhoneInput: React.FC<LandingPhoneInputProps> = ({
               }}
             >
               <span style={{ fontSize: `${fontSizeInputPx}px` }}>{selectedCountry.flag}</span>
-              <span className="font-medium" style={{ fontSize: `${fontSizeInputPx}px` }}>{selectedCountry.ddi}</span>
-              <ChevronDown className="h-4 w-4" />
+              <span className="font-medium text-sm sm:text-base" style={{ fontSize: `${fontSizeInputPx}px` }}>{selectedCountry.ddi}</span>
+              <ChevronDown className="h-3 w-3 sm:h-4 sm:w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent 
