@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -24,7 +24,20 @@ const Login = () => {
   
   const { signIn, user, crmUser } = useCrmAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { branding: defaultBranding, isLoading: brandingLoading } = useDefaultBranding();
+
+  useEffect(() => {
+    // Verificar se há parâmetros de confirmação na URL
+    const token = searchParams.get('token');
+    const type = searchParams.get('type');
+    
+    if (token && type === 'signup') {
+      // Redirecionar para a página de setup com os parâmetros
+      navigate(`/user-setup?token=${token}&type=${type}`, { replace: true });
+      return;
+    }
+  }, [searchParams, navigate]);
 
   useEffect(() => {
     // logs removidos

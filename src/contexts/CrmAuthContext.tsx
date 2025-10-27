@@ -17,6 +17,7 @@ interface CrmAuthContextType {
   hasPermission: (requiredRole: UserRole) => boolean;
   refreshCrmUser: () => Promise<void>;
   updateCrmUserInContext: (partial: Partial<CrmUser>) => void;
+  switchCompany: (companyId: string) => Promise<void>;
 }
 
 const CrmAuthContext = createContext<CrmAuthContextType | undefined>(undefined);
@@ -84,15 +85,25 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
       return null;
     }
 
-    // 1) Tenta buscar por email (fonte de verdade) pegando o registro mais recente
+    // 1) Verificar se há empresa selecionada no localStorage
+    const selectedCompanyId = localStorage.getItem('selectedCompanyId');
+    
     if (authUser.email) {
-      const { data: byEmail, error: byEmailError } = await supabase
+      let query = supabase
         .from('crm_users')
         .select('*')
-        .eq('email', authUser.email)
+        .eq('email', authUser.email);
+      
+      // Se há empresa selecionada, filtrar por ela
+      if (selectedCompanyId) {
+        query = query.eq('company_id', selectedCompanyId);
+      }
+      
+      const { data: byEmail, error: byEmailError } = await query
         .order('updated_at', { ascending: false })
         .limit(1)
         .maybeSingle();
+        
       if (byEmail && !byEmailError) {
         // Verificar se o usuário está ativo
         if (byEmail.status === 'archived') {
@@ -101,6 +112,25 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
           return null;
         }
         return byEmail as any;
+      }
+      
+      // Se não encontrou com empresa selecionada, buscar todas as empresas do usuário
+      if (selectedCompanyId) {
+        const { data: allUserCompanies } = await supabase
+          .from('crm_users')
+          .select('*')
+          .eq('email', authUser.email)
+          .eq('status', 'active')
+          .order('updated_at', { ascending: false });
+          
+        if (allUserCompanies && allUserCompanies.length > 0) {
+          // Se tem múltiplas empresas, retornar null para mostrar seletor
+          if (allUserCompanies.length > 1) {
+            return null;
+          }
+          // Se tem apenas uma empresa, usar ela
+          return allUserCompanies[0] as any;
+        }
       }
     }
 
@@ -354,6 +384,41 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
     return currentRoleLevel >= requiredRoleLevel;
   };
 
+  const switchCompany = async (companyId: string) => {
+    if (!user?.email) return;
+    
+    try {
+      // Salvar empresa selecionada no localStorage
+      localStorage.setItem('selectedCompanyId', companyId);
+      
+      // Buscar dados do usuário para a nova empresa
+      const { data: crmUserData, error } = await supabase
+        .from('crm_users')
+        .select('*')
+        .eq('email', user.email)
+        .eq('company_id', companyId)
+        .eq('status', 'active')
+        .single();
+        
+      if (error || !crmUserData) {
+        throw new Error('Erro ao buscar dados da empresa');
+      }
+      
+      // Atualizar contexto
+      setCrmUser(crmUserData as any);
+      setUserRole((crmUserData.role as UserRole) ?? null);
+      setCompanyId(crmUserData.company_id ?? null);
+      
+      // Atualizar cache
+      if (user.email) {
+        saveCrmUserCache(user.email, crmUserData);
+      }
+    } catch (error) {
+      console.error('Erro ao trocar empresa:', error);
+      throw error;
+    }
+  };
+
   const value = {
     session,
     user,
@@ -367,6 +432,7 @@ export const CrmAuthProvider: React.FC<{ children: React.ReactNode }> = ({ child
     hasPermission,
     refreshCrmUser,
     updateCrmUserInContext,
+    switchCompany,
   };
 
   return (

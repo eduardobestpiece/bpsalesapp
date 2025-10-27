@@ -47,6 +47,7 @@ import { useSetupGuard } from '@/hooks/useSetupGuard';
 // Nova página de Login genérica
 import Login from "./pages/Login";
 import UserSetup from "./pages/UserSetup";
+import CompanySelector from "./pages/CompanySelector";
 
 // Hook para gerenciar cores globais
 import { useGlobalColors } from "@/hooks/useGlobalColors";
@@ -126,14 +127,17 @@ function AppContent() {
           <Route path="/user-setup" element={
             user ? <UserSetup /> : <Navigate to="/crm/login" replace />
           } />
+          <Route path="/company-selector" element={
+            user ? <CompanySelector /> : <Navigate to="/crm/login" replace />
+          } />
           {/* Removidas: rotas de redefinição de senha dentro de /crm */}
           
           {/* Protected routes */}
           <Route path="/" element={
-            user ? (isSetupIncomplete || setupInProgress ? <Navigate to="/user-setup" replace /> : <Navigate to="/home" replace />) : <Navigate to="/landing" replace />
+            user ? (isSetupIncomplete || setupInProgress ? <Navigate to="/user-setup" replace /> : crmUser ? <Navigate to="/home" replace /> : <Navigate to="/company-selector" replace />) : <Navigate to="/landing" replace />
           } />
           <Route path="/home" element={
-            user ? (isSetupIncomplete || setupInProgress ? <Navigate to="/user-setup" replace /> : <Home />) : <Navigate to="/crm/login" replace />
+            user ? (isSetupIncomplete || setupInProgress ? <Navigate to="/user-setup" replace /> : crmUser ? <Home /> : <Navigate to="/company-selector" replace />) : <Navigate to="/crm/login" replace />
           } />
           <Route path="/simulador" element={
             user ? (
