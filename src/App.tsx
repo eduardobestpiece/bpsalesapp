@@ -45,6 +45,7 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 
 // Nova página de Login genérica
 import Login from "./pages/Login";
+import UserSetup from "./pages/UserSetup";
 
 // Hook para gerenciar cores globais
 import { useGlobalColors } from "@/hooks/useGlobalColors";
@@ -117,6 +118,7 @@ function AppContent() {
           <Route path="/crm/login" element={
             user ? (crmUser ? <Navigate to="/home" replace /> : <Login />) : <Login />
           } />
+          <Route path="/user-setup" element={<UserSetup />} />
           {/* Removidas: rotas de redefinição de senha dentro de /crm */}
           
           {/* Protected routes */}

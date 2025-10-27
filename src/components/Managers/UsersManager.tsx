@@ -118,20 +118,30 @@ export function UsersManager({ companyId }: UsersManagerProps) {
     }
   });
 
-  // Mutação para excluir usuário (apenas da tabela crm_users)
+  // Mutação para excluir usuário (completa: crm_users + auth.users)
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
-      // Excluir apenas da tabela crm_users
-      const { error: deleteError } = await supabase
-        .from('crm_users')
-        .delete()
-        .eq('id', userId);
+      // Chamar Edge Function para exclusão completa
+      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/delete-user`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabase.supabaseKey}`,
+        },
+        body: JSON.stringify({ user_id: userId }),
+      });
 
-      if (deleteError) throw deleteError;
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao excluir usuário');
+      }
+
+      const result = await response.json();
+      return result;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['company_users', companyId] });
-      toast.success('Usuário excluído com sucesso!');
+      toast.success('Usuário excluído com sucesso de todas as tabelas!');
     },
     onError: (error: any) => {
       toast.error('Erro ao excluir usuário: ' + error.message);

@@ -77,7 +77,7 @@ Deno.serve(async (req: Request) => {
         role: role,
         company_id: company_id
       },
-      redirectTo: `${Deno.env.get('SITE_URL') || 'http://localhost:8080'}/crm/login`
+      redirectTo: `${Deno.env.get('SITE_URL') || 'http://localhost:8080'}/user-setup`
     });
 
     if (authError) {
