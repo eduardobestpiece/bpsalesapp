@@ -128,6 +128,7 @@ export default function PublicForm(props?: PublicFormProps) {
   const [selectSpacerHeight, setSelectSpacerHeight] = useState<number>(0);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [lastResizeTime, setLastResizeTime] = useState<number>(0);
+  const [monetaryNotifications, setMonetaryNotifications] = useState<Record<string, string>>({});
   
   // Função para formatar data com fuso horário da empresa
   const formatDateTimeWithTimezone = (isoString: string): string => {
@@ -1211,6 +1212,54 @@ export default function PublicForm(props?: PublicFormProps) {
           }
         }
       }
+      
+      // Validação específica para campos monetários com limites
+      if ((field as any).field_type === 'money' || (field as any).field_type === 'monetario' || (field as any).field_type === 'monetário') {
+        const hasLimits = (field as any).money_limits || false;
+        const hasDisqualify = (field as any).disqualify_enabled || false;
+        
+        if (hasLimits || hasDisqualify) {
+          const value = fieldValues[field.field_id];
+          if (value && typeof value === 'string') {
+            // Usar a mesma lógica de conversão do onChange
+            const cleanValue = value.replace(/\D/g, '');
+            const numericValue = cleanValue ? parseInt(cleanValue) / 100 : 0;
+            if (!isNaN(numericValue)) {
+              const minValue = hasLimits ? parseFloat((field as any).money_min) || 0 : parseFloat((field as any).disqualify_min) || 0;
+              const maxValue = hasLimits ? parseFloat((field as any).money_max) || Infinity : parseFloat((field as any).disqualify_max) || Infinity;
+              const fieldCurrency = (field as any).money_currency || companyCurrency;
+              const currencySymbol = fieldCurrency === 'BRL' ? 'R$' : fieldCurrency === 'USD' ? '$' : fieldCurrency === 'EUR' ? '€' : fieldCurrency;
+              
+              // Verificar se os limites são válidos
+              const isValidMin = !isNaN(minValue) && minValue > 0;
+              const isValidMax = !isNaN(maxValue) && maxValue > 0;
+              
+              if (isValidMin && isValidMax) {
+                // Ambos os limites válidos
+                if (numericValue < minValue) {
+                  missingFields.push(field.field_name || field.field_id);
+                  newFieldErrors[field.field_id] = `Valor mínimo: ${currencySymbol} ${minValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+                } else if (numericValue > maxValue) {
+                  missingFields.push(field.field_name || field.field_id);
+                  newFieldErrors[field.field_id] = `Valor máximo: ${currencySymbol} ${maxValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+                }
+              } else if (isValidMin && !isValidMax) {
+                // Apenas limite mínimo
+                if (numericValue < minValue) {
+                  missingFields.push(field.field_name || field.field_id);
+                  newFieldErrors[field.field_id] = `Valor mínimo: ${currencySymbol} ${minValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+                }
+              } else if (!isValidMin && isValidMax) {
+                // Apenas limite máximo
+                if (numericValue > maxValue) {
+                  missingFields.push(field.field_name || field.field_id);
+                  newFieldErrors[field.field_id] = `Valor máximo: ${currencySymbol} ${maxValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+                }
+              }
+            }
+          }
+        }
+      }
     });
     
     // Atualizar erros dos campos
@@ -2063,83 +2112,208 @@ export default function PublicForm(props?: PublicFormProps) {
         const moneyFinalLabel = null; // Sempre oculto conforme regras
         
         return (
-          <Input
-            value={currentValue}
-            placeholder={placeholderText}
-            required={(field as any).is_required}
-            type="text"
-            className="h-12 text-base focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-border select-trigger"
-            style={{
-              ...fieldStyle,
-              ...(fontStyle || {}),
-              ['--active-bc' as any]: cfg.borderColorActive,
-              ['--focus-bw' as any]: `${cfg.borderWidthFocusPx || 2}px`,
-              padding: '12px',
-              width: '100%'
-            }}
-            onFocus={(e) => {
-              e.target.style.borderColor = cfg.borderColorActive || '#E50F5E';
-              e.target.style.borderWidth = `${cfg.borderWidthFocusPx || 2}px`;
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = cfg.borderColorNormal || '#D1D5DB';
-              e.target.style.borderWidth = `${cfg.borderWidthNormalPx || 1}px`;
-              
-              // Validar limites na perda de foco (só se houver limites configurados)
+          <div className="relative">
+            <Input
+              value={currentValue}
+              placeholder={placeholderText}
+              required={(field as any).is_required}
+              type="text"
+              className="h-12 text-base focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-border select-trigger"
+              style={{
+                ...fieldStyle,
+                ...(fontStyle || {}),
+                ['--active-bc' as any]: cfg.borderColorActive,
+                ['--focus-bw' as any]: `${cfg.borderWidthFocusPx || 2}px`,
+                padding: '12px',
+                width: '100%'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = cfg.borderColorActive || '#E50F5E';
+                e.target.style.borderWidth = `${cfg.borderWidthFocusPx || 2}px`;
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = cfg.borderColorNormal || '#D1D5DB';
+                e.target.style.borderWidth = `${cfg.borderWidthNormalPx || 1}px`;
+                
+              // Apenas mostrar notificação visual, sem bloquear o envio
               if (hasLimits || hasDisqualify) {
-                const numericValue = parseFloat(e.target.value.replace(/[^\d.,]/g, '').replace(',', '.'));
+                // Usar a mesma lógica de conversão do onChange
+                const value = e.target.value.replace(/\D/g, '');
+                const numericValue = value ? parseInt(value) / 100 : 0;
                 if (!isNaN(numericValue)) {
-                  if (numericValue < minValue) {
-                    e.target.setCustomValidity(`Valor mínimo: ${currencySymbol} ${minValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`);
-                  } else if (numericValue > maxValue) {
-                    e.target.setCustomValidity(`Valor máximo: ${currencySymbol} ${maxValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`);
+                  const fieldId = (field as any).field_id;
+                  
+                  // Verificar se os limites são válidos
+                  const isValidMin = !isNaN(minValue) && minValue > 0;
+                  const isValidMax = !isNaN(maxValue) && maxValue > 0;
+                  
+                  if (isValidMin && isValidMax) {
+                    // Ambos os limites válidos
+                    const isWithinLimits = numericValue >= minValue && numericValue <= maxValue;
+                    
+                    if (numericValue < minValue) {
+                      setMonetaryNotifications(prev => ({
+                        ...prev,
+                        [fieldId]: `Valor mínimo: ${currencySymbol} ${minValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                      }));
+                    } else if (numericValue > maxValue) {
+                      setMonetaryNotifications(prev => ({
+                        ...prev,
+                        [fieldId]: `Valor máximo: ${currencySymbol} ${maxValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                      }));
+                    } else {
+                      setMonetaryNotifications(prev => {
+                        const newNotifications = { ...prev };
+                        delete newNotifications[fieldId];
+                        return newNotifications;
+                      });
+                    }
+                  } else if (isValidMin && !isValidMax) {
+                    // Apenas limite mínimo
+                    if (numericValue < minValue) {
+                      setMonetaryNotifications(prev => ({
+                        ...prev,
+                        [fieldId]: `Valor mínimo: ${currencySymbol} ${minValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                      }));
+                    } else {
+                      setMonetaryNotifications(prev => {
+                        const newNotifications = { ...prev };
+                        delete newNotifications[fieldId];
+                        return newNotifications;
+                      });
+                    }
+                  } else if (!isValidMin && isValidMax) {
+                    // Apenas limite máximo
+                    if (numericValue > maxValue) {
+                      setMonetaryNotifications(prev => ({
+                        ...prev,
+                        [fieldId]: `Valor máximo: ${currencySymbol} ${maxValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`
+                      }));
+                    } else {
+                      setMonetaryNotifications(prev => {
+                        const newNotifications = { ...prev };
+                        delete newNotifications[fieldId];
+                        return newNotifications;
+                      });
+                    }
                   } else {
-                    e.target.setCustomValidity('');
+                    // Nenhum limite válido - limpar notificação
+                    setMonetaryNotifications(prev => {
+                      const newNotifications = { ...prev };
+                      delete newNotifications[fieldId];
+                      return newNotifications;
+                    });
                   }
                 }
               }
-            }}
-            onChange={(e) => {
-              // Formatação de moeda baseada na configuração específica do campo
-              let value = e.target.value.replace(/\D/g, '');
-              
-              if (value) {
-                // Converter para número e aplicar limites (só se houver limites configurados)
-                const numericValue = parseInt(value) / 100;
-                let clampedValue = numericValue;
+              }}
+              onChange={(e) => {
+                // Formatação de moeda baseada na configuração específica do campo
+                let value = e.target.value.replace(/\D/g, '');
                 
-                if (hasLimits || hasDisqualify) {
-                  clampedValue = Math.min(Math.max(numericValue, minValue), maxValue);
-                }
-                
-                // Formatar com a moeda específica - sempre símbolo antes do número
-                const locale = fieldCurrency === 'BRL' ? 'pt-BR' : fieldCurrency === 'USD' ? 'en-US' : fieldCurrency === 'EUR' ? 'de-DE' : 'pt-BR';
-                const formattedValue = clampedValue.toLocaleString(locale, {
-                  style: 'currency',
-                  currency: fieldCurrency,
-                  minimumFractionDigits: 2,
-                  maximumFractionDigits: 2
-                });
-                
-                // Garantir que o símbolo da moeda apareça sempre antes do número
-                // Para moedas que não sejam BRL ou USD, forçar símbolo antes
-                if (fieldCurrency !== 'BRL' && fieldCurrency !== 'USD') {
-                  const symbol = fieldCurrency === 'EUR' ? '€' : fieldCurrency;
-                  const numberPart = clampedValue.toLocaleString(locale, {
+                if (value) {
+                  // Converter para número SEM aplicar limites (permitir digitação livre)
+                  const numericValue = parseInt(value) / 100;
+                  
+                  // Verificar se o valor está dentro dos limites para limpar notificação
+                  if (hasLimits || hasDisqualify) {
+                    const fieldId = (field as any).field_id;
+                    
+                    // Verificar se os limites são válidos
+                    const isValidMin = !isNaN(minValue) && minValue > 0;
+                    const isValidMax = !isNaN(maxValue) && maxValue > 0;
+                    
+                    if (isValidMin && isValidMax) {
+                      const isWithinLimits = numericValue >= minValue && numericValue <= maxValue;
+                      
+                      if (isWithinLimits) {
+                        // Limpar notificação se valor estiver dentro dos limites
+                        setMonetaryNotifications(prev => {
+                          const newNotifications = { ...prev };
+                          delete newNotifications[fieldId];
+                          return newNotifications;
+                        });
+                      }
+                    } else if (isValidMin && !isValidMax) {
+                      // Apenas limite mínimo
+                      const isWithinLimits = numericValue >= minValue;
+                      
+                      if (isWithinLimits) {
+                        setMonetaryNotifications(prev => {
+                          const newNotifications = { ...prev };
+                          delete newNotifications[fieldId];
+                          return newNotifications;
+                        });
+                      }
+                    } else if (!isValidMin && isValidMax) {
+                      // Apenas limite máximo
+                      const isWithinLimits = numericValue <= maxValue;
+                      
+                      if (isWithinLimits) {
+                        setMonetaryNotifications(prev => {
+                          const newNotifications = { ...prev };
+                          delete newNotifications[fieldId];
+                          return newNotifications;
+                        });
+                      }
+                    }
+                  }
+                  
+                  // Formatar com a moeda específica - sempre símbolo antes do número
+                  const locale = fieldCurrency === 'BRL' ? 'pt-BR' : fieldCurrency === 'USD' ? 'en-US' : fieldCurrency === 'EUR' ? 'de-DE' : 'pt-BR';
+                  const formattedValue = numericValue.toLocaleString(locale, {
+                    style: 'currency',
+                    currency: fieldCurrency,
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2
                   });
-                  const finalFormattedValue = `${symbol} ${numberPart}`;
-                  updateFieldValue((field as any).field_id, finalFormattedValue);
-                  return;
+                  
+                  // Garantir que o símbolo da moeda apareça sempre antes do número
+                  // Para moedas que não sejam BRL ou USD, forçar símbolo antes
+                  if (fieldCurrency !== 'BRL' && fieldCurrency !== 'USD') {
+                    const symbol = fieldCurrency === 'EUR' ? '€' : fieldCurrency;
+                    const numberPart = numericValue.toLocaleString(locale, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2
+                    });
+                    const finalFormattedValue = `${symbol} ${numberPart}`;
+                    updateFieldValue((field as any).field_id, finalFormattedValue);
+                    return;
+                  }
+                  
+                  updateFieldValue((field as any).field_id, formattedValue);
+                } else {
+                  updateFieldValue((field as any).field_id, '');
                 }
-                
-                updateFieldValue((field as any).field_id, formattedValue);
-              } else {
-                updateFieldValue((field as any).field_id, '');
-              }
-            }}
-          />
+              }}
+            />
+            
+            {/* Notificação visual para valores fora dos limites */}
+            {monetaryNotifications[(field as any).field_id] && (
+              <div 
+                className="absolute top-full left-0 mt-2 px-3 py-2 bg-orange-100 border border-orange-300 rounded-md shadow-lg z-10"
+                style={{
+                  backgroundColor: '#FEF3C7',
+                  borderColor: '#F59E0B',
+                  color: '#92400E',
+                  fontSize: '14px',
+                  fontWeight: '500',
+                  maxWidth: '300px',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <div 
+                    className="w-4 h-4 rounded-full flex items-center justify-center"
+                    style={{ backgroundColor: '#F59E0B' }}
+                  >
+                    <span className="text-white text-xs font-bold">!</span>
+                  </div>
+                  <span>{monetaryNotifications[(field as any).field_id]}</span>
+                </div>
+              </div>
+            )}
+          </div>
         );
 
       case 'cpf':
@@ -2768,6 +2942,7 @@ export default function PublicForm(props?: PublicFormProps) {
     // Validar todos os campos obrigatórios antes do envio final
     const allRequiredFields = formFields.filter(field => field.is_required);
     const missingFields: string[] = [];
+    const newFieldErrors: Record<string, string> = {};
     
     allRequiredFields.forEach(field => {
       const value = fieldValues[field.field_id];
@@ -2778,6 +2953,64 @@ export default function PublicForm(props?: PublicFormProps) {
       if (isEmpty) {
         missingFields.push(field.field_name || field.field_id);
       }
+      
+      // Validação específica para campos monetários com limites
+      if ((field as any).field_type === 'money' || (field as any).field_type === 'monetario' || (field as any).field_type === 'monetário') {
+        const hasLimits = (field as any).money_limits || false;
+        const hasDisqualify = (field as any).disqualify_enabled || false;
+        
+        if (hasLimits || hasDisqualify) {
+          if (value && typeof value === 'string') {
+            // Usar a mesma lógica de conversão do onChange
+            const cleanValue = value.replace(/\D/g, '');
+            const numericValue = cleanValue ? parseInt(cleanValue) / 100 : 0;
+            if (!isNaN(numericValue)) {
+              const minValue = hasLimits ? parseFloat((field as any).money_min) || 0 : parseFloat((field as any).disqualify_min) || 0;
+              const maxValue = hasLimits ? parseFloat((field as any).money_max) || Infinity : parseFloat((field as any).disqualify_max) || Infinity;
+              const fieldCurrency = (field as any).money_currency || companyCurrency;
+              const currencySymbol = fieldCurrency === 'BRL' ? 'R$' : fieldCurrency === 'USD' ? '$' : fieldCurrency === 'EUR' ? '€' : fieldCurrency;
+              
+              // Verificar se os limites são válidos
+              const isValidMin = !isNaN(minValue) && minValue > 0;
+              const isValidMax = !isNaN(maxValue) && maxValue > 0;
+              
+              if (isValidMin && isValidMax) {
+                // Ambos os limites válidos
+                if (numericValue < minValue) {
+                  missingFields.push(field.field_name || field.field_id);
+                  newFieldErrors[field.field_id] = `Valor mínimo: ${currencySymbol} ${minValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+                } else if (numericValue > maxValue) {
+                  missingFields.push(field.field_name || field.field_id);
+                  newFieldErrors[field.field_id] = `Valor máximo: ${currencySymbol} ${maxValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+                }
+              } else if (isValidMin && !isValidMax) {
+                // Apenas limite mínimo
+                if (numericValue < minValue) {
+                  missingFields.push(field.field_name || field.field_id);
+                  newFieldErrors[field.field_id] = `Valor mínimo: ${currencySymbol} ${minValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+                }
+              } else if (!isValidMin && isValidMax) {
+                // Apenas limite máximo
+                if (numericValue > maxValue) {
+                  missingFields.push(field.field_name || field.field_id);
+                  newFieldErrors[field.field_id] = `Valor máximo: ${currencySymbol} ${maxValue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+                }
+              }
+            }
+          }
+        }
+      }
+    });
+    
+    // Atualizar erros dos campos
+    setFieldErrors(prev => {
+      const updated = { ...prev };
+      // Limpar erros de todos os campos
+      formFields.forEach(field => {
+        delete updated[field.field_id];
+      });
+      // Adicionar novos erros
+      return { ...updated, ...newFieldErrors };
     });
     
     if (missingFields.length > 0) {
@@ -3026,12 +3259,23 @@ export default function PublicForm(props?: PublicFormProps) {
 
       // Verificar se está sendo executado dentro da plataforma (iframe)
       const isInsidePlatform = window.parent !== window && 
-        (window.parent.location.hostname === window.location.hostname ||
-         window.parent.location.hostname.includes('localhost') ||
-         window.parent.location.hostname.includes('vercel.app'));
+        (() => {
+          try {
+            return (window.parent.location.hostname === window.location.hostname ||
+                   window.parent.location.hostname.includes('localhost') ||
+                   window.parent.location.hostname.includes('vercel.app'));
+          } catch (error) {
+            // CORS error - assume it's external
+            return false;
+          }
+        })();
 
       console.log('🔍 Verificando se está dentro da plataforma:', isInsidePlatform);
-      console.log('🔍 Parent URL:', window.parent.location.href);
+      try {
+        console.log('🔍 Parent URL:', window.parent.location.href);
+      } catch (error) {
+        console.log('🔍 Parent URL: CORS blocked');
+      }
       console.log('🔍 Current URL:', window.location.href);
 
       // Função para solicitar dados do usuário logado via postMessage

@@ -15,6 +15,7 @@ import { Loader2, ImageIcon, Trash2, Plus } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { LossReasonsManager, OriginsManager } from '@/components/Managers/DefinicoesManagers';
+import { TagsManager, PhasesManager } from '@/components/Managers/TagsPhasesManagers';
 import { UsersManager } from '@/components/Managers/UsersManager';
 import { usePermissions } from '@/hooks/usePermissions';
 import SettingsPerfil from './SettingsPerfil';
@@ -30,8 +31,8 @@ export default function SettingsGestao() {
   const getDefaultTab = () => {
     // Verificar se há parâmetro 'tab' na URL
     const urlTab = searchParams.get('tab');
-    if (urlTab && ['company', 'users', 'origens', 'motivos-perda', 'perfil'].includes(urlTab)) {
-      return urlTab as 'company' | 'users' | 'origens' | 'motivos-perda' | 'perfil';
+    if (urlTab && ['company', 'users', 'origens', 'motivos-perda', 'tags', 'fases', 'perfil'].includes(urlTab)) {
+      return urlTab as 'company' | 'users' | 'origens' | 'motivos-perda' | 'tags' | 'fases' | 'perfil';
     }
     
     // Fallback para lógica baseada em permissões
@@ -43,13 +44,13 @@ export default function SettingsGestao() {
     return 'company';
   };
 
-  const [tabValue, setTabValue] = useState<'company' | 'users' | 'origens' | 'motivos-perda' | 'perfil'>(getDefaultTab());
+  const [tabValue, setTabValue] = useState<'company' | 'users' | 'origens' | 'motivos-perda' | 'tags' | 'fases' | 'perfil'>(getDefaultTab());
 
   // Atualizar aba quando o parâmetro da URL mudar
   useEffect(() => {
     const urlTab = searchParams.get('tab');
-    if (urlTab && ['company', 'users', 'origens', 'motivos-perda', 'perfil'].includes(urlTab)) {
-      setTabValue(urlTab as 'company' | 'users' | 'origens' | 'motivos-perda' | 'perfil');
+    if (urlTab && ['company', 'users', 'origens', 'motivos-perda', 'tags', 'fases', 'perfil'].includes(urlTab)) {
+      setTabValue(urlTab as 'company' | 'users' | 'origens' | 'motivos-perda' | 'tags' | 'fases' | 'perfil');
     }
   }, [searchParams]);
 
@@ -329,6 +330,32 @@ export default function SettingsGestao() {
                 </>
               )}
 
+              {/* Aba Tags - apenas para usuários com acesso a configurações */}
+              {permissions.canAccessConfigurations && (
+                <>
+                  <TabsTrigger 
+                    value="tags" 
+                    className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
+                  >
+                    Tags
+                  </TabsTrigger>
+                  <div className="w-px h-6 bg-border/30 self-center"></div>
+                </>
+              )}
+
+              {/* Aba Fases - apenas para usuários com acesso a configurações */}
+              {permissions.canAccessConfigurations && (
+                <>
+                  <TabsTrigger 
+                    value="fases" 
+                    className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
+                  >
+                    Fases
+                  </TabsTrigger>
+                  <div className="w-px h-6 bg-border/30 self-center"></div>
+                </>
+              )}
+
               {/* Aba Perfil - sempre visível */}
               <TabsTrigger 
                 value="perfil" 
@@ -597,6 +624,20 @@ export default function SettingsGestao() {
                 <LossReasonsManager />
               </div>
             </TabsContent>
+              )}
+
+              {/* Conteúdo da aba Tags - apenas para usuários com acesso a configurações */}
+              {permissions.canAccessConfigurations && (
+                <TabsContent value="tags" className="p-6">
+                  <TagsManager />
+                </TabsContent>
+              )}
+
+              {/* Conteúdo da aba Fases - apenas para usuários com acesso a configurações */}
+              {permissions.canAccessConfigurations && (
+                <TabsContent value="fases" className="p-6">
+                  <PhasesManager />
+                </TabsContent>
               )}
 
               {/* Conteúdo da aba Perfil - sempre visível */}
