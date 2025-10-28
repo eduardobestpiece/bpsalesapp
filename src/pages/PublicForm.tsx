@@ -3024,6 +3024,46 @@ export default function PublicForm(props?: PublicFormProps) {
       console.log('💾 fbp:', leadData.fbp || 'N/A');
       console.log('💾 fbid:', leadData.fbid || 'N/A');
 
+      // Verificar se está sendo executado dentro da plataforma (iframe)
+      const isInsidePlatform = window.parent !== window && 
+        (window.parent.location.hostname === window.location.hostname ||
+         window.parent.location.hostname.includes('localhost') ||
+         window.parent.location.hostname.includes('vercel.app'));
+
+      console.log('🔍 Verificando se está dentro da plataforma:', isInsidePlatform);
+      console.log('🔍 Parent URL:', window.parent.location.href);
+      console.log('🔍 Current URL:', window.location.href);
+
+      // Função para solicitar dados do usuário logado via postMessage
+      const requestLoggedUser = (): Promise<any> => {
+        return new Promise((resolve) => {
+          if (!isInsidePlatform) {
+            resolve(null);
+            return;
+          }
+
+          const timeout = setTimeout(() => {
+            console.log('⏰ Timeout ao solicitar dados do usuário logado');
+            resolve(null);
+          }, 2000); // 2 segundos de timeout
+
+          const handleMessage = (event: MessageEvent) => {
+            if (event.data.type === 'LOGGED_USER_RESPONSE') {
+              clearTimeout(timeout);
+              window.removeEventListener('message', handleMessage);
+              console.log('👤 Dados do usuário logado recebidos:', event.data.user);
+              resolve(event.data.user);
+            }
+          };
+
+          window.addEventListener('message', handleMessage);
+          
+          // Solicitar dados do usuário logado
+          console.log('📤 Solicitando dados do usuário logado via postMessage');
+          window.parent.postMessage({ type: 'REQUEST_LOGGED_USER' }, '*');
+        });
+      };
+
       // Distribuição automática de leads
       let distributionResult = null;
       if (formData.company_id) {
@@ -3033,10 +3073,45 @@ export default function PublicForm(props?: PublicFormProps) {
           console.log('🎯 Company ID:', formData.company_id);
           
           // Extrair email e telefone dos dados do formulário
-          const leadEmail = formData.email || '';
-          const leadTelefone = formData.telefone || '';
+          const leadEmail = fieldValues.email || '';
+          const leadTelefone = fieldValues.telefone || fieldValues.phone || '';
           
-          distributionResult = await distributeLead(formId, formData.company_id, leadEmail, leadTelefone);
+          // Se estiver dentro da plataforma, tentar obter o usuário logado
+          if (isInsidePlatform) {
+            try {
+              console.log('🏠 Detectado iframe dentro da plataforma - solicitando usuário logado');
+              
+              const loggedUser = await requestLoggedUser();
+              
+              if (loggedUser && loggedUser.id) {
+                console.log('👤 Usuário logado encontrado:', loggedUser);
+                
+                // Atribuir o usuário logado como responsável
+                leadData.responsible_id = loggedUser.id;
+                leadData.responsavel = `${loggedUser.first_name} ${loggedUser.last_name}`.trim();
+                
+                console.log('✅ Lead atribuído ao usuário logado:', {
+                  responsible_id: leadData.responsible_id,
+                  responsavel: leadData.responsavel
+                });
+                
+                // Pular distribuição automática já que foi atribuído manualmente
+                distributionResult = {
+                  responsible_id: leadData.responsible_id,
+                  responsible_name: leadData.responsavel
+                };
+              } else {
+                console.log('⚠️ Usuário logado não encontrado, usando distribuição automática');
+                distributionResult = await distributeLead(formId, formData.company_id, leadEmail, leadTelefone);
+              }
+            } catch (error) {
+              console.log('⚠️ Erro ao obter usuário logado, usando distribuição automática:', error);
+              distributionResult = await distributeLead(formId, formData.company_id, leadEmail, leadTelefone);
+            }
+          } else {
+            console.log('🌐 Iframe externo - usando distribuição automática normal');
+            distributionResult = await distributeLead(formId, formData.company_id, leadEmail, leadTelefone);
+          }
           
           if (distributionResult) {
             leadData.responsible_id = distributionResult.responsible_id;

@@ -35,11 +35,25 @@ export const CompanyProvider = ({ children, defaultCompanyId = DEFAULT_COMPANY_I
     }
   }, [selectedCompanyId]);
 
-  // Setter que também atualiza o localStorage
+  // Setter que também atualiza o localStorage e força reload da página
   const setSelectedCompanyId = (id: string) => {
+    const previousCompanyId = selectedCompanyId;
+    
     setSelectedCompanyIdState(id);
     if (id) {
       localStorage.setItem('selectedCompanyId', id);
+    }
+    
+    // Se a empresa mudou e não é a primeira vez, forçar reload da página
+    if (previousCompanyId && previousCompanyId !== id) {
+      console.log('🔄 Empresa alterada - recarregando página para atualizar dados');
+      console.log('🔄 Empresa anterior:', previousCompanyId);
+      console.log('🔄 Nova empresa:', id);
+      
+      // Pequeno delay para garantir que o estado foi atualizado
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
     }
   };
 

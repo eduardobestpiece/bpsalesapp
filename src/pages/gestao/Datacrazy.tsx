@@ -1,20 +1,22 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, RefreshCw, Maximize2, Minimize2 } from 'lucide-react';
+import { ArrowLeft, RefreshCw } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { AccessDenied } from '@/components/AccessDenied';
+import { useNavigate } from 'react-router-dom';
 
 export const Datacrazy = () => {
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [currentUrl, setCurrentUrl] = useState('https://datacrazy.io/');
+  const [currentUrl, setCurrentUrl] = useState('https://crm.datacrazy.io/login');
   const permissions = usePermissions();
+  const navigate = useNavigate();
 
   // URLs alternativas para tentar
   const alternativeUrls = [
+    'https://crm.datacrazy.io/login',
     'https://datacrazy.io/',
     'https://crm.datacrazy.io/',
     'https://app.datacrazy.io/',
@@ -39,12 +41,8 @@ export const Datacrazy = () => {
     }
   };
 
-  const handleOpenExternal = () => {
-    window.open('https://crm.datacrazy.io/pipelines', '_blank');
-  };
-
-  const toggleFullscreen = () => {
-    setIsFullscreen(!isFullscreen);
+  const handleGoBack = () => {
+    navigate('/gestao/leads');
   };
 
   const handleIframeLoad = () => {
@@ -84,52 +82,35 @@ export const Datacrazy = () => {
     }
   }, [isLoading, currentUrl]);
 
-  // Detectar tecla ESC para sair do fullscreen
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isFullscreen) {
-        setIsFullscreen(false);
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isFullscreen]);
-
   return (
-    <div className={`flex flex-col h-full ${isFullscreen ? 'fixed inset-0 z-50 bg-background' : ''}`}>
-      <Card className={`flex-1 flex flex-col ${isFullscreen ? 'rounded-none border-0' : ''}`}>
-        <CardHeader className="flex-shrink-0">
+    <div className="fixed inset-0 z-50 bg-background flex flex-col h-full">
+      <Card className="flex-1 flex flex-col rounded-none border-0">
+        <CardHeader className="flex-shrink-0 py-2 px-3">
           <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <ExternalLink className="h-5 w-5" />
-              Datacrazy CRM
-            </CardTitle>
             <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleGoBack}
+                title="Voltar para Leads"
+                className="p-1.5 h-7 w-7"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+              </Button>
+              <CardTitle className="flex items-center gap-1.5 text-sm font-medium">
+                Datacrazy CRM
+              </CardTitle>
+            </div>
+            <div className="flex items-center gap-1.5">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleRefresh}
                 disabled={isLoading}
                 title="Atualizar"
+                className="h-7 px-2"
               >
-                <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleOpenExternal}
-                title="Abrir em nova aba"
-              >
-                <ExternalLink className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={toggleFullscreen}
-                title={isFullscreen ? 'Sair do modo tela cheia' : 'Modo tela cheia'}
-              >
-                {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
               </Button>
             </div>
           </div>
@@ -161,16 +142,10 @@ export const Datacrazy = () => {
                     URL testada: {currentUrl}
                   </p>
                 </div>
-                <div className="flex gap-2">
-                  <Button onClick={handleRefresh} variant="outline">
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Tentar novamente
-                  </Button>
-                  <Button onClick={handleOpenExternal} variant="outline">
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Abrir externamente
-                  </Button>
-                </div>
+                <Button onClick={handleRefresh} variant="outline">
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Tentar novamente
+                </Button>
               </div>
             </div>
           )}

@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { GestaoLayout } from '@/components/Layout/GestaoLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -65,6 +66,7 @@ export default function GestaoLeadsNew() {
   const { selectedCompanyId } = useCompany();
   const { userRole, crmUser } = useCrmAuth();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   // Estados para filtros
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -636,6 +638,42 @@ setTimeout(observeIframeContent, 500);
       }
     }
   }, [companyFormSettings, companyForms]);
+
+  // Listener para comunicação com iframes de formulários
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // Verificar se a mensagem é de um iframe solicitando dados do usuário logado
+      if (event.data.type === 'REQUEST_LOGGED_USER') {
+        console.log('📨 Iframe solicitando dados do usuário logado');
+        
+        if (crmUser) {
+          console.log('👤 Enviando dados do usuário logado para o iframe:', crmUser);
+          
+          // Enviar dados do usuário logado de volta para o iframe
+          event.source?.postMessage({
+            type: 'LOGGED_USER_RESPONSE',
+            user: {
+              id: crmUser.id,
+              first_name: crmUser.first_name,
+              last_name: crmUser.last_name,
+              email: crmUser.email
+            }
+          }, event.origin);
+        } else {
+          console.log('⚠️ Nenhum usuário logado encontrado');
+          
+          // Enviar resposta vazia
+          event.source?.postMessage({
+            type: 'LOGGED_USER_RESPONSE',
+            user: null
+          }, event.origin);
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [crmUser]);
 
   // Usuários para o dropdown de Responsável
   const isMaster = (userRole === 'master') && (crmUser?.email === 'eduardocosta@bestpiece.com.br');
@@ -1656,29 +1694,57 @@ setTimeout(observeIframeContent, 500);
                       <Plus className="h-4 w-4 mr-2" /> Adicionar Lead
                     </Button>
                   </DialogTrigger>
-                <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogContent className="max-w-2xl max-h-[95vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Adicionar Lead</DialogTitle>
                   </DialogHeader>
 
-                  <div className="space-y-4 py-4">
+                  <div className="space-y-4 py-0">
                     {!isFormConfigured ? (
                       <div className="space-y-4">
-                        <div>
-                          <Label htmlFor="form-select">Selecionar Formulário</Label>
-                          <Select value={selectedFormId} onValueChange={handleFormSelect}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Escolha um formulário" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {companyForms.map((form) => (
-                                <SelectItem key={form.id} value={form.id}>
-                                  {form.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
+                        {/* Apenas admin e master podem trocar formulário */}
+                        {!isCollaborator && (
+                          <div>
+                            <Label htmlFor="form-select">Selecionar Formulário</Label>
+                            <Select value={selectedFormId} onValueChange={handleFormSelect}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Escolha um formulário" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {companyForms.filter(form => form.name === 'Formulário base').map((form) => (
+                                  <SelectItem key={form.id} value={form.id}>
+                                    {form.name}
+                                  </SelectItem>
+                                ))}
+                                {companyForms.filter(form => form.name === 'Formulário base').length === 0 && (
+                                  <div className="p-2 text-center">
+                                    <p className="text-sm text-muted-foreground mb-2">Nenhum formulário base encontrado</p>
+                                    <Button 
+                                      variant="outline" 
+                                      size="sm" 
+                                      onClick={() => {
+                                        setOpenModal(false);
+                                        navigate('/configuracoes/formularios?tab=leads');
+                                      }}
+                                      className="w-full"
+                                    >
+                                      Criar Formulário Base
+                                    </Button>
+                                  </div>
+                                )}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        )}
+                        
+                        {/* Colaboradores veem apenas o formulário embedado */}
+                        {isCollaborator && (
+                          <div className="text-center py-4">
+                            <p className="text-sm text-muted-foreground">
+                              Formulário de cadastro de leads
+                            </p>
+                          </div>
+                        )}
                         
                         {selectedFormId && (
                           <div className="space-y-4">
