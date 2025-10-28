@@ -21,6 +21,7 @@ import LandingTeste from "./pages/LandingTeste";
 import GestaoLeadsNew from "./pages/gestao/LeadsNew";
 import GestaoAgendamentos from "./pages/gestao/Agendamentos";
 import GestaoVendas from "./pages/gestao/Vendas";
+import { Datacrazy } from "./pages/gestao/Datacrazy";
 import { Loader2 } from "lucide-react";
 
 // Novas páginas do módulo Configurações
@@ -166,6 +167,11 @@ function AppContent() {
           <Route path="/gestao/vendas" element={
             user ? (
               <GestaoVendas />
+            ) : <Navigate to="/crm/login" replace />
+          } />
+          <Route path="/gestao/datacrazy" element={
+            user ? (
+              <Datacrazy />
             ) : <Navigate to="/crm/login" replace />
           } />
 

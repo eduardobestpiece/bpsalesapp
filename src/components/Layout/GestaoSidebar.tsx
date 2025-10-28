@@ -19,7 +19,7 @@ import {
   SidebarFooter,
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Calendar, Handshake, ListChecks, LogOut } from 'lucide-react';
+import { Calendar, Handshake, ListChecks, LogOut, ExternalLink } from 'lucide-react';
 
 export const GestaoSidebar = () => {
   const location = useLocation();
@@ -164,6 +164,18 @@ export const GestaoSidebar = () => {
                     <Link to="/gestao/vendas">
                       <Handshake className="h-4 w-4" />
                       <span>Vendas</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+              
+              {/* Datacrazy - apenas para usuários com acesso à gestão */}
+              {permissions.canAccessGestao && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActivePath('/gestao/datacrazy')}>
+                    <Link to="/gestao/datacrazy">
+                      <ExternalLink className="h-4 w-4" />
+                      <span>Datacrazy</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
