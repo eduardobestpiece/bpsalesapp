@@ -18,6 +18,7 @@ export function LeadFormsManager() {
   const { companyPrimaryColor, companySecondaryColor } = useGlobalColors();
   const [forms, setForms] = useState<{ id: string; name: string }[]>([]);
   const [formsWithLeads, setFormsWithLeads] = useState<{ [formId: string]: number }>({});
+  const [baseFormId, setBaseFormId] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [editing, setEditing] = useState<{ id: string; name: string } | null>(null);
   const [formName, setFormName] = useState('');

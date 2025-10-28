@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Plus, Trash2, Loader2, UserPlus } from 'lucide-react';
+import { Plus, Trash2, Loader2, UserPlus, Shield } from 'lucide-react';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 
 interface User {
@@ -31,6 +31,9 @@ export function UsersManager({ companyId }: UsersManagerProps) {
   const queryClient = useQueryClient();
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   const [isDeletingUserId, setIsDeletingUserId] = useState<string | null>(null);
+  const [isSetPasswordModalOpen, setIsSetPasswordModalOpen] = useState(false);
+  const [selectedUserForPassword, setSelectedUserForPassword] = useState<User | null>(null);
+  const [newPassword, setNewPassword] = useState('');
 
   // Estados do formulário de novo usuário
   const [newUserData, setNewUserData] = useState({
@@ -131,6 +134,41 @@ export function UsersManager({ companyId }: UsersManagerProps) {
     }
   });
 
+  // Mutação para definir senha do usuário
+  const setPasswordMutation = useMutation({
+    mutationFn: async ({ userId, password }: { userId: string; password: string }) => {
+      // Chamar Edge Function para definir senha
+      const response = await fetch(`${supabase.supabaseUrl}/functions/v1/set-user-password`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabase.supabaseKey}`,
+        },
+        body: JSON.stringify({ 
+          user_id: userId,
+          password: password
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao definir senha');
+      }
+
+      const result = await response.json();
+      return result;
+    },
+    onSuccess: () => {
+      setIsSetPasswordModalOpen(false);
+      setSelectedUserForPassword(null);
+      setNewPassword('');
+      toast.success('Senha definida com sucesso!');
+    },
+    onError: (error: any) => {
+      toast.error('Erro ao definir senha: ' + error.message);
+    }
+  });
+
   // Mutação para excluir usuário (completa: crm_users + auth.users)
   const deleteUserMutation = useMutation({
     mutationFn: async (userId: string) => {
@@ -203,6 +241,24 @@ export function UsersManager({ companyId }: UsersManagerProps) {
     createUserMutation.mutate(newUserData);
   };
 
+  const handleSetPassword = (user: User) => {
+    setSelectedUserForPassword(user);
+    setIsSetPasswordModalOpen(true);
+  };
+
+  const handleConfirmSetPassword = () => {
+    if (!newPassword || newPassword.length < 6) {
+      toast.error('A senha deve ter pelo menos 6 caracteres');
+      return;
+    }
+    if (!selectedUserForPassword) return;
+    
+    setPasswordMutation.mutate({ 
+      userId: selectedUserForPassword.id, 
+      password: newPassword 
+    });
+  };
+
   const getRoleLabel = (role: string) => {
     const roleLabels = {
       master: 'Master',
@@ -214,6 +270,7 @@ export function UsersManager({ companyId }: UsersManagerProps) {
   };
 
   const canManageUsers = crmUser?.role === 'master' || crmUser?.role === 'admin';
+  const canSetPassword = crmUser?.role === 'master';
 
   if (!canManageUsers) {
     return (
@@ -281,6 +338,20 @@ export function UsersManager({ companyId }: UsersManagerProps) {
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center space-x-2">
+                      {/* Botão para definir senha - apenas para master */}
+                      {canSetPassword && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleSetPassword(user)}
+                          disabled={setPasswordMutation.isPending}
+                          className="text-[#333333] hover:text-[#555555]"
+                          title="Definir senha do usuário"
+                        >
+                          <Shield className="h-4 w-4" />
+                        </Button>
+                      )}
+                      
                       <Button
                         variant="ghost"
                         size="sm"
@@ -411,6 +482,68 @@ export function UsersManager({ companyId }: UsersManagerProps) {
                 <UserPlus className="h-4 w-4 mr-2" />
               )}
               {createUserMutation.isPending ? 'Criando...' : 'Criar Usuário'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para definir senha */}
+      <Dialog open={isSetPasswordModalOpen} onOpenChange={setIsSetPasswordModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5 text-[#333333]" />
+              Definir Senha do Usuário
+            </DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              Definindo senha para: <strong>{selectedUserForPassword?.first_name} {selectedUserForPassword?.last_name}</strong>
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Email: <strong>{selectedUserForPassword?.email}</strong>
+            </p>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="new_password">Nova Senha *</Label>
+              <Input
+                id="new_password"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Digite a nova senha"
+                autoComplete="new-password"
+              />
+              <p className="text-xs text-muted-foreground">
+                A senha deve ter pelo menos 6 caracteres
+              </p>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setIsSetPasswordModalOpen(false);
+                setSelectedUserForPassword(null);
+                setNewPassword('');
+              }}
+              disabled={setPasswordMutation.isPending}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              onClick={handleConfirmSetPassword}
+              disabled={setPasswordMutation.isPending || !newPassword}
+              className="brand-radius"
+              variant="brandPrimaryToSecondary"
+            >
+              {setPasswordMutation.isPending ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <Shield className="h-4 w-4 mr-2" />
+              )}
+              {setPasswordMutation.isPending ? 'Definindo...' : 'Definir Senha'}
             </Button>
           </DialogFooter>
         </DialogContent>

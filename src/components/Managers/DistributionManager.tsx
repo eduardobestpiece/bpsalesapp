@@ -13,7 +13,8 @@ import { useQueryClient } from '@tanstack/react-query';
 // Interfaces
 interface User {
   id: string;
-  name: string;
+  first_name: string;
+  last_name: string;
   email: string;
 }
 
@@ -73,9 +74,9 @@ export function DistributionManager() {
     try {
       const { data, error } = await supabase
         .from('crm_users')
-        .select('id, name, email')
+        .select('id, first_name, last_name, email')
         .eq('company_id', selectedCompanyId)
-        .order('name');
+        .order('first_name');
 
       if (error) throw error;
       setUsers(data || []);
@@ -127,7 +128,8 @@ export function DistributionManager() {
           number_weight,
           percentage_weight,
           crm_users!inner (
-            name,
+            first_name,
+            last_name,
             email
           )
         `)
@@ -140,7 +142,7 @@ export function DistributionManager() {
       const mappedUsers: DistributionUser[] = (distUsers || []).map((du: any) => ({
         id: du.id,
         user_id: du.user_id,
-        user_name: du.crm_users.name,
+        user_name: `${du.crm_users.first_name} ${du.crm_users.last_name}`.trim(),
         user_email: du.crm_users.email,
         number_weight: du.number_weight,
         percentage_weight: du.percentage_weight
@@ -431,7 +433,7 @@ export function DistributionManager() {
                       <SelectContent>
                         {availableUsers.map((user) => (
                           <SelectItem key={user.id} value={user.id}>
-                            {user.name} ({user.email})
+                            {`${user.first_name} ${user.last_name}`.trim()} ({user.email})
                           </SelectItem>
                         ))}
                       </SelectContent>

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import { useCompany } from '@/contexts/CompanyContext';
+import { usePermissions } from '@/hooks/usePermissions';
 import { supabase } from '@/integrations/supabase/client';
 import { Logo } from '@/components/ui/Logo';
 import {
@@ -25,6 +26,7 @@ export const GestaoSidebar = () => {
   const navigate = useNavigate();
   const { userRole, companyId, crmUser, signOut } = useCrmAuth();
   const { selectedCompanyId, setSelectedCompanyId } = useCompany();
+  const permissions = usePermissions();
 
   const { data: companies = [], isLoading: companiesLoading } = useQuery({
     queryKey: ['companies'],
@@ -131,30 +133,41 @@ export const GestaoSidebar = () => {
           <SidebarGroupLabel>Gestão</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActivePath('/gestao/leads')}>
-                  <Link to="/gestao/leads">
-                    <ListChecks className="h-4 w-4" />
-                    <span>Leads</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActivePath('/gestao/agendamentos')}>
-                  <Link to="/gestao/agendamentos">
-                    <Calendar className="h-4 w-4" />
-                    <span>Agendamentos</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActivePath('/gestao/vendas')}>
-                  <Link to="/gestao/vendas">
-                    <Handshake className="h-4 w-4" />
-                    <span>Vendas</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {/* Leads - apenas para usuários com acesso à gestão */}
+              {permissions.canAccessGestao && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActivePath('/gestao/leads')}>
+                    <Link to="/gestao/leads">
+                      <ListChecks className="h-4 w-4" />
+                      <span>Leads</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+              
+              {/* Agendamentos - apenas para usuários com acesso à gestão */}
+              {permissions.canAccessGestao && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActivePath('/gestao/agendamentos')}>
+                    <Link to="/gestao/agendamentos">
+                      <Calendar className="h-4 w-4" />
+                      <span>Agendamentos</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+              
+              {/* Vendas - apenas para usuários com acesso à gestão */}
+              {permissions.canAccessGestao && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActivePath('/gestao/vendas')}>
+                    <Link to="/gestao/vendas">
+                      <Handshake className="h-4 w-4" />
+                      <span>Vendas</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

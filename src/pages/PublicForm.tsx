@@ -3028,12 +3028,22 @@ export default function PublicForm(props?: PublicFormProps) {
       let distributionResult = null;
       if (formData.company_id) {
         try {
-          distributionResult = await distributeLead(formId, formData.company_id);
+          console.log('🎯 Iniciando distribuição automática...');
+          console.log('🎯 Form ID:', formId);
+          console.log('🎯 Company ID:', formData.company_id);
+          
+          // Extrair email e telefone dos dados do formulário
+          const leadEmail = formData.email || '';
+          const leadTelefone = formData.telefone || '';
+          
+          distributionResult = await distributeLead(formId, formData.company_id, leadEmail, leadTelefone);
+          
           if (distributionResult) {
             leadData.responsible_id = distributionResult.responsible_id;
             leadData.responsavel = distributionResult.responsible_name;
             console.log('🎯 Lead distribuído para:', distributionResult.responsible_name);
             console.log('🎯 ID do responsável:', distributionResult.responsible_id);
+            console.log('🎯 Dados do lead atualizados:', leadData);
           } else {
             console.log('ℹ️ Nenhuma distribuição configurada para este formulário');
           }
@@ -3041,6 +3051,8 @@ export default function PublicForm(props?: PublicFormProps) {
           console.error('❌ Erro na distribuição automática:', error);
           // Continua sem distribuição em caso de erro
         }
+      } else {
+        console.log('⚠️ Company ID não encontrado, pulando distribuição');
       }
 
       const { data: lead, error: leadError } = await supabase

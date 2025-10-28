@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Plus, Trash2, RotateCcw, RefreshCw, Copy, Check, ChevronLeft, ChevronRight, Pencil, X, Search, Filter } from 'lucide-react';
+import { Plus, Trash2, RotateCcw, RefreshCw, Copy, Check, ChevronLeft, ChevronRight, Pencil, X, Search, Filter, User } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { useCompany } from '@/contexts/CompanyContext';
@@ -66,12 +66,20 @@ export default function GestaoLeadsNew() {
   const { userRole, crmUser } = useCrmAuth();
   const queryClient = useQueryClient();
 
+  // Estados para filtros
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [selectedOrigin, setSelectedOrigin] = useState<string>('');
+  const [selectedForm, setSelectedForm] = useState<string>('');
+  const [selectedResponsible, setSelectedResponsible] = useState<string>('');
+  const [dateRange, setDateRange] = useState<{from: string, to: string}>({from: '', to: ''});
+  const [showFilters, setShowFilters] = useState<boolean>(false);
+
   const { data: leads = [] } = useQuery<Lead[]>({
-    queryKey: ['leads-new', selectedCompanyId],
+    queryKey: ['leads-new', selectedCompanyId, searchTerm, selectedOrigin, selectedForm, selectedResponsible, dateRange],
     enabled: !!selectedCompanyId,
     queryFn: async () => {
-      // Buscar leads com informações de formulário e origem
-      const { data, error } = await supabase
+      // Construir query base
+      let query = supabase
         .from('leads' as any)
         .select(`
           id,
@@ -99,6 +107,14 @@ export default function GestaoLeadsNew() {
           browser,
           device,
           pais,
+          responsible_id,
+          responsavel,
+          crm_users!leads_responsible_id_fkey (
+            id,
+            first_name,
+            last_name,
+            email
+          ),
           lead_forms!leads_form_id_fkey (
             id,
             name,
@@ -109,14 +125,53 @@ export default function GestaoLeadsNew() {
             )
           )
         `)
-        .eq('company_id', selectedCompanyId as string)
-        .order('created_at', { ascending: false });
+        .eq('company_id', selectedCompanyId as string);
+
+      // Restrição para colaboradores: só podem ver seus próprios leads
+      if (isCollaborator && crmUser?.id) {
+        console.log('🔒 Aplicando filtro de colaborador - User ID:', crmUser.id);
+        query = query.eq('responsible_id', crmUser.id);
+      } else {
+        console.log('🔓 Sem filtro de colaborador aplicado');
+      }
+
+      // Aplicar filtros
+      if (searchTerm) {
+        query = query.or(`nome.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%,telefone.ilike.%${searchTerm}%`);
+      }
+
+      if (selectedOrigin) {
+        query = query.eq('origem', selectedOrigin);
+      }
+
+      if (selectedForm) {
+        query = query.eq('form_id', selectedForm);
+      }
+
+      if (selectedResponsible) {
+        if (selectedResponsible === 'none') {
+          query = query.is('responsible_id', null);
+        } else {
+          query = query.eq('responsible_id', selectedResponsible);
+        }
+      }
+
+      if (dateRange.from) {
+        query = query.gte('created_at', dateRange.from);
+      }
+
+      if (dateRange.to) {
+        query = query.lte('created_at', dateRange.to);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false });
 
       if (error) throw error;
       
       // Processar os dados para incluir origem correta
       const processedLeads = (data || []).map((lead: any) => {
         const form = lead.lead_forms;
+        const responsibleUser = lead.crm_users;
         let origemDisplay = lead.origem;
         
         // Se o lead tem um formulário associado
@@ -131,10 +186,19 @@ export default function GestaoLeadsNew() {
           }
         }
         
+        // Construir nome do responsável
+        let responsibleName = '';
+        if (responsibleUser) {
+          responsibleName = `${responsibleUser.first_name || ''} ${responsibleUser.last_name || ''}`.trim();
+        } else if (lead.responsavel) {
+          responsibleName = lead.responsavel;
+        }
+        
         return {
           ...lead,
           form_name: form?.name || 'Formulário',
-          origem: origemDisplay
+          origem: origemDisplay,
+          responsavel: responsibleName
         } as any;
       });
       
@@ -154,7 +218,6 @@ export default function GestaoLeadsNew() {
   const [copiedItems, setCopiedItems] = useState<Record<string, boolean>>({});
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 50;
-  const [selectedLeads, setSelectedLeads] = useState<Set<string>>(new Set());
   const [lastSelectedIndex, setLastSelectedIndex] = useState<number | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
@@ -165,12 +228,17 @@ export default function GestaoLeadsNew() {
   const [editingLeadName, setEditingLeadName] = useState<boolean>(false);
   const [leadNameValue, setLeadNameValue] = useState<string>('');
   const [showNavigationData, setShowNavigationData] = useState<boolean>(false);
+  const [editingResponsible, setEditingResponsible] = useState<boolean>(false);
+  const [selectedResponsibleId, setSelectedResponsibleId] = useState<string>('');
+  const [editingResponsibleLeadId, setEditingResponsibleLeadId] = useState<string | null>(null);
+  const [inlineResponsibleId, setInlineResponsibleId] = useState<string>('');
   
-  // Estados para filtros
-  const [searchTerm, setSearchTerm] = useState<string>('');
-  const [selectedOrigin, setSelectedOrigin] = useState<string>('');
-  const [selectedForm, setSelectedForm] = useState<string>('');
-  const [dateRange, setDateRange] = useState<{from: string, to: string}>({from: '', to: ''});
+  // Estados para ações em lote
+  const [selectedLeads, setSelectedLeads] = useState<string[]>([]);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
+  const [isBulkResponsibleModalOpen, setIsBulkResponsibleModalOpen] = useState<boolean>(false);
+  const [bulkResponsibleId, setBulkResponsibleId] = useState<string>('');
+  const [deleteConfirmationNumber, setDeleteConfirmationNumber] = useState<string>('');
 
   // Função para gerar iframe quando um formulário é selecionado
   const handleFormSelect = (formId: string) => {
@@ -571,6 +639,14 @@ setTimeout(observeIframeContent, 500);
 
   // Usuários para o dropdown de Responsável
   const isMaster = (userRole === 'master') && (crmUser?.email === 'eduardocosta@bestpiece.com.br');
+  const isCollaborator = userRole === 'user'; // Usuários com role 'user' são colaboradores
+  
+  // Debug: Log do role do usuário
+  console.log('🔍 Debug - User Role:', userRole);
+  console.log('🔍 Debug - CRM User ID:', crmUser?.id);
+  console.log('🔍 Debug - CRM User Email:', crmUser?.email);
+  console.log('🔍 Debug - Is Collaborator:', isCollaborator);
+  console.log('🔍 Debug - Selected Company ID:', selectedCompanyId);
   const { data: companyUsers = [] } = useQuery<any[]>({
     queryKey: ['company-users', selectedCompanyId],
     enabled: !!selectedCompanyId,
@@ -679,6 +755,14 @@ setTimeout(observeIframeContent, 500);
 
 
   const deleteLead = async (id: string) => {
+    // Verificação de segurança: colaboradores não podem excluir leads
+    if (isCollaborator) {
+      console.log('🚫 Tentativa de exclusão bloqueada - usuário é colaborador');
+      toast.error('Colaboradores não podem excluir leads');
+      return;
+    }
+    
+    console.log('🗑️ Excluindo lead:', id);
     const { error } = await supabase.from('leads' as any).delete().eq('id', id);
     if (error) throw error;
     await queryClient.invalidateQueries({ queryKey: ['leads-new', selectedCompanyId] });
@@ -1021,53 +1105,9 @@ setTimeout(observeIframeContent, 500);
   };
 
   // Funções de seleção
-  const isAllSelected = currentLeads.length > 0 && currentLeads.every(lead => selectedLeads.has(lead.id));
-  const isIndeterminate = currentLeads.some(lead => selectedLeads.has(lead.id)) && !isAllSelected;
+  const isAllSelected = currentLeads.length > 0 && currentLeads.every(lead => selectedLeads.includes(lead.id));
+  const isIndeterminate = currentLeads.some(lead => selectedLeads.includes(lead.id)) && !isAllSelected;
 
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      const newSelected = new Set(selectedLeads);
-      currentLeads.forEach(lead => newSelected.add(lead.id));
-      setSelectedLeads(newSelected);
-    } else {
-      const newSelected = new Set(selectedLeads);
-      currentLeads.forEach(lead => newSelected.delete(lead.id));
-      setSelectedLeads(newSelected);
-    }
-  };
-
-  const handleSelectLead = (leadId: string, index: number, event?: React.MouseEvent) => {
-    const isCtrlOrCmd = event?.metaKey || event?.ctrlKey;
-    const isShift = event?.shiftKey;
-
-    if (isShift && lastSelectedIndex !== null) {
-      // Seleção em range
-      const start = Math.min(lastSelectedIndex, index);
-      const end = Math.max(lastSelectedIndex, index);
-      const newSelected = new Set(selectedLeads);
-      
-      for (let i = start; i <= end; i++) {
-        if (currentLeads[i]) {
-          newSelected.add(currentLeads[i].id);
-        }
-      }
-      setSelectedLeads(newSelected);
-    } else if (isCtrlOrCmd) {
-      // Toggle individual
-      const newSelected = new Set(selectedLeads);
-      if (newSelected.has(leadId)) {
-        newSelected.delete(leadId);
-      } else {
-        newSelected.add(leadId);
-      }
-      setSelectedLeads(newSelected);
-      setLastSelectedIndex(index);
-    } else {
-      // Seleção simples
-      setSelectedLeads(new Set([leadId]));
-      setLastSelectedIndex(index);
-    }
-  };
 
   const handleLeadClick = (leadId: string, index: number, event: React.MouseEvent) => {
     // Verificar se o clique foi em um botão de cópia
@@ -1079,7 +1119,34 @@ setTimeout(observeIframeContent, 500);
     // Só processa se for Ctrl/Cmd ou Shift
     if (event.metaKey || event.ctrlKey || event.shiftKey) {
       event.preventDefault();
-      handleSelectLead(leadId, index, event);
+      const isCtrlOrCmd = event.metaKey || event.ctrlKey;
+      const isShift = event.shiftKey;
+
+      if (isShift && lastSelectedIndex !== null) {
+        // Seleção em range
+        const start = Math.min(lastSelectedIndex, index);
+        const end = Math.max(lastSelectedIndex, index);
+        const newSelected = [...selectedLeads];
+        
+        for (let i = start; i <= end; i++) {
+          if (currentLeads[i] && !newSelected.includes(currentLeads[i].id)) {
+            newSelected.push(currentLeads[i].id);
+          }
+        }
+        setSelectedLeads(newSelected);
+      } else if (isCtrlOrCmd) {
+        // Toggle individual
+        if (selectedLeads.includes(leadId)) {
+          setSelectedLeads(prev => prev.filter(id => id !== leadId));
+        } else {
+          setSelectedLeads(prev => [...prev, leadId]);
+        }
+        setLastSelectedIndex(index);
+      } else {
+        // Seleção simples
+        setSelectedLeads([leadId]);
+        setLastSelectedIndex(index);
+      }
     } else {
       // Abrir modal de edição
       const lead = currentLeads.find(l => l.id === leadId);
@@ -1237,6 +1304,172 @@ setTimeout(observeIframeContent, 500);
     setLeadNameValue('');
   };
 
+  const startEditingResponsible = () => {
+    if (editingLead) {
+      const currentResponsibleId = (editingLead as any).responsible_id;
+      setSelectedResponsibleId(currentResponsibleId || 'none');
+      setEditingResponsible(true);
+    }
+  };
+
+  const saveResponsible = async () => {
+    if (!editingLead) return;
+
+    try {
+      const isNoneSelected = selectedResponsibleId === 'none';
+      const responsibleName = isNoneSelected ? '' : 
+        (responsibleOptions.find(r => r.id === selectedResponsibleId)?.label || '');
+
+      const { error } = await supabase
+        .from('leads' as any)
+        .update({ 
+          responsible_id: isNoneSelected ? null : selectedResponsibleId,
+          responsavel: isNoneSelected ? null : responsibleName
+        })
+        .eq('id', editingLead.id);
+
+      if (error) throw error;
+
+      // Atualizar o lead local
+      setEditingLead({
+        ...editingLead,
+        responsible_id: isNoneSelected ? null : selectedResponsibleId,
+        responsavel: isNoneSelected ? '' : responsibleName
+      } as any);
+
+      // Invalidar cache
+      queryClient.invalidateQueries({ queryKey: ['leads-new', selectedCompanyId] });
+      
+      setEditingResponsible(false);
+    } catch (error) {
+      console.error('Erro ao salvar responsável:', error);
+    }
+  };
+
+  const cancelEditingResponsible = () => {
+    setEditingResponsible(false);
+    setSelectedResponsibleId('none');
+  };
+
+  // Funções para edição inline na tabela
+  const startInlineResponsibleEdit = (leadId: string, currentResponsibleId: string | null) => {
+    setEditingResponsibleLeadId(leadId);
+    setInlineResponsibleId(currentResponsibleId || 'none');
+  };
+
+  const saveInlineResponsible = async (leadId: string) => {
+    try {
+      const isNoneSelected = inlineResponsibleId === 'none';
+      const responsibleName = isNoneSelected ? '' : 
+        (responsibleOptions.find(r => r.id === inlineResponsibleId)?.label || '');
+
+      const { error } = await supabase
+        .from('leads' as any)
+        .update({ 
+          responsible_id: isNoneSelected ? null : inlineResponsibleId,
+          responsavel: isNoneSelected ? null : responsibleName
+        })
+        .eq('id', leadId);
+
+      if (error) throw error;
+
+      // Invalidar cache para atualizar a lista
+      queryClient.invalidateQueries({ queryKey: ['leads-new', selectedCompanyId] });
+      
+      setEditingResponsibleLeadId(null);
+      setInlineResponsibleId('');
+    } catch (error) {
+      console.error('Erro ao salvar responsável inline:', error);
+    }
+  };
+
+  const cancelInlineResponsibleEdit = () => {
+    setEditingResponsibleLeadId(null);
+    setInlineResponsibleId('');
+  };
+
+  // Funções para ações em lote
+  const handleSelectAllLeads = (checked: boolean) => {
+    if (checked) {
+      setSelectedLeads(leads.map(lead => lead.id));
+    } else {
+      setSelectedLeads([]);
+    }
+  };
+
+  const handleSelectLead = (leadId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedLeads(prev => [...prev, leadId]);
+    } else {
+      setSelectedLeads(prev => prev.filter(id => id !== leadId));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    // Verificação de segurança: colaboradores não podem excluir leads
+    if (isCollaborator) {
+      console.log('🚫 Tentativa de exclusão em lote bloqueada - usuário é colaborador');
+      toast.error('Colaboradores não podem excluir leads');
+      return;
+    }
+    
+    if (deleteConfirmationNumber !== selectedLeads.length.toString()) {
+      toast.error('Número de confirmação incorreto');
+      return;
+    }
+
+    try {
+      console.log('🗑️ Excluindo leads em lote:', selectedLeads);
+      const { error } = await supabase
+        .from('leads' as any)
+        .delete()
+        .in('id', selectedLeads);
+
+      if (error) throw error;
+
+      toast.success(`${selectedLeads.length} leads excluídos com sucesso!`);
+      setSelectedLeads([]);
+      setIsDeleteModalOpen(false);
+      setDeleteConfirmationNumber('');
+      queryClient.invalidateQueries({ queryKey: ['leads-new', selectedCompanyId] });
+    } catch (error) {
+      console.error('Erro ao excluir leads:', error);
+      toast.error('Erro ao excluir leads');
+    }
+  };
+
+  const handleBulkUpdateResponsible = async () => {
+    if (!bulkResponsibleId) {
+      toast.error('Selecione um responsável');
+      return;
+    }
+
+    try {
+      const isNoneSelected = bulkResponsibleId === 'none';
+      const responsibleName = isNoneSelected ? '' : 
+        (responsibleOptions.find(r => r.id === bulkResponsibleId)?.label || '');
+
+      const { error } = await supabase
+        .from('leads' as any)
+        .update({ 
+          responsible_id: isNoneSelected ? null : bulkResponsibleId,
+          responsavel: isNoneSelected ? null : responsibleName
+        })
+        .in('id', selectedLeads);
+
+      if (error) throw error;
+
+      toast.success(`Responsável atualizado para ${selectedLeads.length} leads!`);
+      setSelectedLeads([]);
+      setIsBulkResponsibleModalOpen(false);
+      setBulkResponsibleId('');
+      queryClient.invalidateQueries({ queryKey: ['leads-new', selectedCompanyId] });
+    } catch (error) {
+      console.error('Erro ao atualizar responsável:', error);
+      toast.error('Erro ao atualizar responsável');
+    }
+  };
+
   // Função para extrair todos os campos do lead
   const getAllLeadFields = (lead: Lead) => {
     const fields: Array<{name: string, value: string, key: string}> = [];
@@ -1319,109 +1552,110 @@ setTimeout(observeIframeContent, 500);
     <GestaoLayout>
       <div className="max-w-[1200px] mx-auto space-y-4">
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0">
-            <div className="flex flex-col space-y-4">
+          <CardHeader>
+            {/* Linha 1: Título, Filtros, Atualizar e Adicionar */}
+            <div className="flex items-center justify-between">
               <CardTitle>Leads</CardTitle>
               
-              {/* Filtros */}
-              <div className="flex flex-wrap gap-4 items-center">
-                {/* Campo de pesquisa geral */}
-                <div className="relative min-w-[200px]">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Pesquisar leads..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-
-                {/* Filtro de origem */}
-                <Select value={selectedOrigin || "all"} onValueChange={(value) => setSelectedOrigin(value === "all" ? "" : value)}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Todas as origens" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas as origens</SelectItem>
-                    {origins.map((origin) => (
-                      <SelectItem key={origin.id} value={origin.name}>
-                        {origin.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                {/* Filtro de formulário */}
-                <Select value={selectedForm || "all"} onValueChange={(value) => setSelectedForm(value === "all" ? "" : value)}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Todos os formulários" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os formulários</SelectItem>
-                    {formsList.map((form) => (
-                      <SelectItem key={form.id} value={form.name}>
-                        {form.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                {/* Filtro de data */}
-                <div className="flex gap-2 items-center">
-                  <Input
-                    type="date"
-                    placeholder="Data inicial"
-                    value={dateRange.from}
-                    onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
-                    className="w-[140px]"
-                  />
-                  <span className="text-muted-foreground">até</span>
-                  <Input
-                    type="date"
-                    placeholder="Data final"
-                    value={dateRange.to}
-                    onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
-                    className="w-[140px]"
-                  />
-                </div>
-
-                {/* Botão para limpar filtros */}
-                {(searchTerm || selectedOrigin || selectedForm || dateRange.from || dateRange.to) && (
+          <div className="flex items-center gap-2">
+            {/* Ações em lote - aparecem quando há leads selecionados */}
+            {selectedLeads.length > 0 && (
+              <>
+                {/* Botão de exclusão - apenas para não-colaboradores */}
+                {!isCollaborator && (
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => {
-                      setSearchTerm('');
-                      setSelectedOrigin('');
-                      setSelectedForm('');
-                      setDateRange({from: '', to: ''});
+                      console.log('🗑️ Botão de exclusão em lote clicado');
+                      setIsDeleteModalOpen(true);
                     }}
-                    className="text-muted-foreground"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 brand-radius"
                   >
-                    <Filter className="h-4 w-4 mr-2" />
-                    Limpar filtros
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Excluir ({selectedLeads.length})
                   </Button>
                 )}
-              </div>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Button 
-                size="sm" 
-                variant="outline" 
-                onClick={handleRefreshLeads}
-                disabled={isRefreshing}
-                className="brand-radius"
+                {isCollaborator && (
+                  <div className="text-sm text-muted-foreground">
+                    Colaboradores não podem excluir leads
+                  </div>
+                )}
+                
+                <Select value={bulkResponsibleId} onValueChange={setBulkResponsibleId}>
+                  <SelectTrigger className="w-[200px]">
+                    <SelectValue placeholder="Alterar responsável" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Sem responsável</SelectItem>
+                    {responsibleOptions.map((user) => (
+                      <SelectItem key={user.id} value={user.id}>
+                        {user.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsBulkResponsibleModalOpen(true)}
+                  disabled={!bulkResponsibleId}
+                  className="brand-radius"
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  Confirmar
+                </Button>
+              </>
+            )}
+
+            {/* Botão para limpar filtros - aparece à esquerda do botão Filtros */}
+            {(searchTerm || selectedOrigin || selectedForm || (!isCollaborator && selectedResponsible) || dateRange.from || dateRange.to) && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedOrigin('');
+                  setSelectedForm('');
+                  if (!isCollaborator) {
+                    setSelectedResponsible('');
+                  }
+                  setDateRange({from: '', to: ''});
+                }}
+                className="text-muted-foreground brand-radius"
               >
-                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                <Filter className="h-4 w-4 mr-2" />
+                Limpar filtros
               </Button>
-              
-              <Dialog open={openModal} onOpenChange={setOpenModal}>
-                <DialogTrigger asChild>
-                  <Button size="sm" className="brand-radius" onClick={() => setOpenModal(true)}>
-                    <Plus className="h-4 w-4 mr-2" /> Adicionar Lead
-                  </Button>
-                </DialogTrigger>
+            )}
+            
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={() => setShowFilters(!showFilters)}
+              className="brand-radius"
+            >
+              <Filter className="h-4 w-4 mr-2" />
+              Filtros
+            </Button>
+            
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={handleRefreshLeads}
+              disabled={isRefreshing}
+              className="brand-radius"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            </Button>
+                
+                <Dialog open={openModal} onOpenChange={setOpenModal}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" className="brand-radius" onClick={() => setOpenModal(true)}>
+                      <Plus className="h-4 w-4 mr-2" /> Adicionar Lead
+                    </Button>
+                  </DialogTrigger>
                 <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Adicionar Lead</DialogTitle>
@@ -1485,12 +1719,13 @@ setTimeout(observeIframeContent, 500);
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
+            </div>
 
-              {/* Modal de Edição do Lead */}
+            {/* Modal de Edição do Lead */}
               <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
                 <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                   <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
+                    <DialogTitle className="flex items-center gap-4">
                       {editingLeadName ? (
                         <div className="flex items-center gap-2 flex-1">
                           <Input
@@ -1521,7 +1756,7 @@ setTimeout(observeIframeContent, 500);
                           </Button>
                         </div>
                       ) : (
-                        <>
+                        <div className="flex items-center gap-2 flex-1">
                           <span>
                             {editingLead ? (
                               editingLead.nome || 
@@ -1539,7 +1774,65 @@ setTimeout(observeIframeContent, 500);
                           >
                             <Pencil className="h-4 w-4" />
                           </Button>
-                        </>
+                        </div>
+                      )}
+                      
+                      {/* Campo de Responsável */}
+                      {editingLead && (
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-muted-foreground" />
+                          <span className="text-sm text-muted-foreground">Responsável:</span>
+                          {editingResponsible ? (
+                            <div className="flex items-center gap-2">
+                              <Select
+                                value={selectedResponsibleId}
+                                onValueChange={setSelectedResponsibleId}
+                              >
+                                <SelectTrigger className="w-48">
+                                  <SelectValue placeholder="Selecione um responsável" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="none">Sem responsável</SelectItem>
+                                  {responsibleOptions.map((user) => (
+                                    <SelectItem key={user.id} value={user.id}>
+                                      {user.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={saveResponsible}
+                                className="h-6 w-6 p-0"
+                              >
+                                <Check className="h-3 w-3 text-green-600" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={cancelEditingResponsible}
+                                className="h-6 w-6 p-0"
+                              >
+                                <X className="h-3 w-3 text-red-600" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm">
+                                {(editingLead as any).responsavel || 'Sem responsável'}
+                              </span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={startEditingResponsible}
+                                className="h-6 w-6 p-0"
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                       )}
                     </DialogTitle>
                     <div className="text-sm text-muted-foreground">
@@ -1673,6 +1966,92 @@ setTimeout(observeIframeContent, 500);
             </div>
           </CardHeader>
 
+          {/* Linha 2: Filtros Colapsáveis */}
+          {showFilters && (
+            <div className="px-6 pb-4">
+              <div className="flex flex-wrap gap-4 items-center">
+                {/* Campo de pesquisa geral */}
+                <div className="relative min-w-[200px]">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Pesquisar leads..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+
+                {/* Filtro de origem */}
+                <Select value={selectedOrigin || "all"} onValueChange={(value) => setSelectedOrigin(value === "all" ? "" : value)}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Todas as origens" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todas as origens</SelectItem>
+                    {origins.map((origin) => (
+                      <SelectItem key={origin.id} value={origin.name}>
+                        {origin.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Filtro de formulário */}
+                <Select value={selectedForm || "all"} onValueChange={(value) => setSelectedForm(value === "all" ? "" : value)}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Todos os formulários" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os formulários</SelectItem>
+                    {formsList.map((form) => (
+                      <SelectItem key={form.id} value={form.name}>
+                        {form.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Filtro de responsável - apenas para não-colaboradores */}
+                {!isCollaborator && (
+                  <Select value={selectedResponsible || "all"} onValueChange={(value) => setSelectedResponsible(value === "all" ? "" : value)}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Todos os responsáveis" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Todos os responsáveis</SelectItem>
+                      <SelectItem value="none">Sem responsável</SelectItem>
+                      {responsibleOptions.map((user) => (
+                        <SelectItem key={user.id} value={user.id}>
+                          {user.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+
+                {/* Filtro de data */}
+                <div className="flex gap-2 items-center">
+                  <Input
+                    type="date"
+                    placeholder="Data inicial"
+                    value={dateRange.from}
+                    onChange={(e) => setDateRange(prev => ({ ...prev, from: e.target.value }))}
+                    className="w-[140px]"
+                  />
+                  <span className="text-muted-foreground">até</span>
+                  <Input
+                    type="date"
+                    placeholder="Data final"
+                    value={dateRange.to}
+                    onChange={(e) => setDateRange(prev => ({ ...prev, to: e.target.value }))}
+                    className="w-[140px]"
+                  />
+                </div>
+
+              </div>
+            </div>
+          )}
+
           <CardContent>
             <div className="w-full overflow-auto">
               <Table>
@@ -1683,11 +2062,11 @@ setTimeout(observeIframeContent, 500);
                         return (
                           <TableHead key={colKey as string} className="w-7">
                             <Checkbox
-                              checked={isAllSelected}
-                              onCheckedChange={handleSelectAll}
+                              checked={selectedLeads.length === leads.length && leads.length > 0}
+                              onCheckedChange={handleSelectAllLeads}
                               ref={(el) => {
                                 if (el && 'indeterminate' in el) {
-                                  (el as any).indeterminate = isIndeterminate;
+                                  (el as any).indeterminate = selectedLeads.length > 0 && selectedLeads.length < leads.length;
                                 }
                               }}
                             />
@@ -1731,32 +2110,35 @@ setTimeout(observeIframeContent, 500);
                           '') || '-';
 
                       return (
-                        <TableRow key={lead.id} className={selectedLeads.has(lead.id) ? 'bg-muted/50' : ''}>
+                        <TableRow key={lead.id} className={selectedLeads.includes(lead.id) ? 'bg-muted/50' : ''}>
                         {visibleColumns.map(colKey => {
                             if (colKey === 'selecao') {
                               return (
                                 <TableCell key={`${lead.id}_selecao`} className="w-7">
                                   <Checkbox
-                                    checked={selectedLeads.has(lead.id)}
-                                    onCheckedChange={(checked) => {
-                                      if (checked) {
-                                        setSelectedLeads(prev => new Set([...prev, lead.id]));
-                                      } else {
-                                        setSelectedLeads(prev => {
-                                          const newSet = new Set(prev);
-                                          newSet.delete(lead.id);
-                                          return newSet;
-                                        });
-                                      }
-                                      setLastSelectedIndex(index);
-                                    }}
+                                    checked={selectedLeads.includes(lead.id)}
+                                    onCheckedChange={(checked) => handleSelectLead(lead.id, checked as boolean)}
                                   />
                                 </TableCell>
                               );
                             }
                           if (colKey === 'trash') {
+                            // Colaboradores não podem excluir leads
+                            if (isCollaborator) {
+                              console.log('🚫 Colaborador - ocultando botão de exclusão individual');
+                              return (
+                                <TableCell key={`${lead.id}_trash`}>
+                                  <div className="h-8 w-8"></div>
+                                </TableCell>
+                              );
+                            }
+                            console.log('✅ Usuário não-colaborador - mostrando botão de exclusão individual');
                             return (
-                              <TableCell key={`${lead.id}_trash`} onClick={(e) => { e.stopPropagation(); deleteLead(lead.id); }}>
+                              <TableCell key={`${lead.id}_trash`} onClick={(e) => { 
+                                e.stopPropagation(); 
+                                console.log('🗑️ Botão de exclusão individual clicado para lead:', lead.id);
+                                deleteLead(lead.id); 
+                              }}>
                                 <Button variant="outline" size="icon" className="h-8 w-8" title="Excluir">
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
@@ -1835,11 +2217,58 @@ setTimeout(observeIframeContent, 500);
                             }
                             
                             if (colKey === 'responsavel') {
-                              const raw = (lead as any).responsavel;
-                              const label = raw ? (responsibleNameMap[String(raw)] || '') : '';
-                          return (
-                                <TableCell key={`${lead.id}_${colKey}`}>{label}</TableCell>
-                          );
+                              const responsibleName = (lead as any).responsavel || '';
+                              const isEditingThisLead = editingResponsibleLeadId === lead.id;
+                              
+                              return (
+                                <TableCell key={`${lead.id}_${colKey}`}>
+                                  {isEditingThisLead ? (
+                                    <div className="flex items-center gap-2 max-w-[200px]">
+                                      <Select
+                                        value={inlineResponsibleId}
+                                        onValueChange={setInlineResponsibleId}
+                                      >
+                                        <SelectTrigger className="flex-1 min-w-0">
+                                          <SelectValue placeholder="Selecione um responsável" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="none">Sem responsável</SelectItem>
+                                          {responsibleOptions.map((user) => (
+                                            <SelectItem key={user.id} value={user.id}>
+                                              {user.label}
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => saveInlineResponsible(lead.id)}
+                                        className="h-6 w-6 p-0 flex-shrink-0"
+                                      >
+                                        <Check className="h-3 w-3 text-green-600" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={cancelInlineResponsibleEdit}
+                                        className="h-6 w-6 p-0 flex-shrink-0"
+                                      >
+                                        <X className="h-3 w-3 text-red-600" />
+                                      </Button>
+                                    </div>
+                                  ) : (
+                                    <div 
+                                      className="text-sm cursor-pointer px-2 py-1 rounded flex items-center gap-2 group"
+                                      onClick={() => startInlineResponsibleEdit(lead.id, (lead as any).responsible_id)}
+                                    >
+                                      <User className="h-3 w-3 text-muted-foreground" />
+                                      <span className="hover:underline">{responsibleName || 'Sem responsável'}</span>
+                                      <Pencil className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100" />
+                                    </div>
+                                  )}
+                                </TableCell>
+                              );
                             }
                             
                             return null;
@@ -1912,6 +2341,106 @@ setTimeout(observeIframeContent, 500);
           )}
         </Card>
       </div>
+
+      {/* Modal de confirmação para exclusão em lote */}
+      <Dialog open={isDeleteModalOpen} onOpenChange={setIsDeleteModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <Trash2 className="h-5 w-5" />
+              Confirmar Exclusão
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Você está prestes a excluir <strong>{selectedLeads.length} leads</strong> permanentemente.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Esta ação não pode ser desfeita.
+            </p>
+            
+            <div className="space-y-2">
+              <Label htmlFor="confirmation-number">
+                Digite <strong>{selectedLeads.length}</strong> para confirmar:
+              </Label>
+              <Input
+                id="confirmation-number"
+                type="text"
+                value={deleteConfirmationNumber}
+                onChange={(e) => setDeleteConfirmationNumber(e.target.value)}
+                placeholder={`Digite ${selectedLeads.length}`}
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsDeleteModalOpen(false);
+                setDeleteConfirmationNumber('');
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleBulkDelete}
+              disabled={deleteConfirmationNumber !== selectedLeads.length.toString()}
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Excluir {selectedLeads.length} Leads
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de confirmação para alteração de responsável em lote */}
+      <Dialog open={isBulkResponsibleModalOpen} onOpenChange={setIsBulkResponsibleModalOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <User className="h-5 w-5" />
+              Confirmar Alteração de Responsável
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Você está prestes a alterar o responsável de <strong>{selectedLeads.length} leads</strong>.
+            </p>
+            
+            <div className="space-y-2">
+              <Label>Novo responsável:</Label>
+              <div className="p-3 bg-muted rounded-md">
+                {bulkResponsibleId === 'none' ? 'Sem responsável' : 
+                 responsibleOptions.find(r => r.id === bulkResponsibleId)?.label || 'Nenhum'}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsBulkResponsibleModalOpen(false);
+                setBulkResponsibleId('');
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleBulkUpdateResponsible}
+              className="brand-radius"
+              variant="brandPrimaryToSecondary"
+            >
+              <User className="h-4 w-4 mr-2" />
+              Confirmar Alteração
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </GestaoLayout>
   );
 }

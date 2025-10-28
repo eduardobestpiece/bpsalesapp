@@ -45,8 +45,15 @@ export default function SettingsPerfil() {
   }, []);
 
   useEffect(() => {
-    if (!crmUser) return;
-    setFormData({
+    console.log('🔄 [PERFIL] useEffect executado, crmUser:', crmUser);
+    
+    if (!crmUser) {
+      console.log('⚠️ [PERFIL] crmUser não existe, retornando...');
+      return;
+    }
+    
+    console.log('✅ [PERFIL] crmUser existe, configurando formData...');
+    const newFormData = {
       first_name: crmUser.first_name || '',
       last_name: crmUser.last_name || '',
       email: crmUser.email || '',
@@ -54,12 +61,28 @@ export default function SettingsPerfil() {
       birth_date: (crmUser as any).birth_date || '',
       bio: (crmUser as any).bio || '',
       avatar_url: (crmUser as any).avatar_url || '',
+    };
+    
+    console.log('📝 [PERFIL] Novo formData:', newFormData);
+    console.log('📝 [PERFIL] birth_date detalhes:', {
+      original: (crmUser as any).birth_date,
+      processed: newFormData.birth_date,
+      type: typeof newFormData.birth_date
     });
+    
+    setFormData(newFormData);
     setAvatarPreview((crmUser as any).avatar_url || '');
   }, [crmUser]);
 
   const handleInputChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    console.log('📝 [PERFIL] handleInputChange chamado:', { field, value });
+    console.log('📝 [PERFIL] formData antes da mudança:', formData);
+    
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
+      console.log('📝 [PERFIL] formData após mudança:', newData);
+      return newData;
+    });
   };
 
   // Função para abrir modal de crop quando arquivo é selecionado
@@ -141,28 +164,167 @@ export default function SettingsPerfil() {
   };
 
   const handleSave = async () => {
-    if (!crmUser) return;
+    console.log('🔵 [PERFIL] Iniciando handleSave...');
+    console.log('🔵 [PERFIL] crmUser:', crmUser);
+    console.log('🔵 [PERFIL] formData atual:', formData);
+    
+    if (!crmUser) {
+      console.log('❌ [PERFIL] Erro: crmUser não existe');
+      return;
+    }
+    
     setIsSaving(true);
     try {
-      const { error } = await supabase
+      // Preparar dados para atualização, removendo campos vazios
+      const updateData: any = {};
+      
+      console.log('🔵 [PERFIL] Preparando dados para atualização...');
+      
+      // Campos obrigatórios que sempre existem (excluindo email que não pode ser alterado)
+      if (formData.first_name?.trim()) {
+        updateData.first_name = formData.first_name.trim();
+        console.log('✅ [PERFIL] Adicionando first_name:', updateData.first_name);
+      }
+      if (formData.last_name?.trim()) {
+        updateData.last_name = formData.last_name.trim();
+        console.log('✅ [PERFIL] Adicionando last_name:', updateData.last_name);
+      }
+      if (formData.phone?.trim()) {
+        updateData.phone = formData.phone.trim();
+        console.log('✅ [PERFIL] Adicionando phone:', updateData.phone);
+      }
+      
+      // Campos opcionais - só incluir se existirem valores válidos
+      // IMPORTANTE: birth_date deve ser null ou uma data válida, NUNCA string vazia
+      console.log('🔵 [PERFIL] Verificando birth_date:', {
+        value: formData.birth_date,
+        type: typeof formData.birth_date,
+        isEmpty: formData.birth_date === '',
+        isNull: formData.birth_date === null,
+        isUndefined: formData.birth_date === undefined
+      });
+      
+      if (formData.birth_date && typeof formData.birth_date === 'string' && formData.birth_date.trim() !== '') {
+        updateData.birth_date = formData.birth_date.trim();
+        console.log('✅ [PERFIL] Adicionando birth_date:', updateData.birth_date);
+      } else {
+        console.log('⏭️ [PERFIL] Pulando birth_date (vazio ou inválido)');
+      }
+      
+      if (formData.bio?.trim()) {
+        updateData.bio = formData.bio.trim();
+        console.log('✅ [PERFIL] Adicionando bio:', updateData.bio);
+      }
+      if (formData.avatar_url?.trim()) {
+        updateData.avatar_url = formData.avatar_url.trim();
+        console.log('✅ [PERFIL] Adicionando avatar_url:', updateData.avatar_url);
+      }
+      
+      // Garantir que campos sensíveis não sejam incluídos na atualização
+      delete updateData.email;
+      delete updateData.password_hash;
+      delete updateData.id;
+      delete updateData.created_at;
+      delete updateData.role;
+      delete updateData.company_id;
+      delete updateData.team_id;
+      delete updateData.leader_id;
+      delete updateData.status;
+      delete updateData.funnels;
+      delete updateData.user_id;
+      delete updateData.cpf;
+      delete updateData.avatar_base64;
+      delete updateData.updated_at;
+
+      console.log('🔵 [PERFIL] Dados finais para atualização:', updateData);
+      console.log('🔵 [PERFIL] ID do usuário:', crmUser.id);
+      console.log('🔵 [PERFIL] Quantidade de campos para atualizar:', Object.keys(updateData).length);
+
+      // Verificar se há dados para atualizar
+      if (Object.keys(updateData).length === 0) {
+        console.log('⚠️ [PERFIL] Nenhuma alteração detectada, cancelando atualização');
+        toast.info('Nenhuma alteração detectada');
+        return;
+      }
+
+      console.log('🚀 [PERFIL] Enviando requisição para Supabase...');
+      console.log('🚀 [PERFIL] URL:', 'https://hpjqetugksblfiojwhzh.supabase.co/rest/v1/crm_users');
+      console.log('🚀 [PERFIL] Método: PATCH');
+      console.log('🚀 [PERFIL] Payload:', JSON.stringify(updateData, null, 2));
+
+      const { data, error } = await supabase
         .from('crm_users')
-        .update({
-          first_name: formData.first_name,
-          last_name: formData.last_name,
-          phone: formData.phone,
-          birth_date: formData.birth_date,
-          bio: formData.bio,
-          avatar_url: formData.avatar_url,
-        })
-        .eq('id', crmUser.id);
+        .update(updateData)
+        .eq('id', crmUser.id)
+        .select();
 
-      if (error) throw error;
+      console.log('📥 [PERFIL] Resposta do Supabase:');
+      console.log('📥 [PERFIL] Data:', data);
+      console.log('📥 [PERFIL] Error:', error);
 
-      await updateCrmUserInContext();
-      toast.success('Perfil atualizado com sucesso!');
-    } catch (error) {
-      toast.error('Erro ao atualizar perfil');
+      if (error) {
+        console.log('❌ [PERFIL] Erro na atualização:');
+        console.log('❌ [PERFIL] Error object:', error);
+        console.log('❌ [PERFIL] Error message:', error.message);
+        console.log('❌ [PERFIL] Error code:', error.code);
+        console.log('❌ [PERFIL] Error details:', error.details);
+        console.log('❌ [PERFIL] Error hint:', error.hint);
+        console.log('❌ [PERFIL] Dados que causaram erro:', updateData);
+        
+        // Se o erro for relacionado a campos que não existem, tentar sem eles
+        if (error.message?.includes('column') && error.message?.includes('does not exist')) {
+          console.log('🔄 [PERFIL] Tentando atualização sem campos opcionais...');
+          
+          // Remover campos opcionais e tentar novamente
+          const safeUpdateData: any = {};
+          if (formData.first_name?.trim()) safeUpdateData.first_name = formData.first_name.trim();
+          if (formData.last_name?.trim()) safeUpdateData.last_name = formData.last_name.trim();
+          if (formData.phone?.trim()) safeUpdateData.phone = formData.phone.trim();
+          
+          console.log('🔄 [PERFIL] Dados seguros para retry:', safeUpdateData);
+          
+          const { error: retryError } = await supabase
+            .from('crm_users')
+            .update(safeUpdateData)
+            .eq('id', crmUser.id);
+            
+          if (retryError) {
+            console.log('❌ [PERFIL] Erro no retry:', retryError);
+            throw retryError;
+          }
+          
+          console.log('✅ [PERFIL] Retry bem-sucedido!');
+          toast.success('Perfil atualizado com sucesso! (Alguns campos não foram salvos)');
+        } else {
+          console.log('❌ [PERFIL] Erro não tratável, lançando exceção');
+          throw error;
+        }
+      } else {
+        console.log('✅ [PERFIL] Atualização bem-sucedida!');
+        console.log('✅ [PERFIL] Dados retornados:', data);
+        console.log('🔄 [PERFIL] Atualizando contexto...');
+        
+        await updateCrmUserInContext();
+        console.log('✅ [PERFIL] Contexto atualizado');
+        console.log('🔄 [PERFIL] Forçando refresh do contexto...');
+        
+        // Forçar refresh do contexto para garantir que os dados sejam atualizados
+        await refreshCrmUser();
+        console.log('✅ [PERFIL] Refresh do contexto concluído');
+        console.log('✅ [PERFIL] Dados do usuário após atualização:', crmUser);
+        
+        toast.success('Perfil atualizado com sucesso!');
+      }
+    } catch (error: any) {
+      console.log('💥 [PERFIL] Erro capturado no catch:');
+      console.log('💥 [PERFIL] Error object:', error);
+      console.log('💥 [PERFIL] Error message:', error?.message);
+      console.log('💥 [PERFIL] Error stack:', error?.stack);
+      console.log('💥 [PERFIL] Error type:', typeof error);
+      
+      toast.error('Erro ao atualizar perfil: ' + (error?.message || 'Erro desconhecido'));
     } finally {
+      console.log('🏁 [PERFIL] Finalizando handleSave, setIsSaving(false)');
       setIsSaving(false);
     }
   };
@@ -214,14 +376,7 @@ export default function SettingsPerfil() {
     <div className="space-y-6">
       {/* Seção de Avatar */}
       <div className="space-y-4">
-        <Label>Foto do Perfil</Label>
         <div className="flex items-center space-x-6">
-          {/* Preview atual */}
-          <Avatar className="h-24 w-24">
-            <AvatarImage src={avatarPreview} alt="Avatar" />
-            <AvatarFallback className="text-2xl">{userInitials}</AvatarFallback>
-          </Avatar>
-          
           {/* Upload area - baseado no sistema de logos */}
           <div className="space-y-2">
             <Label>Nova foto de perfil</Label>
@@ -333,74 +488,78 @@ export default function SettingsPerfil() {
             Digite uma nova senha para sua conta. A senha deve ter pelo menos 6 caracteres.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="newPassword">Nova Senha</Label>
-            <div className="relative">
-              <Input 
-                id="newPassword" 
-                type={showPassword ? 'text' : 'password'}
-                value={passwordData.newPassword} 
-                onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
-                placeholder="Digite sua nova senha"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                onClick={() => setShowPassword(!showPassword)}
+        <CardContent>
+          <form onSubmit={(e) => { e.preventDefault(); handlePasswordChange(); }} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">Nova Senha</Label>
+              <div className="relative">
+                <Input 
+                  id="newPassword" 
+                  type={showPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  value={passwordData.newPassword} 
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                  placeholder="Digite sua nova senha"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
+              <div className="relative">
+                <Input 
+                  id="confirmPassword" 
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  autoComplete="new-password"
+                  value={passwordData.confirmPassword} 
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
+                  placeholder="Confirme sua nova senha"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button 
+                type="submit"
+                disabled={isChangingPassword || !passwordData.newPassword || !passwordData.confirmPassword} 
+                variant="brandPrimaryToSecondary" 
+                className="brand-radius"
               >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4 text-muted-foreground" />
+                {isChangingPassword ? (
+                  <Loader2 size={16} className="animate-spin mr-2" />
                 ) : (
-                  <Eye className="h-4 w-4 text-muted-foreground" />
+                  <Lock size={16} className="mr-2" />
                 )}
+                <span>{isChangingPassword ? 'Alterando...' : 'Alterar Senha'}</span>
               </Button>
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirmar Nova Senha</Label>
-            <div className="relative">
-              <Input 
-                id="confirmPassword" 
-                type={showConfirmPassword ? 'text' : 'password'}
-                value={passwordData.confirmPassword} 
-                onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                placeholder="Confirme sua nova senha"
-              />
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              >
-                {showConfirmPassword ? (
-                  <EyeOff className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <Eye className="h-4 w-4 text-muted-foreground" />
-                )}
-              </Button>
-            </div>
-          </div>
-
-          <div className="flex justify-end">
-            <Button 
-              onClick={handlePasswordChange} 
-              disabled={isChangingPassword || !passwordData.newPassword || !passwordData.confirmPassword} 
-              variant="brandPrimaryToSecondary" 
-              className="brand-radius"
-            >
-              {isChangingPassword ? (
-                <Loader2 size={16} className="animate-spin mr-2" />
-              ) : (
-                <Lock size={16} className="mr-2" />
-              )}
-              <span>{isChangingPassword ? 'Alterando...' : 'Alterar Senha'}</span>
-            </Button>
-          </div>
+          </form>
         </CardContent>
       </Card>
 

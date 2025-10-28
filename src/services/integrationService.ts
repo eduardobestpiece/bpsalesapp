@@ -1092,6 +1092,31 @@ export class IntegrationService {
         companyTimezone: companyTimezone || 'America/Sao_Paulo'
       } : await this.collectSystemData();
 
+      // Buscar dados completos do responsável se ID estiver disponível
+      let responsibleUserData = null;
+      if (systemData.responsible_id) {
+        try {
+          const { data: userData, error: userError } = await supabase
+            .from('crm_users')
+            .select('id, first_name, last_name, email, phone')
+            .eq('id', systemData.responsible_id)
+            .single();
+
+          if (!userError && userData) {
+            responsibleUserData = {
+              responsavel_nome: `${userData.first_name} ${userData.last_name}`.trim(),
+              responsavel_primeiro_nome: userData.first_name,
+              responsavel_sobrenome: userData.last_name,
+              responsavel_email: userData.email,
+              responsavel_telefone: userData.phone || ''
+            };
+            console.log('👤 Dados do responsável carregados:', responsibleUserData);
+          }
+        } catch (error) {
+          console.error('❌ Erro ao buscar dados do responsável:', error);
+        }
+      }
+
       // Mapear campos do formulário para nomes do webhook
       const mappedFormFields = await this.mapFormFieldsToWebhookNames(formId, formFields);
 
@@ -1105,7 +1130,9 @@ export class IntegrationService {
         company_name: companyName,
         form_name: formName,
         lead_id: leadId || '', // NOVO: ID do lead
-        ...systemData
+        ...systemData,
+        // Incluir dados do responsável se disponível
+        ...(responsibleUserData && responsibleUserData)
       } as IntegrationData;
 
       console.log('📊 ===== DADOS FINAIS PARA INTEGRAÇÕES =====');
@@ -1121,6 +1148,13 @@ export class IntegrationService {
       console.log('📊 fbc:', integrationData.fbc || 'N/A');
       console.log('📊 fbp:', integrationData.fbp || 'N/A');
       console.log('📊 fbid:', integrationData.fbid || 'N/A');
+      console.log('📊 responsible_id:', integrationData.responsible_id || 'N/A');
+      console.log('📊 responsible_name:', integrationData.responsible_name || 'N/A');
+      console.log('📊 responsavel_nome:', integrationData.responsavel_nome || 'N/A');
+      console.log('📊 responsavel_primeiro_nome:', integrationData.responsavel_primeiro_nome || 'N/A');
+      console.log('📊 responsavel_sobrenome:', integrationData.responsavel_sobrenome || 'N/A');
+      console.log('📊 responsavel_email:', integrationData.responsavel_email || 'N/A');
+      console.log('📊 responsavel_telefone:', integrationData.responsavel_telefone || 'N/A');
       console.log('📊 Campos do formulário:', integrationData.form_fields);
 
       // Processar cada integração

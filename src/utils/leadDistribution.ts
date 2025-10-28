@@ -19,76 +19,67 @@ interface DistributionResult {
  * Distribui um lead automaticamente baseado na configuração do formulário
  * @param formId ID do formulário
  * @param companyId ID da empresa
+ * @param email Email do lead (opcional, para verificação de duplicatas)
+ * @param telefone Telefone do lead (opcional, para verificação de duplicatas)
  * @returns Objeto com responsible_id e responsible_name, ou null se não houver distribuição configurada
  */
-export async function distributeLead(formId: string, companyId: string): Promise<DistributionResult | null> {
+export async function distributeLead(
+  formId: string, 
+  companyId: string, 
+  email?: string, 
+  telefone?: string
+): Promise<DistributionResult | null> {
   try {
-    // Buscar configuração de distribuição ativa
-    const { data: distribution, error: distError } = await supabase
-      .from('lead_form_distributions')
-      .select('id, is_active')
-      .eq('lead_form_id', formId)
-      .eq('company_id', companyId)
-      .eq('is_active', true)
+    console.log('🎯 Iniciando distribuição para formId:', formId, 'companyId:', companyId);
+    console.log('📧 Email para verificação:', email);
+    console.log('📱 Telefone para verificação:', telefone);
+
+    // Usar a função SQL diretamente via RPC (incluindo verificação de duplicatas)
+    const { data: assignedUserId, error: assignError } = await supabase
+      .rpc('assign_lead_responsible' as any, {
+        p_form_id: formId,
+        p_company_id: companyId,
+        p_email: email || null,
+        p_telefone: telefone || null
+      });
+
+    if (assignError) {
+      console.log('❌ Erro ao atribuir responsável:', assignError);
+      return null;
+    }
+
+    if (!assignedUserId || typeof assignedUserId !== 'string') {
+      console.log('ℹ️ Nenhum responsável atribuído (sem distribuição configurada)');
+      return null;
+    }
+
+    console.log('✅ Responsável atribuído:', assignedUserId);
+
+    // Buscar dados do usuário responsável
+    const { data: userData, error: userError } = await supabase
+      .from('crm_users')
+      .select('id, first_name, last_name, email, phone')
+      .eq('id', assignedUserId)
       .single();
 
-    if (distError || !distribution) {
-      // Não há distribuição configurada ou não está ativa
-      return null;
-    }
-
-    // Buscar usuários da distribuição
-    const { data: distUsers, error: usersError } = await supabase
-      .from('lead_form_distribution_users')
-      .select(`
-        user_id,
-        user_name: crm_users.name,
-        number_weight,
-        percentage_weight
-      `)
-      .eq('distribution_id', distribution.id)
-      .order('created_at');
-
-    if (usersError || !distUsers || distUsers.length === 0) {
-      // Não há usuários na distribuição
-      return null;
-    }
-
-    // Algoritmo de distribuição baseado em peso
-    const totalWeight = distUsers.reduce((sum, user) => sum + user.number_weight, 0);
-    
-    if (totalWeight === 0) {
-      // Se todos os pesos são 0, distribuir igualmente
-      const randomIndex = Math.floor(Math.random() * distUsers.length);
+    if (userError || !userData) {
+      console.log('❌ Erro ao buscar dados do usuário:', userError);
       return {
-        responsible_id: distUsers[randomIndex].user_id,
-        responsible_name: distUsers[randomIndex].user_name
+        responsible_id: assignedUserId,
+        responsible_name: 'Usuário'
       };
     }
 
-    // Gerar número aleatório entre 1 e totalWeight
-    const randomNumber = Math.floor(Math.random() * totalWeight) + 1;
-    
-    // Encontrar usuário responsável baseado no peso
-    let currentWeight = 0;
-    for (const user of distUsers) {
-      currentWeight += user.number_weight;
-      if (randomNumber <= currentWeight) {
-        return {
-          responsible_id: user.user_id,
-          responsible_name: user.user_name
-        };
-      }
-    }
-
-    // Fallback: retornar o primeiro usuário
-    return {
-      responsible_id: distUsers[0].user_id,
-      responsible_name: distUsers[0].user_name
+    const result = {
+      responsible_id: assignedUserId,
+      responsible_name: `${userData.first_name} ${userData.last_name}`.trim()
     };
 
+    console.log('🎯 Distribuição concluída:', result);
+    return result;
+
   } catch (error) {
-    console.error('Erro na distribuição automática de leads:', error);
+    console.error('❌ Erro na distribuição automática de leads:', error);
     return null;
   }
 }
@@ -102,7 +93,7 @@ export async function distributeLead(formId: string, companyId: string): Promise
 export async function hasActiveDistribution(formId: string, companyId: string): Promise<boolean> {
   try {
     const { data, error } = await supabase
-      .from('lead_form_distributions')
+      .from('lead_form_distributions' as any)
       .select('id')
       .eq('lead_form_id', formId)
       .eq('company_id', companyId)
