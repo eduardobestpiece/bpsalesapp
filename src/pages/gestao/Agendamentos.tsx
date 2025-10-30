@@ -809,6 +809,7 @@ export default function GestaoAgendamentos() {
           <DialogContent className="max-w-[500px] p-[25px] max-h-[85vh] overflow-y-auto bg-[#1F1F1F] text-white border border-white/10">
             <div className="w-full bg-[#1F1F1F]/95 backdrop-blur-sm shadow-xl border border-white/10 rounded-md">
               <div className="p-6" style={fontStyle}>
+                <h2 className="text-lg font-semibold mb-4">Adicionar agendamento</h2>
                 <style>{`.focus-border:focus { border-color: var(--active-bc) !important; border-width: var(--focus-bw, 2px) !important; }`}</style>
                 <div className="flex flex-col">
                   <div className="space-y-2" style={{ marginBottom: `${spacingFieldsPx}px` }}>
