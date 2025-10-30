@@ -158,7 +158,7 @@ export const GestaoSidebar = () => {
               )}
               
               {/* Vendas - apenas para usuários com acesso à gestão */}
-              {permissions.canAccessGestao && (
+              {permissions.canAccessGestao && userRole !== 'user' && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActivePath('/gestao/vendas')}>
                     <Link to="/gestao/vendas">

@@ -29,6 +29,7 @@ export const SettingsSidebar = () => {
   const { userRole, companyId, crmUser, signOut } = useCrmAuth();
   const { selectedCompanyId, setSelectedCompanyId } = useCompany();
   const permissions = usePermissions();
+  const isCollaborator = userRole === 'user';
 
   const { data: companies = [], isLoading: companiesLoading } = useQuery({
     queryKey: ['companies'],
@@ -200,7 +201,7 @@ export const SettingsSidebar = () => {
           <SidebarGroupContent>
             <SidebarMenu>
               {/* 1. Campos - apenas para usuários com acesso a configurações */}
-              {permissions.canAccessConfigurations && (
+              {permissions.canAccessConfigurations && !isCollaborator && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/campos')}>
                     <Link to="/configuracoes/campos">
@@ -212,7 +213,7 @@ export const SettingsSidebar = () => {
               )}
 
               {/* 2. Formulários - apenas para usuários com acesso a configurações */}
-              {permissions.canAccessConfigurations && (
+              {permissions.canAccessConfigurations && !isCollaborator && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/formularios')}>
                     <Link to="/configuracoes/formularios">
@@ -224,7 +225,7 @@ export const SettingsSidebar = () => {
               )}
 
               {/* 3. Definições - apenas para usuários com acesso a configurações */}
-              {permissions.canAccessConfigurations && (
+              {permissions.canAccessConfigurations && !isCollaborator && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/gestao')}>
                     <Link to="/configuracoes/gestao">
@@ -236,7 +237,7 @@ export const SettingsSidebar = () => {
               )}
 
               {/* 4. Perfil - apenas para usuários com acesso ao perfil */}
-              {permissions.canAccessPerfil && !permissions.canAccessConfigurations && (
+              {(isCollaborator || (permissions.canAccessPerfil && !permissions.canAccessConfigurations)) && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/gestao')}>
                     <Link to="/configuracoes/gestao">
@@ -248,7 +249,7 @@ export const SettingsSidebar = () => {
               )}
 
               {/* 5. Master Config - apenas para masters */}
-              {permissions.canAccessMasterConfig && (
+              {permissions.canAccessMasterConfig && !isCollaborator && (
                 <SidebarMenuItem>
                   <SidebarMenuButton asChild isActive={isActivePath('/configuracoes/master')}>
                     <Link to="/configuracoes/master">

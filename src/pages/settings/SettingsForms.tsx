@@ -21,6 +21,7 @@ import { DistributionManager } from '@/components/Managers/DistributionManager';
 import { loadFormRedirectConfig, saveFormRedirectConfig, RedirectConfig } from '@/utils/redirectManager';
 import { IntegrationsManager } from '@/components/Integrations/IntegrationsManager';
 import { Trash2 } from 'lucide-react';
+import { useCrmAuth } from '@/contexts/CrmAuthContext';
 import {
   DndContext,
   closestCenter,
@@ -488,7 +489,6 @@ const SortableField = ({
     </div>
   );
 };
-
 // Lista de moedas (mesma da página Campos Lead)
 const currencies = [
   { code: 'BRL', name: 'Real Brasileiro', symbol: 'R$' },
@@ -861,7 +861,6 @@ export default function SettingsForms() {
       console.error('❌ Erro ao salvar texto do botão ao salvar campos:', error);
     }
   };
-
   // Função para copiar estilo entre formulários
   const copyStyleToForms = async (sourceForm: string, targetForms: string[]) => {
     try {
@@ -1790,6 +1789,406 @@ setTimeout(observeIframeContent, 500);
     setShowIframeDialog(true);
   };
 
+  // Função para gerar código iframe de agendamentos
+  const generateAppointmentIframeCode = () => {
+    const baseUrl = window.location.origin;
+    const timestamp = Date.now();
+    const randomId = Math.random().toString(36).substring(7);
+    const formUrl = `${baseUrl}/appointment/12483128-c840-40b2-aed5-1cbb550331b6?v=${timestamp}&r=${randomId}`;
+    
+    const iframeHtml = `<iframe 
+  src="${formUrl}
+  " 
+  width="100%" 
+  height="600" 
+  frameborder="0" 
+  id="form-iframe"
+  style="border: none; border-radius: 8px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);"
+  title="Formulário de Agendamento"
+></iframe>
+<script>
+  (function() {
+    // ===== SISTEMA DE TRACKING AVANÇADO =====
+    // Função para obter parâmetros da URL da página pai
+    function getParentUrlParams() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const params = {};
+      for (const [key, value] of urlParams.entries()) {
+        params[key] = value;
+      }
+      return params;
+    }
+    
+    // Função para obter cookies da página pai
+    function getParentCookie(name) {
+      const value = \`; \${document.cookie}\`;
+      const parts = value.split(\`; \${name}=\`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+      return '';
+    }
+    
+    // Função para capturar dados de tracking da página pai
+    function captureParentTrackingData() {
+      const urlParams = getParentUrlParams();
+      
+      const trackingData = {
+        parentUrl: window.location.href,
+        parentUrlParams: urlParams,
+        utmSource: urlParams.utm_source || '',
+        utmMedium: urlParams.utm_medium || '',
+        utmCampaign: urlParams.utm_campaign || '',
+        utmContent: urlParams.utm_content || '',
+        utmTerm: urlParams.utm_term || '',
+        gclid: urlParams.gclid || '',
+        fbclid: urlParams.fbclid || '',
+        fbc: getParentCookie('_fbc') || '',
+        fbp: getParentCookie('_fbp') || '',
+        fbid: getParentCookie('_fbid') || '',
+        referrer: document.referrer || '',
+        userAgent: navigator.userAgent,
+        timestamp: new Date().toISOString()
+      };
+      
+      return trackingData;
+    }
+    
+    // Função para enviar dados de tracking para o iframe
+    function sendTrackingDataToIframe() {
+      const trackingData = captureParentTrackingData();
+      const iframe = document.getElementById('form-iframe');
+      
+      if (iframe && iframe.contentWindow) {
+        try {
+          iframe.contentWindow.postMessage({
+            type: 'PARENT_TRACKING_DATA',
+            data: trackingData
+          }, '*');
+        } catch (error) {
+          // Erro silencioso
+        }
+      }
+    }
+    
+    // Função para responder a solicitações do iframe
+    function handleIframeRequests(event) {
+      if (event.data && typeof event.data === 'object') {
+        if (event.data.type === 'REQUEST_PARENT_URL') {
+          event.source.postMessage({
+            type: 'PARENT_URL_RESPONSE',
+            url: window.location.href
+          }, '*');
+        } else if (event.data.type === 'REQUEST_COOKIE') {
+          const cookieValue = getParentCookie(event.data.cookieName);
+          event.source.postMessage({
+            type: 'PARENT_COOKIE_RESPONSE',
+            cookieName: event.data.cookieName,
+            cookieValue: cookieValue
+          }, '*');
+        } else if (event.data.type === 'REQUEST_TRACKING_DATA') {
+          const trackingData = captureParentTrackingData();
+          event.source.postMessage({
+            type: 'PARENT_TRACKING_RESPONSE',
+            data: trackingData
+          }, '*');
+        }
+      }
+    }
+    
+    // Inicializar sistema de tracking
+    function initTracking() {
+      window.addEventListener('message', handleIframeRequests);
+      
+      const iframe = document.getElementById('form-iframe');
+      if (iframe) {
+        iframe.onload = function() {
+          setTimeout(sendTrackingDataToIframe, 100);
+          setTimeout(sendTrackingDataToIframe, 500);
+          setTimeout(sendTrackingDataToIframe, 1000);
+        };
+        
+        if (iframe.contentDocument && iframe.contentDocument.readyState === 'complete') {
+          setTimeout(sendTrackingDataToIframe, 100);
+        }
+      }
+      
+      setInterval(sendTrackingDataToIframe, 2000);
+      
+      window.addEventListener('focus', () => {
+        setTimeout(sendTrackingDataToIframe, 100);
+      });
+      
+      let currentUrl = window.location.href;
+      const urlObserver = new MutationObserver(() => {
+        if (window.location.href !== currentUrl) {
+          currentUrl = window.location.href;
+          setTimeout(sendTrackingDataToIframe, 100);
+        }
+      });
+      
+      urlObserver.observe(document.body, {
+        childList: true,
+        subtree: true
+      });
+    }
+    
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initTracking);
+    } else {
+      initTracking();
+    }
+  })();
+  
+  // ===== SISTEMA DE REDIMENSIONAMENTO DO IFRAME =====
+  function resizeIframe(height) {
+    const iframe = document.getElementById('form-iframe');
+    if (iframe) {
+      const minHeight = 300;
+      const finalHeight = Math.max(minHeight, height);
+      iframe.style.height = finalHeight + 'px';
+      iframe.style.minHeight = finalHeight + 'px';
+      iframe.style.maxHeight = finalHeight + 'px';
+    }
+  }
+
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'resize') {
+      resizeIframe(event.data.height);
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const iframe = document.getElementById('form-iframe');
+    if (iframe) {
+      iframe.onload = function() {
+        setTimeout(function() {
+          try {
+            const allElements = iframe.contentWindow.document.querySelectorAll('*');
+            let maxBottom = 0;
+            
+            allElements.forEach(function(element) {
+              const rect = element.getBoundingClientRect();
+              const elementBottom = rect.bottom;
+              if (elementBottom > maxBottom) {
+                maxBottom = elementBottom;
+              }
+            });
+            
+            const bodyHeight = iframe.contentWindow.document.body.scrollHeight;
+            const documentHeight = iframe.contentWindow.document.documentElement.scrollHeight;
+            
+            const rootElement = iframe.contentWindow.document.getElementById('root') || iframe.contentWindow.document.body;
+            const rootRect = rootElement.getBoundingClientRect();
+            const rootBottom = rootRect.bottom;
+            
+            const calculatedHeight = Math.max(
+              bodyHeight, 
+              documentHeight, 
+              maxBottom,
+              rootBottom
+            );
+            
+            const finalHeight = Math.max(150, Math.ceil(calculatedHeight));
+            resizeIframe(finalHeight);
+          } catch (e) {
+            // Fallback para casos de CORS
+          }
+        }, 100);
+      };
+      
+      window.addEventListener('resize', function() {
+        try {
+          const allElements = iframe.contentWindow.document.querySelectorAll('*');
+          let maxBottom = 0;
+          
+          allElements.forEach(function(element) {
+            const rect = element.getBoundingClientRect();
+            const elementBottom = rect.bottom;
+            if (elementBottom > maxBottom) {
+              maxBottom = elementBottom;
+            }
+          });
+          
+          const bodyHeight = iframe.contentWindow.document.body.scrollHeight;
+          const documentHeight = iframe.contentWindow.document.documentElement.scrollHeight;
+          
+          const rootElement = iframe.contentWindow.document.getElementById('root') || iframe.contentWindow.document.body;
+          const rootRect = rootElement.getBoundingClientRect();
+          const rootBottom = rootRect.bottom;
+          
+          const calculatedHeight = Math.max(
+            bodyHeight, 
+            documentHeight, 
+            maxBottom,
+            rootBottom
+          );
+          
+          const finalHeight = Math.max(150, Math.ceil(calculatedHeight));
+          resizeIframe(finalHeight);
+        } catch (e) {
+          // Fallback para casos de CORS
+        }
+      });
+      
+      const resizeAttempts = [500, 1000, 1500, 2000, 3000];
+      resizeAttempts.forEach(delay => {
+        setTimeout(function() {
+          try {
+            const allElements = iframe.contentWindow.document.querySelectorAll('*');
+            let maxBottom = 0;
+            
+            allElements.forEach(function(element) {
+              const rect = element.getBoundingClientRect();
+              const elementBottom = rect.bottom;
+              if (elementBottom > maxBottom) {
+                maxBottom = elementBottom;
+              }
+            });
+            
+            const bodyHeight = iframe.contentWindow.document.body.scrollHeight;
+            const documentHeight = iframe.contentWindow.document.documentElement.scrollHeight;
+            
+            const rootElement = iframe.contentWindow.document.getElementById('root') || iframe.contentWindow.document.body;
+            const rootRect = rootElement.getBoundingClientRect();
+            const rootBottom = rootRect.bottom;
+            
+            const calculatedHeight = Math.max(
+              bodyHeight, 
+              documentHeight, 
+              maxBottom,
+              rootBottom
+            );
+            
+            const finalHeight = Math.max(150, Math.ceil(calculatedHeight));
+            resizeIframe(finalHeight);
+          } catch (e) {
+            // Tentativa de redimensionamento via postMessage
+          }
+        }, delay);
+      });
+    }
+  });
+
+  function observeIframeContent() {
+    const iframe = document.getElementById('form-iframe');
+    if (iframe && iframe.contentWindow) {
+      try {
+        const observer = new MutationObserver(function() {
+          try {
+            const bodyHeight = iframe.contentWindow.document.body.scrollHeight;
+            const documentHeight = iframe.contentWindow.document.documentElement.scrollHeight;
+            const windowHeight = iframe.contentWindow.innerHeight;
+            
+            const rootElement = iframe.contentWindow.document.getElementById('root') || iframe.contentWindow.document.body;
+            const rootHeight = rootElement.scrollHeight;
+            
+            const calculatedHeight = Math.max(bodyHeight, documentHeight, windowHeight, rootHeight);
+            const finalHeight = Math.max(300, calculatedHeight + 20);
+            resizeIframe(finalHeight);
+          } catch (e) {
+            // Fallback para casos de CORS
+          }
+        });
+        
+        observer.observe(iframe.contentWindow.document.body, {
+          childList: true,
+          subtree: true,
+          attributes: true
+        });
+        
+        const stepObserver = new MutationObserver(function(mutations) {
+          let shouldResize = false;
+          
+          mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList') {
+              mutation.addedNodes.forEach(function(node) {
+                if (node.nodeType === 1) {
+                  if (node.hasAttribute('data-radix-select-content') || 
+                      node.hasAttribute('data-radix-dropdown-menu-content') ||
+                      node.classList?.contains('select-content') ||
+                      node.classList?.contains('phone-dropdown-content')) {
+                    return;
+                  }
+                  
+                  if (node.tagName === 'INPUT' || node.tagName === 'SELECT' || 
+                      node.tagName === 'BUTTON' || node.tagName === 'DIV' ||
+                      node.classList?.contains('step') || node.classList?.contains('form-step')) {
+                    shouldResize = true;
+                  }
+                }
+              });
+              
+              mutation.removedNodes.forEach(function(node) {
+                if (node.nodeType === 1) {
+                  if (node.hasAttribute('data-radix-select-content') || 
+                      node.hasAttribute('data-radix-dropdown-menu-content') ||
+                      node.classList?.contains('select-content') ||
+                      node.classList?.contains('phone-dropdown-content')) {
+                    return;
+                  }
+                  
+                  if (node.tagName === 'INPUT' || node.tagName === 'SELECT' || 
+                      node.tagName === 'BUTTON' || node.tagName === 'DIV' ||
+                      node.classList?.contains('step') || node.classList?.contains('form-step')) {
+                    shouldResize = true;
+                  }
+                }
+              });
+            }
+            
+            if (mutation.type === 'attributes' && 
+                (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
+              const target = mutation.target;
+              if (target && (
+                  target.hasAttribute('data-radix-select-content') || 
+                  target.hasAttribute('data-radix-dropdown-menu-content') ||
+                  target.classList?.contains('select-content') ||
+                  target.classList?.contains('phone-dropdown-content'))) {
+                return;
+              }
+              shouldResize = true;
+            }
+          });
+          
+          if (shouldResize) {
+            setTimeout(function() {
+              try {
+                const bodyHeight = iframe.contentWindow.document.body.scrollHeight;
+                const documentHeight = iframe.contentWindow.document.documentElement.scrollHeight;
+                const windowHeight = iframe.contentWindow.innerHeight;
+                
+                const rootElement = iframe.contentWindow.document.getElementById('root') || iframe.contentWindow.document.body;
+                const rootHeight = rootElement.scrollHeight;
+                
+                const calculatedHeight = Math.max(bodyHeight, documentHeight, windowHeight, rootHeight);
+                const finalHeight = Math.max(300, calculatedHeight + 20);
+                resizeIframe(finalHeight);
+              } catch (e) {
+                // Fallback para casos de CORS
+              }
+            }, 100);
+          }
+        });
+        
+        stepObserver.observe(iframe.contentWindow.document.body, {
+          childList: true,
+          subtree: true,
+          attributes: true,
+          attributeFilter: ['style', 'class', 'data-step']
+        });
+        
+      } catch (e) {
+        // Fallback para casos de CORS
+      }
+    }
+  }
+
+  setTimeout(observeIframeContent, 500);
+</script>`;
+
+    setIframeCode(iframeHtml);
+    setShowIframeDialog(true);
+  };
+
   // Função para gerar código HTML completo
   const generateHtmlCode = () => {
     if (!selectedLeadForm?.id) {
@@ -2151,7 +2550,6 @@ setTimeout(observeIframeContent, 500);
         return optionsString.split(',').map(opt => opt.trim()).filter(opt => opt);
       }
     };
-
     // Gerar campos do formulário
     const generateFormFields = () => {
       if (!selectedFields || selectedFields.length === 0) {
@@ -3093,7 +3491,6 @@ setTimeout(observeIframeContent, 500);
     btnRadius, btnBorderWidth, btnBorderWidthActive,
     btnBorderColor, btnBorderColorActive,
   });
-
   const applyAgStyleToState = (s: Partial<StyleCfg>) => {
     if (typeof s.spacingFieldsPx === 'number') setSpacingFieldsPx(s.spacingFieldsPx);
     if (typeof s.previewFont === 'string') setPreviewFont(s.previewFont);
@@ -3585,7 +3982,6 @@ setTimeout(observeIframeContent, 500);
           </div>
         )}
       </div>
-
       {/* Botão */}
       <div className="space-y-3">
         <div className="flex items-center justify-between rounded-md px-2 py-1 cursor-pointer hover:bg-[#2A2A2A]" onClick={() => setOpenSection(openSection === 'button' ? null : 'button')}>
@@ -3612,7 +4008,7 @@ setTimeout(observeIframeContent, 500);
                       className="h-10 w-[150px] bg-[#1F1F1F] border-white/20 text-white rounded-md border px-3" />
                   );
                 })()}
-            </div>
+              </div>
             </div>
             <div className="flex items-center justify-between gap-4 py-2">
               <Label className="flex-shrink-0 w-[200px] text-sm text-white">Raio da borda do botão (px)</Label>
@@ -3686,7 +4082,7 @@ setTimeout(observeIframeContent, 500);
                       className="h-10 w-[150px] bg-[#1F1F1F] border-white/20 text-white rounded-md border px-3" />
                   );
                 })()}
-            </div>
+              </div>
             </div>
             <div className="flex items-center justify-between gap-4 py-2">
               <Label className="flex-shrink-0 w-[200px] text-sm text-white">Espessura da borda do botão (pressionado) (px)</Label>
@@ -4085,7 +4481,6 @@ setTimeout(observeIframeContent, 500);
           </TabsContent>
         </Tabs>
       )}
-
       {main === 'agendamentos' && (
         <Tabs value={subTabs.agendamentos} onValueChange={(v: any) => setSubTabs(prev => ({ ...prev, agendamentos: v }))} className="w-full">
           <TabsList className="flex gap-2 bg-transparent p-0 rounded-none w-fit">
@@ -4445,7 +4840,7 @@ setTimeout(observeIframeContent, 500);
             <div className="space-y-4">
               <div className="border-t border-white/10 pt-6">
                 <IntegrationsManager 
-                  formId="agendamentos-form" 
+                  formId="12483128-c840-40b2-aed5-1cbb550331b6" 
                   formType="agendamentos" 
                 />
               </div>
@@ -4459,7 +4854,6 @@ setTimeout(observeIframeContent, 500);
           </TabsContent>
         </Tabs>
       )}
-
       {main === 'resultados' && (
         <Tabs value={subTabs.resultados} onValueChange={(v: any) => setSubTabs(prev => ({ ...prev, resultados: v }))} className="w-full">
           <TabsList className="flex gap-2 bg-transparent p-0 rounded-none w-fit">
@@ -4769,6 +5163,7 @@ setTimeout(observeIframeContent, 500);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const { selectedCompanyId } = useCompany();
+  const { userRole, crmUser } = useCrmAuth();
   const [leads, setLeads] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
   const [meetings, setMeetings] = useState<any[]>([]);
@@ -4808,13 +5203,52 @@ setTimeout(observeIframeContent, 500);
     const load = async () => {
       if (!selectedCompanyId) { setLeads([]); setUsers([]); setMeetings([]); setLossReasons([]); setOrigins([]); return; }
       try {
+        let leadsQuery = supabase.from('leads').select('id, nome, email, telefone').eq('company_id', selectedCompanyId).limit(200);
+        if (!(userRole === 'admin' || userRole === 'master')) {
+          if (crmUser?.id) leadsQuery = leadsQuery.eq('responsible_id', crmUser.id);
+        }
         const [{ data: leadsData }, { data: usersData }, { data: lossReasonsData }, { data: originsData }] = await Promise.all([
-          supabase.from('leads').select('id, nome, email, telefone').eq('company_id', selectedCompanyId).limit(200),
+          leadsQuery,
           supabase.from('crm_users').select('id, first_name, last_name, email, phone, company_id').eq('company_id', selectedCompanyId).limit(200),
           (supabase as any).from('loss_reasons').select('id, name, justificativa_obrigatoria').eq('company_id', selectedCompanyId).eq('status', 'active').order('created_at', { ascending: false }),
           (supabase as any).from('lead_origins').select('id, name').eq('company_id', selectedCompanyId).order('created_at', { ascending: false }),
         ]);
-        setLeads(leadsData || []);
+
+        // Enriquecer leads com nome/email vindos de lead_field_values quando existirem
+        const baseLeads = leadsData || [];
+        const leadIds = baseLeads.map((l: any) => l.id);
+        let enrichedLeads = baseLeads as any[];
+        if (leadIds.length > 0) {
+          const { data: leadFields } = await (supabase as any)
+            .from('lead_fields')
+            .select('id, type')
+            .eq('company_id', selectedCompanyId);
+          const nameFieldId = (leadFields || []).find((f: any) => f.type === 'name')?.id;
+          const emailFieldId = (leadFields || []).find((f: any) => f.type === 'email')?.id;
+          if (nameFieldId || emailFieldId) {
+            const { data: fieldValues } = await (supabase as any)
+              .from('lead_field_values')
+              .select('lead_id, field_id, value_text')
+              .in('lead_id', leadIds)
+              .in('field_id', [nameFieldId, emailFieldId].filter(Boolean));
+            const valuesMap = new Map<string, Record<string, string>>();
+            (fieldValues || []).forEach((v: any) => {
+              const byLead = valuesMap.get(v.lead_id) || {};
+              byLead[v.field_id] = v.value_text || '';
+              valuesMap.set(v.lead_id, byLead);
+            });
+            enrichedLeads = baseLeads.map((l: any) => {
+              const v = valuesMap.get(l.id) || {};
+              const computed_name = (nameFieldId && v[nameFieldId]) || l.nome || '';
+              const computed_email = (emailFieldId && v[emailFieldId]) || l.email || '';
+              return { ...l, computed_name, computed_email };
+            });
+          } else {
+            enrichedLeads = baseLeads.map((l: any) => ({ ...l, computed_name: l.nome || '', computed_email: l.email || '' }));
+          }
+        }
+
+        setLeads(enrichedLeads);
         setUsers(usersData || []);
         setLossReasons(lossReasonsData || []);
         setOrigins(originsData || []);
@@ -4896,7 +5330,7 @@ setTimeout(observeIframeContent, 500);
           <Button 
             type="button" 
             variant="outline"
-            onClick={generateIframeCode}
+            onClick={title === 'Agendamentos' ? generateAppointmentIframeCode : generateIframeCode}
             className="border-white/20 text-white hover:bg-white/10"
           >
             Gerar Iframe
@@ -4925,7 +5359,7 @@ setTimeout(observeIframeContent, 500);
                   <div className="space-y-2" style={{ marginBottom: `${spacingFieldsPx}px` }}>
                     <Label style={labelStyle}>Selecione o tipo de Reunião</Label>
                     <Select value={agType} onValueChange={(v: any) => setAgType(v)}>
-                      <SelectTrigger className="h-12 text-base focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-border focus-border" style={{ ...fieldStyle, ...(fontStyle||{}), ['--active-bc' as any]: borderColorActive, ['--focus-bw' as any]: `${borderWidthFocusPx}px` }}>
+                      <SelectTrigger className="h-12 text-base focus:ring-0 focus:ring-offset-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-border" style={{ ...fieldStyle, ...(fontStyle||{}), ['--active-bc' as any]: borderColorActive, ['--focus-bw' as any]: `${borderWidthFocusPx}px` }}>
                         <SelectValue placeholder="Selecione o tipo de Reunião" />
                       </SelectTrigger>
                       <SelectContent className="bg-[#2A2A2A] border-white/20 text-white" style={{ ...(fontStyle||{}), ['--selBg' as any]: selectBgColor, ['--selFg' as any]: selectTextColor, fontSize: `${fontSizeInputPx}px` }}>
@@ -4962,17 +5396,22 @@ setTimeout(observeIframeContent, 500);
                                   const q = leadQuery.toLowerCase();
                                   return (
                                     !q ||
-                                    (l.nome || '').toLowerCase().includes(q) ||
-                                    (l.email || '').toLowerCase().includes(q) ||
+                                    (l.computed_name || '').toLowerCase().includes(q) ||
+                                    (l.computed_email || '').toLowerCase().includes(q) ||
                                     (l.telefone || '').toLowerCase().includes(q)
                                   );
                                 })
                                 .slice(0, 50)
-                                .map((l) => (
-                                  <SelectItem key={l.id} value={l.id} className="text-base data-[highlighted]:bg-[var(--selBg)] data-[highlighted]:text-[var(--selFg)] data-[state=checked]:bg-[var(--selBg)] data-[state=checked]:text-[var(--selFg)]" style={{ ...(fontStyle||{}), fontSize: `${fontSizeInputPx}px` }}>
-                                    {l.nome || l.email || l.telefone}
-                                  </SelectItem>
-                                ))}
+                                .map((l) => {
+                                  const displayName = (l as any).computed_name || l.nome || '';
+                                  const displayEmail = (l as any).computed_email || l.email || '';
+                                  const label = [displayName, displayEmail].filter(Boolean).join(' — ');
+                                  return (
+                                    <SelectItem key={l.id} value={l.id} className="text-base data-[highlighted]:bg-[var(--selBg)] data-[highlighted]:text-[var(--selFg)] data-[state=checked]:bg-[var(--selBg)] data-[state=checked]:text-[var(--selFg)]" style={{ ...(fontStyle||{}), fontSize: `${fontSizeInputPx}px` }}>
+                                      {label || l.telefone || 'Lead sem dados'}
+                                    </SelectItem>
+                                  );
+                                })}
                             </SelectContent>
                           </Select>
                           <Button type="button" className="h-12 px-3 border hover:bg-[var(--selBg)] hover:text-[var(--selFg)]" variant="ghost" title="Adicionar lead" style={{ backgroundColor: fieldBgColor, color: fieldTextColor, borderColor: borderColorNormal, borderWidth: borderWidthNormalPx, borderRadius: borderRadiusPx }}>
@@ -5383,7 +5822,6 @@ setTimeout(observeIframeContent, 500);
                       </div>
                     </div>
                   )}
-
                   {/* Agendou nova reunião? (aparece apenas quando não houve fechamento) */}
                   {sameHost === 'sim' && hasClosing === 'nao' && (
                     <div className="space-y-2" style={{ ...(selectorVars as any), marginBottom: `${cfg.spacingFieldsPx}px` }}>
@@ -5690,7 +6128,6 @@ setTimeout(observeIframeContent, 500);
                           />
                         </div>
                       )}
-                            
                             {field.type === 'number' && (
                               <Input
                                 type="number"
@@ -6024,10 +6461,10 @@ setTimeout(observeIframeContent, 500);
                                     </div>
                                     {field.connection_list === 'leads' && leads.filter(lead => 
                                       !fieldValues[`${fieldId}_search`] || 
-                                      (lead.name || lead.email || '').toLowerCase().includes(fieldValues[`${fieldId}_search`].toLowerCase())
+                                      (lead.computed_name || lead.computed_email || '').toLowerCase().includes(fieldValues[`${fieldId}_search`].toLowerCase())
                                     ).map((lead) => (
                                       <SelectItem key={lead.id} value={lead.id} className="data-[highlighted]:bg-[var(--selBg)] data-[highlighted]:text-[var(--selFg)] data-[state=checked]:bg-[var(--selBg)] data-[state=checked]:text-[var(--selFg)]" style={{ ...(fontStyle||{}), fontSize: `${cfg.fontSizeInputPx}px` }}>
-                                        {lead.name || lead.email}
+                                        {lead.computed_name || lead.computed_email || lead.telefone}
                                       </SelectItem>
                                     ))}
                                     {field.connection_list === 'users' && users.filter(user => 
@@ -6097,7 +6534,6 @@ setTimeout(observeIframeContent, 500);
                                 }}
                               />
                             )}
-                            
                             {field.type === 'checkbox' && (
                               <div className="space-y-2">
                                 
@@ -6496,7 +6932,6 @@ setTimeout(observeIframeContent, 500);
       </div>
     );
   };
-
   return (
     <div className="space-y-4">
       <div>

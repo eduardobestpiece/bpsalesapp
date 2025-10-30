@@ -55,12 +55,12 @@ export function usePermissions(): PermissionConfig {
   // Colaborador: acesso limitado
   if (userRole === 'user') {
     return {
-      canAccessConfigurations: false, // Colaborador não tem acesso às configurações
-      canAccessGestao: false, // Colaborador não tem acesso à gestão
+      canAccessConfigurations: true, // Pode acessar módulo Configurações (apenas Perfil pelas rotas/guardas)
+      canAccessGestao: true, // Pode acessar módulo Gestão
       canAccessMasterConfig: false,
       canManageUsers: false,
-      canAccessPerfil: true, // Apenas aba Perfil via rota direta
-      canAccessLeads: false,  // Colaborador não tem acesso aos leads
+      canAccessPerfil: true, // Apenas aba Perfil
+      canAccessLeads: true,  // Acesso às páginas de Leads
       canAccessSimulator: false, // Colaborador não tem acesso ao Simulador
     };
   }

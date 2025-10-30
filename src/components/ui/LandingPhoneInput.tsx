@@ -62,6 +62,7 @@ interface LandingPhoneInputProps {
   borderWidthNormalPx?: number;
   borderWidthFocusPx?: number;
   fontSizeInputPx?: number;
+  verifyExistence?: boolean;
 }
 
 export const LandingPhoneInput: React.FC<LandingPhoneInputProps> = ({
@@ -84,9 +85,12 @@ export const LandingPhoneInput: React.FC<LandingPhoneInputProps> = ({
   borderWidthNormalPx = 1,
   borderWidthFocusPx = 2,
   fontSizeInputPx = 16,
+  verifyExistence = false,
 }) => {
   const [selectedCountry, setSelectedCountry] = useState<Country>(countries[0]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isChecking, setIsChecking] = useState(false);
+  const [existsError, setExistsError] = useState<string | null>(null);
 
   useEffect(() => {
     if (onDdiChange) {
@@ -127,6 +131,7 @@ export const LandingPhoneInput: React.FC<LandingPhoneInputProps> = ({
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatPhoneNumber(e.target.value);
     onChange(formatted);
+    setExistsError(null);
   };
 
   const validatePhone = (phone: string) => {
@@ -134,7 +139,8 @@ export const LandingPhoneInput: React.FC<LandingPhoneInputProps> = ({
     
     switch (selectedCountry.code) {
       case 'BR':
-        return numbers.length >= 10 && numbers.length <= 11;
+        // Brasil: exigir exatamente 11 dígitos (fora DDI)
+        return numbers.length === 11;
       case 'US':
       case 'CA':
         return numbers.length === 10;
@@ -182,6 +188,39 @@ export const LandingPhoneInput: React.FC<LandingPhoneInputProps> = ({
   };
 
   const isValid = value ? validatePhone(value) : true;
+
+  // Verificação de existência (opcional) ao perder foco
+  const checkExistence = async () => {
+    if (!verifyExistence) return;
+    try {
+      setIsChecking(true);
+      setExistsError(null);
+      const digits = (value || '').replace(/\D/g, '');
+      if (!digits) { setIsChecking(false); return; }
+      // Montar E.164 com DDI selecionado
+      const ddi = selectedCountry.ddi.replace(/\D/g, '');
+      const e164 = `+${ddi}${digits}`;
+      const res = await fetch('/functions/v1/validate-phone', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: e164 })
+      });
+      const data = await res.json();
+      if (data?.skipped) {
+        // Sem provider configurado: não bloquear
+        setExistsError(null);
+      } else if (data?.valid === false) {
+        setExistsError('Número inexistente ou inválido.');
+      } else {
+        setExistsError(null);
+      }
+    } catch {
+      // Falha de rede: não bloquear o usuário
+      setExistsError(null);
+    } finally {
+      setIsChecking(false);
+    }
+  };
 
   // Filtrar países baseado na pesquisa
   const filteredCountries = countries.filter(country => 
@@ -426,7 +465,15 @@ export const LandingPhoneInput: React.FC<LandingPhoneInputProps> = ({
             e.currentTarget.style.setProperty('border-color', borderColorNormal, 'important');
             e.currentTarget.style.setProperty('border-width', `${borderWidthNormalPx}px`, 'important');
           }}
+          onBlur={checkExistence}
         />
+
+      {isChecking && (
+        <p className="text-xs text-muted-foreground mt-1">Verificando telefone...</p>
+      )}
+      {existsError && (
+        <p className="text-red-500 text-sm mt-1">{existsError}</p>
+      )}
       </div>
       
       {error && (

@@ -1,7 +1,7 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-type Module = 'simulator' | 'settings' | 'gestao';
+type Module = 'simulator' | 'settings' | 'gestao' | 'prospeccao';
 
 interface ModuleContextType {
   currentModule: Module;
@@ -9,6 +9,7 @@ interface ModuleContextType {
   isSimulatorModule: boolean;
   isSettingsModule: boolean;
   isGestaoModule: boolean;
+  isProspeccaoModule: boolean;
 }
 
 const ModuleContext = createContext<ModuleContextType | undefined>(undefined);
@@ -38,6 +39,7 @@ export const ModuleProvider = ({ children }: ModuleProviderProps) => {
     isSimulatorModule: currentModule === 'simulator',
     isSettingsModule: currentModule === 'settings',
     isGestaoModule: currentModule === 'gestao',
+    isProspeccaoModule: currentModule === 'prospeccao',
   };
 
   return (

@@ -9,7 +9,7 @@ import { useCompany } from '@/contexts/CompanyContext';
 import { supabase } from '@/integrations/supabase/client';
 
 interface ModuleSwitcherProps {
-  current: 'simulator' | 'settings' | 'gestao';
+  current: 'simulator' | 'settings' | 'gestao' | 'prospeccao';
 }
 
 export const ModuleSwitcher = ({ current }: ModuleSwitcherProps) => {
@@ -62,6 +62,8 @@ export const ModuleSwitcher = ({ current }: ModuleSwitcherProps) => {
       navigate(computeSettingsPath());
     } else if (module === 'gestao') {
       navigate('/gestao');
+    } else if (module === 'prospeccao') {
+      navigate('/prospeccao');
     }
   };
 
@@ -129,20 +131,21 @@ export const ModuleSwitcher = ({ current }: ModuleSwitcherProps) => {
   };
 
   const modules = useMemo(() => {
-    const allowedSettings = (
-      canAccessSimulatorConfig() ||
-      userRole === 'admin' || userRole === 'master'
-    );
+    const isCollaborator = userRole === 'user';
+    const allowedSettings = isCollaborator
+      ? true // Colaborador vê Configurações (conteúdo restrito pelas rotas)
+      : (canAccessSimulatorConfig() || userRole === 'admin' || userRole === 'master');
 
-    const list: { key: 'simulator'|'settings'|'gestao'; label: string; path: string; allowed: boolean }[] = [
+    const list: { key: 'simulator'|'settings'|'gestao'|'prospeccao'; label: string; path: string; allowed: boolean }[] = [
       { 
         key: 'simulator', 
         label: 'Simulador', 
         path: '/simulador', 
-        allowed: (canAccessSimulator() || canAccessSimulatorConfig()) && canAccessSimulatorByRole 
+        allowed: !isCollaborator && (canAccessSimulator() || canAccessSimulatorConfig()) && canAccessSimulatorByRole 
       },
       { key: 'settings', label: 'Configurações', path: computeSettingsPath(), allowed: allowedSettings },
       { key: 'gestao', label: 'Gestão', path: '/gestao', allowed: true },
+      { key: 'prospeccao', label: 'Prospecção', path: '/prospeccao', allowed: !isCollaborator },
     ];
 
     return list.filter(m => m.allowed);

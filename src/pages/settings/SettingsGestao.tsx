@@ -15,13 +15,14 @@ import { Loader2, ImageIcon, Trash2, Plus } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { LossReasonsManager, OriginsManager } from '@/components/Managers/DefinicoesManagers';
-import { TagsManager, PhasesManager } from '@/components/Managers/TagsPhasesManagers';
+import { TagsManager } from '@/components/Managers/TagsPhasesManagers';
 import { UsersManager } from '@/components/Managers/UsersManager';
+import FunnelsManager from '@/components/Managers/FunnelsManager';
 import { usePermissions } from '@/hooks/usePermissions';
 import SettingsPerfil from './SettingsPerfil';
 
 export default function SettingsGestao() {
-  const { companyId } = useCrmAuth();
+  const { companyId, userRole } = useCrmAuth();
   const { selectedCompanyId } = useCompany();
   const effectiveCompanyId = selectedCompanyId || companyId;
   const permissions = usePermissions();
@@ -31,28 +32,27 @@ export default function SettingsGestao() {
   const getDefaultTab = () => {
     // Verificar se há parâmetro 'tab' na URL
     const urlTab = searchParams.get('tab');
-    if (urlTab && ['company', 'users', 'origens', 'motivos-perda', 'tags', 'fases', 'perfil'].includes(urlTab)) {
-      return urlTab as 'company' | 'users' | 'origens' | 'motivos-perda' | 'tags' | 'fases' | 'perfil';
+    if (urlTab && ['perfil', 'company', 'users', 'origens', 'funis', 'motivos-perda', 'tags'].includes(urlTab)) {
+      return urlTab as 'perfil' | 'company' | 'users' | 'origens' | 'funis' | 'motivos-perda' | 'tags';
     }
     
-    // Fallback para lógica baseada em permissões
-    if (permissions.canAccessConfigurations) {
-      return 'company';
-    } else if (permissions.canAccessPerfil) {
-      return 'perfil';
-    }
-    return 'company';
+    // Fallback: sempre começar com Perfil como aba principal
+    return 'perfil';
   };
 
-  const [tabValue, setTabValue] = useState<'company' | 'users' | 'origens' | 'motivos-perda' | 'tags' | 'fases' | 'perfil'>(getDefaultTab());
+  const [tabValue, setTabValue] = useState<'perfil' | 'company' | 'users' | 'origens' | 'funis' | 'motivos-perda' | 'tags'>(getDefaultTab());
 
-  // Atualizar aba quando o parâmetro da URL mudar
+  // Atualizar aba quando o parâmetro da URL mudar, mas para colaborador travar em Perfil
   useEffect(() => {
-    const urlTab = searchParams.get('tab');
-    if (urlTab && ['company', 'users', 'origens', 'motivos-perda', 'tags', 'fases', 'perfil'].includes(urlTab)) {
-      setTabValue(urlTab as 'company' | 'users' | 'origens' | 'motivos-perda' | 'tags' | 'fases' | 'perfil');
+    if (userRole === 'user') {
+      setTabValue('perfil');
+      return;
     }
-  }, [searchParams]);
+    const urlTab = searchParams.get('tab');
+    if (urlTab && ['perfil', 'company', 'users', 'origens', 'funis', 'motivos-perda', 'tags'].includes(urlTab)) {
+      setTabValue(urlTab as 'perfil' | 'company' | 'users' | 'origens' | 'funis' | 'motivos-perda' | 'tags');
+    }
+  }, [searchParams, userRole]);
 
   // Estado do formulário da empresa
   const [companyName, setCompanyName] = useState('');
@@ -278,8 +278,17 @@ export default function SettingsGestao() {
         <CardContent className="p-0">
           <Tabs value={tabValue} onValueChange={(v) => setTabValue(v as any)} className="w-full">
             <TabsList className="flex items-end border-b border-border/30 bg-transparent p-0 rounded-none justify-start w-fit">
+              {/* Aba Perfil - sempre visível e principal */}
+              <TabsTrigger 
+                value="perfil" 
+                className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
+              >
+                Perfil
+              </TabsTrigger>
+              <div className="w-px h-6 bg-border/30 self-center"></div>
+
               {/* Aba Empresa - apenas para usuários com acesso a configurações */}
-              {permissions.canAccessConfigurations && (
+              {permissions.canAccessConfigurations && userRole !== 'user' && (
                 <>
                   <TabsTrigger 
                     value="company" 
@@ -292,7 +301,7 @@ export default function SettingsGestao() {
               )}
 
               {/* Aba Usuários - apenas para usuários que podem gerenciar usuários */}
-              {permissions.canManageUsers && (
+              {permissions.canManageUsers && userRole !== 'user' && (
                 <>
                   <TabsTrigger 
                     value="users" 
@@ -305,7 +314,7 @@ export default function SettingsGestao() {
               )}
 
               {/* Aba Origens - apenas para usuários com acesso a configurações */}
-              {permissions.canAccessConfigurations && (
+              {permissions.canAccessConfigurations && userRole !== 'user' && (
                 <>
                   <TabsTrigger 
                     value="origens" 
@@ -317,8 +326,21 @@ export default function SettingsGestao() {
                 </>
               )}
 
+              {/* Aba Funis - apenas para usuários com acesso a configurações */}
+              {permissions.canAccessConfigurations && userRole !== 'user' && (
+                <>
+                  <TabsTrigger 
+                    value="funis" 
+                    className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
+                  >
+                    Funis
+                  </TabsTrigger>
+                  <div className="w-px h-6 bg-border/30 self-center"></div>
+                </>
+              )}
+
               {/* Aba Motivos de Perda - apenas para usuários com acesso a configurações */}
-              {permissions.canAccessConfigurations && (
+              {permissions.canAccessConfigurations && userRole !== 'user' && (
                 <>
                   <TabsTrigger 
                     value="motivos-perda" 
@@ -331,7 +353,7 @@ export default function SettingsGestao() {
               )}
 
               {/* Aba Tags - apenas para usuários com acesso a configurações */}
-              {permissions.canAccessConfigurations && (
+              {permissions.canAccessConfigurations && userRole !== 'user' && (
                 <>
                   <TabsTrigger 
                     value="tags" 
@@ -339,34 +361,17 @@ export default function SettingsGestao() {
                   >
                     Tags
                   </TabsTrigger>
-                  <div className="w-px h-6 bg-border/30 self-center"></div>
                 </>
               )}
-
-              {/* Aba Fases - apenas para usuários com acesso a configurações */}
-              {permissions.canAccessConfigurations && (
-                <>
-                  <TabsTrigger 
-                    value="fases" 
-                    className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
-                  >
-                    Fases
-                  </TabsTrigger>
-                  <div className="w-px h-6 bg-border/30 self-center"></div>
-                </>
-              )}
-
-              {/* Aba Perfil - sempre visível */}
-              <TabsTrigger 
-                value="perfil" 
-                className="relative bg-transparent px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors data-[state=active]:text-foreground data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5"
-              >
-                Perfil
-              </TabsTrigger>
             </TabsList>
 
+              {/* Conteúdo da aba Perfil - sempre visível */}
+              <TabsContent value="perfil" className="p-6">
+              <SettingsPerfil />
+            </TabsContent>
+
               {/* Conteúdo da aba Empresa - apenas para usuários com acesso a configurações */}
-              {permissions.canAccessConfigurations && (
+              {permissions.canAccessConfigurations && userRole !== 'user' && (
                 <TabsContent value="company" className="p-6">
               {!effectiveCompanyId ? (
                 <p className="text-muted-foreground">Selecione uma empresa para editar.</p>
@@ -595,21 +600,28 @@ export default function SettingsGestao() {
               )}
 
               {/* Conteúdo da aba Usuários - apenas para usuários que podem gerenciar usuários */}
-              {permissions.canManageUsers && (
+              {permissions.canManageUsers && userRole !== 'user' && (
                 <TabsContent value="users" className="p-6">
                 <UsersManager companyId={effectiveCompanyId as string} />
               </TabsContent>
               )}
 
               {/* Conteúdo da aba Origens - apenas para usuários com acesso a configurações */}
-              {permissions.canAccessConfigurations && (
+              {permissions.canAccessConfigurations && userRole !== 'user' && (
                 <TabsContent value="origens" className="p-6">
                   <OriginsManager />
                 </TabsContent>
               )}
 
+              {/* Conteúdo da aba Funis - apenas para usuários com acesso a configurações */}
+              {permissions.canAccessConfigurations && userRole !== 'user' && (
+                <TabsContent value="funis" className="p-6">
+                  <FunnelsManager />
+                </TabsContent>
+              )}
+
               {/* Conteúdo da aba Motivos de Perda - apenas para usuários com acesso a configurações */}
-              {permissions.canAccessConfigurations && (
+              {permissions.canAccessConfigurations && userRole !== 'user' && (
                 <TabsContent value="motivos-perda" className="p-6">
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
@@ -627,23 +639,11 @@ export default function SettingsGestao() {
               )}
 
               {/* Conteúdo da aba Tags - apenas para usuários com acesso a configurações */}
-              {permissions.canAccessConfigurations && (
+              {permissions.canAccessConfigurations && userRole !== 'user' && (
                 <TabsContent value="tags" className="p-6">
                   <TagsManager />
                 </TabsContent>
               )}
-
-              {/* Conteúdo da aba Fases - apenas para usuários com acesso a configurações */}
-              {permissions.canAccessConfigurations && (
-                <TabsContent value="fases" className="p-6">
-                  <PhasesManager />
-                </TabsContent>
-              )}
-
-              {/* Conteúdo da aba Perfil - sempre visível */}
-              <TabsContent value="perfil" className="p-6">
-              <SettingsPerfil />
-            </TabsContent>
 
           </Tabs>
         </CardContent>

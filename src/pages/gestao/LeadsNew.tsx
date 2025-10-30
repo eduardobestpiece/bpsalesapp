@@ -48,15 +48,32 @@ type Lead = {
   crm_id?: string;
   fonte?: string;
   dados_extras?: any;
+  tags?: string[];
+  funil_id?: string;
+  fase_id?: string;
+  funnels?: {
+    id: string;
+    name: string;
+    color: string;
+  };
+  funnel_phases?: {
+    id: string;
+    name: string;
+    color: string;
+    is_final: boolean;
+    is_lost: boolean;
+  };
 };
 
-type ColumnKey = keyof Lead | 'trash' | 'form_name' | 'contato' | 'informacoes' | 'selecao';
+type ColumnKey = keyof Lead | 'trash' | 'form_name' | 'contato' | 'informacoes' | 'selecao' | 'funil' | 'fase';
 
 const STATIC_COLUMNS: { key: ColumnKey; label: string }[] = [
   { key: 'selecao', label: 'Seleção' },
   { key: 'contato', label: 'Contato' },
   { key: 'informacoes', label: 'Informações' },
   { key: 'responsavel', label: 'Responsável' },
+  { key: 'funil', label: 'Funil' },
+  { key: 'fase', label: 'Fase' },
   { key: 'trash', label: '' },
 ];
 
@@ -111,6 +128,9 @@ export default function GestaoLeadsNew() {
           pais,
           responsible_id,
           responsavel,
+          tags,
+          funil_id,
+          fase_id,
           crm_users!leads_responsible_id_fkey (
             id,
             first_name,
@@ -125,6 +145,18 @@ export default function GestaoLeadsNew() {
               id,
               name
             )
+          ),
+          funnels!leads_funil_id_fkey (
+            id,
+            name,
+            color
+          ),
+          funnel_phases!leads_fase_id_fkey (
+            id,
+            name,
+            color,
+            is_final,
+            is_lost
           )
         `)
         .eq('company_id', selectedCompanyId as string);
@@ -1160,31 +1192,31 @@ setTimeout(observeIframeContent, 500);
       const isCtrlOrCmd = event.metaKey || event.ctrlKey;
       const isShift = event.shiftKey;
 
-      if (isShift && lastSelectedIndex !== null) {
-        // Seleção em range
-        const start = Math.min(lastSelectedIndex, index);
-        const end = Math.max(lastSelectedIndex, index);
+    if (isShift && lastSelectedIndex !== null) {
+      // Seleção em range
+      const start = Math.min(lastSelectedIndex, index);
+      const end = Math.max(lastSelectedIndex, index);
         const newSelected = [...selectedLeads];
-        
-        for (let i = start; i <= end; i++) {
+      
+      for (let i = start; i <= end; i++) {
           if (currentLeads[i] && !newSelected.includes(currentLeads[i].id)) {
             newSelected.push(currentLeads[i].id);
-          }
         }
-        setSelectedLeads(newSelected);
-      } else if (isCtrlOrCmd) {
-        // Toggle individual
+      }
+      setSelectedLeads(newSelected);
+    } else if (isCtrlOrCmd) {
+      // Toggle individual
         if (selectedLeads.includes(leadId)) {
           setSelectedLeads(prev => prev.filter(id => id !== leadId));
-        } else {
-          setSelectedLeads(prev => [...prev, leadId]);
-        }
-        setLastSelectedIndex(index);
       } else {
-        // Seleção simples
-        setSelectedLeads([leadId]);
-        setLastSelectedIndex(index);
+          setSelectedLeads(prev => [...prev, leadId]);
       }
+      setLastSelectedIndex(index);
+    } else {
+      // Seleção simples
+        setSelectedLeads([leadId]);
+      setLastSelectedIndex(index);
+    }
     } else {
       // Abrir modal de edição
       const lead = currentLeads.find(l => l.id === leadId);
@@ -1617,7 +1649,7 @@ setTimeout(observeIframeContent, 500);
                 {isCollaborator && (
                   <div className="text-sm text-muted-foreground">
                     Colaboradores não podem excluir leads
-                  </div>
+                </div>
                 )}
                 
                 <Select value={bulkResponsibleId} onValueChange={setBulkResponsibleId}>
@@ -1633,7 +1665,7 @@ setTimeout(observeIframeContent, 500);
                     ))}
                   </SelectContent>
                 </Select>
-                
+
                 <Button
                   variant="outline"
                   size="sm"
@@ -1649,24 +1681,24 @@ setTimeout(observeIframeContent, 500);
 
             {/* Botão para limpar filtros - aparece à esquerda do botão Filtros */}
             {(searchTerm || selectedOrigin || selectedForm || (!isCollaborator && selectedResponsible) || dateRange.from || dateRange.to) && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setSearchTerm('');
-                  setSelectedOrigin('');
-                  setSelectedForm('');
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSearchTerm('');
+                      setSelectedOrigin('');
+                      setSelectedForm('');
                   if (!isCollaborator) {
                     setSelectedResponsible('');
                   }
-                  setDateRange({from: '', to: ''});
-                }}
+                      setDateRange({from: '', to: ''});
+                    }}
                 className="text-muted-foreground brand-radius"
-              >
-                <Filter className="h-4 w-4 mr-2" />
-                Limpar filtros
-              </Button>
-            )}
+                  >
+                    <Filter className="h-4 w-4 mr-2" />
+                    Limpar filtros
+                  </Button>
+                )}
             
             <Button 
               size="sm" 
@@ -1678,22 +1710,22 @@ setTimeout(observeIframeContent, 500);
               Filtros
             </Button>
             
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={handleRefreshLeads}
-              disabled={isRefreshing}
-              className="brand-radius"
-            >
-              <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            </Button>
-                
-                <Dialog open={openModal} onOpenChange={setOpenModal}>
-                  <DialogTrigger asChild>
-                    <Button size="sm" className="brand-radius" onClick={() => setOpenModal(true)}>
-                      <Plus className="h-4 w-4 mr-2" /> Adicionar Lead
-                    </Button>
-                  </DialogTrigger>
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={handleRefreshLeads}
+                disabled={isRefreshing}
+                className="brand-radius"
+              >
+                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              </Button>
+              
+              <Dialog open={openModal} onOpenChange={setOpenModal}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="brand-radius" onClick={() => setOpenModal(true)}>
+                    <Plus className="h-4 w-4 mr-2" /> Adicionar Lead
+                  </Button>
+                </DialogTrigger>
                 <DialogContent className="max-w-2xl max-h-[95vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle>Adicionar Lead</DialogTitle>
@@ -1704,18 +1736,18 @@ setTimeout(observeIframeContent, 500);
                       <div className="space-y-4">
                         {/* Apenas admin e master podem trocar formulário */}
                         {!isCollaborator && (
-                          <div>
-                            <Label htmlFor="form-select">Selecionar Formulário</Label>
-                            <Select value={selectedFormId} onValueChange={handleFormSelect}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Escolha um formulário" />
-                              </SelectTrigger>
-                              <SelectContent>
+                        <div>
+                          <Label htmlFor="form-select">Selecionar Formulário</Label>
+                          <Select value={selectedFormId} onValueChange={handleFormSelect}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Escolha um formulário" />
+                            </SelectTrigger>
+                            <SelectContent>
                                 {companyForms.filter(form => form.name === 'Formulário base').map((form) => (
-                                  <SelectItem key={form.id} value={form.id}>
-                                    {form.name}
-                                  </SelectItem>
-                                ))}
+                                <SelectItem key={form.id} value={form.id}>
+                                  {form.name}
+                                </SelectItem>
+                              ))}
                                 {companyForms.filter(form => form.name === 'Formulário base').length === 0 && (
                                   <div className="p-2 text-center">
                                     <p className="text-sm text-muted-foreground mb-2">Nenhum formulário base encontrado</p>
@@ -1732,9 +1764,9 @@ setTimeout(observeIframeContent, 500);
                                     </Button>
                                   </div>
                                 )}
-                              </SelectContent>
-                            </Select>
-                          </div>
+                            </SelectContent>
+                          </Select>
+                        </div>
                         )}
                         
                         {/* Colaboradores veem apenas o formulário embedado */}
@@ -1787,7 +1819,7 @@ setTimeout(observeIframeContent, 500);
               </Dialog>
             </div>
 
-            {/* Modal de Edição do Lead */}
+              {/* Modal de Edição do Lead */}
               <Dialog open={editModalOpen} onOpenChange={setEditModalOpen}>
                 <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
                   <DialogHeader>
@@ -2192,7 +2224,7 @@ setTimeout(observeIframeContent, 500);
                             // Colaboradores não podem excluir leads
                             if (isCollaborator) {
                               console.log('🚫 Colaborador - ocultando botão de exclusão individual');
-                              return (
+                            return (
                                 <TableCell key={`${lead.id}_trash`}>
                                   <div className="h-8 w-8"></div>
                                 </TableCell>
@@ -2286,7 +2318,7 @@ setTimeout(observeIframeContent, 500);
                               const responsibleName = (lead as any).responsavel || '';
                               const isEditingThisLead = editingResponsibleLeadId === lead.id;
                               
-                              return (
+                          return (
                                 <TableCell key={`${lead.id}_${colKey}`}>
                                   {isEditingThisLead ? (
                                     <div className="flex items-center gap-2 max-w-[200px]">
@@ -2335,6 +2367,58 @@ setTimeout(observeIframeContent, 500);
                                   )}
                                 </TableCell>
                               );
+                            }
+                            
+                            if (colKey === 'funil') {
+                              const funnel = (lead as any).funnels;
+                              return (
+                                <TableCell key={`${lead.id}_${colKey}`}>
+                                  <div className="text-sm">
+                                    {funnel ? (
+                                      <div className="flex items-center gap-2">
+                                        <div 
+                                          className="w-3 h-3 rounded-full" 
+                                          style={{ backgroundColor: funnel.color }}
+                                        />
+                                        <span>{funnel.name}</span>
+                                      </div>
+                                    ) : (
+                                      <span className="text-muted-foreground">-</span>
+                                    )}
+                                  </div>
+                                </TableCell>
+                              );
+                            }
+                            
+                            if (colKey === 'fase') {
+                              const phase = (lead as any).funnel_phases;
+                              return (
+                                <TableCell key={`${lead.id}_${colKey}`}>
+                                  <div className="text-sm">
+                                    {phase ? (
+                                      <div className="flex items-center gap-2">
+                                        <div 
+                                          className="w-3 h-3 rounded-full" 
+                                          style={{ backgroundColor: phase.color }}
+                                        />
+                                        <span>{phase.name}</span>
+                                        {phase.is_final && (
+                                          <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded">
+                                            Final
+                                          </span>
+                                        )}
+                                        {phase.is_lost && (
+                                          <span className="text-xs bg-red-100 text-red-800 px-1.5 py-0.5 rounded">
+                                            Perda
+                                          </span>
+                                        )}
+                                      </div>
+                                    ) : (
+                                      <span className="text-muted-foreground">-</span>
+                                    )}
+                                  </div>
+                                </TableCell>
+                          );
                             }
                             
                             return null;

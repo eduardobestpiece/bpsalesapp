@@ -22,6 +22,12 @@ import GestaoLeadsNew from "./pages/gestao/LeadsNew";
 import GestaoAgendamentos from "./pages/gestao/Agendamentos";
 import GestaoVendas from "./pages/gestao/Vendas";
 import { Datacrazy } from "./pages/gestao/Datacrazy";
+
+// Módulo de Prospecção
+import ProspeccaoIndex from "./pages/prospeccao/ProspeccaoIndex";
+import GoogleScrapper from "./pages/prospeccao/GoogleScrapper";
+import InstagramScrapper from "./pages/prospeccao/InstagramScrapper";
+import IAScrapper from "./pages/prospeccao/IAScrapper";
 import { Loader2 } from "lucide-react";
 
 // Novas páginas do módulo Configurações
@@ -35,6 +41,7 @@ import SettingsPerfil from "./pages/settings/SettingsPerfil";
 import SettingsForms from "./pages/settings/SettingsForms";
 import SettingsFields from "./pages/settings/SettingsFields";
 import PublicForm from "./pages/PublicForm";
+import PublicAppointmentForm from "./pages/PublicAppointmentForm";
 import IframeGeneratorPage from "./pages/IframeGeneratorPage";
 import { TestPermissions } from "./components/TestPermissions";
 import { DebugPermissions } from "./components/DebugPermissions";
@@ -115,8 +122,9 @@ function AppContent() {
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/payment-cancel" element={<PaymentCancel />} />
           
-          {/* Public Form - accessible without authentication */}
+          {/* Public Forms - accessible without authentication */}
           <Route path="/form/:formId" element={<PublicForm />} />
+          <Route path="/appointment/:formId" element={<PublicAppointmentForm />} />
           
           {/* Iframe Generator - accessible without authentication */}
           <Route path="/iframe-generator" element={<IframeGeneratorPage />} />
@@ -172,6 +180,28 @@ function AppContent() {
           <Route path="/gestao/datacrazy" element={
             user ? (
               <Datacrazy />
+            ) : <Navigate to="/crm/login" replace />
+          } />
+
+          {/* Módulo de Prospecção */}
+          <Route path="/prospeccao" element={
+            user ? (
+              <ProspeccaoIndex />
+            ) : <Navigate to="/crm/login" replace />
+          } />
+          <Route path="/prospeccao/google" element={
+            user ? (
+              <GoogleScrapper />
+            ) : <Navigate to="/crm/login" replace />
+          } />
+          <Route path="/prospeccao/instagram" element={
+            user ? (
+              <InstagramScrapper />
+            ) : <Navigate to="/crm/login" replace />
+          } />
+          <Route path="/prospeccao/ia" element={
+            user ? (
+              <IAScrapper />
             ) : <Navigate to="/crm/login" replace />
           } />
 

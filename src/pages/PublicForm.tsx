@@ -1545,6 +1545,7 @@ export default function PublicForm(props?: PublicFormProps) {
           <LandingPhoneInput
             value={currentValue}
             onChange={(value) => updateFieldValue((field as any).field_id, value)}
+            verifyExistence
               placeholder={phonePlaceholder}
             globalDefaultColor={undefined}
             accentFocus
