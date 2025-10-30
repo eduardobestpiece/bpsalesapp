@@ -1079,14 +1079,17 @@ export default function PublicForm(props?: PublicFormProps) {
                   // Essas tabelas possuem (id, name[, company_id]) — buscar e filtrar por company_id no cliente
                   const resp = await supabase
                     .from(listTable as any)
-                    .select('id, name, company_id')
+                    .select('id, name, company_id, status, created_at')
                     .limit(200);
                   listData = resp.data as any[] | null;
                   listError = resp.error;
                   debugLog('connection:query:no-company-filter', { field_id: field.field_id, listTable, rows: listData?.length || 0, error: listError || null });
                   // Filtrar apenas as origens da empresa do formulário
                   if (!listError && listData) {
-                    const filtered = (listData as any[]).filter((it: any) => String(it.company_id || '').toLowerCase() === String(companyId || '').toLowerCase());
+                    const filtered = (listData as any[])
+                      .filter((it: any) => String(it.company_id || '').toLowerCase() === String(companyId || '').toLowerCase())
+                      .filter((it: any) => (it.status || 'active') === 'active')
+                      .sort((a: any, b: any) => (a.created_at || '').localeCompare(b.created_at || ''));
                     debugLog('connection:filter-company', { listTable, before: listData.length, after: filtered.length, companyId });
                     listData = filtered;
                   }

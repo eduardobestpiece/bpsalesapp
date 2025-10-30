@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { GestaoLayout } from '@/components/Layout/GestaoLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -246,6 +246,7 @@ export default function GestaoLeadsNew() {
   const [openModal, setOpenModal] = useState(false);
   const [selectedFormId, setSelectedFormId] = useState<string>('');
   const [iframeCode, setIframeCode] = useState<string>('');
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isFormConfigured, setIsFormConfigured] = useState(false);
   const [showFormSelector, setShowFormSelector] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -287,7 +288,7 @@ export default function GestaoLeadsNew() {
   width="100%" 
   height="auto" 
   frameborder="0" 
-  style="border: none; border-radius: 8px; box-shadow: none; background-color: transparent; padding: 20px; min-height: 300px;"
+  style="border: none; border-radius: 8px; box-shadow: none; background-color: transparent; padding: 20px; min-height: 400px;"
   title="Formulário de Contato"
   id="form-iframe">
 </iframe>
@@ -298,7 +299,7 @@ function resizeIframe(height) {
   const iframe = document.getElementById('form-iframe');
   if (iframe) {
     // Altura mínima para evitar iframe muito pequeno
-    const minHeight = 300;
+    const minHeight = 400;
     const finalHeight = Math.max(minHeight, height);
     iframe.style.height = finalHeight + 'px';
     iframe.style.minHeight = finalHeight + 'px';
@@ -605,7 +606,7 @@ setTimeout(observeIframeContent, 500);
       if (!selectedCompanyId) return [];
       const { data, error } = await supabase
         .from('lead_forms' as any)
-        .select('id, name, status')
+        .select('id, name, status, is_base_form')
         .eq('company_id', selectedCompanyId)
         .eq('status', 'active')
         .order('name');
@@ -919,6 +920,16 @@ setTimeout(observeIframeContent, 500);
       return data || [];
     }
   });
+
+  // Abrir modal automaticamente via ?add=1 e limpar o parâmetro depois
+  useEffect(() => {
+    const add = searchParams.get('add');
+    if (add === '1') {
+      setOpenModal(true);
+      searchParams.delete('add');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const formNameById = useMemo(() => {
     const map: Record<string, string> = {};
@@ -1743,12 +1754,12 @@ setTimeout(observeIframeContent, 500);
                               <SelectValue placeholder="Escolha um formulário" />
                             </SelectTrigger>
                             <SelectContent>
-                                {companyForms.filter(form => form.name === 'Formulário base').map((form) => (
+                                {companyForms.filter(form => form.is_base_form === true).map((form) => (
                                 <SelectItem key={form.id} value={form.id}>
                                   {form.name}
                                 </SelectItem>
                               ))}
-                                {companyForms.filter(form => form.name === 'Formulário base').length === 0 && (
+                                {companyForms.filter(form => form.is_base_form === true).length === 0 && (
                                   <div className="p-2 text-center">
                                     <p className="text-sm text-muted-foreground mb-2">Nenhum formulário base encontrado</p>
                                     <Button 

@@ -34,49 +34,74 @@ export async function distributeLead(
     console.log('📧 Email para verificação:', email);
     console.log('📱 Telefone para verificação:', telefone);
 
-    // Usar a função SQL diretamente via RPC (incluindo verificação de duplicatas)
-    const { data: assignedUserId, error: assignError } = await supabase
-      .rpc('assign_lead_responsible' as any, {
-        p_form_id: formId,
-        p_company_id: companyId,
-        p_email: email || null,
-        p_telefone: telefone || null
+    // 1) Regra de duplicidade: se já existe lead com mesmo email/telefone, manter o mesmo responsável
+    const normalizedPhone = (telefone || '').replace(/\D/g, '');
+    const normalizedEmail = (email || '').toLowerCase();
+    if (normalizedEmail || normalizedPhone) {
+      const { data: dupLead } = await supabase
+        .from('leads' as any)
+        .select('id, responsible_id, email, telefone')
+        .eq('company_id', companyId)
+        .eq('form_id', formId)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      const found = ((dupLead as any[]) || []).find((l: any) => {
+        const e = String(l.email || '').toLowerCase();
+        const p = String(l.telefone || '').replace(/\D/g, '');
+        return (normalizedEmail && e && e === normalizedEmail) || (normalizedPhone && p && p.endsWith(normalizedPhone));
       });
-
-    if (assignError) {
-      console.log('❌ Erro ao atribuir responsável:', assignError);
-      return null;
+      if ((found as any)?.responsible_id) {
+        const { data: u } = await supabase.from('crm_users' as any).select('first_name, last_name').eq('id', (found as any).responsible_id).single();
+        return { responsible_id: (found as any).responsible_id, responsible_name: `${(u as any)?.first_name || ''} ${(u as any)?.last_name || ''}`.trim() || 'Usuário' };
+      }
     }
 
-    if (!assignedUserId || typeof assignedUserId !== 'string') {
-      console.log('ℹ️ Nenhum responsável atribuído (sem distribuição configurada)');
-      return null;
-    }
+    // 2) Round-robin determinístico baseado em number_weight
+    // Carregar distribuição e usuários (apenas peso > 0)
+    const { data: distribution } = await supabase
+      .from('lead_form_distributions' as any)
+      .select('id')
+      .eq('lead_form_id', formId)
+      .eq('company_id', companyId)
+      .eq('is_active', true)
+      .maybeSingle();
+    if (!(distribution as any)?.id) return null;
 
-    console.log('✅ Responsável atribuído:', assignedUserId);
+    const { data: distUsers } = await supabase
+      .from('lead_form_distribution_users' as any)
+      .select('user_id, number_weight, created_at, crm_users:first_name, crm_users:last_name')
+      .eq('distribution_id', (distribution as any).id)
+      .gt('number_weight', 0)
+      .order('created_at');
 
-    // Buscar dados do usuário responsável
-    const { data: userData, error: userError } = await supabase
+    const users = (distUsers || []) as any[];
+    if (users.length === 0) return null;
+
+    // Montar sequência repetindo cada user pelo seu number_weight
+    const sequence = users.flatMap(u => Array(Math.max(0, Number(u.number_weight) || 0)).fill(u));
+    if (sequence.length === 0) return null;
+
+    // Contar quantos leads já foram atribuídos neste formulário para esses usuários
+    const userIds = users.map(u => u.user_id);
+    const { data: countsData } = await supabase
+      .from('leads' as any)
+      .select('responsible_id')
+      .eq('company_id', companyId)
+      .eq('form_id', formId)
+      .in('responsible_id', userIds);
+    const totalAssigned = (countsData || []).length;
+
+    // Selecionar próximo por índice circular
+    const next = sequence[totalAssigned % sequence.length];
+    const { data: nextUser } = await supabase
       .from('crm_users')
-      .select('id, first_name, last_name, email, phone')
-      .eq('id', assignedUserId)
+      .select('first_name, last_name')
+      .eq('id', next.user_id)
       .single();
-
-    if (userError || !userData) {
-      console.log('❌ Erro ao buscar dados do usuário:', userError);
-      return {
-        responsible_id: assignedUserId,
-        responsible_name: 'Usuário'
-      };
-    }
-
-    const result = {
-      responsible_id: assignedUserId,
-      responsible_name: `${userData.first_name} ${userData.last_name}`.trim()
+    return {
+      responsible_id: next.user_id,
+      responsible_name: `${nextUser?.first_name || ''} ${nextUser?.last_name || ''}`.trim() || 'Usuário'
     };
-
-    console.log('🎯 Distribuição concluída:', result);
-    return result;
 
   } catch (error) {
     console.error('❌ Erro na distribuição automática de leads:', error);
