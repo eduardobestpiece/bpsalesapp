@@ -3323,6 +3323,8 @@ export default function PublicForm(props?: PublicFormProps) {
           // Extrair email e telefone dos dados do formulário
           const leadEmail = fieldValues.email || '';
           const leadTelefone = fieldValues.telefone || fieldValues.phone || '';
+          console.log('📧 Email extraído:', leadEmail);
+          console.log('📱 Telefone extraído:', leadTelefone);
           
           // Se estiver dentro da plataforma, tentar obter o usuário logado
           if (isInsidePlatform) {
